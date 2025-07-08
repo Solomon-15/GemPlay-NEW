@@ -1076,6 +1076,20 @@ async def get_transaction_history(
     
     return [Transaction(**transaction) for transaction in transactions]
 
+# ==============================================================================
+# BASIC API ROUTES
+# ==============================================================================
+
+@api_router.get("/", response_model=dict)
+async def root():
+    """API root endpoint."""
+    return {"message": "GemPlay API is running!", "version": "1.0.0"}
+
+@api_router.get("/health", response_model=dict)
+async def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "timestamp": datetime.utcnow()}
+
 # Include routers
 app.include_router(auth_router)
 app.include_router(api_router)
