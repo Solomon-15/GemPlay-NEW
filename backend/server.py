@@ -691,18 +691,390 @@ async def claim_daily_bonus(current_user: User = Depends(get_current_user)):
     }
 
 # ==============================================================================
-# BASIC API ROUTES
+# ECONOMY API ROUTES
 # ==============================================================================
 
-@api_router.get("/", response_model=dict)
-async def root():
-    """API root endpoint."""
-    return {"message": "GemPlay API is running!", "version": "1.0.0"}
+@api_router.get("/gems/definitions", response_model=List[GemDefinition])
+async def get_gem_definitions():
+    """Get all available gem types and their properties."""
+    gems = await db.gem_definitions.find({"enabled": True}).to_list(100)
+    return [GemDefinition(**gem) for gem in gems]
 
-@api_router.get("/health", response_model=dict)
-async def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy", "timestamp": datetime.utcnow()}
+@api_router.get("/gems/inventory", response_model=List[GemResponse])
+async def get_user_gems(current_user: User = Depends(get_current_user)):
+    """Get user's gem inventory."""
+    user_gems = await db.user_gems.find({"user_id": current_user.id}).to_list(100)
+    gem_definitions = await db.gem_definitions.find().to_list(100)
+    
+    # Create a map of gem definitions
+    gem_def_map = {gem["type"]: gem for gem in gem_definitions}
+    
+    result = []
+    for user_gem in user_gems:
+        if user_gem["quantity"] > 0:  # Only return gems with positive quantity
+            gem_def = gem_def_map.get(user_gem["gem_type"])
+            if gem_def:
+                result.append(GemResponse(
+                    type=gem_def["type"],
+                    name=gem_def["name"],
+                    price=gem_def["price"],
+                    color=gem_def["color"],
+                    icon=gem_def["icon"],
+                    rarity=gem_def["rarity"],
+                    quantity=user_gem["quantity"],
+                    frozen_quantity=user_gem["frozen_quantity"]
+                ))
+    
+    # Sort by price ascending
+    result.sort(key=lambda x: x.price)
+    return result
+
+@api_router.post("/gems/buy", response_model=dict)
+async def buy_gems(gem_type: GemType, quantity: int, current_user: User = Depends(get_current_user)):
+    """Buy gems from the shop."""
+    if quantity <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Quantity must be positive"
+        )
+    
+    # Get gem definition
+    gem_def = await db.gem_definitions.find_one({"type": gem_type, "enabled": True})
+    if not gem_def:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Gem type not found or disabled"
+        )
+    
+    total_cost = gem_def["price"] * quantity
+    
+    # Check if user has enough balance
+    user = await db.users.find_one({"id": current_user.id})
+    if user["virtual_balance"] < total_cost:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Insufficient balance"
+        )
+    
+    # Update user balance
+    new_balance = user["virtual_balance"] - total_cost
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": {"virtual_balance": new_balance, "updated_at": datetime.utcnow()}}
+    )
+    
+    # Add gems to user inventory
+    existing_gems = await db.user_gems.find_one({"user_id": current_user.id, "gem_type": gem_type})
+    if existing_gems:
+        new_quantity = existing_gems["quantity"] + quantity
+        await db.user_gems.update_one(
+            {"user_id": current_user.id, "gem_type": gem_type},
+            {
+                "$set": {
+                    "quantity": new_quantity,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+    else:
+        new_gem = UserGem(
+            user_id=current_user.id,
+            gem_type=gem_type,
+            quantity=quantity
+        )
+        await db.user_gems.insert_one(new_gem.dict())
+    
+    # Create transaction record
+    transaction = Transaction(
+        user_id=current_user.id,
+        transaction_type=TransactionType.PURCHASE,
+        amount=total_cost,
+        currency="USD",
+        gem_type=gem_type,
+        gem_quantity=quantity,
+        balance_before=user["virtual_balance"],
+        balance_after=new_balance,
+        description=f"Purchased {quantity} {gem_type} gems"
+    )
+    await db.transactions.insert_one(transaction.dict())
+    
+    return {
+        "message": f"Successfully purchased {quantity} {gem_type} gems",
+        "total_cost": total_cost,
+        "new_balance": new_balance
+    }
+
+@api_router.post("/gems/sell", response_model=dict)
+async def sell_gems(gem_type: GemType, quantity: int, current_user: User = Depends(get_current_user)):
+    """Sell gems back to the shop."""
+    if quantity <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Quantity must be positive"
+        )
+    
+    # Get gem definition
+    gem_def = await db.gem_definitions.find_one({"type": gem_type, "enabled": True})
+    if not gem_def:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Gem type not found or disabled"
+        )
+    
+    # Check if user has enough gems
+    user_gems = await db.user_gems.find_one({"user_id": current_user.id, "gem_type": gem_type})
+    if not user_gems or user_gems["quantity"] < quantity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Insufficient gems"
+        )
+    
+    # Check if gems are not frozen
+    available_quantity = user_gems["quantity"] - user_gems["frozen_quantity"]
+    if available_quantity < quantity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Some gems are frozen in active bets"
+        )
+    
+    total_value = gem_def["price"] * quantity
+    
+    # Update user balance
+    user = await db.users.find_one({"id": current_user.id})
+    new_balance = user["virtual_balance"] + total_value
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": {"virtual_balance": new_balance, "updated_at": datetime.utcnow()}}
+    )
+    
+    # Remove gems from inventory
+    new_quantity = user_gems["quantity"] - quantity
+    await db.user_gems.update_one(
+        {"user_id": current_user.id, "gem_type": gem_type},
+        {
+            "$set": {
+                "quantity": new_quantity,
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    # Create transaction record
+    transaction = Transaction(
+        user_id=current_user.id,
+        transaction_type=TransactionType.SALE,
+        amount=total_value,
+        currency="USD",
+        gem_type=gem_type,
+        gem_quantity=quantity,
+        balance_before=user["virtual_balance"],
+        balance_after=new_balance,
+        description=f"Sold {quantity} {gem_type} gems"
+    )
+    await db.transactions.insert_one(transaction.dict())
+    
+    return {
+        "message": f"Successfully sold {quantity} {gem_type} gems",
+        "total_value": total_value,
+        "new_balance": new_balance
+    }
+
+@api_router.post("/gems/gift", response_model=dict)
+async def gift_gems(
+    recipient_email: str, 
+    gem_type: GemType, 
+    quantity: int, 
+    current_user: User = Depends(get_current_user)
+):
+    """Gift gems to another user."""
+    if quantity <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Quantity must be positive"
+        )
+    
+    # Check if recipient exists
+    recipient = await db.users.find_one({"email": recipient_email})
+    if not recipient:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Recipient not found"
+        )
+    
+    # Can't gift to yourself
+    if recipient["id"] == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot gift to yourself"
+        )
+    
+    # Get gem definition
+    gem_def = await db.gem_definitions.find_one({"type": gem_type, "enabled": True})
+    if not gem_def:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Gem type not found or disabled"
+        )
+    
+    # Check if sender has enough gems
+    sender_gems = await db.user_gems.find_one({"user_id": current_user.id, "gem_type": gem_type})
+    if not sender_gems or sender_gems["quantity"] < quantity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Insufficient gems"
+        )
+    
+    # Check if gems are not frozen
+    available_quantity = sender_gems["quantity"] - sender_gems["frozen_quantity"]
+    if available_quantity < quantity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Some gems are frozen in active bets"
+        )
+    
+    # Calculate commission (3% of total gem value)
+    gem_value = gem_def["price"] * quantity
+    commission = gem_value * 0.03
+    
+    # Check if sender has enough balance for commission
+    sender = await db.users.find_one({"id": current_user.id})
+    if sender["virtual_balance"] < commission:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Insufficient balance for gift commission (3%)"
+        )
+    
+    # Deduct commission from sender
+    new_sender_balance = sender["virtual_balance"] - commission
+    await db.users.update_one(
+        {"id": current_user.id},
+        {"$set": {"virtual_balance": new_sender_balance, "updated_at": datetime.utcnow()}}
+    )
+    
+    # Remove gems from sender
+    new_sender_quantity = sender_gems["quantity"] - quantity
+    await db.user_gems.update_one(
+        {"user_id": current_user.id, "gem_type": gem_type},
+        {
+            "$set": {
+                "quantity": new_sender_quantity,
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    # Add gems to recipient
+    recipient_gems = await db.user_gems.find_one({"user_id": recipient["id"], "gem_type": gem_type})
+    if recipient_gems:
+        new_recipient_quantity = recipient_gems["quantity"] + quantity
+        await db.user_gems.update_one(
+            {"user_id": recipient["id"], "gem_type": gem_type},
+            {
+                "$set": {
+                    "quantity": new_recipient_quantity,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+    else:
+        new_recipient_gem = UserGem(
+            user_id=recipient["id"],
+            gem_type=gem_type,
+            quantity=quantity
+        )
+        await db.user_gems.insert_one(new_recipient_gem.dict())
+    
+    # Create transaction records
+    # Sender transaction
+    sender_transaction = Transaction(
+        user_id=current_user.id,
+        transaction_type=TransactionType.GIFT,
+        amount=-gem_value,
+        currency="GEM",
+        gem_type=gem_type,
+        gem_quantity=-quantity,
+        balance_before=sender["virtual_balance"],
+        balance_after=new_sender_balance,
+        description=f"Gifted {quantity} {gem_type} gems to {recipient['username']}",
+        reference_id=recipient["id"]
+    )
+    await db.transactions.insert_one(sender_transaction.dict())
+    
+    # Commission transaction
+    commission_transaction = Transaction(
+        user_id=current_user.id,
+        transaction_type=TransactionType.COMMISSION,
+        amount=commission,
+        currency="USD",
+        balance_before=sender["virtual_balance"],
+        balance_after=new_sender_balance,
+        description=f"Gift commission for {quantity} {gem_type} gems",
+        reference_id=recipient["id"]
+    )
+    await db.transactions.insert_one(commission_transaction.dict())
+    
+    # Recipient transaction
+    recipient_transaction = Transaction(
+        user_id=recipient["id"],
+        transaction_type=TransactionType.GIFT,
+        amount=gem_value,
+        currency="GEM",
+        gem_type=gem_type,
+        gem_quantity=quantity,
+        balance_before=0,  # We don't track gem balance changes for recipient
+        balance_after=0,
+        description=f"Received {quantity} {gem_type} gems from {current_user.username}",
+        reference_id=current_user.id
+    )
+    await db.transactions.insert_one(recipient_transaction.dict())
+    
+    return {
+        "message": f"Successfully gifted {quantity} {gem_type} gems to {recipient['username']}",
+        "gem_value": gem_value,
+        "commission": commission,
+        "new_balance": new_sender_balance
+    }
+
+@api_router.get("/economy/balance", response_model=dict)
+async def get_economy_balance(current_user: User = Depends(get_current_user)):
+    """Get user's complete economic status."""
+    # Get current user data
+    user = await db.users.find_one({"id": current_user.id})
+    
+    # Calculate total gem value
+    user_gems = await db.user_gems.find({"user_id": current_user.id}).to_list(100)
+    gem_definitions = await db.gem_definitions.find().to_list(100)
+    gem_def_map = {gem["type"]: gem["price"] for gem in gem_definitions}
+    
+    total_gem_value = 0
+    available_gem_value = 0
+    
+    for user_gem in user_gems:
+        gem_price = gem_def_map.get(user_gem["gem_type"], 0)
+        total_gem_value += user_gem["quantity"] * gem_price
+        available_gem_value += (user_gem["quantity"] - user_gem["frozen_quantity"]) * gem_price
+    
+    return {
+        "virtual_balance": user["virtual_balance"],
+        "frozen_balance": user["frozen_balance"],
+        "total_gem_value": total_gem_value,
+        "available_gem_value": available_gem_value,
+        "total_value": user["virtual_balance"] + total_gem_value,
+        "daily_limit_used": user["daily_limit_used"],
+        "daily_limit_max": user["daily_limit_max"]
+    }
+
+@api_router.get("/transactions/history", response_model=List[Transaction])
+async def get_transaction_history(
+    limit: int = 50,
+    current_user: User = Depends(get_current_user)
+):
+    """Get user's transaction history."""
+    transactions = await db.transactions.find(
+        {"user_id": current_user.id}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return [Transaction(**transaction) for transaction in transactions]
 
 # Include routers
 app.include_router(auth_router)
