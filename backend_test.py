@@ -264,31 +264,27 @@ def test_login(email: str, password: str, expected_success: bool = True) -> Opti
     
     # For invalid login test
     if not expected_success:
-        if response.get("detail") == "Incorrect email or password" and not success:
+        if "detail" in response and "Incorrect email or password" in response["detail"]:
             print_success("Login correctly failed with invalid credentials")
             record_test("Invalid Login Attempt", True)
-            return None
+        else:
+            print_error(f"Login failed but with unexpected error: {response}")
+            record_test("Invalid Login Attempt", False, f"Unexpected error: {response}")
+        return None
     
     # For valid login test
-    if expected_success and success:
-        if "access_token" in response and "user" in response:
+    if expected_success:
+        if success and "access_token" in response and "user" in response:
             print_success(f"User logged in successfully")
             print_success(f"User details: {response['user']['username']} ({response['user']['email']})")
             print_success(f"Balance: ${response['user']['virtual_balance']}")
             record_test("User Login", True)
             return response["access_token"]
         else:
-            print_error(f"Login response missing expected fields: {response}")
-            record_test("User Login", False, "Response missing expected fields")
+            print_error(f"Login failed: {response}")
+            record_test("User Login", False, f"Login failed: {response}")
             return None
     
-    if expected_success and not success:
-        record_test("User Login", False, f"Login failed: {response}")
-        return None
-    
-    # This should not happen
-    print_error("Unexpected test result - please check test logic")
-    record_test("Test Logic Error", False, "Unexpected test result")
     return None
 
 def test_get_current_user(token: str) -> None:
