@@ -272,14 +272,15 @@ def test_login(email: str, password: str, expected_success: bool = True) -> Opti
         else:
             print_error(f"Login response missing expected fields: {response}")
             record_test("User Login", False, "Response missing expected fields")
-    elif success and not expected_success:
-        print_error("Login succeeded when it should have failed")
-        record_test("Invalid Login Attempt", False, "Login succeeded with invalid credentials")
+    elif not success and expected_success:
+        record_test("User Login", False, "Request failed")
     elif not success and not expected_success:
         print_success("Login correctly failed with invalid credentials")
         record_test("Invalid Login Attempt", True)
     else:
-        record_test("User Login", False, "Request failed")
+        # This case should not happen - if we get here, there's a bug in our test logic
+        print_error("Unexpected test result - please check test logic")
+        record_test("Test Logic Error", False, "Unexpected test result")
     
     return None
 
