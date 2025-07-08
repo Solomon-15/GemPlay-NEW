@@ -1,0 +1,58 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Ruby Red Gradients -->
+    <linearGradient id="rubyMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ee5a52;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#d63031;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="rubyHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff9ff3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="rubyShadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#a4161a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#660708;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Glow Filter -->
+    <filter id="rubyGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Glow Background -->
+  <circle cx="60" cy="60" r="50" fill="url(#rubyMain)" opacity="0.3" filter="url(#rubyGlow)"/>
+  
+  <!-- Main Ruby Diamond -->
+  <g transform="translate(60,60)">
+    <!-- Top facet -->
+    <path d="M 0,-35 L 25,-10 L 0,0 L -25,-10 Z" fill="url(#rubyHighlight)"/>
+    
+    <!-- Left facet -->
+    <path d="M -25,-10 L 0,0 L -35,15 L -25,35 Z" fill="url(#rubyMain)"/>
+    
+    <!-- Right facet -->
+    <path d="M 25,-10 L 35,15 L 25,35 L 0,0 Z" fill="url(#rubyMain)"/>
+    
+    <!-- Bottom left facet -->
+    <path d="M 0,0 L -35,15 L 0,40 Z" fill="url(#rubyShadow)"/>
+    
+    <!-- Bottom right facet -->
+    <path d="M 0,0 L 0,40 L 35,15 Z" fill="url(#rubyShadow)"/>
+    
+    <!-- Center highlight -->
+    <circle cx="0" cy="-5" r="8" fill="url(#rubyHighlight)" opacity="0.6"/>
+    
+    <!-- Sparkle effects -->
+    <circle cx="-15" cy="-15" r="2" fill="#ffffff" opacity="0.8"/>
+    <circle cx="18" cy="-8" r="1.5" fill="#ffffff" opacity="0.6"/>
+    <circle cx="8" cy="10" r="1" fill="#ffffff" opacity="0.4"/>
+  </g>
+</svg>

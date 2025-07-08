@@ -1,0 +1,61 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Emerald Green Gradients -->
+    <linearGradient id="emeraldMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#66ff66;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#00dd88;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00aa55;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="emeraldHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#88ffaa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#66ff66;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="emeraldShadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#006633;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#004422;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Glow Filter -->
+    <filter id="emeraldGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Glow Background -->
+  <circle cx="60" cy="60" r="50" fill="url(#emeraldMain)" opacity="0.3" filter="url(#emeraldGlow)"/>
+  
+  <!-- Main Emerald Crystal -->
+  <g transform="translate(60,60)">
+    <!-- Top emerald cut -->
+    <path d="M 0,-35 L 22,-18 L 28,0 L 20,12 L 0,8 L -20,12 L -28,0 L -22,-18 Z" fill="url(#emeraldHighlight)"/>
+    
+    <!-- Left upper facet -->
+    <path d="M -22,-18 L -28,0 L -32,20 L -22,28 L -18,15 L -20,12 Z" fill="url(#emeraldMain)"/>
+    
+    <!-- Right upper facet -->
+    <path d="M 22,-18 L 20,12 L 18,15 L 22,28 L 32,20 L 28,0 Z" fill="url(#emeraldMain)"/>
+    
+    <!-- Left lower facet -->
+    <path d="M -20,12 L -18,15 L -8,32 L 0,8 Z" fill="url(#emeraldShadow)"/>
+    
+    <!-- Right lower facet -->
+    <path d="M 20,12 L 0,8 L 8,32 L 18,15 Z" fill="url(#emeraldShadow)"/>
+    
+    <!-- Bottom emerald -->
+    <path d="M -18,15 L -8,32 L 0,38 L 8,32 L 18,15 L 22,28 L 0,35 L -22,28 Z" fill="url(#emeraldShadow)"/>
+    
+    <!-- Center highlight -->
+    <rect x="-12" y="-8" width="24" height="16" rx="2" fill="url(#emeraldHighlight)" opacity="0.6"/>
+    
+    <!-- Sparkle effects -->
+    <circle cx="-16" cy="-22" r="2" fill="#ffffff" opacity="0.8"/>
+    <circle cx="18" cy="-8" r="1.5" fill="#ffffff" opacity="0.6"/>
+    <circle cx="6" cy="20" r="1" fill="#ffffff" opacity="0.4"/>
+  </g>
+</svg>
