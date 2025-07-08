@@ -9,6 +9,7 @@ const GemShowcase = () => {
       borderColor: "#ff4444", 
       buttonColor: "#ff4444",
       bgColor: "#2a1d1d",
+      glowColor: "#ff444440",
       file: "gem-red.svg" 
     },
     { 
@@ -17,6 +18,7 @@ const GemShowcase = () => {
       borderColor: "#ff8800", 
       buttonColor: "#ff8800",
       bgColor: "#2a2318",
+      glowColor: "#ff880040",
       file: "gem-orange.svg" 
     },
     { 
@@ -25,6 +27,7 @@ const GemShowcase = () => {
       borderColor: "#ffdd00", 
       buttonColor: "#ffdd00",
       bgColor: "#2a2a18",
+      glowColor: "#ffdd0040",
       file: "gem-yellow.svg" 
     },
     { 
@@ -33,6 +36,7 @@ const GemShowcase = () => {
       borderColor: "#00dd88", 
       buttonColor: "#00dd88",
       bgColor: "#182a20",
+      glowColor: "#00dd8840",
       file: "gem-green.svg" 
     },
     { 
@@ -41,6 +45,7 @@ const GemShowcase = () => {
       borderColor: "#00aaff", 
       buttonColor: "#00aaff",
       bgColor: "#18252a",
+      glowColor: "#00aaff40",
       file: "gem-cyan.svg" 
     },
     { 
@@ -49,6 +54,7 @@ const GemShowcase = () => {
       borderColor: "#4466ff", 
       buttonColor: "#4466ff",
       bgColor: "#1d1f2a",
+      glowColor: "#4466ff40",
       file: "gem-blue.svg" 
     },
     { 
@@ -57,6 +63,7 @@ const GemShowcase = () => {
       borderColor: "#aa44ff", 
       buttonColor: "#aa44ff",
       bgColor: "#251d2a",
+      glowColor: "#aa44ff40",
       file: "gem-purple.svg" 
     }
   ];
@@ -88,22 +95,36 @@ const GemShowcase = () => {
               className="rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
               style={{
                 backgroundColor: gem.bgColor,
-                border: `2px solid ${gem.borderColor}`,
+                border: `1px solid ${gem.borderColor}`,
                 boxShadow: `0 0 20px ${gem.borderColor}40`
               }}
             >
               {/* Gem Icon */}
               <div className="flex justify-center mb-6">
                 <div 
-                  className="w-24 h-24 rounded-full flex items-center justify-center"
+                  className="w-32 h-32 rounded-full flex items-center justify-center relative"
                   style={{
-                    background: `radial-gradient(circle at 30% 30%, ${gem.borderColor}80, ${gem.borderColor}40, ${gem.borderColor}20)`
+                    background: `radial-gradient(circle at 30% 30%, ${gem.borderColor}80, ${gem.borderColor}40, ${gem.borderColor}20)`,
+                    boxShadow: `0 0 30px ${gem.glowColor}, inset 0 0 15px ${gem.glowColor}`
                   }}
                 >
+                  {/* Background glow */}
+                  <div 
+                    className="absolute inset-0 rounded-full animate-pulse"
+                    style={{
+                      background: `radial-gradient(circle, ${gem.glowColor}, transparent 70%)`,
+                      filter: 'blur(8px)',
+                      transform: 'scale(1.2)'
+                    }}
+                  ></div>
+                  
                   <img
                     src={`/gems/${gem.file}`}
                     alt={gem.name}
-                    className="w-16 h-16 object-contain drop-shadow-lg"
+                    className="w-20 h-20 object-contain drop-shadow-lg relative z-10"
+                    style={{
+                      filter: `drop-shadow(0 0 10px ${gem.glowColor})`
+                    }}
                   />
                 </div>
               </div>
@@ -116,8 +137,7 @@ const GemShowcase = () => {
                 
                 {/* Price */}
                 <div className="mb-6">
-                  <span className="font-roboto text-gray-400 text-sm">Price: </span>
-                  <span className="font-rajdhani text-3xl font-bold text-white">
+                  <span className="font-rajdhani text-4xl font-bold text-green-400">
                     ${gem.price}
                   </span>
                 </div>
@@ -127,7 +147,7 @@ const GemShowcase = () => {
                   className="w-full py-4 px-6 rounded-lg font-rajdhani font-bold text-lg text-white transition-all duration-300 hover:opacity-80 hover:scale-105 uppercase tracking-wider"
                   style={{
                     backgroundColor: 'transparent',
-                    border: `2px solid ${gem.buttonColor}`,
+                    border: `1px solid ${gem.buttonColor}`,
                     color: gem.buttonColor,
                     boxShadow: `0 0 15px ${gem.borderColor}30`
                   }}
