@@ -2,24 +2,26 @@
   <defs>
     <!-- Ruby Red Gradients -->
     <linearGradient id="rubyMain" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
-      <stop offset="50%" style="stop-color:#ee5a52;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#d63031;stop-opacity:1" />
+      <stop offset="0%" style="stop-color:#ff6666;stop-opacity:1" />
+      <stop offset="30%" style="stop-color:#ff4444;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#ee2222;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#cc0000;stop-opacity:1" />
     </linearGradient>
     
-    <linearGradient id="rubyHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#ff9ff3;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:1" />
+    <linearGradient id="rubyLight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffaaaa;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ff8888;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6666;stop-opacity:1" />
     </linearGradient>
     
-    <linearGradient id="rubyShadow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#a4161a;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#660708;stop-opacity:1" />
+    <linearGradient id="rubyDark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#aa0000;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#660000;stop-opacity:1" />
     </linearGradient>
     
     <!-- Glow Filter -->
-    <filter id="rubyGlow">
-      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+    <filter id="rubyGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
       <feMerge> 
         <feMergeNode in="coloredBlur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -27,32 +29,33 @@
     </filter>
   </defs>
   
-  <!-- Glow Background -->
-  <circle cx="60" cy="60" r="50" fill="url(#rubyMain)" opacity="0.3" filter="url(#rubyGlow)"/>
-  
   <!-- Main Ruby Diamond -->
-  <g transform="translate(60,60)">
-    <!-- Top facet -->
-    <path d="M 0,-35 L 25,-10 L 0,0 L -25,-10 Z" fill="url(#rubyHighlight)"/>
+  <g transform="translate(60,60)" filter="url(#rubyGlow)">
+    <!-- Top diamond facet -->
+    <path d="M 0,-30 L 20,-12 L 25,8 L 0,5 L -25,8 L -20,-12 Z" fill="url(#rubyLight)" stroke="#ff4444" stroke-width="0.5"/>
     
     <!-- Left facet -->
-    <path d="M -25,-10 L 0,0 L -35,15 L -25,35 Z" fill="url(#rubyMain)"/>
+    <path d="M -20,-12 L -25,8 L -30,25 L -15,30 L 0,5 Z" fill="url(#rubyMain)" stroke="#ff4444" stroke-width="0.5"/>
     
     <!-- Right facet -->
-    <path d="M 25,-10 L 35,15 L 25,35 L 0,0 Z" fill="url(#rubyMain)"/>
+    <path d="M 20,-12 L 0,5 L 15,30 L 30,25 L 25,8 Z" fill="url(#rubyMain)" stroke="#ff4444" stroke-width="0.5"/>
     
-    <!-- Bottom left facet -->
-    <path d="M 0,0 L -35,15 L 0,40 Z" fill="url(#rubyShadow)"/>
+    <!-- Bottom left -->
+    <path d="M -25,8 L 0,5 L -15,30 L -30,25 Z" fill="url(#rubyDark)" stroke="#ff4444" stroke-width="0.5"/>
     
-    <!-- Bottom right facet -->
-    <path d="M 0,0 L 0,40 L 35,15 Z" fill="url(#rubyShadow)"/>
+    <!-- Bottom right -->
+    <path d="M 25,8 L 30,25 L 15,30 L 0,5 Z" fill="url(#rubyDark)" stroke="#ff4444" stroke-width="0.5"/>
     
-    <!-- Center highlight -->
-    <circle cx="0" cy="-5" r="8" fill="url(#rubyHighlight)" opacity="0.6"/>
+    <!-- Bottom tip -->
+    <path d="M -15,30 L 0,35 L 15,30 Z" fill="url(#rubyDark)" stroke="#ff4444" stroke-width="0.5"/>
     
-    <!-- Sparkle effects -->
-    <circle cx="-15" cy="-15" r="2" fill="#ffffff" opacity="0.8"/>
-    <circle cx="18" cy="-8" r="1.5" fill="#ffffff" opacity="0.6"/>
-    <circle cx="8" cy="10" r="1" fill="#ffffff" opacity="0.4"/>
+    <!-- Highlight -->
+    <ellipse cx="-8" cy="-8" rx="6" ry="4" fill="#ffffff" opacity="0.6"/>
+    <ellipse cx="0" cy="-15" rx="8" ry="3" fill="#ffffff" opacity="0.4"/>
+    
+    <!-- Sparkles -->
+    <circle cx="-12" cy="-18" r="1.5" fill="#ffffff" opacity="0.8"/>
+    <circle cx="15" cy="-5" r="1" fill="#ffffff" opacity="0.6"/>
+    <circle cx="8" cy="12" r="0.8" fill="#ffffff" opacity="0.4"/>
   </g>
 </svg>

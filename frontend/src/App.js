@@ -3,62 +3,135 @@ import "./App.css";
 
 const GemShowcase = () => {
   const gems = [
-    { name: "Ruby", price: 1, color: "gem-ruby", file: "gem-red.svg" },
-    { name: "Amber", price: 2, color: "gem-amber", file: "gem-orange.svg" },
-    { name: "Topaz", price: 5, color: "gem-topaz", file: "gem-yellow.svg" },
-    { name: "Emerald", price: 10, color: "gem-emerald", file: "gem-green.svg" },
-    { name: "Aquamarine", price: 25, color: "gem-aquamarine", file: "gem-cyan.svg" },
-    { name: "Sapphire", price: 50, color: "gem-sapphire", file: "gem-blue.svg" },
-    { name: "Magic", price: 100, color: "gem-magic", file: "gem-purple.svg" }
+    { 
+      name: "Ruby", 
+      price: 1, 
+      borderColor: "#ff4444", 
+      buttonColor: "#ff4444",
+      bgColor: "#2a1d1d",
+      file: "gem-red.svg" 
+    },
+    { 
+      name: "Amber", 
+      price: 2, 
+      borderColor: "#ff8800", 
+      buttonColor: "#ff8800",
+      bgColor: "#2a2318",
+      file: "gem-orange.svg" 
+    },
+    { 
+      name: "Topaz", 
+      price: 5, 
+      borderColor: "#ffdd00", 
+      buttonColor: "#ffdd00",
+      bgColor: "#2a2a18",
+      file: "gem-yellow.svg" 
+    },
+    { 
+      name: "Emerald", 
+      price: 10, 
+      borderColor: "#00dd88", 
+      buttonColor: "#00dd88",
+      bgColor: "#182a20",
+      file: "gem-green.svg" 
+    },
+    { 
+      name: "Aquamarine", 
+      price: 25, 
+      borderColor: "#00aaff", 
+      buttonColor: "#00aaff",
+      bgColor: "#18252a",
+      file: "gem-cyan.svg" 
+    },
+    { 
+      name: "Sapphire", 
+      price: 50, 
+      borderColor: "#4466ff", 
+      buttonColor: "#4466ff",
+      bgColor: "#1d1f2a",
+      file: "gem-blue.svg" 
+    },
+    { 
+      name: "Magic", 
+      price: 100, 
+      borderColor: "#aa44ff", 
+      buttonColor: "#aa44ff",
+      bgColor: "#251d2a",
+      file: "gem-purple.svg" 
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-primary p-8">
+    <div className="min-h-screen" style={{ 
+      background: 'linear-gradient(135deg, #0a0a0f 0%, #151520 50%, #1a1a2e 100%)' 
+    }}>
       {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="font-russo text-4xl md:text-6xl text-accent-primary mb-4">
+      <div className="text-center py-12">
+        <h1 className="font-russo text-5xl md:text-7xl text-white mb-4">
           GemPlay
         </h1>
-        <p className="font-roboto text-xl text-text-secondary">
+        <p className="font-roboto text-xl text-gray-400">
           PvP NFT Gem Battle Game
         </p>
       </div>
 
       {/* Gem Grid */}
-      <div className="max-w-6xl mx-auto">
-        <h2 className="font-russo text-3xl text-center mb-8 text-accent-secondary">
+      <div className="max-w-7xl mx-auto px-8">
+        <h2 className="font-russo text-4xl text-center mb-12 text-white">
           Collectible Gems
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {gems.map((gem, index) => (
             <div
               key={index}
-              className={`bg-surface-card border border-border-primary rounded-lg p-6 hover:bg-surface-hover transition-all duration-300 hover:shadow-gem hover:scale-105`}
+              className="rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+              style={{
+                backgroundColor: gem.bgColor,
+                border: `2px solid ${gem.borderColor}`,
+                boxShadow: `0 0 20px ${gem.borderColor}40`
+              }}
             >
               {/* Gem Icon */}
-              <div className="flex justify-center mb-4">
-                <img
-                  src={`/gems/${gem.file}`}
-                  alt={gem.name}
-                  className="w-20 h-20 object-contain"
-                />
+              <div className="flex justify-center mb-6">
+                <div 
+                  className="w-24 h-24 rounded-full flex items-center justify-center"
+                  style={{
+                    background: `radial-gradient(circle at 30% 30%, ${gem.borderColor}80, ${gem.borderColor}40, ${gem.borderColor}20)`
+                  }}
+                >
+                  <img
+                    src={`/gems/${gem.file}`}
+                    alt={gem.name}
+                    className="w-16 h-16 object-contain drop-shadow-lg"
+                  />
+                </div>
               </div>
               
               {/* Gem Info */}
               <div className="text-center">
-                <h3 className="font-russo text-xl text-text-primary mb-2">
+                <h3 className="font-russo text-2xl text-white mb-4">
                   {gem.name}
                 </h3>
-                <div className="flex justify-center items-center space-x-4 mb-4">
-                  <span className="font-roboto text-text-secondary">Price:</span>
-                  <span className="font-rajdhani text-2xl font-bold text-accent-primary">
+                
+                {/* Price */}
+                <div className="mb-6">
+                  <span className="font-roboto text-gray-400 text-sm">Price: </span>
+                  <span className="font-rajdhani text-3xl font-bold text-white">
                     ${gem.price}
                   </span>
                 </div>
                 
                 {/* Action Button */}
-                <button className="w-full bg-gradient-accent hover:opacity-90 text-white font-rajdhani font-bold py-3 px-6 rounded-lg transition-all duration-300 hover:shadow-glow-primary">
+                <button 
+                  className="w-full py-4 px-6 rounded-lg font-rajdhani font-bold text-lg text-white transition-all duration-300 hover:opacity-80 hover:scale-105 uppercase tracking-wider"
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: `2px solid ${gem.buttonColor}`,
+                    color: gem.buttonColor,
+                    boxShadow: `0 0 15px ${gem.borderColor}30`
+                  }}
+                >
                   VIEW
                 </button>
               </div>
@@ -68,8 +141,8 @@ const GemShowcase = () => {
       </div>
 
       {/* Footer */}
-      <div className="text-center mt-16">
-        <p className="font-roboto text-text-muted">
+      <div className="text-center py-16">
+        <p className="font-roboto text-gray-500">
           Powered by cutting-edge technology
         </p>
       </div>
