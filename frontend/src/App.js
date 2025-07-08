@@ -1,199 +1,280 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
+import axios from "axios";
+import Shop from "./components/Shop";
+import Inventory from "./components/Inventory";
 
-const GemShowcase = () => {
-  const gems = [
-    { 
-      name: "Ruby", 
-      price: 1, 
-      borderColor: "#ff4444", 
-      buttonColor: "#ff4444",
-      bgColor: "#2a1d1d",
-      glowColor: "#ff444440",
-      file: "gem-red.svg" 
-    },
-    { 
-      name: "Amber", 
-      price: 2, 
-      borderColor: "#ff8800", 
-      buttonColor: "#ff8800",
-      bgColor: "#2a2318",
-      glowColor: "#ff880040",
-      file: "gem-orange.svg" 
-    },
-    { 
-      name: "Topaz", 
-      price: 5, 
-      borderColor: "#ffdd00", 
-      buttonColor: "#ffdd00",
-      bgColor: "#2a2a18",
-      glowColor: "#ffdd0040",
-      file: "gem-yellow.svg" 
-    },
-    { 
-      name: "Emerald", 
-      price: 10, 
-      borderColor: "#00dd88", 
-      buttonColor: "#00dd88",
-      bgColor: "#182a20",
-      glowColor: "#00dd8840",
-      file: "gem-green.svg" 
-    },
-    { 
-      name: "Aquamarine", 
-      price: 25, 
-      borderColor: "#00aaff", 
-      buttonColor: "#00aaff",
-      bgColor: "#18252a",
-      glowColor: "#00aaff40",
-      file: "gem-cyan.svg" 
-    },
-    { 
-      name: "Sapphire", 
-      price: 50, 
-      borderColor: "#4466ff", 
-      buttonColor: "#4466ff",
-      bgColor: "#1d1f2a",
-      glowColor: "#4466ff40",
-      file: "gem-blue.svg" 
-    },
-    { 
-      name: "Magic", 
-      price: 100, 
-      borderColor: "#aa44ff", 
-      buttonColor: "#aa44ff",
-      bgColor: "#251d2a",
-      glowColor: "#aa44ff40",
-      file: "gem-purple.svg" 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+// Login Component
+const LoginForm = ({ onLogin }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    username: '',
+    gender: 'male'
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        // Login
+        const response = await axios.post(`${API}/auth/login`, {
+          email: formData.email,
+          password: formData.password
+        });
+        
+        localStorage.setItem('token', response.data.access_token);
+        onLogin(response.data.user);
+      } else {
+        // Register
+        const response = await axios.post(`${API}/auth/register`, {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          gender: formData.gender
+        });
+        
+        alert(`Registration successful! Verification token: ${response.data.verification_token}`);
+        
+        // Auto verify for demo
+        await axios.post(`${API}/auth/verify-email`, {
+          token: response.data.verification_token
+        });
+        
+        // Auto login after verification
+        const loginResponse = await axios.post(`${API}/auth/login`, {
+          email: formData.email,
+          password: formData.password
+        });
+        
+        localStorage.setItem('token', loginResponse.data.access_token);
+        onLogin(loginResponse.data.user);
+      }
+    } catch (error) {
+      alert(error.response?.data?.detail || 'An error occurred');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   return (
-    <div className="min-h-screen" style={{ 
-      background: 'linear-gradient(135deg, #0a0a0f 0%, #151520 50%, #1a1a2e 100%)' 
-    }}>
-      {/* Header */}
-      <div className="text-center py-12">
-        <h1 className="font-russo text-5xl md:text-7xl text-white mb-4">
+    <div className="min-h-screen bg-gradient-primary flex items-center justify-center p-8">
+      <div className="bg-surface-card border border-border-primary rounded-xl p-8 max-w-md w-full">
+        <h1 className="font-russo text-3xl text-accent-primary text-center mb-2">
           GemPlay
         </h1>
-        <p className="font-roboto text-xl text-gray-400">
+        <p className="font-roboto text-text-secondary text-center mb-6">
           PvP NFT Gem Battle Game
         </p>
-      </div>
-
-      {/* Gem Grid */}
-      <div className="max-w-7xl mx-auto px-8">
-        <h2 className="font-russo text-4xl text-center mb-12 text-white">
-          Collectible Gems
-        </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {gems.map((gem, index) => (
-            <div
-              key={index}
-              className="rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl group cursor-pointer"
-              style={{
-                backgroundColor: gem.bgColor,
-                border: `1px solid ${gem.borderColor}`,
-                boxShadow: `0 0 20px ${gem.borderColor}40`
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.border = `2px solid #23d364`;
-                e.currentTarget.style.boxShadow = `0 0 30px #23d36440, 0 0 20px ${gem.borderColor}60`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.border = `1px solid ${gem.borderColor}`;
-                e.currentTarget.style.boxShadow = `0 0 20px ${gem.borderColor}40`;
-              }}
-            >
-              {/* Gem Icon */}
-              <div className="flex justify-center mb-6">
-                <div 
-                  className="w-32 h-32 flex items-center justify-center relative transition-all duration-300 group-hover:scale-110"
-                >
-                  {/* Background glow */}
-                  <div 
-                    className="absolute inset-0 animate-pulse transition-all duration-300 group-hover:scale-125"
-                    style={{
-                      background: `radial-gradient(circle, ${gem.glowColor}, transparent 70%)`,
-                      filter: 'blur(8px)',
-                      transform: 'scale(1.2)'
-                    }}
-                  ></div>
-                  
-                  <img
-                    src={`/gems/${gem.file}`}
-                    alt={gem.name}
-                    className="w-28 h-28 object-contain drop-shadow-lg relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:brightness-125"
-                    style={{
-                      filter: `drop-shadow(0 0 10px ${gem.glowColor})`
-                    }}
-                  />
-                  
-                  {/* Enhanced glow on hover */}
-                  <div 
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{
-                      background: `radial-gradient(circle, ${gem.borderColor}60, transparent 60%)`,
-                      filter: 'blur(15px)',
-                      transform: 'scale(1.5)'
-                    }}
-                  ></div>
-                </div>
-              </div>
-              
-              {/* Gem Info */}
-              <div className="text-center">
-                <h3 className="font-russo text-2xl text-white mb-4 transition-all duration-300 group-hover:text-green-400">
-                  {gem.name}
-                </h3>
-                
-                {/* Price */}
-                <div className="mb-6">
-                  <span className="font-rajdhani text-4xl font-bold text-green-400 transition-all duration-300 group-hover:text-green-300 group-hover:text-5xl">
-                    ${gem.price}
-                  </span>
-                </div>
-                
-                {/* Action Button */}
-                <button 
-                  className="w-full py-4 px-6 rounded-lg font-rajdhani font-bold text-lg text-white transition-all duration-300 hover:opacity-80 hover:scale-105 uppercase tracking-wider group-hover:shadow-lg"
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: `1px solid ${gem.buttonColor}`,
-                    color: gem.buttonColor,
-                    boxShadow: `0 0 15px ${gem.borderColor}30`
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = `0 0 25px ${gem.borderColor}50, 0 0 10px #23d36430`;
-                    e.currentTarget.style.borderColor = '#23d364';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = `0 0 15px ${gem.borderColor}30`;
-                    e.currentTarget.style.borderColor = gem.buttonColor;
-                  }}
-                >
-                  VIEW
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="flex mb-6">
+          <button
+            onClick={() => setIsLogin(true)}
+            className={`flex-1 py-2 px-4 rounded-l-lg font-rajdhani font-bold transition-colors ${
+              isLogin ? 'bg-accent-primary text-white' : 'bg-surface-sidebar text-text-secondary'
+            }`}
+          >
+            LOGIN
+          </button>
+          <button
+            onClick={() => setIsLogin(false)}
+            className={`flex-1 py-2 px-4 rounded-r-lg font-rajdhani font-bold transition-colors ${
+              !isLogin ? 'bg-accent-primary text-white' : 'bg-surface-sidebar text-text-secondary'
+            }`}
+          >
+            REGISTER
+          </button>
         </div>
-      </div>
 
-      {/* Footer */}
-      <div className="text-center py-16">
-        <p className="font-roboto text-gray-500">
-          Powered by cutting-edge technology
-        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <>
+              <input
+                type="text"
+                placeholder="Username"
+                value={formData.username}
+                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                className="w-full px-4 py-3 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+                required
+              />
+              <select
+                value={formData.gender}
+                onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                className="w-full px-4 py-3 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+              >
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </>
+          )}
+          
+          <input
+            type="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+            className="w-full px-4 py-3 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+            required
+          />
+          
+          <input
+            type="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={(e) => setFormData({...formData, password: e.target.value})}
+            className="w-full px-4 py-3 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+            required
+          />
+          
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-gradient-accent text-white font-rajdhani font-bold text-lg rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {loading ? 'LOADING...' : (isLogin ? 'LOGIN' : 'REGISTER')}
+          </button>
+        </form>
       </div>
     </div>
   );
 };
 
+// Main App Component
 function App() {
-  return <GemShowcase />;
+  const [user, setUser] = useState(null);
+  const [currentView, setCurrentView] = useState('shop');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const response = await axios.get(`${API}/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUser(response.data);
+      } catch (error) {
+        localStorage.removeItem('token');
+      }
+    }
+    setLoading(false);
+  };
+
+  const handleLogin = (userData) => {
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setCurrentView('shop');
+  };
+
+  const handleClaimDailyBonus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/auth/daily-bonus`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(response.data.message);
+      checkAuthStatus(); // Refresh user data
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Error claiming daily bonus');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
+        <div className="text-white text-xl font-roboto">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginForm onLogin={handleLogin} />;
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-primary">
+      {/* Navigation */}
+      <nav className="bg-surface-sidebar border-b border-border-primary p-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-8">
+            <h1 className="font-russo text-2xl text-accent-primary">GemPlay</h1>
+            
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setCurrentView('shop')}
+                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
+                  currentView === 'shop' 
+                    ? 'bg-accent-primary text-white' 
+                    : 'text-text-secondary hover:text-white'
+                }`}
+              >
+                SHOP
+              </button>
+              
+              <button
+                onClick={() => setCurrentView('inventory')}
+                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
+                  currentView === 'inventory' 
+                    ? 'bg-accent-primary text-white' 
+                    : 'text-text-secondary hover:text-white'
+                }`}
+              >
+                INVENTORY
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="text-right">
+              <p className="font-roboto text-text-secondary text-sm">Welcome, {user.username}</p>
+              <p className="font-rajdhani text-green-400 font-bold">
+                ${user.virtual_balance?.toFixed(2) || '0.00'}
+              </p>
+            </div>
+            
+            <button
+              onClick={handleClaimDailyBonus}
+              className="px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity text-sm"
+            >
+              DAILY BONUS
+            </button>
+            
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors text-sm"
+            >
+              LOGOUT
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="min-h-screen">
+        {currentView === 'shop' && (
+          <Shop user={user} onUpdateUser={checkAuthStatus} />
+        )}
+        {currentView === 'inventory' && (
+          <Inventory user={user} onUpdateUser={checkAuthStatus} />
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default App;
