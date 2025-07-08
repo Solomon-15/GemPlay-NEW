@@ -2,16 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-        "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-        "Helvetica Neue", sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-        monospace;
+/* GemPlay Color Scheme */
+:root {
+  /* Background gradients */
+  --bg-primary: #010b20;
+  --bg-secondary: #011941;
+  --bg-gradient: linear-gradient(135deg, #010b20 0%, #011941 100%);
+  
+  /* Surface colors */
+  --surface-sidebar: #0f172a;
+  --surface-card: #081730;
+  --surface-hover: #1a1f3a;
+  
+  /* Accent colors */
+  --accent-primary: #23d364;
+  --accent-secondary: #23d3a7;
+  --accent-gradient: linear-gradient(135deg, #23d364 0%, #23d3a7 100%);
+  
+  /* Text colors */
+  --text-primary: #ffffff;
+  --text-secondary: #c2c2c2;
+  --text-muted: #888888;
+  
+  /* Border colors */
+  --border-primary: #1d1d36;
+  --border-secondary: #2a2a4a;
+  
+  /* Gem colors */
+  --gem-ruby: #d63031;
+  --gem-amber: #ff6b35;
+  --gem-topaz: #ffcc02;
+  --gem-emerald: #00aa55;
+  --gem-aquamarine: #0099cc;
+  --gem-sapphire: #0044cc;
+  --gem-magic: #6622cc;
+  
+  /* Status colors */
+  --success: #00dd88;
+  --warning: #ffcc02;
+  --error: #d63031;
+  --info: #0099cc;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+  
+  /* Glow effects */
+  --glow-primary: 0 0 10px rgba(35, 211, 100, 0.3);
+  --glow-secondary: 0 0 10px rgba(35, 211, 167, 0.3);
+  --glow-gem: 0 0 15px rgba(102, 34, 204, 0.4);
 }
