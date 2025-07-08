@@ -89,22 +89,29 @@ def make_request(
     if auth_token:
         headers["Authorization"] = f"Bearer {auth_token}"
     
+    print(f"Making {method} request to {url}")
+    if data:
+        print(f"Request data: {json.dumps(data, indent=2)}")
+    
     if data and method.lower() in ["post", "put", "patch"]:
         headers["Content-Type"] = "application/json"
         response = requests.request(method, url, json=data, headers=headers)
     else:
         response = requests.request(method, url, params=data, headers=headers)
     
+    print(f"Response status: {response.status_code}")
+    
     try:
         response_data = response.json()
+        print(f"Response data: {json.dumps(response_data, indent=2)}")
     except json.JSONDecodeError:
         response_data = {"text": response.text}
+        print(f"Response text: {response.text}")
     
     success = response.status_code == expected_status
     
     if not success:
         print_error(f"Expected status {expected_status}, got {response.status_code}")
-        print_error(f"Response: {json.dumps(response_data, indent=2)}")
     
     return response_data, success
 
