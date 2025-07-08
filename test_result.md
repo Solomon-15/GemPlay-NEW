@@ -206,15 +206,18 @@ backend:
 
   - task: "Invalid Login Attempt"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "Login with incorrect password succeeds when it should fail. This is a security issue that needs to be fixed."
+      - working: true
+        agent: "testing"
+        comment: "After fixing the test script, we confirmed that login with incorrect password correctly fails with a 401 Unauthorized error and the message 'Incorrect email or password'."
 
   - task: "Admin Users Creation"
     implemented: true
