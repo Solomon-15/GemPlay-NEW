@@ -121,7 +121,7 @@ const GemShowcase = () => {
                   <img
                     src={`/gems/${gem.file}`}
                     alt={gem.name}
-                    className="w-20 h-20 object-contain drop-shadow-lg relative z-10"
+                    className="w-28 h-28 object-contain drop-shadow-lg relative z-10"
                     style={{
                       filter: `drop-shadow(0 0 10px ${gem.glowColor})`
                     }}
