@@ -101,3 +101,171 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+## user_problem_statement: Протестировать ФАЗУ 1: ФУНДАМЕНТ GemPlay API
+
+backend:
+  - task: "API Root Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "API root endpoint returns correct response: {\"message\": \"GemPlay API is running!\", \"version\": \"1.0.0\"}"
+
+  - task: "Health Check Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Health check endpoint returns healthy status correctly"
+
+  - task: "User Registration"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "User registration works correctly. Creates user with initial balance of $1000 and provides verification token."
+
+  - task: "Email Verification"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Email verification works correctly with the provided token"
+
+  - task: "User Login"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "User login works correctly and returns JWT token and user information"
+
+  - task: "Get Current User Info"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Get current user info endpoint works correctly with JWT token"
+
+  - task: "Daily Bonus Claim"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "Daily bonus claim fails with 'Daily bonus not available yet' error. This is likely because the last_daily_reset time is set to the current time when the user is created, so the 24-hour check fails."
+
+  - task: "Duplicate Registration Prevention"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "System correctly prevents duplicate email and username registrations"
+
+  - task: "Invalid Login Attempt"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "Login with incorrect password succeeds when it should fail. This is a security issue that needs to be fixed."
+
+  - task: "Admin Users Creation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Admin and Super Admin users are created correctly and can be logged in"
+
+  - task: "Initial Gems Creation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Initial gems are created for new users as specified in the registration endpoint"
+
+frontend:
+  - task: "Frontend Testing"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Frontend testing was not part of this test phase"
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Daily Bonus Claim"
+    - "Invalid Login Attempt"
+  stuck_tasks:
+    - "Daily Bonus Claim"
+    - "Invalid Login Attempt"
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "Completed initial testing of GemPlay API Phase 1. Found two issues: 1) Daily bonus claim fails with 'Daily bonus not available yet' error, likely due to the last_daily_reset time being set to the current time when the user is created. 2) Login with incorrect password succeeds when it should fail, which is a security issue."
