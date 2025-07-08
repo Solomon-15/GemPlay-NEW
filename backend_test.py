@@ -262,7 +262,15 @@ def test_login(email: str, password: str, expected_success: bool = True) -> Opti
     
     response, success = make_request("POST", "/auth/login", data=login_data, expected_status=expected_status)
     
-    if success and expected_success:
+    # For invalid login test
+    if not expected_success:
+        if response.get("detail") == "Incorrect email or password" and not success:
+            print_success("Login correctly failed with invalid credentials")
+            record_test("Invalid Login Attempt", True)
+            return None
+    
+    # For valid login test
+    if expected_success and success:
         if "access_token" in response and "user" in response:
             print_success(f"User logged in successfully")
             print_success(f"User details: {response['user']['username']} ({response['user']['email']})")
@@ -272,15 +280,8 @@ def test_login(email: str, password: str, expected_success: bool = True) -> Opti
         else:
             print_error(f"Login response missing expected fields: {response}")
             record_test("User Login", False, "Response missing expected fields")
-    elif not success and expected_success:
-        record_test("User Login", False, "Request failed")
-    elif not success and not expected_success:
-        print_success("Login correctly failed with invalid credentials")
-        record_test("Invalid Login Attempt", True)
     else:
-        # This case should not happen - if we get here, there's a bug in our test logic
-        print_error("Unexpected test result - please check test logic")
-        record_test("Test Logic Error", False, "Unexpected test result")
+        record_test("User Login", False, "Request failed")
     
     return None
 
