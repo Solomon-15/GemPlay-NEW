@@ -250,6 +250,9 @@ def test_login(email: str, password: str, expected_success: bool = True) -> Opti
     }
     
     expected_status = 200 if expected_success else 401
+    print(f"Attempting login with email: {email}, password: {password}")
+    print(f"Expected status: {expected_status}")
+    
     response, success = make_request("POST", "/auth/login", data=login_data, expected_status=expected_status)
     
     if success and expected_success:
