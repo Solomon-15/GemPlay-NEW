@@ -280,9 +280,15 @@ def test_login(email: str, password: str, expected_success: bool = True) -> Opti
         else:
             print_error(f"Login response missing expected fields: {response}")
             record_test("User Login", False, "Response missing expected fields")
-    else:
-        record_test("User Login", False, "Request failed")
+            return None
     
+    if expected_success and not success:
+        record_test("User Login", False, f"Login failed: {response}")
+        return None
+    
+    # This should not happen
+    print_error("Unexpected test result - please check test logic")
+    record_test("Test Logic Error", False, "Unexpected test result")
     return None
 
 def test_get_current_user(token: str) -> None:
