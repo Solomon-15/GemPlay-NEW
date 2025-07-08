@@ -92,17 +92,25 @@ const GemShowcase = () => {
           {gems.map((gem, index) => (
             <div
               key={index}
-              className="rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+              className="rounded-xl p-8 transition-all duration-300 hover:scale-105 hover:shadow-2xl group cursor-pointer"
               style={{
                 backgroundColor: gem.bgColor,
                 border: `1px solid ${gem.borderColor}`,
                 boxShadow: `0 0 20px ${gem.borderColor}40`
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.border = `2px solid #23d364`;
+                e.currentTarget.style.boxShadow = `0 0 30px #23d36440, 0 0 20px ${gem.borderColor}60`;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.border = `1px solid ${gem.borderColor}`;
+                e.currentTarget.style.boxShadow = `0 0 20px ${gem.borderColor}40`;
+              }}
             >
               {/* Gem Icon */}
               <div className="flex justify-center mb-6">
                 <div 
-                  className="w-32 h-32 rounded-full flex items-center justify-center relative"
+                  className="w-32 h-32 rounded-full flex items-center justify-center relative transition-all duration-300 group-hover:scale-110"
                   style={{
                     background: `radial-gradient(circle at 30% 30%, ${gem.borderColor}80, ${gem.borderColor}40, ${gem.borderColor}20)`,
                     boxShadow: `0 0 30px ${gem.glowColor}, inset 0 0 15px ${gem.glowColor}`
@@ -110,7 +118,7 @@ const GemShowcase = () => {
                 >
                   {/* Background glow */}
                   <div 
-                    className="absolute inset-0 rounded-full animate-pulse"
+                    className="absolute inset-0 rounded-full animate-pulse transition-all duration-300 group-hover:scale-125"
                     style={{
                       background: `radial-gradient(circle, ${gem.glowColor}, transparent 70%)`,
                       filter: 'blur(8px)',
@@ -121,35 +129,53 @@ const GemShowcase = () => {
                   <img
                     src={`/gems/${gem.file}`}
                     alt={gem.name}
-                    className="w-28 h-28 object-contain drop-shadow-lg relative z-10"
+                    className="w-28 h-28 object-contain drop-shadow-lg relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:brightness-125"
                     style={{
                       filter: `drop-shadow(0 0 10px ${gem.glowColor})`
                     }}
                   />
+                  
+                  {/* Enhanced glow on hover */}
+                  <div 
+                    className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{
+                      background: `radial-gradient(circle, ${gem.borderColor}60, transparent 60%)`,
+                      filter: 'blur(15px)',
+                      transform: 'scale(1.5)'
+                    }}
+                  ></div>
                 </div>
               </div>
               
               {/* Gem Info */}
               <div className="text-center">
-                <h3 className="font-russo text-2xl text-white mb-4">
+                <h3 className="font-russo text-2xl text-white mb-4 transition-all duration-300 group-hover:text-green-400">
                   {gem.name}
                 </h3>
                 
                 {/* Price */}
                 <div className="mb-6">
-                  <span className="font-rajdhani text-4xl font-bold text-green-400">
+                  <span className="font-rajdhani text-4xl font-bold text-green-400 transition-all duration-300 group-hover:text-green-300 group-hover:text-5xl">
                     ${gem.price}
                   </span>
                 </div>
                 
                 {/* Action Button */}
                 <button 
-                  className="w-full py-4 px-6 rounded-lg font-rajdhani font-bold text-lg text-white transition-all duration-300 hover:opacity-80 hover:scale-105 uppercase tracking-wider"
+                  className="w-full py-4 px-6 rounded-lg font-rajdhani font-bold text-lg text-white transition-all duration-300 hover:opacity-80 hover:scale-105 uppercase tracking-wider group-hover:shadow-lg"
                   style={{
                     backgroundColor: 'transparent',
                     border: `1px solid ${gem.buttonColor}`,
                     color: gem.buttonColor,
                     boxShadow: `0 0 15px ${gem.borderColor}30`
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = `0 0 25px ${gem.borderColor}50, 0 0 10px #23d36430`;
+                    e.currentTarget.style.borderColor = '#23d364';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = `0 0 15px ${gem.borderColor}30`;
+                    e.currentTarget.style.borderColor = gem.buttonColor;
                   }}
                 >
                   VIEW
