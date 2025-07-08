@@ -110,15 +110,11 @@ const GemShowcase = () => {
               {/* Gem Icon */}
               <div className="flex justify-center mb-6">
                 <div 
-                  className="w-32 h-32 rounded-full flex items-center justify-center relative transition-all duration-300 group-hover:scale-110"
-                  style={{
-                    background: `radial-gradient(circle at 30% 30%, ${gem.borderColor}80, ${gem.borderColor}40, ${gem.borderColor}20)`,
-                    boxShadow: `0 0 30px ${gem.glowColor}, inset 0 0 15px ${gem.glowColor}`
-                  }}
+                  className="w-32 h-32 flex items-center justify-center relative transition-all duration-300 group-hover:scale-110"
                 >
                   {/* Background glow */}
                   <div 
-                    className="absolute inset-0 rounded-full animate-pulse transition-all duration-300 group-hover:scale-125"
+                    className="absolute inset-0 animate-pulse transition-all duration-300 group-hover:scale-125"
                     style={{
                       background: `radial-gradient(circle, ${gem.glowColor}, transparent 70%)`,
                       filter: 'blur(8px)',
@@ -137,7 +133,7 @@ const GemShowcase = () => {
                   
                   {/* Enhanced glow on hover */}
                   <div 
-                    className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     style={{
                       background: `radial-gradient(circle, ${gem.borderColor}60, transparent 60%)`,
                       filter: 'blur(15px)',
