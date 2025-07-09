@@ -245,6 +245,13 @@ def test_invalid_refresh_token(username: str) -> None:
         print_success("Invalid refresh token correctly rejected")
         record_test(f"Invalid Refresh Token - {username}", True)
     else:
+        print_error(f"Invalid refresh token not handled correctly: {response}")
+        record_test(f"Invalid Refresh Token - {username}", False, f"Unexpected response: {response}")
+    
+    if not success and "detail" in response and "Invalid or expired refresh token" in response["detail"]:
+        print_success("Invalid refresh token correctly rejected")
+        record_test(f"Invalid Refresh Token - {username}", True)
+    else:
         print_error(f"Invalid refresh token not correctly rejected: {response}")
         record_test(f"Invalid Refresh Token - {username}", False, f"Unexpected response: {response}")
 
