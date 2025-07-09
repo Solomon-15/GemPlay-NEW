@@ -962,6 +962,65 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user information."""
     return UserResponse(**current_user.dict())
 
+@auth_router.post("/refresh", response_model=Token)
+async def refresh_access_token(refresh_token: str):
+    """Refresh access token using refresh token."""
+    try:
+        # Find and validate refresh token
+        token_doc = await db.refresh_tokens.find_one({
+            "token": refresh_token,
+            "is_active": True,
+            "expires_at": {"$gt": datetime.utcnow()}
+        })
+        
+        if not token_doc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired refresh token"
+            )
+        
+        # Get user
+        user = await db.users.find_one({"id": token_doc["user_id"]})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        user_obj = User(**user)
+        
+        # Check if user is still active
+        if user_obj.status != UserStatus.ACTIVE:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User account is not active"
+            )
+        
+        # Create new access token
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user_obj.id}, expires_delta=access_token_expires
+        )
+        
+        # Create new refresh token
+        new_refresh_token = await create_refresh_token(user_obj.id)
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            refresh_token=new_refresh_token,
+            user=UserResponse(**user_obj.dict())
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error refreshing token: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to refresh token"
+        )
+
 @auth_router.post("/daily-bonus", response_model=dict)
 async def claim_daily_bonus(current_user: User = Depends(get_current_user)):
     """Claim daily bonus of $1000."""
