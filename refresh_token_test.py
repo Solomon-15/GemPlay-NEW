@@ -237,8 +237,7 @@ def test_invalid_refresh_token(username: str) -> None:
     
     response, success = make_request(
         "POST", 
-        "/auth/refresh", 
-        data={"refresh_token": invalid_token},
+        f"/auth/refresh?refresh_token={invalid_token}",
         expected_status=401
     )
     
