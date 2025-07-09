@@ -141,18 +141,27 @@ def test_get_all_bots(admin_token: str) -> List[Dict[str, Any]]:
         record_test("GET /api/bots", False, "No admin token")
         return []
     
-    response, success = make_request("GET", "/bots", auth_token=admin_token)
-    
-    if success:
-        if isinstance(response, list):
-            print_success(f"Successfully retrieved {len(response)} bots")
-            record_test("GET /api/bots", True)
-            return response
+    try:
+        response, success = make_request("GET", "/bots", auth_token=admin_token)
+        
+        if success:
+            if isinstance(response, list):
+                print_success(f"Successfully retrieved {len(response)} bots")
+                record_test("GET /api/bots", True)
+                return response
+            else:
+                print_error("Response is not a list")
+                record_test("GET /api/bots", False, "Response is not a list")
         else:
-            print_error("Response is not a list")
-            record_test("GET /api/bots", False, "Response is not a list")
-    else:
-        record_test("GET /api/bots", False, "Request failed")
+            # If the endpoint returns 500, we'll mark it as a known issue but continue testing
+            if response.get("text", "").strip() == "Internal Server Error":
+                print_warning("GET /api/bots endpoint returns 500 Internal Server Error - known issue")
+                record_test("GET /api/bots", False, "Internal Server Error (known issue)")
+            else:
+                record_test("GET /api/bots", False, "Request failed")
+    except Exception as e:
+        print_error(f"Exception occurred: {str(e)}")
+        record_test("GET /api/bots", False, f"Exception: {str(e)}")
     
     return []
 
