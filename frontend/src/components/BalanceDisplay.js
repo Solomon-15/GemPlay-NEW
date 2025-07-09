@@ -27,23 +27,18 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
       
       setBalance(balanceResponse.data);
       setGems(gemsResponse.data);
-      
-      // Only update if there's actually a change and onUpdateBalance is provided
-      if (onUpdateBalance && balanceResponse.data) {
-        onUpdateBalance(balanceResponse.data);
-      }
     } catch (error) {
       console.error('Error fetching balance data:', error);
     } finally {
       setLoading(false);
     }
-  }, [onUpdateBalance]);
+  }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       fetchBalanceData();
     }
-  }, [user?.id, fetchBalanceData]); // Only depend on user.id to prevent unnecessary calls
+  }, [user?.id, fetchBalanceData]);
 
   if (!user || loading) {
     return (
