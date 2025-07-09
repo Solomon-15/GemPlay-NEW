@@ -309,11 +309,9 @@ function App() {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="text-right hidden sm:block">
-                <p className="font-roboto text-text-secondary text-sm">Welcome, {user.username}</p>
-                <p className="font-rajdhani text-green-400 font-bold">
-                  ${user.virtual_balance?.toFixed(2) || '0.00'}
-                </p>
+              <div className="hidden sm:block">
+                <p className="font-roboto text-text-secondary text-sm mb-1">Welcome, {user.username}</p>
+                <BalanceDisplay user={user} onUpdateBalance={(newBalance) => setUser({...user, ...newBalance})} />
               </div>
               
               <button
