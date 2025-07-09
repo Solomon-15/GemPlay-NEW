@@ -83,7 +83,7 @@ const Profile = ({ user, onUpdateUser }) => {
           </div>
           <h3 className="font-rajdhani font-bold text-lg text-white">Balance</h3>
           <p className="font-roboto text-xl font-bold text-green-400">
-            ${user.virtual_balance?.toFixed(2) || '0.00'}
+            {formatCurrencyWithSymbol(user.virtual_balance || 0)}
           </p>
         </div>
 
