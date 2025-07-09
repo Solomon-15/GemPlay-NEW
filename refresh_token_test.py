@@ -258,7 +258,7 @@ def test_expired_refresh_token(username: str, refresh_token: str) -> None:
         return
     
     # First, get a new refresh token to deactivate the old one
-    response, success = make_request("POST", "/auth/refresh", data={"refresh_token": refresh_token})
+    response, success = make_request("POST", f"/auth/refresh?refresh_token={refresh_token}")
     
     if not success:
         print_error(f"Failed to get new refresh token: {response}")
@@ -268,8 +268,7 @@ def test_expired_refresh_token(username: str, refresh_token: str) -> None:
     # Now try to use the old refresh token, which should be deactivated
     response, success = make_request(
         "POST", 
-        "/auth/refresh", 
-        data={"refresh_token": refresh_token},
+        f"/auth/refresh?refresh_token={refresh_token}",
         expected_status=401
     )
     
