@@ -371,6 +371,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "CREATE BET button is present in the Lobby and functional. The button is properly styled and visible."
+      - working: true
+        agent: "testing"
+        comment: "Successfully tested the notification system when creating a game. The notification appears in the top-right corner with the message 'Bet created! $0.06 (6%) frozen until game completion.' The notification has a green border, disappears automatically after about 7 seconds, and can be manually closed with the X button."
 
   - task: "Game Lobby Component"
     implemented: true
