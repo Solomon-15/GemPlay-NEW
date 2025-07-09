@@ -125,7 +125,7 @@ const Lobby = ({ user, onUpdateUser }) => {
   );
 
   const SectionBlock = ({ title, icon, count, children, color = 'text-blue-400' }) => (
-    <div className="bg-surface-card border border-accent-primary rounded-lg p-4">
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <div className={color}>{icon}</div>
