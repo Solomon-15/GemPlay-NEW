@@ -72,7 +72,7 @@ const Lobby = ({ user, onUpdateUser }) => {
   };
 
   const InfoBlock = ({ title, value, icon, color }) => (
-    <div className="bg-surface-card border border-accent-primary rounded-lg p-4 text-center">
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 text-center">
       <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${color}`}>
         {icon}
       </div>
