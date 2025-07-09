@@ -148,7 +148,7 @@ const Lobby = ({ user, onUpdateUser }) => {
         <button
           onClick={() => onPageChange(section, Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="px-3 py-1 bg-surface-sidebar border border-accent-primary rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
+          className="px-3 py-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
         >
           Previous
         </button>
@@ -158,7 +158,7 @@ const Lobby = ({ user, onUpdateUser }) => {
         <button
           onClick={() => onPageChange(section, Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="px-3 py-1 bg-surface-sidebar border border-accent-primary rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
+          className="px-3 py-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
         >
           Next
         </button>
