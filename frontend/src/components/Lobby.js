@@ -12,6 +12,7 @@ const Lobby = ({ user, onUpdateUser }) => {
   const [availableBots, setAvailableBots] = useState([]);
   const [ongoingBotBattles, setOngoingBotBattles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('live-players');
   const [currentPage, setCurrentPage] = useState({
     myBets: 1,
     availableBets: 1,
@@ -71,7 +72,7 @@ const Lobby = ({ user, onUpdateUser }) => {
   };
 
   const InfoBlock = ({ title, value, icon, color }) => (
-    <div className="bg-surface-card border border-border-primary rounded-lg p-4 text-center">
+    <div className="bg-surface-card border border-accent-primary rounded-lg p-4 text-center">
       <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${color}`}>
         {icon}
       </div>
@@ -83,7 +84,7 @@ const Lobby = ({ user, onUpdateUser }) => {
   );
 
   const GameCard = ({ game, onJoin, isBot = false }) => (
-    <div className="bg-surface-sidebar border border-border-primary rounded-lg p-4 hover:border-accent-primary transition-all duration-300">
+    <div className="bg-surface-sidebar border border-accent-primary rounded-lg p-4 hover:border-accent-primary hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBot ? 'bg-blue-700' : 'bg-green-700'}`}>
@@ -124,7 +125,7 @@ const Lobby = ({ user, onUpdateUser }) => {
   );
 
   const SectionBlock = ({ title, icon, count, children, color = 'text-blue-400' }) => (
-    <div className="bg-surface-card border border-border-primary rounded-lg p-4">
+    <div className="bg-surface-card border border-accent-primary rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <div className={color}>{icon}</div>
@@ -147,7 +148,7 @@ const Lobby = ({ user, onUpdateUser }) => {
         <button
           onClick={() => onPageChange(section, Math.max(1, currentPage - 1))}
           disabled={currentPage === 1}
-          className="px-3 py-1 bg-surface-sidebar border border-border-primary rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
+          className="px-3 py-1 bg-surface-sidebar border border-accent-primary rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
         >
           Previous
         </button>
@@ -157,7 +158,7 @@ const Lobby = ({ user, onUpdateUser }) => {
         <button
           onClick={() => onPageChange(section, Math.min(totalPages, currentPage + 1))}
           disabled={currentPage === totalPages}
-          className="px-3 py-1 bg-surface-sidebar border border-border-primary rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
+          className="px-3 py-1 bg-surface-sidebar border border-accent-primary rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
         >
           Next
         </button>
@@ -187,6 +188,156 @@ const Lobby = ({ user, onUpdateUser }) => {
       </div>
     );
   }
+
+  const LivePlayersContent = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+      {/* Left Column - My Bets & Ongoing Battles */}
+      <div className="space-y-6">
+        {/* My Bets */}
+        <SectionBlock
+          title="My Bets"
+          count={myBets.length}
+          color="text-green-400"
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          }
+        >
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {getPaginatedItems(myBets, currentPage.myBets).map((game) => (
+              <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
+            ))}
+            {myBets.length === 0 && (
+              <p className="text-text-secondary text-center py-8">No active bets</p>
+            )}
+          </div>
+          <PaginationControls
+            currentPage={currentPage.myBets}
+            totalItems={myBets.length}
+            onPageChange={handlePageChange}
+            section="myBets"
+          />
+        </SectionBlock>
+
+        {/* Ongoing Battles */}
+        <SectionBlock
+          title="Ongoing Battles"
+          count={ongoingBattles.length}
+          color="text-orange-400"
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+            </svg>
+          }
+        >
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {getPaginatedItems(ongoingBattles, currentPage.ongoingBattles).map((game) => (
+              <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
+            ))}
+            {ongoingBattles.length === 0 && (
+              <p className="text-text-secondary text-center py-8">No ongoing battles</p>
+            )}
+          </div>
+          <PaginationControls
+            currentPage={currentPage.ongoingBattles}
+            totalItems={ongoingBattles.length}
+            onPageChange={handlePageChange}
+            section="ongoingBattles"
+          />
+        </SectionBlock>
+      </div>
+
+      {/* Right Column - Available Bets */}
+      <div className="lg:col-span-2">
+        <SectionBlock
+          title="Available Bets"
+          count={availableBets.length}
+          color="text-blue-400"
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          }
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+            {getPaginatedItems(availableBets, currentPage.availableBets).map((game) => (
+              <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
+            ))}
+            {availableBets.length === 0 && (
+              <div className="col-span-full text-text-secondary text-center py-8">
+                No available bets
+              </div>
+            )}
+          </div>
+          <PaginationControls
+            currentPage={currentPage.availableBets}
+            totalItems={availableBets.length}
+            onPageChange={handlePageChange}
+            section="availableBets"
+          />
+        </SectionBlock>
+      </div>
+    </div>
+  );
+
+  const BotPlayersContent = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+      {/* Available Bots */}
+      <SectionBlock
+        title="Available Bots"
+        count={availableBots.length}
+        color="text-cyan-400"
+        icon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        }
+      >
+        <div className="space-y-3 max-h-64 overflow-y-auto">
+          {getPaginatedItems(availableBots, currentPage.availableBots).map((game) => (
+            <GameCard key={game.id} game={game} onJoin={handleJoinGame} isBot={true} />
+          ))}
+          {availableBots.length === 0 && (
+            <p className="text-text-secondary text-center py-8">No available bots</p>
+          )}
+        </div>
+        <PaginationControls
+          currentPage={currentPage.availableBots}
+          totalItems={availableBots.length}
+          onPageChange={handlePageChange}
+          section="availableBots"
+        />
+      </SectionBlock>
+
+      {/* Ongoing Bot Battles */}
+      <SectionBlock
+        title="Ongoing Bot Battles"
+        count={ongoingBotBattles.length}
+        color="text-red-400"
+        icon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        }
+      >
+        <div className="space-y-3 max-h-64 overflow-y-auto">
+          {getPaginatedItems(ongoingBotBattles, currentPage.ongoingBotBattles).map((game) => (
+            <GameCard key={game.id} game={game} onJoin={handleJoinGame} isBot={true} />
+          ))}
+          {ongoingBotBattles.length === 0 && (
+            <p className="text-text-secondary text-center py-8">No ongoing bot battles</p>
+          )}
+        </div>
+        <PaginationControls
+          currentPage={currentPage.ongoingBotBattles}
+          totalItems={ongoingBotBattles.length}
+          onPageChange={handlePageChange}
+          section="ongoingBotBattles"
+        />
+      </SectionBlock>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-primary p-4 sm:p-6">
@@ -247,160 +398,36 @@ const Lobby = ({ user, onUpdateUser }) => {
         </button>
       </div>
 
-      {/* Live Players Section */}
-      <div className="mb-8">
-        <h2 className="font-russo text-2xl text-blue-400 mb-4 text-center">Live Players</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-          
-          {/* Left Column */}
-          <div className="space-y-6">
-            {/* My Bets */}
-            <SectionBlock
-              title="My Bets"
-              count={myBets.length}
-              color="text-green-400"
-              icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              }
+      {/* Tabs */}
+      <div className="max-w-6xl mx-auto mb-8">
+        <div className="flex space-x-1 bg-surface-sidebar rounded-lg p-1">
+          {[
+            { id: 'live-players', label: 'Live Players', icon: '👥', count: availableBets.length + myBets.length + ongoingBattles.length },
+            { id: 'bot-players', label: 'Bot Players', icon: '🤖', count: availableBots.length + ongoingBotBattles.length }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-3 px-4 rounded-lg font-rajdhani font-bold transition-all duration-300 ${
+                activeTab === tab.id
+                  ? 'bg-accent-primary text-white shadow-lg'
+                  : 'text-text-secondary hover:text-white hover:bg-surface-card'
+              }`}
             >
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {getPaginatedItems(myBets, currentPage.myBets).map((game) => (
-                  <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
-                ))}
-                {myBets.length === 0 && (
-                  <p className="text-text-secondary text-center py-8">No active bets</p>
-                )}
-              </div>
-              <PaginationControls
-                currentPage={currentPage.myBets}
-                totalItems={myBets.length}
-                onPageChange={handlePageChange}
-                section="myBets"
-              />
-            </SectionBlock>
-
-            {/* Ongoing Battles */}
-            <SectionBlock
-              title="Ongoing Battles"
-              count={ongoingBattles.length}
-              color="text-orange-400"
-              icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
-              }
-            >
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {getPaginatedItems(ongoingBattles, currentPage.ongoingBattles).map((game) => (
-                  <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
-                ))}
-                {ongoingBattles.length === 0 && (
-                  <p className="text-text-secondary text-center py-8">No ongoing battles</p>
-                )}
-              </div>
-              <PaginationControls
-                currentPage={currentPage.ongoingBattles}
-                totalItems={ongoingBattles.length}
-                onPageChange={handlePageChange}
-                section="ongoingBattles"
-              />
-            </SectionBlock>
-          </div>
-
-          {/* Right Column */}
-          <div className="lg:col-span-2">
-            <SectionBlock
-              title="Available Bets"
-              count={availableBets.length}
-              color="text-blue-400"
-              icon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              }
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
-                {getPaginatedItems(availableBets, currentPage.availableBets).map((game) => (
-                  <GameCard key={game.id} game={game} onJoin={handleJoinGame} />
-                ))}
-                {availableBets.length === 0 && (
-                  <div className="col-span-full text-text-secondary text-center py-8">
-                    No available bets
-                  </div>
-                )}
-              </div>
-              <PaginationControls
-                currentPage={currentPage.availableBets}
-                totalItems={availableBets.length}
-                onPageChange={handlePageChange}
-                section="availableBets"
-              />
-            </SectionBlock>
-          </div>
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+              <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-xs">
+                {tab.count}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Bot Players Section */}
+      {/* Content */}
       <div>
-        <h2 className="font-russo text-2xl text-blue-400 mb-4 text-center">Bot Players</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
-          
-          {/* Available Bots */}
-          <SectionBlock
-            title="Available Bots"
-            count={availableBots.length}
-            color="text-cyan-400"
-            icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            }
-          >
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {getPaginatedItems(availableBots, currentPage.availableBots).map((game) => (
-                <GameCard key={game.id} game={game} onJoin={handleJoinGame} isBot={true} />
-              ))}
-              {availableBots.length === 0 && (
-                <p className="text-text-secondary text-center py-8">No available bots</p>
-              )}
-            </div>
-            <PaginationControls
-              currentPage={currentPage.availableBots}
-              totalItems={availableBots.length}
-              onPageChange={handlePageChange}
-              section="availableBots"
-            />
-          </SectionBlock>
-
-          {/* Ongoing Bot Battles */}
-          <SectionBlock
-            title="Ongoing Bot Battles"
-            count={ongoingBotBattles.length}
-            color="text-red-400"
-            icon={
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            }
-          >
-            <div className="space-y-3 max-h-64 overflow-y-auto">
-              {getPaginatedItems(ongoingBotBattles, currentPage.ongoingBotBattles).map((game) => (
-                <GameCard key={game.id} game={game} onJoin={handleJoinGame} isBot={true} />
-              ))}
-              {ongoingBotBattles.length === 0 && (
-                <p className="text-text-secondary text-center py-8">No ongoing bot battles</p>
-              )}
-            </div>
-            <PaginationControls
-              currentPage={currentPage.ongoingBotBattles}
-              totalItems={ongoingBotBattles.length}
-              onPageChange={handlePageChange}
-              section="ongoingBotBattles"
-            />
-          </SectionBlock>
-        </div>
+        {activeTab === 'live-players' && <LivePlayersContent />}
+        {activeTab === 'bot-players' && <BotPlayersContent />}
       </div>
     </div>
   );
