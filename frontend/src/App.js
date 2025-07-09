@@ -283,6 +283,7 @@ function App() {
         user={user}
         isCollapsed={sidebarCollapsed}
         setIsCollapsed={setSidebarCollapsed}
+        onOpenAdminPanel={handleOpenAdminPanel}
       />
 
       {/* Main Content */}
