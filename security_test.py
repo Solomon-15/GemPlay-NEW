@@ -474,11 +474,14 @@ def test_admin_access_control(user_token: str, admin_token: str) -> None:
         expected_status=403  # Expect forbidden
     )
     
+    # For regular user, we expect a 403 error (not success)
     if not success:
         if "detail" in response and "Not enough permissions" in response["detail"]:
             print_success("Regular user correctly denied access to admin endpoint")
+            user_test_passed = True
         else:
             print_warning(f"Unexpected error when regular user tried to access admin endpoint: {response}")
+            user_test_passed = False
     else:
         print_error("Regular user was able to access admin endpoint!")
         record_test("Admin Access Control", False, "Regular user accessed admin endpoint")
@@ -493,10 +496,19 @@ def test_admin_access_control(user_token: str, admin_token: str) -> None:
     
     if success:
         print_success("Admin user correctly granted access to admin endpoint")
-        record_test("Admin Access Control", True)
+        admin_test_passed = True
     else:
         print_error("Admin user denied access to admin endpoint")
-        record_test("Admin Access Control", False, "Admin denied access")
+        admin_test_passed = False
+    
+    # Only pass the test if both parts passed
+    if user_test_passed and admin_test_passed:
+        record_test("Admin Access Control", True, "Access control working correctly")
+    else:
+        if not user_test_passed:
+            record_test("Admin Access Control", False, "Regular user access control issue")
+        else:
+            record_test("Admin Access Control", False, "Admin access issue")
 
 def test_suspicious_activity(user_token: str) -> None:
     """Test suspicious activity detection by making multiple purchases."""
