@@ -573,6 +573,16 @@ async def register(user_data: UserRegistration):
         expires_at=datetime.utcnow() + timedelta(hours=24)
     )
     await db.email_verifications.insert_one(verification.dict())
+
+    # Create security alert for new registration
+    security_alert = SecurityAlert(
+        user_id=user.id,
+        alert_type="NEW_REGISTRATION",
+        severity="LOW",
+        description=f"New user registration: {user_data.email}",
+        request_data={"email": user_data.email, "username": user_data.username}
+    )
+    await db.security_alerts.insert_one(security_alert.dict())
     
     # Give user initial gems worth $1000
     initial_gems = {
