@@ -2476,7 +2476,248 @@ async def get_game_history(
             detail="Failed to fetch game history"
         )
 
-@api_router.get("/health", response_model=dict)
+@api_router.get("/bots", response_model=List[dict])
+async def get_bots(current_user: User = Depends(get_current_admin)):
+    """Get all bots (admin only)."""
+    try:
+        bots = await db.bots.find().to_list(100)
+        return [bot for bot in bots]
+    except Exception as e:
+        logger.error(f"Error fetching bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bots"
+        )
+
+@api_router.post("/bots", response_model=dict)
+async def create_bot(
+    bot_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Create a new bot (admin only)."""
+    try:
+        # Validate bot data
+        required_fields = ["name", "bot_type", "win_rate"]
+        for field in required_fields:
+            if field not in bot_data:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Missing required field: {field}"
+                )
+        
+        # Create bot
+        bot = Bot(
+            name=bot_data["name"],
+            bot_type=bot_data["bot_type"],
+            win_rate=min(max(bot_data["win_rate"], 0.1), 0.9),  # 10% to 90%
+            min_bet=bot_data.get("min_bet", 1.0),
+            max_bet=bot_data.get("max_bet", 1000.0),
+            cycle_games=bot_data.get("cycle_games", 12),
+            pause_between_games=bot_data.get("pause_between_games", 60),
+            can_accept_bets=bot_data.get("can_accept_bets", False),
+            can_play_with_bots=bot_data.get("can_play_with_bots", False),
+            avatar_gender=bot_data.get("avatar_gender", "male"),
+            simple_mode=bot_data.get("simple_mode", False)
+        )
+        
+        await db.bots.insert_one(bot.dict())
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="CREATE_BOT",
+            target_type="bot",
+            target_id=bot.id,
+            details={"bot_name": bot.name, "bot_type": bot.bot_type}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "Bot created successfully", "bot_id": bot.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating bot: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create bot"
+        )
+
+@api_router.put("/bots/{bot_id}", response_model=dict)
+async def update_bot(
+    bot_id: str,
+    bot_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Update bot settings (admin only)."""
+    try:
+        # Find bot
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Update fields
+        update_fields = {}
+        if "name" in bot_data:
+            update_fields["name"] = bot_data["name"]
+        if "is_active" in bot_data:
+            update_fields["is_active"] = bot_data["is_active"]
+        if "win_rate" in bot_data:
+            update_fields["win_rate"] = min(max(bot_data["win_rate"], 0.1), 0.9)
+        if "min_bet" in bot_data:
+            update_fields["min_bet"] = bot_data["min_bet"]
+        if "max_bet" in bot_data:
+            update_fields["max_bet"] = bot_data["max_bet"]
+        if "cycle_games" in bot_data:
+            update_fields["cycle_games"] = bot_data["cycle_games"]
+        if "pause_between_games" in bot_data:
+            update_fields["pause_between_games"] = bot_data["pause_between_games"]
+        if "can_accept_bets" in bot_data:
+            update_fields["can_accept_bets"] = bot_data["can_accept_bets"]
+        if "can_play_with_bots" in bot_data:
+            update_fields["can_play_with_bots"] = bot_data["can_play_with_bots"]
+        if "avatar_gender" in bot_data:
+            update_fields["avatar_gender"] = bot_data["avatar_gender"]
+        if "simple_mode" in bot_data:
+            update_fields["simple_mode"] = bot_data["simple_mode"]
+        
+        update_fields["updated_at"] = datetime.utcnow()
+        
+        # Update bot
+        await db.bots.update_one(
+            {"id": bot_id},
+            {"$set": update_fields}
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="UPDATE_BOT",
+            target_type="bot",
+            target_id=bot_id,
+            details={"updated_fields": list(update_fields.keys())}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "Bot updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating bot: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update bot"
+        )
+
+@api_router.delete("/bots/{bot_id}", response_model=dict)
+async def delete_bot(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Delete a bot (admin only)."""
+    try:
+        # Find bot
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Check if bot has active games
+        active_games = await db.games.find({
+            "$or": [
+                {"creator_id": bot_id, "status": {"$in": ["WAITING", "ACTIVE"]}},
+                {"opponent_id": bot_id, "status": {"$in": ["WAITING", "ACTIVE"]}}
+            ]
+        }).to_list(1)
+        
+        if active_games:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete bot with active games"
+            )
+        
+        # Delete bot
+        await db.bots.delete_one({"id": bot_id})
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="DELETE_BOT",
+            target_type="bot",
+            target_id=bot_id,
+            details={"bot_name": bot["name"]}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "Bot deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting bot: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete bot"
+        )
+
+@api_router.post("/bots/{bot_id}/toggle", response_model=dict)
+async def toggle_bot_status(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Toggle bot active status (admin only)."""
+    try:
+        # Find bot
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Toggle status
+        new_status = not bot["is_active"]
+        await db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "is_active": new_status,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="TOGGLE_BOT_STATUS",
+            target_type="bot",
+            target_id=bot_id,
+            details={"new_status": new_status, "bot_name": bot["name"]}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": f"Bot {'activated' if new_status else 'deactivated'} successfully",
+            "is_active": new_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error toggling bot status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to toggle bot status"
+        )
+
+@api_router.get("/health")
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "timestamp": datetime.utcnow()}
