@@ -947,9 +947,13 @@ async def login(user_credentials: UserLogin):
         data={"sub": user_obj.id}, expires_delta=access_token_expires
     )
     
+    # Create refresh token
+    refresh_token = await create_refresh_token(user_obj.id)
+    
     return Token(
         access_token=access_token,
         token_type="bearer",
+        refresh_token=refresh_token,
         user=UserResponse(**user_obj.dict())
     )
 
