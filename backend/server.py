@@ -344,6 +344,13 @@ class EmailVerificationRequest(BaseModel):
 class DailyBonusRequest(BaseModel):
     pass
 
+class CreateGameRequest(BaseModel):
+    move: GameMove
+    bet_gems: Dict[str, int]
+
+class JoinGameRequest(BaseModel):
+    move: GameMove
+
 # ==============================================================================
 # UTILITY FUNCTIONS
 # ==============================================================================
