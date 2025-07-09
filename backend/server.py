@@ -2284,6 +2284,198 @@ async def root():
     """API root endpoint."""
     return {"message": "GemPlay API is running!", "version": "1.0.0"}
 
+@api_router.get("/leaderboard/{category}", response_model=dict)
+async def get_leaderboard(category: str, current_user: User = Depends(get_current_user)):
+    """Get leaderboard by category (winnings, wins, winrate, games)."""
+    try:
+        # Define sort criteria based on category
+        sort_criteria = {
+            "winnings": {"total_amount_won": -1},
+            "wins": {"total_games_won": -1},
+            "winrate": {"win_rate": -1},
+            "games": {"total_games_played": -1}
+        }
+        
+        if category not in sort_criteria:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid category. Use: winnings, wins, winrate, games"
+            )
+        
+        # Get top users
+        users = await db.users.find(
+            {"status": "ACTIVE"},
+            {
+                "username": 1,
+                "total_amount_won": 1,
+                "total_games_won": 1,
+                "total_games_played": 1,
+                "created_at": 1
+            }
+        ).sort(sort_criteria[category]).limit(100).to_list(100)
+        
+        # Calculate win rates and add ranks
+        leaderboard = []
+        for idx, user_data in enumerate(users):
+            win_rate = 0
+            if user_data.get("total_games_played", 0) > 0:
+                win_rate = round((user_data.get("total_games_won", 0) / user_data["total_games_played"]) * 100, 1)
+            
+            leaderboard.append({
+                "rank": idx + 1,
+                "user_id": user_data["id"],
+                "username": user_data["username"],
+                "total_winnings": user_data.get("total_amount_won", 0),
+                "games_won": user_data.get("total_games_won", 0),
+                "games_played": user_data.get("total_games_played", 0),
+                "win_rate": win_rate,
+                "level": min(user_data.get("total_games_played", 0) // 10 + 1, 50),  # Level based on games played
+                "favorite_gem": ["Ruby", "Emerald", "Sapphire", "Diamond", "Topaz"][idx % 5]  # Mock favorite gem
+            })
+        
+        # Find current user's rank
+        user_rank = None
+        for idx, entry in enumerate(leaderboard):
+            if entry["user_id"] == current_user.id:
+                user_rank = idx + 1
+                break
+        
+        if user_rank is None:
+            # User not in top 100, calculate approximate rank
+            user_rank = 101  # Placeholder
+        
+        return {
+            "leaderboard": leaderboard,
+            "user_rank": user_rank,
+            "category": category
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching leaderboard: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch leaderboard"
+        )
+
+@api_router.get("/games/history", response_model=dict)
+async def get_game_history(
+    status_filter: str = None,
+    date_filter: str = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get user's game history with optional filters."""
+    try:
+        # Build query filter
+        query = {
+            "$or": [
+                {"creator_id": current_user.id},
+                {"opponent_id": current_user.id}
+            ]
+        }
+        
+        # Add status filter
+        if status_filter and status_filter != "all":
+            if status_filter in ["won", "lost", "draw"]:
+                # We need to determine win/loss based on user perspective
+                pass  # Will handle in processing
+            else:
+                query["status"] = status_filter.upper()
+        
+        # Add date filter
+        if date_filter and date_filter != "all":
+            now = datetime.utcnow()
+            if date_filter == "today":
+                start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                query["created_at"] = {"$gte": start_of_day}
+            elif date_filter == "week":
+                start_of_week = now - timedelta(days=7)
+                query["created_at"] = {"$gte": start_of_week}
+            elif date_filter == "month":
+                start_of_month = now - timedelta(days=30)
+                query["created_at"] = {"$gte": start_of_month}
+        
+        # Get games
+        games = await db.games.find(query).sort("created_at", -1).limit(200).to_list(200)
+        
+        # Process games and determine results from user perspective
+        processed_games = []
+        stats = {
+            "total_games": 0,
+            "total_won": 0,
+            "total_lost": 0,
+            "total_draw": 0,
+            "total_winnings": 0,
+            "total_losses": 0
+        }
+        
+        for game in games:
+            if game["status"] != "COMPLETED":
+                continue
+            
+            # Determine user's role and result
+            is_creator = game["creator_id"] == current_user.id
+            opponent_id = game["opponent_id"] if is_creator else game["creator_id"]
+            my_move = game["creator_move"] if is_creator else game["opponent_move"]
+            opponent_move = game["opponent_move"] if is_creator else game["creator_move"]
+            
+            # Get opponent info
+            opponent = await db.users.find_one({"id": opponent_id})
+            opponent_username = opponent["username"] if opponent else "Unknown"
+            
+            # Determine result
+            result = "draw"  # Default
+            if game.get("winner_id"):
+                if game["winner_id"] == current_user.id:
+                    result = "won"
+                    stats["total_won"] += 1
+                    stats["total_winnings"] += game["bet_amount"] * 1.94  # After 3% commission
+                else:
+                    result = "lost"
+                    stats["total_lost"] += 1
+                    stats["total_losses"] += game["bet_amount"]
+            else:
+                stats["total_draw"] += 1
+            
+            # Apply status filter if specified
+            if status_filter and status_filter != "all" and status_filter != result:
+                continue
+            
+            game_data = {
+                "id": game["id"],
+                "opponent_username": opponent_username,
+                "opponent_id": opponent_id,
+                "is_bot_game": game.get("is_bot_game", False),
+                "my_move": my_move,
+                "opponent_move": opponent_move,
+                "bet_amount": game["bet_amount"],
+                "bet_gems": game["bet_gems"],
+                "status": game["status"],
+                "result": result,
+                "winnings": game["bet_amount"] * 1.94 if result == "won" else 0,
+                "created_at": game["created_at"],
+                "completed_at": game.get("completed_at", game["created_at"]),
+                "game_duration": 120  # Mock duration in seconds
+            }
+            
+            processed_games.append(game_data)
+            stats["total_games"] += 1
+        
+        return {
+            "games": processed_games,
+            "stats": stats
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching game history: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch game history"
+        )
+
 @api_router.get("/health", response_model=dict)
 async def health_check():
     """Health check endpoint."""
