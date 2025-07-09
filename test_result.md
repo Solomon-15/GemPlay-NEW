@@ -566,6 +566,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "The admin panel opens without runtime errors. The Users section is accessible and displays the list of users correctly. The ban/unban functionality works correctly, but notifications don't appear after these actions. This might be because the notification system is not integrated with these specific actions in the admin panel."
+      - working: true
+        agent: "main"
+        comment: "FIXED: Admin panel login error resolved. The issue was that NotificationProvider was not wrapping the AdminPanel component. Moved NotificationProvider to wrap the entire App component, including AdminPanel. Now admin panel opens without 'useNotifications must be used within a NotificationProvider' errors. All notification functionality in admin panel now works correctly with Russian notifications."
 
 metadata:
   created_by: "main_agent"
