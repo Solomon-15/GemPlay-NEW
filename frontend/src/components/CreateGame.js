@@ -219,7 +219,7 @@ const CreateGame = ({ user, onUpdateUser }) => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           
           {/* Move Selection */}
-          <div className="bg-surface-card border border-border-primary rounded-lg p-6">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
             <h2 className="font-russo text-2xl text-accent-secondary mb-6">
               Выберите ваш ход
             </h2>
@@ -232,7 +232,7 @@ const CreateGame = ({ user, onUpdateUser }) => {
                   className={`p-6 rounded-lg border-2 transition-all duration-300 ${
                     selectedMove === move.value
                       ? 'border-accent-primary bg-accent-primary/20 text-accent-primary'
-                      : 'border-border-primary hover:border-accent-primary/50 text-text-secondary'
+                      : 'border-accent-primary border-opacity-30 hover:border-accent-primary hover:border-opacity-60 text-text-secondary'
                   }`}
                 >
                   <div className="text-4xl mb-2">{move.icon}</div>
@@ -243,7 +243,7 @@ const CreateGame = ({ user, onUpdateUser }) => {
           </div>
 
           {/* Gem Selection */}
-          <div className="bg-surface-card border border-border-primary rounded-lg p-6">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
             <h2 className="font-russo text-2xl text-accent-secondary mb-6">
               Выберите гемы для ставки
             </h2>
@@ -256,7 +256,7 @@ const CreateGame = ({ user, onUpdateUser }) => {
                 return (
                   <div
                     key={gem.type}
-                    className="flex items-center justify-between p-4 bg-surface-sidebar rounded-lg border border-border-primary"
+                    className="flex items-center justify-between p-4 bg-surface-sidebar rounded-lg border border-accent-primary border-opacity-30"
                   >
                     <div className="flex items-center space-x-4">
                       <img
@@ -282,7 +282,7 @@ const CreateGame = ({ user, onUpdateUser }) => {
                         max={availableQuantity}
                         value={selectedQuantity}
                         onChange={(e) => handleGemQuantityChange(gem.type, e.target.value)}
-                        className="w-20 px-2 py-1 bg-surface-card border border-border-primary rounded text-center text-white font-rajdhani"
+                        className="w-20 px-2 py-1 bg-surface-card border border-accent-primary border-opacity-30 rounded text-center text-white font-rajdhani"
                         disabled={availableQuantity === 0}
                       />
                       <span className="font-roboto text-text-secondary text-sm">
