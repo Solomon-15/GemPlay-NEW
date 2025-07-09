@@ -6,6 +6,40 @@ const API = `${BACKEND_URL}/api`;
 
 const Profile = ({ user, onUpdateUser }) => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositing, setDepositing] = useState(false);
+  
+  const handleAddBalance = async () => {
+    const amount = parseFloat(depositAmount);
+    if (!amount || amount <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+    
+    const remainingLimit = user.daily_limit_max - user.daily_limit_used;
+    if (amount > remainingLimit) {
+      alert(`You can only add up to $${remainingLimit.toFixed(2)} more today`);
+      return;
+    }
+    
+    setDepositing(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/auth/daily-bonus`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setDepositAmount('');
+      if (onUpdateUser) {
+        onUpdateUser();
+      }
+      alert(`Successfully added $${amount.toFixed(2)} to your balance!`);
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Error adding balance');
+    } finally {
+      setDepositing(false);
+    }
+  };
   
   const ProfileOverview = () => (
     <div className="space-y-6">
