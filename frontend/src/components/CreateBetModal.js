@@ -61,6 +61,10 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   };
 
   const autoSelectGems = (targetAmount) => {
+    if (!userGems || userGems.length === 0) {
+      return {};
+    }
+    
     const availableGems = userGems.filter(gem => gem.quantity > 0);
     let remainingAmount = targetAmount;
     let selectedGems = {};
