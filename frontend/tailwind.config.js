@@ -15,6 +15,8 @@ module.exports = {
         'surface-hover': '#1a1f3a',
         'accent-primary': '#23d364',
         'accent-secondary': '#23d3a7',
+        'accent-dark': '#1ba351', // 15% darker green for buttons and backgrounds
+        'accent-dark-secondary': '#1ba388', // 15% darker secondary green
         'text-primary': '#ffffff',
         'text-secondary': '#c2c2c2',
         'text-muted': '#888888',
