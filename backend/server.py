@@ -388,6 +388,27 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+async def create_refresh_token(user_id: str) -> str:
+    """Create and store refresh token."""
+    refresh_token = secrets.token_urlsafe(32)
+    expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    
+    # Deactivate old refresh tokens for this user
+    await db.refresh_tokens.update_many(
+        {"user_id": user_id, "is_active": True},
+        {"$set": {"is_active": False}}
+    )
+    
+    # Create new refresh token
+    token_obj = RefreshToken(
+        user_id=user_id,
+        token=refresh_token,
+        expires_at=expires_at
+    )
+    await db.refresh_tokens.insert_one(token_obj.dict())
+    
+    return refresh_token
+
 def generate_verification_token() -> str:
     """Generate email verification token."""
     return str(uuid.uuid4())
