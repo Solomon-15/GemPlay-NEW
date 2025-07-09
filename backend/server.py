@@ -1334,6 +1334,190 @@ async def get_transaction_history(
     return [Transaction(**transaction) for transaction in transactions]
 
 # ==============================================================================
+# ADMIN SECURITY MONITORING API
+# ==============================================================================
+
+@api_router.get("/admin/security/alerts", response_model=List[SecurityAlert])
+async def get_security_alerts(
+    limit: int = 50,
+    severity: Optional[str] = None,
+    resolved: Optional[bool] = None,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get security alerts for admin monitoring."""
+    query = {}
+    if severity:
+        query["severity"] = severity
+    if resolved is not None:
+        query["resolved"] = resolved
+    
+    alerts = await db.security_alerts.find(query).sort("created_at", -1).limit(limit).to_list(limit)
+    return [SecurityAlert(**alert) for alert in alerts]
+
+@api_router.get("/admin/security/dashboard", response_model=dict)
+async def get_security_dashboard(current_admin: User = Depends(get_current_admin)):
+    """Get security monitoring dashboard data."""
+    current_time = datetime.utcnow()
+    hour_ago = current_time - timedelta(hours=1)
+    day_ago = current_time - timedelta(days=1)
+    week_ago = current_time - timedelta(days=7)
+    
+    # Count alerts by severity (last 24h)
+    alert_counts = {
+        "critical": await db.security_alerts.count_documents({
+            "severity": "CRITICAL",
+            "created_at": {"$gte": day_ago}
+        }),
+        "high": await db.security_alerts.count_documents({
+            "severity": "HIGH",
+            "created_at": {"$gte": day_ago}
+        }),
+        "medium": await db.security_alerts.count_documents({
+            "severity": "MEDIUM",
+            "created_at": {"$gte": day_ago}
+        }),
+        "low": await db.security_alerts.count_documents({
+            "severity": "LOW",
+            "created_at": {"$gte": day_ago}
+        })
+    }
+    
+    # Recent suspicious activities
+    recent_activities = await db.security_alerts.find({
+        "created_at": {"$gte": hour_ago}
+    }).sort("created_at", -1).limit(10).to_list(10)
+    
+    # Top alert types (last 7 days)
+    alert_pipeline = [
+        {"$match": {"created_at": {"$gte": week_ago}}},
+        {"$group": {"_id": "$alert_type", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 10}
+    ]
+    top_alert_types = await db.security_alerts.aggregate(alert_pipeline).to_list(10)
+    
+    # Users with most alerts (last 7 days)
+    user_pipeline = [
+        {"$match": {"created_at": {"$gte": week_ago}}},
+        {"$group": {"_id": "$user_id", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 5}
+    ]
+    users_with_alerts = await db.security_alerts.aggregate(user_pipeline).to_list(5)
+    
+    # Get user details for top alerting users
+    for user_alert in users_with_alerts:
+        user = await db.users.find_one({"id": user_alert["_id"]})
+        user_alert["username"] = user["username"] if user else "Unknown"
+        user_alert["email"] = user["email"] if user else "Unknown"
+    
+    return {
+        "alert_counts": alert_counts,
+        "recent_activities": recent_activities,
+        "top_alert_types": top_alert_types,
+        "users_with_most_alerts": users_with_alerts,
+        "total_alerts_24h": sum(alert_counts.values()),
+        "unresolved_alerts": await db.security_alerts.count_documents({"resolved": False})
+    }
+
+@api_router.post("/admin/security/alerts/{alert_id}/resolve", response_model=dict)
+async def resolve_security_alert(
+    alert_id: str,
+    action_taken: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Resolve a security alert."""
+    result = await db.security_alerts.update_one(
+        {"id": alert_id},
+        {
+            "$set": {
+                "resolved": True,
+                "resolved_at": datetime.utcnow(),
+                "resolved_by": current_admin.id,
+                "action_taken": action_taken
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Security alert not found"
+        )
+    
+    # Log admin action
+    admin_log = AdminLog(
+        admin_id=current_admin.id,
+        action="RESOLVE_SECURITY_ALERT",
+        target_type="security_alert",
+        target_id=alert_id,
+        details={"action_taken": action_taken}
+    )
+    await db.admin_logs.insert_one(admin_log.dict())
+    
+    return {"message": "Security alert resolved successfully"}
+
+@api_router.get("/admin/security/suspicious-activities", response_model=List[SuspiciousActivity])
+async def get_suspicious_activities(
+    limit: int = 50,
+    status_filter: Optional[str] = None,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get suspicious activities for investigation."""
+    query = {}
+    if status_filter:
+        query["status"] = status_filter
+    
+    activities = await db.suspicious_activities.find(query).sort("created_at", -1).limit(limit).to_list(limit)
+    return [SuspiciousActivity(**activity) for activity in activities]
+
+@api_router.get("/admin/security/monitoring-stats", response_model=dict)
+async def get_monitoring_stats(current_admin: User = Depends(get_current_admin)):
+    """Get security monitoring statistics."""
+    current_time = datetime.utcnow()
+    day_ago = current_time - timedelta(days=1)
+    
+    # Transaction monitoring
+    recent_transactions = await db.transactions.find({
+        "created_at": {"$gte": day_ago}
+    }).to_list(1000)
+    
+    # Calculate stats
+    total_volume = sum(abs(t["amount"]) for t in recent_transactions)
+    purchase_volume = sum(t["amount"] for t in recent_transactions if t["transaction_type"] == "PURCHASE")
+    gift_volume = sum(abs(t["amount"]) for t in recent_transactions if t["transaction_type"] == "GIFT")
+    
+    # High-value transactions (>$100)
+    high_value_transactions = [t for t in recent_transactions if abs(t["amount"]) > 100]
+    
+    # User activity stats
+    active_users_24h = len(set(t["user_id"] for t in recent_transactions))
+    
+    # Rate limiting stats (from memory - in production use Redis)
+    total_requests_blocked = sum(
+        1 for ip_data in request_counts.values()
+        for count_data in ip_data.values()
+        if count_data.get("count", 0) > SUSPICIOUS_ACTIVITY_THRESHOLDS["max_requests_per_minute"]
+    )
+    
+    return {
+        "transaction_stats": {
+            "total_volume_24h": total_volume,
+            "purchase_volume_24h": purchase_volume,
+            "gift_volume_24h": gift_volume,
+            "transaction_count_24h": len(recent_transactions),
+            "high_value_transactions_24h": len(high_value_transactions)
+        },
+        "user_activity": {
+            "active_users_24h": active_users_24h
+        },
+        "security_stats": {
+            "requests_blocked_24h": total_requests_blocked,
+            "rate_limit_threshold": SUSPICIOUS_ACTIVITY_THRESHOLDS["max_requests_per_minute"]
+        }
+    }
+
+# ==============================================================================
 # BASIC API ROUTES
 # ==============================================================================
 
