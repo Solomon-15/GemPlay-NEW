@@ -3319,6 +3319,246 @@ async def get_all_users(
             detail="Failed to fetch users"
         )
 
+@api_router.put("/admin/users/{user_id}", response_model=dict)
+async def update_user(
+    user_id: str,
+    user_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Update user information (admin only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Update fields
+        update_fields = {}
+        if "username" in user_data:
+            update_fields["username"] = user_data["username"]
+        if "email" in user_data:
+            update_fields["email"] = user_data["email"]
+        if "role" in user_data:
+            update_fields["role"] = user_data["role"]
+        if "virtual_balance" in user_data:
+            update_fields["virtual_balance"] = user_data["virtual_balance"]
+        
+        update_fields["updated_at"] = datetime.utcnow()
+        
+        # Update user
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": update_fields}
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="UPDATE_USER",
+            target_type="user",
+            target_id=user_id,
+            details={"updated_fields": list(update_fields.keys())}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "User updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update user"
+        )
+
+@api_router.post("/admin/users/{user_id}/ban", response_model=dict)
+async def ban_user(
+    user_id: str,
+    ban_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Ban a user (admin only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Parse ban duration
+        ban_until = None
+        if ban_data.get("duration"):
+            duration_map = {
+                "1hour": timedelta(hours=1),
+                "1day": timedelta(days=1),
+                "1week": timedelta(weeks=1),
+                "1month": timedelta(days=30)
+            }
+            
+            if ban_data["duration"] in duration_map:
+                ban_until = datetime.utcnow() + duration_map[ban_data["duration"]]
+        
+        # Update user
+        update_fields = {
+            "status": UserStatus.BANNED,
+            "ban_reason": ban_data.get("reason", "No reason provided"),
+            "ban_until": ban_until,
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": update_fields}
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="BAN_USER",
+            target_type="user",
+            target_id=user_id,
+            details={
+                "reason": ban_data.get("reason"),
+                "duration": ban_data.get("duration"),
+                "ban_until": ban_until.isoformat() if ban_until else None
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "User banned successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error banning user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to ban user"
+        )
+
+@api_router.post("/admin/users/{user_id}/unban", response_model=dict)
+async def unban_user(
+    user_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Unban a user (admin only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Update user
+        update_fields = {
+            "status": UserStatus.ACTIVE,
+            "ban_reason": None,
+            "ban_until": None,
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": update_fields}
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="UNBAN_USER",
+            target_type="user",
+            target_id=user_id,
+            details={"username": user.get("username")}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "User unbanned successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error unbanning user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to unban user"
+        )
+
+@api_router.post("/admin/users/{user_id}/balance", response_model=dict)
+async def update_user_balance(
+    user_id: str,
+    balance_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Update user balance (admin only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        new_balance = balance_data.get("balance", 0)
+        old_balance = user.get("virtual_balance", 0)
+        
+        # Update user balance
+        await db.users.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    "virtual_balance": new_balance,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Create transaction record
+        transaction = Transaction(
+            user_id=user_id,
+            transaction_type=TransactionType.GIFT,
+            amount=new_balance - old_balance,
+            currency="USD",
+            balance_before=old_balance,
+            balance_after=new_balance,
+            description=f"Admin balance adjustment",
+            admin_id=current_user.id
+        )
+        await db.transactions.insert_one(transaction.dict())
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="UPDATE_USER_BALANCE",
+            target_type="user",
+            target_id=user_id,
+            details={
+                "old_balance": old_balance,
+                "new_balance": new_balance,
+                "difference": new_balance - old_balance
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "User balance updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user balance: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update user balance"
+        )
+
 async def update_bot_cycle_tracking(bot_id: str, bot_won: bool):
     """Update bot's cycle tracking after a game."""
     try:
