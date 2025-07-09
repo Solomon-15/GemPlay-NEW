@@ -338,6 +338,9 @@ class GemResponse(BaseModel):
     quantity: int = 0
     frozen_quantity: int = 0
 
+class AddBalanceRequest(BaseModel):
+    amount: float = Field(..., gt=0, le=1000, description="Amount to add to balance (max $1000)")
+
 # ==============================================================================
 # REQUEST MODELS
 # ==============================================================================
