@@ -507,17 +507,20 @@ frontend:
         agent: "testing"
         comment: "Authentication is working correctly. Login with admin@gemplay.com/Admin123! is successful. Refresh tokens are properly saved and used. Logout functionality works correctly."
         
-  - task: "Responsive Design"
+  - task: "Notification System"
     implemented: true
     working: true
-    file: "/app/frontend/src/App.js"
+    file: "/app/frontend/src/components/NotificationContext.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing the notification system in the GemPlay application."
       - working: true
         agent: "testing"
-        comment: "The application is responsive and works correctly on desktop, tablet, and mobile views. The sidebar collapses automatically on smaller screens."
+        comment: "The notification system works correctly. Success notifications appear with green borders, error notifications with red borders, and notifications can be closed manually with the X button. Notifications appear in the top-right corner of the screen and automatically disappear after about 7 seconds (slightly longer than the expected 5-7 second range). The notification for game creation shows the correct message 'Bet created! $0.06 (6%) frozen until game completion.' The notification has a slide-in animation from the right."
         
   - task: "GemsHeader Component"
     implemented: true
