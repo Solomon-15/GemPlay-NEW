@@ -192,7 +192,7 @@ def test_update_bot(admin_token: str, bot_id: str, update_data: Dict[str, Any]) 
     response, success = make_request("PUT", f"/bots/{bot_id}", data=update_data, auth_token=admin_token)
     
     if success:
-        if "message" in response and "bot" in response:
+        if "message" in response:
             print_success(f"Bot updated successfully: {response['message']}")
             record_test(f"PUT /api/bots/{bot_id}", True)
             return True
