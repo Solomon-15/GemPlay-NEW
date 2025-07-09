@@ -579,7 +579,6 @@ test_plan:
     - "Shop Component"
     - "Inventory Component"
     - "Profile Component"
-    - "Notification System"
   stuck_tasks:
     - "Shop Component"
     - "Inventory Component"
