@@ -241,6 +241,42 @@ class AdminLog(BaseModel):
     user_agent: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class SecurityAlert(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    alert_type: str  # RATE_LIMIT, SUSPICIOUS_PURCHASE, UNUSUAL_ACTIVITY, etc.
+    severity: str    # LOW, MEDIUM, HIGH, CRITICAL
+    description: str
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    request_data: Dict[str, Any] = {}
+    action_taken: Optional[str] = None
+    resolved: bool = False
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    resolved_at: Optional[datetime] = None
+    resolved_by: Optional[str] = None
+
+class SecurityMonitoring(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    ip_address: str
+    endpoint: str
+    request_count: int
+    time_window: str  # "1m", "1h", "1d"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class SuspiciousActivity(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    activity_type: str
+    description: str
+    risk_score: int  # 1-100
+    ip_address: Optional[str] = None
+    evidence: Dict[str, Any] = {}
+    status: str = "OPEN"  # OPEN, INVESTIGATING, RESOLVED, FALSE_POSITIVE
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 class EmailVerification(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
