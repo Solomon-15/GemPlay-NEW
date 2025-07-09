@@ -244,6 +244,51 @@ backend:
       - working: false
         agent: "testing"
         comment: "The POST /api/admin/users/{user_id}/balance endpoint returns a 200 OK response, but the balance is not updated correctly. Attempted to add 100 to the user's balance, but the balance was set to 0 instead."
+        
+  - task: "Gems Definitions API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing GET /api/gems/definitions endpoint."
+      - working: true
+        agent: "testing"
+        comment: "The GET /api/gems/definitions endpoint works correctly. It returns all 7 gem types (Ruby, Amber, Topaz, Emerald, Aquamarine, Sapphire, Magic) with their correct properties including name, price, color, icon, and rarity."
+        
+  - task: "Gems Inventory API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing GET /api/gems/inventory endpoint."
+      - working: true
+        agent: "testing"
+        comment: "The GET /api/gems/inventory endpoint works correctly. It returns the user's gem inventory with proper quantity and frozen_quantity fields. For the admin user, the inventory is currently empty, which is expected as no gems have been purchased yet."
+        
+  - task: "Economy Balance API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing GET /api/economy/balance endpoint."
+      - working: true
+        agent: "testing"
+        comment: "The GET /api/economy/balance endpoint works correctly. It returns the user's complete economic status including virtual_balance, frozen_balance, total_gem_value, available_gem_value, total_value, daily_limit_used, and daily_limit_max. For the admin user, the virtual balance is $10,000 with no frozen balance or gems."
 
 frontend:
   - task: "Create Game Component"
