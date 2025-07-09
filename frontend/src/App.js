@@ -13,6 +13,7 @@ import CreateGame from "./components/CreateGame";
 import GameLobby from "./components/GameLobby";
 import SecurityMonitoring from "./components/SecurityMonitoring";
 import AdminPanel from "./components/AdminPanel";
+import BalanceDisplay from "./components/BalanceDisplay";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
