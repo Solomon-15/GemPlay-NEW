@@ -327,7 +327,7 @@ const AdminPanel = ({ user, onClose }) => {
 
               {/* Меню */}
               <nav className="space-y-2">
-                {menuItems.map((item) => (
+                {adminSections.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveSection(item.id)}
