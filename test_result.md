@@ -581,7 +581,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Profit API endpoints"
     - "Shop Component"
     - "Inventory Component"
     - "Profile Component"
