@@ -280,19 +280,22 @@ def test_expired_refresh_token(username: str, refresh_token: str) -> None:
         record_test(f"Expired Refresh Token - {username}", False, "No new refresh token in response")
         return
     
+    print_success(f"Successfully obtained new refresh token: {new_refresh_token[:20]}...")
+    
     # Now try to use the old refresh token, which should be deactivated
-    response, success = make_request(
+    old_token_response, old_token_success = make_request(
         "POST", 
         f"/auth/refresh?refresh_token={refresh_token}",
         expected_status=401
     )
     
-    if not success and "detail" in response and "Invalid or expired refresh token" in response["detail"]:
-        print_success("Deactivated refresh token correctly rejected")
+    # This is actually a success case for our test - we expect a 401 error
+    if not old_token_success and "detail" in old_token_response and "Invalid or expired refresh token" in old_token_response["detail"]:
+        print_success("Old refresh token correctly rejected with 401 status")
         record_test(f"Expired Refresh Token - {username}", True)
     else:
-        print_error(f"Deactivated refresh token not handled correctly: {response}")
-        record_test(f"Expired Refresh Token - {username}", False, f"Unexpected response: {response}")
+        print_error(f"Old refresh token not handled correctly: {old_token_response}")
+        record_test(f"Expired Refresh Token - {username}", False, f"Unexpected response: {old_token_response}")
     
     if not success and "detail" in response and "Invalid or expired refresh token" in response["detail"]:
         print_success("Deactivated refresh token correctly rejected")
