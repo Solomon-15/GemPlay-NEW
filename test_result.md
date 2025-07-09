@@ -539,8 +539,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Update User API"
-    - "Admin Update User Balance API"
+    - "Profit API endpoints"
     - "Shop Component"
     - "Inventory Component"
     - "Profile Component"
