@@ -3270,6 +3270,14 @@ async def start_bot_automation():
 app.include_router(auth_router)
 app.include_router(api_router)
 
+# Startup event
+@app.on_event("startup")
+async def startup_event():
+    """Initialize bot automation on startup."""
+    logger.info("Starting bot automation system...")
+    await start_bot_automation()
+    logger.info("Bot automation system started successfully")
+
 # ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
