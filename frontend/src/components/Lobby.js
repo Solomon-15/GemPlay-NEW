@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import GemsHeader from './GemsHeader';
 import PlayerCard from './PlayerCard';
+import { useNotifications } from './NotificationContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
+  const { showSuccess, showError } = useNotifications();
   const [stats, setStats] = useState({ available: 0, gems: 0, total: 0 });
   const [myBets, setMyBets] = useState([]);
   const [availableBets, setAvailableBets] = useState([]);
