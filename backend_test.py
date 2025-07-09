@@ -10,6 +10,10 @@ import hashlib
 
 # Configuration
 BASE_URL = "https://ba8cc80b-e89e-43ed-be28-0c0321c9b61d.preview.emergentagent.com/api"
+ADMIN_USER = {
+    "email": "admin@gemplay.com",
+    "password": "Admin123!"
+}
 TEST_USERS = [
     {
         "username": "player1",
