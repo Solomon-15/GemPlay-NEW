@@ -48,7 +48,8 @@ module.exports = {
       },
       backgroundImage: {
         'gradient-primary': 'linear-gradient(135deg, #010b20 0%, #011941 100%)',
-        'gradient-accent': 'linear-gradient(135deg, #23d364 0%, #23d3a7 100%)',
+        'gradient-accent': 'linear-gradient(135deg, #1ba351 0%, #1ba388 100%)', // Darker greens
+        'gradient-accent-light': 'linear-gradient(135deg, #23d364 0%, #23d3a7 100%)', // Original for text
       },
       animation: {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
