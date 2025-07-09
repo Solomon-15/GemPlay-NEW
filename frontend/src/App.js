@@ -287,6 +287,9 @@ function App() {
         {currentView === 'inventory' && (
           <Inventory user={user} onUpdateUser={checkAuthStatus} />
         )}
+        {currentView === 'monitoring' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
+          <SecurityMonitoring user={user} />
+        )}
       </div>
     </div>
   );
