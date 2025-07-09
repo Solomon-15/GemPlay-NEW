@@ -190,7 +190,9 @@ function App() {
   };
 
   const handleLogin = (userData) => {
+    console.log('🚀 handleLogin called with userData:', userData);
     setUser(userData);
+    console.log('✅ User state updated');
   };
 
   const handleLogout = () => {
