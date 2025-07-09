@@ -414,16 +414,13 @@ def test_insufficient_funds(token: str) -> None:
     
     response, success = make_request("POST", "/gems/buy", params=params, auth_token=token, expected_status=400)
     
-    if success:
-        print_error("Server allowed purchase with insufficient funds")
-        record_test("Insufficient Funds Validation", False, "Purchase with insufficient funds was allowed")
+    # For validation tests, success means the server correctly returned a 400 error
+    if not success and "detail" in response and "Insufficient balance" in response["detail"]:
+        print_success("Server correctly rejected purchase with insufficient funds")
+        record_test("Insufficient Funds Validation", True)
     else:
-        if "detail" in response and "Insufficient balance" in response["detail"]:
-            print_success("Server correctly rejected purchase with insufficient funds")
-            record_test("Insufficient Funds Validation", True)
-        else:
-            print_error(f"Unexpected error response: {response}")
-            record_test("Insufficient Funds Validation", False, f"Unexpected error: {response}")
+        print_error("Server did not properly validate insufficient funds")
+        record_test("Insufficient Funds Validation", False, "Validation failed")
 
 def test_insufficient_gems(token: str) -> None:
     """Test selling more gems than available."""
