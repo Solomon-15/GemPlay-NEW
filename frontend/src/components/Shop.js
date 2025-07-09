@@ -98,8 +98,8 @@ const Shop = ({ user, onUpdateUser }) => {
       {/* Balance Display */}
       {balance && (
         <div className="max-w-4xl mx-auto mb-8">
-          <div className="bg-surface-card border border-border-primary rounded-lg p-6">
-            <h2 className="font-russo text-2xl text-accent-secondary mb-4">Your Balance</h2>
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+            <h2 className="font-russo text-2xl text-accent-secondary mb-4">Account Balance</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <p className="font-roboto text-text-secondary">Virtual Dollars</p>
@@ -108,7 +108,7 @@ const Shop = ({ user, onUpdateUser }) => {
                 </p>
               </div>
               <div className="text-center">
-                <p className="font-roboto text-text-secondary">Total Gem Value</p>
+                <p className="font-roboto text-text-secondary">Gem Value</p>
                 <p className="font-rajdhani text-3xl font-bold text-accent-primary">
                   ${balance.total_gem_value.toFixed(2)}
                 </p>
