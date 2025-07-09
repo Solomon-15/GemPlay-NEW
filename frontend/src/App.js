@@ -311,7 +311,7 @@ function App() {
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block">
                 <p className="font-roboto text-text-secondary text-sm mb-1">Welcome, {user.username}</p>
-                <BalanceDisplay user={user} onUpdateBalance={(newBalance) => setUser({...user, ...newBalance})} />
+                <BalanceDisplay user={user} onUpdateBalance={null} />
               </div>
               
               <button
