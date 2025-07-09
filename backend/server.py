@@ -1716,9 +1716,24 @@ async def determine_game_winner(game_id: str) -> dict:
         # Distribute rewards
         await distribute_game_rewards(game_obj, winner_id, commission_amount)
         
+        # Update bot cycle tracking if applicable
+        if game_obj.is_bot_game and game_obj.bot_id:
+            await update_bot_cycle_tracking(game_obj.bot_id, winner_id == game_obj.bot_id)
+        
         # Get user details for response
         creator = await db.users.find_one({"id": game_obj.creator_id})
+        if not creator:
+            # Creator might be a bot
+            creator = await db.bots.find_one({"id": game_obj.creator_id})
+            if creator:
+                creator = {"id": creator["id"], "username": creator["name"]}
+        
         opponent = await db.users.find_one({"id": game_obj.opponent_id})
+        if not opponent:
+            # Opponent might be a bot
+            opponent = await db.bots.find_one({"id": game_obj.opponent_id})
+            if opponent:
+                opponent = {"id": opponent["id"], "username": opponent["name"]}
         
         return {
             "game_id": game_id,
