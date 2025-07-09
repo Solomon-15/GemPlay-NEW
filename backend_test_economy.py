@@ -453,10 +453,11 @@ def test_insufficient_gems(token: str) -> None:
         "quantity": sell_quantity
     }
     
+    # We expect a 400 error, so we set expected_status=400
     response, success = make_request("POST", "/gems/sell", params=params, auth_token=token, expected_status=400)
     
-    # For validation tests, success means the server correctly returned a 400 error
-    if not success and "detail" in response and "Insufficient gems" in response["detail"]:
+    # For validation tests, success means the server correctly returned a 400 error with the right message
+    if success and "detail" in response and "Insufficient gems" in response["detail"]:
         print_success("Server correctly rejected selling more gems than available")
         record_test("Insufficient Gems Validation", True)
     else:
