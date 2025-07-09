@@ -312,6 +312,7 @@ function App() {
                   {currentView === 'my-bets' ? 'My Bets' : 
                    currentView === 'game-lobby' ? 'Game Lobby' : 
                    currentView === 'create-game' ? 'Create Game' : 
+                   currentView === 'notification-demo' ? 'Notification Demo' : 
                    currentView}
                 </h1>
               </div>
