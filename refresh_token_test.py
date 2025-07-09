@@ -241,8 +241,9 @@ def test_invalid_refresh_token(username: str) -> None:
         expected_status=401
     )
     
+    # This is actually a success case for our test - we expect a 401 error
     if not success and "detail" in response and "Invalid or expired refresh token" in response["detail"]:
-        print_success("Invalid refresh token correctly rejected")
+        print_success("Invalid refresh token correctly rejected with 401 status")
         record_test(f"Invalid Refresh Token - {username}", True)
     else:
         print_error(f"Invalid refresh token not handled correctly: {response}")
