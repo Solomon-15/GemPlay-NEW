@@ -62,11 +62,11 @@ const Lobby = ({ user, onUpdateUser }) => {
       // Filter games
       const allGames = gamesResponse.data || [];
       setAvailableBets(allGames.filter(game => !game.is_bot_game));
-      setAvailableBots(allGames.filter(game => game.is_bot_game));
       
-      // Set active bots for display
+      // Combine bot games and active bots
+      const botGames = allGames.filter(game => game.is_bot_game);
       const activeBots = botsResponse.data || [];
-      setAvailableBots(prev => [...prev, ...activeBots.map(bot => ({
+      const botEntries = activeBots.map(bot => ({
         id: `bot-${bot.id}`,
         creator_username: bot.name,
         creator: { username: bot.name, gender: bot.avatar_gender },
@@ -76,7 +76,9 @@ const Lobby = ({ user, onUpdateUser }) => {
         is_bot: true,
         bot_id: bot.id,
         bot_type: bot.bot_type
-      })])];
+      }));
+      
+      setAvailableBots([...botGames, ...botEntries]);
       
       const userGames = myBetsResponse.data || [];
       setMyBets(userGames.filter(game => game.status === 'WAITING'));
