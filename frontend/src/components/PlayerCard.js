@@ -111,7 +111,7 @@ const PlayerCard = ({
             </h3>
             {isMyBet && (
               <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full font-rajdhani font-bold">
-                Моя ставка
+                My Bet
               </span>
             )}
           </div>
@@ -124,7 +124,7 @@ const PlayerCard = ({
               {timeRemaining}
             </div>
             <div className="text-text-secondary text-xs">
-              автоотмена
+              auto-cancel
             </div>
           </div>
         )}
@@ -148,7 +148,7 @@ const PlayerCard = ({
           ))}
           {sortedGems.length === 0 && (
             <span className="text-text-secondary text-sm font-roboto">
-              Нет гемов
+              No gems
             </span>
           )}
         </div>
@@ -164,21 +164,21 @@ const PlayerCard = ({
         <div className="flex-shrink-0">
           {isOngoing ? (
             <div className="px-4 py-2 bg-blue-600 text-white font-rajdhani font-bold rounded-lg text-sm">
-              В процессе
+              In Progress
             </div>
           ) : isMyBet ? (
             <button
               onClick={() => onCancel && onCancel(game.id)}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-colors text-sm"
             >
-              Отменить
+              Cancel
             </button>
           ) : (
             <button
               onClick={() => onAccept && onAccept(game.id)}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-colors text-sm"
             >
-              Принять
+              Accept
             </button>
           )}
         </div>
