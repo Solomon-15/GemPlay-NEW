@@ -335,7 +335,7 @@ function App() {
         {/* Page Content */}
         <div className="flex-1 overflow-auto">
           {currentView === 'lobby' && (
-            <Lobby user={user} onUpdateUser={checkAuthStatus} />
+            <Lobby user={user} onUpdateUser={checkAuthStatus} setCurrentView={setCurrentView} />
           )}
           {currentView === 'my-bets' && (
             <MyBets user={user} onUpdateUser={checkAuthStatus} />
