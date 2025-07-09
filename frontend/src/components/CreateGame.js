@@ -182,7 +182,7 @@ const CreateGame = ({ user, onUpdateUser }) => {
       {/* Balance Info */}
       {balance && (
         <div className="max-w-4xl mx-auto mb-8">
-          <div className="bg-surface-card border border-border-primary rounded-lg p-6">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <p className="font-roboto text-text-secondary">Баланс</p>
