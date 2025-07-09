@@ -156,8 +156,9 @@ const LoginForm = ({ onLogin }) => {
 // Main App Component
 function App() {
   const [user, setUser] = useState(null);
-  const [currentView, setCurrentView] = useState('shop');
+  const [currentView, setCurrentView] = useState('lobby');
   const [loading, setLoading] = useState(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     checkAuthStatus();
