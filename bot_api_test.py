@@ -262,7 +262,7 @@ def test_toggle_bot(token: str, bot_id: str) -> bool:
     response, success = make_request("POST", f"/bots/{bot_id}/toggle", auth_token=token)
     
     if success:
-        if "message" in response and "toggled" in response["message"].lower():
+        if "message" in response and ("deactivated" in response["message"].lower() or "activated" in response["message"].lower()):
             print_success("Bot toggled successfully")
             record_test("POST /api/bots/{bot_id}/toggle", True)
             return True
