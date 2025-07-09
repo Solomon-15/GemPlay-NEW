@@ -184,6 +184,8 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   const handleGemQuantityChange = (gemType, quantity) => {
     if (isAutoMode) return; // Don't allow manual changes in auto mode
     
+    if (!userGems || userGems.length === 0) return;
+    
     const maxQuantity = userGems.find(g => g.gem_type === gemType)?.quantity || 0;
     const newQuantity = Math.max(0, Math.min(quantity, maxQuantity));
     
