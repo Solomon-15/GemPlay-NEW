@@ -7,6 +7,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const Shop = ({ user, onUpdateUser }) => {
+  const { showSuccess, showError } = useNotifications();
   const [gems, setGems] = useState([]);
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
