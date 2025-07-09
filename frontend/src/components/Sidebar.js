@@ -275,27 +275,14 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
 
           {/* Admin Panel Button */}
           <button
-            onClick={() => setCurrentView('admin')}
+            onClick={onOpenAdminPanel}
             className={`w-full flex items-center transition-all duration-300 group relative overflow-hidden mt-2 ${
               isCollapsed 
                 ? 'justify-center p-2 mx-1 rounded-lg' 
                 : 'px-3 py-2 rounded-lg'
-            } ${
-              currentView === 'admin' 
-                ? isCollapsed
-                  ? 'bg-purple-500/5 text-purple-400' 
-                  : 'bg-purple-500/5 text-purple-400'
-                : 'hover:bg-surface-card text-purple-400 hover:text-purple-300'
-            }`}
+            } hover:bg-surface-card text-purple-400 hover:text-purple-300`}
             title={isCollapsed ? 'Админ Панель' : ''}
           >
-            {/* Very thin purple frame for active state */}
-            {currentView === 'admin' && (
-              <div className={`absolute inset-0 border border-purple-500 border-opacity-40 rounded-lg bg-purple-500/3 ${
-                isCollapsed ? 'border-opacity-50' : 'border-l-2 border-purple-500 border-opacity-100 border-t-0 border-r-0 border-b-0 bg-purple-500/8'
-              }`}></div>
-            )}
-            
             <svg className={`w-6 h-6 relative z-10 transition-all duration-300 ${
               isCollapsed 
                 ? 'group-hover:scale-110 group-hover:translate-x-1' 
