@@ -167,6 +167,84 @@ backend:
         agent: "testing"
         comment: "Refresh token system works correctly. Login endpoint returns both access_token and refresh_token. Refresh endpoint returns new access_token and refresh_token. Old refresh tokens are deactivated when new ones are created. Invalid refresh tokens are properly rejected with 401 status."
 
+  - task: "Admin User Stats API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing GET /api/admin/users/stats endpoint."
+      - working: true
+        agent: "testing"
+        comment: "The GET /api/admin/users/stats endpoint works correctly. It returns all expected fields: total, active, banned, and new_today with appropriate values."
+
+  - task: "Admin Users List API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing GET /api/admin/users endpoint."
+      - working: false
+        agent: "testing"
+        comment: "The GET /api/admin/users endpoint returns a 500 Internal Server Error. The issue is with the response model, which is set to List[dict] but the function returns a dictionary with a 'users' field that contains a list of users."
+      - working: true
+        agent: "testing"
+        comment: "The GET /api/admin/users endpoint now works correctly after fixing the response model. It returns a dictionary with users list, total count, pagination info, and properly handles search and status filtering."
+
+  - task: "Admin Update User API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing PUT /api/admin/users/{user_id} endpoint."
+      - working: false
+        agent: "testing"
+        comment: "The PUT /api/admin/users/{user_id} endpoint returns a 200 OK response, but the changes are not reflected in the database. Attempted to update daily_limit_max but the value was not updated when retrieving the user again."
+
+  - task: "Admin Ban/Unban User API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing POST /api/admin/users/{user_id}/ban and POST /api/admin/users/{user_id}/unban endpoints."
+      - working: true
+        agent: "testing"
+        comment: "The ban and unban endpoints work correctly. Successfully banned a user with a reason and duration, and then unbanned the user. The user's status was correctly updated in both cases."
+
+  - task: "Admin Update User Balance API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing POST /api/admin/users/{user_id}/balance endpoint."
+      - working: false
+        agent: "testing"
+        comment: "The POST /api/admin/users/{user_id}/balance endpoint returns a 200 OK response, but the balance is not updated correctly. Attempted to add 100 to the user's balance, but the balance was set to 0 instead."
+
 frontend:
   - task: "Create Game Component"
     implemented: true
@@ -326,15 +404,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Create Game API"
-    - "Join Game API"
-    - "Rock-Paper-Scissors Logic"
-    - "Commit-Reveal Scheme"
-    - "Bot Management APIs"
-    - "Bot Game APIs"
-    - "Bot Game Logic"
-    - "Bot Integration with Game System"
-    - "Refresh Token System"
+    - "Admin User Stats API"
+    - "Admin Users List API"
+    - "Admin Update User API"
+    - "Admin Ban/Unban User API"
+    - "Admin Update User Balance API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -349,11 +423,13 @@ agent_communication:
   - agent: "testing"
     message: "Tested the bot system implementation. Most Bot Management APIs work correctly, with GET /api/bots returning a 500 error (known issue). Bot Game APIs function as expected, including setup-gems, create-game, and stats endpoints. Bot game logic works correctly, though cycle tracking might be updated asynchronously. Bot integration with the game system is successful, with bots able to create games and have their history recorded."
   - agent: "testing"
-    message: "The GET /api/bots endpoint has been fixed and now returns properly cleaned bot data that is JSON-serializable. Created a new test script to verify all bot management endpoints, and all tests are passing. The fix ensures that bot data is properly cleaned before being returned, preventing serialization issues."
+    message: "The GET /api/bots endpoint has been fixed and now works correctly. Created a new test script to verify all bot management endpoints, and all tests are passing. The fix ensures that bot data is properly cleaned before being returned, preventing serialization issues."
   - agent: "testing"
     message: "Tested the refresh token system implementation. All tests are passing. The login endpoint correctly returns both access_token and refresh_token. The refresh endpoint correctly returns a new access_token and refresh_token. Old refresh tokens are properly deactivated when new ones are created. Invalid refresh tokens are correctly rejected with a 401 status code. The refresh token system is working as expected."
   - agent: "testing"
     message: "Completed comprehensive UI testing of the GemPlay application. All frontend components are working correctly, including Sidebar Navigation, Lobby, Shop, Inventory, Profile, My Bets, Leaderboard, History, and Security Monitoring. Authentication and session management with refresh tokens are functioning properly. The application is responsive and works well on desktop, tablet, and mobile views. There are some 500 errors when fetching data from the backend API endpoints for the Leaderboard and Security Monitoring components, but these don't prevent the components from rendering correctly with mock data."
+  - agent: "testing"
+    message: "Tested the admin API endpoints. The GET /api/admin/users/stats endpoint works correctly, returning all expected fields. Fixed an issue with the GET /api/admin/users endpoint where the response model was incorrectly defined. The ban and unban endpoints work correctly, but there are issues with the update user and update user balance endpoints - they return 200 OK responses but the changes are not reflected in the database."
 
 **ТЕКУЩИЙ ПРОГРЕСС ФАЗЫ 3:**
 - ✅ Backend API для создания игр (/api/games/create)
@@ -425,3 +501,11 @@ agent_communication:
 - ✅ Endpoint /api/auth/refresh для обновления токенов
 - ✅ Проверка валидности и срока действия токенов
 - ✅ Безопасная обработка недействительных токенов
+
+**ADMIN API ENDPOINTS (РЕАЛИЗОВАНЫ):**
+- ✅ GET /api/admin/users/stats - статистика пользователей для дашборда
+- ✅ GET /api/admin/users - список всех пользователей с пагинацией
+- ⚠️ PUT /api/admin/users/{user_id} - обновление пользователя (не работает корректно)
+- ✅ POST /api/admin/users/{user_id}/ban - бан пользователя
+- ✅ POST /api/admin/users/{user_id}/unban - разбан пользователя
+- ⚠️ POST /api/admin/users/{user_id}/balance - обновление баланса пользователя (не работает корректно)
