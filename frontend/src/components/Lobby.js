@@ -233,6 +233,25 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     }
   };
 
+  const handleCancelBet = async (gameId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/games/${gameId}/cancel`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        // Refresh the lobby data after cancellation
+        await fetchLobbyData();
+        console.log('Bet cancelled successfully');
+      }
+    } catch (error) {
+      console.error('Error cancelling bet:', error);
+      // Even if the API call fails, we can still refresh the data
+      await fetchLobbyData();
+    }
+  };
+
   const getPaginatedItems = (items, page) => {
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
