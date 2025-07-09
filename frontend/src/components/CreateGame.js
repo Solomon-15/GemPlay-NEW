@@ -6,6 +6,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const CreateGame = ({ user, onUpdateUser }) => {
+  const { showSuccess, showError, showWarning } = useNotifications();
   const [gems, setGems] = useState([]);
   const [selectedGems, setSelectedGems] = useState({});
   const [selectedMove, setSelectedMove] = useState('');
