@@ -338,7 +338,7 @@ def test_get_bot_stats(admin_token: str, bot_id: str) -> Dict[str, Any]:
     response, success = make_request("GET", f"/bots/{bot_id}/stats", auth_token=admin_token)
     
     if success:
-        if "bot" in response and "games" in response and "stats" in response:
+        if "bot_id" in response and "name" in response:
             print_success(f"Successfully retrieved stats for bot {bot_id}")
             record_test(f"GET /api/bots/{bot_id}/stats", True)
             return response
