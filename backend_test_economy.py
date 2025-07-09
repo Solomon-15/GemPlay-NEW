@@ -412,10 +412,11 @@ def test_insufficient_funds(token: str) -> None:
         "quantity": quantity
     }
     
+    # We expect a 400 error, so we set expected_status=400
     response, success = make_request("POST", "/gems/buy", params=params, auth_token=token, expected_status=400)
     
-    # For validation tests, success means the server correctly returned a 400 error
-    if not success and "detail" in response and "Insufficient balance" in response["detail"]:
+    # For validation tests, success means the server correctly returned a 400 error with the right message
+    if success and "detail" in response and "Insufficient balance" in response["detail"]:
         print_success("Server correctly rejected purchase with insufficient funds")
         record_test("Insufficient Funds Validation", True)
     else:
