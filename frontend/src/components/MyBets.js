@@ -168,17 +168,17 @@ const MyBets = ({ user }) => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 max-w-4xl mx-auto">
-        <div className="bg-surface-card border border-border-primary rounded-lg p-4 text-center">
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 text-center">
           <h3 className="font-rajdhani font-bold text-lg text-white">Total Bets</h3>
           <p className="font-roboto text-2xl font-bold text-accent-primary">{bets.length}</p>
         </div>
-        <div className="bg-surface-card border border-border-primary rounded-lg p-4 text-center">
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 text-center">
           <h3 className="font-rajdhani font-bold text-lg text-white">Won</h3>
           <p className="font-roboto text-2xl font-bold text-green-400">
             {bets.filter(b => b.status === 'COMPLETED' && b.winner_id === user.id).length}
           </p>
         </div>
-        <div className="bg-surface-card border border-border-primary rounded-lg p-4 text-center">
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 text-center">
           <h3 className="font-rajdhani font-bold text-lg text-white">Lost</h3>
           <p className="font-roboto text-2xl font-bold text-red-400">
             {bets.filter(b => b.status === 'COMPLETED' && b.winner_id && b.winner_id !== user.id).length}
