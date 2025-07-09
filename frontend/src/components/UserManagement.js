@@ -122,10 +122,10 @@ const UserManagement = () => {
       });
       
       fetchUsers();
-      alert('Баланс обновлен');
+      showSuccessRU('Баланс обновлен');
     } catch (error) {
       console.error('Ошибка обновления баланса:', error);
-      alert('Ошибка при обновлении баланса');
+      showErrorRU('Ошибка при обновлении баланса');
     }
   };
 
