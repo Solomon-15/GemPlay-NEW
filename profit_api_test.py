@@ -176,31 +176,41 @@ def test_profit_commission_settings(admin_token: str) -> Dict[str, Any]:
     
     return {}
 
-def test_profit_entries(admin_token: str) -> List[Dict[str, Any]]:
+def test_profit_entries(admin_token: str) -> Dict[str, Any]:
     """Test getting profit entries."""
     print_subheader("Testing GET /api/admin/profit/entries")
     
     if not admin_token:
         print_error("No admin token available")
         record_test("GET /api/admin/profit/entries", False, "No admin token available")
-        return []
+        return {}
     
     response, success = make_request("GET", "/admin/profit/entries", auth_token=admin_token)
     
     if success:
-        if isinstance(response, list):
-            print_success(f"Got profit entries: {len(response)} entries")
-            for entry in response[:3]:  # Show first 3 entries
-                print_success(f"Entry: {entry['entry_type']} - ${entry['amount']} - {entry['description']}")
+        if isinstance(response, dict) and "entries" in response:
+            entries = response["entries"]
+            print_success(f"Got profit entries: {len(entries)} entries")
+            print_success(f"Total entries: {response['total_count']}")
+            print_success(f"Page: {response['page']}")
+            print_success(f"Limit: {response['limit']}")
+            print_success(f"Total pages: {response['total_pages']}")
+            
+            if entries and len(entries) > 0:
+                for entry in entries[:3]:  # Show first 3 entries
+                    print_success(f"Entry: {entry['entry_type']} - ${entry['amount']} - {entry['description']}")
+            else:
+                print_success("No profit entries found (empty list)")
+                
             record_test("GET /api/admin/profit/entries", True)
             return response
         else:
-            print_error(f"Profit entries response is not a list: {response}")
-            record_test("GET /api/admin/profit/entries", False, "Response is not a list")
+            print_error(f"Profit entries response missing expected fields: {response}")
+            record_test("GET /api/admin/profit/entries", False, "Response missing expected fields")
     else:
         record_test("GET /api/admin/profit/entries", False, "Request failed")
     
-    return []
+    return {}
 
 def print_summary() -> None:
     """Print a summary of all test results."""
