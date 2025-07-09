@@ -320,14 +320,15 @@ def test_create_game_validation(token: str, username: str, move: str, bet_gems: 
         record_test(f"Create Game Validation - {username}", False, "No token available")
         return
     
-    # For FastAPI, we need to send the move as a query parameter and bet_gems in the body
+    # Send both move and bet_gems in the request body
     data = {
+        "move": move,
         "bet_gems": bet_gems
     }
     
     response, success = make_request(
         "POST", 
-        f"/games/create?move={move}", 
+        "/games/create", 
         data=data,
         auth_token=token, 
         expected_status=400
