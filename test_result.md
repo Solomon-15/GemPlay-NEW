@@ -363,6 +363,102 @@ backend:
         agent: "testing"
         comment: "System tracks frozen gems correctly with frozen_quantity field in inventory"
 
+  - task: "Rate Limiting Protection"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "Rate limiting protection does not trigger when making 70 requests in parallel. The system should block requests after 60 per minute according to the configuration."
+
+  - task: "Security Alerts API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/admin/security/alerts endpoint returns security alerts correctly with all expected fields including severity, description, and status."
+
+  - task: "Security Dashboard API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "GET /api/admin/security/dashboard endpoint returns a 500 Internal Server Error. This needs to be fixed."
+
+  - task: "Monitoring Stats API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/admin/security/monitoring-stats endpoint returns all expected sections including transaction stats, user activity, and security stats."
+
+  - task: "Large Purchase Detection"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "System correctly detects and creates security alerts for large purchases (>$500). Tested with a purchase of 501 Ruby gems for $501."
+
+  - task: "Suspicious Activity Detection"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "System correctly detects and creates security alerts for suspicious activity patterns like multiple purchases. Tested with 25 small purchases in quick succession."
+
+  - task: "Alert Resolution API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/admin/security/alerts/{id}/resolve endpoint allows admins to resolve security alerts with an action taken message."
+
+  - task: "Admin Access Control"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "There's an issue with the admin access control test. Regular users are correctly denied access to admin endpoints with a 403 error, but the test is incorrectly reporting this as a failure. The implementation appears to be working correctly, but the test needs to be fixed."
+
 frontend:
   - task: "Frontend Testing"
     implemented: true
