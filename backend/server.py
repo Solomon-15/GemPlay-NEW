@@ -1870,9 +1870,9 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
         logger.error(f"Error distributing game rewards: {e}")
         raise
 
-@api_router.get("/games/live", response_model=List[dict])
-async def get_live_games(current_user: User = Depends(get_current_user)):
-    """Get list of live/waiting games."""
+@api_router.get("/games/available", response_model=List[dict])
+async def get_available_games(current_user: User = Depends(get_current_user)):
+    """Get list of available games for joining."""
     try:
         # Get waiting games (exclude user's own games)
         games = await db.games.find({
