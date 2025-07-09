@@ -389,6 +389,7 @@ def test_join_game(token: str, username: str, game_id: str, move: str) -> Dict[s
         record_test(f"Join Game - {username}", False, "No token available")
         return {}
     
+    # For FastAPI, we need to send the move as a query parameter
     response, success = make_request(
         "POST", 
         f"/games/{game_id}/join?move={move}", 
