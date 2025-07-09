@@ -215,6 +215,26 @@ class Transaction(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     admin_id: Optional[str] = None  # Если транзакция создана админом
 
+class ProfitEntry(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    entry_type: str  # "BET_COMMISSION", "GIFT_COMMISSION", "ADMIN_ADJUSTMENT"
+    amount: float
+    source_user_id: str  # Пользователь, с которого взята комиссия
+    reference_id: Optional[str] = None  # ID игры, подарка и т.д.
+    description: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    admin_id: Optional[str] = None  # Если создано админом
+
+class FrozenBalance(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    amount: float
+    reason: str  # "BET_COMMISSION", "MAINTENANCE", etc.
+    reference_id: Optional[str] = None  # ID игры
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    released_at: Optional[datetime] = None
+    is_active: bool = True
+
 class Bot(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
