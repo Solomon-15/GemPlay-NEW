@@ -104,46 +104,66 @@ const Lobby = ({ user, onUpdateUser }) => {
     </div>
   );
 
-  const GameCard = ({ game, onJoin, isBot = false }) => (
-    <div className="bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg p-4 hover:border-accent-primary hover:border-opacity-100 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center space-x-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBot ? 'bg-blue-700' : 'bg-green-700'}`}>
-            {isBot ? '🤖' : '👤'}
+  const GameCard = ({ game, onJoin, isBot = false }) => {
+    const isActiveBotEntry = game.is_bot && game.bot_id;
+    
+    return (
+      <div className="bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg p-4 hover:border-accent-primary hover:border-opacity-100 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBot || isActiveBotEntry ? 'bg-blue-700' : 'bg-green-700'}`}>
+              {isBot || isActiveBotEntry ? '🤖' : '👤'}
+            </div>
+            <div>
+              <h4 className="font-rajdhani font-bold text-white">
+                {game.creator_username || game.creator?.username || 'Player'}
+              </h4>
+              <p className="font-roboto text-xs text-text-secondary">
+                {isActiveBotEntry ? 'Available Bot' : new Date(game.created_at).toLocaleTimeString()}
+              </p>
+              {isActiveBotEntry && (
+                <span className="text-xs text-cyan-400 font-rajdhani">
+                  {game.bot_type === 'HUMAN' ? 'Human-like' : 'Regular'} Bot
+                </span>
+              )}
+            </div>
           </div>
-          <div>
-            <h4 className="font-rajdhani font-bold text-white">{game.creator_username || 'Player'}</h4>
-            <p className="font-roboto text-xs text-text-secondary">
-              {new Date(game.created_at).toLocaleTimeString()}
-            </p>
-          </div>
-        </div>
-        <span className="px-2 py-1 bg-green-700 text-white text-xs rounded-full font-rajdhani">
-          WAITING
-        </span>
-      </div>
-      
-      <div className="space-y-2 mb-4">
-        <div className="flex justify-between">
-          <span className="font-roboto text-text-secondary">Bet Amount:</span>
-          <span className="font-rajdhani text-green-400 font-bold">${game.bet_amount}</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="font-roboto text-text-secondary">Gems:</span>
-          <span className="font-rajdhani text-white text-sm">
-            {Object.entries(game.bet_gems || {}).map(([type, qty]) => `${type}: ${qty}`).join(', ')}
+          <span className={`px-2 py-1 text-white text-xs rounded-full font-rajdhani ${
+            isActiveBotEntry ? 'bg-blue-700' : 'bg-green-700'
+          }`}>
+            {isActiveBotEntry ? 'CHALLENGE' : 'WAITING'}
           </span>
         </div>
+        
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between">
+            <span className="font-roboto text-text-secondary">
+              {isActiveBotEntry ? 'Bet Range:' : 'Bet Amount:'}
+            </span>
+            <span className="font-rajdhani text-green-400 font-bold">
+              {typeof game.bet_amount === 'string' ? game.bet_amount : `$${game.bet_amount}`}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-roboto text-text-secondary">Gems:</span>
+            <span className="font-rajdhani text-white text-sm">
+              {typeof game.bet_gems === 'object' ? 
+                Object.entries(game.bet_gems).map(([type, qty]) => `${type}: ${qty}`).join(', ') : 
+                'Various'
+              }
+            </span>
+          </div>
+        </div>
+        
+        <button
+          onClick={() => onJoin(isActiveBotEntry ? game.bot_id : game.id)}
+          className="w-full py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300"
+        >
+          {isActiveBotEntry ? 'CHALLENGE BOT' : 'JOIN BATTLE'}
+        </button>
       </div>
-      
-      <button
-        onClick={() => onJoin(game.id)}
-        className="w-full py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300"
-      >
-        JOIN BATTLE
-      </button>
-    </div>
-  );
+    );
+  };
 
   const SectionBlock = ({ title, icon, count, children, color = 'text-blue-400' }) => (
     <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
