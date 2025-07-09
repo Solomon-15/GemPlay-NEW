@@ -1506,6 +1506,16 @@ async def gift_gems(
     )
     await db.transactions.insert_one(commission_transaction.dict())
     
+    # Record profit from gift commission
+    profit_entry = ProfitEntry(
+        entry_type="GIFT_COMMISSION",
+        amount=commission,
+        source_user_id=current_user.id,
+        reference_id=recipient["id"],
+        description=f"3% commission from gift: {quantity} {gem_type} gems to {recipient['username']}"
+    )
+    await db.profit_entries.insert_one(profit_entry.dict())
+    
     # Recipient transaction
     recipient_transaction = Transaction(
         user_id=recipient["id"],
