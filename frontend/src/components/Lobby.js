@@ -291,7 +291,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           ))}
           {myBets.length === 0 && (
             <div className="col-span-full text-text-secondary text-center py-8">
-              У вас нет активных ставок
+              You have no active bets
             </div>
           )}
         </div>
@@ -325,7 +325,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           ))}
           {availableBets.length === 0 && (
             <div className="col-span-full text-text-secondary text-center py-8">
-              Нет доступных ставок
+              No available bets
             </div>
           )}
         </div>
@@ -359,7 +359,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           ))}
           {ongoingBattles.length === 0 && (
             <div className="col-span-full text-text-secondary text-center py-8">
-              Нет активных сражений
+              No active battles
             </div>
           )}
         </div>
