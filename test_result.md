@@ -449,11 +449,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin User Stats API"
-    - "Admin Users List API"
     - "Admin Update User API"
-    - "Admin Ban/Unban User API"
     - "Admin Update User Balance API"
+    - "Gems Definitions API"
+    - "Gems Inventory API"
+    - "Economy Balance API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
