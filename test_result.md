@@ -243,6 +243,126 @@ backend:
         agent: "testing"
         comment: "Initial gems are created for new users as specified in the registration endpoint"
 
+  - task: "Gem Definitions API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/gems/definitions endpoint returns all gem types correctly with their properties including price, color, rarity, etc."
+
+  - task: "Inventory API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/gems/inventory endpoint returns user's gem inventory correctly with quantities and frozen quantities"
+
+  - task: "Buy Gems API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/gems/buy endpoint allows users to purchase gems with proper balance updates and transaction records"
+
+  - task: "Sell Gems API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/gems/sell endpoint allows users to sell gems back with proper balance updates and transaction records"
+
+  - task: "Gift Gems API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "POST /api/gems/gift endpoint allows users to gift gems to other users with proper 3% commission and transaction records"
+
+  - task: "Economy Balance API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/economy/balance endpoint returns complete economic status including virtual balance, frozen balance, and gem values"
+
+  - task: "Transaction History API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "GET /api/transactions/history endpoint returns transaction history with all details including transaction type, amount, and description"
+
+  - task: "Insufficient Funds Validation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "System correctly validates and prevents purchases when user has insufficient funds"
+
+  - task: "Insufficient Gems Validation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "System correctly validates and prevents selling more gems than available in inventory"
+
+  - task: "Frozen Gems Validation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "System tracks frozen gems correctly with frozen_quantity field in inventory"
+
 frontend:
   - task: "Frontend Testing"
     implemented: true
