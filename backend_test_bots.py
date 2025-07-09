@@ -375,6 +375,11 @@ def test_bot_game_logic(admin_token: str, bot_id: str) -> bool:
     initial_cycle_games = initial_stats.get("current_cycle_games", 0)
     initial_cycle_wins = initial_stats.get("current_cycle_wins", 0)
     
+    # Make sure the bot is active
+    if not initial_stats.get("is_active", False):
+        print_warning("Bot is not active, toggling to active")
+        test_toggle_bot(admin_token, bot_id)
+    
     # Create a game with the bot
     game_id = test_bot_create_game(admin_token, bot_id)
     if not game_id:
