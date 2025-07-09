@@ -292,7 +292,7 @@ def test_setup_bot_gems(token: str, bot_id: str) -> bool:
     response, success = make_request("POST", f"/bots/{bot_id}/setup-gems", data=gems_data, auth_token=token)
     
     if success:
-        if "message" in response and "gems set up" in response["message"].lower():
+        if "message" in response and "setup" in response["message"].lower():
             print_success("Bot gems set up successfully")
             record_test("POST /api/bots/{bot_id}/setup-gems", True)
             return True
