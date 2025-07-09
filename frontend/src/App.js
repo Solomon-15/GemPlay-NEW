@@ -16,6 +16,7 @@ import AdminPanel from "./components/AdminPanel";
 import BalanceDisplay from "./components/BalanceDisplay";
 import NotificationProvider from "./components/NotificationContext";
 import NotificationContainer from "./components/NotificationContainer";
+import NotificationDemo from "./components/NotificationDemo";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
