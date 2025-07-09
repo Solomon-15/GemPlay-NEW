@@ -96,7 +96,7 @@ const Lobby = ({ user, onUpdateUser }) => {
             </p>
           </div>
         </div>
-        <span className="px-2 py-1 bg-green-600 text-white text-xs rounded-full font-rajdhani">
+        <span className="px-2 py-1 bg-green-700 text-white text-xs rounded-full font-rajdhani">
           WAITING
         </span>
       </div>
