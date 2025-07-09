@@ -3670,6 +3670,129 @@ async def update_user_balance(
             detail="Failed to update user balance"
         )
 
+# ==============================================================================
+# ADMIN PROFIT TRACKING API
+# ==============================================================================
+
+@api_router.get("/admin/profit/stats", response_model=dict)
+async def get_profit_stats(current_admin: User = Depends(get_current_admin)):
+    """Get profit statistics for admin dashboard."""
+    try:
+        current_time = datetime.utcnow()
+        day_ago = current_time - timedelta(days=1)
+        week_ago = current_time - timedelta(weeks=1)
+        month_ago = current_time - timedelta(days=30)
+        
+        # Get total profits
+        total_profit = await db.profit_entries.aggregate([
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        total_profit = total_profit[0]["total"] if total_profit else 0
+        
+        # Get profits by type
+        profit_by_type = await db.profit_entries.aggregate([
+            {"$group": {"_id": "$entry_type", "total": {"$sum": "$amount"}}}
+        ]).to_list(10)
+        
+        # Get recent profits (last 24 hours)
+        recent_profit = await db.profit_entries.aggregate([
+            {"$match": {"created_at": {"$gte": day_ago}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        recent_profit = recent_profit[0]["total"] if recent_profit else 0
+        
+        # Get weekly profit
+        weekly_profit = await db.profit_entries.aggregate([
+            {"$match": {"created_at": {"$gte": week_ago}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        weekly_profit = weekly_profit[0]["total"] if weekly_profit else 0
+        
+        # Get monthly profit
+        monthly_profit = await db.profit_entries.aggregate([
+            {"$match": {"created_at": {"$gte": month_ago}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        monthly_profit = monthly_profit[0]["total"] if monthly_profit else 0
+        
+        return {
+            "total_profit": total_profit,
+            "recent_profit": recent_profit,
+            "weekly_profit": weekly_profit,
+            "monthly_profit": monthly_profit,
+            "profit_by_type": {item["_id"]: item["total"] for item in profit_by_type}
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching profit stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch profit stats"
+        )
+
+@api_router.get("/admin/profit/entries", response_model=List[dict])
+async def get_profit_entries(
+    page: int = 1,
+    limit: int = 50,
+    entry_type: Optional[str] = None,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get profit entries with pagination."""
+    try:
+        query = {}
+        if entry_type:
+            query["entry_type"] = entry_type
+        
+        skip = (page - 1) * limit
+        
+        # Get profit entries
+        entries = await db.profit_entries.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        # Get user info for each entry
+        for entry in entries:
+            user = await db.users.find_one({"id": entry["source_user_id"]})
+            entry["source_user"] = {
+                "username": user["username"] if user else "Unknown",
+                "email": user["email"] if user else "Unknown"
+            }
+        
+        # Get total count
+        total_count = await db.profit_entries.count_documents(query)
+        
+        return {
+            "entries": entries,
+            "total_count": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching profit entries: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch profit entries"
+        )
+
+@api_router.get("/admin/profit/commission-settings", response_model=dict)
+async def get_commission_settings(current_admin: User = Depends(get_current_admin)):
+    """Get current commission settings."""
+    try:
+        # These could be stored in database in the future
+        return {
+            "bet_commission": 6.0,  # 6% commission on bets
+            "gift_commission": 3.0,  # 3% commission on gifts
+            "min_bet": 1.0,
+            "max_bet": 3000.0,
+            "daily_deposit_limit": 1000.0
+        }
+    except Exception as e:
+        logger.error(f"Error fetching commission settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch commission settings"
+        )
+
 async def update_bot_cycle_tracking(bot_id: str, bot_won: bool):
     """Update bot's cycle tracking after a game."""
     try:
