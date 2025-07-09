@@ -243,12 +243,18 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       });
       
       if (response.data.success) {
+        showSuccess('Bet cancelled successfully');
         // Refresh the lobby data after cancellation
         await fetchLobbyData();
-        console.log('Bet cancelled successfully');
+        if (onUpdateUser) {
+          onUpdateUser();
+        }
+      } else {
+        showError('Failed to cancel bet');
       }
     } catch (error) {
       console.error('Error cancelling bet:', error);
+      showError(error.response?.data?.detail || 'Failed to cancel bet');
       // Even if the API call fails, we can still refresh the data
       await fetchLobbyData();
     }
