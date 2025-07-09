@@ -228,11 +228,20 @@ function App() {
     console.log('✅ User state updated');
   };
 
+  const handleOpenAdminPanel = () => {
+    setIsAdminPanelOpen(true);
+  };
+
+  const handleCloseAdminPanel = () => {
+    setIsAdminPanelOpen(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     setUser(null);
     setCurrentView('lobby');
+    setIsAdminPanelOpen(false);
   };
 
   const handleClaimDailyBonus = async () => {
