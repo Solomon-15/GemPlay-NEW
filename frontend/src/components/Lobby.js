@@ -5,7 +5,7 @@ import GemsHeader from './GemsHeader';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Lobby = ({ user, onUpdateUser }) => {
+const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const [stats, setStats] = useState({ available: 0, gems: 0, total: 0 });
   const [myBets, setMyBets] = useState([]);
   const [availableBets, setAvailableBets] = useState([]);
