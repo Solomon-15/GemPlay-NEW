@@ -206,7 +206,8 @@ def test_refresh_token_endpoint(refresh_token: str, username: str) -> Tuple[Opti
         record_test(f"Refresh Token Endpoint - {username}", False, "No refresh token available")
         return None, None
     
-    response, success = make_request("POST", "/auth/refresh", data={"refresh_token": refresh_token})
+    # Send refresh_token as a query parameter
+    response, success = make_request("POST", f"/auth/refresh?refresh_token={refresh_token}")
     
     if success:
         if "access_token" in response and "refresh_token" in response and "user" in response:
