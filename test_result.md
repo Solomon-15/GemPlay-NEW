@@ -259,6 +259,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "The GET /api/gems/definitions endpoint works correctly. It returns all 7 gem types (Ruby, Amber, Topaz, Emerald, Aquamarine, Sapphire, Magic) with their correct properties including name, price, color, icon, and rarity."
+      - working: true
+        agent: "testing"
+        comment: "Verified again that the GET /api/gems/definitions endpoint works correctly. It returns all 7 gem types with their correct properties."
         
   - task: "Gems Inventory API"
     implemented: true
@@ -274,6 +277,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "The GET /api/gems/inventory endpoint works correctly. It returns the user's gem inventory with proper quantity and frozen_quantity fields. For the admin user, the inventory is currently empty, which is expected as no gems have been purchased yet."
+      - working: true
+        agent: "testing"
+        comment: "Verified again that the GET /api/gems/inventory endpoint works correctly. It returns the user's gem inventory with proper quantity and frozen_quantity fields. After buying gems, the inventory correctly shows the purchased gems."
         
   - task: "Economy Balance API"
     implemented: true
@@ -289,6 +295,69 @@ backend:
       - working: true
         agent: "testing"
         comment: "The GET /api/economy/balance endpoint works correctly. It returns the user's complete economic status including virtual_balance, frozen_balance, total_gem_value, available_gem_value, total_value, daily_limit_used, and daily_limit_max. For the admin user, the virtual balance is $10,000 with no frozen balance or gems."
+      - working: true
+        agent: "testing"
+        comment: "Verified again that the GET /api/economy/balance endpoint works correctly. It returns the user's complete economic status with all expected fields. The values are correctly updated after buying/selling gems and adding balance."
+        
+  - task: "Gems Buy API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing POST /api/gems/buy endpoint."
+      - working: true
+        agent: "testing"
+        comment: "The POST /api/gems/buy endpoint works correctly. Successfully purchased different types of gems (Ruby, Emerald, Magic) with different quantities. The endpoint correctly updates the user's balance and adds the gems to the inventory."
+        
+  - task: "Gems Sell API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing POST /api/gems/sell endpoint."
+      - working: true
+        agent: "testing"
+        comment: "The POST /api/gems/sell endpoint works correctly. Successfully sold different types of gems (Ruby, Emerald) with different quantities. The endpoint correctly updates the user's balance and removes the gems from the inventory."
+        
+  - task: "Add Balance API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing POST /api/auth/add-balance endpoint."
+      - working: true
+        agent: "testing"
+        comment: "The POST /api/auth/add-balance endpoint works correctly. Successfully added different amounts ($100, $500, $400) to the user's balance. The endpoint correctly updates the user's balance and tracks the daily limit usage."
+        
+  - task: "Daily Limit Functionality"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing the daily limit functionality for adding balance."
+      - working: true
+        agent: "testing"
+        comment: "The daily limit functionality works correctly. The system correctly tracks the daily_limit_used and prevents adding more than the daily_limit_max ($1000). When attempting to add an amount that would exceed the limit, the system returns an appropriate error message."
 
 frontend:
   - task: "Create Game Component"
@@ -477,6 +546,8 @@ agent_communication:
     message: "Tested the admin API endpoints. The GET /api/admin/users/stats endpoint works correctly, returning all expected fields. Fixed an issue with the GET /api/admin/users endpoint where the response model was incorrectly defined. The ban and unban endpoints work correctly, but there are issues with the update user and update user balance endpoints - they return 200 OK responses but the changes are not reflected in the database."
   - agent: "testing"
     message: "Tested the gems-related API endpoints for the GemsHeader component. All three endpoints (GET /api/gems/definitions, GET /api/gems/inventory, GET /api/economy/balance) are working correctly. The gems definitions endpoint returns all 7 gem types with correct data including name, price, color, and icon. The inventory endpoint correctly shows the user's gems (empty for the admin user). The balance endpoint returns the correct economic status with virtual_balance, frozen_balance, and gem values."
+  - agent: "testing"
+    message: "Tested the gem system and balance functionality. All endpoints are working correctly: GET /api/gems/definitions, GET /api/gems/inventory, GET /api/economy/balance, POST /api/gems/buy, POST /api/gems/sell, POST /api/auth/add-balance, and POST /api/games/create with gem betting. Successfully bought and sold different types of gems, added balance to the account, tested the daily limit functionality, and created a game with gems. The system correctly tracks the user's balance, gem inventory, and daily limit usage."
 
 **ТЕКУЩИЙ ПРОГРЕСС ФАЗЫ 3:**
 - ✅ Backend API для создания игр (/api/games/create)
@@ -556,3 +627,13 @@ agent_communication:
 - ✅ POST /api/admin/users/{user_id}/ban - бан пользователя
 - ✅ POST /api/admin/users/{user_id}/unban - разбан пользователя
 - ⚠️ POST /api/admin/users/{user_id}/balance - обновление баланса пользователя (не работает корректно)
+
+**СИСТЕМА ГЕМОВ И БАЛАНСА (РЕАЛИЗОВАНА):**
+- ✅ GET /api/gems/definitions - получение списка всех типов гемов
+- ✅ GET /api/gems/inventory - получение инвентаря гемов пользователя
+- ✅ GET /api/economy/balance - получение экономического статуса пользователя
+- ✅ POST /api/gems/buy - покупка гемов в магазине
+- ✅ POST /api/gems/sell - продажа гемов обратно в доллары
+- ✅ POST /api/auth/add-balance - пополнение баланса
+- ✅ Система дневных лимитов ($1000 в день)
+- ✅ Интеграция с системой ставок (создание игр с гемами)
