@@ -162,31 +162,37 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
             <li key={item.id}>
               <button
                 onClick={() => setCurrentView(item.id)}
-                className={`w-full flex items-center transition-all duration-200 group relative ${
+                className={`w-full flex items-center transition-all duration-300 group relative overflow-hidden ${
                   isCollapsed 
                     ? 'justify-center p-2 mx-1 rounded-lg' 
                     : 'px-3 py-3 rounded-lg'
                 } ${
                   currentView === item.id 
                     ? isCollapsed
-                      ? 'bg-accent-primary/10 text-accent-primary relative' 
-                      : 'bg-accent-primary/10 border-l-2 border-accent-primary text-accent-primary'
+                      ? 'bg-accent-primary/5 text-accent-primary' 
+                      : 'bg-accent-primary/5 text-accent-primary'
                     : 'hover:bg-surface-card text-gray-400 hover:text-white'
                 }`}
                 title={isCollapsed ? item.label : ''}
               >
-                {/* Green frame for collapsed active state */}
-                {currentView === item.id && isCollapsed && (
-                  <div className="absolute inset-0 border border-accent-primary/60 rounded-lg bg-accent-primary/5"></div>
+                {/* Very thin green frame for active state */}
+                {currentView === item.id && (
+                  <div className={`absolute inset-0 border border-accent-primary border-opacity-40 rounded-lg bg-accent-primary/3 ${
+                    isCollapsed ? 'border-opacity-50' : 'border-l-2 border-accent-primary border-opacity-100 border-t-0 border-r-0 border-b-0 bg-accent-primary/8'
+                  }`}></div>
                 )}
                 
-                <div className={`relative z-10 ${
+                <div className={`relative z-10 transition-all duration-300 ${
                   currentView === item.id ? 'text-accent-primary' : 'text-gray-400 group-hover:text-white'
-                } ${isCollapsed ? 'flex items-center justify-center' : ''}`}>
+                } ${
+                  isCollapsed 
+                    ? 'flex items-center justify-center group-hover:scale-110 group-hover:translate-x-1' 
+                    : ''
+                }`}>
                   {item.icon}
                 </div>
                 {!isCollapsed && (
-                  <span className="ml-3 font-rajdhani font-semibold tracking-wide">
+                  <span className="ml-3 font-rajdhani font-semibold tracking-wide relative z-10">
                     {item.label}
                   </span>
                 )}
