@@ -184,7 +184,7 @@ const Shop = ({ user, onUpdateUser }) => {
                   {/* Price */}
                   <div className="mb-4">
                     <span className="font-rajdhani text-2xl font-bold text-green-400">
-                      ${gem.price}
+                      {formatCurrencyWithSymbol(gem.price)}
                     </span>
                     <span className="font-roboto text-text-secondary text-sm"> each</span>
                   </div>
