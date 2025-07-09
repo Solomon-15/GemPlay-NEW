@@ -62,14 +62,15 @@ const Shop = ({ user, onUpdateUser }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert(response.data.message);
+      showSuccess(`Successfully purchased ${quantity} ${gemType} gem${quantity > 1 ? 's' : ''}!`);
       await fetchBalance();
       
       if (onUpdateUser) {
         onUpdateUser();
       }
     } catch (error) {
-      alert(error.response?.data?.detail || 'Error buying gems');
+      const errorMessage = error.response?.data?.detail || 'Error buying gems. Please try again.';
+      showError(errorMessage);
     } finally {
       setBuyingGem(null);
     }
