@@ -1400,14 +1400,13 @@ async def get_transaction_history(
 @api_router.post("/games/create", response_model=dict)
 async def create_game(
     request: Request,
-    move: GameMove,
-    bet_gems: Dict[str, int],  # {"Ruby": 5, "Emerald": 2}
+    game_data: CreateGameRequest,
     current_user: User = Depends(get_current_user_with_security)
 ):
     """Create a new PvP game with gem stakes."""
     try:
         # Validate bet gems format
-        if not bet_gems or not isinstance(bet_gems, dict):
+        if not game_data.bet_gems or not isinstance(game_data.bet_gems, dict):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid bet gems format"
@@ -1418,7 +1417,7 @@ async def create_game(
         gem_definitions = await db.gem_definitions.find().to_list(100)
         gem_def_map = {gem["type"]: gem for gem in gem_definitions}
         
-        for gem_type, quantity in bet_gems.items():
+        for gem_type, quantity in game_data.bet_gems.items():
             if quantity <= 0:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -1447,7 +1446,7 @@ async def create_game(
             )
         
         # Check if user has enough gems
-        for gem_type, quantity in bet_gems.items():
+        for gem_type, quantity in game_data.bet_gems.items():
             user_gems = await db.user_gems.find_one({"user_id": current_user.id, "gem_type": gem_type})
             if not user_gems:
                 raise HTTPException(
@@ -1473,10 +1472,10 @@ async def create_game(
         
         # Generate salt and hash the move (commit-reveal scheme)
         salt = str(uuid.uuid4())
-        move_hash = hash_move_with_salt(move, salt)
+        move_hash = hash_move_with_salt(game_data.move, salt)
         
         # Freeze gems for the bet
-        for gem_type, quantity in bet_gems.items():
+        for gem_type, quantity in game_data.bet_gems.items():
             await db.user_gems.update_one(
                 {"user_id": current_user.id, "gem_type": gem_type},
                 {
@@ -1501,11 +1500,11 @@ async def create_game(
         # Create the game
         game = Game(
             creator_id=current_user.id,
-            creator_move=move,
+            creator_move=game_data.move,
             creator_move_hash=move_hash,
             creator_salt=salt,
             bet_amount=total_bet_amount,
-            bet_gems=bet_gems,
+            bet_gems=game_data.bet_gems,
             status=GameStatus.WAITING
         )
         
