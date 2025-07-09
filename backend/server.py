@@ -3335,6 +3335,23 @@ async def update_user(
                 detail="User not found"
             )
         
+        # Check for unique email and username if they are being updated
+        if "email" in user_data and user_data["email"] != user.get("email"):
+            existing_email = await db.users.find_one({"email": user_data["email"]})
+            if existing_email:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already exists"
+                )
+        
+        if "username" in user_data and user_data["username"] != user.get("username"):
+            existing_username = await db.users.find_one({"username": user_data["username"]})
+            if existing_username:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Username already exists"
+                )
+        
         # Update fields
         update_fields = {}
         if "username" in user_data:
@@ -3344,15 +3361,21 @@ async def update_user(
         if "role" in user_data:
             update_fields["role"] = user_data["role"]
         if "virtual_balance" in user_data:
-            update_fields["virtual_balance"] = user_data["virtual_balance"]
+            update_fields["virtual_balance"] = float(user_data["virtual_balance"])
         
         update_fields["updated_at"] = datetime.utcnow()
         
         # Update user
-        await db.users.update_one(
+        result = await db.users.update_one(
             {"id": user_id},
             {"$set": update_fields}
         )
+        
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No changes were made"
+            )
         
         # Log admin action
         admin_log = AdminLog(
@@ -3364,7 +3387,7 @@ async def update_user(
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        return {"message": "User updated successfully"}
+        return {"message": "User updated successfully", "modified_count": result.modified_count}
         
     except HTTPException:
         raise
