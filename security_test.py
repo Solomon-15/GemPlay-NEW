@@ -381,14 +381,9 @@ def test_resolve_alert(admin_token: str) -> None:
     alert_id = alert["id"]
     
     # Try to resolve it
-    resolution_data = {
-        "action_taken": "Resolved during security testing"
-    }
-    
     response, success = make_request(
         "POST", 
-        f"/admin/security/alerts/{alert_id}/resolve", 
-        data=resolution_data, 
+        f"/admin/security/alerts/{alert_id}/resolve?action_taken=Resolved+during+security+testing", 
         auth_token=admin_token
     )
     
