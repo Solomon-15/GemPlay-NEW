@@ -206,6 +206,8 @@ agent_communication:
     message: "All backend APIs are now working correctly after updating the tests to send data in the request body instead of query parameters. Successfully tested creating a game, joining a game, getting available games, and verifying the rock-paper-scissors logic and commit-reveal scheme. The game correctly determines the winner and distributes rewards."
   - agent: "testing"
     message: "Tested the bot system implementation. Most Bot Management APIs work correctly, with GET /api/bots returning a 500 error (known issue). Bot Game APIs function as expected, including setup-gems, create-game, and stats endpoints. Bot game logic works correctly, though cycle tracking might be updated asynchronously. Bot integration with the game system is successful, with bots able to create games and have their history recorded."
+  - agent: "testing"
+    message: "The GET /api/bots endpoint has been fixed and now returns properly cleaned bot data that is JSON-serializable. Created a new test script to verify all bot management endpoints, and all tests are passing. The fix ensures that bot data is properly cleaned before being returned, preventing serialization issues."
 
 **ТЕКУЩИЙ ПРОГРЕСС ФАЗЫ 3:**
 - ✅ Backend API для создания игр (/api/games/create)
