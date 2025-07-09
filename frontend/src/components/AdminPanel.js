@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import UserManagement from './UserManagement';
 import ProfitAdmin from './ProfitAdmin';
+import NotificationProvider from './NotificationContext';
+import NotificationContainer from './NotificationContainer';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
