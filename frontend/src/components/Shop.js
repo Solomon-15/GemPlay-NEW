@@ -202,7 +202,7 @@ const Shop = ({ user, onUpdateUser }) => {
                       max="1000"
                       value={quantity}
                       onChange={(e) => handleQuantityChange(gem.type, e.target.value)}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-rajdhani text-center"
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani text-center"
                     />
                   </div>
                   
