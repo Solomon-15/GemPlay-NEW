@@ -216,7 +216,7 @@ const MyBets = ({ user }) => {
           <button
             onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-text-secondary hover:text-white disabled:opacity-50 transition-colors"
+            className="px-4 py-2 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50 transition-colors"
           >
             Previous
           </button>
@@ -229,7 +229,7 @@ const MyBets = ({ user }) => {
                 className={`px-3 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
                   currentPage === index + 1
                     ? 'bg-accent-primary text-white'
-                    : 'bg-surface-card border border-border-primary text-text-secondary hover:text-white'
+                    : 'bg-surface-card border border-accent-primary border-opacity-30 text-text-secondary hover:text-white'
                 }`}
               >
                 {index + 1}
@@ -240,7 +240,7 @@ const MyBets = ({ user }) => {
           <button
             onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-text-secondary hover:text-white disabled:opacity-50 transition-colors"
+            className="px-4 py-2 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50 transition-colors"
           >
             Next
           </button>
