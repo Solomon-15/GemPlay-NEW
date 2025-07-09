@@ -195,16 +195,114 @@ const Profile = ({ user, onUpdateUser }) => {
     </div>
   );
 
-  const ProfileSettings = () => (
-    <div className="space-y-6">
-      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-        <h3 className="font-russo text-xl text-accent-secondary mb-4">Profile Settings</h3>
-        <p className="font-roboto text-text-secondary text-center py-8">
-          Profile settings will be available in future updates.
-        </p>
+  const ProfileSettings = () => {
+    const remainingLimit = user.daily_limit_max - user.daily_limit_used;
+    const canDeposit = remainingLimit > 0;
+    
+    return (
+      <div className="space-y-6">
+        {/* Balance Management */}
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+          <h3 className="font-russo text-xl text-accent-secondary mb-4">Balance Management</h3>
+          
+          {/* Daily Limit Info */}
+          <div className="mb-6 p-4 bg-surface-sidebar rounded-lg">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-roboto text-text-secondary">Daily Deposit Limit:</span>
+              <span className="font-rajdhani text-white font-bold">
+                ${user.daily_limit_max.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-roboto text-text-secondary">Used Today:</span>
+              <span className="font-rajdhani text-warning font-bold">
+                ${user.daily_limit_used.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-roboto text-text-secondary">Remaining:</span>
+              <span className={`font-rajdhani font-bold ${canDeposit ? 'text-green-400' : 'text-red-400'}`}>
+                ${remainingLimit.toFixed(2)}
+              </span>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="mt-3">
+              <div className="w-full bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-green-500 to-yellow-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${Math.min(100, (user.daily_limit_used / user.daily_limit_max) * 100)}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Deposit Form */}
+          <div className="space-y-4">
+            <div>
+              <label className="block font-roboto text-text-secondary text-sm mb-2">
+                Add Virtual Dollars to Balance
+              </label>
+              <div className="flex space-x-3">
+                <input
+                  type="number"
+                  min="1"
+                  max={remainingLimit}
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  className="flex-1 px-4 py-3 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani text-center focus:outline-none focus:border-accent-primary"
+                  disabled={!canDeposit}
+                />
+                <button
+                  onClick={handleAddBalance}
+                  disabled={!canDeposit || depositing || !depositAmount}
+                  className={`px-6 py-3 rounded-lg font-rajdhani font-bold transition-all duration-300 ${
+                    canDeposit && !depositing && depositAmount
+                      ? 'bg-gradient-accent text-white hover:scale-105 hover:shadow-lg'
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {depositing ? 'ADDING...' : 'ADD BALANCE'}
+                </button>
+              </div>
+            </div>
+            
+            {!canDeposit && (
+              <p className="font-roboto text-red-400 text-sm">
+                Daily limit reached. Limit resets at 00:00 server time.
+              </p>
+            )}
+            
+            <div className="grid grid-cols-3 gap-2">
+              {[100, 500, remainingLimit].map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => setDepositAmount(amount.toString())}
+                  disabled={!canDeposit || amount <= 0}
+                  className={`py-2 px-4 rounded-lg font-rajdhani font-bold text-sm transition-all duration-300 ${
+                    canDeposit && amount > 0
+                      ? 'bg-surface-sidebar border border-accent-primary border-opacity-30 text-white hover:bg-accent-primary hover:text-white'
+                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  ${amount > 0 ? amount.toFixed(0) : '0'}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Other Settings */}
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+          <h3 className="font-russo text-xl text-accent-secondary mb-4">Other Settings</h3>
+          <p className="font-roboto text-text-secondary text-center py-8">
+            Additional profile settings will be available in future updates.
+          </p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-primary p-4 sm:p-6">
