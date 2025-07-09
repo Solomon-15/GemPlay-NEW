@@ -215,116 +215,107 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-primary">
-      {/* Navigation */}
-      <nav className="bg-surface-sidebar border-b border-border-primary p-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-8">
-            <h1 className="font-russo text-2xl text-accent-primary">GemPlay</h1>
-            
-            <div className="flex space-x-4">
+    <div className="min-h-screen bg-gradient-primary flex">
+      {/* Sidebar */}
+      <Sidebar 
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        user={user}
+        isCollapsed={sidebarCollapsed}
+        setIsCollapsed={setSidebarCollapsed}
+      />
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Top Bar */}
+        <nav className="bg-surface-sidebar border-b border-border-primary p-4 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Mobile Menu Button */}
               <button
-                onClick={() => setCurrentView('shop')}
-                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
-                  currentView === 'shop' 
-                    ? 'bg-accent-primary text-white' 
-                    : 'text-text-secondary hover:text-white'
-                }`}
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="lg:hidden p-2 hover:bg-surface-card rounded-lg transition-colors"
               >
-                SHOP
+                <svg className="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+
+              <h2 className="font-russo text-xl text-white capitalize">
+                {currentView.replace('-', ' ')}
+              </h2>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="text-right hidden sm:block">
+                <p className="font-roboto text-text-secondary text-sm">Welcome, {user.username}</p>
+                <p className="font-rajdhani text-green-400 font-bold">
+                  ${user.virtual_balance?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+              
+              <button
+                onClick={handleClaimDailyBonus}
+                className="px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity text-sm"
+              >
+                DAILY BONUS
               </button>
               
               <button
-                onClick={() => setCurrentView('inventory')}
-                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
-                  currentView === 'inventory' 
-                    ? 'bg-accent-primary text-white' 
-                    : 'text-text-secondary hover:text-white'
-                }`}
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors text-sm"
               >
-                INVENTORY
+                LOGOUT
               </button>
-
-              <button
-                onClick={() => setCurrentView('create-game')}
-                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
-                  currentView === 'create-game' 
-                    ? 'bg-green-600 text-white' 
-                    : 'text-green-400 hover:text-white'
-                }`}
-              >
-                🎮 СОЗДАТЬ ИГРУ
-              </button>
-
-              <button
-                onClick={() => setCurrentView('game-lobby')}
-                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
-                  currentView === 'game-lobby' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-blue-400 hover:text-white'
-                }`}
-              >
-                🎯 ЛОББИ
-              </button>
-
-              {/* Admin Monitoring Section */}
-              {user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? (
-                <button
-                  onClick={() => setCurrentView('monitoring')}
-                  className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
-                    currentView === 'monitoring' 
-                      ? 'bg-red-600 text-white' 
-                      : 'text-red-400 hover:text-white'
-                  }`}
-                >
-                  🛡️ МОНИТОРИНГ
-                </button>
-              ) : null}
             </div>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <p className="font-roboto text-text-secondary text-sm">Welcome, {user.username}</p>
-              <p className="font-rajdhani text-green-400 font-bold">
-                ${user.virtual_balance?.toFixed(2) || '0.00'}
-              </p>
+        </nav>
+
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto">
+          {currentView === 'lobby' && (
+            <Lobby user={user} onUpdateUser={checkAuthStatus} />
+          )}
+          {currentView === 'my-bets' && (
+            <MyBets user={user} onUpdateUser={checkAuthStatus} />
+          )}
+          {currentView === 'profile' && (
+            <Profile user={user} onUpdateUser={checkAuthStatus} />
+          )}
+          {currentView === 'shop' && (
+            <Shop user={user} onUpdateUser={checkAuthStatus} />
+          )}
+          {currentView === 'inventory' && (
+            <Inventory user={user} onUpdateUser={checkAuthStatus} />
+          )}
+          {currentView === 'create-game' && (
+            <CreateGame user={user} onUpdateUser={checkAuthStatus} />
+          )}
+          {currentView === 'game-lobby' && (
+            <GameLobby user={user} onUpdateUser={checkAuthStatus} />
+          )}
+          {currentView === 'leaderboard' && (
+            <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-6xl mb-4">🏆</div>
+                <h2 className="font-russo text-2xl text-accent-secondary mb-2">Leaderboard</h2>
+                <p className="font-roboto text-text-secondary">Coming soon...</p>
+              </div>
             </div>
-            
-            <button
-              onClick={handleClaimDailyBonus}
-              className="px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity text-sm"
-            >
-              DAILY BONUS
-            </button>
-            
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors text-sm"
-            >
-              LOGOUT
-            </button>
-          </div>
+          )}
+          {currentView === 'history' && (
+            <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-6xl mb-4">📜</div>
+                <h2 className="font-russo text-2xl text-accent-secondary mb-2">History</h2>
+                <p className="font-roboto text-text-secondary">Coming soon...</p>
+              </div>
+            </div>
+          )}
+          {currentView === 'monitoring' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
+            <SecurityMonitoring user={user} />
+          )}
         </div>
-      </nav>
-
-      {/* Main Content */}
-      <div className="min-h-screen">
-        {currentView === 'shop' && (
-          <Shop user={user} onUpdateUser={checkAuthStatus} />
-        )}
-        {currentView === 'inventory' && (
-          <Inventory user={user} onUpdateUser={checkAuthStatus} />
-        )}
-        {currentView === 'create-game' && (
-          <CreateGame user={user} onUpdateUser={checkAuthStatus} />
-        )}
-        {currentView === 'game-lobby' && (
-          <GameLobby user={user} onUpdateUser={checkAuthStatus} />
-        )}
-        {currentView === 'monitoring' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
-          <SecurityMonitoring user={user} />
-        )}
       </div>
     </div>
   );
