@@ -71,6 +71,9 @@ const LoginForm = ({ onLogin }) => {
         });
         
         localStorage.setItem('token', loginResponse.data.access_token);
+        if (loginResponse.data.refresh_token) {
+          localStorage.setItem('refresh_token', loginResponse.data.refresh_token);
+        }
         onLogin(loginResponse.data.user);
       }
     } catch (error) {
