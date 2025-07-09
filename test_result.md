@@ -413,6 +413,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Shop component is working correctly. All 7 gem types are displayed with their SVG icons, prices, and descriptions. Buy functionality is available with the $10000 balance."
+      - working: false
+        agent: "testing"
+        comment: "The Buy functionality in the Shop component has issues. When attempting to buy gems, the API returns an error: 'Field required' for gem_type and quantity parameters. The UI works correctly, but the backend API integration is not working properly."
         
   - task: "Inventory Component"
     implemented: true
@@ -425,6 +428,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Inventory component is working correctly. It displays the Portfolio Overview with Virtual Dollars, Available Gems, Frozen in Bets, and Total Worth. No gems are present initially, with a message to visit the Shop."
+      - working: false
+        agent: "testing"
+        comment: "The Inventory component UI works correctly and displays gems, but the Sell functionality has issues. When attempting to sell gems, the API returns an error: 'Field required' for gem_type and quantity parameters. The UI works correctly, but the backend API integration is not working properly."
         
   - task: "Profile Component"
     implemented: true
@@ -437,6 +443,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "Profile component is working correctly. It has Overview and Settings tabs. The Overview tab displays user statistics including Balance, Games Played, Games Won, and Win Rate."
+      - working: false
+        agent: "testing"
+        comment: "The Profile component UI works correctly, but the Add Balance functionality in the Settings tab has issues. The daily limit is shown as already reached ($1000.00 used out of $1000.00), and the input field for adding balance is disabled. The UI correctly shows the limit status but the functionality to add balance cannot be tested."
         
   - task: "My Bets Component"
     implemented: true
@@ -509,6 +518,21 @@ frontend:
       - working: true
         agent: "testing"
         comment: "The application is responsive and works correctly on desktop, tablet, and mobile views. The sidebar collapses automatically on smaller screens."
+        
+  - task: "GemsHeader Component"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/GemsHeader.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GemsHeader component for displaying gem blocks in Lobby"
+      - working: true
+        agent: "testing"
+        comment: "GemsHeader component works correctly. It displays all 7 gem types (Ruby, Amber, Topaz, Emerald, Aquamarine, Sapphire, Magic) in a horizontal row on desktop and in a grid of 4 columns on mobile. Each gem block shows the gem name, icon, and values in the format '$available / $total'. The color logic works correctly - gems with non-zero values are bright, while empty gems are dimmed."
 
 metadata:
   created_by: "main_agent"
