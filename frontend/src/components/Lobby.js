@@ -48,6 +48,11 @@ const Lobby = ({ user, onUpdateUser }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      // Fetch active bots
+      const botsResponse = await axios.get(`${API}/bots/active`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
       setStats({
         available: balanceResponse.data.virtual_balance || 0,
         gems: balanceResponse.data.total_gem_value || 0,
@@ -58,6 +63,20 @@ const Lobby = ({ user, onUpdateUser }) => {
       const allGames = gamesResponse.data || [];
       setAvailableBets(allGames.filter(game => !game.is_bot_game));
       setAvailableBots(allGames.filter(game => game.is_bot_game));
+      
+      // Set active bots for display
+      const activeBots = botsResponse.data || [];
+      setAvailableBots(prev => [...prev, ...activeBots.map(bot => ({
+        id: `bot-${bot.id}`,
+        creator_username: bot.name,
+        creator: { username: bot.name, gender: bot.avatar_gender },
+        bet_amount: `${bot.min_bet} - ${bot.max_bet}`,
+        bet_gems: { Ruby: '1-5', Emerald: '1-5', Sapphire: '1-5' },
+        created_at: new Date(),
+        is_bot: true,
+        bot_id: bot.id,
+        bot_type: bot.bot_type
+      })])];
       
       const userGames = myBetsResponse.data || [];
       setMyBets(userGames.filter(game => game.status === 'WAITING'));
