@@ -260,13 +260,18 @@ function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Loading...</div>
+        <div className="text-white text-xl font-roboto">Загрузка...</div>
       </div>
     );
   }
 
   if (!user) {
     return <LoginForm onLogin={handleLogin} />;
+  }
+
+  // Если открыта админ панель, показываем только её
+  if (isAdminPanelOpen) {
+    return <AdminPanel user={user} onClose={handleCloseAdminPanel} />;
   }
 
   return (
