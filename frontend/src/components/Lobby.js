@@ -408,6 +408,9 @@ const Lobby = ({ user, onUpdateUser }) => {
         </p>
       </div>
 
+      {/* Gems Header */}
+      <GemsHeader user={user} />
+
       {/* Info Blocks */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 max-w-4xl mx-auto">
         <InfoBlock
