@@ -10,13 +10,7 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
   const [gems, setGems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchBalanceData();
-    }
-  }, [user]);
-
-  const fetchBalanceData = async () => {
+  const fetchBalanceData = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -34,7 +28,8 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
       setBalance(balanceResponse.data);
       setGems(gemsResponse.data);
       
-      if (onUpdateBalance) {
+      // Only update if there's actually a change and onUpdateBalance is provided
+      if (onUpdateBalance && balanceResponse.data) {
         onUpdateBalance(balanceResponse.data);
       }
     } catch (error) {
@@ -42,7 +37,13 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [onUpdateBalance]);
+
+  useEffect(() => {
+    if (user) {
+      fetchBalanceData();
+    }
+  }, [user?.id, fetchBalanceData]); // Only depend on user.id to prevent unnecessary calls
 
   if (!user || loading) {
     return (
