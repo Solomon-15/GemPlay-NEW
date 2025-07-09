@@ -544,10 +544,13 @@ test_plan:
   current_focus:
     - "Admin Update User API"
     - "Admin Update User Balance API"
-    - "Gems Definitions API"
-    - "Gems Inventory API"
-    - "Economy Balance API"
-  stuck_tasks: []
+    - "Shop Component"
+    - "Inventory Component"
+    - "Profile Component"
+  stuck_tasks:
+    - "Shop Component"
+    - "Inventory Component"
+    - "Profile Component"
   test_all: false
   test_priority: "high_first"
 
