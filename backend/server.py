@@ -3040,6 +3040,39 @@ async def get_bot_stats(
             detail="Failed to fetch bot stats"
         )
 
+async def update_bot_cycle_tracking(bot_id: str, bot_won: bool):
+    """Update bot's cycle tracking after a game."""
+    try:
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            return
+        
+        # Update cycle tracking
+        new_cycle_games = bot.get("current_cycle_games", 0) + 1
+        new_cycle_wins = bot.get("current_cycle_wins", 0) + (1 if bot_won else 0)
+        
+        # Reset cycle if we've reached the limit
+        if new_cycle_games >= bot.get("cycle_games", 12):
+            new_cycle_games = 0
+            new_cycle_wins = 0
+        
+        await db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "current_cycle_games": new_cycle_games,
+                    "current_cycle_wins": new_cycle_wins,
+                    "last_game_time": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"Bot {bot_id} cycle updated: {new_cycle_games} games, {new_cycle_wins} wins")
+        
+    except Exception as e:
+        logger.error(f"Error updating bot cycle tracking: {e}")
+
 # Include routers
 app.include_router(auth_router)
 app.include_router(api_router)
