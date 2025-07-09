@@ -371,6 +371,138 @@ def generate_verification_token() -> str:
     """Generate email verification token."""
     return str(uuid.uuid4())
 
+# ==============================================================================
+# SECURITY FUNCTIONS
+# ==============================================================================
+
+def get_client_ip(request: Request) -> str:
+    """Get client IP address from request."""
+    forwarded_for = request.headers.get("X-Forwarded-For")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.client.host
+
+async def check_rate_limit(user_id: str, ip_address: str, endpoint: str) -> bool:
+    """Check if user/IP has exceeded rate limits."""
+    current_time = datetime.utcnow()
+    minute_key = current_time.strftime("%Y-%m-%d-%H-%M")
+    
+    # Check requests per minute for this IP
+    ip_key = f"{ip_address}:{minute_key}"
+    request_counts[ip_key]["count"] += 1
+    
+    if request_counts[ip_key]["count"] > SUSPICIOUS_ACTIVITY_THRESHOLDS["max_requests_per_minute"]:
+        await create_security_alert(
+            user_id=user_id,
+            alert_type="RATE_LIMIT_EXCEEDED",
+            severity="HIGH",
+            description=f"Rate limit exceeded: {request_counts[ip_key]['count']} requests in 1 minute",
+            ip_address=ip_address,
+            request_data={"endpoint": endpoint, "requests_count": request_counts[ip_key]["count"]}
+        )
+        return False
+    
+    return True
+
+async def create_security_alert(
+    user_id: str,
+    alert_type: str,
+    severity: str,
+    description: str,
+    ip_address: Optional[str] = None,
+    user_agent: Optional[str] = None,
+    request_data: Dict[str, Any] = None,
+    action_taken: Optional[str] = None
+):
+    """Create a security alert."""
+    alert = SecurityAlert(
+        user_id=user_id,
+        alert_type=alert_type,
+        severity=severity,
+        description=description,
+        ip_address=ip_address,
+        user_agent=user_agent,
+        request_data=request_data or {},
+        action_taken=action_taken
+    )
+    await db.security_alerts.insert_one(alert.dict())
+    
+    # Log critical alerts
+    if severity in ["HIGH", "CRITICAL"]:
+        logger.warning(f"SECURITY ALERT [{severity}]: {description} - User: {user_id}, IP: {ip_address}")
+
+async def monitor_transaction_patterns(user_id: str, transaction_type: str, amount: float):
+    """Monitor user transaction patterns for suspicious activity."""
+    current_time = datetime.utcnow()
+    hour_ago = current_time - timedelta(hours=1)
+    day_ago = current_time - timedelta(days=1)
+    
+    # Check purchases per hour
+    if transaction_type == "PURCHASE":
+        recent_purchases = await db.transactions.count_documents({
+            "user_id": user_id,
+            "transaction_type": "PURCHASE",
+            "created_at": {"$gte": hour_ago}
+        })
+        
+        if recent_purchases > SUSPICIOUS_ACTIVITY_THRESHOLDS["max_purchases_per_hour"]:
+            await create_security_alert(
+                user_id=user_id,
+                alert_type="EXCESSIVE_PURCHASES",
+                severity="MEDIUM",
+                description=f"Excessive purchases: {recent_purchases} purchases in 1 hour",
+                request_data={"purchases_count": recent_purchases, "time_window": "1_hour"}
+            )
+    
+    # Check large balance changes
+    if transaction_type in ["PURCHASE", "SALE", "GIFT"]:
+        recent_transactions = await db.transactions.find({
+            "user_id": user_id,
+            "created_at": {"$gte": hour_ago}
+        }).to_list(100)
+        
+        total_change = sum(abs(t["amount"]) for t in recent_transactions)
+        
+        if total_change > SUSPICIOUS_ACTIVITY_THRESHOLDS["max_balance_change_per_hour"]:
+            await create_security_alert(
+                user_id=user_id,
+                alert_type="LARGE_BALANCE_CHANGE",
+                severity="HIGH",
+                description=f"Large balance changes: ${total_change} in 1 hour",
+                request_data={"total_change": total_change, "transactions_count": len(recent_transactions)}
+            )
+
+async def validate_transaction_integrity(user_id: str, operation: str, amount: float = None, gem_quantity: int = None, gem_type: str = None) -> bool:
+    """Validate transaction integrity before processing."""
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        return False
+    
+    if operation == "purchase" and amount:
+        if user["virtual_balance"] < amount:
+            await create_security_alert(
+                user_id=user_id,
+                alert_type="INSUFFICIENT_FUNDS_ATTEMPT",
+                severity="LOW",
+                description=f"Attempted purchase with insufficient funds: ${amount} requested, ${user['virtual_balance']} available",
+                request_data={"requested_amount": amount, "available_balance": user["virtual_balance"]}
+            )
+            return False
+    
+    if operation == "sell" and gem_quantity and gem_type:
+        user_gems = await db.user_gems.find_one({"user_id": user_id, "gem_type": gem_type})
+        if not user_gems or user_gems["quantity"] < gem_quantity:
+            await create_security_alert(
+                user_id=user_id,
+                alert_type="INSUFFICIENT_GEMS_ATTEMPT",
+                severity="LOW",
+                description=f"Attempted sale with insufficient gems: {gem_quantity} {gem_type} requested",
+                request_data={"requested_quantity": gem_quantity, "gem_type": gem_type, "available_quantity": user_gems["quantity"] if user_gems else 0}
+            )
+            return False
+    
+    return True
+
 def hash_move_with_salt(move: GameMove, salt: str) -> str:
     """Hash game move with salt for commit-reveal scheme."""
     combined = f"{move.value}:{salt}"
