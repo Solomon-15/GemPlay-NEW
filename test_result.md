@@ -534,11 +534,20 @@ frontend:
         agent: "testing"
         comment: "The application is responsive and works correctly on desktop, tablet, and mobile views. The sidebar collapses automatically on smaller screens."
 
-metadata:
-  created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 1
-  run_ui: false
+  - task: "GemsHeader Component"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/GemsHeader.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented GemsHeader component for displaying gem blocks in Lobby"
+      - working: true
+        agent: "testing"
+        comment: "GemsHeader component works correctly. It displays all 7 gem types (Ruby, Amber, Topaz, Emerald, Aquamarine, Sapphire, Magic) in a horizontal row on desktop and in a grid of 4 columns on mobile. Each gem block shows the gem name, icon, and values in the format '$available / $total'. The color logic works correctly - gems with non-zero values are bright, while empty gems are dimmed."
 
 test_plan:
   current_focus:
