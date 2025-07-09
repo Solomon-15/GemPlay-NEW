@@ -367,6 +367,9 @@ function App() {
             {currentView === 'history' && (
               <History user={user} onUpdateUser={checkAuthStatus} />
             )}
+            {currentView === 'notification-demo' && (
+              <NotificationDemo />
+            )}
             {currentView === 'monitoring' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
               <SecurityMonitoring user={user} />
             )}
