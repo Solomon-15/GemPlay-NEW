@@ -283,12 +283,15 @@ def test_create_game(token: str, username: str, move: str, bet_gems: Dict[str, i
         record_test(f"Create Game - {username}", False, "No token available")
         return None
     
-    # Convert bet_gems to query string format
-    bet_gems_str = json.dumps(bet_gems)
+    # For FastAPI, we need to send the move as a query parameter and bet_gems in the body
+    data = {
+        "bet_gems": bet_gems
+    }
     
     response, success = make_request(
         "POST", 
-        f"/games/create?move={move}&bet_gems={bet_gems_str}", 
+        f"/games/create?move={move}", 
+        data=data,
         auth_token=token
     )
     
