@@ -10,13 +10,13 @@ const PlayerCard = ({
 }) => {
   // Gem definitions with colors and order by value (ascending)
   const gemDefinitions = [
-    { name: 'Topaz', color: 'text-yellow-500', icon: '/gems/gem-yellow.svg', value: 2 },
-    { name: 'Amber', color: 'text-orange-500', icon: '/gems/gem-orange.svg', value: 3 },
-    { name: 'Ruby', color: 'text-red-500', icon: '/gems/gem-red.svg', value: 5 },
-    { name: 'Aquamarine', color: 'text-cyan-500', icon: '/gems/gem-cyan.svg', value: 6 },
-    { name: 'Emerald', color: 'text-green-500', icon: '/gems/gem-green.svg', value: 8 },
-    { name: 'Sapphire', color: 'text-blue-500', icon: '/gems/gem-blue.svg', value: 10 },
-    { name: 'Magic', color: 'text-purple-500', icon: '/gems/gem-purple.svg', value: 15 }
+    { name: 'Ruby', color: 'text-red-500', icon: '/gems/gem-red.svg', value: 1 },
+    { name: 'Amber', color: 'text-orange-500', icon: '/gems/gem-orange.svg', value: 2 },
+    { name: 'Topaz', color: 'text-yellow-500', icon: '/gems/gem-yellow.svg', value: 5 },
+    { name: 'Emerald', color: 'text-green-500', icon: '/gems/gem-green.svg', value: 10 },
+    { name: 'Aquamarine', color: 'text-cyan-500', icon: '/gems/gem-cyan.svg', value: 25 },
+    { name: 'Sapphire', color: 'text-blue-500', icon: '/gems/gem-blue.svg', value: 50 },
+    { name: 'Magic', color: 'text-purple-500', icon: '/gems/gem-purple.svg', value: 100 }
   ];
 
   // Get time remaining for auto-cancel
