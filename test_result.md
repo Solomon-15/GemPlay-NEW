@@ -475,6 +475,8 @@ agent_communication:
     message: "Completed comprehensive UI testing of the GemPlay application. All frontend components are working correctly, including Sidebar Navigation, Lobby, Shop, Inventory, Profile, My Bets, Leaderboard, History, and Security Monitoring. Authentication and session management with refresh tokens are functioning properly. The application is responsive and works well on desktop, tablet, and mobile views. There are some 500 errors when fetching data from the backend API endpoints for the Leaderboard and Security Monitoring components, but these don't prevent the components from rendering correctly with mock data."
   - agent: "testing"
     message: "Tested the admin API endpoints. The GET /api/admin/users/stats endpoint works correctly, returning all expected fields. Fixed an issue with the GET /api/admin/users endpoint where the response model was incorrectly defined. The ban and unban endpoints work correctly, but there are issues with the update user and update user balance endpoints - they return 200 OK responses but the changes are not reflected in the database."
+  - agent: "testing"
+    message: "Tested the gems-related API endpoints for the GemsHeader component. All three endpoints (GET /api/gems/definitions, GET /api/gems/inventory, GET /api/economy/balance) are working correctly. The gems definitions endpoint returns all 7 gem types with correct data including name, price, color, and icon. The inventory endpoint correctly shows the user's gems (empty for the admin user). The balance endpoint returns the correct economic status with virtual_balance, frozen_balance, and gem values."
 
 **ТЕКУЩИЙ ПРОГРЕСС ФАЗЫ 3:**
 - ✅ Backend API для создания игр (/api/games/create)
