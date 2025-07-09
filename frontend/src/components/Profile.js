@@ -213,19 +213,19 @@ const Profile = ({ user, onUpdateUser }) => {
             <div className="flex justify-between items-center mb-2">
               <span className="font-roboto text-text-secondary">Daily Deposit Limit:</span>
               <span className="font-rajdhani text-white font-bold">
-                ${user.daily_limit_max.toFixed(2)}
+                {formatCurrencyWithSymbol(user.daily_limit_max)}
               </span>
             </div>
             <div className="flex justify-between items-center mb-2">
               <span className="font-roboto text-text-secondary">Used Today:</span>
               <span className="font-rajdhani text-warning font-bold">
-                ${user.daily_limit_used.toFixed(2)}
+                {formatCurrencyWithSymbol(user.daily_limit_used)}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="font-roboto text-text-secondary">Remaining:</span>
               <span className={`font-rajdhani font-bold ${canDeposit ? 'text-green-400' : 'text-red-400'}`}>
-                ${remainingLimit.toFixed(2)}
+                {formatCurrencyWithSymbol(remainingLimit)}
               </span>
             </div>
             
