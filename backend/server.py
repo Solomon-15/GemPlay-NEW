@@ -1357,68 +1357,92 @@ async def get_security_alerts(
 @api_router.get("/admin/security/dashboard", response_model=dict)
 async def get_security_dashboard(current_admin: User = Depends(get_current_admin)):
     """Get security monitoring dashboard data."""
-    current_time = datetime.utcnow()
-    hour_ago = current_time - timedelta(hours=1)
-    day_ago = current_time - timedelta(days=1)
-    week_ago = current_time - timedelta(days=7)
-    
-    # Count alerts by severity (last 24h)
-    alert_counts = {
-        "critical": await db.security_alerts.count_documents({
-            "severity": "CRITICAL",
-            "created_at": {"$gte": day_ago}
-        }),
-        "high": await db.security_alerts.count_documents({
-            "severity": "HIGH",
-            "created_at": {"$gte": day_ago}
-        }),
-        "medium": await db.security_alerts.count_documents({
-            "severity": "MEDIUM",
-            "created_at": {"$gte": day_ago}
-        }),
-        "low": await db.security_alerts.count_documents({
-            "severity": "LOW",
-            "created_at": {"$gte": day_ago}
+    try:
+        current_time = datetime.utcnow()
+        hour_ago = current_time - timedelta(hours=1)
+        day_ago = current_time - timedelta(days=1)
+        week_ago = current_time - timedelta(days=7)
+        
+        # Count alerts by severity (last 24h)
+        alert_counts = {
+            "critical": await db.security_alerts.count_documents({
+                "severity": "CRITICAL",
+                "created_at": {"$gte": day_ago}
+            }),
+            "high": await db.security_alerts.count_documents({
+                "severity": "HIGH",
+                "created_at": {"$gte": day_ago}
+            }),
+            "medium": await db.security_alerts.count_documents({
+                "severity": "MEDIUM",
+                "created_at": {"$gte": day_ago}
+            }),
+            "low": await db.security_alerts.count_documents({
+                "severity": "LOW",
+                "created_at": {"$gte": day_ago}
+            })
+        }
+        
+        # Recent suspicious activities
+        recent_activities = await db.security_alerts.find({
+            "created_at": {"$gte": hour_ago}
+        }).sort("created_at", -1).limit(10).to_list(10)
+        
+        # Top alert types (last 7 days) - simplified query
+        alert_types_cursor = db.security_alerts.find({
+            "created_at": {"$gte": week_ago}
         })
-    }
+        
+        alert_types_dict = {}
+        async for alert in alert_types_cursor:
+            alert_type = alert.get("alert_type", "UNKNOWN")
+            alert_types_dict[alert_type] = alert_types_dict.get(alert_type, 0) + 1
+        
+        top_alert_types = [
+            {"_id": alert_type, "count": count}
+            for alert_type, count in sorted(alert_types_dict.items(), key=lambda x: x[1], reverse=True)[:10]
+        ]
+        
+        # Users with most alerts (last 7 days) - simplified query
+        user_alerts_cursor = db.security_alerts.find({
+            "created_at": {"$gte": week_ago}
+        })
+        
+        user_alerts_dict = {}
+        async for alert in user_alerts_cursor:
+            user_id = alert.get("user_id", "UNKNOWN")
+            user_alerts_dict[user_id] = user_alerts_dict.get(user_id, 0) + 1
+        
+        users_with_alerts = [
+            {"_id": user_id, "count": count}
+            for user_id, count in sorted(user_alerts_dict.items(), key=lambda x: x[1], reverse=True)[:5]
+        ]
+        
+        # Get user details for top alerting users
+        for user_alert in users_with_alerts:
+            try:
+                user = await db.users.find_one({"id": user_alert["_id"]})
+                user_alert["username"] = user["username"] if user else "Unknown"
+                user_alert["email"] = user["email"] if user else "Unknown"
+            except Exception:
+                user_alert["username"] = "Unknown"
+                user_alert["email"] = "Unknown"
+        
+        return {
+            "alert_counts": alert_counts,
+            "recent_activities": recent_activities,
+            "top_alert_types": top_alert_types,
+            "users_with_most_alerts": users_with_alerts,
+            "total_alerts_24h": sum(alert_counts.values()),
+            "unresolved_alerts": await db.security_alerts.count_documents({"resolved": False})
+        }
     
-    # Recent suspicious activities
-    recent_activities = await db.security_alerts.find({
-        "created_at": {"$gte": hour_ago}
-    }).sort("created_at", -1).limit(10).to_list(10)
-    
-    # Top alert types (last 7 days)
-    alert_pipeline = [
-        {"$match": {"created_at": {"$gte": week_ago}}},
-        {"$group": {"_id": "$alert_type", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 10}
-    ]
-    top_alert_types = await db.security_alerts.aggregate(alert_pipeline).to_list(10)
-    
-    # Users with most alerts (last 7 days)
-    user_pipeline = [
-        {"$match": {"created_at": {"$gte": week_ago}}},
-        {"$group": {"_id": "$user_id", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}},
-        {"$limit": 5}
-    ]
-    users_with_alerts = await db.security_alerts.aggregate(user_pipeline).to_list(5)
-    
-    # Get user details for top alerting users
-    for user_alert in users_with_alerts:
-        user = await db.users.find_one({"id": user_alert["_id"]})
-        user_alert["username"] = user["username"] if user else "Unknown"
-        user_alert["email"] = user["email"] if user else "Unknown"
-    
-    return {
-        "alert_counts": alert_counts,
-        "recent_activities": recent_activities,
-        "top_alert_types": top_alert_types,
-        "users_with_most_alerts": users_with_alerts,
-        "total_alerts_24h": sum(alert_counts.values()),
-        "unresolved_alerts": await db.security_alerts.count_documents({"resolved": False})
-    }
+    except Exception as e:
+        logger.error(f"Error in security dashboard: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching security dashboard data: {str(e)}"
+        )
 
 @api_router.post("/admin/security/alerts/{alert_id}/resolve", response_model=dict)
 async def resolve_security_alert(
