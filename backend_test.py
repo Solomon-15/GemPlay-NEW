@@ -425,6 +425,7 @@ def test_join_game_validation(token: str, username: str, game_id: str, move: str
         record_test(f"Join Game Validation - {username}", False, "No token available")
         return
     
+    # For FastAPI, we need to send the move as a query parameter
     response, success = make_request(
         "POST", 
         f"/games/{game_id}/join?move={move}", 
