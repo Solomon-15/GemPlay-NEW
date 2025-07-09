@@ -170,6 +170,7 @@ const LoginForm = ({ onLogin }) => {
 function App() {
   const [user, setUser] = useState(null);
   const [currentView, setCurrentView] = useState('lobby');
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
