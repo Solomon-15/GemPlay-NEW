@@ -286,8 +286,11 @@ def test_bot_create_game(admin_token: str, bot_id: str) -> Optional[str]:
         record_test(f"POST /api/bots/{bot_id}/create-game", False, "No admin token")
         return None
     
-    # Send empty data to avoid 422 error
-    data = {}
+    # Send game data
+    data = {
+        "bet_gems": {"Ruby": 5, "Emerald": 2},
+        "opponent_type": "any"
+    }
     
     response, success = make_request("POST", f"/bots/{bot_id}/create-game", data=data, auth_token=admin_token)
     
