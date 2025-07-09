@@ -102,19 +102,19 @@ const Shop = ({ user, onUpdateUser }) => {
               <div className="text-center">
                 <p className="font-roboto text-text-secondary">Virtual Dollars</p>
                 <p className="font-rajdhani text-3xl font-bold text-green-400">
-                  ${balance.virtual_balance.toFixed(2)}
+                  {formatCurrencyWithSymbol(balance.virtual_balance)}
                 </p>
               </div>
               <div className="text-center">
                 <p className="font-roboto text-text-secondary">Gem Value</p>
                 <p className="font-rajdhani text-3xl font-bold text-accent-primary">
-                  ${balance.total_gem_value.toFixed(2)}
+                  {formatCurrencyWithSymbol(balance.total_gem_value)}
                 </p>
               </div>
               <div className="text-center">
                 <p className="font-roboto text-text-secondary">Total Worth</p>
                 <p className="font-rajdhani text-3xl font-bold text-white">
-                  ${balance.total_value.toFixed(2)}
+                  {formatCurrencyWithSymbol(balance.total_value)}
                 </p>
               </div>
             </div>
