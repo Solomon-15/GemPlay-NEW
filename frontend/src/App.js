@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
+import Sidebar from "./components/Sidebar";
+import Lobby from "./components/Lobby";
+import MyBets from "./components/MyBets";
+import Profile from "./components/Profile";
 import Shop from "./components/Shop";
 import Inventory from "./components/Inventory";
 import CreateGame from "./components/CreateGame";
