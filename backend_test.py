@@ -316,12 +316,15 @@ def test_create_game_validation(token: str, username: str, move: str, bet_gems: 
         record_test(f"Create Game Validation - {username}", False, "No token available")
         return
     
-    data = {
-        "move": move,
-        "bet_gems": bet_gems
-    }
+    # Convert bet_gems to query string format
+    bet_gems_str = json.dumps(bet_gems)
     
-    response, success = make_request("POST", "/games/create", data=data, auth_token=token, expected_status=400)
+    response, success = make_request(
+        "POST", 
+        f"/games/create?move={move}&bet_gems={bet_gems_str}", 
+        auth_token=token, 
+        expected_status=400
+    )
     
     if not success and "detail" in response and expected_error in response["detail"]:
         print_success(f"Validation correctly failed with error: {response['detail']}")
