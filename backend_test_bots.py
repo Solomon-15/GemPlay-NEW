@@ -168,10 +168,10 @@ def test_create_bot(admin_token: str, bot_data: Dict[str, Any]) -> Optional[str]
     response, success = make_request("POST", "/bots", data=bot_data, auth_token=admin_token)
     
     if success:
-        if "id" in response and "message" in response:
-            print_success(f"Bot created successfully with ID: {response['id']}")
+        if "bot_id" in response and "message" in response:
+            print_success(f"Bot created successfully with ID: {response['bot_id']}")
             record_test("POST /api/bots", True)
-            return response["id"]
+            return response["bot_id"]
         else:
             print_error("Response missing expected fields")
             record_test("POST /api/bots", False, "Response missing expected fields")
