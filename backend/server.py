@@ -1078,6 +1078,61 @@ async def claim_daily_bonus(current_user: User = Depends(get_current_user)):
         "new_balance": new_balance
     }
 
+@auth_router.post("/add-balance", response_model=dict)
+async def add_balance(
+    request: AddBalanceRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Add virtual dollars to user balance (within daily limit)."""
+    # Check if user has reached daily limit
+    remaining_limit = current_user.daily_limit_max - current_user.daily_limit_used
+    if remaining_limit <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Daily limit already reached"
+        )
+    
+    # Check if requested amount exceeds remaining limit
+    if request.amount > remaining_limit:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Amount exceeds remaining daily limit of ${remaining_limit:.2f}"
+        )
+    
+    # Add balance
+    new_balance = current_user.virtual_balance + request.amount
+    current_time = datetime.now(TIMEZONE)
+    
+    # Update user balance
+    await db.users.update_one(
+        {"id": current_user.id},
+        {
+            "$set": {
+                "virtual_balance": new_balance,
+                "daily_limit_used": current_user.daily_limit_used + request.amount,
+                "updated_at": current_time
+            }
+        }
+    )
+    
+    # Create transaction record
+    transaction = Transaction(
+        user_id=current_user.id,
+        transaction_type=TransactionType.DEPOSIT,
+        amount=request.amount,
+        balance_before=current_user.virtual_balance,
+        balance_after=new_balance,
+        description=f"Manual balance addition of ${request.amount:.2f}"
+    )
+    await db.transactions.insert_one(transaction.dict())
+    
+    return {
+        "message": "Balance added successfully",
+        "amount": request.amount,
+        "new_balance": new_balance,
+        "remaining_daily_limit": remaining_limit - request.amount
+    }
+
 # ==============================================================================
 # ECONOMY API ROUTES
 # ==============================================================================
