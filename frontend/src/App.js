@@ -34,12 +34,15 @@ const LoginForm = ({ onLogin }) => {
     try {
       if (isLogin) {
         // Login
+        console.log('🔐 Attempting login for:', formData.email);
         const response = await axios.post(`${API}/auth/login`, {
           email: formData.email,
           password: formData.password
         });
         
+        console.log('🎉 Login successful. Response:', response.data);
         localStorage.setItem('token', response.data.access_token);
+        console.log('💾 Token saved to localStorage');
         onLogin(response.data.user);
       } else {
         // Register
