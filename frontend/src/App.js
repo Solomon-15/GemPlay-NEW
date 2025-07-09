@@ -297,22 +297,10 @@ function App() {
             <GameLobby user={user} onUpdateUser={checkAuthStatus} />
           )}
           {currentView === 'leaderboard' && (
-            <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🏆</div>
-                <h2 className="font-russo text-2xl text-accent-secondary mb-2">Leaderboard</h2>
-                <p className="font-roboto text-text-secondary">Coming soon...</p>
-              </div>
-            </div>
+            <Leaderboard user={user} onUpdateUser={checkAuthStatus} />
           )}
           {currentView === 'history' && (
-            <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-6xl mb-4">📜</div>
-                <h2 className="font-russo text-2xl text-accent-secondary mb-2">History</h2>
-                <p className="font-roboto text-text-secondary">Coming soon...</p>
-              </div>
-            </div>
+            <History user={user} onUpdateUser={checkAuthStatus} />
           )}
           {currentView === 'monitoring' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
             <SecurityMonitoring user={user} />
