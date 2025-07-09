@@ -5,7 +5,7 @@ import UserManagement from './UserManagement';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const AdminPanel = ({ user }) => {
+const AdminPanel = ({ user, onClose }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
