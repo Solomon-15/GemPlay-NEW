@@ -152,6 +152,21 @@ backend:
         agent: "testing"
         comment: "Bot integration with the game system works correctly. Bots can create games and the games are recorded in the bot's history (last_game_time is updated). The DELETE endpoint prevents deleting bots with active games, which is a good safety feature."
 
+  - task: "Refresh Token System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented refresh token system for enhanced security"
+      - working: true
+        agent: "testing"
+        comment: "Refresh token system works correctly. Login endpoint returns both access_token and refresh_token. Refresh endpoint returns new access_token and refresh_token. Old refresh tokens are deactivated when new ones are created. Invalid refresh tokens are properly rejected with 401 status."
+
 frontend:
   - task: "Create Game Component"
     implemented: true
@@ -193,6 +208,7 @@ test_plan:
     - "Bot Game APIs"
     - "Bot Game Logic"
     - "Bot Integration with Game System"
+    - "Refresh Token System"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -208,6 +224,8 @@ agent_communication:
     message: "Tested the bot system implementation. Most Bot Management APIs work correctly, with GET /api/bots returning a 500 error (known issue). Bot Game APIs function as expected, including setup-gems, create-game, and stats endpoints. Bot game logic works correctly, though cycle tracking might be updated asynchronously. Bot integration with the game system is successful, with bots able to create games and have their history recorded."
   - agent: "testing"
     message: "The GET /api/bots endpoint has been fixed and now returns properly cleaned bot data that is JSON-serializable. Created a new test script to verify all bot management endpoints, and all tests are passing. The fix ensures that bot data is properly cleaned before being returned, preventing serialization issues."
+  - agent: "testing"
+    message: "Tested the refresh token system implementation. All tests are passing. The login endpoint correctly returns both access_token and refresh_token. The refresh endpoint correctly returns a new access_token and refresh_token. Old refresh tokens are properly deactivated when new ones are created. Invalid refresh tokens are correctly rejected with a 401 status code. The refresh token system is working as expected."
 
 **ТЕКУЩИЙ ПРОГРЕСС ФАЗЫ 3:**
 - ✅ Backend API для создания игр (/api/games/create)
@@ -271,3 +289,11 @@ agent_communication:
 - Hover эффекты применяются только в свернутом состоянии
 - Z-index правильно настроен для overlay рамок
 - Overflow hidden для предотвращения выхода анимации за границы
+
+**СИСТЕМА REFRESH ТОКЕНОВ (РЕАЛИЗОВАНА):**
+- ✅ Модель RefreshToken для хранения токенов в базе данных
+- ✅ Функция create_refresh_token для создания новых токенов
+- ✅ Деактивация старых токенов при создании новых
+- ✅ Endpoint /api/auth/refresh для обновления токенов
+- ✅ Проверка валидности и срока действия токенов
+- ✅ Безопасная обработка недействительных токенов
