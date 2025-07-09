@@ -168,14 +168,20 @@ const PlayerCard = ({
             </div>
           ) : isMyBet ? (
             <button
-              onClick={() => onCancel && onCancel(game.id)}
+              onClick={() => {
+                console.log('Cancel button clicked for game:', game.id);
+                onCancel && onCancel(game.id);
+              }}
               className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-colors text-sm"
             >
               Cancel
             </button>
           ) : (
             <button
-              onClick={() => onAccept && onAccept(game.id)}
+              onClick={() => {
+                console.log('Accept button clicked for game:', game.id);
+                onAccept && onAccept(game.id);
+              }}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-colors text-sm"
             >
               Accept
