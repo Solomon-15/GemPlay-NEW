@@ -1873,24 +1873,26 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         }
                     )
         
-        # Record game result transactions
+        # Record game result transactions (only for human players)
         result_description = "Draw - gems returned" if not winner_id else f"{'Won' if winner_id == game.creator_id else 'Lost'} PvP game"
         
         for player_id in [game.creator_id, game.opponent_id]:
-            is_winner = player_id == winner_id
-            gem_change = game.bet_amount if is_winner else (-game.bet_amount if winner_id else 0)
-            
-            transaction = Transaction(
-                user_id=player_id,
-                transaction_type=TransactionType.WIN if is_winner else TransactionType.BET,
-                amount=gem_change,
-                currency="GEM",
-                balance_before=0,
-                balance_after=0,
-                description=result_description,
-                reference_id=game.id
-            )
-            await db.transactions.insert_one(transaction.dict())
+            player = await db.users.find_one({"id": player_id})
+            if player:  # Only create transactions for human players
+                is_winner = player_id == winner_id
+                gem_change = game.bet_amount if is_winner else (-game.bet_amount if winner_id else 0)
+                
+                transaction = Transaction(
+                    user_id=player_id,
+                    transaction_type=TransactionType.WIN if is_winner else TransactionType.BET,
+                    amount=gem_change,
+                    currency="GEM",
+                    balance_before=0,
+                    balance_after=0,
+                    description=result_description,
+                    reference_id=game.id
+                )
+                await db.transactions.insert_one(transaction.dict())
             
     except Exception as e:
         logger.error(f"Error distributing game rewards: {e}")
