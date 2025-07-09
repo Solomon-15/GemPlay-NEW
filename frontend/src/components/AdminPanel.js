@@ -253,7 +253,7 @@ const AdminPanel = ({ user }) => {
       case 'dashboard':
         return <DashboardContent />;
       case 'users':
-        return <div className="text-white">Управление пользователями (в разработке)</div>;
+        return <UserManagement />;
       case 'bots':
         return <div className="text-white">Управление ботами (в разработке)</div>;
       case 'games':
