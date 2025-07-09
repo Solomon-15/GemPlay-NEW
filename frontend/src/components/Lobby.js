@@ -212,8 +212,23 @@ const Lobby = ({ user, onUpdateUser }) => {
   };
 
   const handleJoinGame = async (gameId) => {
-    // This would redirect to the create game component with join functionality
-    console.log('Joining game:', gameId);
+    try {
+      // Check if it's a bot challenge (bot ID format)
+      if (typeof gameId === 'string' && !gameId.startsWith('bot-')) {
+        // Regular game join
+        console.log('Joining game:', gameId);
+        // This would redirect to the create game component with join functionality
+        // For now, we'll just log it
+      } else {
+        // Bot challenge
+        const botId = typeof gameId === 'string' && gameId.startsWith('bot-') ? gameId.replace('bot-', '') : gameId;
+        console.log('Challenging bot:', botId);
+        // This would open a modal or redirect to challenge the bot
+        // For now, we'll just log it
+      }
+    } catch (error) {
+      console.error('Error handling game join:', error);
+    }
   };
 
   const getPaginatedItems = (items, page) => {
