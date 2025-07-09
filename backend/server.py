@@ -3099,6 +3099,173 @@ async def update_bot_cycle_tracking(bot_id: str, bot_won: bool):
     except Exception as e:
         logger.error(f"Error updating bot cycle tracking: {e}")
 
+async def bot_automation_task():
+    """Background task for bot automation - creates and joins games."""
+    while True:
+        try:
+            # Get active bots
+            active_bots = await db.bots.find({"is_active": True}).to_list(100)
+            
+            for bot in active_bots:
+                bot_obj = Bot(**bot)
+                
+                # Check if bot should take action
+                if await should_bot_take_action(bot_obj):
+                    # Randomly decide between creating a game or joining one
+                    if random.choice([True, False]):
+                        await bot_create_game_automatically(bot_obj)
+                    else:
+                        await bot_join_game_automatically(bot_obj)
+            
+            # Wait before next cycle
+            await asyncio.sleep(30)  # Check every 30 seconds
+            
+        except Exception as e:
+            logger.error(f"Error in bot automation task: {e}")
+            await asyncio.sleep(60)  # Wait longer if error occurred
+
+async def should_bot_take_action(bot: Bot) -> bool:
+    """Determine if bot should take action based on timing and settings."""
+    if not bot.is_active:
+        return False
+    
+    # Check if enough time has passed since last game
+    if bot.last_game_time:
+        time_since_last = datetime.utcnow() - bot.last_game_time
+        if time_since_last.total_seconds() < bot.pause_between_games:
+            return False
+    
+    # Add randomness to bot behavior
+    return random.random() < 0.3  # 30% chance to act when conditions are met
+
+async def bot_create_game_automatically(bot: Bot):
+    """Make bot create a game automatically."""
+    try:
+        # Ensure bot has gems
+        await BotGameLogic.setup_bot_gems(bot.id, db)
+        
+        # Generate random bet amount within bot's limits
+        bet_amount = random.uniform(bot.min_bet, min(bot.max_bet, 100))
+        bet_amount = round(bet_amount, 2)
+        
+        # Select random gems to bet
+        gem_types = list(GemType)
+        selected_gems = random.sample(gem_types, random.randint(1, min(3, len(gem_types))))
+        bet_gems = {gem_type.value: random.randint(1, 5) for gem_type in selected_gems}
+        
+        # Generate bot's move
+        bot_move = BotGameLogic.calculate_bot_move(bot)
+        salt = secrets.token_hex(32)
+        
+        # Create game
+        game = Game(
+            creator_id=bot.id,
+            creator_move=bot_move,
+            creator_move_hash=hashlib.sha256(f"{bot_move.value}{salt}".encode()).hexdigest(),
+            creator_salt=salt,
+            bet_amount=bet_amount,
+            bet_gems=bet_gems,
+            is_bot_game=True,
+            bot_id=bot.id
+        )
+        
+        await db.games.insert_one(game.dict())
+        
+        # Update bot's last game time
+        await db.bots.update_one(
+            {"id": bot.id},
+            {"$set": {"last_game_time": datetime.utcnow()}}
+        )
+        
+        logger.info(f"Bot {bot.name} created game {game.id} with bet ${bet_amount}")
+        
+    except Exception as e:
+        logger.error(f"Error in bot auto-create game: {e}")
+
+async def bot_join_game_automatically(bot: Bot):
+    """Make bot join an available game automatically."""
+    try:
+        if not bot.can_accept_bets:
+            return
+        
+        # Find available games that bot can join
+        available_games = await db.games.find({
+            "status": GameStatus.WAITING,
+            "creator_id": {"$ne": bot.id},  # Don't join own games
+            "bet_amount": {"$gte": bot.min_bet, "$lte": bot.max_bet}
+        }).to_list(10)
+        
+        if not available_games:
+            return
+        
+        # Select random game
+        game_to_join = random.choice(available_games)
+        game_obj = Game(**game_to_join)
+        
+        # Check if bot can play with other bots
+        if game_obj.is_bot_game and not bot.can_play_with_bots:
+            return
+        
+        # Ensure bot has required gems
+        await BotGameLogic.setup_bot_gems(bot.id, db)
+        
+        # Check if bot has enough gems
+        for gem_type, quantity in game_obj.bet_gems.items():
+            bot_gems = await db.user_gems.find_one({"user_id": bot.id, "gem_type": gem_type})
+            if not bot_gems or bot_gems["quantity"] < quantity:
+                return  # Bot doesn't have enough gems
+        
+        # Freeze bot's gems
+        for gem_type, quantity in game_obj.bet_gems.items():
+            await db.user_gems.update_one(
+                {"user_id": bot.id, "gem_type": gem_type},
+                {
+                    "$inc": {"frozen_quantity": quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+        
+        # Calculate bot's move using strategy
+        creator_move = game_obj.creator_move
+        if creator_move:
+            # Bot knows creator's move (for testing/balancing)
+            bot_move = BotGameLogic.get_bot_move_against_player(bot, creator_move)
+        else:
+            # Standard move calculation
+            bot_move = BotGameLogic.calculate_bot_move(bot)
+        
+        # Update game with bot as opponent
+        await db.games.update_one(
+            {"id": game_obj.id},
+            {
+                "$set": {
+                    "opponent_id": bot.id,
+                    "opponent_move": bot_move,
+                    "status": GameStatus.ACTIVE,
+                    "started_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Update bot's last game time
+        await db.bots.update_one(
+            {"id": bot.id},
+            {"$set": {"last_game_time": datetime.utcnow()}}
+        )
+        
+        # Determine winner
+        await determine_game_winner(game_obj.id)
+        
+        logger.info(f"Bot {bot.name} joined game {game_obj.id}")
+        
+    except Exception as e:
+        logger.error(f"Error in bot auto-join game: {e}")
+
+# Start bot automation background task
+async def start_bot_automation():
+    """Start the bot automation background task."""
+    asyncio.create_task(bot_automation_task())
+
 # Include routers
 app.include_router(auth_router)
 app.include_router(api_router)
