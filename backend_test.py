@@ -283,12 +283,14 @@ def test_create_game(token: str, username: str, move: str, bet_gems: Dict[str, i
         record_test(f"Create Game - {username}", False, "No token available")
         return None
     
-    data = {
-        "move": move,
-        "bet_gems": bet_gems
-    }
+    # Convert bet_gems to query string format
+    bet_gems_str = json.dumps(bet_gems)
     
-    response, success = make_request("POST", "/games/create", data=data, auth_token=token)
+    response, success = make_request(
+        "POST", 
+        f"/games/create?move={move}&bet_gems={bet_gems_str}", 
+        auth_token=token
+    )
     
     if success:
         if "message" in response and "game_id" in response and "bet_amount" in response:
