@@ -186,7 +186,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUser(null);
-    setCurrentView('shop');
+    setCurrentView('lobby');
   };
 
   const handleClaimDailyBonus = async () => {
