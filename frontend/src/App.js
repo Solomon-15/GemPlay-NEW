@@ -240,6 +240,28 @@ function App() {
                 INVENTORY
               </button>
 
+              <button
+                onClick={() => setCurrentView('create-game')}
+                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
+                  currentView === 'create-game' 
+                    ? 'bg-green-600 text-white' 
+                    : 'text-green-400 hover:text-white'
+                }`}
+              >
+                🎮 СОЗДАТЬ ИГРУ
+              </button>
+
+              <button
+                onClick={() => setCurrentView('game-lobby')}
+                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
+                  currentView === 'game-lobby' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-blue-400 hover:text-white'
+                }`}
+              >
+                🎯 ЛОББИ
+              </button>
+
               {/* Admin Monitoring Section */}
               {user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? (
                 <button
