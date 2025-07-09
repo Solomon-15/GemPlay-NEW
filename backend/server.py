@@ -1387,6 +1387,681 @@ async def get_transaction_history(
     return [Transaction(**transaction) for transaction in transactions]
 
 # ==============================================================================
+# PVP GAME API ROUTES
+# ==============================================================================
+
+@api_router.post("/games/create", response_model=dict)
+async def create_game(
+    request: Request,
+    move: GameMove,
+    bet_gems: Dict[str, int],  # {"Ruby": 5, "Emerald": 2}
+    current_user: User = Depends(get_current_user_with_security)
+):
+    """Create a new PvP game with gem stakes."""
+    try:
+        # Validate bet gems format
+        if not bet_gems or not isinstance(bet_gems, dict):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid bet gems format"
+            )
+        
+        # Calculate total bet amount and validate gems
+        total_bet_amount = 0
+        gem_definitions = await db.gem_definitions.find().to_list(100)
+        gem_def_map = {gem["type"]: gem for gem in gem_definitions}
+        
+        for gem_type, quantity in bet_gems.items():
+            if quantity <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid quantity for {gem_type}"
+                )
+            
+            gem_def = gem_def_map.get(gem_type)
+            if not gem_def:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid gem type: {gem_type}"
+                )
+            
+            total_bet_amount += gem_def["price"] * quantity
+        
+        # Check minimum and maximum bet limits
+        if total_bet_amount < 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Minimum bet is $1"
+            )
+        if total_bet_amount > 3000:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Maximum bet is $3000"
+            )
+        
+        # Check if user has enough gems
+        for gem_type, quantity in bet_gems.items():
+            user_gems = await db.user_gems.find_one({"user_id": current_user.id, "gem_type": gem_type})
+            if not user_gems:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"You don't have any {gem_type} gems"
+                )
+            
+            available_quantity = user_gems["quantity"] - user_gems["frozen_quantity"]
+            if available_quantity < quantity:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Insufficient {gem_type} gems. Available: {available_quantity}, Required: {quantity}"
+                )
+        
+        # Check if user has enough balance for commission (6% of bet amount)
+        commission_required = total_bet_amount * 0.06
+        user = await db.users.find_one({"id": current_user.id})
+        if user["virtual_balance"] < commission_required:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Insufficient balance for commission. Required: ${commission_required:.2f}"
+            )
+        
+        # Generate salt and hash the move (commit-reveal scheme)
+        salt = str(uuid.uuid4())
+        move_hash = hash_move_with_salt(move, salt)
+        
+        # Freeze gems for the bet
+        for gem_type, quantity in bet_gems.items():
+            await db.user_gems.update_one(
+                {"user_id": current_user.id, "gem_type": gem_type},
+                {
+                    "$inc": {"frozen_quantity": quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+        
+        # Freeze commission balance
+        new_balance = user["virtual_balance"] - commission_required
+        await db.users.update_one(
+            {"id": current_user.id},
+            {
+                "$set": {
+                    "virtual_balance": new_balance,
+                    "frozen_balance": user["frozen_balance"] + commission_required,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Create the game
+        game = Game(
+            creator_id=current_user.id,
+            creator_move=move,
+            creator_move_hash=move_hash,
+            creator_salt=salt,
+            bet_amount=total_bet_amount,
+            bet_gems=bet_gems,
+            status=GameStatus.WAITING
+        )
+        
+        await db.games.insert_one(game.dict())
+        
+        # Create transaction for freezing gems
+        transaction = Transaction(
+            user_id=current_user.id,
+            transaction_type=TransactionType.BET,
+            amount=-total_bet_amount,
+            currency="GEM",
+            balance_before=0,  # We track gem balance separately
+            balance_after=0,
+            description=f"Created PvP game with ${total_bet_amount} bet",
+            reference_id=game.id
+        )
+        await db.transactions.insert_one(transaction.dict())
+        
+        # Monitor for suspicious betting patterns
+        await monitor_transaction_patterns(current_user.id, "BET", total_bet_amount)
+        
+        return {
+            "message": "Game created successfully",
+            "game_id": game.id,
+            "bet_amount": total_bet_amount,
+            "commission_reserved": commission_required,
+            "new_balance": new_balance
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating game: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create game"
+        )
+
+@api_router.post("/games/{game_id}/join", response_model=dict)
+async def join_game(
+    request: Request,
+    game_id: str,
+    move: GameMove,
+    current_user: User = Depends(get_current_user_with_security)
+):
+    """Join an existing PvP game."""
+    try:
+        # Get the game
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Game not found"
+            )
+        
+        game_obj = Game(**game)
+        
+        # Validate game state
+        if game_obj.status != GameStatus.WAITING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Game is not available for joining"
+            )
+        
+        if game_obj.creator_id == current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot join your own game"
+            )
+        
+        if game_obj.opponent_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Game already has an opponent"
+            )
+        
+        # Check if user has enough gems to match the bet
+        for gem_type, quantity in game_obj.bet_gems.items():
+            user_gems = await db.user_gems.find_one({"user_id": current_user.id, "gem_type": gem_type})
+            if not user_gems:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"You don't have any {gem_type} gems"
+                )
+            
+            available_quantity = user_gems["quantity"] - user_gems["frozen_quantity"]
+            if available_quantity < quantity:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Insufficient {gem_type} gems. Available: {available_quantity}, Required: {quantity}"
+                )
+        
+        # Check if user has enough balance for commission
+        commission_required = game_obj.bet_amount * 0.06
+        user = await db.users.find_one({"id": current_user.id})
+        if user["virtual_balance"] < commission_required:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Insufficient balance for commission. Required: ${commission_required:.2f}"
+            )
+        
+        # Freeze user's gems
+        for gem_type, quantity in game_obj.bet_gems.items():
+            await db.user_gems.update_one(
+                {"user_id": current_user.id, "gem_type": gem_type},
+                {
+                    "$inc": {"frozen_quantity": quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+        
+        # Freeze commission balance
+        new_balance = user["virtual_balance"] - commission_required
+        await db.users.update_one(
+            {"id": current_user.id},
+            {
+                "$set": {
+                    "virtual_balance": new_balance,
+                    "frozen_balance": user["frozen_balance"] + commission_required,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Update game with opponent
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "opponent_id": current_user.id,
+                    "opponent_move": move,
+                    "status": GameStatus.ACTIVE,
+                    "started_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Determine winner immediately
+        result = await determine_game_winner(game_id)
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error joining game: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to join game"
+        )
+
+async def determine_game_winner(game_id: str) -> dict:
+    """Determine the winner of a PvP game and distribute rewards."""
+    try:
+        # Get updated game
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Game not found"
+            )
+        
+        game_obj = Game(**game)
+        
+        # Verify move hash (commit-reveal)
+        if not verify_move_hash(game_obj.creator_move, game_obj.creator_salt, game_obj.creator_move_hash):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Move verification failed"
+            )
+        
+        # Determine winner using rock-paper-scissors logic
+        creator_move = game_obj.creator_move
+        opponent_move = game_obj.opponent_move
+        
+        winner_id = None
+        result_status = "draw"
+        
+        if creator_move == opponent_move:
+            result_status = "draw"
+        elif (
+            (creator_move == GameMove.ROCK and opponent_move == GameMove.SCISSORS) or
+            (creator_move == GameMove.SCISSORS and opponent_move == GameMove.PAPER) or
+            (creator_move == GameMove.PAPER and opponent_move == GameMove.ROCK)
+        ):
+            winner_id = game_obj.creator_id
+            result_status = "creator_wins"
+        else:
+            winner_id = game_obj.opponent_id
+            result_status = "opponent_wins"
+        
+        # Calculate commission
+        total_pot = game_obj.bet_amount * 2  # Both players' bets
+        commission_amount = total_pot * 0.03 if winner_id else 0  # 3% only if there's a winner
+        
+        # Update game status
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "status": GameStatus.COMPLETED,
+                    "winner_id": winner_id,
+                    "commission_amount": commission_amount,
+                    "completed_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Distribute rewards
+        await distribute_game_rewards(game_obj, winner_id, commission_amount)
+        
+        # Get user details for response
+        creator = await db.users.find_one({"id": game_obj.creator_id})
+        opponent = await db.users.find_one({"id": game_obj.opponent_id})
+        
+        return {
+            "game_id": game_id,
+            "result": result_status,
+            "creator_move": creator_move.value,
+            "opponent_move": opponent_move.value,
+            "winner_id": winner_id,
+            "creator": {
+                "id": creator["id"],
+                "username": creator["username"]
+            },
+            "opponent": {
+                "id": opponent["id"], 
+                "username": opponent["username"]
+            },
+            "bet_amount": game_obj.bet_amount,
+            "total_pot": total_pot,
+            "commission": commission_amount,
+            "gems_won": game_obj.bet_gems if winner_id else None
+        }
+        
+    except Exception as e:
+        logger.error(f"Error determining game winner: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to determine game winner"
+        )
+
+async def distribute_game_rewards(game: Game, winner_id: str, commission_amount: float):
+    """Distribute gems and handle commissions after game completion."""
+    try:
+        # Unfreeze gems for both players
+        for player_id in [game.creator_id, game.opponent_id]:
+            for gem_type, quantity in game.bet_gems.items():
+                await db.user_gems.update_one(
+                    {"user_id": player_id, "gem_type": gem_type},
+                    {
+                        "$inc": {"frozen_quantity": -quantity},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+        
+        if winner_id:
+            # Winner gets all gems (double the bet)
+            for gem_type, quantity in game.bet_gems.items():
+                await db.user_gems.update_one(
+                    {"user_id": winner_id, "gem_type": gem_type},
+                    {
+                        "$inc": {"quantity": quantity},  # Winner keeps their gems + gets opponent's
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                
+                # Remove gems from loser
+                loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
+                await db.user_gems.update_one(
+                    {"user_id": loser_id, "gem_type": gem_type},
+                    {
+                        "$inc": {"quantity": -quantity},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+            
+            # Handle commission for winner
+            winner = await db.users.find_one({"id": winner_id})
+            commission_to_deduct = commission_amount  # 3% of total pot
+            
+            new_winner_balance = winner["virtual_balance"]
+            new_winner_frozen = winner["frozen_balance"] - (game.bet_amount * 0.06)  # Unfreeze winner's commission
+            
+            # Deduct actual commission from winner's balance
+            if new_winner_frozen >= commission_to_deduct:
+                new_winner_frozen -= commission_to_deduct
+            else:
+                remaining = commission_to_deduct - new_winner_frozen
+                new_winner_balance -= remaining
+                new_winner_frozen = 0
+            
+            await db.users.update_one(
+                {"id": winner_id},
+                {
+                    "$set": {
+                        "virtual_balance": new_winner_balance,
+                        "frozen_balance": new_winner_frozen,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            # Return frozen commission to loser
+            loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
+            loser = await db.users.find_one({"id": loser_id})
+            
+            await db.users.update_one(
+                {"id": loser_id},
+                {
+                    "$set": {
+                        "virtual_balance": loser["virtual_balance"] + (game.bet_amount * 0.06),
+                        "frozen_balance": loser["frozen_balance"] - (game.bet_amount * 0.06),
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            # Record commission transaction
+            commission_transaction = Transaction(
+                user_id=winner_id,
+                transaction_type=TransactionType.COMMISSION,
+                amount=commission_amount,
+                currency="USD",
+                balance_before=winner["virtual_balance"],
+                balance_after=new_winner_balance,
+                description=f"PvP game commission (3% of ${game.bet_amount * 2})",
+                reference_id=game.id
+            )
+            await db.transactions.insert_one(commission_transaction.dict())
+            
+        else:
+            # Draw - return frozen commissions to both players
+            for player_id in [game.creator_id, game.opponent_id]:
+                player = await db.users.find_one({"id": player_id})
+                commission_to_return = game.bet_amount * 0.06
+                
+                await db.users.update_one(
+                    {"id": player_id},
+                    {
+                        "$set": {
+                            "virtual_balance": player["virtual_balance"] + commission_to_return,
+                            "frozen_balance": player["frozen_balance"] - commission_to_return,
+                            "updated_at": datetime.utcnow()
+                        }
+                    }
+                )
+        
+        # Record game result transactions
+        result_description = "Draw - gems returned" if not winner_id else f"{'Won' if winner_id == game.creator_id else 'Lost'} PvP game"
+        
+        for player_id in [game.creator_id, game.opponent_id]:
+            is_winner = player_id == winner_id
+            gem_change = game.bet_amount if is_winner else (-game.bet_amount if winner_id else 0)
+            
+            transaction = Transaction(
+                user_id=player_id,
+                transaction_type=TransactionType.WIN if is_winner else TransactionType.BET,
+                amount=gem_change,
+                currency="GEM",
+                balance_before=0,
+                balance_after=0,
+                description=result_description,
+                reference_id=game.id
+            )
+            await db.transactions.insert_one(transaction.dict())
+            
+    except Exception as e:
+        logger.error(f"Error distributing game rewards: {e}")
+        raise
+
+@api_router.get("/games/live", response_model=List[dict])
+async def get_live_games(current_user: User = Depends(get_current_user)):
+    """Get list of live/waiting games."""
+    try:
+        # Get waiting games (exclude user's own games)
+        games = await db.games.find({
+            "status": GameStatus.WAITING,
+            "creator_id": {"$ne": current_user.id}
+        }).sort("created_at", -1).limit(50).to_list(50)
+        
+        result = []
+        for game in games:
+            # Get creator info
+            creator = await db.users.find_one({"id": game["creator_id"]})
+            if not creator:
+                continue
+                
+            # Calculate time remaining (24 hour limit)
+            created_time = game["created_at"]
+            time_remaining = created_time + timedelta(hours=24) - datetime.utcnow()
+            
+            if time_remaining.total_seconds() <= 0:
+                # Game expired, mark as cancelled
+                await db.games.update_one(
+                    {"id": game["id"]},
+                    {
+                        "$set": {
+                            "status": GameStatus.CANCELLED,
+                            "cancelled_at": datetime.utcnow()
+                        }
+                    }
+                )
+                continue
+            
+            result.append({
+                "game_id": game["id"],
+                "creator": {
+                    "id": creator["id"],
+                    "username": creator["username"],
+                    "gender": creator["gender"]
+                },
+                "bet_amount": game["bet_amount"],
+                "bet_gems": game["bet_gems"],
+                "created_at": game["created_at"],
+                "time_remaining_hours": time_remaining.total_seconds() / 3600
+            })
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error getting live games: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get live games"
+        )
+
+@api_router.get("/games/my-bets", response_model=List[dict])
+async def get_my_bets(current_user: User = Depends(get_current_user)):
+    """Get user's active and recent bets."""
+    try:
+        # Get user's games (created or joined)
+        games = await db.games.find({
+            "$or": [
+                {"creator_id": current_user.id},
+                {"opponent_id": current_user.id}
+            ]
+        }).sort("created_at", -1).limit(20).to_list(20)
+        
+        result = []
+        for game in games:
+            # Get opponent info
+            opponent_id = game["opponent_id"] if game["creator_id"] == current_user.id else game["creator_id"]
+            opponent = None
+            if opponent_id:
+                opponent = await db.users.find_one({"id": opponent_id})
+            
+            is_creator = game["creator_id"] == current_user.id
+            
+            game_data = {
+                "game_id": game["id"],
+                "is_creator": is_creator,
+                "bet_amount": game["bet_amount"],
+                "bet_gems": game["bet_gems"],
+                "status": game["status"],
+                "created_at": game["created_at"],
+                "opponent": {
+                    "id": opponent["id"],
+                    "username": opponent["username"],
+                    "gender": opponent["gender"]
+                } if opponent else None
+            }
+            
+            # Add result info if completed
+            if game["status"] == GameStatus.COMPLETED:
+                game_data.update({
+                    "winner_id": game.get("winner_id"),
+                    "creator_move": game.get("creator_move"),
+                    "opponent_move": game.get("opponent_move"),
+                    "commission": game.get("commission_amount", 0),
+                    "completed_at": game.get("completed_at")
+                })
+            
+            result.append(game_data)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error getting user bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get user bets"
+        )
+
+@api_router.delete("/games/{game_id}/cancel", response_model=dict)
+async def cancel_game(game_id: str, current_user: User = Depends(get_current_user)):
+    """Cancel a waiting game."""
+    try:
+        # Get the game
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Game not found"
+            )
+        
+        game_obj = Game(**game)
+        
+        # Validate permissions
+        if game_obj.creator_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only game creator can cancel the game"
+            )
+        
+        if game_obj.status != GameStatus.WAITING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can only cancel waiting games"
+            )
+        
+        # Unfreeze creator's gems
+        for gem_type, quantity in game_obj.bet_gems.items():
+            await db.user_gems.update_one(
+                {"user_id": current_user.id, "gem_type": gem_type},
+                {
+                    "$inc": {"frozen_quantity": -quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+        
+        # Return frozen commission
+        user = await db.users.find_one({"id": current_user.id})
+        commission_to_return = game_obj.bet_amount * 0.06
+        
+        await db.users.update_one(
+            {"id": current_user.id},
+            {
+                "$set": {
+                    "virtual_balance": user["virtual_balance"] + commission_to_return,
+                    "frozen_balance": user["frozen_balance"] - commission_to_return,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Update game status
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "status": GameStatus.CANCELLED,
+                    "cancelled_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        return {
+            "message": "Game cancelled successfully",
+            "gems_returned": game_obj.bet_gems,
+            "commission_returned": commission_to_return
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cancelling game: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to cancel game"
+        )
+
+# ==============================================================================
 # ADMIN SECURITY MONITORING API
 # ==============================================================================
 
