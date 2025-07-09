@@ -530,8 +530,7 @@ def test_suspicious_activity(user_token: str) -> None:
     for i in range(num_purchases):
         response, success = make_request(
             "POST", 
-            "/gems/buy", 
-            data={"gem_type": gem_type, "quantity": quantity}, 
+            f"/gems/buy?gem_type={gem_type}&quantity={quantity}", 
             auth_token=user_token,
             silent=True
         )
