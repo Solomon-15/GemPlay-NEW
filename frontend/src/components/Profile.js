@@ -159,7 +159,7 @@ const Profile = ({ user, onUpdateUser }) => {
 
   const ProfileSettings = () => (
     <div className="space-y-6">
-      <div className="bg-surface-card border border-border-primary rounded-lg p-6">
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
         <h3 className="font-russo text-xl text-accent-secondary mb-4">Profile Settings</h3>
         <p className="font-roboto text-text-secondary text-center py-8">
           Profile settings will be available in future updates.
