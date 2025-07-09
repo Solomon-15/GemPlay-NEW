@@ -418,11 +418,12 @@ def test_join_game_validation(token: str, username: str, game_id: str, move: str
         record_test(f"Join Game Validation - {username}", False, "No token available")
         return
     
-    data = {
-        "move": move
-    }
-    
-    response, success = make_request("POST", f"/games/{game_id}/join", data=data, auth_token=token, expected_status=400)
+    response, success = make_request(
+        "POST", 
+        f"/games/{game_id}/join?move={move}", 
+        auth_token=token, 
+        expected_status=400
+    )
     
     if not success and "detail" in response and expected_error in response["detail"]:
         print_success(f"Validation correctly failed with error: {response['detail']}")
