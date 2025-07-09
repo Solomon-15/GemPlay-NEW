@@ -84,7 +84,7 @@ const Lobby = ({ user, onUpdateUser }) => {
   );
 
   const GameCard = ({ game, onJoin, isBot = false }) => (
-    <div className="bg-surface-sidebar border border-accent-primary rounded-lg p-4 hover:border-accent-primary hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300">
+    <div className="bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg p-4 hover:border-accent-primary hover:border-opacity-100 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBot ? 'bg-blue-700' : 'bg-green-700'}`}>
