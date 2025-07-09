@@ -25,7 +25,9 @@ const Profile = ({ user, onUpdateUser }) => {
     setDepositing(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${API}/auth/daily-bonus`, {}, {
+      const response = await axios.post(`${API}/auth/add-balance`, {
+        amount: amount
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -33,7 +35,7 @@ const Profile = ({ user, onUpdateUser }) => {
       if (onUpdateUser) {
         onUpdateUser();
       }
-      alert(`Successfully added $${amount.toFixed(2)} to your balance!`);
+      alert(response.data.message);
     } catch (error) {
       alert(error.response?.data?.detail || 'Error adding balance');
     } finally {
