@@ -71,6 +71,16 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
         </svg>
       ),
       color: 'text-gray-400'
+    },
+    {
+      id: 'notification-demo',
+      label: 'Notifications',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5V12h-5l5-5 5 5h-5v5zM4 4h16v2H4V4zM4 8h16v2H4V8zM4 12h16v2H4v-2z" />
+        </svg>
+      ),
+      color: 'text-gray-400'
     }
   ];
 
