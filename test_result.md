@@ -103,6 +103,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Most Bot Management APIs work correctly. POST /api/bots, PUT /api/bots/{bot_id}, POST /api/bots/{bot_id}/toggle all function as expected. GET /api/bots returns a 500 error, which is a known issue. DELETE /api/bots/{bot_id} fails when the bot has active games, which is expected behavior."
+      - working: true
+        agent: "testing"
+        comment: "The GET /api/bots endpoint now works correctly after the fix. The endpoint returns properly cleaned bot data that is JSON-serializable. All other bot management endpoints (POST, PUT, DELETE, toggle) continue to work as expected."
 
   - task: "Bot Game APIs"
     implemented: true
