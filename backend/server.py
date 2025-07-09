@@ -1547,7 +1547,7 @@ async def create_game(
 async def join_game(
     request: Request,
     game_id: str,
-    move: GameMove,
+    join_data: JoinGameRequest,
     current_user: User = Depends(get_current_user_with_security)
 ):
     """Join an existing PvP game."""
@@ -1635,7 +1635,7 @@ async def join_game(
             {
                 "$set": {
                     "opponent_id": current_user.id,
-                    "opponent_move": move,
+                    "opponent_move": join_data.move,
                     "status": GameStatus.ACTIVE,
                     "started_at": datetime.utcnow()
                 }
