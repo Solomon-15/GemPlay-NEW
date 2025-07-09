@@ -363,9 +363,6 @@ function App() {
           {currentView === 'monitoring' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
             <SecurityMonitoring user={user} />
           )}
-          {currentView === 'admin' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
-            <AdminPanel user={user} />
-          )}
         </div>
       </div>
     </div>
