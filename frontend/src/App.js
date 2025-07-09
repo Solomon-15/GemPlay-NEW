@@ -311,6 +311,12 @@ function App() {
         {currentView === 'inventory' && (
           <Inventory user={user} onUpdateUser={checkAuthStatus} />
         )}
+        {currentView === 'create-game' && (
+          <CreateGame user={user} onUpdateUser={checkAuthStatus} />
+        )}
+        {currentView === 'game-lobby' && (
+          <GameLobby user={user} onUpdateUser={checkAuthStatus} />
+        )}
         {currentView === 'monitoring' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
           <SecurityMonitoring user={user} />
         )}
