@@ -215,7 +215,7 @@ backend:
         agent: "testing"
         comment: "The commission system works correctly. Successfully tested 6% commission on game bets and 3% commission on gem gifts. The profit stats endpoint shows the correct profit by type: {'GIFT_COMMISSION': 0.15, 'BET_COMMISSION': 1.5}."
 
-  - task: "Admin Ban/Unban User API"
+  - task: "Balance Freezing System"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -225,10 +225,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Testing POST /api/admin/users/{user_id}/ban and POST /api/admin/users/{user_id}/unban endpoints."
+        comment: "Testing the balance freezing system for game bets."
       - working: true
         agent: "testing"
-        comment: "The ban and unban endpoints work correctly. Successfully banned a user with a reason and duration, and then unbanned the user. The user's status was correctly updated in both cases."
+        comment: "The balance freezing system works correctly. When creating a game, 6% of the bet amount is frozen in the user's balance. After the game is completed, the frozen balance is correctly released. The loser gets their commission refunded, and the winner's commission is taken as profit."
 
   - task: "Profit API endpoints"
     implemented: true
