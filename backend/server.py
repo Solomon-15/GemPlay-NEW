@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, BackgroundTasks
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -20,6 +20,9 @@ import time
 from threading import Thread
 import hashlib
 import json
+import secrets
+from collections import defaultdict
+import ipaddress
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
@@ -34,10 +37,23 @@ db = client[os.environ['DB_NAME']]
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-# JWT settings
-SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-super-secret-jwt-key-change-in-production')
-ALGORITHM = os.environ.get('JWT_ALGORITHM', 'HS256')
+# Enhanced JWT settings with stronger security
+SECRET_KEY = secrets.token_urlsafe(64)  # Generate secure random key
+ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Security monitoring
+SUSPICIOUS_ACTIVITY_THRESHOLDS = {
+    "max_requests_per_minute": 60,
+    "max_purchases_per_hour": 20,
+    "max_gift_amount_per_day": 1000,
+    "max_balance_change_per_hour": 5000,
+    "unusual_login_locations": True
+}
+
+# In-memory rate limiting (in production, use Redis)
+request_counts = defaultdict(lambda: defaultdict(int))
+user_activity = defaultdict(lambda: defaultdict(list))
 
 # Timezone
 TIMEZONE = pytz.timezone(os.environ.get('TIMEZONE', 'Asia/Almaty'))
