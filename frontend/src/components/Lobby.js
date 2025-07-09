@@ -238,7 +238,7 @@ const Lobby = ({ user, onUpdateUser }) => {
       <div className="text-center mb-8">
         <button 
           onClick={() => window.location.href = '#create-game'}
-          className="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-rajdhani font-bold text-xl rounded-lg hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none shadow-lg hover:shadow-green-500/25"
+          className="px-8 py-4 bg-gradient-to-r from-green-700 to-green-800 text-white font-rajdhani font-bold text-xl rounded-lg hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none shadow-lg hover:shadow-green-500/25"
         >
           <svg className="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
