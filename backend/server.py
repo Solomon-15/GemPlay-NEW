@@ -516,8 +516,41 @@ def verify_move_hash(move: GameMove, salt: str, hash_value: str) -> bool:
 # DEPENDENCY FUNCTIONS
 # ==============================================================================
 
+async def get_current_user_with_security(request: Request, token: str = Depends(oauth2_scheme)):
+    """Get current user with security monitoring."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    
+    user = await db.users.find_one({"id": user_id})
+    if user is None:
+        raise credentials_exception
+    
+    # Security monitoring
+    ip_address = get_client_ip(request)
+    endpoint = str(request.url.path)
+    
+    # Check rate limits
+    rate_limit_ok = await check_rate_limit(user_id, ip_address, endpoint)
+    if not rate_limit_ok:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded. Please try again later."
+        )
+    
+    return User(**user)
+
 async def get_current_user(token: str = Depends(oauth2_scheme)):
-    """Get current user from JWT token."""
+    """Get current user from JWT token (legacy method)."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
