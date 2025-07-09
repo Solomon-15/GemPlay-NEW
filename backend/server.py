@@ -23,6 +23,7 @@ import json
 import secrets
 from collections import defaultdict
 import ipaddress
+import random
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
@@ -54,6 +55,9 @@ SUSPICIOUS_ACTIVITY_THRESHOLDS = {
 # In-memory rate limiting (in production, use Redis)
 request_counts = defaultdict(lambda: defaultdict(int))
 user_activity = defaultdict(lambda: defaultdict(list))
+
+# Bot behavior tracking
+bot_activity_tracker = {}
 
 # Timezone
 TIMEZONE = pytz.timezone(os.environ.get('TIMEZONE', 'Asia/Almaty'))
