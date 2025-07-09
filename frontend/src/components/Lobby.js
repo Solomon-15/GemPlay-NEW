@@ -448,7 +448,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       {/* Create Bet Button */}
       <div className="text-center mb-8">
         <button 
-          onClick={() => window.location.href = '#create-game'}
+          onClick={() => setCurrentView('create-game')}
           className="px-8 py-4 bg-gradient-to-r from-green-700 to-green-800 text-white font-rajdhani font-bold text-xl rounded-lg hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none shadow-lg hover:shadow-green-500/25"
         >
           <svg className="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
