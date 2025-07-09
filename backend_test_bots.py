@@ -366,8 +366,8 @@ def test_bot_game_logic(admin_token: str, bot_id: str) -> bool:
         record_test("Bot Game Logic - Cycle Tracking", False, "Failed to get initial stats")
         return False
     
-    initial_cycle_games = initial_stats["bot"].get("current_cycle_games", 0)
-    initial_cycle_wins = initial_stats["bot"].get("current_cycle_wins", 0)
+    initial_cycle_games = initial_stats.get("current_cycle_games", 0)
+    initial_cycle_wins = initial_stats.get("current_cycle_wins", 0)
     
     # Create a game with the bot
     game_id = test_bot_create_game(admin_token, bot_id)
