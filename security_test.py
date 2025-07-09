@@ -451,8 +451,7 @@ def test_large_purchase(user_token: str) -> None:
     # Make the large purchase
     response, success = make_request(
         "POST", 
-        "/gems/buy", 
-        data={"gem_type": gem_type, "quantity": quantity}, 
+        f"/gems/buy?gem_type={gem_type}&quantity={quantity}", 
         auth_token=user_token
     )
     
