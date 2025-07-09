@@ -86,7 +86,7 @@ const Lobby = ({ user, onUpdateUser }) => {
     <div className="bg-surface-sidebar border border-border-primary rounded-lg p-4 hover:border-accent-primary transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBot ? 'bg-blue-600' : 'bg-green-600'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBot ? 'bg-blue-700' : 'bg-green-700'}`}>
             {isBot ? '🤖' : '👤'}
           </div>
           <div>
