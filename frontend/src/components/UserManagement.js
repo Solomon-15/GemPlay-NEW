@@ -79,16 +79,16 @@ const UserManagement = () => {
       });
       
       fetchUsers(); // Обновляем список
-      alert('Пользователь разбанен');
+      showSuccessRU('Пользователь разбанен');
     } catch (error) {
       console.error('Ошибка разбана:', error);
-      alert('Ошибка при разбане пользователя');
+      showErrorRU('Ошибка при разбане пользователя');
     }
   };
 
   const submitBan = async () => {
     if (!banReason.trim()) {
-      alert('Укажите причину бана');
+      showWarningRU('Укажите причину бана');
       return;
     }
 
@@ -105,10 +105,10 @@ const UserManagement = () => {
 
       setIsBanModalOpen(false);
       fetchUsers();
-      alert('Пользователь забанен');
+      showSuccessRU('Пользователь забанен');
     } catch (error) {
       console.error('Ошибка бана:', error);
-      alert('Ошибка при бане пользователя');
+      showErrorRU('Ошибка при бане пользователя');
     }
   };
 
