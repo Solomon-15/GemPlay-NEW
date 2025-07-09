@@ -7,6 +7,8 @@ import MyBets from "./components/MyBets";
 import Profile from "./components/Profile";
 import Shop from "./components/Shop";
 import Inventory from "./components/Inventory";
+import Leaderboard from "./components/Leaderboard";
+import History from "./components/History";
 import CreateGame from "./components/CreateGame";
 import GameLobby from "./components/GameLobby";
 import SecurityMonitoring from "./components/SecurityMonitoring";
