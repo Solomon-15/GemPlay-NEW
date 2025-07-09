@@ -237,6 +237,20 @@ function App() {
               >
                 INVENTORY
               </button>
+
+              {/* Admin Monitoring Section */}
+              {user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? (
+                <button
+                  onClick={() => setCurrentView('monitoring')}
+                  className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
+                    currentView === 'monitoring' 
+                      ? 'bg-red-600 text-white' 
+                      : 'text-red-400 hover:text-white'
+                  }`}
+                >
+                  🛡️ МОНИТОРИНГ
+                </button>
+              ) : null}
             </div>
           </div>
           
