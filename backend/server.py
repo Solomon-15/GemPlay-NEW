@@ -42,6 +42,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 SECRET_KEY = secrets.token_urlsafe(64)  # Generate secure random key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_DAYS = 7  # 7 days for refresh tokens
 
 # Security monitoring
 SUSPICIOUS_ACTIVITY_THRESHOLDS = {
