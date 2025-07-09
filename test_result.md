@@ -232,15 +232,18 @@ backend:
 
   - task: "Profit API endpoints"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Testing profit tracking API endpoints. GET /api/admin/profit/stats and GET /api/admin/profit/commission-settings work correctly, but GET /api/admin/profit/entries returns a 500 Internal Server Error."
+      - working: true
+        agent: "testing"
+        comment: "All profit API endpoints are now working correctly. GET /api/admin/profit/stats returns proper profit statistics, GET /api/admin/profit/commission-settings returns commission settings, and GET /api/admin/profit/entries returns a paginated list of profit entries."
         
   - task: "Gems Definitions API"
     implemented: true
