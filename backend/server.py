@@ -1799,57 +1799,61 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
             
             # Handle commission for winner
             winner = await db.users.find_one({"id": winner_id})
-            commission_to_deduct = commission_amount  # 3% of total pot
-            
-            new_winner_balance = winner["virtual_balance"]
-            new_winner_frozen = winner["frozen_balance"] - (game.bet_amount * 0.06)  # Unfreeze winner's commission
-            
-            # Deduct actual commission from winner's balance
-            if new_winner_frozen >= commission_to_deduct:
-                new_winner_frozen -= commission_to_deduct
-            else:
-                remaining = commission_to_deduct - new_winner_frozen
-                new_winner_balance -= remaining
-                new_winner_frozen = 0
-            
-            await db.users.update_one(
-                {"id": winner_id},
-                {
-                    "$set": {
-                        "virtual_balance": new_winner_balance,
-                        "frozen_balance": new_winner_frozen,
-                        "updated_at": datetime.utcnow()
+            if winner:
+                # Winner is a human player
+                commission_to_deduct = commission_amount  # 3% of total pot
+                
+                new_winner_balance = winner["virtual_balance"]
+                new_winner_frozen = winner["frozen_balance"] - (game.bet_amount * 0.06)  # Unfreeze winner's commission
+                
+                # Deduct actual commission from winner's balance
+                if new_winner_frozen >= commission_to_deduct:
+                    new_winner_frozen -= commission_to_deduct
+                else:
+                    remaining = commission_to_deduct - new_winner_frozen
+                    new_winner_balance -= remaining
+                    new_winner_frozen = 0
+                
+                await db.users.update_one(
+                    {"id": winner_id},
+                    {
+                        "$set": {
+                            "virtual_balance": new_winner_balance,
+                            "frozen_balance": new_winner_frozen,
+                            "updated_at": datetime.utcnow()
+                        }
                     }
-                }
-            )
+                )
+                
+                # Record commission transaction
+                commission_transaction = Transaction(
+                    user_id=winner_id,
+                    transaction_type=TransactionType.COMMISSION,
+                    amount=commission_amount,
+                    currency="USD",
+                    balance_before=winner["virtual_balance"],
+                    balance_after=new_winner_balance,
+                    description=f"PvP game commission (3% of ${game.bet_amount * 2})",
+                    reference_id=game.id
+                )
+                await db.transactions.insert_one(commission_transaction.dict())
             
-            # Return frozen commission to loser
+            # Handle commission for loser
             loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
             loser = await db.users.find_one({"id": loser_id})
             
-            await db.users.update_one(
-                {"id": loser_id},
-                {
-                    "$set": {
-                        "virtual_balance": loser["virtual_balance"] + (game.bet_amount * 0.06),
-                        "frozen_balance": loser["frozen_balance"] - (game.bet_amount * 0.06),
-                        "updated_at": datetime.utcnow()
+            if loser:
+                # Loser is a human player - return frozen commission
+                await db.users.update_one(
+                    {"id": loser_id},
+                    {
+                        "$set": {
+                            "virtual_balance": loser["virtual_balance"] + (game.bet_amount * 0.06),
+                            "frozen_balance": loser["frozen_balance"] - (game.bet_amount * 0.06),
+                            "updated_at": datetime.utcnow()
+                        }
                     }
-                }
-            )
-            
-            # Record commission transaction
-            commission_transaction = Transaction(
-                user_id=winner_id,
-                transaction_type=TransactionType.COMMISSION,
-                amount=commission_amount,
-                currency="USD",
-                balance_before=winner["virtual_balance"],
-                balance_after=new_winner_balance,
-                description=f"PvP game commission (3% of ${game.bet_amount * 2})",
-                reference_id=game.id
-            )
-            await db.transactions.insert_one(commission_transaction.dict())
+                )
             
         else:
             # Draw - return frozen commissions to both players
