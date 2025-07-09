@@ -387,8 +387,8 @@ def test_bot_game_logic(admin_token: str, bot_id: str) -> bool:
         record_test("Bot Game Logic - Cycle Tracking", False, "Failed to get updated stats")
         return False
     
-    updated_cycle_games = updated_stats["bot"].get("current_cycle_games", 0)
-    updated_cycle_wins = updated_stats["bot"].get("current_cycle_wins", 0)
+    updated_cycle_games = updated_stats.get("current_cycle_games", 0)
+    updated_cycle_wins = updated_stats.get("current_cycle_wins", 0)
     
     # Check if cycle tracking was updated
     if updated_cycle_games > initial_cycle_games:
