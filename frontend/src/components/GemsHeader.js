@@ -106,12 +106,12 @@ const GemsHeader = ({ user }) => {
           <div className={`font-rajdhani text-sm font-bold transition-colors duration-300 ${
             hasGems ? 'text-green-400' : 'text-gray-600'
           }`}>
-            ${availableValue.toFixed(2)}
+            {formatCurrencyWithSymbol(availableValue)}
           </div>
           <div className={`font-rajdhani text-xs transition-colors duration-300 ${
             hasGems ? 'text-text-secondary' : 'text-gray-700'
           }`}>
-            / ${totalValue.toFixed(2)}
+            / {formatCurrencyWithSymbol(totalValue)}
           </div>
         </div>
       </div>
