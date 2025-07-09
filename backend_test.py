@@ -383,11 +383,11 @@ def test_join_game(token: str, username: str, game_id: str, move: str) -> Dict[s
         record_test(f"Join Game - {username}", False, "No token available")
         return {}
     
-    data = {
-        "move": move
-    }
-    
-    response, success = make_request("POST", f"/games/{game_id}/join", data=data, auth_token=token)
+    response, success = make_request(
+        "POST", 
+        f"/games/{game_id}/join?move={move}", 
+        auth_token=token
+    )
     
     if success:
         if "game_id" in response and "result" in response and "creator_move" in response and "opponent_move" in response:
