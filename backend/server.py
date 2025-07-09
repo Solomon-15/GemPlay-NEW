@@ -387,20 +387,73 @@ async def check_rate_limit(user_id: str, ip_address: str, endpoint: str) -> bool
     current_time = datetime.utcnow()
     minute_key = current_time.strftime("%Y-%m-%d-%H-%M")
     
-    # Check requests per minute for this IP
-    ip_key = f"{ip_address}:{minute_key}"
-    request_counts[ip_key]["count"] += 1
+    # Clean up old entries (keep only current minute data)
+    current_minute_keys = set()
+    for i in range(2):  # Keep current and previous minute
+        key_time = current_time - timedelta(minutes=i)
+        current_minute_keys.add(key_time.strftime("%Y-%m-%d-%H-%M"))
     
+    # Remove old entries
+    keys_to_remove = []
+    for key in list(request_counts.keys()):
+        if key.split(":")[-1] not in current_minute_keys:
+            keys_to_remove.append(key)
+    
+    for key in keys_to_remove:
+        del request_counts[key]
+    
+    # Check requests per minute for this IP and user
+    ip_key = f"{ip_address}:{minute_key}"
+    user_key = f"{user_id}:{minute_key}"
+    
+    # Initialize if not exists
+    if ip_key not in request_counts:
+        request_counts[ip_key] = {"count": 0}
+    if user_key not in request_counts:
+        request_counts[user_key] = {"count": 0}
+    
+    # Increment counters
+    request_counts[ip_key]["count"] += 1
+    request_counts[user_key]["count"] += 1
+    
+    # Check IP rate limit
     if request_counts[ip_key]["count"] > SUSPICIOUS_ACTIVITY_THRESHOLDS["max_requests_per_minute"]:
         await create_security_alert(
             user_id=user_id,
-            alert_type="RATE_LIMIT_EXCEEDED",
+            alert_type="IP_RATE_LIMIT_EXCEEDED",
             severity="HIGH",
-            description=f"Rate limit exceeded: {request_counts[ip_key]['count']} requests in 1 minute",
+            description=f"IP rate limit exceeded: {request_counts[ip_key]['count']} requests in 1 minute",
             ip_address=ip_address,
-            request_data={"endpoint": endpoint, "requests_count": request_counts[ip_key]["count"]}
+            request_data={"endpoint": endpoint, "requests_count": request_counts[ip_key]["count"], "limit_type": "IP"}
         )
         return False
+    
+    # Check user rate limit  
+    if request_counts[user_key]["count"] > SUSPICIOUS_ACTIVITY_THRESHOLDS["max_requests_per_minute"]:
+        await create_security_alert(
+            user_id=user_id,
+            alert_type="USER_RATE_LIMIT_EXCEEDED", 
+            severity="HIGH",
+            description=f"User rate limit exceeded: {request_counts[user_key]['count']} requests in 1 minute",
+            ip_address=ip_address,
+            request_data={"endpoint": endpoint, "requests_count": request_counts[user_key]["count"], "limit_type": "USER"}
+        )
+        return False
+    
+    # Store monitoring data
+    monitoring = SecurityMonitoring(
+        user_id=user_id,
+        ip_address=ip_address,
+        endpoint=endpoint,
+        request_count=request_counts[user_key]["count"],
+        time_window="1m"
+    )
+    
+    # Save to database (fire and forget)
+    try:
+        await db.security_monitoring.insert_one(monitoring.dict())
+    except Exception as e:
+        logger.warning(f"Failed to save monitoring data: {e}")
     
     return True
 
