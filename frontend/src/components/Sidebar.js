@@ -164,19 +164,24 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
                 onClick={() => setCurrentView(item.id)}
                 className={`w-full flex items-center transition-all duration-200 group relative ${
                   isCollapsed 
-                    ? 'justify-center p-3 mx-1 rounded-lg' 
+                    ? 'justify-center p-2 mx-1 rounded-lg' 
                     : 'px-3 py-3 rounded-lg'
                 } ${
                   currentView === item.id 
                     ? isCollapsed
-                      ? 'bg-green-500/20 border-2 border-green-500/60 text-green-400' 
-                      : 'bg-green-500/20 border-l-4 border-green-500 text-green-400'
+                      ? 'bg-accent-primary/10 text-accent-primary relative' 
+                      : 'bg-accent-primary/10 border-l-2 border-accent-primary text-accent-primary'
                     : 'hover:bg-surface-card text-gray-400 hover:text-white'
                 }`}
                 title={isCollapsed ? item.label : ''}
               >
-                <div className={`${
-                  currentView === item.id ? 'text-green-400' : 'text-gray-400 group-hover:text-white'
+                {/* Green frame for collapsed active state */}
+                {currentView === item.id && isCollapsed && (
+                  <div className="absolute inset-0 border border-accent-primary/60 rounded-lg bg-accent-primary/5"></div>
+                )}
+                
+                <div className={`relative z-10 ${
+                  currentView === item.id ? 'text-accent-primary' : 'text-gray-400 group-hover:text-white'
                 } ${isCollapsed ? 'flex items-center justify-center' : ''}`}>
                   {item.icon}
                 </div>
