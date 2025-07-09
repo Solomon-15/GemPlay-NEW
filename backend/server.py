@@ -3257,7 +3257,7 @@ async def get_games_stats(current_user: User = Depends(get_current_admin)):
             detail="Failed to fetch games stats"
         )
 
-@api_router.get("/admin/users", response_model=Dict[str, Any])
+@api_router.get("/admin/users", response_model=dict)
 async def get_all_users(
     page: int = 1,
     limit: int = 50,
