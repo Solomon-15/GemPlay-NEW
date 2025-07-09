@@ -2507,7 +2507,30 @@ async def get_bots(current_user: User = Depends(get_current_admin)):
     """Get all bots (admin only)."""
     try:
         bots = await db.bots.find().to_list(100)
-        return [bot for bot in bots]
+        # Clean up the bot data to ensure JSON serialization
+        cleaned_bots = []
+        for bot in bots:
+            cleaned_bot = {
+                "id": bot.get("id"),
+                "name": bot.get("name"),
+                "bot_type": bot.get("bot_type"),
+                "is_active": bot.get("is_active", True),
+                "min_bet": bot.get("min_bet", 1.0),
+                "max_bet": bot.get("max_bet", 1000.0),
+                "win_rate": bot.get("win_rate", 0.6),
+                "cycle_games": bot.get("cycle_games", 12),
+                "current_cycle_games": bot.get("current_cycle_games", 0),
+                "current_cycle_wins": bot.get("current_cycle_wins", 0),
+                "pause_between_games": bot.get("pause_between_games", 60),
+                "last_game_time": bot.get("last_game_time"),
+                "can_accept_bets": bot.get("can_accept_bets", False),
+                "can_play_with_bots": bot.get("can_play_with_bots", False),
+                "avatar_gender": bot.get("avatar_gender", "male"),
+                "simple_mode": bot.get("simple_mode", False),
+                "created_at": bot.get("created_at")
+            }
+            cleaned_bots.append(cleaned_bot)
+        return cleaned_bots
     except Exception as e:
         logger.error(f"Error fetching bots: {e}")
         raise HTTPException(
