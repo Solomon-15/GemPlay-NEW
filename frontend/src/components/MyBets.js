@@ -62,7 +62,7 @@ const MyBets = ({ user }) => {
   };
 
   const BetCard = ({ bet }) => (
-    <div className="bg-surface-card border border-border-primary rounded-lg p-4 hover:border-accent-primary transition-all duration-300">
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 hover:border-accent-primary hover:border-opacity-100 transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-accent rounded-full flex items-center justify-center">
@@ -99,7 +99,7 @@ const MyBets = ({ user }) => {
       </div>
       
       {bet.status === 'COMPLETED' && (
-        <div className="pt-3 border-t border-border-primary">
+        <div className="pt-3 border-t border-accent-primary border-opacity-30">
           <div className="flex justify-between items-center">
             <span className="font-roboto text-text-secondary">Result:</span>
             <span className={`font-rajdhani font-bold ${
