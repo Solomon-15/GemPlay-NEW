@@ -549,18 +549,11 @@ frontend:
         agent: "testing"
         comment: "GemsHeader component works correctly. It displays all 7 gem types (Ruby, Amber, Topaz, Emerald, Aquamarine, Sapphire, Magic) in a horizontal row on desktop and in a grid of 4 columns on mobile. Each gem block shows the gem name, icon, and values in the format '$available / $total'. The color logic works correctly - gems with non-zero values are bright, while empty gems are dimmed."
 
-test_plan:
-  current_focus:
-    - "Profit API endpoints"
-    - "Shop Component"
-    - "Inventory Component"
-    - "Profile Component"
-  stuck_tasks:
-    - "Shop Component"
-    - "Inventory Component"
-    - "Profile Component"
-  test_all: false
-  test_priority: "high_first"
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
 
 agent_communication:
   - agent: "main"
