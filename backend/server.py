@@ -3183,6 +3183,142 @@ async def get_bot_stats(
             detail="Failed to fetch bot stats"
         )
 
+# ==============================================================================
+# ADMIN STATISTICS AND MANAGEMENT API
+# ==============================================================================
+
+@api_router.get("/admin/users/stats", response_model=dict)
+async def get_users_stats(current_user: User = Depends(get_current_admin)):
+    """Get user statistics for admin dashboard."""
+    try:
+        # Get total users count
+        total_users = await db.users.count_documents({})
+        
+        # Get active users count
+        active_users = await db.users.count_documents({"status": "ACTIVE"})
+        
+        # Get banned users count
+        banned_users = await db.users.count_documents({"status": "BANNED"})
+        
+        # Get new users today
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        new_users_today = await db.users.count_documents({
+            "created_at": {"$gte": today}
+        })
+        
+        return {
+            "total": total_users,
+            "active": active_users,
+            "banned": banned_users,
+            "new_today": new_users_today
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching users stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch users stats"
+        )
+
+@api_router.get("/admin/games/stats", response_model=dict)
+async def get_games_stats(current_user: User = Depends(get_current_admin)):
+    """Get game statistics for admin dashboard."""
+    try:
+        # Get total games count
+        total_games = await db.games.count_documents({})
+        
+        # Get active games count
+        active_games = await db.games.count_documents({"status": "ACTIVE"})
+        
+        # Get waiting games count
+        waiting_games = await db.games.count_documents({"status": "WAITING"})
+        
+        # Get completed games count
+        completed_games = await db.games.count_documents({"status": "COMPLETED"})
+        
+        # Get games today
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        games_today = await db.games.count_documents({
+            "created_at": {"$gte": today}
+        })
+        
+        return {
+            "total": total_games,
+            "active": active_games,
+            "waiting": waiting_games,
+            "completed": completed_games,
+            "today": games_today
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching games stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch games stats"
+        )
+
+@api_router.get("/admin/users", response_model=List[dict])
+async def get_all_users(
+    page: int = 1,
+    limit: int = 50,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get all users with pagination and filtering."""
+    try:
+        # Build query
+        query = {}
+        if search:
+            query["$or"] = [
+                {"username": {"$regex": search, "$options": "i"}},
+                {"email": {"$regex": search, "$options": "i"}}
+            ]
+        if status:
+            query["status"] = status
+        
+        # Get total count
+        total = await db.users.count_documents(query)
+        
+        # Get users with pagination
+        skip = (page - 1) * limit
+        users = await db.users.find(query).skip(skip).limit(limit).sort("created_at", -1).to_list(limit)
+        
+        # Clean user data
+        cleaned_users = []
+        for user in users:
+            cleaned_user = {
+                "id": user.get("id"),
+                "username": user.get("username"),
+                "email": user.get("email"),
+                "role": user.get("role"),
+                "status": user.get("status"),
+                "gender": user.get("gender"),
+                "virtual_balance": user.get("virtual_balance", 0),
+                "total_games_played": user.get("total_games_played", 0),
+                "total_games_won": user.get("total_games_won", 0),
+                "created_at": user.get("created_at"),
+                "last_login": user.get("last_login"),
+                "ban_reason": user.get("ban_reason"),
+                "ban_until": user.get("ban_until")
+            }
+            cleaned_users.append(cleaned_user)
+        
+        return {
+            "users": cleaned_users,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "pages": (total + limit - 1) // limit
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching all users: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch users"
+        )
+
 async def update_bot_cycle_tracking(bot_id: str, bot_won: bool):
     """Update bot's cycle tracking after a game."""
     try:
