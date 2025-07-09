@@ -196,9 +196,7 @@ function App() {
         if (error.response?.status === 401 && refreshToken) {
           console.log('🔄 Attempting to refresh token...');
           try {
-            const refreshResponse = await axios.post(`${API}/auth/refresh`, {
-              refresh_token: refreshToken
-            });
+            const refreshResponse = await axios.post(`${API}/auth/refresh?refresh_token=${refreshToken}`);
             
             console.log('✅ Token refreshed successfully');
             localStorage.setItem('token', refreshResponse.data.access_token);
