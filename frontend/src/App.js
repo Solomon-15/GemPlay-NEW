@@ -168,15 +168,23 @@ function App() {
 
   const checkAuthStatus = async () => {
     const token = localStorage.getItem('token');
+    console.log('🔍 Checking auth status. Token exists:', !!token);
+    
     if (token) {
       try {
+        console.log('📡 Making request to /api/auth/me with token:', token.substring(0, 20) + '...');
         const response = await axios.get(`${API}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('✅ Auth check successful. User:', response.data);
         setUser(response.data);
       } catch (error) {
+        console.error('❌ Auth check failed:', error.response?.data || error.message);
+        console.log('🗑️ Removing invalid token');
         localStorage.removeItem('token');
       }
+    } else {
+      console.log('🔒 No token found in localStorage');
     }
     setLoading(false);
   };
