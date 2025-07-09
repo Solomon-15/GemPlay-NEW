@@ -289,7 +289,7 @@ const Profile = ({ user, onUpdateUser }) => {
                       : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  ${amount > 0 ? amount.toFixed(0) : '0'}
+                  {formatCurrencyWithSymbol(amount > 0 ? amount : 0, false)}
                 </button>
               ))}
             </div>
