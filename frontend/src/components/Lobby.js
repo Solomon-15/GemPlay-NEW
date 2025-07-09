@@ -130,7 +130,7 @@ const Lobby = ({ user, onUpdateUser }) => {
           <div className={color}>{icon}</div>
           <h3 className="font-rajdhani font-bold text-lg text-white">{title}</h3>
         </div>
-        <span className="px-2 py-1 bg-accent-primary text-white text-xs rounded-full font-rajdhani">
+        <span className="px-2 py-1 bg-accent-dark text-white text-xs rounded-full font-rajdhani">
           {count}
         </span>
       </div>
