@@ -3,6 +3,7 @@ import "./App.css";
 import axios from "axios";
 import Shop from "./components/Shop";
 import Inventory from "./components/Inventory";
+import SecurityMonitoring from "./components/SecurityMonitoring";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
