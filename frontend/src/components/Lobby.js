@@ -219,21 +219,37 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
 
   const handleJoinGame = async (gameId) => {
     try {
+      console.log('Attempting to join game:', gameId);
+      
       // Check if it's a bot challenge (bot ID format)
-      if (typeof gameId === 'string' && !gameId.startsWith('bot-')) {
-        // Regular game join
-        console.log('Joining game:', gameId);
-        // This would redirect to the create game component with join functionality
-        // For now, we'll just log it
-      } else {
+      if (typeof gameId === 'string' && gameId.startsWith('bot-')) {
         // Bot challenge
-        const botId = typeof gameId === 'string' && gameId.startsWith('bot-') ? gameId.replace('bot-', '') : gameId;
+        const botId = gameId.replace('bot-', '');
         console.log('Challenging bot:', botId);
+        showSuccess('Bot challenge initiated');
         // This would open a modal or redirect to challenge the bot
         // For now, we'll just log it
+      } else {
+        // Regular game join
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${API}/games/${gameId}/join`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.data.success) {
+          showSuccess('Successfully joined the game');
+          // Refresh the lobby data after joining
+          await fetchLobbyData();
+          if (onUpdateUser) {
+            onUpdateUser();
+          }
+        } else {
+          showError('Failed to join game');
+        }
       }
     } catch (error) {
       console.error('Error handling game join:', error);
+      showError(error.response?.data?.detail || 'Failed to join game');
     }
   };
 
