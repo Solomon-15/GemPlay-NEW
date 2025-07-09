@@ -55,10 +55,7 @@ const Shop = ({ user, onUpdateUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/gems/buy`, {
-        gem_type: gemType,
-        quantity: quantity
-      }, {
+      const response = await axios.post(`${API}/gems/buy?gem_type=${gemType}&quantity=${quantity}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
