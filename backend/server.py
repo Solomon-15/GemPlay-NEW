@@ -2722,6 +2722,324 @@ async def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "timestamp": datetime.utcnow()}
 
+# ==============================================================================
+# BOT GAME LOGIC AND ALGORITHMS
+# ==============================================================================
+
+class BotGameLogic:
+    """Bot game logic and decision-making algorithms."""
+    
+    @staticmethod
+    def calculate_bot_move(bot: Bot, game_context: dict = None) -> GameMove:
+        """Calculate bot's move based on its type and settings."""
+        import random
+        
+        if bot.bot_type == BotType.REGULAR:
+            # Regular bot: Simple random selection
+            return random.choice([GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS])
+        
+        elif bot.bot_type == BotType.HUMAN:
+            # Human bot: More sophisticated decision making
+            if bot.simple_mode:
+                # Simple human mode: slight bias towards rock
+                choices = [GameMove.ROCK, GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
+                return random.choice(choices)
+            else:
+                # Complex human mode: pattern-based decisions
+                # In a real implementation, this could analyze opponent patterns
+                # For now, we'll use weighted random selection
+                weights = [0.35, 0.35, 0.30]  # Rock, Paper, Scissors
+                moves = [GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
+                return random.choices(moves, weights=weights)[0]
+        
+        return GameMove.ROCK  # Default fallback
+    
+    @staticmethod
+    def should_bot_win(bot: Bot) -> bool:
+        """Determine if bot should win based on win rate and cycle management."""
+        import random
+        
+        # Check if we're in a cycle management mode
+        if bot.cycle_games > 0:
+            # Calculate current win rate in cycle
+            if bot.current_cycle_games > 0:
+                current_win_rate = bot.current_cycle_wins / bot.current_cycle_games
+                target_win_rate = bot.win_rate
+                
+                # If we're behind target, increase win probability
+                if current_win_rate < target_win_rate:
+                    adjusted_win_rate = min(0.9, target_win_rate + 0.1)
+                    return random.random() < adjusted_win_rate
+                # If we're ahead, decrease win probability
+                elif current_win_rate > target_win_rate:
+                    adjusted_win_rate = max(0.1, target_win_rate - 0.1)
+                    return random.random() < adjusted_win_rate
+        
+        # Standard win rate check
+        return random.random() < bot.win_rate
+    
+    @staticmethod
+    def get_bot_move_against_player(bot: Bot, player_move: GameMove) -> GameMove:
+        """Get bot move specifically to beat or lose to player move."""
+        should_win = BotGameLogic.should_bot_win(bot)
+        
+        if should_win:
+            # Bot should win
+            if player_move == GameMove.ROCK:
+                return GameMove.PAPER
+            elif player_move == GameMove.PAPER:
+                return GameMove.SCISSORS
+            else:  # SCISSORS
+                return GameMove.ROCK
+        else:
+            # Bot should lose
+            if player_move == GameMove.ROCK:
+                return GameMove.SCISSORS
+            elif player_move == GameMove.PAPER:
+                return GameMove.ROCK
+            else:  # SCISSORS
+                return GameMove.PAPER
+    
+    @staticmethod
+    async def setup_bot_gems(bot_id: str, db):
+        """Ensure bot has adequate gems for gameplay."""
+        # Check bot's current gems
+        bot_gems = await db.user_gems.find({"user_id": bot_id}).to_list(100)
+        
+        # Define minimum required gems for each type
+        required_gems = {gem_type.value: 100 for gem_type in GemType}
+        
+        for gem_type, min_quantity in required_gems.items():
+            existing_gem = next((g for g in bot_gems if g["gem_type"] == gem_type), None)
+            
+            if not existing_gem:
+                # Create new gem entry
+                new_gem = UserGem(
+                    user_id=bot_id,
+                    gem_type=gem_type,
+                    quantity=min_quantity
+                )
+                await db.user_gems.insert_one(new_gem.dict())
+            elif existing_gem["quantity"] < min_quantity:
+                # Top up existing gems
+                await db.user_gems.update_one(
+                    {"user_id": bot_id, "gem_type": gem_type},
+                    {
+                        "$set": {
+                            "quantity": min_quantity,
+                            "updated_at": datetime.utcnow()
+                        }
+                    }
+                )
+
+@api_router.post("/bots/{bot_id}/setup-gems", response_model=dict)
+async def setup_bot_gems(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Setup gems for a bot (admin only)."""
+    try:
+        # Find bot
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Setup gems
+        await BotGameLogic.setup_bot_gems(bot_id, db)
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="SETUP_BOT_GEMS",
+            target_type="bot",
+            target_id=bot_id,
+            details={"bot_name": bot["name"]}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "Bot gems setup successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error setting up bot gems: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to setup bot gems"
+        )
+
+@api_router.post("/bots/{bot_id}/create-game", response_model=dict)
+async def bot_create_game(
+    bot_id: str,
+    game_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Make a bot create a game (admin only)."""
+    try:
+        # Find bot
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        bot_obj = Bot(**bot)
+        
+        if not bot_obj.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Bot is not active"
+            )
+        
+        # Validate bet amount is within bot's limits
+        bet_amount = game_data.get("bet_amount", 10.0)
+        if bet_amount < bot_obj.min_bet or bet_amount > bot_obj.max_bet:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Bet amount must be between {bot_obj.min_bet} and {bot_obj.max_bet}"
+            )
+        
+        # Ensure bot has gems
+        await BotGameLogic.setup_bot_gems(bot_id, db)
+        
+        # Generate bot's move and bet gems
+        bot_move = BotGameLogic.calculate_bot_move(bot_obj)
+        bet_gems = game_data.get("bet_gems", {"Ruby": 1, "Emerald": 1})
+        
+        # Create game as bot
+        game = Game(
+            creator_id=bot_id,
+            creator_move=bot_move,
+            creator_move_hash=hashlib.sha256(f"{bot_move.value}{secrets.token_hex(32)}".encode()).hexdigest(),
+            creator_salt=secrets.token_hex(32),
+            bet_amount=bet_amount,
+            bet_gems=bet_gems,
+            is_bot_game=True,
+            bot_id=bot_id
+        )
+        
+        await db.games.insert_one(game.dict())
+        
+        # Update bot cycle tracking
+        await db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "last_game_time": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        return {"message": "Bot game created successfully", "game_id": game.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating bot game: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create bot game"
+        )
+
+@api_router.get("/bots/active", response_model=List[dict])
+async def get_active_bots(current_user: User = Depends(get_current_user)):
+    """Get all active bots that can play games."""
+    try:
+        # Find active bots
+        bots = await db.bots.find({"is_active": True}).to_list(100)
+        
+        result = []
+        for bot in bots:
+            bot_data = {
+                "id": bot["id"],
+                "name": bot["name"],
+                "bot_type": bot["bot_type"],
+                "avatar_gender": bot["avatar_gender"],
+                "min_bet": bot["min_bet"],
+                "max_bet": bot["max_bet"],
+                "can_accept_bets": bot.get("can_accept_bets", False),
+                "last_game_time": bot.get("last_game_time"),
+                "current_cycle_games": bot.get("current_cycle_games", 0),
+                "current_cycle_wins": bot.get("current_cycle_wins", 0)
+            }
+            result.append(bot_data)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error fetching active bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch active bots"
+        )
+
+@api_router.get("/bots/{bot_id}/stats", response_model=dict)
+async def get_bot_stats(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get detailed bot statistics (admin only)."""
+    try:
+        # Find bot
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Get bot's game statistics
+        total_games = await db.games.count_documents({
+            "$or": [
+                {"creator_id": bot_id},
+                {"opponent_id": bot_id}
+            ],
+            "status": "COMPLETED"
+        })
+        
+        won_games = await db.games.count_documents({
+            "winner_id": bot_id,
+            "status": "COMPLETED"
+        })
+        
+        # Get recent games
+        recent_games = await db.games.find({
+            "$or": [
+                {"creator_id": bot_id},
+                {"opponent_id": bot_id}
+            ],
+            "status": "COMPLETED"
+        }).sort("completed_at", -1).limit(10).to_list(10)
+        
+        return {
+            "bot_id": bot_id,
+            "name": bot["name"],
+            "bot_type": bot["bot_type"],
+            "is_active": bot["is_active"],
+            "win_rate_setting": bot["win_rate"],
+            "total_games": total_games,
+            "won_games": won_games,
+            "actual_win_rate": won_games / total_games if total_games > 0 else 0,
+            "current_cycle_games": bot.get("current_cycle_games", 0),
+            "current_cycle_wins": bot.get("current_cycle_wins", 0),
+            "last_game_time": bot.get("last_game_time"),
+            "recent_games": len(recent_games)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching bot stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bot stats"
+        )
+
 # Include routers
 app.include_router(auth_router)
 app.include_router(api_router)
