@@ -192,10 +192,10 @@ const UserManagement = () => {
         
         setIsEditModalOpen(false);
         fetchUsers();
-        alert('Пользователь обновлен');
+        showSuccessRU('Пользователь обновлен');
       } catch (error) {
         console.error('Ошибка обновления пользователя:', error);
-        alert('Ошибка при обновлении пользователя');
+        showErrorRU('Ошибка при обновлении пользователя');
       }
     };
 
