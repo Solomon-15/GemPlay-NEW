@@ -957,8 +957,8 @@ async def get_user_gems(current_user: User = Depends(get_current_user)):
     return result
 
 @api_router.post("/gems/buy", response_model=dict)
-async def buy_gems(gem_type: GemType, quantity: int, current_user: User = Depends(get_current_user)):
-    """Buy gems from the shop."""
+async def buy_gems(request: Request, gem_type: GemType, quantity: int, current_user: User = Depends(get_current_user_with_security)):
+    """Buy gems from the shop with security monitoring."""
     if quantity <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -975,12 +975,42 @@ async def buy_gems(gem_type: GemType, quantity: int, current_user: User = Depend
     
     total_cost = gem_def["price"] * quantity
     
+    # Enhanced security validation
+    validation_ok = await validate_transaction_integrity(current_user.id, "purchase", amount=total_cost)
+    if not validation_ok:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Transaction validation failed"
+        )
+    
+    # Check for suspicious purchase patterns
+    await monitor_transaction_patterns(current_user.id, "PURCHASE", total_cost)
+    
     # Check if user has enough balance
     user = await db.users.find_one({"id": current_user.id})
     if user["virtual_balance"] < total_cost:
+        await create_security_alert(
+            user_id=current_user.id,
+            alert_type="INSUFFICIENT_FUNDS_ATTEMPT",
+            severity="LOW",
+            description=f"Purchase attempt with insufficient funds: ${total_cost} requested",
+            ip_address=get_client_ip(request),
+            request_data={"gem_type": gem_type, "quantity": quantity, "total_cost": total_cost}
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Insufficient balance"
+        )
+    
+    # Monitor large purchases
+    if total_cost > 500:  # Large purchase threshold
+        await create_security_alert(
+            user_id=current_user.id,
+            alert_type="LARGE_PURCHASE",
+            severity="MEDIUM",
+            description=f"Large purchase detected: ${total_cost} for {quantity} {gem_type} gems",
+            ip_address=get_client_ip(request),
+            request_data={"gem_type": gem_type, "quantity": quantity, "total_cost": total_cost}
         )
     
     # Update user balance
