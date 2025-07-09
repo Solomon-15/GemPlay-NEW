@@ -555,31 +555,19 @@ metadata:
   test_sequence: 1
   run_ui: false
 
-agent_communication:
-  - agent: "main"
-    message: "Implemented PvP game mechanics with rock-paper-scissors logic and commit-reveal scheme for secure moves. Need to test all game-related APIs."
-  - agent: "testing"
-    message: "Found issues with the Create Game and Join Game APIs. The Create Game API has parameter handling issues - FastAPI is expecting bet_gems as a query parameter but it's defined as a Dict[str, int] which causes validation errors. The Join Game API returns a 500 Internal Server Error when trying to join a game. The Available Games API works correctly."
-  - agent: "testing"
-    message: "All backend APIs are now working correctly after updating the tests to send data in the request body instead of query parameters. Successfully tested creating a game, joining a game, getting available games, and verifying the rock-paper-scissors logic and commit-reveal scheme. The game correctly determines the winner and distributes rewards."
-  - agent: "testing"
-    message: "Tested the bot system implementation. Most Bot Management APIs work correctly, with GET /api/bots returning a 500 error (known issue). Bot Game APIs function as expected, including setup-gems, create-game, and stats endpoints. Bot game logic works correctly, though cycle tracking might be updated asynchronously. Bot integration with the game system is successful, with bots able to create games and have their history recorded."
-  - agent: "testing"
-    message: "The GET /api/bots endpoint has been fixed and now works correctly. Created a new test script to verify all bot management endpoints, and all tests are passing. The fix ensures that bot data is properly cleaned before being returned, preventing serialization issues."
-  - agent: "testing"
-    message: "Tested the refresh token system implementation. All tests are passing. The login endpoint correctly returns both access_token and refresh_token. The refresh endpoint correctly returns a new access_token and refresh_token. Old refresh tokens are properly deactivated when new ones are created. Invalid refresh tokens are correctly rejected with a 401 status code. The refresh token system is working as expected."
-  - agent: "testing"
-    message: "Completed comprehensive UI testing of the GemPlay application. All frontend components are working correctly, including Sidebar Navigation, Lobby, Shop, Inventory, Profile, My Bets, Leaderboard, History, and Security Monitoring. Authentication and session management with refresh tokens are functioning properly. The application is responsive and works well on desktop, tablet, and mobile views. There are some 500 errors when fetching data from the backend API endpoints for the Leaderboard and Security Monitoring components, but these don't prevent the components from rendering correctly with mock data."
-  - agent: "testing"
-    message: "Tested the admin API endpoints. The GET /api/admin/users/stats endpoint works correctly, returning all expected fields. Fixed an issue with the GET /api/admin/users endpoint where the response model was incorrectly defined. The ban and unban endpoints work correctly, but there are issues with the update user and update user balance endpoints - they return 200 OK responses but the changes are not reflected in the database."
-  - agent: "testing"
-    message: "Tested the gems-related API endpoints for the GemsHeader component. All three endpoints (GET /api/gems/definitions, GET /api/gems/inventory, GET /api/economy/balance) are working correctly. The gems definitions endpoint returns all 7 gem types with correct data including name, price, color, and icon. The inventory endpoint correctly shows the user's gems (empty for the admin user). The balance endpoint returns the correct economic status with virtual_balance, frozen_balance, and gem values."
-  - agent: "testing"
-    message: "Tested the gem system and balance functionality. All endpoints are working correctly: GET /api/gems/definitions, GET /api/gems/inventory, GET /api/economy/balance, POST /api/gems/buy, POST /api/gems/sell, POST /api/auth/add-balance, and POST /api/games/create with gem betting. Successfully bought and sold different types of gems, added balance to the account, tested the daily limit functionality, and created a game with gems. The system correctly tracks the user's balance, gem inventory, and daily limit usage."
-  - agent: "testing"
-    message: "Tested the GemsHeader component and related functionality. The GemsHeader component correctly displays all 7 gem types in a horizontal row on desktop and in a grid of 4 columns on mobile. Each gem block shows the name, icon, and values in the format '$available / $total'. The color logic works correctly - gems with non-zero values are bright, while empty gems are dimmed. However, there are issues with the Shop and Inventory components: when trying to buy or sell gems, the API returns errors about missing required fields (gem_type and quantity). The Profile component shows that the daily limit for adding balance has been reached ($1000.00 used out of $1000.00), so that functionality could not be tested."
-  - agent: "testing"
-    message: "Tested the profit tracking system and commission handling. The GET /api/admin/profit/stats and GET /api/admin/profit/commission-settings endpoints work correctly, but GET /api/admin/profit/entries returns a 500 Internal Server Error. The commission system works correctly with 6% commission on game bets and 3% commission on gem gifts. The balance freezing system also works correctly - when creating a game, 6% of the bet amount is frozen, and after the game is completed, the frozen balance is correctly released. The profit stats endpoint shows the correct profit by type."
+test_plan:
+  current_focus:
+    - "Profit API endpoints"
+    - "Shop Component"
+    - "Inventory Component"
+    - "Profile Component"
+    - "Notification System"
+  stuck_tasks:
+    - "Shop Component"
+    - "Inventory Component"
+    - "Profile Component"
+  test_all: false
+  test_priority: "high_first"
 
 **ТЕКУЩИЙ ПРОГРЕСС ФАЗЫ 3:**
 - ✅ Backend API для создания игр (/api/games/create)
