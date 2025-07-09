@@ -230,7 +230,7 @@ backend:
         agent: "testing"
         comment: "The ban and unban endpoints work correctly. Successfully banned a user with a reason and duration, and then unbanned the user. The user's status was correctly updated in both cases."
 
-  - task: "Admin Update User Balance API"
+  - task: "Profit API endpoints"
     implemented: true
     working: false
     file: "/app/backend/server.py"
@@ -240,10 +240,7 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Testing POST /api/admin/users/{user_id}/balance endpoint."
-      - working: false
-        agent: "testing"
-        comment: "The POST /api/admin/users/{user_id}/balance endpoint returns a 200 OK response, but the balance is not updated correctly. Attempted to add 100 to the user's balance, but the balance was set to 0 instead."
+        comment: "Testing profit tracking API endpoints. GET /api/admin/profit/stats and GET /api/admin/profit/commission-settings work correctly, but GET /api/admin/profit/entries returns a 500 Internal Server Error."
         
   - task: "Gems Definitions API"
     implemented: true
