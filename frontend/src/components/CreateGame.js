@@ -103,13 +103,13 @@ const CreateGame = ({ user, onUpdateUser }) => {
 
   const handleCreateGame = async () => {
     if (!selectedMove) {
-      alert('Выберите ваш ход!');
+      showWarning('Please select your move!');
       return;
     }
 
     const validationError = validateBet();
     if (validationError) {
-      alert(validationError);
+      showError(validationError);
       return;
     }
 
@@ -122,7 +122,7 @@ const CreateGame = ({ user, onUpdateUser }) => {
     }
 
     if (Object.keys(betGems).length === 0) {
-      alert('Выберите хотя бы один гем для ставки');
+      showWarning('Please select at least one gem for betting');
       return;
     }
 
@@ -137,7 +137,13 @@ const CreateGame = ({ user, onUpdateUser }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert(`Игра создана! ID: ${response.data.game_id}\nСтавка: $${response.data.bet_amount}\nКомиссия: $${response.data.commission_reserved.toFixed(2)}`);
+      // Calculate and display the notification exactly like the reference image
+      const commissionAmount = response.data.commission_reserved.toFixed(2);
+      const commissionPercent = ((response.data.commission_reserved / response.data.bet_amount) * 100).toFixed(0);
+      
+      showSuccess(`Bet created! $${commissionAmount} (${commissionPercent}%) frozen until game completion.`, { 
+        duration: 7000 
+      });
       
       // Reset form
       setSelectedGems({});
@@ -151,7 +157,9 @@ const CreateGame = ({ user, onUpdateUser }) => {
         onUpdateUser();
       }
     } catch (error) {
-      alert(error.response?.data?.detail || 'Ошибка создания игры');
+      console.error('Error creating game:', error);
+      const errorMessage = error.response?.data?.detail || 'Failed to create game. Please try again.';
+      showError(errorMessage);
     } finally {
       setCreating(false);
     }
