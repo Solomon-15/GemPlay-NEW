@@ -237,9 +237,9 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-surface-card border border-accent-primary rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="font-russo text-2xl text-accent-primary">Create Bet</h2>
+      <div className="bg-surface-card border border-accent-primary rounded-lg p-6 max-w-xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="font-russo text-xl text-accent-primary">Create Bet</h2>
           <button
             onClick={onClose}
             className="text-text-secondary hover:text-white"
@@ -250,10 +250,10 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           </button>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Bet Amount */}
           <div>
-            <label className="block text-text-secondary text-sm font-rajdhani mb-2">
+            <label className="block text-text-secondary text-sm font-rajdhani mb-1">
               Bet Amount ($1 - $3000)
             </label>
             <input
@@ -262,14 +262,14 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               max="3000"
               value={betAmount}
               onChange={(e) => handleBetAmountChange(e.target.value)}
-              className="w-full px-4 py-3 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto text-lg"
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
               placeholder="Enter bet amount"
             />
           </div>
 
           {/* Auto/Manual Mode Toggle */}
           <div className="flex items-center justify-between">
-            <span className="text-text-secondary font-rajdhani">Gem Selection Mode:</span>
+            <span className="text-text-secondary font-rajdhani text-sm">Gem Selection:</span>
             <div className="flex space-x-2">
               <button
                 onClick={() => {
@@ -279,7 +279,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
                     setSelectedGems(autoGems);
                   }
                 }}
-                className={`px-4 py-2 rounded-lg font-rajdhani font-bold ${
+                className={`px-3 py-1 rounded font-rajdhani text-sm ${
                   isAutoMode 
                     ? 'bg-accent-primary text-white' 
                     : 'bg-surface-sidebar text-text-secondary'
@@ -289,7 +289,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               </button>
               <button
                 onClick={() => setIsAutoMode(false)}
-                className={`px-4 py-2 rounded-lg font-rajdhani font-bold ${
+                className={`px-3 py-1 rounded font-rajdhani text-sm ${
                   !isAutoMode 
                     ? 'bg-accent-primary text-white' 
                     : 'bg-surface-sidebar text-text-secondary'
@@ -300,38 +300,38 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
             </div>
           </div>
 
-          {/* Mini Inventory */}
+          {/* Mini Inventory - Compact Grid */}
           <div>
-            <h3 className="text-white font-rajdhani font-bold mb-3">Gem Selection</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <h3 className="text-white font-rajdhani font-bold text-sm mb-2">Gem Selection</h3>
+            <div className="grid grid-cols-4 gap-2">
               {gemDefinitions.map((gem) => {
                 const userGem = userGems.find(g => g.gem_type === gem.name);
                 const available = userGem?.quantity || 0;
                 const selected = selectedGems[gem.name] || 0;
                 
                 return (
-                  <div key={gem.name} className="bg-surface-sidebar border border-border-primary rounded-lg p-3">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <img src={gem.icon} alt={gem.name} className="w-6 h-6" />
-                      <div>
-                        <div className="text-white font-rajdhani font-bold text-sm">{gem.name}</div>
-                        <div className="text-text-secondary text-xs">${gem.value} each</div>
+                  <div key={gem.name} className="bg-surface-sidebar border border-border-primary rounded-lg p-2">
+                    <div className="flex flex-col items-center space-y-1">
+                      <img src={gem.icon} alt={gem.name} className="w-5 h-5" />
+                      <div className="text-center">
+                        <div className="text-white font-rajdhani font-bold text-xs">{gem.name}</div>
+                        <div className="text-text-secondary text-xs">${gem.value}</div>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="number"
-                        min="0"
-                        max={available}
-                        value={selected}
-                        onChange={(e) => handleGemQuantityChange(gem.name, parseInt(e.target.value) || 0)}
-                        disabled={isAutoMode}
-                        className={`w-full px-2 py-1 bg-surface-card border border-border-primary rounded text-white text-sm ${
-                          isAutoMode ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
-                      />
-                      <span className="text-text-secondary text-xs">/{available}</span>
+                      
+                      <div className="flex items-center space-x-1 w-full">
+                        <input
+                          type="number"
+                          min="0"
+                          max={available}
+                          value={selected}
+                          onChange={(e) => handleGemQuantityChange(gem.name, parseInt(e.target.value) || 0)}
+                          disabled={isAutoMode}
+                          className={`w-full px-1 py-1 bg-surface-card border border-border-primary rounded text-white text-xs text-center ${
+                            isAutoMode ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                        />
+                      </div>
+                      <div className="text-text-secondary text-xs">/{available}</div>
                     </div>
                   </div>
                 );
@@ -341,21 +341,21 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
 
           {/* Move Selection */}
           <div>
-            <h3 className="text-white font-rajdhani font-bold mb-3">Select Your Move</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <h3 className="text-white font-rajdhani font-bold text-sm mb-2">Select Your Move</h3>
+            <div className="grid grid-cols-3 gap-3">
               {moves.map((move) => (
                 <button
                   key={move.value}
                   onClick={() => setSelectedMove(move.value)}
-                  className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+                  className={`p-3 rounded-lg border-2 transition-all duration-300 ${
                     selectedMove === move.value
                       ? 'border-accent-primary bg-accent-primary/20 text-accent-primary'
                       : 'border-border-primary hover:border-accent-primary/50 text-text-secondary'
                   }`}
                 >
                   <div className="text-center">
-                    <div className="text-4xl mb-2">{move.icon}</div>
-                    <div className="font-rajdhani font-bold">{move.label}</div>
+                    <div className="text-2xl mb-1">{move.icon}</div>
+                    <div className="font-rajdhani font-bold text-sm">{move.label}</div>
                   </div>
                 </button>
               ))}
@@ -363,9 +363,9 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           </div>
 
           {/* Bet Summary */}
-          <div className="bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg p-4">
-            <h3 className="text-white font-rajdhani font-bold mb-3">Bet Summary</h3>
-            <div className="space-y-2">
+          <div className="bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg p-3">
+            <h3 className="text-white font-rajdhani font-bold text-sm mb-2">Bet Summary</h3>
+            <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-text-secondary">Base Amount:</span>
                 <span className="text-white">${(parseFloat(betAmount) || 0).toFixed(2)}</span>
@@ -374,7 +374,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
                 <span className="text-text-secondary">Gems Value:</span>
                 <span className="text-white">${calculateTotalGemValue().toFixed(2)}</span>
               </div>
-              <div className="flex justify-between border-t border-border-primary pt-2">
+              <div className="flex justify-between border-t border-border-primary pt-1">
                 <span className="text-white font-bold">Total Bet Value:</span>
                 <span className="text-accent-primary font-bold">${calculateTotalBetValue().toFixed(2)}</span>
               </div>
@@ -393,7 +393,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           <button
             onClick={handleCreateBet}
             disabled={loading || !betAmount || !selectedMove}
-            className={`w-full py-4 rounded-lg font-rajdhani font-bold text-lg transition-all duration-300 ${
+            className={`w-full py-3 rounded-lg font-rajdhani font-bold transition-all duration-300 ${
               loading || !betAmount || !selectedMove
                 ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                 : 'bg-gradient-accent text-white hover:scale-105'
