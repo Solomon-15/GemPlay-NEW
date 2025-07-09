@@ -230,23 +230,28 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
 
       {/* Admin Monitoring Section */}
       {user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
-        <div className={`border-t border-border-primary ${isCollapsed ? 'p-1' : 'p-2'}`}>
+        <div className={`border-t border-accent-primary border-opacity-30 ${isCollapsed ? 'p-1' : 'p-2'}`}>
           <button
             onClick={() => setCurrentView('monitoring')}
             className={`w-full flex items-center transition-all duration-200 relative ${
               isCollapsed 
-                ? 'justify-center p-3 mx-1 rounded-lg' 
+                ? 'justify-center p-2 mx-1 rounded-lg' 
                 : 'px-3 py-2 rounded-lg'
             } ${
               currentView === 'monitoring' 
                 ? isCollapsed
-                  ? 'bg-red-500/20 border-2 border-red-500/60 text-red-400' 
-                  : 'bg-red-500/20 border-l-4 border-red-500 text-red-400'
+                  ? 'bg-red-500/10 text-red-400 relative' 
+                  : 'bg-red-500/10 border-l-2 border-red-500 text-red-400'
                 : 'hover:bg-surface-card text-red-400 hover:text-red-300'
             }`}
             title={isCollapsed ? 'Monitoring' : ''}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Red frame for collapsed active state */}
+            {currentView === 'monitoring' && isCollapsed && (
+              <div className="absolute inset-0 border border-red-500/60 rounded-lg bg-red-500/5"></div>
+            )}
+            
+            <svg className="w-6 h-6 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
             {!isCollapsed && (
