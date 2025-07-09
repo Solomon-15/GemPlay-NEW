@@ -2023,6 +2023,16 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     reference_id=game.id
                 )
                 await db.transactions.insert_one(commission_transaction.dict())
+                
+                # Record profit entry from bet commission
+                profit_entry = ProfitEntry(
+                    entry_type="BET_COMMISSION",
+                    amount=commission_amount,
+                    source_user_id=winner_id,
+                    reference_id=game.id,
+                    description=f"6% commission from PvP game victory: ${game.bet_amount * 2} total pot"
+                )
+                await db.profit_entries.insert_one(profit_entry.dict())
             
             # Handle commission for loser
             loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
