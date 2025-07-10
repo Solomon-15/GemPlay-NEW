@@ -101,13 +101,13 @@ export const GemsProvider = ({ children }) => {
   };
 
   const getDefaultGemDefinitions = () => [
-    { name: 'Ruby', value: 1, icon: '/gems/gem-red.svg', color: 'text-red-500' },
-    { name: 'Amber', value: 2, icon: '/gems/gem-orange.svg', color: 'text-orange-500' },
-    { name: 'Topaz', value: 5, icon: '/gems/gem-yellow.svg', color: 'text-yellow-500' },
-    { name: 'Emerald', value: 10, icon: '/gems/gem-green.svg', color: 'text-green-500' },
-    { name: 'Aquamarine', value: 25, icon: '/gems/gem-cyan.svg', color: 'text-cyan-500' },
-    { name: 'Sapphire', value: 50, icon: '/gems/gem-blue.svg', color: 'text-blue-500' },
-    { name: 'Magic', value: 100, icon: '/gems/gem-purple.svg', color: 'text-purple-500' }
+    { type: 'Ruby', name: 'Ruby', price: 1, icon: '/gems/gem-red.svg', color: '#ef4444', quantity: 0, frozen_quantity: 0 },
+    { type: 'Amber', name: 'Amber', price: 2, icon: '/gems/gem-orange.svg', color: '#f97316', quantity: 0, frozen_quantity: 0 },
+    { type: 'Topaz', name: 'Topaz', price: 5, icon: '/gems/gem-yellow.svg', color: '#eab308', quantity: 0, frozen_quantity: 0 },
+    { type: 'Emerald', name: 'Emerald', price: 10, icon: '/gems/gem-green.svg', color: '#22c55e', quantity: 0, frozen_quantity: 0 },
+    { type: 'Aquamarine', name: 'Aquamarine', price: 25, icon: '/gems/gem-cyan.svg', color: '#06b6d4', quantity: 0, frozen_quantity: 0 },
+    { type: 'Sapphire', name: 'Sapphire', price: 50, icon: '/gems/gem-blue.svg', color: '#3b82f6', quantity: 0, frozen_quantity: 0 },
+    { type: 'Magic', name: 'Magic', price: 100, icon: '/gems/gem-purple.svg', color: '#a855f7', quantity: 0, frozen_quantity: 0 }
   ];
 
   const getGemByType = (gemType) => {
