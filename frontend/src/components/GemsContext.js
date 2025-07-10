@@ -74,68 +74,6 @@ export const GemsProvider = ({ children }) => {
     }
   };
 
-  const getGemColor = (gemType) => {
-    const colorMap = {
-      'Ruby': 'red',
-      'Amber': 'orange', 
-      'Topaz': 'yellow',
-      'Emerald': 'green',
-      'Aquamarine': 'cyan',
-      'Sapphire': 'blue',
-      'Magic': 'purple'
-    };
-    return colorMap[gemType] || 'gray';
-  };
-
-  const getGemTailwindColor = (gemType) => {
-    const colorMap = {
-      'Ruby': 'text-red-500',
-      'Amber': 'text-orange-500',
-      'Topaz': 'text-yellow-500', 
-      'Emerald': 'text-green-500',
-      'Aquamarine': 'text-cyan-500',
-      'Sapphire': 'text-blue-500',
-      'Magic': 'text-purple-500'
-    };
-    return colorMap[gemType] || 'text-gray-500';
-  };
-
-  const getDefaultGemDefinitions = () => [
-    { type: 'Ruby', name: 'Ruby', price: 1, icon: '/gems/gem-red.svg', color: '#ef4444', quantity: 0, frozen_quantity: 0 },
-    { type: 'Amber', name: 'Amber', price: 2, icon: '/gems/gem-orange.svg', color: '#f97316', quantity: 0, frozen_quantity: 0 },
-    { type: 'Topaz', name: 'Topaz', price: 5, icon: '/gems/gem-yellow.svg', color: '#eab308', quantity: 0, frozen_quantity: 0 },
-    { type: 'Emerald', name: 'Emerald', price: 10, icon: '/gems/gem-green.svg', color: '#22c55e', quantity: 0, frozen_quantity: 0 },
-    { type: 'Aquamarine', name: 'Aquamarine', price: 25, icon: '/gems/gem-cyan.svg', color: '#06b6d4', quantity: 0, frozen_quantity: 0 },
-    { type: 'Sapphire', name: 'Sapphire', price: 50, icon: '/gems/gem-blue.svg', color: '#3b82f6', quantity: 0, frozen_quantity: 0 },
-    { type: 'Magic', name: 'Magic', price: 100, icon: '/gems/gem-purple.svg', color: '#a855f7', quantity: 0, frozen_quantity: 0 }
-  ];
-
-  const getGemByType = (gemType) => {
-    return gemsDefinitions.find(gem => gem.type === gemType || gem.name === gemType) || 
-           getDefaultGemDefinitions().find(gem => gem.type === gemType || gem.name === gemType);
-  };
-
-  const getGemValue = (gemType) => {
-    const gem = getGemByType(gemType);
-    return gem ? gem.price : 0;
-  };
-
-  const getGemIcon = (gemType) => {
-    const gem = getGemByType(gemType);
-    return gem ? gem.icon : '/gems/gem-gray.svg';
-  };
-
-  const getSortedGems = (orderBy = 'price', order = 'asc') => {
-    const sortedGems = [...gemsDefinitions].sort((a, b) => {
-      if (order === 'asc') {
-        return a[orderBy] - b[orderBy];
-      } else {
-        return b[orderBy] - a[orderBy];
-      }
-    });
-    return sortedGems;
-  };
-
   const refreshGemsData = () => {
     fetchGemsData();
   };
