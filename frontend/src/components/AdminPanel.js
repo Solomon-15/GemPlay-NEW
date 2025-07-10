@@ -263,6 +263,37 @@ const AdminPanel = ({ user, onClose }) => {
     </div>
   );
 
+  const resetAllBets = async () => {
+    if (!window.confirm('Вы уверены, что хотите сбросить все ставки? Это действие нельзя отменить.')) {
+      return;
+    }
+    
+    setResetLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/games/reset-all`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      
+      showSuccessRU(
+        `Все ставки сброшены успешно! Игр сброшено: ${response.data.games_reset}, Комиссия возвращена: $${response.data.commission_returned}`
+      );
+      
+      // Обновляем статистику
+      await fetchDashboardStats();
+      
+    } catch (error) {
+      console.error('Error resetting bets:', error);
+      showErrorRU('Ошибка при сбросе ставок: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
