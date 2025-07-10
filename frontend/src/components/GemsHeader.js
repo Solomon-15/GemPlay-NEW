@@ -125,8 +125,8 @@ const GemsHeader = ({ user }) => {
 
   return (
     <div className="max-w-6xl mx-auto mb-6">
-      {/* Desktop: 7 columns, Mobile: 4 columns (2 rows) */}
-      <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+      {/* Desktop: 7 columns, Tablet: 4 columns, Mobile: 3 columns */}
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <GemBlock gemType="Ruby" />
         <GemBlock gemType="Amber" />
         <GemBlock gemType="Topaz" />
