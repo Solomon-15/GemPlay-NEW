@@ -925,9 +925,309 @@ def test_admin_reset_all_endpoint() -> None:
     print_success("Admin logging is implemented in the endpoint code")
     record_test("Admin logging implemented", True, "Logging code present in endpoint")
 
+def test_gems_synchronization() -> None:
+    """Test gems synchronization between frontend GemsHeader and backend Inventory API."""
+    print_header("TESTING GEMS SYNCHRONIZATION")
+    
+    # Step 1: Login as admin
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with gems synchronization tests - admin login failed")
+        return
+    
+    # Step 2: Test GET /api/gems/definitions - ensure all 7 gem types are returned
+    print_subheader("Testing Gems Definitions API")
+    
+    response, success = make_request("GET", "/gems/definitions")
+    
+    if success:
+        if isinstance(response, list):
+            print_success(f"Got gem definitions: {len(response)} types")
+            
+            # Expected gem types with their properties
+            expected_gems = {
+                "Ruby": {"price": 1.0, "color": "#FF0000", "rarity": "Common"},
+                "Amber": {"price": 2.0, "color": "#FFA500", "rarity": "Common"},
+                "Topaz": {"price": 5.0, "color": "#FFFF00", "rarity": "Uncommon"},
+                "Emerald": {"price": 10.0, "color": "#00FF00", "rarity": "Rare"},
+                "Aquamarine": {"price": 25.0, "color": "#00FFFF", "rarity": "Rare+"},
+                "Sapphire": {"price": 50.0, "color": "#0000FF", "rarity": "Epic"},
+                "Magic": {"price": 100.0, "color": "#800080", "rarity": "Legendary"}
+            }
+            
+            # Verify all 7 gem types are present with correct data
+            found_gems = {}
+            for gem in response:
+                found_gems[gem["name"]] = {
+                    "price": gem["price"],
+                    "color": gem["color"],
+                    "rarity": gem["rarity"]
+                }
+                print_success(f"{gem['name']}: ${gem['price']} - {gem['color']} - {gem['rarity']}")
+            
+            # Check if all expected gems are present
+            missing_gems = []
+            incorrect_gems = []
+            
+            for gem_name, expected_data in expected_gems.items():
+                if gem_name not in found_gems:
+                    missing_gems.append(gem_name)
+                else:
+                    found_data = found_gems[gem_name]
+                    if (found_data["price"] != expected_data["price"] or 
+                        found_data["color"] != expected_data["color"] or 
+                        found_data["rarity"] != expected_data["rarity"]):
+                        incorrect_gems.append(f"{gem_name}: Expected {expected_data}, Got {found_data}")
+            
+            if not missing_gems and not incorrect_gems:
+                print_success("All 7 gem types present with correct properties")
+                record_test("Gems Definitions API - All 7 gems correct", True)
+            else:
+                error_msg = ""
+                if missing_gems:
+                    error_msg += f"Missing gems: {missing_gems}. "
+                if incorrect_gems:
+                    error_msg += f"Incorrect gems: {incorrect_gems}."
+                print_error(error_msg)
+                record_test("Gems Definitions API - All 7 gems correct", False, error_msg)
+        else:
+            print_error(f"Gems definitions response is not a list: {response}")
+            record_test("Gems Definitions API", False, "Response is not a list")
+    else:
+        record_test("Gems Definitions API", False, "Request failed")
+    
+    # Step 3: Test GET /api/gems/inventory - check user's gem data
+    print_subheader("Testing Gems Inventory API - Empty State")
+    
+    response, success = make_request("GET", "/gems/inventory", auth_token=admin_token)
+    
+    if success:
+        if isinstance(response, list):
+            print_success(f"Got user gems inventory: {len(response)} types")
+            
+            # For admin user, inventory might be empty initially
+            if len(response) == 0:
+                print_success("Admin user has no gems initially (expected)")
+                record_test("Gems Inventory API - Empty state", True)
+            else:
+                # If admin has gems, verify the structure
+                for gem in response:
+                    required_fields = ["type", "name", "price", "color", "icon", "rarity", "quantity", "frozen_quantity"]
+                    missing_fields = [field for field in required_fields if field not in gem]
+                    if missing_fields:
+                        print_error(f"Gem {gem.get('name', 'unknown')} missing fields: {missing_fields}")
+                        record_test("Gems Inventory API - Structure", False, f"Missing fields: {missing_fields}")
+                    else:
+                        print_success(f"{gem['name']}: {gem['quantity']} available, {gem['frozen_quantity']} frozen")
+                
+                record_test("Gems Inventory API - With gems", True)
+        else:
+            print_error(f"Gems inventory response is not a list: {response}")
+            record_test("Gems Inventory API", False, "Response is not a list")
+    else:
+        record_test("Gems Inventory API", False, "Request failed")
+    
+    # Step 4: Test GET /api/economy/balance - check economic status
+    print_subheader("Testing Economy Balance API")
+    
+    response, success = make_request("GET", "/economy/balance", auth_token=admin_token)
+    
+    if success:
+        required_fields = ["virtual_balance", "frozen_balance", "total_gem_value", "available_gem_value", "total_value", "daily_limit_used", "daily_limit_max"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if not missing_fields:
+            print_success("Economy balance contains all required fields")
+            print_success(f"Virtual Balance: ${response['virtual_balance']}")
+            print_success(f"Frozen Balance: ${response['frozen_balance']}")
+            print_success(f"Total Gem Value: ${response['total_gem_value']}")
+            print_success(f"Available Gem Value: ${response['available_gem_value']}")
+            print_success(f"Total Value: ${response['total_value']}")
+            print_success(f"Daily Limit: ${response['daily_limit_used']} / ${response['daily_limit_max']}")
+            record_test("Economy Balance API", True)
+        else:
+            print_error(f"Economy balance missing fields: {missing_fields}")
+            record_test("Economy Balance API", False, f"Missing fields: {missing_fields}")
+    else:
+        record_test("Economy Balance API", False, "Request failed")
+    
+    # Step 5: Buy some gems and test inventory with gems
+    print_subheader("Testing Gems Purchase and Inventory Update")
+    
+    # Buy different types of gems
+    gems_to_buy = [
+        {"gem_type": "Ruby", "quantity": 10},
+        {"gem_type": "Emerald", "quantity": 5},
+        {"gem_type": "Magic", "quantity": 2}
+    ]
+    
+    for gem_purchase in gems_to_buy:
+        response, success = make_request(
+            "POST", 
+            f"/gems/buy?gem_type={gem_purchase['gem_type']}&quantity={gem_purchase['quantity']}", 
+            auth_token=admin_token
+        )
+        
+        if success:
+            print_success(f"Successfully bought {gem_purchase['quantity']} {gem_purchase['gem_type']} gems")
+        else:
+            print_error(f"Failed to buy {gem_purchase['gem_type']} gems: {response}")
+    
+    # Check inventory after purchases
+    print_subheader("Testing Gems Inventory API - With Gems")
+    
+    response, success = make_request("GET", "/gems/inventory", auth_token=admin_token)
+    
+    if success:
+        if isinstance(response, list):
+            print_success(f"Got user gems inventory after purchase: {len(response)} types")
+            
+            # Verify purchased gems are in inventory
+            inventory_gems = {gem["type"]: gem for gem in response}
+            
+            for gem_purchase in gems_to_buy:
+                gem_type = gem_purchase["gem_type"]
+                expected_quantity = gem_purchase["quantity"]
+                
+                if gem_type in inventory_gems:
+                    actual_quantity = inventory_gems[gem_type]["quantity"]
+                    if actual_quantity >= expected_quantity:
+                        print_success(f"{gem_type}: {actual_quantity} gems (expected at least {expected_quantity})")
+                    else:
+                        print_error(f"{gem_type}: {actual_quantity} gems (expected at least {expected_quantity})")
+                        record_test(f"Gem Purchase Verification - {gem_type}", False, f"Insufficient quantity")
+                else:
+                    print_error(f"{gem_type} not found in inventory after purchase")
+                    record_test(f"Gem Purchase Verification - {gem_type}", False, "Not found in inventory")
+            
+            record_test("Gems Inventory API - After purchase", True)
+        else:
+            print_error(f"Gems inventory response is not a list: {response}")
+            record_test("Gems Inventory API - After purchase", False, "Response is not a list")
+    else:
+        record_test("Gems Inventory API - After purchase", False, "Request failed")
+    
+    # Step 6: Test data consistency - verify economy balance reflects gem purchases
+    print_subheader("Testing Data Consistency - Economy Balance After Purchases")
+    
+    response, success = make_request("GET", "/economy/balance", auth_token=admin_token)
+    
+    if success:
+        print_success(f"Updated Virtual Balance: ${response['virtual_balance']}")
+        print_success(f"Updated Total Gem Value: ${response['total_gem_value']}")
+        print_success(f"Updated Available Gem Value: ${response['available_gem_value']}")
+        print_success(f"Updated Total Value: ${response['total_value']}")
+        
+        # Verify total_value = virtual_balance + total_gem_value
+        expected_total = response['virtual_balance'] + response['total_gem_value']
+        actual_total = response['total_value']
+        
+        if abs(expected_total - actual_total) < 0.01:  # Allow for floating point precision
+            print_success(f"Total value calculation correct: ${actual_total}")
+            record_test("Data Consistency - Total Value Calculation", True)
+        else:
+            print_error(f"Total value calculation incorrect: Expected ${expected_total}, Got ${actual_total}")
+            record_test("Data Consistency - Total Value Calculation", False, f"Calculation error")
+        
+        record_test("Data Consistency - Economy Balance Update", True)
+    else:
+        record_test("Data Consistency - Economy Balance Update", False, "Request failed")
+    
+    # Step 7: Test frozen gems scenario - create a game to freeze some gems
+    print_subheader("Testing Frozen Gems Scenario")
+    
+    # Create a game to freeze some gems
+    bet_gems = {"Ruby": 3, "Emerald": 1}
+    game_data = {
+        "move": "rock",
+        "bet_gems": bet_gems
+    }
+    
+    response, success = make_request("POST", "/games/create", data=game_data, auth_token=admin_token)
+    
+    if success:
+        game_id = response.get("game_id")
+        print_success(f"Created game {game_id} to test frozen gems")
+        
+        # Check inventory to see frozen gems
+        response, success = make_request("GET", "/gems/inventory", auth_token=admin_token)
+        
+        if success:
+            print_success("Checking frozen gems in inventory:")
+            frozen_gems_found = False
+            
+            for gem in response:
+                if gem["frozen_quantity"] > 0:
+                    frozen_gems_found = True
+                    print_success(f"{gem['name']}: {gem['quantity']} total, {gem['frozen_quantity']} frozen")
+            
+            if frozen_gems_found:
+                print_success("Frozen gems correctly reflected in inventory")
+                record_test("Frozen Gems - Inventory Reflection", True)
+            else:
+                print_error("No frozen gems found in inventory after creating game")
+                record_test("Frozen Gems - Inventory Reflection", False, "No frozen gems found")
+        
+        # Check economy balance to see frozen balance
+        response, success = make_request("GET", "/economy/balance", auth_token=admin_token)
+        
+        if success:
+            frozen_balance = response.get("frozen_balance", 0)
+            if frozen_balance > 0:
+                print_success(f"Frozen balance correctly shows: ${frozen_balance}")
+                record_test("Frozen Gems - Balance Reflection", True)
+            else:
+                print_error("No frozen balance found after creating game")
+                record_test("Frozen Gems - Balance Reflection", False, "No frozen balance")
+    else:
+        print_error(f"Failed to create game for frozen gems test: {response}")
+        record_test("Frozen Gems Test Setup", False, "Game creation failed")
+    
+    # Step 8: Test GemsHeader data requirements
+    print_subheader("Testing GemsHeader Data Requirements")
+    
+    # GemsHeader needs both definitions and inventory data
+    # Test that both endpoints return consistent gem types
+    
+    definitions_response, def_success = make_request("GET", "/gems/definitions")
+    inventory_response, inv_success = make_request("GET", "/gems/inventory", auth_token=admin_token)
+    
+    if def_success and inv_success:
+        # Get all gem types from definitions
+        definition_types = {gem["type"] for gem in definitions_response}
+        
+        # Get gem types from inventory (only those with quantity > 0)
+        inventory_types = {gem["type"] for gem in inventory_response}
+        
+        print_success(f"Definition types: {sorted(definition_types)}")
+        print_success(f"Inventory types: {sorted(inventory_types)}")
+        
+        # Verify that inventory types are subset of definition types
+        if inventory_types.issubset(definition_types):
+            print_success("All inventory gem types are defined in definitions")
+            record_test("GemsHeader Data Consistency", True)
+        else:
+            undefined_types = inventory_types - definition_types
+            print_error(f"Inventory contains undefined gem types: {undefined_types}")
+            record_test("GemsHeader Data Consistency", False, f"Undefined types: {undefined_types}")
+        
+        # Test that GemsHeader can display all 7 gem types (even with 0 quantity)
+        if len(definition_types) == 7:
+            print_success("All 7 gem types available for GemsHeader display")
+            record_test("GemsHeader - All 7 Gem Types Available", True)
+        else:
+            print_error(f"Only {len(definition_types)} gem types available, expected 7")
+            record_test("GemsHeader - All 7 Gem Types Available", False, f"Only {len(definition_types)} types")
+    else:
+        print_error("Failed to get both definitions and inventory data")
+        record_test("GemsHeader Data Requirements", False, "API requests failed")
+
 def run_all_tests() -> None:
     """Run all tests in sequence."""
     print_header("GEMPLAY API TESTING")
+    
+    # Test gems synchronization (as requested in review)
+    test_gems_synchronization()
     
     # Test admin reset-all endpoint
     test_admin_reset_all_endpoint()
