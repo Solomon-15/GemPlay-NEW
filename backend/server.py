@@ -3998,23 +3998,6 @@ async def bot_join_game_automatically(bot: Bot):
     except Exception as e:
         logger.error(f"Error in bot auto-join game: {e}")
 
-# Start bot automation background task
-async def start_bot_automation():
-    """Start the bot automation background task."""
-    asyncio.create_task(bot_automation_task())
-
-# Include routers
-app.include_router(auth_router)
-app.include_router(api_router)
-
-# Startup event
-@app.on_event("startup")
-async def startup_event():
-    """Initialize bot automation on startup."""
-    logger.info("Starting bot automation system...")
-    await start_bot_automation()
-    logger.info("Bot automation system started successfully")
-
 # ==============================================================================
 # ADMIN GAME MANAGEMENT
 # ==============================================================================
@@ -4153,6 +4136,23 @@ async def reset_all_bets(current_user: User = Depends(get_current_admin)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to reset all bets"
         )
+
+# Start bot automation background task
+async def start_bot_automation():
+    """Start the bot automation background task."""
+    asyncio.create_task(bot_automation_task())
+
+# Include routers
+app.include_router(auth_router)
+app.include_router(api_router)
+
+# Startup event
+@app.on_event("startup")
+async def startup_event():
+    """Initialize bot automation on startup."""
+    logger.info("Starting bot automation system...")
+    await start_bot_automation()
+    logger.info("Bot automation system started successfully")
 
 # ==============================================================================
 # ERROR HANDLERS
