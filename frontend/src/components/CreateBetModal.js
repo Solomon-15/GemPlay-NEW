@@ -306,7 +306,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           <div>
             <h3 className="text-white font-rajdhani font-bold text-sm mb-2">Gem Selection</h3>
             <div className="grid grid-cols-4 gap-2">
-              {gemDefinitions.map((gem) => {
+              {gemsDefinitions && gemsDefinitions.map((gem) => {
                 const userGem = userGems.find(g => g.gem_type === gem.name);
                 const available = userGem?.quantity || 0;
                 const selected = selectedGems[gem.name] || 0;
