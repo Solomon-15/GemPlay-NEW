@@ -15,6 +15,7 @@ import SecurityMonitoring from "./components/SecurityMonitoring";
 import AdminPanel from "./components/AdminPanel";
 import BalanceDisplay from "./components/BalanceDisplay";
 import NotificationProvider from "./components/NotificationContext";
+import { GemsProvider } from './components/GemsContext';
 import NotificationContainer from "./components/NotificationContainer";
 import NotificationDemo from "./components/NotificationDemo";
 
