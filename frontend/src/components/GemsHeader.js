@@ -33,7 +33,7 @@ const GemsHeader = ({ user }) => {
     
     if (!gemData) return null;
     
-    const { name, icon, color, availableValue, totalValue, hasGems } = gemData;
+    const { name, icon, color, price, totalQuantity, frozenQuantity, availableQuantity, hasGems } = gemData;
     
     return (
       <div 
@@ -45,19 +45,25 @@ const GemsHeader = ({ user }) => {
           boxShadow: hasGems ? `0 0 8px ${color}20` : 'none'
         }}
       >
-        {/* Gem Icon */}
-        <div className="flex justify-center mb-2">
-          <div className="w-8 h-8 flex items-center justify-center relative">
+        {/* Gem Icon with quantity badge */}
+        <div className="flex justify-center mb-2 relative">
+          <div className="w-10 h-10 flex items-center justify-center relative">
             <img
               src={icon}
               alt={name}
-              className={`w-7 h-7 object-contain transition-all duration-300 ${
+              className={`w-9 h-9 object-contain transition-all duration-300 ${
                 hasGems ? 'brightness-100' : 'brightness-50 opacity-40'
               }`}
               style={{
                 filter: hasGems ? `drop-shadow(0 0 4px ${color}40)` : 'grayscale(100%)'
               }}
             />
+            {/* Quantity badge */}
+            {hasGems && (
+              <div className="absolute -top-1 -right-1 bg-accent-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {totalQuantity > 99 ? '99+' : totalQuantity}
+              </div>
+            )}
           </div>
         </div>
         
@@ -68,18 +74,30 @@ const GemsHeader = ({ user }) => {
           {name}
         </h3>
         
-        {/* Gem Values */}
+        {/* Gem Price */}
+        <div className={`font-rajdhani text-sm font-bold mb-1 transition-colors duration-300 ${
+          hasGems ? 'text-green-400' : 'text-gray-600'
+        }`}>
+          {formatCurrencyWithSymbol(price)}
+        </div>
+        
+        {/* Gem Quantities */}
         <div className="space-y-1">
-          <div className={`font-rajdhani text-sm font-bold transition-colors duration-300 ${
-            hasGems ? 'text-green-400' : 'text-gray-600'
-          }`}>
-            {formatCurrencyWithSymbol(availableValue)}
-          </div>
           <div className={`font-rajdhani text-xs transition-colors duration-300 ${
-            hasGems ? 'text-text-secondary' : 'text-gray-700'
+            hasGems ? 'text-blue-400' : 'text-gray-700'
           }`}>
-            / {formatCurrencyWithSymbol(totalValue)}
+            {availableQuantity} Available
           </div>
+          {frozenQuantity > 0 && (
+            <div className="font-rajdhani text-xs text-orange-400">
+              {frozenQuantity} Frozen
+            </div>
+          )}
+          {!hasGems && (
+            <div className="font-rajdhani text-xs text-gray-700">
+              0 Owned
+            </div>
+          )}
         </div>
       </div>
     );
