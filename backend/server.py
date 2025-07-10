@@ -4093,13 +4093,19 @@ async def reset_all_bets(current_user: User = Depends(get_current_admin)):
         )
         
         # Release any remaining frozen balances
-        await db.users.update_many(
-            {"frozen_balance": {"$gt": 0}},
-            {
-                "$inc": {"virtual_balance": "$frozen_balance"},
-                "$set": {"frozen_balance": 0.0, "updated_at": datetime.utcnow()}
-            }
-        )
+        users_with_frozen = await db.users.find({"frozen_balance": {"$gt": 0}}).to_list(1000)
+        for user in users_with_frozen:
+            new_balance = user["virtual_balance"] + user["frozen_balance"]
+            await db.users.update_one(
+                {"id": user["id"]},
+                {
+                    "$set": {
+                        "virtual_balance": new_balance,
+                        "frozen_balance": 0.0,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
         
         # Reset all frozen gem quantities
         await db.user_gems.update_many(
