@@ -1,4 +1,5 @@
 import React from 'react';
+import { useGems } from './GemsContext';
 
 const PlayerCard = ({ 
   game, 
@@ -8,16 +9,7 @@ const PlayerCard = ({
   onCancel,
   currentTime = new Date()
 }) => {
-  // Gem definitions with colors and order by value (ascending)
-  const gemDefinitions = [
-    { name: 'Ruby', color: 'text-red-500', icon: '/gems/gem-red.svg', value: 1 },
-    { name: 'Amber', color: 'text-orange-500', icon: '/gems/gem-orange.svg', value: 2 },
-    { name: 'Topaz', color: 'text-yellow-500', icon: '/gems/gem-yellow.svg', value: 5 },
-    { name: 'Emerald', color: 'text-green-500', icon: '/gems/gem-green.svg', value: 10 },
-    { name: 'Aquamarine', color: 'text-cyan-500', icon: '/gems/gem-cyan.svg', value: 25 },
-    { name: 'Sapphire', color: 'text-blue-500', icon: '/gems/gem-blue.svg', value: 50 },
-    { name: 'Magic', color: 'text-purple-500', icon: '/gems/gem-purple.svg', value: 100 }
-  ];
+  const { gemsDefinitions, getGemByType } = useGems();
 
   // Get time remaining for auto-cancel
   const getTimeRemaining = () => {
