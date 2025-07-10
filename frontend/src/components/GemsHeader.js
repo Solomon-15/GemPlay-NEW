@@ -49,7 +49,7 @@ const GemsHeader = ({ user }) => {
         <div className="flex justify-center mb-2">
           <div className="w-8 h-8 flex items-center justify-center relative">
             <img
-              src={`/gems/${icon}`}
+              src={icon}
               alt={name}
               className={`w-7 h-7 object-contain transition-all duration-300 ${
                 hasGems ? 'brightness-100' : 'brightness-50 opacity-40'
