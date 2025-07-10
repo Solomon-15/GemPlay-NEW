@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNotifications } from './NotificationContext';
+import { useGems } from './GemsContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   const { showSuccess, showError, showWarning } = useNotifications();
+  const { gemsDefinitions, getGemByType, refreshGemsData } = useGems();
   
   const [betAmount, setBetAmount] = useState('');
   const [selectedMove, setSelectedMove] = useState('');
