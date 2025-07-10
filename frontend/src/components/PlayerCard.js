@@ -54,8 +54,8 @@ const PlayerCard = ({
     if (game.bet_gems && typeof game.bet_gems === 'object') {
       Object.entries(game.bet_gems).forEach(([type, quantity]) => {
         if (quantity > 0) {
-          const gemData = gemDefinitions.find(g => g.name === type);
-          const gemValue = gemData ? gemData.value : 1;
+          const gem = getGemByType(type);
+          const gemValue = gem ? gem.value : 1;
           total += gemValue * quantity;
         }
       });
@@ -68,7 +68,7 @@ const PlayerCard = ({
   const getSortedGems = () => {
     if (!game.bet_gems || typeof game.bet_gems !== 'object') return [];
     
-    return gemDefinitions
+    return gemsDefinitions
       .filter(gem => game.bet_gems[gem.name] > 0)
       .sort((a, b) => a.value - b.value)
       .map(gem => ({
