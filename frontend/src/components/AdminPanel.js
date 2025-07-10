@@ -13,6 +13,8 @@ const AdminPanel = ({ user, onClose }) => {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const { showSuccessRU, showErrorRU } = useNotifications();
 
   // Проверка прав доступа
   if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
