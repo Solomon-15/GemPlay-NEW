@@ -2,7 +2,7 @@ import React from 'react';
 import { useGems } from './GemsContext';
 
 const GemsHeader = ({ user }) => {
-  const { gemsDefinitions, gemsData, loading } = useGems();
+  const { gemsDefinitions: gemDefinitions, gemsData: userGems, loading } = useGems();
 
   const getGemData = (gemType) => {
     const definition = gemDefinitions.find(def => def.type === gemType);
