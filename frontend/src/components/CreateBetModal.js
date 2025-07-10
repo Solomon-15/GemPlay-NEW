@@ -26,18 +26,10 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     { value: 'scissors', label: 'Scissors', icon: '✂️' }
   ];
 
-  const gemDefinitions = [
-    { name: 'Magic', value: 100, icon: '/gems/gem-purple.svg' },
-    { name: 'Sapphire', value: 50, icon: '/gems/gem-blue.svg' },
-    { name: 'Aquamarine', value: 25, icon: '/gems/gem-cyan.svg' },
-    { name: 'Emerald', value: 10, icon: '/gems/gem-green.svg' },
-    { name: 'Topaz', value: 5, icon: '/gems/gem-yellow.svg' },
-    { name: 'Amber', value: 2, icon: '/gems/gem-orange.svg' },
-    { name: 'Ruby', value: 1, icon: '/gems/gem-red.svg' }
-  ];
-
   useEffect(() => {
     fetchUserData();
+    // Refresh gems data to ensure we have latest prices
+    refreshGemsData();
   }, []);
 
   const fetchUserData = async () => {
