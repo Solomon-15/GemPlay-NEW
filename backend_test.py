@@ -716,16 +716,16 @@ def test_admin_reset_all_endpoint() -> None:
     }
     
     # Register users
-    user1_id, user1_email, user1_username = test_user_registration(test_user1)
-    user2_id, user2_email, user2_username = test_user_registration(test_user2)
+    user1_token_verify, user1_email, user1_username = test_user_registration(test_user1)
+    user2_token_verify, user2_email, user2_username = test_user_registration(test_user2)
     
-    if not user1_id or not user2_id:
+    if not user1_token_verify or not user2_token_verify:
         print_error("Cannot proceed - user registration failed")
         return
     
     # Verify emails
-    test_email_verification(user1_id)
-    test_email_verification(user2_id)
+    test_email_verification(user1_token_verify, user1_username)
+    test_email_verification(user2_token_verify, user2_username)
     
     # Login users
     user1_token = test_login(user1_email, test_user1["password"], user1_username)
