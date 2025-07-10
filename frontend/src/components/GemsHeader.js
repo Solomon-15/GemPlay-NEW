@@ -1,41 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { formatCurrencyWithSymbol } from '../utils/economy';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import React from 'react';
+import { useGems } from './GemsContext';
 
 const GemsHeader = ({ user }) => {
-  const [gemDefinitions, setGemDefinitions] = useState([]);
-  const [userGems, setUserGems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchGemsData();
-  }, []);
-
-  const fetchGemsData = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Fetch gem definitions
-      const definitionsResponse = await axios.get(`${API}/gems/definitions`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Fetch user's gem inventory
-      const inventoryResponse = await axios.get(`${API}/gems/inventory`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setGemDefinitions(definitionsResponse.data);
-      setUserGems(inventoryResponse.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching gems data:', error);
-      setLoading(false);
-    }
-  };
+  const { gemsDefinitions, gemsData, loading } = useGems();
 
   const getGemData = (gemType) => {
     const definition = gemDefinitions.find(def => def.type === gemType);
