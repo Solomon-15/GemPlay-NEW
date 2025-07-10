@@ -55,7 +55,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   };
 
   const autoSelectGems = (targetAmount) => {
-    if (!userGems || userGems.length === 0) {
+    if (!userGems || userGems.length === 0 || !gemsDefinitions || gemsDefinitions.length === 0) {
       return {};
     }
     
@@ -65,13 +65,15 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     
     // Sort gems by value (descending - start with most valuable)
     const sortedGems = availableGems.sort((a, b) => {
-      const aValue = gemDefinitions.find(g => g.name === a.gem_type)?.value || 0;
-      const bValue = gemDefinitions.find(g => g.name === b.gem_type)?.value || 0;
+      const aGem = getGemByType(a.gem_type);
+      const bGem = getGemByType(b.gem_type);
+      const aValue = aGem ? aGem.value : 0;
+      const bValue = bGem ? bGem.value : 0;
       return bValue - aValue;
     });
     
     for (const gem of sortedGems) {
-      const gemData = gemDefinitions.find(g => g.name === gem.gem_type);
+      const gemData = getGemByType(gem.gem_type);
       if (!gemData) continue;
       
       const maxQuantity = Math.min(gem.quantity, Math.floor(remainingAmount / gemData.value));
