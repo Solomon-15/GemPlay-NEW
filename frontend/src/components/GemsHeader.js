@@ -109,13 +109,13 @@ const GemsHeader = ({ user }) => {
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto mb-6">
-        <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-3">
           {[...Array(7)].map((_, index) => (
             <div key={index} className="bg-surface-card border border-accent-primary border-opacity-20 rounded-lg p-3 animate-pulse">
-              <div className="w-8 h-8 bg-gray-600 rounded mx-auto mb-2"></div>
-              <div className="w-12 h-3 bg-gray-600 rounded mx-auto mb-1"></div>
-              <div className="w-10 h-3 bg-gray-600 rounded mx-auto mb-1"></div>
-              <div className="w-8 h-3 bg-gray-600 rounded mx-auto"></div>
+              <div className="w-12 h-12 bg-gray-600 rounded-full mx-auto mb-2"></div>
+              <div className="w-16 h-3 bg-gray-600 rounded mx-auto mb-2"></div>
+              <div className="w-12 h-4 bg-gray-600 rounded mx-auto mb-2"></div>
+              <div className="w-14 h-3 bg-gray-600 rounded mx-auto"></div>
             </div>
           ))}
         </div>
