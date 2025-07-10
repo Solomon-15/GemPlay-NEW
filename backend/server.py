@@ -4107,6 +4107,14 @@ async def reset_all_bets(current_user: User = Depends(get_current_admin)):
                 }
             )
         
+        # Also reset any negative frozen balances to 0 (floating point precision issues)
+        await db.users.update_many(
+            {"frozen_balance": {"$ne": 0.0}},
+            {
+                "$set": {"frozen_balance": 0.0, "updated_at": datetime.utcnow()}
+            }
+        )
+        
         # Reset all frozen gem quantities
         await db.user_gems.update_many(
             {"frozen_quantity": {"$gt": 0}},
