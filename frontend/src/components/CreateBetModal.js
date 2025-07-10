@@ -105,9 +105,9 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   const calculateTotalGemValue = () => {
     let total = 0;
     Object.entries(selectedGems).forEach(([gemType, quantity]) => {
-      const gemData = gemDefinitions.find(g => g.name === gemType);
-      if (gemData) {
-        total += gemData.value * quantity;
+      const gem = getGemByType(gemType);
+      if (gem) {
+        total += gem.value * quantity;
       }
     });
     return total;
