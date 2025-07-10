@@ -32,25 +32,39 @@ export const GemsProvider = ({ children }) => {
         return;
       }
 
+      // Fetch gem definitions (all gem types)
+      const definitionsResponse = await axios.get(`${API}/gems/definitions`);
+      const definitions = definitionsResponse.data || [];
+      
       // Fetch user's gem inventory
-      const response = await axios.get(`${API}/gems/inventory`, {
+      const inventoryResponse = await axios.get(`${API}/gems/inventory`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      const gems = response.data.gems || response.data || [];
-      setGemsData(gems);
+      const userGems = inventoryResponse.data || [];
       
-      // Create gem definitions from inventory data
-      const definitions = gems.map(gem => ({
-        name: gem.gem_type || gem.type || gem.name,
-        value: gem.price || 0,
-        icon: `/gems/gem-${getGemColor(gem.gem_type || gem.type || gem.name)}.svg`,
-        color: getGemTailwindColor(gem.gem_type || gem.type || gem.name),
-        quantity: gem.quantity || 0,
-        frozen_quantity: gem.frozen_quantity || 0
+      // Create a map of user gems for easy lookup
+      const userGemMap = {};
+      userGems.forEach(gem => {
+        userGemMap[gem.type] = {
+          quantity: gem.quantity || 0,
+          frozen_quantity: gem.frozen_quantity || 0
+        };
+      });
+      
+      // Combine definitions with user inventory data
+      const combinedGems = definitions.map(def => ({
+        type: def.type,
+        name: def.name,
+        price: def.price,
+        color: def.color,
+        icon: def.icon,
+        rarity: def.rarity,
+        quantity: userGemMap[def.type]?.quantity || 0,
+        frozen_quantity: userGemMap[def.type]?.frozen_quantity || 0
       }));
-
-      setGemsDefinitions(definitions);
+      
+      setGemsDefinitions(combinedGems);
+      setGemsData(combinedGems);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching gems data:', error);
