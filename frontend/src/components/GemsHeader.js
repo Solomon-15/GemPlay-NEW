@@ -1,5 +1,6 @@
 import React from 'react';
 import { useGems } from './GemsContext';
+import { formatCurrencyWithSymbol } from '../utils/economy';
 
 const GemsHeader = ({ user }) => {
   const { gemsDefinitions: gemDefinitions, gemsData: userGems, loading } = useGems();
