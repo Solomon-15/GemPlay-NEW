@@ -88,6 +88,32 @@ export const GemsProvider = ({ children }) => {
     fetchGemsData();
   };
 
+  const getGemByType = (gemType) => {
+    return gemsDefinitions.find(gem => gem.type === gemType || gem.name === gemType) || 
+           getDefaultGemDefinitions().find(gem => gem.type === gemType || gem.name === gemType);
+  };
+
+  const getGemValue = (gemType) => {
+    const gem = getGemByType(gemType);
+    return gem ? gem.price : 0;
+  };
+
+  const getGemIcon = (gemType) => {
+    const gem = getGemByType(gemType);
+    return gem ? gem.icon : '/gems/gem-gray.svg';
+  };
+
+  const getSortedGems = (orderBy = 'price', order = 'asc') => {
+    const sortedGems = [...gemsDefinitions].sort((a, b) => {
+      if (order === 'asc') {
+        return a[orderBy] - b[orderBy];
+      } else {
+        return b[orderBy] - a[orderBy];
+      }
+    });
+    return sortedGems;
+  };
+
   return (
     <GemsContext.Provider value={{
       gemsData,
