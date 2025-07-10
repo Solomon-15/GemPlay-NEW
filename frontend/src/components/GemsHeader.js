@@ -3,23 +3,22 @@ import { useGems } from './GemsContext';
 import { formatCurrencyWithSymbol } from '../utils/economy';
 
 const GemsHeader = ({ user }) => {
-  const { gemsDefinitions: gemDefinitions, gemsData: userGems, loading } = useGems();
+  const { gemsDefinitions, loading } = useGems();
 
   const getGemData = (gemType) => {
-    const definition = gemDefinitions.find(def => def.type === gemType);
-    const userGem = userGems.find(gem => gem.type === gemType);
+    const gemData = gemsDefinitions.find(def => def.type === gemType);
     
-    if (!definition) return null;
+    if (!gemData) return null;
     
-    const totalQuantity = userGem ? userGem.quantity : 0;
-    const frozenQuantity = userGem ? userGem.frozen_quantity : 0;
+    const totalQuantity = gemData.quantity || 0;
+    const frozenQuantity = gemData.frozen_quantity || 0;
     const availableQuantity = totalQuantity - frozenQuantity;
     
-    const availableValue = availableQuantity * definition.price;
-    const totalValue = totalQuantity * definition.price;
+    const availableValue = availableQuantity * gemData.price;
+    const totalValue = totalQuantity * gemData.price;
     
     return {
-      ...definition,
+      ...gemData,
       totalQuantity,
       frozenQuantity,
       availableQuantity,
