@@ -294,6 +294,68 @@ const AdminPanel = ({ user, onClose }) => {
     }
   };
 
+  const GamesContent = () => (
+    <div className="space-y-8">
+      <div>
+        <h2 className="font-russo text-2xl text-white mb-6">Game Management</h2>
+        
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 mb-6">
+          <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Dangerous Actions</h3>
+          <div className="bg-red-900 bg-opacity-20 border border-red-500 border-opacity-30 rounded-lg p-4">
+            <div className="flex items-center space-x-3 mb-3">
+              <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <h4 className="font-rajdhani text-lg font-bold text-red-400">Reset All Bets</h4>
+            </div>
+            <p className="text-text-secondary text-sm mb-4">
+              This action will cancel all active games, return frozen gems and commission to all players and bots. 
+              This cannot be undone.
+            </p>
+            <button
+              onClick={resetAllBets}
+              disabled={resetLoading}
+              className={`px-6 py-3 font-rajdhani font-bold rounded-lg transition-all duration-300 ${
+                resetLoading 
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                  : 'bg-red-600 hover:bg-red-700 text-white'
+              }`}
+            >
+              {resetLoading ? (
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Resetting...</span>
+                </div>
+              ) : (
+                'Reset All Bets'
+              )}
+            </button>
+          </div>
+        </div>
+        
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+          <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Game Statistics</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-surface-sidebar rounded-lg p-4">
+              <div className="text-text-secondary text-sm">Total Games</div>
+              <div className="text-2xl font-bold text-white">{stats.games?.total || '—'}</div>
+            </div>
+            <div className="bg-surface-sidebar rounded-lg p-4">
+              <div className="text-text-secondary text-sm">Active Games</div>
+              <div className="text-2xl font-bold text-orange-400">{stats.games?.active || '—'}</div>
+            </div>
+            <div className="bg-surface-sidebar rounded-lg p-4">
+              <div className="text-text-secondary text-sm">Completed Games</div>
+              <div className="text-2xl font-bold text-green-400">{stats.games?.completed || '—'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
@@ -303,7 +365,7 @@ const AdminPanel = ({ user, onClose }) => {
       case 'bots':
         return <div className="text-white">Bot management (in development)</div>;
       case 'games':
-        return <div className="text-white">Game management (in development)</div>;
+        return <GamesContent />;
       case 'gems':
         return <div className="text-white">Gem management (in development)</div>;
       case 'profit':
