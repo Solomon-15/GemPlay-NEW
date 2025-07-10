@@ -4016,6 +4016,145 @@ async def startup_event():
     logger.info("Bot automation system started successfully")
 
 # ==============================================================================
+# ADMIN GAME MANAGEMENT
+# ==============================================================================
+
+@api_router.post("/admin/games/reset-all", response_model=dict)
+async def reset_all_bets(current_user: User = Depends(get_current_admin)):
+    """Reset all bets for all players and bots (admin only)."""
+    try:
+        # Get all active games (WAITING, ACTIVE)
+        active_games = await db.games.find({
+            "status": {"$in": [GameStatus.WAITING, GameStatus.ACTIVE]}
+        }).to_list(1000)
+        
+        reset_count = 0
+        total_gems_returned = {}
+        total_commission_returned = 0.0
+        
+        # Process each active game
+        for game in active_games:
+            game_obj = Game(**game)
+            
+            # Unfreeze creator's gems
+            for gem_type, quantity in game_obj.bet_gems.items():
+                await db.user_gems.update_one(
+                    {"user_id": game_obj.creator_id, "gem_type": gem_type},
+                    {
+                        "$inc": {"frozen_quantity": -quantity},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                
+                # Track returned gems
+                if gem_type not in total_gems_returned:
+                    total_gems_returned[gem_type] = 0
+                total_gems_returned[gem_type] += quantity
+            
+            # Return frozen commission to creator
+            creator = await db.users.find_one({"id": game_obj.creator_id})
+            if creator:
+                commission_to_return = game_obj.bet_amount * 0.06
+                await db.users.update_one(
+                    {"id": game_obj.creator_id},
+                    {
+                        "$inc": {
+                            "virtual_balance": commission_to_return,
+                            "frozen_balance": -commission_to_return
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                total_commission_returned += commission_to_return
+            
+            # If game is ACTIVE, also handle opponent's gems
+            if game_obj.status == GameStatus.ACTIVE and game_obj.opponent_id:
+                # Unfreeze opponent's gems
+                for gem_type, quantity in game_obj.bet_gems.items():
+                    await db.user_gems.update_one(
+                        {"user_id": game_obj.opponent_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    total_gems_returned[gem_type] += quantity
+                
+                # Return frozen commission to opponent
+                opponent = await db.users.find_one({"id": game_obj.opponent_id})
+                if opponent:
+                    commission_to_return = game_obj.bet_amount * 0.06
+                    await db.users.update_one(
+                        {"id": game_obj.opponent_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_to_return,
+                                "frozen_balance": -commission_to_return
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    total_commission_returned += commission_to_return
+            
+            reset_count += 1
+        
+        # Update all active games to CANCELLED
+        await db.games.update_many(
+            {"status": {"$in": [GameStatus.WAITING, GameStatus.ACTIVE]}},
+            {
+                "$set": {
+                    "status": GameStatus.CANCELLED,
+                    "cancelled_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Release any remaining frozen balances
+        await db.users.update_many(
+            {"frozen_balance": {"$gt": 0}},
+            {
+                "$inc": {"virtual_balance": "$frozen_balance"},
+                "$set": {"frozen_balance": 0.0, "updated_at": datetime.utcnow()}
+            }
+        )
+        
+        # Reset all frozen gem quantities
+        await db.user_gems.update_many(
+            {"frozen_quantity": {"$gt": 0}},
+            {
+                "$set": {"frozen_quantity": 0, "updated_at": datetime.utcnow()}
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="RESET_ALL_BETS",
+            target_type="games",
+            target_id="all",
+            details={
+                "games_reset": reset_count,
+                "gems_returned": total_gems_returned,
+                "commission_returned": total_commission_returned
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": "All bets have been reset successfully",
+            "games_reset": reset_count,
+            "gems_returned": total_gems_returned,
+            "commission_returned": round(total_commission_returned, 2)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error resetting all bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset all bets"
+        )
+
+# ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
 
