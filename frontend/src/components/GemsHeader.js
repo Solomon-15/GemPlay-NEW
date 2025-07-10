@@ -38,7 +38,7 @@ const GemsHeader = ({ user }) => {
     return (
       <div 
         className={`bg-surface-card rounded-lg p-3 text-center transition-all duration-300 ${
-          hasGems ? 'hover:scale-105' : ''
+          hasGems ? 'hover:scale-105 hover:shadow-lg' : ''
         }`}
         style={{
           border: `1px solid ${color}${hasGems ? '60' : '20'}`,
@@ -47,20 +47,23 @@ const GemsHeader = ({ user }) => {
       >
         {/* Gem Icon with quantity badge */}
         <div className="flex justify-center mb-2 relative">
-          <div className="w-10 h-10 flex items-center justify-center relative">
+          <div className="w-12 h-12 flex items-center justify-center relative">
             <img
               src={icon}
               alt={name}
-              className={`w-9 h-9 object-contain transition-all duration-300 ${
-                hasGems ? 'brightness-100' : 'brightness-50 opacity-40'
+              className={`w-10 h-10 object-contain transition-all duration-300 ${
+                hasGems ? 'brightness-100 scale-110' : 'brightness-50 opacity-40'
               }`}
               style={{
-                filter: hasGems ? `drop-shadow(0 0 4px ${color}40)` : 'grayscale(100%)'
+                filter: hasGems ? `drop-shadow(0 0 6px ${color}60)` : 'grayscale(100%)'
               }}
             />
             {/* Quantity badge */}
             {hasGems && (
-              <div className="absolute -top-1 -right-1 bg-accent-primary text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              <div 
+                className="absolute -top-1 -right-1 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg"
+                style={{ backgroundColor: color }}
+              >
                 {totalQuantity > 99 ? '99+' : totalQuantity}
               </div>
             )}
@@ -68,33 +71,33 @@ const GemsHeader = ({ user }) => {
         </div>
         
         {/* Gem Name */}
-        <h3 className={`font-rajdhani text-xs mb-1 transition-colors duration-300 ${
+        <h3 className={`font-rajdhani text-sm font-bold mb-1 transition-colors duration-300 ${
           hasGems ? 'text-white' : 'text-gray-500'
         }`}>
           {name}
         </h3>
         
         {/* Gem Price */}
-        <div className={`font-rajdhani text-sm font-bold mb-1 transition-colors duration-300 ${
-          hasGems ? 'text-green-400' : 'text-gray-600'
-        }`}>
+        <div className={`font-rajdhani text-lg font-bold mb-2 transition-colors duration-300`}
+             style={{ color: hasGems ? color : '#6b7280' }}>
           {formatCurrencyWithSymbol(price)}
         </div>
         
-        {/* Gem Quantities */}
+        {/* Gem Status */}
         <div className="space-y-1">
-          <div className={`font-rajdhani text-xs transition-colors duration-300 ${
-            hasGems ? 'text-blue-400' : 'text-gray-700'
-          }`}>
-            {availableQuantity} Available
-          </div>
-          {frozenQuantity > 0 && (
-            <div className="font-rajdhani text-xs text-orange-400">
-              {frozenQuantity} Frozen
-            </div>
-          )}
-          {!hasGems && (
-            <div className="font-rajdhani text-xs text-gray-700">
+          {hasGems ? (
+            <>
+              <div className="font-rajdhani text-xs text-green-400 font-medium">
+                {availableQuantity} Available
+              </div>
+              {frozenQuantity > 0 && (
+                <div className="font-rajdhani text-xs text-orange-400 font-medium">
+                  {frozenQuantity} Frozen
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="font-rajdhani text-xs text-gray-600">
               0 Owned
             </div>
           )}
