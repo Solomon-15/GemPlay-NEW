@@ -111,13 +111,13 @@ export const GemsProvider = ({ children }) => {
   ];
 
   const getGemByType = (gemType) => {
-    return gemsDefinitions.find(gem => gem.name === gemType) || 
-           getDefaultGemDefinitions().find(gem => gem.name === gemType);
+    return gemsDefinitions.find(gem => gem.type === gemType || gem.name === gemType) || 
+           getDefaultGemDefinitions().find(gem => gem.type === gemType || gem.name === gemType);
   };
 
   const getGemValue = (gemType) => {
     const gem = getGemByType(gemType);
-    return gem ? gem.value : 0;
+    return gem ? gem.price : 0;
   };
 
   const getGemIcon = (gemType) => {
@@ -125,7 +125,7 @@ export const GemsProvider = ({ children }) => {
     return gem ? gem.icon : '/gems/gem-gray.svg';
   };
 
-  const getSortedGems = (orderBy = 'value', order = 'asc') => {
+  const getSortedGems = (orderBy = 'price', order = 'asc') => {
     const sortedGems = [...gemsDefinitions].sort((a, b) => {
       if (order === 'asc') {
         return a[orderBy] - b[orderBy];
