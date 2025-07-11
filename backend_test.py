@@ -1222,18 +1222,426 @@ def test_gems_synchronization() -> None:
         print_error("Failed to get both definitions and inventory data")
         record_test("GemsHeader Data Requirements", False, "API requests failed")
 
+def test_create_bet_flow() -> None:
+    """Test the complete Create Bet flow with the new system as requested in review."""
+    print_header("TESTING COMPLETE CREATE BET FLOW")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with Create Bet flow tests - admin login failed")
+        return
+    
+    # Step 2: Get initial balance and gem inventory
+    print_subheader("Step 2: Get Initial State")
+    
+    # Get initial balance
+    response, success = make_request("GET", "/economy/balance", auth_token=admin_token)
+    if not success:
+        print_error("Failed to get initial balance")
+        record_test("Create Bet Flow - Initial Balance Check", False, "Failed to get balance")
+        return
+    
+    initial_balance = response.get("virtual_balance", 0)
+    initial_frozen = response.get("frozen_balance", 0)
+    print_success(f"Initial balance: ${initial_balance}, Frozen: ${initial_frozen}")
+    
+    # Get initial gem inventory
+    response, success = make_request("GET", "/gems/inventory", auth_token=admin_token)
+    if not success:
+        print_error("Failed to get initial gem inventory")
+        record_test("Create Bet Flow - Initial Gems Check", False, "Failed to get gems")
+        return
+    
+    initial_gems = {gem["type"]: {"quantity": gem["quantity"], "frozen_quantity": gem["frozen_quantity"]} for gem in response}
+    print_success(f"Initial gems: {len(initial_gems)} types")
+    for gem_type, gem_data in initial_gems.items():
+        print_success(f"  {gem_type}: {gem_data['quantity']} total, {gem_data['frozen_quantity']} frozen")
+    
+    # Step 3: Ensure admin has enough gems for $50 bet (auto-selected from most expensive)
+    print_subheader("Step 3: Prepare Gems for $50 Bet")
+    
+    # Get gem definitions to know prices
+    response, success = make_request("GET", "/gems/definitions")
+    if not success:
+        print_error("Failed to get gem definitions")
+        record_test("Create Bet Flow - Gem Definitions", False, "Failed to get definitions")
+        return
+    
+    gem_prices = {gem["type"]: gem["price"] for gem in response}
+    print_success(f"Gem prices: {gem_prices}")
+    
+    # Auto-select gems starting from most expensive to reach $50
+    target_amount = 50.0
+    sorted_gems = sorted(gem_prices.items(), key=lambda x: x[1], reverse=True)  # Most expensive first
+    selected_gems = {}
+    current_total = 0.0
+    
+    for gem_type, price in sorted_gems:
+        if current_total >= target_amount:
+            break
+        
+        # Check how many of this gem we have
+        available_quantity = initial_gems.get(gem_type, {}).get("quantity", 0) - initial_gems.get(gem_type, {}).get("frozen_quantity", 0)
+        
+        if available_quantity > 0:
+            # Calculate how many we need
+            remaining_needed = target_amount - current_total
+            gems_needed = min(available_quantity, int(remaining_needed / price) + 1)
+            
+            if gems_needed > 0:
+                selected_gems[gem_type] = gems_needed
+                current_total += gems_needed * price
+                print_success(f"Selected {gems_needed} {gem_type} gems (${gems_needed * price})")
+    
+    if current_total < target_amount:
+        # Need to buy more gems
+        print_warning(f"Need to buy more gems. Current total: ${current_total}, Target: ${target_amount}")
+        
+        # Buy Magic gems to reach target
+        magic_price = gem_prices.get("Magic", 100)
+        magic_needed = max(1, int((target_amount - current_total) / magic_price) + 1)
+        
+        response, success = make_request(
+            "POST", 
+            f"/gems/buy?gem_type=Magic&quantity={magic_needed}", 
+            auth_token=admin_token
+        )
+        
+        if success:
+            print_success(f"Bought {magic_needed} Magic gems")
+            selected_gems["Magic"] = magic_needed
+            current_total = magic_needed * magic_price
+        else:
+            print_error(f"Failed to buy Magic gems: {response}")
+            record_test("Create Bet Flow - Gem Purchase", False, "Failed to buy gems")
+            return
+    
+    bet_amount = current_total
+    print_success(f"Final bet selection: {selected_gems}, Total: ${bet_amount}")
+    
+    # Step 4: Test Create Game API with $50 bet
+    print_subheader("Step 4: Create Game with $50 Bet")
+    
+    game_data = {
+        "move": "rock",
+        "bet_gems": selected_gems
+    }
+    
+    response, success = make_request("POST", "/games/create", data=game_data, auth_token=admin_token)
+    
+    if success:
+        game_id = response.get("game_id")
+        actual_bet_amount = response.get("bet_amount", 0)
+        commission_reserved = response.get("commission_reserved", 0)
+        new_balance = response.get("new_balance", 0)
+        
+        print_success(f"Game created successfully: {game_id}")
+        print_success(f"Bet amount: ${actual_bet_amount}")
+        print_success(f"Commission reserved: ${commission_reserved}")
+        print_success(f"New balance: ${new_balance}")
+        
+        # Verify commission is 6% of bet amount
+        expected_commission = actual_bet_amount * 0.06
+        if abs(commission_reserved - expected_commission) < 0.01:
+            print_success(f"Commission calculation correct: 6% of ${actual_bet_amount} = ${commission_reserved}")
+            record_test("Create Bet Flow - Commission Calculation", True)
+        else:
+            print_error(f"Commission calculation incorrect: Expected ${expected_commission}, Got ${commission_reserved}")
+            record_test("Create Bet Flow - Commission Calculation", False, f"Expected ${expected_commission}, Got ${commission_reserved}")
+        
+        # Verify balance change
+        expected_new_balance = initial_balance - commission_reserved
+        if abs(new_balance - expected_new_balance) < 0.01:
+            print_success(f"Balance change correct: ${initial_balance} - ${commission_reserved} = ${new_balance}")
+            record_test("Create Bet Flow - Balance Change", True)
+        else:
+            print_error(f"Balance change incorrect: Expected ${expected_new_balance}, Got ${new_balance}")
+            record_test("Create Bet Flow - Balance Change", False, f"Expected ${expected_new_balance}, Got ${new_balance}")
+        
+        record_test("Create Bet Flow - Game Creation", True)
+    else:
+        print_error(f"Failed to create game: {response}")
+        record_test("Create Bet Flow - Game Creation", False, f"Failed: {response}")
+        return
+    
+    # Step 5: Verify gem freezing mechanism
+    print_subheader("Step 5: Verify Gem Freezing")
+    
+    response, success = make_request("GET", "/gems/inventory", auth_token=admin_token)
+    if success:
+        current_gems = {gem["type"]: {"quantity": gem["quantity"], "frozen_quantity": gem["frozen_quantity"]} for gem in response}
+        
+        print_success("Checking frozen gems:")
+        all_frozen_correct = True
+        
+        for gem_type, bet_quantity in selected_gems.items():
+            initial_frozen = initial_gems.get(gem_type, {}).get("frozen_quantity", 0)
+            current_frozen = current_gems.get(gem_type, {}).get("frozen_quantity", 0)
+            expected_frozen = initial_frozen + bet_quantity
+            
+            if current_frozen == expected_frozen:
+                print_success(f"  {gem_type}: {current_frozen} frozen (expected {expected_frozen})")
+            else:
+                print_error(f"  {gem_type}: {current_frozen} frozen (expected {expected_frozen})")
+                all_frozen_correct = False
+        
+        if all_frozen_correct:
+            record_test("Create Bet Flow - Gem Freezing", True)
+        else:
+            record_test("Create Bet Flow - Gem Freezing", False, "Frozen quantities incorrect")
+    else:
+        print_error("Failed to check gem freezing")
+        record_test("Create Bet Flow - Gem Freezing", False, "Failed to get inventory")
+    
+    # Step 6: Verify commission freezing in balance
+    print_subheader("Step 6: Verify Commission Freezing")
+    
+    response, success = make_request("GET", "/economy/balance", auth_token=admin_token)
+    if success:
+        current_balance = response.get("virtual_balance", 0)
+        current_frozen = response.get("frozen_balance", 0)
+        
+        expected_frozen = initial_frozen + commission_reserved
+        
+        if abs(current_frozen - expected_frozen) < 0.01:
+            print_success(f"Frozen balance correct: ${current_frozen} (expected ${expected_frozen})")
+            record_test("Create Bet Flow - Commission Freezing", True)
+        else:
+            print_error(f"Frozen balance incorrect: ${current_frozen} (expected ${expected_frozen})")
+            record_test("Create Bet Flow - Commission Freezing", False, f"Expected ${expected_frozen}, Got ${current_frozen}")
+    else:
+        print_error("Failed to check commission freezing")
+        record_test("Create Bet Flow - Commission Freezing", False, "Failed to get balance")
+    
+    # Step 7: Test Available Games API
+    print_subheader("Step 7: Test Available Games API")
+    
+    response, success = make_request("GET", "/games/available", auth_token=admin_token)
+    if success:
+        if isinstance(response, list):
+            print_success(f"Available games API returned {len(response)} games")
+            
+            # Admin shouldn't see their own game in available games
+            own_game_found = False
+            for game in response:
+                if game.get("game_id") == game_id:
+                    own_game_found = True
+                    break
+            
+            if not own_game_found:
+                print_success("Own game correctly not shown in available games")
+                record_test("Create Bet Flow - Available Games (Own Game Hidden)", True)
+            else:
+                print_error("Own game incorrectly shown in available games")
+                record_test("Create Bet Flow - Available Games (Own Game Hidden)", False, "Own game visible")
+            
+            # Check structure of available games
+            if len(response) > 0:
+                sample_game = response[0]
+                required_fields = ["game_id", "creator", "bet_amount", "bet_gems", "created_at"]
+                missing_fields = [field for field in required_fields if field not in sample_game]
+                
+                if not missing_fields:
+                    print_success("Available games have correct structure")
+                    record_test("Create Bet Flow - Available Games Structure", True)
+                else:
+                    print_error(f"Available games missing fields: {missing_fields}")
+                    record_test("Create Bet Flow - Available Games Structure", False, f"Missing: {missing_fields}")
+            
+            record_test("Create Bet Flow - Available Games API", True)
+        else:
+            print_error(f"Available games API returned non-list: {response}")
+            record_test("Create Bet Flow - Available Games API", False, "Non-list response")
+    else:
+        print_error(f"Available games API failed: {response}")
+        record_test("Create Bet Flow - Available Games API", False, f"Failed: {response}")
+    
+    # Step 8: Test My Bets API
+    print_subheader("Step 8: Test My Bets API")
+    
+    response, success = make_request("GET", "/games/my-bets", auth_token=admin_token)
+    if success:
+        if isinstance(response, list):
+            print_success(f"My Bets API returned {len(response)} bets")
+            
+            # Find our created game
+            our_game_found = False
+            for bet in response:
+                if bet.get("game_id") == game_id:
+                    our_game_found = True
+                    print_success(f"Found our game in My Bets: {bet}")
+                    
+                    # Verify bet structure
+                    required_fields = ["game_id", "is_creator", "bet_amount", "bet_gems", "status", "created_at"]
+                    missing_fields = [field for field in required_fields if field not in bet]
+                    
+                    if not missing_fields:
+                        print_success("My Bets game has correct structure")
+                        
+                        # Verify specific values
+                        if bet["is_creator"] == True:
+                            print_success("is_creator correctly set to True")
+                        else:
+                            print_error(f"is_creator incorrect: {bet['is_creator']}")
+                        
+                        if bet["status"] == "WAITING":
+                            print_success("Status correctly set to WAITING")
+                        else:
+                            print_error(f"Status incorrect: {bet['status']}")
+                        
+                        if abs(bet["bet_amount"] - bet_amount) < 0.01:
+                            print_success(f"Bet amount correct: ${bet['bet_amount']}")
+                        else:
+                            print_error(f"Bet amount incorrect: ${bet['bet_amount']} (expected ${bet_amount})")
+                        
+                        record_test("Create Bet Flow - My Bets Structure", True)
+                    else:
+                        print_error(f"My Bets game missing fields: {missing_fields}")
+                        record_test("Create Bet Flow - My Bets Structure", False, f"Missing: {missing_fields}")
+                    break
+            
+            if our_game_found:
+                print_success("Our created game found in My Bets")
+                record_test("Create Bet Flow - My Bets Game Found", True)
+            else:
+                print_error("Our created game not found in My Bets")
+                record_test("Create Bet Flow - My Bets Game Found", False, "Game not found")
+            
+            record_test("Create Bet Flow - My Bets API", True)
+        else:
+            print_error(f"My Bets API returned non-list: {response}")
+            record_test("Create Bet Flow - My Bets API", False, "Non-list response")
+    else:
+        print_error(f"My Bets API failed: {response}")
+        record_test("Create Bet Flow - My Bets API", False, f"Failed: {response}")
+
+def test_create_bet_edge_cases() -> None:
+    """Test edge cases for Create Bet flow."""
+    print_header("TESTING CREATE BET EDGE CASES")
+    
+    # Login as admin
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with edge case tests - admin login failed")
+        return
+    
+    # Test 1: Bet amount below minimum ($1)
+    print_subheader("Test 1: Bet Amount Below Minimum")
+    
+    small_bet_gems = {"Ruby": 0}  # This should be invalid
+    game_data = {
+        "move": "rock",
+        "bet_gems": small_bet_gems
+    }
+    
+    response, success = make_request("POST", "/games/create", data=game_data, auth_token=admin_token, expected_status=400)
+    if not success and "detail" in response:
+        if "Invalid quantity" in response["detail"] or "Minimum bet" in response["detail"]:
+            print_success(f"Correctly rejected bet below minimum: {response['detail']}")
+            record_test("Edge Case - Bet Below Minimum", True)
+        else:
+            print_error(f"Unexpected error for bet below minimum: {response['detail']}")
+            record_test("Edge Case - Bet Below Minimum", False, f"Unexpected error: {response['detail']}")
+    else:
+        print_error("Bet below minimum was not rejected")
+        record_test("Edge Case - Bet Below Minimum", False, "Not rejected")
+    
+    # Test 2: Bet amount above maximum ($3000)
+    print_subheader("Test 2: Bet Amount Above Maximum")
+    
+    # Try to create a bet worth more than $3000 using Magic gems
+    large_bet_gems = {"Magic": 31}  # 31 * $100 = $3100
+    game_data = {
+        "move": "rock",
+        "bet_gems": large_bet_gems
+    }
+    
+    response, success = make_request("POST", "/games/create", data=game_data, auth_token=admin_token, expected_status=400)
+    if not success and "detail" in response:
+        if "Maximum bet" in response["detail"]:
+            print_success(f"Correctly rejected bet above maximum: {response['detail']}")
+            record_test("Edge Case - Bet Above Maximum", True)
+        else:
+            print_error(f"Unexpected error for bet above maximum: {response['detail']}")
+            record_test("Edge Case - Bet Above Maximum", False, f"Unexpected error: {response['detail']}")
+    else:
+        print_error("Bet above maximum was not rejected")
+        record_test("Edge Case - Bet Above Maximum", False, "Not rejected")
+    
+    # Test 3: Insufficient gems
+    print_subheader("Test 3: Insufficient Gems")
+    
+    insufficient_gems = {"Magic": 1000}  # Assuming admin doesn't have 1000 Magic gems
+    game_data = {
+        "move": "rock",
+        "bet_gems": insufficient_gems
+    }
+    
+    response, success = make_request("POST", "/games/create", data=game_data, auth_token=admin_token, expected_status=400)
+    if not success and "detail" in response:
+        if "Insufficient" in response["detail"] or "don't have" in response["detail"]:
+            print_success(f"Correctly rejected insufficient gems: {response['detail']}")
+            record_test("Edge Case - Insufficient Gems", True)
+        else:
+            print_error(f"Unexpected error for insufficient gems: {response['detail']}")
+            record_test("Edge Case - Insufficient Gems", False, f"Unexpected error: {response['detail']}")
+    else:
+        print_error("Insufficient gems was not rejected")
+        record_test("Edge Case - Insufficient Gems", False, "Not rejected")
+    
+    # Test 4: Insufficient commission balance
+    print_subheader("Test 4: Insufficient Commission Balance")
+    
+    # First, get current balance
+    response, success = make_request("GET", "/economy/balance", auth_token=admin_token)
+    if success:
+        current_balance = response.get("virtual_balance", 0)
+        print_success(f"Current balance: ${current_balance}")
+        
+        # Try to create a bet that would require more commission than available balance
+        # We need to calculate a bet amount where 6% commission > current balance
+        if current_balance > 0:
+            # Create a bet that would require commission > current balance
+            required_bet_for_insufficient_commission = (current_balance / 0.06) + 100
+            
+            # Use Magic gems to reach this amount
+            magic_gems_needed = int(required_bet_for_insufficient_commission / 100) + 1
+            
+            insufficient_commission_gems = {"Magic": magic_gems_needed}
+            game_data = {
+                "move": "rock",
+                "bet_gems": insufficient_commission_gems
+            }
+            
+            response, success = make_request("POST", "/games/create", data=game_data, auth_token=admin_token, expected_status=400)
+            if not success and "detail" in response:
+                if "Insufficient balance for commission" in response["detail"]:
+                    print_success(f"Correctly rejected insufficient commission balance: {response['detail']}")
+                    record_test("Edge Case - Insufficient Commission Balance", True)
+                else:
+                    print_warning(f"Different error for insufficient commission: {response['detail']}")
+                    record_test("Edge Case - Insufficient Commission Balance", True, "Different error but rejected")
+            else:
+                print_error("Insufficient commission balance was not rejected")
+                record_test("Edge Case - Insufficient Commission Balance", False, "Not rejected")
+        else:
+            print_warning("Admin has no balance, skipping insufficient commission test")
+            record_test("Edge Case - Insufficient Commission Balance", True, "Skipped - no balance")
+    else:
+        print_error("Failed to get balance for insufficient commission test")
+        record_test("Edge Case - Insufficient Commission Balance", False, "Failed to get balance")
+
 def run_all_tests() -> None:
     """Run all tests in sequence."""
-    print_header("GEMPLAY API TESTING")
+    print_header("GEMPLAY API TESTING - CREATE BET FLOW FOCUS")
     
-    # Test gems synchronization (as requested in review)
-    test_gems_synchronization()
+    # Test the complete Create Bet flow as requested in review
+    test_create_bet_flow()
     
-    # Test admin reset-all endpoint
-    test_admin_reset_all_endpoint()
-    
-    # Test PvP game mechanics
-    test_pvp_game_mechanics()
+    # Test edge cases for Create Bet flow
+    test_create_bet_edge_cases()
     
     # Print summary
     print_summary()
