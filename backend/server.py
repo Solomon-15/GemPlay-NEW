@@ -108,8 +108,10 @@ class GemType(str, Enum):
 class GameStatus(str, Enum):
     WAITING = "WAITING"
     ACTIVE = "ACTIVE"
+    REVEAL = "REVEAL"  # Фаза ожидания reveal хода
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
+    TIMEOUT = "TIMEOUT"  # Игра завершена по таймауту
 
 class GameMove(str, Enum):
     ROCK = "rock"
