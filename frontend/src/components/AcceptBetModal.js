@@ -100,12 +100,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     setTotalGemValue(total);
   }, [selectedGems, gemsData]);
 
-  // Auto-fill gems when component loads
-  useEffect(() => {
-    if (targetAmount > 0 && gemsData.length > 0 && !autoFillCompleted) {
-      autoFillGems();
-    }
-  }, [targetAmount, gemsData, autoFillCompleted]);
+  // Remove auto-fill on component load - user should manually select gems
 
   const handleGemQuantityChange = (gemType, quantity) => {
     const gem = gemsData.find(g => g.type === gemType);
