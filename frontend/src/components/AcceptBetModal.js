@@ -32,6 +32,59 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     console.error('AcceptBetModal: Missing required props', { bet, user, onClose });
     return null;
   }
+
+  // Check if user has sufficient funds for bet + commission
+  const availableBalance = (user?.virtual_balance || 0) - (user?.frozen_balance || 0);
+  const requiredCommission = targetAmount * COMMISSION_RATE;
+  
+  if (availableBalance < requiredCommission) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-surface-card border border-border-primary rounded-lg w-full max-w-md p-6">
+          <h2 className="text-xl font-russo text-white mb-4">⚠️ Insufficient Funds</h2>
+          <p className="text-text-secondary mb-4">
+            You need at least {safeFormatCurrency(requiredCommission)} for commission (6%) to join this bet.
+          </p>
+          <p className="text-text-secondary mb-4">
+            Available: {safeFormatCurrency(availableBalance)} | Required: {safeFormatCurrency(requiredCommission)}
+          </p>
+          <button
+            onClick={onClose}
+            className="w-full py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has sufficient gems (rough estimation)
+  const totalAvailableGemValue = (gemsData || []).reduce((sum, gem) => 
+    sum + (gem.available_quantity * gem.price), 0
+  );
+  
+  if (totalAvailableGemValue < targetAmount) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-surface-card border border-border-primary rounded-lg w-full max-w-md p-6">
+          <h2 className="text-xl font-russo text-white mb-4">⚠️ Insufficient Gems</h2>
+          <p className="text-text-secondary mb-4">
+            You don't have enough gems to match this bet amount of {safeFormatCurrency(targetAmount)}.
+          </p>
+          <p className="text-text-secondary mb-4">
+            Your total gem value: {safeFormatCurrency(totalAvailableGemValue)}
+          </p>
+          <button
+            onClick={onClose}
+            className="w-full py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   // Modal state
   const [currentStep, setCurrentStep] = useState(1);
