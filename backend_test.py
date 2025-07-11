@@ -2176,10 +2176,10 @@ def test_gems_calculate_combination() -> None:
 
 def run_all_tests() -> None:
     """Run all tests in sequence."""
-    print_header("GEMPLAY API TESTING - ROCK-PAPER-SCISSORS GAME LOGIC INTEGRATION")
+    print_header("GEMPLAY API TESTING - CANCEL BET FUNCTIONALITY")
     
-    # Test the complete Rock-Paper-Scissors game flow as requested in review
-    test_pvp_game_mechanics()
+    # Test the Cancel bet functionality as requested in the review
+    test_cancel_bet_functionality()
     
     # Print summary
     print_summary()
