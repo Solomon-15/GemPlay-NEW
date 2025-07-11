@@ -162,7 +162,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         </div>
         
         <button
-          onClick={() => onJoin(isActiveBotEntry ? game.bot_id : game.id)}
+          onClick={() => onJoin(isActiveBotEntry ? game.bot_id : (game.game_id || game.id))}
           className="w-full py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300"
         >
           {isActiveBotEntry ? 'CHALLENGE BOT' : 'JOIN BATTLE'}
