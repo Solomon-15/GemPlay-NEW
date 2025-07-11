@@ -1,5 +1,5 @@
 backend:
-  - task: "Gem Combination Strategy Logic Fix - Corrected"
+  - task: "Gem Combination Strategy Logic Fix - Final"
     implemented: true
     working: false
     file: "/app/backend/server.py"
@@ -13,6 +13,9 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "CORRECTED: Reverted to original logic which was actually correct: Small strategy prioritizes cheap gems (more quantity), Big strategy prioritizes expensive gems (fewer quantity). The logic naming is: Small = больше гемов но дешевле, Big = меньше гемов но дороже."
+      - working: "NA"
+        agent: "main"
+        comment: "FINAL FIX: Complete overhaul of gem combination algorithm. Replaced pure DP with greedy algorithm that respects strategy priority. Small strategy now correctly selects cheap gems (Ruby, Amber, Topaz), Big strategy selects expensive gems (Magic, Sapphire, Aquamarine). Added fallback to DP when greedy fails. This should resolve the core issue where strategies were producing opposite results."
 
   - task: "Rock-Paper-Scissors Game Logic Integration"
     implemented: true
