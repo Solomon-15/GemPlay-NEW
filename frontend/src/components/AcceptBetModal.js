@@ -686,6 +686,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
           <div className="flex items-center justify-between p-4 border-b border-border-primary">
             <h2 className="text-white font-russo text-xl">Join Battle</h2>
             <button
+              type="button"
               onClick={onClose}
               className="text-text-secondary hover:text-white transition-colors"
             >
