@@ -1876,7 +1876,7 @@ async def get_economy_balance(current_user: User = Depends(get_current_user)):
         "frozen_balance": user["frozen_balance"],
         "total_gem_value": total_gem_value,
         "available_gem_value": available_gem_value,
-        "total_value": user["virtual_balance"] + total_gem_value,
+        "total_value": user["virtual_balance"] + user["frozen_balance"] + total_gem_value,
         "daily_limit_used": user["daily_limit_used"],
         "daily_limit_max": user["daily_limit_max"]
     }
