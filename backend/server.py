@@ -773,11 +773,11 @@ async def calculate_gem_combination(user_id: str, target_amount: float, strategy
     
     # Сортируем гемы согласно стратегии
     if strategy == GemCombinationStrategy.SMALL:
-        # Сначала дорогие гемы (поменяли местами логику для исправления)
-        available_gems.sort(key=lambda x: x["price"], reverse=True)
-    elif strategy == GemCombinationStrategy.BIG:
-        # Сначала дешевые гемы (поменяли местами логику для исправления)
+        # Сначала дешевые гемы (больше штук)
         available_gems.sort(key=lambda x: x["price"])
+    elif strategy == GemCombinationStrategy.BIG:
+        # Сначала дорогие гемы (меньше штук)
+        available_gems.sort(key=lambda x: x["price"], reverse=True)
     else:  # SMART
         # Сбалансированный подход - средние цены вперед
         available_gems.sort(key=lambda x: abs(x["price"] - 25.0))  # 25 - примерная средняя цена
