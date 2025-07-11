@@ -94,7 +94,7 @@ const PlayerCard = ({
 
   const handleCancelClick = () => {
     if (onCancel) {
-      onCancel(game.id);
+      onCancel(game.game_id || game.id);
     }
   };
 
