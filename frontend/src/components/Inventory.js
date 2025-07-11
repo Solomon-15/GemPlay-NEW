@@ -14,10 +14,19 @@ const Inventory = ({ user, onUpdateUser }) => {
   const [giftingGem, setGiftingGem] = useState(null);
   const [quantities, setQuantities] = useState({});
   const [recipientEmail, setRecipientEmail] = useState('');
+  const [tooltipVisible, setTooltipVisible] = useState(null);
 
   useEffect(() => {
     fetchInventory();
     fetchBalance();
+    
+    // Set up real-time updates
+    const interval = setInterval(() => {
+      fetchBalance();
+      fetchInventory();
+    }, 10000); // Update every 10 seconds
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchInventory = async () => {
@@ -123,6 +132,57 @@ const Inventory = ({ user, onUpdateUser }) => {
     }
   };
 
+  // Calculate portfolio data
+  const getPortfolioData = () => {
+    if (!balance) return null;
+
+    const availableBalance = balance.virtual_balance - balance.frozen_balance;
+    const frozenBalance = balance.frozen_balance;
+    const totalGemsCount = gems.reduce((sum, gem) => sum + gem.quantity, 0);
+    const frozenGemsCount = gems.reduce((sum, gem) => sum + gem.frozen_quantity, 0);
+    const availableGemValue = balance.available_gem_value;
+    const frozenGemValue = balance.total_gem_value - balance.available_gem_value;
+    const totalValue = balance.total_value;
+
+    return {
+      available: {
+        value: availableBalance,
+        frozenFunds: frozenBalance
+      },
+      gems: {
+        totalCount: totalGemsCount,
+        totalValue: balance.total_gem_value,
+        frozenCount: frozenGemsCount,
+        frozenValue: frozenGemValue
+      },
+      total: {
+        value: totalValue
+      }
+    };
+  };
+
+  const portfolioData = getPortfolioData();
+
+  const InfoTooltip = ({ id, tooltip, children }) => (
+    <div className="relative inline-block">
+      {children}
+      <button
+        onMouseEnter={() => setTooltipVisible(id)}
+        onMouseLeave={() => setTooltipVisible(null)}
+        onClick={() => setTooltipVisible(tooltipVisible === id ? null : id)}
+        className="ml-2 w-4 h-4 rounded-full bg-gray-600 text-white text-xs flex items-center justify-center hover:bg-gray-500 transition-colors"
+      >
+        i
+      </button>
+      {tooltipVisible === id && (
+        <div className="absolute bottom-full left-0 mb-2 w-64 bg-gray-800 text-white text-sm rounded-lg p-3 z-10 shadow-lg">
+          <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+          {tooltip}
+        </div>
+      )}
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
@@ -143,35 +203,89 @@ const Inventory = ({ user, onUpdateUser }) => {
         </p>
       </div>
 
-      {/* Balance Display */}
-      {balance && (
-        <div className="max-w-4xl mx-auto mb-8">
+      {/* Portfolio Overview - Updated Design */}
+      {portfolioData && (
+        <div className="max-w-6xl mx-auto mb-8">
           <div className="bg-surface-card border border-border-primary rounded-lg p-6">
-            <h2 className="font-russo text-2xl text-accent-secondary mb-4">Portfolio Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <p className="font-roboto text-text-secondary">Virtual Dollars</p>
-                <p className="font-rajdhani text-2xl font-bold text-green-400">
-                  ${balance.virtual_balance.toFixed(2)}
-                </p>
+            <h2 className="font-russo text-2xl text-accent-secondary mb-6">Portfolio Overview</h2>
+            
+            <div className="grid grid-cols-3 gap-4 min-w-0">
+              {/* Available Block */}
+              <div className="bg-surface-sidebar rounded-lg p-4 border border-border-primary min-w-0">
+                <div className="flex items-center justify-center mb-3">
+                  <InfoTooltip 
+                    id="available" 
+                    tooltip="Available balance for creating new bets. This is your total balance minus any frozen funds."
+                  >
+                    <h3 className="font-rajdhani text-lg font-semibold text-white text-center">Available</h3>
+                  </InfoTooltip>
+                </div>
+                
+                <div className="text-center mb-2">
+                  <div className="font-rajdhani text-2xl font-bold text-green-400">
+                    ${portfolioData.available.value.toFixed(2)}
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-xs text-text-secondary">
+                    {portfolioData.available.frozenFunds > 0 
+                      ? `Frozen: $${portfolioData.available.frozenFunds.toFixed(2)}`
+                      : 'No frozen funds'
+                    }
+                  </div>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="font-roboto text-text-secondary">Available Gems</p>
-                <p className="font-rajdhani text-2xl font-bold text-accent-primary">
-                  ${balance.available_gem_value.toFixed(2)}
-                </p>
+
+              {/* Gems Block */}
+              <div className="bg-surface-sidebar rounded-lg p-4 border border-border-primary min-w-0">
+                <div className="flex items-center justify-center mb-3">
+                  <InfoTooltip 
+                    id="gems" 
+                    tooltip="Your gem collection. Gems are used to create and accept bets. Higher value gems allow for larger bets."
+                  >
+                    <h3 className="font-rajdhani text-lg font-semibold text-white text-center">Gems</h3>
+                  </InfoTooltip>
+                </div>
+                
+                <div className="text-center mb-2">
+                  <div className="font-rajdhani text-2xl font-bold text-accent-primary">
+                    {portfolioData.gems.totalCount} / {Math.round(portfolioData.gems.totalValue)}
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-xs text-text-secondary">
+                    {portfolioData.gems.frozenCount > 0 
+                      ? `Frozen: ${portfolioData.gems.frozenCount} / ${Math.round(portfolioData.gems.frozenValue)}`
+                      : 'No frozen gems'
+                    }
+                  </div>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="font-roboto text-text-secondary">Frozen in Bets</p>
-                <p className="font-rajdhani text-2xl font-bold text-warning">
-                  ${(balance.total_gem_value - balance.available_gem_value).toFixed(2)}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="font-roboto text-text-secondary">Total Worth</p>
-                <p className="font-rajdhani text-2xl font-bold text-white">
-                  ${balance.total_value.toFixed(2)}
-                </p>
+
+              {/* Total Block */}
+              <div className="bg-surface-sidebar rounded-lg p-4 border border-border-primary min-w-0">
+                <div className="flex items-center justify-center mb-3">
+                  <InfoTooltip 
+                    id="total" 
+                    tooltip="Your total estimated value including both balance and gems."
+                  >
+                    <h3 className="font-rajdhani text-lg font-semibold text-white text-center">Total</h3>
+                  </InfoTooltip>
+                </div>
+                
+                <div className="text-center mb-2">
+                  <div className="font-rajdhani text-2xl font-bold text-white">
+                    ${portfolioData.total.value.toFixed(2)}
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-xs text-text-secondary">
+                    Updated in real-time
+                  </div>
+                </div>
               </div>
             </div>
           </div>
