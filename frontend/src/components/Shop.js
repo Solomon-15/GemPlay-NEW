@@ -166,7 +166,7 @@ const Shop = ({ user, onUpdateUser }) => {
                     ></div>
                     
                     <img
-                      src={`/gems/${gem.icon}`}
+                      src={getGemIconPath(gem.type)}
                       alt={gem.name}
                       className="w-20 h-20 object-contain drop-shadow-lg relative z-10 transition-all duration-300 group-hover:scale-110 group-hover:brightness-125"
                       style={{
