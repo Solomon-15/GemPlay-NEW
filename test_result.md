@@ -428,15 +428,18 @@ frontend:
 
   - task: "Accept Bet Modal Implementation"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/components/AcceptBetModal.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented complete 3-screen Accept Bet flow: 1) Fund check & gem selection with API auto-fill using smart strategy, 2) Move selection (Rock/Paper/Scissors), 3) Match result with countdown and real game execution via /api/games/{game_id}/join endpoint. Added proper validation, error handling, and 30-second auto-close timer."
+      - working: true
+        agent: "testing"
+        comment: "ACCEPT BET MODAL COMPREHENSIVE TESTING COMPLETED: Successfully verified complete 3-screen Accept Bet Modal flow. Key findings: 1) MODAL OPENING working - Accept Bet Modal opens correctly when clicking Accept buttons on available bets, displays proper Join Battle title and 3-step progress indicator. 2) STEP 1 GEM SELECTION working - Auto-fill functionality using smart strategy API, target amount/commission displayed, selected gems section, mini-inventory with quantity adjustment, Auto Fill button functional. 3) STEP 2 MOVE SELECTION working - Choose Your Move interface with Rock/Paper/Scissors buttons, move selection with visual highlighting, Start Battle button activation. 4) STEP 3 MATCH RESULT working - Countdown (3-2-1), API call to /api/games/{game_id}/join endpoint, match result display (Victory/Defeat/Draw), player vs opponent move visualization, auto-close timer. 5) API INTEGRATION working - backend integration with /api/gems/calculate-combination and /api/games/{id}/join endpoints functional. 6) ERROR HANDLING working - proper validation and Russian error messages. 7) TECHNICAL IMPLEMENTATION complete - React state management, GemsContext integration, NotificationContext, API error handling, responsive design. The Accept Bet Modal successfully implements all requirements and is production-ready."
   - task: "Create Game Component"
     implemented: true
     working: true
