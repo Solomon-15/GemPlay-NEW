@@ -9,6 +9,7 @@ const PlayerCard = ({
   isOngoing = false,
   onAccept, 
   onCancel,
+  onUpdateUser,
   currentTime = new Date(),
   user
 }) => {
