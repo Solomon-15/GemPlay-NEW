@@ -61,7 +61,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   ];
 
   const steps = [
-    { id: 1, name: 'Gems', description: 'Select your gems' },
+    { id: 1, name: 'Gem Selection', description: 'Select your gems' },
     { id: 2, name: 'Move', description: 'Choose your move' },
     { id: 3, name: 'Match', description: 'Battle result' }
   ];
