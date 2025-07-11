@@ -209,20 +209,20 @@ const Inventory = ({ user, onUpdateUser }) => {
           <div className="bg-surface-card border border-border-primary rounded-lg p-6">
             <h2 className="font-russo text-2xl text-accent-secondary mb-6">Portfolio Overview</h2>
             
-            <div className="grid grid-cols-3 gap-4 min-w-0">
+            <div className="grid grid-cols-3 gap-2 md:gap-4 min-w-0 overflow-x-auto">
               {/* Available Block */}
-              <div className="bg-surface-sidebar rounded-lg p-4 border border-border-primary min-w-0">
-                <div className="flex items-center justify-center mb-3">
+              <div className="bg-surface-sidebar rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
+                <div className="flex items-center justify-center mb-2 md:mb-3">
                   <InfoTooltip 
                     id="available" 
                     tooltip="Available balance for creating new bets. This is your total balance minus any frozen funds."
                   >
-                    <h3 className="font-rajdhani text-lg font-semibold text-white text-center">Available</h3>
+                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white text-center">Available</h3>
                   </InfoTooltip>
                 </div>
                 
-                <div className="text-center mb-2">
-                  <div className="font-rajdhani text-2xl font-bold text-green-400">
+                <div className="text-center mb-1 md:mb-2">
+                  <div className="font-rajdhani text-lg md:text-2xl font-bold text-green-400 break-words">
                     ${portfolioData.available.value.toFixed(2)}
                   </div>
                 </div>
@@ -238,18 +238,18 @@ const Inventory = ({ user, onUpdateUser }) => {
               </div>
 
               {/* Gems Block */}
-              <div className="bg-surface-sidebar rounded-lg p-4 border border-border-primary min-w-0">
-                <div className="flex items-center justify-center mb-3">
+              <div className="bg-surface-sidebar rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
+                <div className="flex items-center justify-center mb-2 md:mb-3">
                   <InfoTooltip 
                     id="gems" 
                     tooltip="Your gem collection. Gems are used to create and accept bets. Higher value gems allow for larger bets."
                   >
-                    <h3 className="font-rajdhani text-lg font-semibold text-white text-center">Gems</h3>
+                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white text-center">Gems</h3>
                   </InfoTooltip>
                 </div>
                 
-                <div className="text-center mb-2">
-                  <div className="font-rajdhani text-2xl font-bold text-accent-primary">
+                <div className="text-center mb-1 md:mb-2">
+                  <div className="font-rajdhani text-lg md:text-2xl font-bold text-accent-primary break-words">
                     {portfolioData.gems.totalCount} / {Math.round(portfolioData.gems.totalValue)}
                   </div>
                 </div>
@@ -265,18 +265,18 @@ const Inventory = ({ user, onUpdateUser }) => {
               </div>
 
               {/* Total Block */}
-              <div className="bg-surface-sidebar rounded-lg p-4 border border-border-primary min-w-0">
-                <div className="flex items-center justify-center mb-3">
+              <div className="bg-surface-sidebar rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
+                <div className="flex items-center justify-center mb-2 md:mb-3">
                   <InfoTooltip 
                     id="total" 
                     tooltip="Your total estimated value including both balance and gems."
                   >
-                    <h3 className="font-rajdhani text-lg font-semibold text-white text-center">Total</h3>
+                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white text-center">Total</h3>
                   </InfoTooltip>
                 </div>
                 
-                <div className="text-center mb-2">
-                  <div className="font-rajdhani text-2xl font-bold text-white">
+                <div className="text-center mb-1 md:mb-2">
+                  <div className="font-rajdhani text-lg md:text-2xl font-bold text-white break-words">
                     ${portfolioData.total.value.toFixed(2)}
                   </div>
                 </div>
