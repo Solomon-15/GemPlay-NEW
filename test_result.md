@@ -230,7 +230,7 @@ backend:
         agent: "testing"
         comment: "The balance freezing system works correctly. When creating a game, 6% of the bet amount is frozen in the user's balance. After the game is completed, the frozen balance is correctly released. The loser gets their commission refunded, and the winner's commission is taken as profit."
 
-  - task: "Profit API endpoints"
+  - task: "My Bets API"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -240,10 +240,25 @@ backend:
     status_history:
       - working: "NA"
         agent: "testing"
-        comment: "Testing profit tracking API endpoints. GET /api/admin/profit/stats and GET /api/admin/profit/commission-settings work correctly, but GET /api/admin/profit/entries returns a 500 Internal Server Error."
+        comment: "Testing GET /api/games/my-bets endpoint to verify user's own bets are tracked."
       - working: true
         agent: "testing"
-        comment: "All profit API endpoints are now working correctly. GET /api/admin/profit/stats returns proper profit statistics, GET /api/admin/profit/commission-settings returns commission settings, and GET /api/admin/profit/entries returns a paginated list of profit entries."
+        comment: "COMPLETE CREATE BET FLOW TESTING: The GET /api/games/my-bets endpoint works correctly. Successfully tracks user's created games, returns correct game structure with is_creator, bet_amount, bet_gems, status, and opponent info. Found our created game in the response with all expected fields. The endpoint properly shows both WAITING and CANCELLED games, with correct pagination (limit 20). All required fields present: game_id, is_creator, bet_amount, bet_gems, status, created_at, opponent."
+
+  - task: "Create Bet Flow Integration"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing the complete Create Bet flow with the new system as requested in review."
+      - working: true
+        agent: "testing"
+        comment: "COMPLETE CREATE BET FLOW TESTING COMPLETED: Successfully tested the complete Create Bet flow with the new system. Key findings: 1) CREATE GAME API works correctly - successfully created $100 bet with Magic gems, proper commission calculation (6% = $6.00), correct balance deduction, and proper gem freezing mechanism. 2) BET VALIDATION working - correctly validates min $1 and max $3000 limits, rejects invalid gem quantities, validates gem availability, and checks commission requirements. 3) GEM FREEZING MECHANISM working - gems are properly frozen in inventory (frozen_quantity increased), available gems reduced correctly. 4) COMMISSION SYSTEM working - 6% commission correctly calculated and reserved from virtual balance. 5) AVAILABLE GAMES API working - correctly excludes user's own games from available list. 6) MY BETS API working - successfully tracks user's created games with correct structure. 7) EDGE CASES validated - correctly rejects invalid bets and validates all requirements. The Create Bet flow is fully functional and ready for production use."
         
   - task: "Gems Definitions API"
     implemented: true
