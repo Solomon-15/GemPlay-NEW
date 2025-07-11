@@ -45,28 +45,19 @@ const GemsHeader = ({ user }) => {
           boxShadow: hasGems ? `0 0 8px ${color}20` : 'none'
         }}
       >
-        {/* Gem Icon with quantity badge */}
-        <div className="flex justify-center mb-2 relative">
-          <div className="w-12 h-12 flex items-center justify-center relative">
+        {/* Gem Icon */}
+        <div className="flex justify-center mb-2">
+          <div className="w-12 h-12 flex items-center justify-center">
             <img
               src={icon}
               alt={name}
               className={`w-10 h-10 object-contain transition-all duration-300 ${
-                hasGems ? 'brightness-100 scale-110' : 'brightness-50 opacity-40'
+                hasGems ? 'brightness-100' : 'brightness-50 opacity-40'
               }`}
               style={{
                 filter: hasGems ? `drop-shadow(0 0 6px ${color}60)` : 'grayscale(100%)'
               }}
             />
-            {/* Quantity badge */}
-            {hasGems && (
-              <div 
-                className="absolute -top-1 -right-1 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-lg"
-                style={{ backgroundColor: color }}
-              >
-                {totalQuantity > 99 ? '99+' : totalQuantity}
-              </div>
-            )}
           </div>
         </div>
         
