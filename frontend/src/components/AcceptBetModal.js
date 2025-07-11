@@ -66,54 +66,6 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     { id: 3, name: 'Match', description: 'Battle result' }
   ];
 
-  // Auto-fill gems using API (only when user clicks Auto Fill button)
-  const autoFillGems = async () => {
-    setLoading(true);
-    
-    try {
-      // Use the same API as Create Bet modal with 'smart' strategy
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gems/calculate-combination`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          bet_amount: targetAmount,
-          strategy: 'smart' // Use smart strategy for accept bet
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Ошибка при автоматическом подборе гемов');
-      }
-      
-      const result = await response.json();
-      
-      if (result.success && result.combinations && Array.isArray(result.combinations)) {
-        // Convert API response to internal format
-        const autoSelected = {};
-        result.combinations.forEach(combo => {
-          if (combo && combo.type && combo.quantity) {
-            autoSelected[combo.type] = combo.quantity;
-          }
-        });
-        
-        setSelectedGems(autoSelected);
-        setAutoFillCompleted(true);
-        showSuccess('Гемы автоматически подобраны для точного соответствия ставке');
-      } else {
-        showError(result.message || 'Недостаточно гемов для создания точной комбинации');
-      }
-    } catch (error) {
-      console.error('Error auto-filling gems:', error);
-      showError(error.message || 'Ошибка при автоматическом подборе гемов');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Calculate total value of selected gems
   useEffect(() => {
     if (!gemsData || !Array.isArray(gemsData)) return;
