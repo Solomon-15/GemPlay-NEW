@@ -181,13 +181,18 @@ const PlayerCard = ({
       {showAcceptModal && (
         <AcceptBetModal
           bet={{
+            id: game.id,
             bet_amount: totalAmount,
             bet_gems: game.bet_gems,
             creator: game.creator
           }}
+          user={user}
           onClose={() => setShowAcceptModal(false)}
           onUpdateUser={() => {
             // Refresh user data if needed
+            if (onAccept) {
+              onAccept(game.id);
+            }
           }}
         />
       )}
