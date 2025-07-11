@@ -108,11 +108,6 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   const [countdown, setCountdown] = useState(3);
   const [showResult, setShowResult] = useState(false);
   
-  // Constants
-  const COMMISSION_RATE = 0.06; // 6%
-  const targetAmount = bet?.bet_amount || 0;
-  const commissionAmount = targetAmount * COMMISSION_RATE;
-  
   const moves = [
     { id: 'rock', name: 'Rock', icon: '/Rock.svg' },
     { id: 'paper', name: 'Paper', icon: '/Paper.svg' },
