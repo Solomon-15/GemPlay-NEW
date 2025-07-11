@@ -516,7 +516,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         <div className="bg-surface-sidebar rounded-lg p-4 space-y-3">
           <div className="flex justify-between">
             <span className="text-text-secondary">Bet Amount:</span>
-            <span className="text-white font-rajdhani font-bold">{formatCurrencyWithSymbol(totalGemValue)}</span>
+            <span className="text-white font-rajdhani font-bold">{safeFormatCurrency(totalGemValue)}</span>
           </div>
           
           <div className="flex justify-between">
