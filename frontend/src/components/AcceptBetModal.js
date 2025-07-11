@@ -40,7 +40,6 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Step 1: Funds check & gem selection
   const [selectedGems, setSelectedGems] = useState({});
   const [totalGemValue, setTotalGemValue] = useState(0);
-  const [autoFillCompleted, setAutoFillCompleted] = useState(false);
   
   // Step 2: Move selection
   const [selectedMove, setSelectedMove] = useState('');
