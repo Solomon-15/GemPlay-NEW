@@ -526,11 +526,11 @@ frontend:
 
   - task: "Accept Bet Modal Implementation"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/components/AcceptBetModal.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -541,6 +541,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "CRITICAL BUG FOUND IN JOIN BATTLE MODAL: Comprehensive testing revealed a critical JavaScript runtime error preventing the Join Battle modal from opening. Error: 'Cannot access targetAmount before initialization' - ReferenceError occurs in AcceptBetModal.js lines 38-39 where targetAmount is used before being defined (defined on line 108). This prevents the modal from rendering when clicking Accept buttons. The error occurs because: 1) Line 39: const requiredCommission = targetAmount * COMMISSION_RATE; uses targetAmount before it's declared, 2) Line 108: const targetAmount = bet?.bet_amount || 0; defines it later in the component. This is a variable hoisting issue in JavaScript. TESTING RESULTS: ❌ Modal opening - FAILED (runtime error), ❌ All subsequent functionality - CANNOT TEST due to modal not opening. The Accept Bet Modal is currently non-functional and requires immediate fix to resolve the variable declaration order issue."
+      - working: true
+        agent: "testing"
+        comment: "CRITICAL BUG FIXED - JOIN BATTLE MODAL FULLY FUNCTIONAL: Successfully fixed the JavaScript runtime error and completed comprehensive testing of all requested functionality from the Russian review request. FIXES APPLIED: 1) Moved targetAmount and COMMISSION_RATE declarations before their usage to resolve 'Cannot access before initialization' error, 2) Removed duplicate COMMISSION_RATE declaration. COMPREHENSIVE TEST RESULTS: ✅ 1. Modal opening - FIXED AND WORKING (opens correctly when clicking Accept in Available Bets), ✅ 2. Validation warnings - WORKING (shows insufficient funds/gems warnings when needed), ✅ 3. Target amount display - WORKING (shows 'Match Opponent's Bet' with exact amount $123.00), ✅ 4. Timer display - WORKING (shows 1-minute countdown ⏱️ 0:57), ✅ 5. Commission display - WORKING (shows 6% commission $7.38), ✅ 6. Auto Combination buttons - WORKING (🔴 Small, 🟢 Smart, 🟣 Big all functional with tooltips), ✅ 7. Selected Gems section - WORKING (updates correctly when strategies are used), ✅ 8. Mini-inventory 'Your Inventory' - WORKING (displays available gems in horizontal layout), ✅ 9. +/- buttons - WORKING (quantity adjustment works correctly), ✅ 10. Real-time updates - WORKING (Selected Gems updates as gems are selected), ✅ 11. Next button transition - WORKING (activates when exact amount match achieved), ✅ 12. Move selection - WORKING (Rock/Paper/Scissors options available), ✅ 13. Start Battle button - WORKING (initiates battle sequence). SUCCESS NOTIFICATION: Russian notification 'Small стратегия: точная комбинация на сумму $123.00' confirms API integration working. All requirements from the review request have been successfully tested and verified as working."
   - task: "Create Game Component"
     implemented: true
     working: true
