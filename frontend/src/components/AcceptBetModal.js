@@ -98,13 +98,14 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     });
   };
 
+  // Improved validation with commission check
   const validateStep1 = () => {
     try {
-      // Check if user has enough balance for commission
+      // Check if user has enough balance for commission  
       const availableBalance = (user?.virtual_balance || 0) - (user?.frozen_balance || 0);
       
       if (availableBalance < commissionAmount) {
-        showError(`Недостаточно средств для комиссии. Требуется: $${commissionAmount.toFixed(2)}, доступно: $${availableBalance.toFixed(2)}`);
+        showError(`Недостаточно средств для комиссии. Требуется: ${safeFormatCurrency(commissionAmount)}, доступно: ${safeFormatCurrency(availableBalance)}`);
         return false;
       }
 
@@ -115,15 +116,21 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
 
       // Check if selected gems total matches bet amount exactly
       if (Math.abs(totalGemValue - targetAmount) > 0.01) {
-        showError(`Сумма выбранных гемов ($${totalGemValue.toFixed(2)}) должна точно соответствовать ставке ($${targetAmount.toFixed(2)})`);
+        showError(`Сумма выбранных гемов (${safeFormatCurrency(totalGemValue)}) должна точно соответствовать ставке (${safeFormatCurrency(targetAmount)})`);
         return false;
       }
 
-      // Validate against Inventory
-      const validation = validateGemOperation(selectedGems);
-      if (!validation.valid) {
-        showError(validation.error);
-        return false;
+      // Validate gem availability
+      for (const [gemType, quantity] of Object.entries(selectedGems)) {
+        const gem = gemsData.find(g => g.type === gemType);
+        if (!gem) {
+          showError(`Гем ${gemType} не найден`);
+          return false;
+        }
+        if (quantity > gem.available_quantity) {
+          showError(`Недостаточно ${gem.name}: требуется ${quantity}, доступно ${gem.available_quantity}`);
+          return false;
+        }
       }
 
       return true;
