@@ -803,65 +803,6 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     );
   };
 
-  const renderStep4 = () => (
-    <div className="space-y-6 text-center">
-      <div className="space-y-4">
-        <h3 className="text-white font-rajdhani text-xl mb-2">Reveal Your Move</h3>
-        <p className="text-text-secondary">
-          The game is ready! Click "Reveal" to complete the battle and see results.
-        </p>
-        
-        <div className="bg-surface-sidebar rounded-lg p-4">
-          <div className="flex items-center justify-center space-x-4 mb-4">
-            <div className="text-center">
-              <div className="text-accent-primary font-rajdhani text-sm">Your Move</div>
-              <img 
-                src={moves.find(m => m.id === selectedMove)?.icon} 
-                alt={moves.find(m => m.id === selectedMove)?.name}
-                className="w-16 h-16 mx-auto mt-2"
-              />
-              <div className="text-white font-rajdhani font-bold mt-2">
-                {moves.find(m => m.id === selectedMove)?.name}
-              </div>
-            </div>
-          </div>
-          
-          <div className="text-green-400 font-rajdhani text-lg">
-            Betting: {safeFormatCurrency(totalGemValue)}
-          </div>
-          <div className="text-orange-400 font-rajdhani text-sm">
-            Commission: {safeFormatCurrency(commissionAmount)}
-          </div>
-        </div>
-        
-        <div className="bg-yellow-900 bg-opacity-20 border border-yellow-600 rounded-lg p-4">
-          <div className="text-yellow-400 font-rajdhani font-bold mb-2">
-            ⚠️ Important: You have 60 seconds to reveal
-          </div>
-          <div className="text-yellow-300 text-sm">
-            If you don't reveal your move in time, the bet will be cancelled and your gems will be returned.
-          </div>
-        </div>
-        
-        <button
-          type="button"
-          onClick={revealGame}
-          disabled={loading}
-          className="w-full py-4 bg-gradient-accent text-white font-rajdhani font-bold text-lg rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-              <span>Revealing...</span>
-            </div>
-          ) : (
-            'Reveal & Complete Battle!'
-          )}
-        </button>
-      </div>
-    </div>
-  );
-
   // Wrap entire component in error boundary
   try {
     return (
