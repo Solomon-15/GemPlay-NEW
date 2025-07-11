@@ -42,13 +42,13 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     { id: 3, name: 'Confirm', description: 'Create bet' }
   ];
 
-  // AUTO-COMBINATION STRATEGIES
+  // IMPROVED AUTO-COMBINATION STRATEGIES with exact amount matching
   const autoSelectSmall = (amount) => {
     // Small: Use cheapest gems first (Ruby, Amber, Topaz)
     const cheapGems = getSortedGems('price', 'asc').filter(gem => 
       gem.has_available && ['Ruby', 'Amber', 'Topaz'].includes(gem.type)
     );
-    return selectGemsWithStrategy(cheapGems, amount);
+    return selectGemsWithExactStrategy(cheapGems, amount, 'small');
   };
 
   const autoSelectSmart = (amount) => {
@@ -56,7 +56,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     const mediumGems = getSortedGems('price', 'asc').filter(gem => 
       gem.has_available && ['Topaz', 'Emerald', 'Aquamarine'].includes(gem.type)
     );
-    return selectGemsWithStrategy(mediumGems, amount);
+    return selectGemsWithExactStrategy(mediumGems, amount, 'smart');
   };
 
   const autoSelectBig = (amount) => {
@@ -64,13 +64,14 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     const expensiveGems = getSortedGems('price', 'desc').filter(gem => 
       gem.has_available && ['Magic', 'Sapphire', 'Aquamarine'].includes(gem.type)
     );
-    return selectGemsWithStrategy(expensiveGems, amount);
+    return selectGemsWithExactStrategy(expensiveGems, amount, 'big');
   };
 
-  const selectGemsWithStrategy = (gems, amount) => {
+  const selectGemsWithExactStrategy = (gems, targetAmount, strategy) => {
     const result = {};
-    let remainingAmount = amount;
+    let remainingAmount = targetAmount;
     
+    // First pass: try to get as close as possible with the preferred strategy
     for (const gem of gems) {
       if (remainingAmount <= 0) break;
       
@@ -81,6 +82,36 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         result[gem.type] = quantityToUse;
         remainingAmount -= quantityToUse * gem.price;
       }
+    }
+    
+    // Second pass: if we still have remaining amount, use any available gems to reach exact amount
+    if (remainingAmount > 0) {
+      const allAvailableGems = getSortedGems('price', 'asc').filter(gem => gem.has_available);
+      
+      for (const gem of allAvailableGems) {
+        if (remainingAmount <= 0) break;
+        
+        const currentUsed = result[gem.type] || 0;
+        const stillAvailable = gem.available_quantity - currentUsed;
+        const maxQuantityForRemaining = Math.floor(remainingAmount / gem.price);
+        const quantityToAdd = Math.min(maxQuantityForRemaining, stillAvailable);
+        
+        if (quantityToAdd > 0) {
+          result[gem.type] = (result[gem.type] || 0) + quantityToAdd;
+          remainingAmount -= quantityToAdd * gem.price;
+        }
+      }
+    }
+    
+    // Check if we achieved exact amount
+    const actualTotal = Object.entries(result).reduce((sum, [gemType, quantity]) => {
+      const gem = gemsData.find(g => g.type === gemType);
+      return sum + (gem ? gem.price * quantity : 0);
+    }, 0);
+    
+    if (actualTotal !== targetAmount) {
+      // Could not achieve exact amount with available gems
+      return { error: 'Insufficient available gems to form the exact bet amount.' };
     }
     
     return result;
