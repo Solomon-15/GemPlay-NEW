@@ -33,6 +33,11 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     return null;
   }
 
+  // Constants - define targetAmount first
+  const targetAmount = bet?.bet_amount || 0;
+  const COMMISSION_RATE = 0.06; // 6%
+  const commissionAmount = targetAmount * COMMISSION_RATE;
+
   // Check if user has sufficient funds for bet + commission
   const availableBalance = (user?.virtual_balance || 0) - (user?.frozen_balance || 0);
   const requiredCommission = targetAmount * COMMISSION_RATE;
