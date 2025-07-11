@@ -1857,7 +1857,7 @@ def test_gems_calculate_combination() -> None:
             "/gems/calculate-combination", 
             data=test_data,
             auth_token=admin_token,
-            expected_status=400
+            expected_status=422
         )
         
         if not success and "detail" in response:
