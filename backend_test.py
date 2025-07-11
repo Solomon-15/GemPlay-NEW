@@ -1537,16 +1537,12 @@ def test_create_bet_edge_cases() -> None:
     }
     
     response, success = make_request("POST", "/games/create", data=game_data, auth_token=admin_token, expected_status=400)
-    if not success and "detail" in response:
-        if "Invalid quantity" in response["detail"] or "Minimum bet" in response["detail"]:
-            print_success(f"Correctly rejected bet below minimum: {response['detail']}")
-            record_test("Edge Case - Bet Below Minimum", True)
-        else:
-            print_error(f"Unexpected error for bet below minimum: {response['detail']}")
-            record_test("Edge Case - Bet Below Minimum", False, f"Unexpected error: {response['detail']}")
+    if response.get("detail") and ("Invalid quantity" in response["detail"] or "Minimum bet" in response["detail"]):
+        print_success(f"Correctly rejected bet below minimum: {response['detail']}")
+        record_test("Edge Case - Bet Below Minimum", True)
     else:
-        print_error("Bet below minimum was not rejected")
-        record_test("Edge Case - Bet Below Minimum", False, "Not rejected")
+        print_error(f"Bet below minimum validation failed: {response}")
+        record_test("Edge Case - Bet Below Minimum", False, f"Validation failed: {response}")
     
     # Test 2: Bet amount above maximum ($3000)
     print_subheader("Test 2: Bet Amount Above Maximum")
