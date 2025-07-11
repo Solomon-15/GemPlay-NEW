@@ -78,7 +78,20 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     setTotalGemValue(total);
   }, [selectedGems, gemsData]);
 
-  // Remove auto-fill on component load - user should manually select gems
+  // 1-minute timer for modal auto-close
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setModalTimer(prev => {
+        if (prev <= 1) {
+          onClose();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [onClose]);
 
   const handleGemQuantityChange = (gemType, quantity) => {
     if (!gemsData || !Array.isArray(gemsData)) return;
