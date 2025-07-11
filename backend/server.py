@@ -2046,6 +2046,83 @@ async def create_game(
             detail="Failed to create game"
         )
 
+async def check_user_concurrent_games(user_id: str) -> bool:
+    """Check if user can join another game (no active games as opponent)."""
+    try:
+        # Check if user is already in an active game as opponent
+        active_game = await db.games.find_one({
+            "opponent_id": user_id,
+            "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
+        })
+        
+        return active_game is None
+    except Exception as e:
+        logger.error(f"Error checking concurrent games for user {user_id}: {e}")
+        return False
+
+async def handle_game_timeout(game_id: str):
+    """Handle game timeout - return funds and potentially recreate bet."""
+    try:
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            return
+            
+        game_obj = Game(**game)
+        
+        # Only handle timeout for REVEAL phase
+        if game_obj.status != GameStatus.REVEAL:
+            return
+            
+        # Get both players
+        creator = await db.users.find_one({"id": game_obj.creator_id})
+        opponent = await db.users.find_one({"id": game_obj.opponent_id})
+        
+        if not creator or not opponent:
+            return
+            
+        # Return gems to opponent (who joined but didn't reveal)
+        for gem_type, quantity in game_obj.bet_gems.items():
+            await db.user_gems.update_one(
+                {"user_id": game_obj.opponent_id, "gem_type": gem_type},
+                {
+                    "$inc": {"frozen_quantity": -quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+            
+        # Return commission to opponent
+        commission = game_obj.bet_amount * 0.06
+        await db.users.update_one(
+            {"id": game_obj.opponent_id},
+            {
+                "$inc": {
+                    "virtual_balance": commission,
+                    "frozen_balance": -commission
+                },
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        # Recreate bet for creator - change status back to WAITING
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "status": GameStatus.WAITING,
+                    "opponent_id": None,
+                    "opponent_move": None,
+                    "started_at": None,
+                    "reveal_deadline": None,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"Game {game_id} timeout handled - bet recreated for creator")
+        
+    except Exception as e:
+        logger.error(f"Error handling game timeout: {e}")
+
 @api_router.post("/games/{game_id}/join", response_model=dict)
 async def join_game(
     request: Request,
