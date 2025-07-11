@@ -461,17 +461,20 @@ frontend:
 
 frontend:
 frontend:
-  - task: "Cancel Bet Button Fix"
+  - task: "Cancel Bet Button Fix - Final"
     implemented: true
-    working: false
-    file: "/app/backend/server.py"
+    working: true
+    file: "/app/backend/server.py, /app/frontend/src/components/Lobby.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Fixed Cancel bet button issue: backend DELETE /api/games/{game_id}/cancel endpoint was not returning 'success: true' field which frontend expected. Added 'success: True' to response to match frontend logic in handleCancelBet function."
+      - working: true
+        agent: "main"
+        comment: "FINAL FIX: Resolved HTTP 500 error by creating proper CancelGameResponse model and fixing response_model=dict issue. Updated endpoint to return CancelGameResponse object instead of plain dict. Fixed backend logic for balance updates using $inc operators. Added debug logging to frontend. API tested successfully - creates game, cancels game, returns success=True with proper gem/commission data."
 
   - task: "Lobby Cancel/Accept Buttons Fix - Updated"
     implemented: true
