@@ -403,6 +403,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         <h4 className="text-white font-rajdhani text-lg">Auto Combination</h4>
         <div className="grid grid-cols-3 gap-3">
           <button
+            type="button"
             onClick={() => handleStrategySelect('small')}
             disabled={loading}
             className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
@@ -415,6 +416,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
             )}
           </button>
           <button
+            type="button"
             onClick={() => handleStrategySelect('smart')}
             disabled={loading}
             className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
@@ -427,6 +429,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
             )}
           </button>
           <button
+            type="button"
             onClick={() => handleStrategySelect('big')}
             disabled={loading}
             className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
