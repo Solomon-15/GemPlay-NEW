@@ -411,27 +411,39 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => handleStrategySelect('small')}
-            disabled={!betAmount || parseFloat(betAmount) <= 0}
-            className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!betAmount || parseFloat(betAmount) <= 0 || loading}
+            className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             title="Use more cheap gems"
           >
-            Small
+            {loading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              'Small'
+            )}
           </button>
           <button
             onClick={() => handleStrategySelect('smart')}
-            disabled={!betAmount || parseFloat(betAmount) <= 0}
-            className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!betAmount || parseFloat(betAmount) <= 0 || loading}
+            className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             title="Balance bet with medium gems"
           >
-            Smart
+            {loading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              'Smart'
+            )}
           </button>
           <button
             onClick={() => handleStrategySelect('big')}
-            disabled={!betAmount || parseFloat(betAmount) <= 0}
-            className="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!betAmount || parseFloat(betAmount) <= 0 || loading}
+            className="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             title="Use minimum quantity of expensive gems"
           >
-            Big
+            {loading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              'Big'
+            )}
           </button>
         </div>
       </div>
