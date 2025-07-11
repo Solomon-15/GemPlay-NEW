@@ -207,8 +207,6 @@ const Inventory = ({ user, onUpdateUser }) => {
       {portfolioData && (
         <div className="max-w-6xl mx-auto mb-8">
           <div className="bg-surface-card border border-border-primary rounded-lg p-6">
-            <h2 className="font-russo text-2xl text-accent-secondary mb-6">Portfolio Overview</h2>
-            
             <div className="grid grid-cols-3 gap-2 md:gap-4 min-w-0 overflow-x-auto">
               {/* Available Block */}
               <div className="bg-surface-sidebar rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
@@ -228,7 +226,7 @@ const Inventory = ({ user, onUpdateUser }) => {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-xs text-text-secondary">
+                  <div className="text-xs text-yellow-400">
                     {portfolioData.available.frozenFunds > 0 
                       ? `Frozen: $${portfolioData.available.frozenFunds.toFixed(2)}`
                       : 'No frozen funds'
@@ -255,7 +253,7 @@ const Inventory = ({ user, onUpdateUser }) => {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-xs text-text-secondary">
+                  <div className="text-xs text-yellow-400">
                     {portfolioData.gems.frozenCount > 0 
                       ? `Frozen: ${portfolioData.gems.frozenCount} / ${Math.round(portfolioData.gems.frozenValue)}`
                       : 'No frozen gems'
@@ -282,8 +280,9 @@ const Inventory = ({ user, onUpdateUser }) => {
                 </div>
                 
                 <div className="text-center">
-                  <div className="text-xs text-text-secondary">
-                    Updated in real-time
+                  <div className="text-xs text-transparent">
+                    {/* Empty space for consistent layout */}
+                    &nbsp;
                   </div>
                 </div>
               </div>
