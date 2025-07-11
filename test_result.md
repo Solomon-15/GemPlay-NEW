@@ -455,6 +455,18 @@ frontend:
         agent: "main"
         comment: "Fixed Cancel and Accept buttons in Lobby My Bets section. Issues: 1) PlayerCard was passing game object instead of game.id to onAccept handler, 2) Missing user prop in PlayerCard components. Fixed both issues."
 
+  - task: "Portfolio Overview Enhancement - Final Update"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/Inventory.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Final update to Portfolio Overview: 1) Removed outer container/wrapper around three blocks, 2) Moved three blocks directly under 'Manage Your NFT Gem Collection' subtitle, 3) Fixed tooltip positioning to show in top-right corner of each block with z-index 9999, 4) Made tooltips display above all interface elements without clipping, 5) Changed background from surface-sidebar to surface-card for better visual hierarchy."
+
   - task: "Portfolio Overview Enhancement"
     implemented: true
     working: true
