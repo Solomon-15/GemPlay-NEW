@@ -10,12 +10,25 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     return null;
   }
 
-  const { 
-    gemsData, 
-    validateGemOperation, 
-    refreshInventory 
-  } = useGems();
-  const { showSuccess, showError } = useNotifications();
+  let gemsData = [];
+  let validateGemOperation = () => ({ valid: true });
+  let refreshInventory = () => {};
+  let showSuccess = () => {};
+  let showError = () => {};
+
+  try {
+    const gemsContext = useGems();
+    const notificationContext = useNotifications();
+    
+    gemsData = gemsContext?.gemsData || [];
+    validateGemOperation = gemsContext?.validateGemOperation || (() => ({ valid: true }));
+    refreshInventory = gemsContext?.refreshInventory || (() => {});
+    showSuccess = notificationContext?.showSuccess || (() => {});
+    showError = notificationContext?.showError || (() => {});
+  } catch (error) {
+    console.error('AcceptBetModal: Error accessing contexts', error);
+    return null;
+  }
   
   // Modal state
   const [currentStep, setCurrentStep] = useState(1);
