@@ -178,7 +178,7 @@ const GameLobby = ({ user, onUpdateUser }) => {
                 </div>
                 
                 <button
-                  onClick={() => setShowJoinModal(game.id)}
+                  onClick={() => setShowJoinModal(game.game_id || game.id)}
                   className="w-full py-3 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300"
                 >
                   ПРИСОЕДИНИТЬСЯ
