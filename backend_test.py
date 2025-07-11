@@ -1836,7 +1836,7 @@ def test_gems_calculate_combination() -> None:
         expected_status=400
     )
     
-    if not success and "detail" in response and "3000" in response["detail"]:
+    if not success and "detail" in response and isinstance(response["detail"], str) and "3000" in response["detail"]:
         print_success(f"Correctly rejected bet above $3000: {response['detail']}")
         record_test("Gem Combination - Max Bet Validation", True)
     else:
