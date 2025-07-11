@@ -18,11 +18,14 @@ const safeFormatCurrency = (amount) => {
 const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   // MUST call hooks first - before any conditional logic or early returns
   const { 
-    gemsData, 
-    validateGemOperation, 
-    refreshInventory 
-  } = useGems();
-  const { showSuccess, showError } = useNotifications();
+    gemsData = [], 
+    validateGemOperation = () => ({ valid: true }), 
+    refreshInventory = () => {} 
+  } = useGems() || {};
+  const { 
+    showSuccess = () => {}, 
+    showError = () => {} 
+  } = useNotifications() || {};
 
   // Now we can safely do early returns after all hooks are called
   if (!bet || !user || !onClose) {
