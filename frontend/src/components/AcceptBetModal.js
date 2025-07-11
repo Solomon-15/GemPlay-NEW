@@ -852,6 +852,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
             {currentStep === 1 && renderStep1()}
             {currentStep === 2 && renderStep2()}
             {currentStep === 3 && renderStep3()}
+            {currentStep === 4 && renderStep4()}
           </div>
 
           {/* Footer */}
