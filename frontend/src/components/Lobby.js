@@ -313,6 +313,12 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
               user={user}
               isMyBet={true}
               onCancel={handleCancelBet}
+              onUpdateUser={() => {
+                fetchLobbyData();
+                if (onUpdateUser) {
+                  onUpdateUser();
+                }
+              }}
               currentTime={new Date()}
             />
           ))}
