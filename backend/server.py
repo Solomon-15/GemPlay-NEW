@@ -813,23 +813,16 @@ async def calculate_gem_combination(user_id: str, target_amount: float, strategy
 
 def find_exact_combination(available_gems: List[Dict], target_amount: float) -> Dict:
     """
-    Найти точную комбинацию гемов для заданной суммы используя динамическое программирование.
+    Найти точную комбинацию гемов для заданной суммы используя жадный алгоритм с приоритетом.
     
     Args:
-        available_gems: Список доступных гемов
+        available_gems: Список доступных гемов (уже отсортированный по стратегии)
         target_amount: Целевая сумма
     
     Returns:
         Dict с результатом поиска
     """
     target_cents = int(target_amount * 100)  # Работаем с центами для точности
-    
-    # DP table: dp[i] = True if we can make amount i
-    dp = [False] * (target_cents + 1)
-    dp[0] = True
-    
-    # parent[i] = информация о том, как получить сумму i
-    parent = [None] * (target_cents + 1)
     
     # Расширяем список доступных гемов с учетом количества каждого
     expanded_gems = []
@@ -844,49 +837,130 @@ def find_exact_combination(available_gems: List[Dict], target_amount: float) -> 
                 "original_gem": gem
             })
     
-    # Заполняем DP таблицу
-    for i in range(len(expanded_gems)):
-        gem = expanded_gems[i]
-        price_cents = gem["price_cents"]
+    # Пытаемся найти точную комбинацию, используя жадный подход с приоритетом
+    def find_combination_greedy(gems_list, target):
+        """Жадный алгоритм, который учитывает порядок приоритетов"""
+        result = []
+        remaining = target
+        used_gems = {}
         
-        # Идем в обратном порядке, чтобы не использовать один гем дважды
-        for amount in range(target_cents, price_cents - 1, -1):
-            if dp[amount - price_cents]:
-                dp[amount] = True
-                parent[amount] = {
-                    "gem_index": i,
-                    "prev_amount": amount - price_cents
-                }
+        # Группируем гемы по типу для контроля количества
+        gems_by_type = {}
+        for gem in gems_list:
+            gem_type = gem["type"]
+            if gem_type not in gems_by_type:
+                gems_by_type[gem_type] = []
+            gems_by_type[gem_type].append(gem)
+        
+        # Пытаемся найти точную комбинацию
+        while remaining > 0:
+            found = False
+            
+            # Проходим по гемам в порядке приоритета
+            for gem_type, gems in gems_by_type.items():
+                if not gems:
+                    continue
+                    
+                gem = gems[0]
+                price_cents = gem["price_cents"]
+                
+                # Если этот гем может быть использован
+                if price_cents <= remaining:
+                    # Используем гем
+                    result.append(gem)
+                    remaining -= price_cents
+                    
+                    # Убираем использованный гем из списка
+                    gems.pop(0)
+                    
+                    # Обновляем счетчик использованных гемов
+                    if gem_type not in used_gems:
+                        used_gems[gem_type] = 0
+                    used_gems[gem_type] += 1
+                    
+                    found = True
+                    break
+            
+            if not found:
+                # Если не можем найти подходящий гем, пробуем DP
+                return find_combination_dp(gems_list, target)
+        
+        # Конвертируем результат в нужный формат
+        combination = []
+        for gem_type, quantity in used_gems.items():
+            gem_info = next((g for g in expanded_gems if g["type"] == gem_type), None)
+            if gem_info:
+                combination.append({
+                    "type": gem_type,
+                    "name": gem_info["name"],
+                    "price": gem_info["price"],
+                    "quantity": quantity
+                })
+        
+        return combination
     
-    # Если точная сумма не найдена
-    if not dp[target_cents]:
+    def find_combination_dp(gems_list, target):
+        """Fallback к DP алгоритму если жадный не работает"""
+        # DP table: dp[i] = True if we can make amount i
+        dp = [False] * (target + 1)
+        dp[0] = True
+        
+        # parent[i] = информация о том, как получить сумму i
+        parent = [None] * (target + 1)
+        
+        # Заполняем DP таблицу
+        for i, gem in enumerate(gems_list):
+            price_cents = gem["price_cents"]
+            
+            # Идем в обратном порядке, чтобы не использовать один гем дважды
+            for amount in range(target, price_cents - 1, -1):
+                if dp[amount - price_cents]:
+                    dp[amount] = True
+                    parent[amount] = {
+                        "gem_index": i,
+                        "prev_amount": amount - price_cents
+                    }
+        
+        # Если точная сумма не найдена
+        if not dp[target]:
+            return []
+        
+        # Восстанавливаем путь
+        result = []
+        current_amount = target
+        
+        while current_amount > 0 and parent[current_amount]:
+            gem_index = parent[current_amount]["gem_index"]
+            gem = gems_list[gem_index]
+            result.append(gem)
+            current_amount = parent[current_amount]["prev_amount"]
+        
+        # Конвертируем в формат с количеством
+        gem_counts = {}
+        for gem in result:
+            gem_type = gem["type"]
+            if gem_type not in gem_counts:
+                gem_counts[gem_type] = 0
+            gem_counts[gem_type] += 1
+        
+        combination = []
+        for gem_type, quantity in gem_counts.items():
+            gem_info = next((g for g in expanded_gems if g["type"] == gem_type), None)
+            if gem_info:
+                combination.append({
+                    "type": gem_type,
+                    "name": gem_info["name"],
+                    "price": gem_info["price"],
+                    "quantity": quantity
+                })
+        
+        return combination
+    
+    # Пытаемся найти комбинацию
+    combination = find_combination_greedy(expanded_gems, target_cents)
+    
+    if not combination:
         return {"success": False, "combination": [], "total_amount": 0.0}
-    
-    # Восстанавливаем путь
-    combination = []
-    current_amount = target_cents
-    
-    while current_amount > 0 and parent[current_amount]:
-        gem_index = parent[current_amount]["gem_index"]
-        gem = expanded_gems[gem_index]
-        
-        # Ищем уже существующий гем в комбинации
-        found = False
-        for combo_gem in combination:
-            if combo_gem["type"] == gem["type"]:
-                combo_gem["quantity"] += 1
-                found = True
-                break
-        
-        if not found:
-            combination.append({
-                "type": gem["type"],
-                "name": gem["name"],
-                "price": gem["price"],
-                "quantity": 1
-            })
-        
-        current_amount = parent[current_amount]["prev_amount"]
     
     # Вычисляем итоговую сумму
     total_amount = sum(item["price"] * item["quantity"] for item in combination)
