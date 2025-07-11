@@ -2132,6 +2132,13 @@ async def join_game(
 ):
     """Join an existing PvP game."""
     try:
+        # Check if user can join another game (no active games as opponent)
+        if not await check_user_concurrent_games(current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You cannot join multiple games simultaneously. Please complete your current game first."
+            )
+        
         # Get the game
         game = await db.games.find_one({"id": game_id})
         if not game:
@@ -2209,23 +2216,31 @@ async def join_game(
             }
         )
         
-        # Update game with opponent
+        # Set reveal deadline (60 seconds from now)
+        reveal_deadline = datetime.utcnow() + timedelta(seconds=60)
+        
+        # Update game with opponent and set to REVEAL phase
         await db.games.update_one(
             {"id": game_id},
             {
                 "$set": {
                     "opponent_id": current_user.id,
                     "opponent_move": join_data.move,
-                    "status": GameStatus.ACTIVE,
-                    "started_at": datetime.utcnow()
+                    "status": GameStatus.REVEAL,
+                    "started_at": datetime.utcnow(),
+                    "reveal_deadline": reveal_deadline
                 }
             }
         )
         
-        # Determine winner immediately
-        result = await determine_game_winner(game_id)
-        
-        return result
+        # Return game info (game is now in REVEAL phase, not completed)
+        return {
+            "success": True,
+            "game_id": game_id,
+            "status": "REVEAL",
+            "message": "Game joined successfully. Waiting for reveal phase.",
+            "reveal_deadline": reveal_deadline.isoformat()
+        }
         
     except HTTPException:
         raise
