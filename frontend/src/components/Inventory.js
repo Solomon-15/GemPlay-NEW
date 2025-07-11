@@ -170,13 +170,18 @@ const Inventory = ({ user, onUpdateUser }) => {
         onMouseEnter={() => setTooltipVisible(id)}
         onMouseLeave={() => setTooltipVisible(null)}
         onClick={() => setTooltipVisible(tooltipVisible === id ? null : id)}
-        className="ml-2 w-4 h-4 rounded-full bg-gray-600 text-white text-xs flex items-center justify-center hover:bg-gray-500 transition-colors"
+        className="absolute top-1 right-1 w-4 h-4 rounded-full bg-gray-600 text-white text-xs flex items-center justify-center hover:bg-gray-500 transition-colors z-10"
       >
         i
       </button>
       {tooltipVisible === id && (
-        <div className="absolute bottom-full left-0 mb-2 w-64 bg-gray-800 text-white text-sm rounded-lg p-3 z-10 shadow-lg">
-          <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+        <div className="fixed w-64 bg-gray-800 text-white text-sm rounded-lg p-3 shadow-lg border border-gray-600 z-[9999]"
+             style={{
+               top: '20px',
+               right: '20px',
+               maxWidth: '280px'
+             }}>
+          <div className="absolute -top-2 -right-2 w-0 h-0 border-l-8 border-r-0 border-b-8 border-transparent border-b-gray-800"></div>
           {tooltip}
         </div>
       )}
