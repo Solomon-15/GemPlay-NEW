@@ -648,8 +648,8 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         {/* Content */}
         <div className="overflow-y-auto max-h-96">
           {currentStep === 1 && renderStep1()}
-          {currentStep === 2 && renderStep2()}
-          {currentStep === 3 && renderStep3()}
+          {currentStep === 2 && <div className="p-4">{renderStep2()}</div>}
+          {currentStep === 3 && <div className="p-4">{renderStep3()}</div>}
         </div>
 
         {/* Footer */}
