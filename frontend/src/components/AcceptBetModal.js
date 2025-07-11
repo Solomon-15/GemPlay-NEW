@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useGems } from './GemsContext';
 import { useNotifications } from './NotificationContext';
-import { formatCurrencyWithSymbol, autoSelectGems } from '../utils/economy';
+import { formatCurrencyWithSymbol } from '../utils/economy';
 
-const AcceptBetModal = ({ bet, onClose, onUpdateUser }) => {
-  const { gemsDefinitions, refreshGemsData } = useGems();
+const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
+  const { 
+    gemsData, 
+    validateGemOperation, 
+    refreshInventory 
+  } = useGems();
   const { showSuccess, showError } = useNotifications();
   
   // Modal state
@@ -14,7 +18,7 @@ const AcceptBetModal = ({ bet, onClose, onUpdateUser }) => {
   // Step 1: Funds check & gem selection
   const [selectedGems, setSelectedGems] = useState({});
   const [totalGemValue, setTotalGemValue] = useState(0);
-  const [useAuto, setUseAuto] = useState(true);
+  const [autoFillCompleted, setAutoFillCompleted] = useState(false);
   
   // Step 2: Move selection
   const [selectedMove, setSelectedMove] = useState('');
@@ -27,6 +31,7 @@ const AcceptBetModal = ({ bet, onClose, onUpdateUser }) => {
   // Constants
   const COMMISSION_RATE = 0.06; // 6%
   const targetAmount = bet?.bet_amount || 0;
+  const commissionAmount = targetAmount * COMMISSION_RATE;
   
   const moves = [
     { id: 'rock', name: 'Rock', icon: '/Rock.svg' },
@@ -40,85 +45,118 @@ const AcceptBetModal = ({ bet, onClose, onUpdateUser }) => {
     { id: 3, name: 'Match', description: 'Battle result' }
   ];
 
-  // Auto-select gems from most expensive
-  const autoSelectGemsFromAmount = (amount) => {
-    if (!gemsDefinitions.length || amount <= 0) return {};
+  // Auto-fill gems using API
+  const autoFillGems = async () => {
+    setLoading(true);
     
-    const availableGems = gemsDefinitions
-      .filter(gem => gem.quantity > gem.frozen_quantity)
-      .sort((a, b) => b.price - a.price); // Sort by price descending
-    
-    const result = autoSelectGems(availableGems, amount);
-    return result.selectedGems;
+    try {
+      // Use the same API as Create Bet modal with 'smart' strategy
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gems/calculate-combination`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          bet_amount: targetAmount,
+          strategy: 'smart' // Use smart strategy for accept bet
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при автоматическом подборе гемов');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Convert API response to internal format
+        const autoSelected = {};
+        result.combinations.forEach(combo => {
+          autoSelected[combo.type] = combo.quantity;
+        });
+        
+        setSelectedGems(autoSelected);
+        setAutoFillCompleted(true);
+        showSuccess('Гемы автоматически подобраны для точного соответствия ставке');
+      } else {
+        showError(result.message || 'Недостаточно гемов для создания точной комбинации');
+      }
+    } catch (error) {
+      console.error('Error auto-filling gems:', error);
+      showError(error.message || 'Ошибка при автоматическом подборе гемов');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Calculate total value of selected gems
   useEffect(() => {
     const total = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
-      const gem = gemsDefinitions.find(g => g.type === gemType);
+      const gem = gemsData.find(g => g.type === gemType);
       return sum + (gem ? gem.price * quantity : 0);
     }, 0);
     setTotalGemValue(total);
-  }, [selectedGems, gemsDefinitions]);
+  }, [selectedGems, gemsData]);
 
-  // Auto-select gems when component loads
+  // Auto-fill gems when component loads
   useEffect(() => {
-    if (useAuto && targetAmount && gemsDefinitions.length > 0) {
-      const autoSelected = autoSelectGemsFromAmount(targetAmount);
-      setSelectedGems(autoSelected);
+    if (targetAmount > 0 && gemsData.length > 0 && !autoFillCompleted) {
+      autoFillGems();
     }
-  }, [targetAmount, useAuto, gemsDefinitions]);
-
-  const handleAutoSelect = () => {
-    const autoSelected = autoSelectGemsFromAmount(targetAmount);
-    setSelectedGems(autoSelected);
-    setUseAuto(true);
-  };
+  }, [targetAmount, gemsData, autoFillCompleted]);
 
   const handleGemQuantityChange = (gemType, quantity) => {
-    setUseAuto(false);
+    const gem = gemsData.find(g => g.type === gemType);
+    if (!gem) return;
+    
+    const maxQuantity = gem.available_quantity;
+    const validQuantity = Math.max(0, Math.min(maxQuantity, quantity));
+    
     setSelectedGems(prev => {
-      if (quantity <= 0) {
+      if (validQuantity <= 0) {
         const newGems = { ...prev };
         delete newGems[gemType];
         return newGems;
       }
-      return { ...prev, [gemType]: quantity };
+      return { ...prev, [gemType]: validQuantity };
     });
   };
 
   const validateStep1 = () => {
-    if (Object.keys(selectedGems).length === 0) {
-      showError('Please select at least one gem');
+    // Check if user has enough balance for commission
+    const availableBalance = (user?.virtual_balance || 0) - (user?.frozen_balance || 0);
+    
+    if (availableBalance < commissionAmount) {
+      showError(`Недостаточно средств для комиссии. Требуется: $${commissionAmount.toFixed(2)}, доступно: $${availableBalance.toFixed(2)}`);
       return false;
     }
 
-    // Check if user has enough gems
-    for (const [gemType, quantity] of Object.entries(selectedGems)) {
-      const gem = gemsDefinitions.find(g => g.type === gemType);
-      if (!gem) {
-        showError(`Invalid gem type: ${gemType}`);
-        return false;
-      }
-      
-      const available = gem.quantity - gem.frozen_quantity;
-      if (available < quantity) {
-        showError(`Not enough ${gemType} gems. Available: ${available}, Required: ${quantity}`);
-        return false;
-      }
+    if (Object.keys(selectedGems).length === 0) {
+      showError('Пожалуйста, выберите гемы для ставки');
+      return false;
     }
 
-    // Check commission
-    const commission = targetAmount * COMMISSION_RATE;
-    // Note: In real app, we'd get user balance from props or context
-    // For now, we'll assume the check passes
-    
+    // Check if selected gems total matches bet amount exactly
+    if (Math.abs(totalGemValue - targetAmount) > 0.01) {
+      showError(`Сумма выбранных гемов ($${totalGemValue.toFixed(2)}) должна точно соответствовать ставке ($${targetAmount.toFixed(2)})`);
+      return false;
+    }
+
+    // Validate against Inventory
+    const validation = validateGemOperation(selectedGems);
+    if (!validation.valid) {
+      showError(validation.error);
+      return false;
+    }
+
     return true;
   };
 
   const validateStep2 = () => {
     if (!selectedMove) {
-      showError('Please select your move');
+      showError('Пожалуйста, выберите свой ход');
       return false;
     }
     return true;
@@ -134,7 +172,7 @@ const AcceptBetModal = ({ bet, onClose, onUpdateUser }) => {
       case 2:
         isValid = validateStep2();
         if (isValid) {
-          // Start countdown and match
+          // Start match
           startMatch();
         }
         break;
@@ -151,8 +189,9 @@ const AcceptBetModal = ({ bet, onClose, onUpdateUser }) => {
     }
   };
 
-  const startMatch = () => {
+  const startMatch = async () => {
     setCurrentStep(3);
+    setLoading(true);
     
     // Start countdown
     let count = 3;
@@ -164,47 +203,69 @@ const AcceptBetModal = ({ bet, onClose, onUpdateUser }) => {
       
       if (count <= 0) {
         clearInterval(countdownInterval);
-        // Simulate game result
-        simulateGameResult();
+        // Join the game
+        joinGame();
       }
     }, 1000);
   };
 
-  const simulateGameResult = () => {
-    // Simulate random opponent move and result
-    const opponentMoves = ['rock', 'paper', 'scissors'];
-    const opponentMove = opponentMoves[Math.floor(Math.random() * 3)];
-    
-    let result = 'draw';
-    if (
-      (selectedMove === 'rock' && opponentMove === 'scissors') ||
-      (selectedMove === 'paper' && opponentMove === 'rock') ||
-      (selectedMove === 'scissors' && opponentMove === 'paper')
-    ) {
-      result = 'win';
-    } else if (
-      (selectedMove === 'scissors' && opponentMove === 'rock') ||
-      (selectedMove === 'rock' && opponentMove === 'paper') ||
-      (selectedMove === 'paper' && opponentMove === 'scissors')
-    ) {
-      result = 'lose';
+  const joinGame = async () => {
+    try {
+      // Call the backend API to join the game
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          move: selectedMove
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
+      }
+      
+      const result = await response.json();
+      
+      // Display match result
+      setMatchResult({
+        playerMove: selectedMove,
+        opponentMove: result.creator_move,
+        result: result.winner_id === user.id ? 'win' : (result.winner_id ? 'lose' : 'draw'),
+        playerGems: selectedGems,
+        opponentGems: bet.bet_gems || {},
+        commission: commissionAmount,
+        totalBet: targetAmount,
+        gameResult: result
+      });
+      
+      setShowResult(true);
+      
+      // Refresh user data and inventory
+      await refreshInventory();
+      if (onUpdateUser) {
+        onUpdateUser();
+      }
+      
+      // Show success notification
+      const resultText = result.winner_id === user.id ? 'Победа!' : (result.winner_id ? 'Поражение!' : 'Ничья!');
+      showSuccess(`Игра завершена! ${resultText}`);
+      
+      // Auto-close after 30 seconds
+      setTimeout(() => {
+        onClose();
+      }, 30000);
+      
+    } catch (error) {
+      console.error('Error joining game:', error);
+      showError(error.message || 'Ошибка при присоединении к игре');
+      setCurrentStep(2); // Go back to move selection
+    } finally {
+      setLoading(false);
     }
-
-    setMatchResult({
-      playerMove: selectedMove,
-      opponentMove,
-      result,
-      playerGems: selectedGems,
-      opponentGems: bet?.bet_gems || {},
-      commission: targetAmount * COMMISSION_RATE
-    });
-    
-    setShowResult(true);
-    
-    // Auto-close after 30 seconds
-    setTimeout(() => {
-      onClose();
-    }, 30000);
   };
 
   const renderStep1 = () => (
