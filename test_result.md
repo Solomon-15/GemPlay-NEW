@@ -441,6 +441,19 @@ frontend:
         agent: "testing"
         comment: "COMPREHENSIVE CREATE BET MODAL INTEGRATION TESTING COMPLETED: Successfully tested all requested functionality from the review request. Key findings: 1) MODAL OPENING working perfectly - Create Bet modal opens correctly when clicking CREATE BET button in lobby, displays proper title and UI elements. 2) STRATEGY BUTTONS fully functional - Small, Smart, and Big buttons are properly disabled when no amount entered, become enabled after entering valid amount, show loading states during API calls. 3) API INTEGRATION working excellently - detected 8 successful API calls to /api/gems/calculate-combination endpoint, proper request/response handling, exact gem combinations returned. 4) SMART STRATEGY tested with $50 - successfully calculated exact combination using 1 Sapphire gem ($50.00), displayed success notification 'Найдена точная комбинация на сумму $50.0', total gems value matches bet amount exactly. 5) SMALL and BIG STRATEGIES tested with $15 and $100 respectively - both strategies functional and return appropriate combinations. 6) SELECTED GEMS DISPLAY working - shows selected gems with proper formatting, displays total value correctly ($50.00 / $50.00), gem icons and quantities visible. 7) MINI-INVENTORY working - displays 30 inventory gem cards with proper gem information, quantities, and prices. 8) UI STATES and VALIDATION working - buttons properly disabled/enabled, loading states displayed, error handling implemented. 9) MULTI-STEP FLOW accessible - Next button functional, can proceed to Step 2 (Move Selection). 10) ERROR HANDLING implemented - strategy buttons disabled for invalid amounts, proper validation in place. The Create Bet Modal integration with Gem Calculation API is fully functional and meets all requirements from the review request."
 
+frontend:
+  - task: "Portfolio Overview Enhancement"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/Inventory.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Enhanced Portfolio Overview with three information blocks (Available, Gems, Total) in horizontal layout. Added tooltips with information icons, real-time data updates, mobile-responsive design, and made this section the single source of truth for balance and gem data across the application."
+
   - task: "Accept Bet Modal Implementation"
     implemented: true
     working: true
