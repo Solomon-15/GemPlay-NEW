@@ -40,6 +40,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Step 1: Funds check & gem selection
   const [selectedGems, setSelectedGems] = useState({});
   const [totalGemValue, setTotalGemValue] = useState(0);
+  const [modalTimer, setModalTimer] = useState(60); // 1 minute timer
   
   // Step 2: Move selection
   const [selectedMove, setSelectedMove] = useState('');
