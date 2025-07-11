@@ -428,7 +428,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         <h3 className="text-white font-rajdhani text-xl mb-2">Choose Your Move</h3>
         <p className="text-text-secondary">Select your strategy for the battle</p>
         <div className="text-green-400 font-rajdhani text-lg mt-2">
-          Betting: {formatCurrencyWithSymbol(totalGemValue)}
+          Betting: {safeFormatCurrency(totalGemValue)}
         </div>
       </div>
 
