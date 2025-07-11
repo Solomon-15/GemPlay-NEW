@@ -449,7 +449,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       </div>
 
       {/* Selected Gems Display */}
-      <div className="px-4">
+      <div>
         <div className="flex justify-between items-center mb-3">
           <label className="text-white font-rajdhani text-lg">Selected Gems</label>
           <div className={`font-rajdhani text-xl font-bold ${
@@ -481,7 +481,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       </div>
 
       {/* Mini Inventory for Manual Editing */}
-      <div className="px-4 pb-4">
+      <div className="pb-4">
         <label className="block text-white font-rajdhani text-lg mb-3">
           Your Inventory
         </label>
