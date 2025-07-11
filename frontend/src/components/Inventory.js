@@ -183,11 +183,11 @@ const Inventory = ({ user, onUpdateUser }) => {
         i
       </button>
       {tooltipVisible === id && (
-        <div className="absolute bottom-full right-0 mb-1 w-64 bg-gray-800 text-white text-sm rounded-lg p-3 shadow-lg border border-gray-600 z-[9999]"
+        <div className="absolute bottom-full right-0 mb-1 w-64 bg-slate-800 text-white text-sm rounded-lg p-3 shadow-xl border border-slate-700 z-[99999]"
              style={{
                maxWidth: '280px'
              }}>
-          <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+          <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
           {tooltip}
         </div>
       )}
