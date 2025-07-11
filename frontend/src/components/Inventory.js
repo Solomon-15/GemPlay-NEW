@@ -163,6 +163,14 @@ const Inventory = ({ user, onUpdateUser }) => {
 
   const portfolioData = getPortfolioData();
 
+  // Format numbers with commas
+  const formatNumber = (number) => {
+    return number.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  };
+
   const InfoTooltip = ({ id, tooltip, children }) => (
     <div className="relative">
       {children}
@@ -170,17 +178,16 @@ const Inventory = ({ user, onUpdateUser }) => {
         onMouseEnter={() => setTooltipVisible(id)}
         onMouseLeave={() => setTooltipVisible(null)}
         onClick={() => setTooltipVisible(tooltipVisible === id ? null : id)}
-        className="absolute top-2 right-2 w-4 h-4 rounded-full bg-gray-600 text-white text-xs flex items-center justify-center hover:bg-gray-500 transition-colors z-10"
+        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gray-600 text-white text-xs flex items-center justify-center hover:bg-gray-500 transition-colors z-20"
       >
         i
       </button>
       {tooltipVisible === id && (
-        <div className="absolute top-6 right-0 w-64 bg-gray-800 text-white text-sm rounded-lg p-3 shadow-lg border border-gray-600 z-[9999]"
+        <div className="absolute bottom-full right-0 mb-1 w-64 bg-gray-800 text-white text-sm rounded-lg p-3 shadow-lg border border-gray-600 z-[9999]"
              style={{
-               maxWidth: '280px',
-               transform: 'translateY(2px)'
+               maxWidth: '280px'
              }}>
-          <div className="absolute -top-2 right-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-800"></div>
+          <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
           {tooltip}
         </div>
       )}
