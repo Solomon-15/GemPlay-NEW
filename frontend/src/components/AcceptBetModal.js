@@ -315,52 +315,56 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-          {gemsData && Array.isArray(gemsData) ? gemsData.map(gem => {
-            const available = gem.available_quantity;
-            const selected = selectedGems[gem.type] || 0;
-            
-            if (!gem.has_available && selected <= 0) return null;
-            
-            return (
-              <div key={gem.type} className="bg-surface-card rounded-lg p-3 border border-opacity-20" style={{ borderColor: gem.color }}>
-                <div className="flex items-center space-x-2 mb-2">
-                  <img src={gem.icon} alt={gem.name} className="w-6 h-6" />
-                  <div>
-                    <div className="text-white font-rajdhani font-bold text-sm">{gem.name}</div>
-                    <div className="text-text-secondary text-xs">{safeFormatCurrency(gem.price)}</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleGemQuantityChange(gem.type, Math.max(0, selected - 1))}
-                    disabled={selected <= 0}
-                    className="w-8 h-8 bg-red-600 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
-                  >
-                    −
-                  </button>
-                  
-                  <div className="flex-1 text-center">
-                    <div className="text-white font-rajdhani font-bold">{selected}</div>
-                    <div className="text-text-secondary text-xs">of {available}</div>
+        {/* Available Gems Grid */}
+        <div className="space-y-4">
+          <h5 className="text-white font-rajdhani font-bold">Available Gems</h5>
+          <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+            {gemsData && Array.isArray(gemsData) ? gemsData.map(gem => {
+              const available = gem.available_quantity;
+              const selected = selectedGems[gem.type] || 0;
+              
+              if (!gem.has_available && selected <= 0) return null;
+              
+              return (
+                <div key={gem.type} className="bg-surface-card rounded-lg p-3 border border-opacity-20" style={{ borderColor: gem.color }}>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <img src={gem.icon} alt={gem.name} className="w-6 h-6" />
+                    <div>
+                      <div className="text-white font-rajdhani font-bold text-sm">{gem.name}</div>
+                      <div className="text-text-secondary text-xs">{safeFormatCurrency(gem.price)}</div>
+                    </div>
                   </div>
                   
-                  <button
-                    onClick={() => handleGemQuantityChange(gem.type, selected + 1)}
-                    disabled={selected >= available}
-                    className="w-8 h-8 bg-green-600 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
-                  >
-                    +
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleGemQuantityChange(gem.type, Math.max(0, selected - 1))}
+                      disabled={selected <= 0}
+                      className="w-6 h-6 bg-red-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
+                    >
+                      −
+                    </button>
+                    
+                    <div className="flex-1 text-center">
+                      <div className="text-white font-rajdhani font-bold">{selected}</div>
+                      <div className="text-text-secondary text-xs">of {available}</div>
+                    </div>
+                    
+                    <button
+                      onClick={() => handleGemQuantityChange(gem.type, selected + 1)}
+                      disabled={selected >= available}
+                      className="w-6 h-6 bg-green-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
+              );
+            }) : (
+              <div className="col-span-2 text-center text-text-secondary py-4">
+                Loading gems...
               </div>
-            );
-          }) : (
-            <div className="col-span-2 text-center text-text-secondary py-4">
-              Loading gems...
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
