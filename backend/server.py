@@ -773,10 +773,10 @@ async def calculate_gem_combination(user_id: str, target_amount: float, strategy
     
     # Сортируем гемы согласно стратегии
     if strategy == GemCombinationStrategy.SMALL:
-        # Сначала дешевые гемы (больше штук)
+        # Small = мелкие гемы (Ruby, Amber, Topaz) - дешевые первыми
         available_gems.sort(key=lambda x: x["price"])
     elif strategy == GemCombinationStrategy.BIG:
-        # Сначала дорогие гемы (меньше штук)
+        # Big = крупные дорогие гемы (Magic, Sapphire, Aquamarine) - дорогие первыми
         available_gems.sort(key=lambda x: x["price"], reverse=True)
     else:  # SMART
         # Сбалансированный подход - средние цены вперед
