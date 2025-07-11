@@ -2775,13 +2775,15 @@ async def reset_all_games(current_admin: User = Depends(get_current_admin)):
         )
         
         # Reset all users' frozen balance to 0 (safety measure)
-        await db.users.update_many(
-            {"frozen_balance": {"$gt": 0}},
-            {
-                "$inc": {"virtual_balance": {"$frozen_balance": 1}},
-                "$set": {"frozen_balance": 0}
-            }
-        )
+        users_with_frozen = await db.users.find({"frozen_balance": {"$gt": 0}}).to_list(1000)
+        for user in users_with_frozen:
+            await db.users.update_one(
+                {"id": user["id"]},
+                {
+                    "$inc": {"virtual_balance": user["frozen_balance"]},
+                    "$set": {"frozen_balance": 0}
+                }
+            )
         
         return {
             "success": True,
