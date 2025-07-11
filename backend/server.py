@@ -2553,17 +2553,16 @@ async def cancel_game(game_id: str, current_user: User = Depends(get_current_use
             )
         
         # Return frozen commission
-        user = await db.users.find_one({"id": current_user.id})
         commission_to_return = game_obj.bet_amount * 0.06
         
         await db.users.update_one(
             {"id": current_user.id},
             {
-                "$set": {
-                    "virtual_balance": user["virtual_balance"] + commission_to_return,
-                    "frozen_balance": user["frozen_balance"] - commission_to_return,
-                    "updated_at": datetime.utcnow()
-                }
+                "$inc": {
+                    "virtual_balance": commission_to_return,
+                    "frozen_balance": -commission_to_return
+                },
+                "$set": {"updated_at": datetime.utcnow()}
             }
         )
         
