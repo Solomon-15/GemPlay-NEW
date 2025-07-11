@@ -182,7 +182,7 @@ const PlayerCard = ({
       {showAcceptModal && (
         <AcceptBetModal
           bet={{
-            id: game.id,
+            id: game.game_id || game.id,
             bet_amount: totalAmount,
             bet_gems: game.bet_gems,
             creator: game.creator
