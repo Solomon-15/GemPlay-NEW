@@ -236,7 +236,7 @@ const Inventory = ({ user, onUpdateUser }) => {
           <div className="max-w-6xl mx-auto mb-8">
             <div className="grid grid-cols-3 gap-2 md:gap-4 min-w-0 overflow-x-auto">
               {/* Available Block */}
-              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
+              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0 hover:border-green-500 transition-colors duration-200">
                 <InfoTooltip 
                   id="available" 
                   tooltip="Available balance for creating new bets. This is your total balance minus any frozen funds."
@@ -261,7 +261,7 @@ const Inventory = ({ user, onUpdateUser }) => {
               </div>
 
               {/* Gems Block */}
-              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
+              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0 hover:border-green-500 transition-colors duration-200">
                 <InfoTooltip 
                   id="gems" 
                   tooltip="Your gem collection. Gems are used to create and accept bets. Higher value gems allow for larger bets."
@@ -286,7 +286,7 @@ const Inventory = ({ user, onUpdateUser }) => {
               </div>
 
               {/* Total Block */}
-              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
+              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0 hover:border-green-500 transition-colors duration-200">
                 <InfoTooltip 
                   id="total" 
                   tooltip="Your total estimated value including both balance and gems."
