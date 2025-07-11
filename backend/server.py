@@ -358,6 +358,12 @@ class GemResponse(BaseModel):
     quantity: int = 0
     frozen_quantity: int = 0
 
+class CancelGameResponse(BaseModel):
+    success: bool
+    message: str
+    gems_returned: Dict[str, int]
+    commission_returned: float
+
 class GemCombinationStrategy(str, Enum):
     SMALL = "small"    # Предпочитает дешевые гемы
     SMART = "smart"    # Сбалансированный подход
