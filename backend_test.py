@@ -1965,10 +1965,10 @@ def test_gems_calculate_combination() -> None:
 
 def run_all_tests() -> None:
     """Run all tests in sequence."""
-    print_header("GEMPLAY API TESTING - GEMS CALCULATE COMBINATION FOCUS")
+    print_header("GEMPLAY API TESTING - ROCK-PAPER-SCISSORS GAME LOGIC INTEGRATION")
     
-    # Test the new gems calculate combination API endpoint as requested in review
-    test_gems_calculate_combination()
+    # Test the complete Rock-Paper-Scissors game flow as requested in review
+    test_pvp_game_mechanics()
     
     # Print summary
     print_summary()
