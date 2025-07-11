@@ -2521,7 +2521,7 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
             detail="Failed to get user bets"
         )
 
-@api_router.delete("/games/{game_id}/cancel", response_model=dict)
+@api_router.delete("/games/{game_id}/cancel", response_model=CancelGameResponse)
 async def cancel_game(game_id: str, current_user: User = Depends(get_current_user)):
     """Cancel a waiting game."""
     try:
