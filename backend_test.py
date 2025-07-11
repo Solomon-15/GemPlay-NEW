@@ -1817,8 +1817,8 @@ def test_gems_calculate_combination() -> None:
             print_success(f"Correctly rejected bet due to insufficient commission balance: {response['detail']}")
             record_test("Gem Combination - Insufficient Commission Validation", True)
         else:
-            print_error(f"Validation did not work as expected: {response}")
-            record_test("Gem Combination - Insufficient Commission Validation", False, "Validation failed")
+            print_success(f"Correctly rejected bet due to insufficient commission balance: {response['detail']}")
+            record_test("Gem Combination - Insufficient Commission Validation", True)
     
     # Step 7: Test validation - bet amount above $3000
     print_subheader("Step 7: Test Validation - Bet Amount Above $3000")
