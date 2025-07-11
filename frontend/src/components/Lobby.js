@@ -553,6 +553,15 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         {activeTab === 'live-players' && <LivePlayersContent />}
         {activeTab === 'bot-players' && <BotPlayersContent />}
       </div>
+
+      {/* Create Bet Modal */}
+      {showCreateBetModal && (
+        <CreateBetModal
+          user={user}
+          onClose={() => setShowCreateBetModal(false)}
+          onUpdateUser={onUpdateUser}
+        />
+      )}
     </div>
   );
 };
