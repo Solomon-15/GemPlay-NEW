@@ -117,6 +117,69 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   const steps = [
     { id: 1, name: 'Gem Selection', description: 'Select your gems' },
     { id: 2, name: 'Move', description: 'Choose your move' },
+    { id: 3, name: 'Match', description: 'Battle result' },
+    { id: 4, name: 'Reveal', description: 'Reveal your move' }
+  ];
+
+  const revealGame = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/reveal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при раскрытии хода');
+      }
+      
+      const result = await response.json();
+      
+      // Display match result
+      setMatchResult({
+        playerMove: selectedMove,
+        opponentMove: result.creator_move,
+        result: result.winner_id === user.id ? 'win' : (result.winner_id ? 'lose' : 'draw'),
+        playerGems: selectedGems,
+        opponentGems: bet.bet_gems || {},
+        commission: commissionAmount,
+        totalBet: targetAmount,
+        gameResult: result
+      });
+      
+      setShowResult(true);
+      
+      // Refresh user data and inventory
+      await refreshInventory();
+      if (onUpdateUser) {
+        onUpdateUser();
+      }
+      
+      // Show success notification
+      const resultText = result.winner_id === user.id ? 'Победа!' : (result.winner_id ? 'Поражение!' : 'Ничья!');
+      showSuccess(`Игра завершена! ${resultText}`);
+      
+      // Auto-close after 30 seconds
+      setTimeout(() => {
+        onClose();
+      }, 30000);
+      
+    } catch (error) {
+      console.error('Error revealing game:', error);
+      showError(error.message || 'Ошибка при раскрытии хода');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const steps = [
+    { id: 1, name: 'Gem Selection', description: 'Select your gems' },
+    { id: 2, name: 'Move', description: 'Choose your move' },
     { id: 3, name: 'Match', description: 'Battle result' }
   ];
 
