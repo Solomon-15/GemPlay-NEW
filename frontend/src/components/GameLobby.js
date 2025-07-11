@@ -146,7 +146,7 @@ const GameLobby = ({ user, onUpdateUser }) => {
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-russo text-xl text-accent-secondary">
-                    Игра #{game.id.substring(0, 8)}
+                    Игра #{(game.game_id || game.id).substring(0, 8)}
                   </h3>
                   <span className="px-3 py-1 bg-green-600 text-white rounded-full text-sm font-rajdhani">
                     ОЖИДАЕТ
