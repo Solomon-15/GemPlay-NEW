@@ -1,4 +1,16 @@
 backend:
+  - task: "Gem Combination Strategy Logic Fix"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Fixed swapped logic in gem combination strategies: Small strategy now correctly prioritizes expensive gems first, Big strategy now correctly prioritizes cheap gems first. This fixes the issue where Small button was executing Big logic and vice versa."
+
   - task: "Rock-Paper-Scissors Game Logic Integration"
     implemented: true
     working: true
