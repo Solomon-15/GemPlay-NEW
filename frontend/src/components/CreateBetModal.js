@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useGems } from './GemsContext';
 import { useNotifications } from './NotificationContext';
-import { formatCurrencyWithSymbol, autoSelectGems } from '../utils/economy';
+import { formatCurrencyWithSymbol } from '../utils/economy';
 
 const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
-  const { gemsDefinitions, refreshGemsData } = useGems();
+  const { 
+    gemsData, 
+    getAvailableGems, 
+    validateGemOperation, 
+    refreshInventory,
+    getSortedGems
+  } = useGems();
   const { showSuccess, showError } = useNotifications();
   
   // Modal state
@@ -15,7 +21,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   const [betAmount, setBetAmount] = useState('');
   const [useAuto, setUseAuto] = useState(true);
   
-  // Step 2: Gems selection
+  // Step 2: Gems selection - ONLY FROM INVENTORY
   const [selectedGems, setSelectedGems] = useState({});
   const [totalGemValue, setTotalGemValue] = useState(0);
   
@@ -40,35 +46,54 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     { id: 4, name: 'Confirm', description: 'Create bet' }
   ];
 
-  // Auto-select gems from most expensive
+  // AUTO-SELECT: Use ONLY available gems from Inventory
   const autoSelectGemsFromAmount = (amount) => {
-    if (!gemsDefinitions.length || amount <= 0) return {};
+    if (amount <= 0) return {};
     
-    const availableGems = gemsDefinitions
-      .filter(gem => gem.quantity > gem.frozen_quantity)
-      .sort((a, b) => b.price - a.price); // Sort by price descending (most expensive first)
+    // Get only available gems from inventory, sorted by price descending (most expensive first)
+    const availableGems = getSortedGems('price', 'desc').filter(gem => gem.has_available);
     
-    const result = autoSelectGems(availableGems, amount);
-    return result.selectedGems;
+    if (availableGems.length === 0) {
+      showError('No available gems in inventory');
+      return {};
+    }
+    
+    const result = {};
+    let remainingAmount = amount;
+    
+    // Select gems starting from most expensive (as required)
+    for (const gem of availableGems) {
+      if (remainingAmount <= 0) break;
+      
+      const maxQuantityForAmount = Math.floor(remainingAmount / gem.price);
+      const quantityToUse = Math.min(maxQuantityForAmount, gem.available_quantity);
+      
+      if (quantityToUse > 0) {
+        result[gem.type] = quantityToUse;
+        remainingAmount -= quantityToUse * gem.price;
+      }
+    }
+    
+    return result;
   };
 
-  // Calculate total value of selected gems
+  // Calculate total value - ONLY from current Inventory data
   useEffect(() => {
     const total = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
-      const gem = gemsDefinitions.find(g => g.type === gemType);
+      const gem = gemsData.find(g => g.type === gemType);
       return sum + (gem ? gem.price * quantity : 0);
     }, 0);
     setTotalGemValue(total);
-  }, [selectedGems, gemsDefinitions]);
+  }, [selectedGems, gemsData]);
 
-  // Auto-select gems when amount changes and auto mode is on
+  // Auto-select when amount changes and auto mode is on
   useEffect(() => {
     if (useAuto && betAmount && parseFloat(betAmount) > 0) {
       const amount = parseFloat(betAmount);
       const autoSelected = autoSelectGemsFromAmount(amount);
       setSelectedGems(autoSelected);
     }
-  }, [betAmount, useAuto, gemsDefinitions]);
+  }, [betAmount, useAuto, gemsData]);
 
   const handleAmountChange = (value) => {
     const numValue = parseFloat(value);
@@ -88,15 +113,23 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     setUseAuto(true);
   };
 
+  // CRITICAL: Validate against current Inventory state
   const handleGemQuantityChange = (gemType, quantity) => {
+    const gem = gemsData.find(g => g.type === gemType);
+    if (!gem) return;
+    
+    // Ensure we don't exceed available inventory
+    const maxQuantity = gem.available_quantity;
+    const validQuantity = Math.max(0, Math.min(maxQuantity, quantity));
+    
     setUseAuto(false);
     setSelectedGems(prev => {
-      if (quantity <= 0) {
+      if (validQuantity <= 0) {
         const newGems = { ...prev };
         delete newGems[gemType];
         return newGems;
       }
-      return { ...prev, [gemType]: quantity };
+      return { ...prev, [gemType]: validQuantity };
     });
   };
 
@@ -115,27 +148,21 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       return false;
     }
 
-    // Check if user has enough gems
-    for (const [gemType, quantity] of Object.entries(selectedGems)) {
-      const gem = gemsDefinitions.find(g => g.type === gemType);
-      if (!gem) {
-        showError(`Invalid gem type: ${gemType}`);
-        return false;
-      }
-      
-      const available = gem.quantity - gem.frozen_quantity;
-      if (available < quantity) {
-        showError(`Not enough ${gemType} gems. Available: ${available}, Required: ${quantity}`);
-        return false;
-      }
+    // CRITICAL: Validate against current Inventory
+    const validation = validateGemOperation(selectedGems);
+    if (!validation.valid) {
+      showError(validation.error);
+      return false;
     }
 
-    // Check commission
+    // Check commission against user balance
     const commission = totalGemValue * COMMISSION_RATE;
-    const availableBalance = user.virtual_balance - (user.frozen_balance || 0);
+    const availableBalance = user?.virtual_balance || 0;
+    const frozenBalance = user?.frozen_balance || 0;
+    const actualAvailable = availableBalance - frozenBalance;
     
-    if (availableBalance < commission) {
-      showError(`Insufficient balance for commission. Required: ${formatCurrencyWithSymbol(commission)}, Available: ${formatCurrencyWithSymbol(availableBalance)}`);
+    if (actualAvailable < commission) {
+      showError(`Insufficient balance for commission. Required: ${formatCurrencyWithSymbol(commission)}, Available: ${formatCurrencyWithSymbol(actualAvailable)}`);
       return false;
     }
 
@@ -197,7 +224,8 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       
       if (response.ok) {
         showSuccess(`Bet created! ${formatCurrencyWithSymbol(totalGemValue * COMMISSION_RATE)} (6%) frozen until game completion.`);
-        refreshGemsData();
+        // CRITICAL: Refresh inventory to get updated frozen quantities
+        await refreshInventory();
         onUpdateUser?.();
         onClose();
       } else {
@@ -245,7 +273,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           AUTO SELECT GEMS
         </button>
         <p className="text-text-secondary text-sm mt-2">
-          Automatically selects gems starting from most expensive
+          Automatically selects gems from your inventory (most expensive first)
         </p>
       </div>
     </div>
@@ -268,7 +296,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
 
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h4 className="text-white font-rajdhani text-lg">Gem Selection</h4>
+          <h4 className="text-white font-rajdhani text-lg">Your Inventory</h4>
           <button
             onClick={handleAutoSelect}
             disabled={!betAmount}
@@ -279,11 +307,11 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         </div>
 
         <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-          {gemsDefinitions.map(gem => {
-            const available = gem.quantity - gem.frozen_quantity;
+          {gemsData.map(gem => {
             const selected = selectedGems[gem.type] || 0;
             
-            if (available <= 0 && selected <= 0) return null;
+            // Only show gems that user has in inventory
+            if (!gem.has_gems) return null;
             
             return (
               <div key={gem.type} className="bg-surface-sidebar rounded-lg p-3">
@@ -297,7 +325,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
                 
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => handleGemQuantityChange(gem.type, Math.max(0, selected - 1))}
+                    onClick={() => handleGemQuantityChange(gem.type, selected - 1)}
                     disabled={selected <= 0}
                     className="w-8 h-8 bg-red-600 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
                   >
@@ -306,12 +334,12 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
                   
                   <div className="flex-1 text-center">
                     <div className="text-white font-rajdhani font-bold">{selected}</div>
-                    <div className="text-text-secondary text-xs">of {available}</div>
+                    <div className="text-text-secondary text-xs">of {gem.available_quantity}</div>
                   </div>
                   
                   <button
                     onClick={() => handleGemQuantityChange(gem.type, selected + 1)}
-                    disabled={selected >= available}
+                    disabled={selected >= gem.available_quantity}
                     className="w-8 h-8 bg-green-600 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
                   >
                     +
@@ -376,10 +404,10 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         </div>
 
         <div className="border-t border-border-primary pt-3 mt-3">
-          <div className="text-text-secondary text-sm mb-2">Selected Gems:</div>
+          <div className="text-text-secondary text-sm mb-2">Selected Gems (from Inventory):</div>
           <div className="flex flex-wrap gap-2">
             {Object.entries(selectedGems).map(([gemType, quantity]) => {
-              const gem = gemsDefinitions.find(g => g.type === gemType);
+              const gem = gemsData.find(g => g.type === gemType);
               return gem ? (
                 <div key={gemType} className="flex items-center space-x-1 bg-surface-card rounded px-2 py-1">
                   <img src={gem.icon} alt={gem.name} className="w-4 h-4" />
@@ -398,7 +426,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           </svg>
           <div className="text-yellow-400 text-sm">
             <div className="font-bold mb-1">Important:</div>
-            <div>Your gems and commission will be frozen until the game completes. The bet will auto-cancel in 24 hours if no opponent joins.</div>
+            <div>Your gems and commission will be frozen in inventory until the game completes. The bet will auto-cancel in 24 hours if no opponent joins.</div>
           </div>
         </div>
       </div>
