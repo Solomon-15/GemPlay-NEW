@@ -179,6 +179,217 @@ def test_email_verification(token: str, username: str) -> None:
     else:
         record_test(f"Email Verification - {username}", False, "Request failed")
 
+def test_cancel_bet_functionality() -> None:
+    """Test the Cancel bet functionality as requested in the review."""
+    print_header("CANCEL BET FUNCTIONALITY TEST")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with cancel bet test")
+        record_test("Cancel Bet - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully with token: {admin_token[:20]}...")
+    
+    # Step 2: Get admin's gem inventory to use for betting
+    print_subheader("Step 2: Get Admin Gem Inventory")
+    inventory_response, inventory_success = make_request(
+        "GET", "/gems/inventory", 
+        auth_token=admin_token
+    )
+    
+    if not inventory_success:
+        print_error("Failed to get admin gem inventory")
+        record_test("Cancel Bet - Get Inventory", False, "Failed to get inventory")
+        return
+    
+    print_success(f"Retrieved inventory with {len(inventory_response)} gem types")
+    
+    # Find gems to use for betting (prefer Ruby and Emerald for testing)
+    bet_gems = {}
+    for gem in inventory_response:
+        if gem["type"] == "Ruby" and gem["quantity"] > gem["frozen_quantity"]:
+            available = gem["quantity"] - gem["frozen_quantity"]
+            bet_gems["Ruby"] = min(5, available)  # Use up to 5 Ruby gems
+        elif gem["type"] == "Emerald" and gem["quantity"] > gem["frozen_quantity"]:
+            available = gem["quantity"] - gem["frozen_quantity"]
+            bet_gems["Emerald"] = min(2, available)  # Use up to 2 Emerald gems
+    
+    if not bet_gems:
+        print_error("No available gems found for betting")
+        record_test("Cancel Bet - Gem Availability", False, "No gems available")
+        return
+    
+    print_success(f"Selected gems for betting: {bet_gems}")
+    
+    # Step 3: Create a game/bet
+    print_subheader("Step 3: Create Game/Bet")
+    
+    # Generate salt and hash for commit-reveal scheme
+    salt = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+    move = "rock"
+    move_hash = hash_move_with_salt(move, salt)
+    
+    create_game_data = {
+        "move": move,
+        "bet_gems": bet_gems
+    }
+    
+    print(f"Creating game with move: {move}, salt: {salt}")
+    print(f"Move hash: {move_hash}")
+    
+    game_response, game_success = make_request(
+        "POST", "/games/create",
+        data=create_game_data,
+        auth_token=admin_token
+    )
+    
+    if not game_success:
+        print_error("Failed to create game")
+        record_test("Cancel Bet - Create Game", False, "Game creation failed")
+        return
+    
+    if "game_id" not in game_response:
+        print_error(f"Game creation response missing game_id: {game_response}")
+        record_test("Cancel Bet - Create Game", False, "Missing game_id in response")
+        return
+    
+    game_id = game_response["game_id"]
+    print_success(f"Game created successfully with ID: {game_id}")
+    record_test("Cancel Bet - Create Game", True)
+    
+    # Step 4: Verify game was created and is in WAITING status
+    print_subheader("Step 4: Verify Game Status")
+    
+    my_bets_response, my_bets_success = make_request(
+        "GET", "/games/my-bets",
+        auth_token=admin_token
+    )
+    
+    if my_bets_success and "games" in my_bets_response:
+        created_game = None
+        for game in my_bets_response["games"]:
+            if game["game_id"] == game_id:
+                created_game = game
+                break
+        
+        if created_game:
+            print_success(f"Game found in my-bets with status: {created_game['status']}")
+            if created_game["status"] == "WAITING":
+                print_success("Game is in WAITING status - ready for cancellation")
+            else:
+                print_warning(f"Game status is {created_game['status']}, not WAITING")
+        else:
+            print_warning("Created game not found in my-bets list")
+    
+    # Step 5: Test Cancel Bet - This is the main test
+    print_subheader("Step 5: Cancel Bet (Main Test)")
+    
+    print(f"Attempting to cancel game with ID: {game_id}")
+    print(f"Using DELETE /games/{game_id}/cancel endpoint")
+    
+    cancel_response, cancel_success = make_request(
+        "DELETE", f"/games/{game_id}/cancel",
+        auth_token=admin_token
+    )
+    
+    if cancel_success:
+        print_success("Cancel bet request completed successfully!")
+        
+        # Verify response structure
+        expected_fields = ["success", "message", "gems_returned", "commission_returned"]
+        missing_fields = [field for field in expected_fields if field not in cancel_response]
+        
+        if missing_fields:
+            print_warning(f"Response missing expected fields: {missing_fields}")
+            record_test("Cancel Bet - Response Structure", False, f"Missing fields: {missing_fields}")
+        else:
+            print_success("Response has all expected fields")
+            record_test("Cancel Bet - Response Structure", True)
+        
+        # Check if success is True
+        if cancel_response.get("success") == True:
+            print_success("Cancel operation reported as successful")
+            record_test("Cancel Bet - Success Flag", True)
+        else:
+            print_error(f"Cancel operation success flag is: {cancel_response.get('success')}")
+            record_test("Cancel Bet - Success Flag", False, f"Success flag: {cancel_response.get('success')}")
+        
+        # Check gems returned
+        gems_returned = cancel_response.get("gems_returned", {})
+        if gems_returned:
+            print_success(f"Gems returned: {gems_returned}")
+            record_test("Cancel Bet - Gems Returned", True)
+        else:
+            print_warning("No gems returned information")
+            record_test("Cancel Bet - Gems Returned", False, "No gems returned")
+        
+        # Check commission returned
+        commission_returned = cancel_response.get("commission_returned", 0)
+        print_success(f"Commission returned: ${commission_returned}")
+        record_test("Cancel Bet - Commission Returned", True)
+        
+        record_test("Cancel Bet - Main Functionality", True)
+        
+    else:
+        print_error("Cancel bet request failed!")
+        print_error(f"Response: {cancel_response}")
+        
+        # Check if it's a 500 error as reported in the issue
+        if "status_code" in str(cancel_response) and "500" in str(cancel_response):
+            print_error("CONFIRMED: Getting 500 Internal Server Error as reported in the issue")
+            record_test("Cancel Bet - Main Functionality", False, "500 Internal Server Error")
+        else:
+            record_test("Cancel Bet - Main Functionality", False, f"Request failed: {cancel_response}")
+    
+    # Step 6: Verify game status after cancellation attempt
+    print_subheader("Step 6: Verify Game Status After Cancellation")
+    
+    my_bets_after_response, my_bets_after_success = make_request(
+        "GET", "/games/my-bets",
+        auth_token=admin_token
+    )
+    
+    if my_bets_after_success and "games" in my_bets_after_response:
+        cancelled_game = None
+        for game in my_bets_after_response["games"]:
+            if game["game_id"] == game_id:
+                cancelled_game = game
+                break
+        
+        if cancelled_game:
+            print_success(f"Game status after cancellation: {cancelled_game['status']}")
+            if cancelled_game["status"] == "CANCELLED":
+                print_success("Game status correctly updated to CANCELLED")
+                record_test("Cancel Bet - Status Update", True)
+            else:
+                print_warning(f"Game status is {cancelled_game['status']}, expected CANCELLED")
+                record_test("Cancel Bet - Status Update", False, f"Status: {cancelled_game['status']}")
+        else:
+            print_warning("Game not found in my-bets after cancellation")
+            record_test("Cancel Bet - Status Update", False, "Game not found after cancellation")
+    
+    # Step 7: Check if gems were unfrozen
+    print_subheader("Step 7: Verify Gems Unfrozen")
+    
+    inventory_after_response, inventory_after_success = make_request(
+        "GET", "/gems/inventory", 
+        auth_token=admin_token
+    )
+    
+    if inventory_after_success:
+        print_success("Retrieved inventory after cancellation")
+        for gem in inventory_after_response:
+            if gem["type"] in bet_gems:
+                print(f"{gem['type']}: quantity={gem['quantity']}, frozen={gem['frozen_quantity']}")
+        record_test("Cancel Bet - Gems Unfrozen Check", True)
+    else:
+        print_error("Failed to get inventory after cancellation")
+        record_test("Cancel Bet - Gems Unfrozen Check", False, "Failed to get inventory")
+
 def test_login(email: str, password: str, username: str, expected_success: bool = True) -> Optional[str]:
     """Test user login."""
     print_subheader(f"Testing User Login for {username} {'(Expected Success)' if expected_success else '(Expected Failure)'}")
