@@ -856,7 +856,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
           </div>
 
           {/* Footer */}
-          {currentStep < 3 && (
+          {currentStep < 3 && currentStep !== 4 && (
             <div className="p-4 border-t border-border-primary">
               <div className="flex space-x-3">
                 {currentStep > 1 && (
