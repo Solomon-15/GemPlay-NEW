@@ -320,10 +320,11 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      <div className="text-center">
+      {/* Header with timer */}
+      <div className="text-center relative">
         <h3 className="text-white font-rajdhani text-xl mb-2">Match Opponent's Bet</h3>
         <div className="text-green-400 font-rajdhani text-2xl font-bold">
-          Target: {safeFormatCurrency(targetAmount)}
+          {safeFormatCurrency(targetAmount)}
         </div>
         <div className="text-blue-400 font-rajdhani text-lg">
           Your Bet: {safeFormatCurrency(totalGemValue)}
@@ -331,6 +332,12 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         <div className="text-orange-400 font-rajdhani text-sm">
           Commission: {safeFormatCurrency(commissionAmount)}
         </div>
+        
+        {/* Timer */}
+        <div className="absolute top-0 right-0 text-yellow-400 text-sm">
+          ⏱️ {Math.floor(modalTimer / 60)}:{(modalTimer % 60).toString().padStart(2, '0')}
+        </div>
+        
         {Math.abs(totalGemValue - targetAmount) > 0.01 && (
           <div className="text-red-400 text-sm mt-1">
             ⚠️ Amount mismatch: {safeFormatCurrency(Math.abs(totalGemValue - targetAmount))}
@@ -338,96 +345,132 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         )}
       </div>
 
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h4 className="text-white font-rajdhani text-lg">Gem Selection</h4>
-          <div className="text-sm text-text-secondary">
-            Select gems manually to match the bet amount
-          </div>
+      {/* Auto Combination Buttons */}
+      <div className="space-y-3">
+        <h4 className="text-white font-rajdhani text-lg">Auto Combination</h4>
+        <div className="grid grid-cols-3 gap-3">
+          <button
+            onClick={() => handleStrategySelect('small')}
+            disabled={loading}
+            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
+            title="Use more cheap gems"
+          >
+            {loading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              '🔴 Small'
+            )}
+          </button>
+          <button
+            onClick={() => handleStrategySelect('smart')}
+            disabled={loading}
+            className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
+            title="Balance your bet with mid-value gems"
+          >
+            {loading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              '🟢 Smart'
+            )}
+          </button>
+          <button
+            onClick={() => handleStrategySelect('big')}
+            disabled={loading}
+            className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
+            title="Make a high-stake bet with fewer expensive gems"
+          >
+            {loading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              '🟣 Big'
+            )}
+          </button>
         </div>
+      </div>
 
-        {/* Selected Gems Display */}
-        <div className="bg-surface-sidebar rounded-lg p-4">
-          <h5 className="text-white font-rajdhani font-bold mb-2">Selected Gems</h5>
-          {Object.keys(selectedGems).length > 0 ? (
-            <div className="space-y-2">
-              {Object.entries(selectedGems).map(([gemType, quantity]) => {
+      {/* Selected Gems Display */}
+      <div className="bg-surface-sidebar rounded-lg p-4">
+        <h5 className="text-white font-rajdhani font-bold mb-2">Selected Gems</h5>
+        {Object.keys(selectedGems).length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(selectedGems)
+              .map(([gemType, quantity]) => {
                 if (!gemsData || !Array.isArray(gemsData)) return null;
                 
                 const gem = gemsData.find(g => g.type === gemType);
                 if (!gem) return null;
                 
+                return { ...gem, quantity };
+              })
+              .filter(Boolean)
+              .sort((a, b) => a.price - b.price) // Sort by price ascending
+              .map((gem) => {
+                const gemTotal = gem.quantity * gem.price;
                 return (
-                  <div key={gemType} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <img src={gem.icon} alt={gem.name} className="w-6 h-6" />
-                      <span className="text-white font-rajdhani">{gem.name}</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-white font-rajdhani font-bold">{quantity}x</div>
-                      <div className="text-text-secondary text-sm">{safeFormatCurrency(gem.price * quantity)}</div>
-                    </div>
+                  <div key={gem.type} className="flex items-center space-x-1 bg-surface-card rounded-lg px-3 py-2 border border-opacity-30" style={{ borderColor: gem.color }}>
+                    <img src={gem.icon} alt={gem.name} className="w-5 h-5" />
+                    <span className="text-text-secondary text-xs font-rajdhani">x{gem.quantity}</span>
+                    <span className="text-green-400 text-xs font-rajdhani font-bold">= {safeFormatCurrency(gemTotal)}</span>
                   </div>
                 );
               })}
-            </div>
-          ) : (
-            <div className="text-text-secondary text-center py-4">
-              No gems selected
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="text-text-secondary text-center py-4">
+            No gems selected. Use Auto Combination or select manually below.
+          </div>
+        )}
+      </div>
 
-        {/* Available Gems Grid */}
-        <div className="space-y-4">
-          <h5 className="text-white font-rajdhani font-bold">Available Gems</h5>
-          <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-            {gemsData && Array.isArray(gemsData) ? gemsData.map(gem => {
-              const available = gem.available_quantity;
-              const selected = selectedGems[gem.type] || 0;
-              
-              if (!gem.has_available && selected <= 0) return null;
-              
-              return (
-                <div key={gem.type} className="bg-surface-card rounded-lg p-3 border border-opacity-20" style={{ borderColor: gem.color }}>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <img src={gem.icon} alt={gem.name} className="w-6 h-6" />
-                    <div>
-                      <div className="text-white font-rajdhani font-bold text-sm">{gem.name}</div>
-                      <div className="text-text-secondary text-xs">{safeFormatCurrency(gem.price)}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleGemQuantityChange(gem.type, Math.max(0, selected - 1))}
-                      disabled={selected <= 0}
-                      className="w-6 h-6 bg-red-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
-                    >
-                      −
-                    </button>
-                    
-                    <div className="flex-1 text-center">
-                      <div className="text-white font-rajdhani font-bold">{selected}</div>
-                      <div className="text-text-secondary text-xs">of {available}</div>
-                    </div>
-                    
-                    <button
-                      onClick={() => handleGemQuantityChange(gem.type, selected + 1)}
-                      disabled={selected >= available}
-                      className="w-6 h-6 bg-green-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
-                    >
-                      +
-                    </button>
+      {/* Mini-Inventory "Your Inventory" */}
+      <div className="space-y-3">
+        <h5 className="text-white font-rajdhani font-bold">Your Inventory</h5>
+        <div className="flex flex-wrap gap-3">
+          {gemsData && Array.isArray(gemsData) ? gemsData.map(gem => {
+            const available = gem.available_quantity;
+            const selected = selectedGems[gem.type] || 0;
+            
+            if (!gem.has_available && selected <= 0) return null;
+            
+            return (
+              <div key={gem.type} className="bg-surface-card rounded-lg p-3 border border-opacity-20 min-w-[140px]" style={{ borderColor: gem.color }}>
+                <div className="flex items-center space-x-2 mb-2">
+                  <img src={gem.icon} alt={gem.name} className="w-5 h-5" />
+                  <div>
+                    <div className="text-white font-rajdhani font-bold text-xs">{gem.name}</div>
+                    <div className="text-text-secondary text-xs">{safeFormatCurrency(gem.price)}</div>
                   </div>
                 </div>
-              );
-            }) : (
-              <div className="col-span-2 text-center text-text-secondary py-4">
-                Loading gems...
+                
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => handleGemQuantityChange(gem.type, Math.max(0, selected - 1))}
+                    disabled={selected <= 0}
+                    className="w-5 h-5 bg-red-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
+                  >
+                    −
+                  </button>
+                  
+                  <div className="flex-1 text-center">
+                    <div className="text-white font-rajdhani font-bold text-xs">{selected}</div>
+                    <div className="text-text-secondary text-xs">/{available}</div>
+                  </div>
+                  
+                  <button
+                    onClick={() => handleGemQuantityChange(gem.type, selected + 1)}
+                    disabled={selected >= available}
+                    className="w-5 h-5 bg-green-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-            )}
-          </div>
+            );
+          }) : (
+            <div className="text-center text-text-secondary py-4 w-full">
+              Loading gems...
+            </div>
+          )}
         </div>
       </div>
     </div>
