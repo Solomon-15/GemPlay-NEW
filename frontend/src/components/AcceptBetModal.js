@@ -733,6 +733,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
               <div className="flex space-x-3">
                 {currentStep > 1 && (
                   <button
+                    type="button"
                     onClick={handleBack}
                     disabled={loading}
                     className="px-4 py-2 bg-surface-sidebar text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
@@ -742,6 +743,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
                 )}
                 
                 <button
+                  type="button"
                   onClick={handleNext}
                   disabled={loading}
                   className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
