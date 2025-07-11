@@ -279,7 +279,7 @@ const History = ({ user }) => {
           <div className="space-y-4">
             {paginatedGames.map((game) => (
               <div
-                key={game.id}
+                key={game.game_id || game.id}
                 className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 hover:border-accent-primary hover:border-opacity-100 transition-all duration-300"
               >
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
