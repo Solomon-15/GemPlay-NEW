@@ -1,4 +1,16 @@
 backend:
+  - task: "Gems Calculate Combination API"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Implemented new API endpoint for calculating exact gem combinations with Small/Smart/Big strategies"
+
   - task: "Create Game API"
     implemented: true
     working: true
