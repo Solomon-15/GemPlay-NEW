@@ -141,7 +141,7 @@ const GameLobby = ({ user, onUpdateUser }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {availableGames.map((game) => (
               <div
-                key={game.id}
+                key={game.game_id || game.id}
                 className="bg-surface-card border border-border-primary rounded-lg p-6 hover:border-accent-primary transition-all duration-300"
               >
                 <div className="flex items-center justify-between mb-4">
