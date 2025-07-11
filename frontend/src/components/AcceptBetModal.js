@@ -388,14 +388,26 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
             className={`p-6 rounded-lg border-2 transition-all duration-300 hover:scale-105 ${
               selectedMove === move.id
                 ? 'border-accent-primary bg-accent-primary bg-opacity-20'
-                : 'border-surface-sidebar hover:border-accent-primary border-opacity-50'
+                : 'border-border-primary hover:border-accent-primary'
             }`}
           >
-            <img src={move.icon} alt={move.name} className="w-16 h-16 mx-auto mb-3" />
-            <div className="text-white font-rajdhani font-bold text-lg">{move.name}</div>
+            <div className="flex flex-col items-center space-y-2">
+              <img src={move.icon} alt={move.name} className="w-16 h-16" />
+              <span className="text-white font-rajdhani font-bold">{move.name}</span>
+            </div>
           </button>
         ))}
       </div>
+
+      {selectedMove && (
+        <div className="text-center">
+          <div className="inline-block bg-accent-primary bg-opacity-20 border border-accent-primary rounded-lg px-4 py-2">
+            <span className="text-accent-primary font-rajdhani font-bold">
+              Selected: {moves.find(m => m.id === selectedMove)?.name}
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 
