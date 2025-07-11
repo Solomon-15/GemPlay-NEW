@@ -105,6 +105,8 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Remove auto-fill on component load - user should manually select gems
 
   const handleGemQuantityChange = (gemType, quantity) => {
+    if (!gemsData || !Array.isArray(gemsData)) return;
+    
     const gem = gemsData.find(g => g.type === gemType);
     if (!gem) return;
     
