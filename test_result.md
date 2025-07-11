@@ -526,11 +526,11 @@ frontend:
 
   - task: "Accept Bet Modal Implementation"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/components/AcceptBetModal.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -538,6 +538,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "ACCEPT BET MODAL COMPREHENSIVE TESTING COMPLETED: Successfully verified complete 3-screen Accept Bet Modal flow. Key findings: 1) MODAL OPENING working - Accept Bet Modal opens correctly when clicking Accept buttons on available bets, displays proper Join Battle title and 3-step progress indicator. 2) STEP 1 GEM SELECTION working - Auto-fill functionality using smart strategy API, target amount/commission displayed, selected gems section, mini-inventory with quantity adjustment, Auto Fill button functional. 3) STEP 2 MOVE SELECTION working - Choose Your Move interface with Rock/Paper/Scissors buttons, move selection with visual highlighting, Start Battle button activation. 4) STEP 3 MATCH RESULT working - Countdown (3-2-1), API call to /api/games/{game_id}/join endpoint, match result display (Victory/Defeat/Draw), player vs opponent move visualization, auto-close timer. 5) API INTEGRATION working - backend integration with /api/gems/calculate-combination and /api/games/{id}/join endpoints functional. 6) ERROR HANDLING working - proper validation and Russian error messages. 7) TECHNICAL IMPLEMENTATION complete - React state management, GemsContext integration, NotificationContext, API error handling, responsive design. The Accept Bet Modal successfully implements all requirements and is production-ready."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL BUG FOUND IN JOIN BATTLE MODAL: Comprehensive testing revealed a critical JavaScript runtime error preventing the Join Battle modal from opening. Error: 'Cannot access targetAmount before initialization' - ReferenceError occurs in AcceptBetModal.js lines 38-39 where targetAmount is used before being defined (defined on line 108). This prevents the modal from rendering when clicking Accept buttons. The error occurs because: 1) Line 39: const requiredCommission = targetAmount * COMMISSION_RATE; uses targetAmount before it's declared, 2) Line 108: const targetAmount = bet?.bet_amount || 0; defines it later in the component. This is a variable hoisting issue in JavaScript. TESTING RESULTS: ❌ Modal opening - FAILED (runtime error), ❌ All subsequent functionality - CANNOT TEST due to modal not opening. The Accept Bet Modal is currently non-functional and requires immediate fix to resolve the variable declaration order issue."
   - task: "Create Game Component"
     implemented: true
     working: true
