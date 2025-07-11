@@ -160,7 +160,7 @@ const AdminPanel = ({ user, onClose }) => {
   ];
 
   const StatCard = ({ title, value, icon, color = 'text-accent-primary' }) => (
-    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 hover:border-green-500 transition-colors duration-200">
       <div className="flex items-center justify-between">
         <div>
           <p className="font-roboto text-text-secondary text-sm">{title}</p>
