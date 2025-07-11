@@ -2579,6 +2579,7 @@ async def cancel_game(game_id: str, current_user: User = Depends(get_current_use
         )
         
         return {
+            "success": True,
             "message": "Game cancelled successfully",
             "gems_returned": game_obj.bet_gems,
             "commission_returned": commission_to_return
