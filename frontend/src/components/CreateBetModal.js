@@ -171,34 +171,54 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     setBetAmount(value);
   };
 
-  const handleStrategySelect = (strategy) => {
+  const handleStrategySelect = async (strategy) => {
     if (!betAmount || parseFloat(betAmount) <= 0) {
       showError('Please enter bet amount first');
       return;
     }
     
     const amount = parseFloat(betAmount);
-    let autoSelected = {};
+    setLoading(true);
     
-    switch (strategy) {
-      case 'small':
-        autoSelected = autoSelectSmall(amount);
-        break;
-      case 'smart':
-        autoSelected = autoSelectSmart(amount);
-        break;
-      case 'big':
-        autoSelected = autoSelectBig(amount);
-        break;
+    try {
+      // Call the new backend API for gem combination calculation
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gems/calculate-combination`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({
+          bet_amount: amount,
+          strategy: strategy
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при расчете комбинации гемов');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Convert API response to internal format
+        const autoSelected = {};
+        result.combinations.forEach(combo => {
+          autoSelected[combo.type] = combo.quantity;
+        });
+        
+        setSelectedGems(autoSelected);
+        showSuccess(result.message || `Найдена комбинация на сумму $${result.total_amount}`);
+      } else {
+        showError(result.message || 'Недостаточно гемов для создания точной комбинации');
+      }
+    } catch (error) {
+      console.error('Error calculating gem combination:', error);
+      showError(error.message || 'Ошибка при расчете комбинации гемов');
+    } finally {
+      setLoading(false);
     }
-    
-    // Check if there was an error (insufficient gems)
-    if (autoSelected.error) {
-      showError(autoSelected.error);
-      return;
-    }
-    
-    setSelectedGems(autoSelected);
   };
 
   const handleGemQuantityChange = (gemType, quantity) => {
