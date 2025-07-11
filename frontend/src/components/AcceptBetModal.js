@@ -93,6 +93,55 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     return () => clearInterval(timer);
   }, [onClose]);
 
+  // Strategy functions for auto gem selection
+  const handleStrategySelect = async (strategy) => {
+    setLoading(true);
+    
+    try {
+      // Call backend API for gem combination calculation
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gems/calculate-combination`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          bet_amount: targetAmount,
+          strategy: strategy
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при расчете комбинации гемов');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.combinations && Array.isArray(result.combinations)) {
+        // Convert API response to internal format
+        const autoSelected = {};
+        result.combinations.forEach(combo => {
+          if (combo && combo.type && combo.quantity) {
+            autoSelected[combo.type] = combo.quantity;
+          }
+        });
+        
+        setSelectedGems(autoSelected);
+        
+        const strategyNames = { small: 'Small', smart: 'Smart', big: 'Big' };
+        showSuccess(`${strategyNames[strategy]} стратегия: точная комбинация на сумму ${safeFormatCurrency(targetAmount)}`);
+      } else {
+        showError(result.message || 'Недостаточно гемов для создания точной комбинации');
+      }
+    } catch (error) {
+      console.error('Error with strategy selection:', error);
+      showError(error.message || 'Ошибка при автоматическом подборе гемов');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGemQuantityChange = (gemType, quantity) => {
     if (!gemsData || !Array.isArray(gemsData)) return;
     
