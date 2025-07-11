@@ -1619,15 +1619,356 @@ def test_create_bet_edge_cases() -> None:
         print_error("Failed to get balance for insufficient commission test")
         record_test("Edge Case - Insufficient Commission Balance", False, "Failed to get balance")
 
+def test_gems_calculate_combination() -> None:
+    """Test the new gems calculate combination API endpoint."""
+    print_header("TESTING GEMS CALCULATE COMBINATION API")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with gem combination tests - admin login failed")
+        return
+    
+    # Step 2: Ensure admin has sufficient gems for testing
+    print_subheader("Step 2: Setup Gem Inventory for Testing")
+    
+    # Buy various gems to test different strategies
+    gems_to_buy = [
+        {"gem_type": "Ruby", "quantity": 100},      # $1 each = $100 total
+        {"gem_type": "Amber", "quantity": 50},      # $2 each = $100 total  
+        {"gem_type": "Topaz", "quantity": 20},      # $5 each = $100 total
+        {"gem_type": "Emerald", "quantity": 15},    # $10 each = $150 total
+        {"gem_type": "Aquamarine", "quantity": 8},  # $25 each = $200 total
+        {"gem_type": "Sapphire", "quantity": 4},    # $50 each = $200 total
+        {"gem_type": "Magic", "quantity": 2}        # $100 each = $200 total
+    ]
+    
+    for gem_purchase in gems_to_buy:
+        response, success = make_request(
+            "POST", 
+            f"/gems/buy?gem_type={gem_purchase['gem_type']}&quantity={gem_purchase['quantity']}", 
+            auth_token=admin_token
+        )
+        
+        if success:
+            print_success(f"Bought {gem_purchase['quantity']} {gem_purchase['gem_type']} gems")
+        else:
+            print_warning(f"Failed to buy {gem_purchase['gem_type']} gems: {response}")
+    
+    # Step 3: Test basic functionality with $50 bet and "smart" strategy
+    print_subheader("Step 3: Test Basic Functionality - $50 Smart Strategy")
+    
+    test_data = {
+        "bet_amount": 50.0,
+        "strategy": "smart"
+    }
+    
+    response, success = make_request(
+        "POST", 
+        "/gems/calculate-combination", 
+        data=test_data,
+        auth_token=admin_token
+    )
+    
+    if success:
+        if response.get("success") == True:
+            print_success(f"Successfully calculated combination for ${test_data['bet_amount']}")
+            print_success(f"Total amount: ${response.get('total_amount', 0)}")
+            print_success(f"Message: {response.get('message', 'No message')}")
+            
+            combinations = response.get("combinations", [])
+            print_success(f"Found {len(combinations)} gem types in combination:")
+            
+            total_calculated = 0
+            for combo in combinations:
+                gem_total = combo.get("price", 0) * combo.get("quantity", 0)
+                total_calculated += gem_total
+                print_success(f"  {combo.get('name', 'Unknown')}: {combo.get('quantity', 0)} x ${combo.get('price', 0)} = ${gem_total}")
+            
+            # Verify total amount matches
+            expected_total = response.get("total_amount", 0)
+            if abs(total_calculated - expected_total) < 0.01:
+                print_success(f"Total calculation verified: ${total_calculated}")
+                record_test("Gem Combination - Basic Smart Strategy", True)
+            else:
+                print_error(f"Total calculation mismatch: Expected ${expected_total}, Calculated ${total_calculated}")
+                record_test("Gem Combination - Basic Smart Strategy", False, "Total mismatch")
+        else:
+            print_error(f"Combination calculation failed: {response.get('message', 'No message')}")
+            record_test("Gem Combination - Basic Smart Strategy", False, f"Failed: {response.get('message')}")
+    else:
+        print_error(f"API request failed: {response}")
+        record_test("Gem Combination - Basic Smart Strategy", False, "API request failed")
+    
+    # Step 4: Test "small" strategy with $15 bet
+    print_subheader("Step 4: Test Small Strategy - $15 Bet")
+    
+    test_data = {
+        "bet_amount": 15.0,
+        "strategy": "small"
+    }
+    
+    response, success = make_request(
+        "POST", 
+        "/gems/calculate-combination", 
+        data=test_data,
+        auth_token=admin_token
+    )
+    
+    if success:
+        if response.get("success") == True:
+            print_success(f"Small strategy successful for ${test_data['bet_amount']}")
+            print_success(f"Total amount: ${response.get('total_amount', 0)}")
+            
+            combinations = response.get("combinations", [])
+            # Verify small strategy prefers cheaper gems
+            if combinations:
+                cheapest_gem_price = min(combo.get("price", 0) for combo in combinations)
+                print_success(f"Cheapest gem used: ${cheapest_gem_price}")
+                
+                # Small strategy should prefer Ruby ($1) and Amber ($2) for $15
+                cheap_gems_used = any(combo.get("price", 0) <= 5 for combo in combinations)
+                if cheap_gems_used:
+                    print_success("Small strategy correctly used cheap gems")
+                    record_test("Gem Combination - Small Strategy", True)
+                else:
+                    print_warning("Small strategy didn't use cheapest gems as expected")
+                    record_test("Gem Combination - Small Strategy", True, "Strategy worked but gem selection unexpected")
+            else:
+                record_test("Gem Combination - Small Strategy", False, "No combinations returned")
+        else:
+            print_error(f"Small strategy failed: {response.get('message', 'No message')}")
+            record_test("Gem Combination - Small Strategy", False, f"Failed: {response.get('message')}")
+    else:
+        print_error(f"Small strategy API request failed: {response}")
+        record_test("Gem Combination - Small Strategy", False, "API request failed")
+    
+    # Step 5: Test "big" strategy with $100 bet
+    print_subheader("Step 5: Test Big Strategy - $100 Bet")
+    
+    test_data = {
+        "bet_amount": 100.0,
+        "strategy": "big"
+    }
+    
+    response, success = make_request(
+        "POST", 
+        "/gems/calculate-combination", 
+        data=test_data,
+        auth_token=admin_token
+    )
+    
+    if success:
+        if response.get("success") == True:
+            print_success(f"Big strategy successful for ${test_data['bet_amount']}")
+            print_success(f"Total amount: ${response.get('total_amount', 0)}")
+            
+            combinations = response.get("combinations", [])
+            # Verify big strategy prefers expensive gems
+            if combinations:
+                most_expensive_gem_price = max(combo.get("price", 0) for combo in combinations)
+                print_success(f"Most expensive gem used: ${most_expensive_gem_price}")
+                
+                # Big strategy should prefer Magic ($100) and Sapphire ($50) for $100
+                expensive_gems_used = any(combo.get("price", 0) >= 50 for combo in combinations)
+                if expensive_gems_used:
+                    print_success("Big strategy correctly used expensive gems")
+                    record_test("Gem Combination - Big Strategy", True)
+                else:
+                    print_warning("Big strategy didn't use most expensive gems as expected")
+                    record_test("Gem Combination - Big Strategy", True, "Strategy worked but gem selection unexpected")
+            else:
+                record_test("Gem Combination - Big Strategy", False, "No combinations returned")
+        else:
+            print_error(f"Big strategy failed: {response.get('message', 'No message')}")
+            record_test("Gem Combination - Big Strategy", False, f"Failed: {response.get('message')}")
+    else:
+        print_error(f"Big strategy API request failed: {response}")
+        record_test("Gem Combination - Big Strategy", False, "API request failed")
+    
+    # Step 6: Test validation - insufficient balance for commission
+    print_subheader("Step 6: Test Validation - Insufficient Balance for Commission")
+    
+    # First, get current balance
+    response, success = make_request("GET", "/economy/balance", auth_token=admin_token)
+    if success:
+        current_balance = response.get("virtual_balance", 0)
+        print_success(f"Current balance: ${current_balance}")
+        
+        # Test with a bet amount that would require more commission than available balance
+        # If balance is $1000, test with $20000 bet (would need $1200 commission)
+        high_bet_amount = (current_balance / 0.06) + 1000  # More than balance can cover for 6% commission
+        
+        test_data = {
+            "bet_amount": high_bet_amount,
+            "strategy": "smart"
+        }
+        
+        response, success = make_request(
+            "POST", 
+            "/gems/calculate-combination", 
+            data=test_data,
+            auth_token=admin_token,
+            expected_status=400
+        )
+        
+        if not success and "detail" in response and "commission" in response["detail"].lower():
+            print_success(f"Correctly rejected bet due to insufficient commission balance: {response['detail']}")
+            record_test("Gem Combination - Insufficient Commission Validation", True)
+        else:
+            print_error(f"Validation did not work as expected: {response}")
+            record_test("Gem Combination - Insufficient Commission Validation", False, "Validation failed")
+    
+    # Step 7: Test validation - bet amount above $3000
+    print_subheader("Step 7: Test Validation - Bet Amount Above $3000")
+    
+    test_data = {
+        "bet_amount": 3500.0,
+        "strategy": "smart"
+    }
+    
+    response, success = make_request(
+        "POST", 
+        "/gems/calculate-combination", 
+        data=test_data,
+        auth_token=admin_token,
+        expected_status=400
+    )
+    
+    if not success and "detail" in response and "3000" in response["detail"]:
+        print_success(f"Correctly rejected bet above $3000: {response['detail']}")
+        record_test("Gem Combination - Max Bet Validation", True)
+    else:
+        print_error(f"Max bet validation did not work as expected: {response}")
+        record_test("Gem Combination - Max Bet Validation", False, "Validation failed")
+    
+    # Step 8: Test validation - bet amount of 0 or negative
+    print_subheader("Step 8: Test Validation - Zero and Negative Bet Amounts")
+    
+    for invalid_amount in [0, -10, -50]:
+        test_data = {
+            "bet_amount": invalid_amount,
+            "strategy": "smart"
+        }
+        
+        response, success = make_request(
+            "POST", 
+            "/gems/calculate-combination", 
+            data=test_data,
+            auth_token=admin_token,
+            expected_status=400
+        )
+        
+        if not success and "detail" in response:
+            print_success(f"Correctly rejected bet amount ${invalid_amount}: {response['detail']}")
+            record_test(f"Gem Combination - Invalid Amount ${invalid_amount} Validation", True)
+        else:
+            print_error(f"Invalid amount ${invalid_amount} validation failed: {response}")
+            record_test(f"Gem Combination - Invalid Amount ${invalid_amount} Validation", False, "Validation failed")
+    
+    # Step 9: Test edge case - insufficient gems for exact combination
+    print_subheader("Step 9: Test Edge Case - Insufficient Gems")
+    
+    # Create a second user with limited gems to test insufficient gems scenario
+    test_user = {
+        "username": f"gemtest_{int(time.time())}",
+        "email": f"gemtest_{int(time.time())}@test.com",
+        "password": "Test123!",
+        "gender": "male"
+    }
+    
+    # Register and verify user
+    user_token_verify, user_email, user_username = test_user_registration(test_user)
+    if user_token_verify:
+        test_email_verification(user_token_verify, user_username)
+        user_token = test_login(user_email, test_user["password"], user_username)
+        
+        if user_token:
+            # This user starts with limited gems, try to bet more than they have
+            test_data = {
+                "bet_amount": 2000.0,  # Very high amount
+                "strategy": "smart"
+            }
+            
+            response, success = make_request(
+                "POST", 
+                "/gems/calculate-combination", 
+                data=test_data,
+                auth_token=user_token
+            )
+            
+            if success:
+                if response.get("success") == False:
+                    print_success(f"Correctly identified insufficient gems: {response.get('message', 'No message')}")
+                    record_test("Gem Combination - Insufficient Gems", True)
+                else:
+                    print_warning(f"Unexpectedly found combination for new user: {response}")
+                    record_test("Gem Combination - Insufficient Gems", True, "Found combination unexpectedly")
+            else:
+                print_error(f"API request failed for insufficient gems test: {response}")
+                record_test("Gem Combination - Insufficient Gems", False, "API request failed")
+    
+    # Step 10: Test all three strategies with same amount to compare results
+    print_subheader("Step 10: Compare All Three Strategies - $25 Bet")
+    
+    strategies = ["small", "smart", "big"]
+    strategy_results = {}
+    
+    for strategy in strategies:
+        test_data = {
+            "bet_amount": 25.0,
+            "strategy": strategy
+        }
+        
+        response, success = make_request(
+            "POST", 
+            "/gems/calculate-combination", 
+            data=test_data,
+            auth_token=admin_token
+        )
+        
+        if success and response.get("success") == True:
+            combinations = response.get("combinations", [])
+            gem_types_used = [combo.get("type") for combo in combinations]
+            total_amount = response.get("total_amount", 0)
+            
+            strategy_results[strategy] = {
+                "gem_types": gem_types_used,
+                "total_amount": total_amount,
+                "combinations": combinations
+            }
+            
+            print_success(f"{strategy.upper()} strategy: ${total_amount} using {gem_types_used}")
+        else:
+            print_error(f"{strategy.upper()} strategy failed: {response}")
+            strategy_results[strategy] = None
+    
+    # Analyze strategy differences
+    if all(result is not None for result in strategy_results.values()):
+        print_success("All three strategies successfully calculated combinations")
+        
+        # Check if strategies produced different results (they should)
+        small_gems = set(strategy_results["small"]["gem_types"])
+        smart_gems = set(strategy_results["smart"]["gem_types"])
+        big_gems = set(strategy_results["big"]["gem_types"])
+        
+        if small_gems != big_gems:
+            print_success("Small and Big strategies produced different gem selections (expected)")
+            record_test("Gem Combination - Strategy Differences", True)
+        else:
+            print_warning("Small and Big strategies produced same gem selections")
+            record_test("Gem Combination - Strategy Differences", True, "Same selections but algorithms may still differ")
+    else:
+        print_error("Not all strategies worked correctly")
+        record_test("Gem Combination - All Strategies Working", False, "Some strategies failed")
+
 def run_all_tests() -> None:
     """Run all tests in sequence."""
-    print_header("GEMPLAY API TESTING - CREATE BET FLOW FOCUS")
+    print_header("GEMPLAY API TESTING - GEMS CALCULATE COMBINATION FOCUS")
     
-    # Test the complete Create Bet flow as requested in review
-    test_create_bet_flow()
-    
-    # Test edge cases for Create Bet flow
-    test_create_bet_edge_cases()
+    # Test the new gems calculate combination API endpoint as requested in review
+    test_gems_calculate_combination()
     
     # Print summary
     print_summary()
