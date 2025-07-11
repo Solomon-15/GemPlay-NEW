@@ -295,14 +295,22 @@ const Inventory = ({ user, onUpdateUser }) => {
                     <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Total</h3>
                     
                     <div className="mb-1 md:mb-2">
-                      <div className="font-rajdhani text-lg md:text-2xl font-bold text-white break-words">
+                      <div className="font-rajdhani text-lg md:text-2xl font-bold text-purple-400 break-words">
                         ${formatNumber(portfolioData.total.value)}
                       </div>
                     </div>
                     
-                    <div className="text-xs text-transparent">
-                      {/* Empty space for consistent layout */}
-                      &nbsp;
+                    <div className="text-xs text-yellow-400">
+                      {(() => {
+                        const totalDeductions = portfolioData.available.frozenFunds + portfolioData.gems.frozenValue;
+                        const remainingTotal = portfolioData.total.value - totalDeductions;
+                        
+                        if (totalDeductions > 0) {
+                          return `$${formatNumber(remainingTotal)} remaining`;
+                        } else {
+                          return 'Remaining Total';
+                        }
+                      })()}
                     </div>
                   </div>
                 </InfoTooltip>
