@@ -379,7 +379,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   const renderStep1 = () => (
     <div className="space-y-6">
       {/* Fixed Bet Amount at Top */}
-      <div className="sticky top-0 bg-surface-card border-b border-border-primary p-4 -m-4 mb-0 z-10">
+      <div className="sticky top-0 bg-surface-card border-b border-border-primary p-4 -mx-4 mb-0 z-10">
         <label className="block text-white font-rajdhani text-lg mb-3">
           Bet Amount
         </label>
@@ -404,7 +404,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       </div>
 
       {/* Strategy Buttons */}
-      <div className="px-4">
+      <div>
         <label className="block text-white font-rajdhani text-lg mb-3">
           Auto Combination
         </label>
