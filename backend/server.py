@@ -728,6 +728,176 @@ async def get_current_super_admin(current_user: User = Depends(get_current_user)
     return current_user
 
 # ==============================================================================
+# GEM COMBINATION CALCULATION FUNCTIONS
+# ==============================================================================
+
+async def calculate_gem_combination(user_id: str, target_amount: float, strategy: GemCombinationStrategy) -> GemCombinationResponse:
+    """
+    Рассчитать точную комбинацию гемов для заданной суммы используя указанную стратегию.
+    
+    Args:
+        user_id: ID пользователя
+        target_amount: Целевая сумма ставки
+        strategy: Стратегия подбора гемов
+    
+    Returns:
+        GemCombinationResponse с результатом расчета
+    """
+    # Получаем инвентарь пользователя
+    user_gems = await db.user_gems.find({"user_id": user_id}).to_list(100)
+    gem_definitions = await db.gem_definitions.find({"enabled": True}).to_list(100)
+    
+    # Создаем карту определений гемов
+    gem_def_map = {gem["type"]: gem for gem in gem_definitions}
+    
+    # Создаем список доступных гемов с их количеством
+    available_gems = []
+    for user_gem in user_gems:
+        gem_def = gem_def_map.get(user_gem["gem_type"])
+        if gem_def and user_gem["quantity"] > user_gem["frozen_quantity"]:
+            available_quantity = user_gem["quantity"] - user_gem["frozen_quantity"]
+            available_gems.append({
+                "type": user_gem["gem_type"],
+                "name": gem_def["name"],
+                "price": gem_def["price"],
+                "available_quantity": available_quantity
+            })
+    
+    if not available_gems:
+        return GemCombinationResponse(
+            success=False,
+            total_amount=0.0,
+            combinations=[],
+            message="У вас нет доступных гемов для создания ставки"
+        )
+    
+    # Сортируем гемы согласно стратегии
+    if strategy == GemCombinationStrategy.SMALL:
+        # Сначала дешевые гемы
+        available_gems.sort(key=lambda x: x["price"])
+    elif strategy == GemCombinationStrategy.BIG:
+        # Сначала дорогие гемы
+        available_gems.sort(key=lambda x: x["price"], reverse=True)
+    else:  # SMART
+        # Сбалансированный подход - средние цены вперед
+        available_gems.sort(key=lambda x: abs(x["price"] - 25.0))  # 25 - примерная средняя цена
+    
+    # Пытаемся найти точную комбинацию
+    result = find_exact_combination(available_gems, target_amount)
+    
+    if result["success"]:
+        # Конвертируем результат в правильный формат
+        combination_items = []
+        for item in result["combination"]:
+            combination_items.append(GemCombinationItem(
+                type=item["type"],
+                name=item["name"],
+                price=item["price"],
+                quantity=item["quantity"],
+                total_value=item["price"] * item["quantity"]
+            ))
+        
+        return GemCombinationResponse(
+            success=True,
+            total_amount=result["total_amount"],
+            combinations=combination_items,
+            message=f"Найдена точная комбинация на сумму ${result['total_amount']}"
+        )
+    else:
+        return GemCombinationResponse(
+            success=False,
+            total_amount=0.0,
+            combinations=[],
+            message="Недостаточно доступных гемов для формирования ставки на указанную сумму"
+        )
+
+def find_exact_combination(available_gems: List[Dict], target_amount: float) -> Dict:
+    """
+    Найти точную комбинацию гемов для заданной суммы используя динамическое программирование.
+    
+    Args:
+        available_gems: Список доступных гемов
+        target_amount: Целевая сумма
+    
+    Returns:
+        Dict с результатом поиска
+    """
+    target_cents = int(target_amount * 100)  # Работаем с центами для точности
+    
+    # DP table: dp[i] = True if we can make amount i
+    dp = [False] * (target_cents + 1)
+    dp[0] = True
+    
+    # parent[i] = информация о том, как получить сумму i
+    parent = [None] * (target_cents + 1)
+    
+    # Расширяем список доступных гемов с учетом количества каждого
+    expanded_gems = []
+    for gem in available_gems:
+        price_cents = int(gem["price"] * 100)
+        for i in range(gem["available_quantity"]):
+            expanded_gems.append({
+                "type": gem["type"],
+                "name": gem["name"],
+                "price": gem["price"],
+                "price_cents": price_cents,
+                "original_gem": gem
+            })
+    
+    # Заполняем DP таблицу
+    for i in range(len(expanded_gems)):
+        gem = expanded_gems[i]
+        price_cents = gem["price_cents"]
+        
+        # Идем в обратном порядке, чтобы не использовать один гем дважды
+        for amount in range(target_cents, price_cents - 1, -1):
+            if dp[amount - price_cents]:
+                dp[amount] = True
+                parent[amount] = {
+                    "gem_index": i,
+                    "prev_amount": amount - price_cents
+                }
+    
+    # Если точная сумма не найдена
+    if not dp[target_cents]:
+        return {"success": False, "combination": [], "total_amount": 0.0}
+    
+    # Восстанавливаем путь
+    combination = []
+    current_amount = target_cents
+    
+    while current_amount > 0 and parent[current_amount]:
+        gem_index = parent[current_amount]["gem_index"]
+        gem = expanded_gems[gem_index]
+        
+        # Ищем уже существующий гем в комбинации
+        found = False
+        for combo_gem in combination:
+            if combo_gem["type"] == gem["type"]:
+                combo_gem["quantity"] += 1
+                found = True
+                break
+        
+        if not found:
+            combination.append({
+                "type": gem["type"],
+                "name": gem["name"],
+                "price": gem["price"],
+                "quantity": 1
+            })
+        
+        current_amount = parent[current_amount]["prev_amount"]
+    
+    # Вычисляем итоговую сумму
+    total_amount = sum(item["price"] * item["quantity"] for item in combination)
+    
+    return {
+        "success": True,
+        "combination": combination,
+        "total_amount": total_amount
+    }
+
+# ==============================================================================
 # STARTUP AND BACKGROUND TASKS
 # ==============================================================================
 
