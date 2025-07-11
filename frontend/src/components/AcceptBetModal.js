@@ -278,9 +278,12 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         <div className="text-blue-400 font-rajdhani text-lg">
           Your Bet: {formatCurrencyWithSymbol(totalGemValue)}
         </div>
+        <div className="text-orange-400 font-rajdhani text-sm">
+          Commission: {formatCurrencyWithSymbol(commissionAmount)}
+        </div>
         {Math.abs(totalGemValue - targetAmount) > 0.01 && (
-          <div className="text-orange-400 text-sm mt-1">
-            Difference: {formatCurrencyWithSymbol(Math.abs(totalGemValue - targetAmount))}
+          <div className="text-red-400 text-sm mt-1">
+            ⚠️ Amount mismatch: {formatCurrencyWithSymbol(Math.abs(totalGemValue - targetAmount))}
           </div>
         )}
       </div>
@@ -289,22 +292,60 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         <div className="flex justify-between items-center">
           <h4 className="text-white font-rajdhani text-lg">Gem Selection</h4>
           <button
-            onClick={handleAutoSelect}
-            className="px-4 py-2 bg-blue-600 text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300"
+            onClick={autoFillGems}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 flex items-center space-x-2"
           >
-            Auto
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Loading...</span>
+              </>
+            ) : (
+              <span>Auto Fill</span>
+            )}
           </button>
         </div>
 
+        {/* Selected Gems Display */}
+        <div className="bg-surface-sidebar rounded-lg p-4">
+          <h5 className="text-white font-rajdhani font-bold mb-2">Selected Gems</h5>
+          {Object.keys(selectedGems).length > 0 ? (
+            <div className="space-y-2">
+              {Object.entries(selectedGems).map(([gemType, quantity]) => {
+                const gem = gemsData.find(g => g.type === gemType);
+                if (!gem) return null;
+                
+                return (
+                  <div key={gemType} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <img src={gem.icon} alt={gem.name} className="w-6 h-6" />
+                      <span className="text-white font-rajdhani">{gem.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-white font-rajdhani font-bold">{quantity}x</div>
+                      <div className="text-text-secondary text-sm">{formatCurrencyWithSymbol(gem.price * quantity)}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-text-secondary text-center py-4">
+              No gems selected
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-          {gemsDefinitions.map(gem => {
-            const available = gem.quantity - gem.frozen_quantity;
+          {gemsData.map(gem => {
+            const available = gem.available_quantity;
             const selected = selectedGems[gem.type] || 0;
             
-            if (available <= 0 && selected <= 0) return null;
+            if (!gem.has_available && selected <= 0) return null;
             
             return (
-              <div key={gem.type} className="bg-surface-sidebar rounded-lg p-3">
+              <div key={gem.type} className="bg-surface-card rounded-lg p-3 border border-opacity-20" style={{ borderColor: gem.color }}>
                 <div className="flex items-center space-x-2 mb-2">
                   <img src={gem.icon} alt={gem.name} className="w-6 h-6" />
                   <div>
@@ -385,11 +426,18 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
           <div className="text-text-secondary">
             Get ready for battle...
           </div>
+          
+          {loading && (
+            <div className="flex items-center justify-center space-x-2 mt-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-accent-primary"></div>
+              <span className="text-text-secondary">Joining game...</span>
+            </div>
+          )}
         </div>
       );
     }
 
-    const { result, playerMove, opponentMove, commission } = matchResult;
+    const { result, playerMove, opponentMove, commission, gameResult } = matchResult;
     
     return (
       <div className="space-y-6">
@@ -452,6 +500,12 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
               </span>
             </div>
           </div>
+          
+          {gameResult && (
+            <div className="text-xs text-text-secondary">
+              Game ID: {gameResult.id}
+            </div>
+          )}
         </div>
 
         <div className="text-center text-text-secondary text-sm">
