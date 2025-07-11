@@ -199,6 +199,7 @@ class Game(BaseModel):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
+    reveal_deadline: Optional[datetime] = None  # Крайний срок для reveal
     is_bot_game: bool = False
     bot_id: Optional[str] = None
 
