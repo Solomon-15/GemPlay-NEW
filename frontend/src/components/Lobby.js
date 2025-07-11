@@ -354,7 +354,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {getPaginatedItems(availableBets, currentPage.availableBets).map((game) => (
             <PlayerCard 
-              key={game.id} 
+              key={game.game_id || game.id} 
               game={game} 
               user={user}
               onUpdateUser={() => {
