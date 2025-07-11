@@ -85,7 +85,7 @@ const PlayerCard = ({
 
   const handleAcceptClick = () => {
     if (onAccept) {
-      onAccept(game);
+      onAccept(game.id); // Передаем ID игры, а не объект
     } else {
       setShowAcceptModal(true);
     }
