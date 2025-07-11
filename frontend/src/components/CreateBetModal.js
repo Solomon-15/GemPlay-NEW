@@ -151,6 +151,12 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         break;
     }
     
+    // Check if there was an error (insufficient gems)
+    if (autoSelected.error) {
+      showError(autoSelected.error);
+      return;
+    }
+    
     setSelectedGems(autoSelected);
   };
 
