@@ -214,8 +214,7 @@ def test_cancel_bet_functionality() -> None:
         
         # Buy some Ruby gems (cheapest at $1 each)
         buy_response, buy_success = make_request(
-            "POST", "/gems/buy",
-            data={"gem_type": "Ruby", "quantity": 10},
+            "POST", "/gems/buy?gem_type=Ruby&quantity=10",
             auth_token=admin_token
         )
         
@@ -229,8 +228,7 @@ def test_cancel_bet_functionality() -> None:
         
         # Buy some Emerald gems too
         buy_emerald_response, buy_emerald_success = make_request(
-            "POST", "/gems/buy",
-            data={"gem_type": "Emerald", "quantity": 3},
+            "POST", "/gems/buy?gem_type=Emerald&quantity=3",
             auth_token=admin_token
         )
         
