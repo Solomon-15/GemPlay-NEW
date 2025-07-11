@@ -260,7 +260,9 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (response.data.success) {
+      console.log('Cancel bet response:', response.data); // Debug log
+      
+      if (response.data && response.data.success) {
         showSuccess('Bet cancelled successfully');
         // Refresh the lobby data after cancellation
         await fetchLobbyData();
@@ -268,11 +270,13 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           onUpdateUser();
         }
       } else {
-        showError('Failed to cancel bet');
+        console.error('Cancel bet failed - no success field:', response.data);
+        showError('Failed to cancel bet - unexpected response format');
       }
     } catch (error) {
       console.error('Error cancelling bet:', error);
-      showError(error.response?.data?.detail || 'Failed to cancel bet');
+      console.error('Error response:', error.response?.data);
+      showError(error.response?.data?.detail || error.message || 'Failed to cancel bet');
       // Even if the API call fails, we can still refresh the data
       await fetchLobbyData();
     }
