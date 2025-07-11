@@ -384,7 +384,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
                   <img src={gem.icon} alt={gem.name} className="w-6 h-6" />
                   <div>
                     <div className="text-white font-rajdhani font-bold text-sm">{gem.name}</div>
-                    <div className="text-text-secondary text-xs">{formatCurrencyWithSymbol(gem.price)}</div>
+                    <div className="text-text-secondary text-xs">{safeFormatCurrency(gem.price)}</div>
                   </div>
                 </div>
                 
