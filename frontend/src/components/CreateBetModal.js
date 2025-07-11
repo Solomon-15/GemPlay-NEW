@@ -311,8 +311,8 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      {/* Amount Input */}
-      <div>
+      {/* Fixed Bet Amount at Top */}
+      <div className="sticky top-0 bg-surface-card border-b border-border-primary p-4 -m-4 mb-2 z-10">
         <label className="block text-white font-rajdhani text-lg mb-3">
           Bet Amount
         </label>
@@ -373,13 +373,32 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       <div>
         <div className="flex justify-between items-center mb-3">
           <label className="text-white font-rajdhani text-lg">Selected Gems</label>
-          <div className="text-green-400 font-rajdhani text-xl font-bold">
+          <div className={`font-rajdhani text-xl font-bold ${
+            betAmount && Math.abs(totalGemValue - parseFloat(betAmount)) < 0.01 
+              ? 'text-green-400' 
+              : totalGemValue > 0 
+                ? 'text-orange-400' 
+                : 'text-text-secondary'
+          }`}>
             {formatCurrencyWithSymbol(totalGemValue)}
+            {betAmount && parseFloat(betAmount) > 0 && (
+              <span className="text-text-secondary text-sm ml-2">
+                / {formatCurrencyWithSymbol(parseFloat(betAmount))}
+              </span>
+            )}
           </div>
         </div>
         <div className="bg-surface-sidebar rounded-lg p-4 min-h-16 border border-border-primary">
           {renderSelectedGems()}
         </div>
+        
+        {/* Show difference warning if amounts don't match */}
+        {betAmount && parseFloat(betAmount) > 0 && Math.abs(totalGemValue - parseFloat(betAmount)) > 0.01 && (
+          <div className="mt-2 text-orange-400 text-sm font-rajdhani">
+            ⚠️ Selected gems total (${totalGemValue}) doesn't match bet amount (${parseFloat(betAmount)}). 
+            Use auto-combination buttons or adjust manually.
+          </div>
+        )}
       </div>
 
       {/* Mini Inventory for Manual Editing */}
