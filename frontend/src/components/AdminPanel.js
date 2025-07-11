@@ -303,6 +303,135 @@ const AdminPanel = ({ user, onClose }) => {
     }
   };
 
+  const BetsContent = () => (
+    <div className="space-y-8">
+      <div>
+        <h2 className="font-russo text-2xl text-white mb-6">Bet Management</h2>
+        
+        {/* Bet Settings */}
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 mb-6">
+          <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Bet Limits</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-text-secondary text-sm mb-2">Minimum Bet Amount ($)</label>
+              <input
+                type="number"
+                defaultValue="1"
+                min="1"
+                className="w-full px-4 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-text-secondary text-sm mb-2">Maximum Bet Amount ($)</label>
+              <input
+                type="number"
+                defaultValue="3000"
+                min="1"
+                className="w-full px-4 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-text-secondary text-sm mb-2">Commission Rate (%)</label>
+              <input
+                type="number"
+                defaultValue="6"
+                min="0"
+                max="100"
+                step="0.1"
+                className="w-full px-4 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-text-secondary text-sm mb-2">Auto-Cancel Time (hours)</label>
+              <input
+                type="number"
+                defaultValue="24"
+                min="1"
+                max="168"
+                className="w-full px-4 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+              />
+            </div>
+          </div>
+          
+          <div className="mt-6">
+            <button className="px-6 py-3 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300">
+              Save Settings
+            </button>
+          </div>
+        </div>
+
+        {/* Current Bets Overview */}
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 mb-6">
+          <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Current Bets</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-surface-sidebar rounded-lg p-4">
+              <div className="text-text-secondary text-sm">Active Bets</div>
+              <div className="text-2xl font-bold text-green-400">{stats.games?.active || '—'}</div>
+            </div>
+            <div className="bg-surface-sidebar rounded-lg p-4">
+              <div className="text-text-secondary text-sm">Total Volume Today</div>
+              <div className="text-2xl font-bold text-blue-400">$0</div>
+            </div>
+            <div className="bg-surface-sidebar rounded-lg p-4">
+              <div className="text-text-secondary text-sm">Commission Earned</div>
+              <div className="text-2xl font-bold text-yellow-400">$0</div>
+            </div>
+            <div className="bg-surface-sidebar rounded-lg p-4">
+              <div className="text-text-secondary text-sm">Cancelled Bets</div>
+              <div className="text-2xl font-bold text-red-400">0</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bet History Table */}
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+          <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Recent Bets</h3>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-border-primary">
+                  <th className="pb-3 text-text-secondary font-rajdhani">Game ID</th>
+                  <th className="pb-3 text-text-secondary font-rajdhani">Creator</th>
+                  <th className="pb-3 text-text-secondary font-rajdhani">Amount</th>
+                  <th className="pb-3 text-text-secondary font-rajdhani">Status</th>
+                  <th className="pb-3 text-text-secondary font-rajdhani">Created</th>
+                  <th className="pb-3 text-text-secondary font-rajdhani">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border-primary">
+                  <td className="py-3 text-white font-rajdhani">#12345</td>
+                  <td className="py-3 text-white">admin@gemplay.com</td>
+                  <td className="py-3 text-green-400 font-rajdhani font-bold">$100.00</td>
+                  <td className="py-3">
+                    <span className="bg-orange-600 text-white text-xs font-rajdhani font-bold px-2 py-1 rounded">
+                      WAITING
+                    </span>
+                  </td>
+                  <td className="py-3 text-text-secondary text-sm">2 hours ago</td>
+                  <td className="py-3">
+                    <button className="text-red-400 hover:text-red-300 text-sm">Cancel</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3 text-text-secondary" colSpan="6">
+                    No recent bets to display
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const GamesContent = () => (
     <div className="space-y-8">
       <div>
