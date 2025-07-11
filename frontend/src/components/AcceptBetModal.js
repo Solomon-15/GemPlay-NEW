@@ -333,7 +333,17 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       const result = await response.json();
       
-      // Display match result
+      // Check if game is in reveal phase
+      if (result.status === 'REVEAL') {
+        // Show reveal phase interface
+        showSuccess('Игра началась! Нажмите "Reveal" для завершения битвы.');
+        
+        // Wait for reveal action
+        setCurrentStep(4); // New step for reveal
+        return;
+      }
+      
+      // Old logic for immediate completion (fallback)
       setMatchResult({
         playerMove: selectedMove,
         opponentMove: result.creator_move,
