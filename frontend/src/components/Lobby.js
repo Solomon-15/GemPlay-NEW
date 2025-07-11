@@ -509,7 +509,10 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       <div className="text-center mb-8">
         <button 
           onClick={() => setShowCreateBetModal(true)}
-          className="px-8 py-4 bg-gradient-to-r from-green-700 to-green-800 text-white font-rajdhani font-bold text-xl rounded-lg hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none shadow-lg hover:shadow-green-500/25"
+          className="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-rajdhani font-bold text-xl rounded-lg hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-green-500/50 animate-bounce hover:animate-none"
+          style={{
+            animation: 'bounce 2s infinite'
+          }}
         >
           <svg className="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
