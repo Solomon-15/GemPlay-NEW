@@ -559,81 +559,102 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     );
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
-      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border-primary">
-          <h2 className="text-white font-russo text-xl">Join Battle</h2>
-          <button
-            onClick={onClose}
-            className="text-text-secondary hover:text-white transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="p-4 border-b border-border-primary">
-          <div className="flex items-center space-x-2">
-            {steps.map((step, index) => (
-              <React.Fragment key={step.id}>
-                <div className={`flex-1 flex items-center space-x-2 ${
-                  currentStep >= step.id ? 'text-accent-primary' : 'text-text-secondary'
-                }`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    currentStep >= step.id ? 'bg-accent-primary text-white' : 'bg-surface-sidebar text-text-secondary'
-                  }`}>
-                    {step.id}
-                  </div>
-                  <span className="text-xs font-rajdhani hidden sm:block">{step.name}</span>
-                </div>
-                {index < steps.length - 1 && (
-                  <div className={`w-8 h-0.5 ${
-                    currentStep > step.id ? 'bg-accent-primary' : 'bg-surface-sidebar'
-                  }`} />
-                )}
-              </React.Fragment>
-            ))}
+  // Wrap entire component in error boundary
+  try {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-border-primary">
+            <h2 className="text-white font-russo text-xl">Join Battle</h2>
+            <button
+              onClick={onClose}
+              className="text-text-secondary hover:text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-        </div>
 
-        {/* Content */}
-        <div className="p-4 overflow-y-auto max-h-96">
-          {currentStep === 1 && renderStep1()}
-          {currentStep === 2 && renderStep2()}
-          {currentStep === 3 && renderStep3()}
-        </div>
-
-        {/* Footer */}
-        {currentStep < 3 && (
-          <div className="p-4 border-t border-border-primary">
-            <div className="flex space-x-3">
-              {currentStep > 1 && (
-                <button
-                  onClick={handleBack}
-                  disabled={loading}
-                  className="px-4 py-2 bg-surface-sidebar text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
-                >
-                  Back
-                </button>
-              )}
-              
-              <button
-                onClick={handleNext}
-                disabled={loading}
-                className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
-              >
-                {currentStep === 2 ? 'Start Battle!' : 'Next'}
-              </button>
+          {/* Progress Steps */}
+          <div className="p-4 border-b border-border-primary">
+            <div className="flex items-center space-x-2">
+              {steps.map((step, index) => (
+                <React.Fragment key={step.id}>
+                  <div className={`flex-1 flex items-center space-x-2 ${
+                    currentStep >= step.id ? 'text-accent-primary' : 'text-text-secondary'
+                  }`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      currentStep >= step.id ? 'bg-accent-primary text-white' : 'bg-surface-sidebar text-text-secondary'
+                    }`}>
+                      {step.id}
+                    </div>
+                    <span className="text-xs font-rajdhani hidden sm:block">{step.name}</span>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div className={`w-8 h-0.5 ${
+                      currentStep > step.id ? 'bg-accent-primary' : 'bg-surface-sidebar'
+                    }`} />
+                  )}
+                </React.Fragment>
+              ))}
             </div>
           </div>
-        )}
+
+          {/* Content */}
+          <div className="p-4 overflow-y-auto max-h-96">
+            {currentStep === 1 && renderStep1()}
+            {currentStep === 2 && renderStep2()}
+            {currentStep === 3 && renderStep3()}
+          </div>
+
+          {/* Footer */}
+          {currentStep < 3 && (
+            <div className="p-4 border-t border-border-primary">
+              <div className="flex space-x-3">
+                {currentStep > 1 && (
+                  <button
+                    onClick={handleBack}
+                    disabled={loading}
+                    className="px-4 py-2 bg-surface-sidebar text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                  >
+                    Back
+                  </button>
+                )}
+                
+                <button
+                  onClick={handleNext}
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                >
+                  {currentStep === 2 ? 'Start Battle!' : 'Next'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error('AcceptBetModal render error:', error);
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-surface-card border border-border-primary rounded-lg w-full max-w-md p-6">
+          <h2 className="text-xl font-russo text-white mb-4">Error</h2>
+          <p className="text-text-secondary mb-4">
+            An error occurred while loading the battle interface. Please try again.
+          </p>
+          <button
+            onClick={onClose}
+            className="w-full py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default AcceptBetModal;
