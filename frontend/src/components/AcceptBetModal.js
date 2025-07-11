@@ -271,20 +271,9 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h4 className="text-white font-rajdhani text-lg">Gem Selection</h4>
-          <button
-            onClick={autoFillGems}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 flex items-center space-x-2"
-          >
-            {loading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Loading...</span>
-              </>
-            ) : (
-              <span>Auto Fill</span>
-            )}
-          </button>
+          <div className="text-sm text-text-secondary">
+            Select gems manually to match the bet amount
+          </div>
         </div>
 
         {/* Selected Gems Display */}
