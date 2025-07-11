@@ -1,4 +1,16 @@
 backend:
+  - task: "Rock-Paper-Scissors Game Logic Integration"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Verified complete game logic implementation including winner determination, gem distribution, commission handling (6% frozen, 3% profit), and proper transaction recording. The join_game endpoint integrates with determine_game_winner for immediate result calculation."
+
   - task: "Gems Calculate Combination API"
     implemented: true
     working: true
