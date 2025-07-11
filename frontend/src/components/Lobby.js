@@ -353,6 +353,12 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
               key={game.id} 
               game={game} 
               user={user}
+              onUpdateUser={() => {
+                fetchLobbyData();
+                if (onUpdateUser) {
+                  onUpdateUser();
+                }
+              }}
               currentTime={new Date()}
             />
           ))}
