@@ -64,7 +64,7 @@ const PlayerCard = ({
     }, 0);
   };
 
-  // Get sorted gems by price (ascending)
+  // Get sorted gems by price (ascending) - ONLY from Inventory data
   const getSortedGems = () => {
     if (!game.bet_gems) return [];
     
