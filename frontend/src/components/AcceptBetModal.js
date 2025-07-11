@@ -522,7 +522,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
           <div className="flex justify-between">
             <span className="text-text-secondary">Commission:</span>
             <span className="text-orange-400 font-rajdhani font-bold">
-              {formatCurrencyWithSymbol(commission)}
+              {safeFormatCurrency(commission)}
             </span>
           </div>
           
