@@ -223,18 +223,18 @@ const Inventory = ({ user, onUpdateUser }) => {
                   id="available" 
                   tooltip="Available balance for creating new bets. This is your total balance minus any frozen funds."
                 >
-                  <div className="text-center">
+                  <div className="text-center pt-2">
                     <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Available</h3>
                     
                     <div className="mb-1 md:mb-2">
                       <div className="font-rajdhani text-lg md:text-2xl font-bold text-green-400 break-words">
-                        ${portfolioData.available.value.toFixed(2)}
+                        ${formatNumber(portfolioData.available.value)}
                       </div>
                     </div>
                     
                     <div className="text-xs text-yellow-400">
                       {portfolioData.available.frozenFunds > 0 
-                        ? `Frozen: $${portfolioData.available.frozenFunds.toFixed(2)}`
+                        ? `Frozen: $${formatNumber(portfolioData.available.frozenFunds)}`
                         : 'No frozen funds'
                       }
                     </div>
@@ -248,18 +248,18 @@ const Inventory = ({ user, onUpdateUser }) => {
                   id="gems" 
                   tooltip="Your gem collection. Gems are used to create and accept bets. Higher value gems allow for larger bets."
                 >
-                  <div className="text-center">
+                  <div className="text-center pt-2">
                     <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Gems</h3>
                     
                     <div className="mb-1 md:mb-2">
                       <div className="font-rajdhani text-lg md:text-2xl font-bold text-accent-primary break-words">
-                        {portfolioData.gems.totalCount} / {Math.round(portfolioData.gems.totalValue)}
+                        {formatNumber(portfolioData.gems.totalCount)} / {formatNumber(portfolioData.gems.totalValue)}
                       </div>
                     </div>
                     
                     <div className="text-xs text-yellow-400">
                       {portfolioData.gems.frozenCount > 0 
-                        ? `Frozen: ${portfolioData.gems.frozenCount} / ${Math.round(portfolioData.gems.frozenValue)}`
+                        ? `Frozen: ${formatNumber(portfolioData.gems.frozenCount)} / ${formatNumber(portfolioData.gems.frozenValue)}`
                         : 'No frozen gems'
                       }
                     </div>
@@ -273,12 +273,12 @@ const Inventory = ({ user, onUpdateUser }) => {
                   id="total" 
                   tooltip="Your total estimated value including both balance and gems."
                 >
-                  <div className="text-center">
+                  <div className="text-center pt-2">
                     <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Total</h3>
                     
                     <div className="mb-1 md:mb-2">
                       <div className="font-rajdhani text-lg md:text-2xl font-bold text-white break-words">
-                        ${portfolioData.total.value.toFixed(2)}
+                        ${formatNumber(portfolioData.total.value)}
                       </div>
                     </div>
                     
