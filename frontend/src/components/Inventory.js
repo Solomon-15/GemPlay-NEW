@@ -203,98 +203,90 @@ const Inventory = ({ user, onUpdateUser }) => {
         <h1 className="font-russo text-4xl md:text-6xl text-accent-primary mb-4">
           My Inventory
         </h1>
-        <p className="font-roboto text-xl text-text-secondary">
+        <p className="font-roboto text-xl text-text-secondary mb-8">
           Manage Your NFT Gem Collection
         </p>
-      </div>
-
-      {/* Portfolio Overview - Updated Design */}
-      {portfolioData && (
-        <div className="max-w-6xl mx-auto mb-8">
-          <div className="bg-surface-card border border-border-primary rounded-lg p-6">
+        
+        {/* Three Portfolio Blocks - Moved directly under subtitle */}
+        {portfolioData && (
+          <div className="max-w-6xl mx-auto mb-8">
             <div className="grid grid-cols-3 gap-2 md:gap-4 min-w-0 overflow-x-auto">
               {/* Available Block */}
-              <div className="bg-surface-sidebar rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
-                <div className="flex items-center justify-center mb-2 md:mb-3">
-                  <InfoTooltip 
-                    id="available" 
-                    tooltip="Available balance for creating new bets. This is your total balance minus any frozen funds."
-                  >
-                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white text-center">Available</h3>
-                  </InfoTooltip>
-                </div>
-                
-                <div className="text-center mb-1 md:mb-2">
-                  <div className="font-rajdhani text-lg md:text-2xl font-bold text-green-400 break-words">
-                    ${portfolioData.available.value.toFixed(2)}
+              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
+                <InfoTooltip 
+                  id="available" 
+                  tooltip="Available balance for creating new bets. This is your total balance minus any frozen funds."
+                >
+                  <div className="text-center">
+                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Available</h3>
+                    
+                    <div className="mb-1 md:mb-2">
+                      <div className="font-rajdhani text-lg md:text-2xl font-bold text-green-400 break-words">
+                        ${portfolioData.available.value.toFixed(2)}
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-yellow-400">
+                      {portfolioData.available.frozenFunds > 0 
+                        ? `Frozen: $${portfolioData.available.frozenFunds.toFixed(2)}`
+                        : 'No frozen funds'
+                      }
+                    </div>
                   </div>
-                </div>
-                
-                <div className="text-center">
-                  <div className="text-xs text-yellow-400">
-                    {portfolioData.available.frozenFunds > 0 
-                      ? `Frozen: $${portfolioData.available.frozenFunds.toFixed(2)}`
-                      : 'No frozen funds'
-                    }
-                  </div>
-                </div>
+                </InfoTooltip>
               </div>
 
               {/* Gems Block */}
-              <div className="bg-surface-sidebar rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
-                <div className="flex items-center justify-center mb-2 md:mb-3">
-                  <InfoTooltip 
-                    id="gems" 
-                    tooltip="Your gem collection. Gems are used to create and accept bets. Higher value gems allow for larger bets."
-                  >
-                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white text-center">Gems</h3>
-                  </InfoTooltip>
-                </div>
-                
-                <div className="text-center mb-1 md:mb-2">
-                  <div className="font-rajdhani text-lg md:text-2xl font-bold text-accent-primary break-words">
-                    {portfolioData.gems.totalCount} / {Math.round(portfolioData.gems.totalValue)}
+              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
+                <InfoTooltip 
+                  id="gems" 
+                  tooltip="Your gem collection. Gems are used to create and accept bets. Higher value gems allow for larger bets."
+                >
+                  <div className="text-center">
+                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Gems</h3>
+                    
+                    <div className="mb-1 md:mb-2">
+                      <div className="font-rajdhani text-lg md:text-2xl font-bold text-accent-primary break-words">
+                        {portfolioData.gems.totalCount} / {Math.round(portfolioData.gems.totalValue)}
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-yellow-400">
+                      {portfolioData.gems.frozenCount > 0 
+                        ? `Frozen: ${portfolioData.gems.frozenCount} / ${Math.round(portfolioData.gems.frozenValue)}`
+                        : 'No frozen gems'
+                      }
+                    </div>
                   </div>
-                </div>
-                
-                <div className="text-center">
-                  <div className="text-xs text-yellow-400">
-                    {portfolioData.gems.frozenCount > 0 
-                      ? `Frozen: ${portfolioData.gems.frozenCount} / ${Math.round(portfolioData.gems.frozenValue)}`
-                      : 'No frozen gems'
-                    }
-                  </div>
-                </div>
+                </InfoTooltip>
               </div>
 
               {/* Total Block */}
-              <div className="bg-surface-sidebar rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
-                <div className="flex items-center justify-center mb-2 md:mb-3">
-                  <InfoTooltip 
-                    id="total" 
-                    tooltip="Your total estimated value including both balance and gems."
-                  >
-                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white text-center">Total</h3>
-                  </InfoTooltip>
-                </div>
-                
-                <div className="text-center mb-1 md:mb-2">
-                  <div className="font-rajdhani text-lg md:text-2xl font-bold text-white break-words">
-                    ${portfolioData.total.value.toFixed(2)}
+              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0">
+                <InfoTooltip 
+                  id="total" 
+                  tooltip="Your total estimated value including both balance and gems."
+                >
+                  <div className="text-center">
+                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Total</h3>
+                    
+                    <div className="mb-1 md:mb-2">
+                      <div className="font-rajdhani text-lg md:text-2xl font-bold text-white break-words">
+                        ${portfolioData.total.value.toFixed(2)}
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-transparent">
+                      {/* Empty space for consistent layout */}
+                      &nbsp;
+                    </div>
                   </div>
-                </div>
-                
-                <div className="text-center">
-                  <div className="text-xs text-transparent">
-                    {/* Empty space for consistent layout */}
-                    &nbsp;
-                  </div>
-                </div>
+                </InfoTooltip>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Gems Grid */}
       <div className="max-w-7xl mx-auto">
