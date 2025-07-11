@@ -171,28 +171,46 @@ const Inventory = ({ user, onUpdateUser }) => {
     });
   };
 
-  const InfoTooltip = ({ id, tooltip, children }) => (
-    <div className="relative">
-      {children}
-      <button
-        onMouseEnter={() => setTooltipVisible(id)}
-        onMouseLeave={() => setTooltipVisible(null)}
-        onClick={() => setTooltipVisible(tooltipVisible === id ? null : id)}
-        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gray-600 text-white text-xs flex items-center justify-center hover:bg-gray-500 transition-colors z-20"
-      >
-        i
-      </button>
-      {tooltipVisible === id && (
-        <div className="absolute bottom-full right-0 mb-1 w-64 bg-slate-800 text-white text-sm rounded-lg p-3 shadow-xl border border-slate-700 z-[99999]"
-             style={{
-               maxWidth: '280px'
-             }}>
-          <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
-          {tooltip}
-        </div>
-      )}
-    </div>
-  );
+  const InfoTooltip = ({ id, tooltip, children }) => {
+    const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+    
+    const handleMouseEnter = (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setTooltipPosition({
+        top: rect.top - 10,
+        left: rect.left + rect.width / 2 - 140 // Center the tooltip
+      });
+      setTooltipVisible(id);
+    };
+    
+    return (
+      <div className="relative">
+        {children}
+        <button
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={() => setTooltipVisible(null)}
+          onClick={handleMouseEnter}
+          className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gray-600 text-white text-xs flex items-center justify-center hover:bg-gray-500 transition-colors z-20"
+        >
+          i
+        </button>
+        {tooltipVisible === id && (
+          <div 
+            className="fixed w-64 bg-slate-800 text-white text-sm rounded-lg p-3 shadow-xl border border-slate-700 z-[99999]"
+            style={{
+              top: `${tooltipPosition.top}px`,
+              left: `${tooltipPosition.left}px`,
+              maxWidth: '280px',
+              transform: 'translateY(-100%)'
+            }}
+          >
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800"></div>
+            {tooltip}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
