@@ -504,6 +504,8 @@ const AdminPanel = ({ user, onClose }) => {
         return <div className="text-white">Bot management (in development)</div>;
       case 'games':
         return <GamesContent />;
+      case 'bets':
+        return <BetsContent />;
       case 'gems':
         return <div className="text-white">Gem management (in development)</div>;
       case 'profit':
