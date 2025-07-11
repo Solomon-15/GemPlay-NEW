@@ -305,17 +305,17 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       <div className="text-center">
         <h3 className="text-white font-rajdhani text-xl mb-2">Match Opponent's Bet</h3>
         <div className="text-green-400 font-rajdhani text-2xl font-bold">
-          Target: {formatCurrencyWithSymbol(targetAmount)}
+          Target: {safeFormatCurrency(targetAmount)}
         </div>
         <div className="text-blue-400 font-rajdhani text-lg">
-          Your Bet: {formatCurrencyWithSymbol(totalGemValue)}
+          Your Bet: {safeFormatCurrency(totalGemValue)}
         </div>
         <div className="text-orange-400 font-rajdhani text-sm">
-          Commission: {formatCurrencyWithSymbol(commissionAmount)}
+          Commission: {safeFormatCurrency(commissionAmount)}
         </div>
         {Math.abs(totalGemValue - targetAmount) > 0.01 && (
           <div className="text-red-400 text-sm mt-1">
-            ⚠️ Amount mismatch: {formatCurrencyWithSymbol(Math.abs(totalGemValue - targetAmount))}
+            ⚠️ Amount mismatch: {safeFormatCurrency(Math.abs(totalGemValue - targetAmount))}
           </div>
         )}
       </div>
