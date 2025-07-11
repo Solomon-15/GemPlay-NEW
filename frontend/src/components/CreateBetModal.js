@@ -189,6 +189,12 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       return false;
     }
 
+    // CRITICAL: Check if selected gems total matches bet amount exactly
+    if (Math.abs(totalGemValue - amount) > 0.01) {
+      showError(`Selected gems total ($${totalGemValue}) must match bet amount ($${amount}). Use auto-combination buttons or adjust manually.`);
+      return false;
+    }
+
     // Validate against Inventory
     const validation = validateGemOperation(selectedGems);
     if (!validation.valid) {
