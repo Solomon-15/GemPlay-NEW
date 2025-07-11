@@ -312,6 +312,8 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
           {Object.keys(selectedGems).length > 0 ? (
             <div className="space-y-2">
               {Object.entries(selectedGems).map(([gemType, quantity]) => {
+                if (!gemsData || !Array.isArray(gemsData)) return null;
+                
                 const gem = gemsData.find(g => g.type === gemType);
                 if (!gem) return null;
                 
