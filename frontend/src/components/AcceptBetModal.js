@@ -157,33 +157,39 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   };
 
   const validateStep1 = () => {
-    // Check if user has enough balance for commission
-    const availableBalance = (user?.virtual_balance || 0) - (user?.frozen_balance || 0);
-    
-    if (availableBalance < commissionAmount) {
-      showError(`Недостаточно средств для комиссии. Требуется: $${commissionAmount.toFixed(2)}, доступно: $${availableBalance.toFixed(2)}`);
+    try {
+      // Check if user has enough balance for commission
+      const availableBalance = (user?.virtual_balance || 0) - (user?.frozen_balance || 0);
+      
+      if (availableBalance < commissionAmount) {
+        showError(`Недостаточно средств для комиссии. Требуется: $${commissionAmount.toFixed(2)}, доступно: $${availableBalance.toFixed(2)}`);
+        return false;
+      }
+
+      if (Object.keys(selectedGems).length === 0) {
+        showError('Пожалуйста, выберите гемы для ставки');
+        return false;
+      }
+
+      // Check if selected gems total matches bet amount exactly
+      if (Math.abs(totalGemValue - targetAmount) > 0.01) {
+        showError(`Сумма выбранных гемов ($${totalGemValue.toFixed(2)}) должна точно соответствовать ставке ($${targetAmount.toFixed(2)})`);
+        return false;
+      }
+
+      // Validate against Inventory
+      const validation = validateGemOperation(selectedGems);
+      if (!validation.valid) {
+        showError(validation.error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in validateStep1:', error);
+      showError('Ошибка валидации данных');
       return false;
     }
-
-    if (Object.keys(selectedGems).length === 0) {
-      showError('Пожалуйста, выберите гемы для ставки');
-      return false;
-    }
-
-    // Check if selected gems total matches bet amount exactly
-    if (Math.abs(totalGemValue - targetAmount) > 0.01) {
-      showError(`Сумма выбранных гемов ($${totalGemValue.toFixed(2)}) должна точно соответствовать ставке ($${targetAmount.toFixed(2)})`);
-      return false;
-    }
-
-    // Validate against Inventory
-    const validation = validateGemOperation(selectedGems);
-    if (!validation.valid) {
-      showError(validation.error);
-      return false;
-    }
-
-    return true;
   };
 
   const validateStep2 = () => {
