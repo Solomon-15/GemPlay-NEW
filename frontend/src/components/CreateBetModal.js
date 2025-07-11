@@ -404,7 +404,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       </div>
 
       {/* Strategy Buttons */}
-      <div>
+      <div className="px-4">
         <label className="block text-white font-rajdhani text-lg mb-3">
           Auto Combination
         </label>
