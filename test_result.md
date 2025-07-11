@@ -461,6 +461,18 @@ frontend:
 
 frontend:
 frontend:
+  - task: "Cancel Bet Button Fix"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Fixed Cancel bet button issue: backend DELETE /api/games/{game_id}/cancel endpoint was not returning 'success: true' field which frontend expected. Added 'success: True' to response to match frontend logic in handleCancelBet function."
+
   - task: "Lobby Cancel/Accept Buttons Fix - Updated"
     implemented: true
     working: false
