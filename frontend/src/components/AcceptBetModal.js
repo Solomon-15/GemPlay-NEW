@@ -144,7 +144,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [onClose]);
+  }, []); // Убираем onClose из зависимостей, чтобы таймер не сбрасывался
 
   // Strategy functions for auto gem selection
   const handleStrategySelect = async (strategy) => {
