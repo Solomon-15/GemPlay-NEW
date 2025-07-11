@@ -93,6 +93,8 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
 
   // Calculate total value of selected gems
   useEffect(() => {
+    if (!gemsData || !Array.isArray(gemsData)) return;
+    
     const total = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
       return sum + (gem ? gem.price * quantity : 0);
