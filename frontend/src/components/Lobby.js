@@ -256,7 +256,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const handleCancelBet = async (gameId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/games/${gameId}/cancel`, {}, {
+      const response = await axios.delete(`${API}/games/${gameId}/cancel`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
