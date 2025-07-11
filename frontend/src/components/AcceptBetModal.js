@@ -45,7 +45,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     { id: 3, name: 'Match', description: 'Battle result' }
   ];
 
-  // Auto-fill gems using API
+  // Auto-fill gems using API (only when user clicks Auto Fill button)
   const autoFillGems = async () => {
     setLoading(true);
     
