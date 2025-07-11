@@ -358,7 +358,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
                     </div>
                     <div className="text-right">
                       <div className="text-white font-rajdhani font-bold">{quantity}x</div>
-                      <div className="text-text-secondary text-sm">{formatCurrencyWithSymbol(gem.price * quantity)}</div>
+                      <div className="text-text-secondary text-sm">{safeFormatCurrency(gem.price * quantity)}</div>
                     </div>
                   </div>
                 );
