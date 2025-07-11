@@ -431,7 +431,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       >
         <div className="space-y-3 max-h-64 overflow-y-auto">
           {getPaginatedItems(availableBots, currentPage.availableBots).map((game) => (
-            <GameCard key={game.id} game={game} onJoin={handleJoinGame} isBot={true} />
+            <GameCard key={game.game_id || game.id} game={game} onJoin={handleJoinGame} isBot={true} />
           ))}
           {availableBots.length === 0 && (
             <p className="text-text-secondary text-center py-8">No available bots</p>
