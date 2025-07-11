@@ -16,29 +16,17 @@ const safeFormatCurrency = (amount) => {
 };
 
 const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
-  // Early return if required props are missing
+  // MUST call hooks first - before any conditional logic or early returns
+  const { 
+    gemsData, 
+    validateGemOperation, 
+    refreshInventory 
+  } = useGems();
+  const { showSuccess, showError } = useNotifications();
+
+  // Now we can safely do early returns after all hooks are called
   if (!bet || !user || !onClose) {
     console.error('AcceptBetModal: Missing required props', { bet, user, onClose });
-    return null;
-  }
-
-  let gemsData = [];
-  let validateGemOperation = () => ({ valid: true });
-  let refreshInventory = () => {};
-  let showSuccess = () => {};
-  let showError = () => {};
-
-  try {
-    const gemsContext = useGems();
-    const notificationContext = useNotifications();
-    
-    gemsData = gemsContext?.gemsData || [];
-    validateGemOperation = gemsContext?.validateGemOperation || (() => ({ valid: true }));
-    refreshInventory = gemsContext?.refreshInventory || (() => {});
-    showSuccess = notificationContext?.showSuccess || (() => {});
-    showError = notificationContext?.showError || (() => {});
-  } catch (error) {
-    console.error('AcceptBetModal: Error accessing contexts', error);
     return null;
   }
   
