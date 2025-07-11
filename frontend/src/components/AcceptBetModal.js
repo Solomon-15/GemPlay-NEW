@@ -337,7 +337,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         </div>
 
         <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-          {gemsData.map(gem => {
+          {gemsData && Array.isArray(gemsData) ? gemsData.map(gem => {
             const available = gem.available_quantity;
             const selected = selectedGems[gem.type] || 0;
             
