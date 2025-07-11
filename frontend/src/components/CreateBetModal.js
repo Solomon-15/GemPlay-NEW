@@ -17,15 +17,12 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   
-  // Step 1: Amount input
+  // Unified Gem Selection
   const [betAmount, setBetAmount] = useState('');
-  const [useAuto, setUseAuto] = useState(true);
-  
-  // Step 2: Gems selection - ONLY FROM INVENTORY
   const [selectedGems, setSelectedGems] = useState({});
   const [totalGemValue, setTotalGemValue] = useState(0);
   
-  // Step 3: Move selection
+  // Step 2: Move selection
   const [selectedMove, setSelectedMove] = useState('');
   
   // Constants
@@ -40,29 +37,41 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   ];
 
   const steps = [
-    { id: 1, name: 'Amount', description: 'Enter bet amount' },
-    { id: 2, name: 'Gems', description: 'Select gems' },
-    { id: 3, name: 'Move', description: 'Choose your move' },
-    { id: 4, name: 'Confirm', description: 'Create bet' }
+    { id: 1, name: 'Gem Selection', description: 'Choose gems and amount' },
+    { id: 2, name: 'Move', description: 'Choose your move' },
+    { id: 3, name: 'Confirm', description: 'Create bet' }
   ];
 
-  // AUTO-SELECT: Use ONLY available gems from Inventory
-  const autoSelectGemsFromAmount = (amount) => {
-    if (amount <= 0) return {};
-    
-    // Get only available gems from inventory, sorted by price descending (most expensive first)
-    const availableGems = getSortedGems('price', 'desc').filter(gem => gem.has_available);
-    
-    if (availableGems.length === 0) {
-      showError('No available gems in inventory');
-      return {};
-    }
-    
+  // AUTO-COMBINATION STRATEGIES
+  const autoSelectSmall = (amount) => {
+    // Small: Use cheapest gems first (Ruby, Amber, Topaz)
+    const cheapGems = getSortedGems('price', 'asc').filter(gem => 
+      gem.has_available && ['Ruby', 'Amber', 'Topaz'].includes(gem.type)
+    );
+    return selectGemsWithStrategy(cheapGems, amount);
+  };
+
+  const autoSelectSmart = (amount) => {
+    // Smart: Use medium-priced gems (Topaz, Emerald, Aquamarine)
+    const mediumGems = getSortedGems('price', 'asc').filter(gem => 
+      gem.has_available && ['Topaz', 'Emerald', 'Aquamarine'].includes(gem.type)
+    );
+    return selectGemsWithStrategy(mediumGems, amount);
+  };
+
+  const autoSelectBig = (amount) => {
+    // Big: Use expensive gems first (Magic, Sapphire, Aquamarine)
+    const expensiveGems = getSortedGems('price', 'desc').filter(gem => 
+      gem.has_available && ['Magic', 'Sapphire', 'Aquamarine'].includes(gem.type)
+    );
+    return selectGemsWithStrategy(expensiveGems, amount);
+  };
+
+  const selectGemsWithStrategy = (gems, amount) => {
     const result = {};
     let remainingAmount = amount;
     
-    // Select gems starting from most expensive (as required)
-    for (const gem of availableGems) {
+    for (const gem of gems) {
       if (remainingAmount <= 0) break;
       
       const maxQuantityForAmount = Math.floor(remainingAmount / gem.price);
@@ -77,7 +86,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     return result;
   };
 
-  // Calculate total value - ONLY from current Inventory data
+  // Calculate total value
   useEffect(() => {
     const total = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
@@ -86,43 +95,41 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     setTotalGemValue(total);
   }, [selectedGems, gemsData]);
 
-  // Auto-select when amount changes and auto mode is on
-  useEffect(() => {
-    if (useAuto && betAmount && parseFloat(betAmount) > 0) {
-      const amount = parseFloat(betAmount);
-      const autoSelected = autoSelectGemsFromAmount(amount);
-      setSelectedGems(autoSelected);
-    }
-  }, [betAmount, useAuto, gemsData]);
-
   const handleAmountChange = (value) => {
-    const numValue = parseFloat(value);
-    if (isNaN(numValue) || numValue < MIN_BET || numValue > MAX_BET) {
-      setBetAmount(value);
-      return;
-    }
     setBetAmount(value);
   };
 
-  const handleAutoSelect = () => {
-    if (!betAmount || parseFloat(betAmount) <= 0) return;
+  const handleStrategySelect = (strategy) => {
+    if (!betAmount || parseFloat(betAmount) <= 0) {
+      showError('Please enter bet amount first');
+      return;
+    }
     
     const amount = parseFloat(betAmount);
-    const autoSelected = autoSelectGemsFromAmount(amount);
+    let autoSelected = {};
+    
+    switch (strategy) {
+      case 'small':
+        autoSelected = autoSelectSmall(amount);
+        break;
+      case 'smart':
+        autoSelected = autoSelectSmart(amount);
+        break;
+      case 'big':
+        autoSelected = autoSelectBig(amount);
+        break;
+    }
+    
     setSelectedGems(autoSelected);
-    setUseAuto(true);
   };
 
-  // CRITICAL: Validate against current Inventory state
   const handleGemQuantityChange = (gemType, quantity) => {
     const gem = gemsData.find(g => g.type === gemType);
     if (!gem) return;
     
-    // Ensure we don't exceed available inventory
     const maxQuantity = gem.available_quantity;
     const validQuantity = Math.max(0, Math.min(maxQuantity, quantity));
     
-    setUseAuto(false);
     setSelectedGems(prev => {
       if (validQuantity <= 0) {
         const newGems = { ...prev };
@@ -139,23 +146,20 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       showError(`Bet amount must be between $${MIN_BET} and $${MAX_BET}`);
       return false;
     }
-    return true;
-  };
 
-  const validateStep2 = () => {
     if (Object.keys(selectedGems).length === 0) {
       showError('Please select at least one gem');
       return false;
     }
 
-    // CRITICAL: Validate against current Inventory
+    // Validate against Inventory
     const validation = validateGemOperation(selectedGems);
     if (!validation.valid) {
       showError(validation.error);
       return false;
     }
 
-    // Check commission against user balance
+    // Check commission
     const commission = totalGemValue * COMMISSION_RATE;
     const availableBalance = user?.virtual_balance || 0;
     const frozenBalance = user?.frozen_balance || 0;
@@ -169,7 +173,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     return true;
   };
 
-  const validateStep3 = () => {
+  const validateStep2 = () => {
     if (!selectedMove) {
       showError('Please select your move');
       return false;
@@ -187,12 +191,9 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       case 2:
         isValid = validateStep2();
         break;
-      case 3:
-        isValid = validateStep3();
-        break;
     }
     
-    if (isValid && currentStep < 4) {
+    if (isValid && currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -204,7 +205,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   };
 
   const handleCreateBet = async () => {
-    if (!validateStep3()) return;
+    if (!validateStep2()) return;
     
     setLoading(true);
     try {
@@ -224,7 +225,6 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       
       if (response.ok) {
         showSuccess(`Bet created! ${formatCurrencyWithSymbol(totalGemValue * COMMISSION_RATE)} (6%) frozen until game completion.`);
-        // CRITICAL: Refresh inventory to get updated frozen quantities
         await refreshInventory();
         onUpdateUser?.();
         onClose();
@@ -238,10 +238,45 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     }
   };
 
+  // Render Selected Gems inline
+  const renderSelectedGems = () => {
+    const sortedSelectedGems = Object.entries(selectedGems)
+      .map(([gemType, quantity]) => {
+        const gem = gemsData.find(g => g.type === gemType);
+        return gem ? { ...gem, quantity } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.price - b.price); // Sort by price ascending
+
+    if (sortedSelectedGems.length === 0) {
+      return (
+        <div className="text-text-secondary text-sm text-center py-4">
+          No gems selected. Choose amount and strategy above.
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {sortedSelectedGems.map((gem) => {
+          const gemTotal = gem.quantity * gem.price;
+          return (
+            <div key={gem.type} className="flex items-center space-x-1 bg-surface-sidebar rounded-lg px-3 py-2 border border-opacity-30" style={{ borderColor: gem.color }}>
+              <img src={gem.icon} alt={gem.name} className="w-5 h-5" />
+              <span className="text-text-secondary text-xs font-rajdhani">x{gem.quantity}</span>
+              <span className="text-green-400 text-xs font-rajdhani font-bold">= {formatCurrencyWithSymbol(gemTotal)}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderStep1 = () => (
     <div className="space-y-6">
+      {/* Amount Input */}
       <div>
-        <label className="block text-white font-rajdhani text-lg mb-2">
+        <label className="block text-white font-rajdhani text-lg mb-3">
           Bet Amount
         </label>
         <div className="relative">
@@ -264,83 +299,89 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         </div>
       </div>
 
-      <div className="text-center">
-        <button
-          onClick={handleAutoSelect}
-          disabled={!betAmount || parseFloat(betAmount) <= 0}
-          className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          AUTO SELECT GEMS
-        </button>
-        <p className="text-text-secondary text-sm mt-2">
-          Automatically selects gems from your inventory (most expensive first)
-        </p>
-      </div>
-    </div>
-  );
-
-  const renderStep2 = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-white font-rajdhani text-xl mb-2">Selected Gems</h3>
-        <div className="text-green-400 font-rajdhani text-2xl font-bold">
-          {formatCurrencyWithSymbol(totalGemValue)}
-        </div>
-        {betAmount && Math.abs(totalGemValue - parseFloat(betAmount)) > 0.01 && (
-          <div className="text-orange-400 text-sm mt-1">
-            Target: {formatCurrencyWithSymbol(parseFloat(betAmount))} 
-            (Difference: {formatCurrencyWithSymbol(Math.abs(totalGemValue - parseFloat(betAmount)))})
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h4 className="text-white font-rajdhani text-lg">Your Inventory</h4>
+      {/* Strategy Buttons */}
+      <div>
+        <label className="block text-white font-rajdhani text-lg mb-3">
+          Auto Combination
+        </label>
+        <div className="grid grid-cols-3 gap-3">
           <button
-            onClick={handleAutoSelect}
-            disabled={!betAmount}
-            className="px-4 py-2 bg-blue-600 text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+            onClick={() => handleStrategySelect('small')}
+            disabled={!betAmount || parseFloat(betAmount) <= 0}
+            className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Use more cheap gems"
           >
-            Auto
+            Small
+          </button>
+          <button
+            onClick={() => handleStrategySelect('smart')}
+            disabled={!betAmount || parseFloat(betAmount) <= 0}
+            className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Balance bet with medium gems"
+          >
+            Smart
+          </button>
+          <button
+            onClick={() => handleStrategySelect('big')}
+            disabled={!betAmount || parseFloat(betAmount) <= 0}
+            className="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Use minimum quantity of expensive gems"
+          >
+            Big
           </button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+      {/* Selected Gems Display */}
+      <div>
+        <div className="flex justify-between items-center mb-3">
+          <label className="text-white font-rajdhani text-lg">Selected Gems</label>
+          <div className="text-green-400 font-rajdhani text-xl font-bold">
+            {formatCurrencyWithSymbol(totalGemValue)}
+          </div>
+        </div>
+        <div className="bg-surface-sidebar rounded-lg p-4 min-h-16 border border-border-primary">
+          {renderSelectedGems()}
+        </div>
+      </div>
+
+      {/* Mini Inventory for Manual Editing */}
+      <div>
+        <label className="block text-white font-rajdhani text-lg mb-3">
+          Your Inventory
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
           {gemsData.map(gem => {
             const selected = selectedGems[gem.type] || 0;
             
-            // Only show gems that user has in inventory
             if (!gem.has_gems) return null;
             
             return (
-              <div key={gem.type} className="bg-surface-sidebar rounded-lg p-3">
-                <div className="flex items-center space-x-2 mb-2">
-                  <img src={gem.icon} alt={gem.name} className="w-6 h-6" />
-                  <div>
-                    <div className="text-white font-rajdhani font-bold text-sm">{gem.name}</div>
-                    <div className="text-text-secondary text-xs">{formatCurrencyWithSymbol(gem.price)}</div>
-                  </div>
+              <div key={gem.type} className="bg-surface-card rounded-lg p-3 border border-opacity-20" style={{ borderColor: gem.color }}>
+                <div className="text-center mb-2">
+                  <img src={gem.icon} alt={gem.name} className="w-8 h-8 mx-auto mb-1" />
+                  <div className="text-white font-rajdhani font-bold text-xs">{gem.name}</div>
+                  <div className="text-text-secondary text-xs">{formatCurrencyWithSymbol(gem.price)}</div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-between space-x-1">
                   <button
                     onClick={() => handleGemQuantityChange(gem.type, selected - 1)}
                     disabled={selected <= 0}
-                    className="w-8 h-8 bg-red-600 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
+                    className="w-6 h-6 bg-red-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
                   >
                     −
                   </button>
                   
-                  <div className="flex-1 text-center">
-                    <div className="text-white font-rajdhani font-bold">{selected}</div>
-                    <div className="text-text-secondary text-xs">of {gem.available_quantity}</div>
+                  <div className="text-center flex-1">
+                    <div className="text-white font-rajdhani font-bold text-sm">{selected}</div>
+                    <div className="text-text-secondary text-xs">/{gem.available_quantity}</div>
                   </div>
                   
                   <button
                     onClick={() => handleGemQuantityChange(gem.type, selected + 1)}
                     disabled={selected >= gem.available_quantity}
-                    className="w-8 h-8 bg-green-600 text-white rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
+                    className="w-6 h-6 bg-green-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
                   >
                     +
                   </button>
@@ -353,11 +394,14 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     </div>
   );
 
-  const renderStep3 = () => (
+  const renderStep2 = () => (
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-white font-rajdhani text-xl mb-2">Choose Your Move</h3>
         <p className="text-text-secondary">Select your strategy for the battle</p>
+        <div className="text-green-400 font-rajdhani text-lg mt-2">
+          Betting: {formatCurrencyWithSymbol(totalGemValue)}
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -379,7 +423,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     </div>
   );
 
-  const renderStep4 = () => (
+  const renderStep3 = () => (
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-white font-rajdhani text-xl mb-4">Confirm Your Bet</h3>
@@ -405,16 +449,8 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
 
         <div className="border-t border-border-primary pt-3 mt-3">
           <div className="text-text-secondary text-sm mb-2">Selected Gems (from Inventory):</div>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(selectedGems).map(([gemType, quantity]) => {
-              const gem = gemsData.find(g => g.type === gemType);
-              return gem ? (
-                <div key={gemType} className="flex items-center space-x-1 bg-surface-card rounded px-2 py-1">
-                  <img src={gem.icon} alt={gem.name} className="w-4 h-4" />
-                  <span className="text-white text-sm">{quantity}</span>
-                </div>
-              ) : null;
-            })}
+          <div className="space-y-2">
+            {renderSelectedGems()}
           </div>
         </div>
       </div>
@@ -435,7 +471,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
-      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden">
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border-primary">
           <h2 className="text-white font-russo text-xl">Create Bet</h2>
@@ -479,7 +515,6 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           {currentStep === 1 && renderStep1()}
           {currentStep === 2 && renderStep2()}
           {currentStep === 3 && renderStep3()}
-          {currentStep === 4 && renderStep4()}
         </div>
 
         {/* Footer */}
@@ -495,7 +530,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               </button>
             )}
             
-            {currentStep < 4 ? (
+            {currentStep < 3 ? (
               <button
                 onClick={handleNext}
                 disabled={loading}
