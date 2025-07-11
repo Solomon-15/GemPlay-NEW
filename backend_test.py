@@ -208,6 +208,48 @@ def test_cancel_bet_functionality() -> None:
     
     print_success(f"Retrieved inventory with {len(inventory_response)} gem types")
     
+    # If no gems available, buy some gems first
+    if not inventory_response:
+        print_subheader("Step 2a: Buy Gems for Testing")
+        
+        # Buy some Ruby gems (cheapest at $1 each)
+        buy_response, buy_success = make_request(
+            "POST", "/gems/buy",
+            data={"gem_type": "Ruby", "quantity": 10},
+            auth_token=admin_token
+        )
+        
+        if buy_success:
+            print_success("Successfully bought 10 Ruby gems")
+            record_test("Cancel Bet - Buy Gems", True)
+        else:
+            print_error("Failed to buy gems for testing")
+            record_test("Cancel Bet - Buy Gems", False, "Failed to buy gems")
+            return
+        
+        # Buy some Emerald gems too
+        buy_emerald_response, buy_emerald_success = make_request(
+            "POST", "/gems/buy",
+            data={"gem_type": "Emerald", "quantity": 3},
+            auth_token=admin_token
+        )
+        
+        if buy_emerald_success:
+            print_success("Successfully bought 3 Emerald gems")
+        
+        # Get inventory again after purchase
+        inventory_response, inventory_success = make_request(
+            "GET", "/gems/inventory", 
+            auth_token=admin_token
+        )
+        
+        if not inventory_success:
+            print_error("Failed to get inventory after gem purchase")
+            record_test("Cancel Bet - Get Inventory After Purchase", False)
+            return
+        
+        print_success(f"Updated inventory with {len(inventory_response)} gem types")
+    
     # Find gems to use for betting (prefer Ruby and Emerald for testing)
     bet_gems = {}
     for gem in inventory_response:
@@ -219,7 +261,7 @@ def test_cancel_bet_functionality() -> None:
             bet_gems["Emerald"] = min(2, available)  # Use up to 2 Emerald gems
     
     if not bet_gems:
-        print_error("No available gems found for betting")
+        print_error("No available gems found for betting even after purchase")
         record_test("Cancel Bet - Gem Availability", False, "No gems available")
         return
     
