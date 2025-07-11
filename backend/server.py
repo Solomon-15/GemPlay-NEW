@@ -2704,6 +2704,100 @@ async def get_security_dashboard(current_admin: User = Depends(get_current_admin
             detail=f"Error fetching security dashboard data: {str(e)}"
         )
 
+@api_router.post("/admin/reset-all-games")
+async def reset_all_games(current_admin: User = Depends(get_current_admin)):
+    """Reset all active games and unfreeze all funds."""
+    try:
+        # Get all active games (WAITING and ACTIVE status)
+        active_games = await db.games.find({
+            "status": {"$in": [GameStatus.WAITING, GameStatus.ACTIVE]}
+        }).to_list(1000)
+        
+        games_cancelled = 0
+        total_gems_unfrozen = 0
+        total_balance_unfrozen = 0.0
+        
+        for game in active_games:
+            game_obj = Game(**game)
+            
+            # Unfreeze creator's gems
+            for gem_type, quantity in game_obj.bet_gems.items():
+                await db.user_gems.update_one(
+                    {"user_id": game_obj.creator_id, "gem_type": gem_type},
+                    {"$inc": {"frozen_quantity": -quantity}},
+                    upsert=False
+                )
+                total_gems_unfrozen += quantity
+            
+            # Unfreeze creator's commission
+            creator_commission = game_obj.bet_amount * 0.06
+            await db.users.update_one(
+                {"id": game_obj.creator_id},
+                {
+                    "$inc": {
+                        "frozen_balance": -creator_commission,
+                        "virtual_balance": creator_commission
+                    }
+                }
+            )
+            total_balance_unfrozen += creator_commission
+            
+            # If game has opponent, unfreeze their funds too
+            if game_obj.opponent_id:
+                opponent_commission = game_obj.bet_amount * 0.06
+                await db.users.update_one(
+                    {"id": game_obj.opponent_id},
+                    {
+                        "$inc": {
+                            "frozen_balance": -opponent_commission,
+                            "virtual_balance": opponent_commission
+                        }
+                    }
+                )
+                total_balance_unfrozen += opponent_commission
+            
+            # Mark game as cancelled
+            await db.games.update_one(
+                {"id": game_obj.id},
+                {
+                    "$set": {
+                        "status": GameStatus.CANCELLED,
+                        "cancelled_at": datetime.utcnow()
+                    }
+                }
+            )
+            games_cancelled += 1
+        
+        # Reset all users' frozen quantities to 0 (safety measure)
+        await db.user_gems.update_many(
+            {"frozen_quantity": {"$gt": 0}},
+            {"$set": {"frozen_quantity": 0}}
+        )
+        
+        # Reset all users' frozen balance to 0 (safety measure)
+        await db.users.update_many(
+            {"frozen_balance": {"$gt": 0}},
+            {
+                "$inc": {"virtual_balance": {"$frozen_balance": 1}},
+                "$set": {"frozen_balance": 0}
+            }
+        )
+        
+        return {
+            "success": True,
+            "message": f"All games reset successfully",
+            "games_cancelled": games_cancelled,
+            "total_gems_unfrozen": total_gems_unfrozen,
+            "total_balance_unfrozen": round(total_balance_unfrozen, 2)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error resetting all games: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reset games: {str(e)}"
+        )
+
 @api_router.post("/admin/security/alerts/{alert_id}/resolve", response_model=dict)
 async def resolve_security_alert(
     alert_id: str,
