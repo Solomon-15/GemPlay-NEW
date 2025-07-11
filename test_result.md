@@ -443,7 +443,7 @@ frontend:
 
 frontend:
 frontend:
-  - task: "Lobby Cancel/Accept Buttons Fix"
+  - task: "Lobby Cancel/Accept Buttons Fix - Updated"
     implemented: true
     working: false
     file: "/app/frontend/src/components/Lobby.js, /app/frontend/src/components/PlayerCard.js"
@@ -454,6 +454,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Fixed Cancel and Accept buttons in Lobby My Bets section. Issues: 1) PlayerCard was passing game object instead of game.id to onAccept handler, 2) Missing user prop in PlayerCard components. Fixed both issues."
+      - working: "NA"
+        agent: "main"
+        comment: "Major fix: 1) Cancel button now uses DELETE method instead of POST for /api/games/{gameId}/cancel endpoint, 2) Accept button in Available Bets now opens AcceptBetModal instead of direct API call, 3) Added onUpdateUser prop to PlayerCard and proper callback handling, 4) Removed direct onAccept handler from Available Bets to allow modal workflow."
 
   - task: "Portfolio Overview Enhancement - Final Update"
     implemented: true
