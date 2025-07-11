@@ -221,7 +221,7 @@ const AdminPanel = ({ user, onClose }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 hover:border-green-500 transition-colors duration-200">
           <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Quick Actions</h3>
           <div className="space-y-3">
             <button
@@ -245,7 +245,7 @@ const AdminPanel = ({ user, onClose }) => {
           </div>
         </div>
 
-        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 hover:border-green-500 transition-colors duration-200">
           <h3 className="font-rajdhani text-xl font-bold text-white mb-4">System Information</h3>
           <div className="space-y-3 text-text-secondary">
             <div className="flex justify-between">
