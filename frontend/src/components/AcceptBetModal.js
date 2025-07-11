@@ -4,6 +4,12 @@ import { useNotifications } from './NotificationContext';
 import { formatCurrencyWithSymbol } from '../utils/economy';
 
 const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
+  // Early return if required props are missing
+  if (!bet || !user || !onClose) {
+    console.error('AcceptBetModal: Missing required props', { bet, user, onClose });
+    return null;
+  }
+
   const { 
     gemsData, 
     validateGemOperation, 
