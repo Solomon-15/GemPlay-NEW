@@ -4,7 +4,7 @@ import json
 import time
 
 # Configuration
-BASE_URL = "https://8bca1a59-c454-43a7-9e13-2778a914eb31.preview.emergentagent.com/api"
+BASE_URL = "https://2421bc06-8742-405a-9afa-ddcb9e3fb696.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
