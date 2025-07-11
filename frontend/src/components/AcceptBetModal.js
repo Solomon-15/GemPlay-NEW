@@ -176,10 +176,6 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       setLoading(false);
     }
   };
-    { id: 1, name: 'Gem Selection', description: 'Select your gems' },
-    { id: 2, name: 'Move', description: 'Choose your move' },
-    { id: 3, name: 'Match', description: 'Battle result' }
-  ];
 
   // Calculate total value of selected gems
   useEffect(() => {
