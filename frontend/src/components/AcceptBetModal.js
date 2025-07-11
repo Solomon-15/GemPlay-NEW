@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useGems } from './GemsContext';
 import { useNotifications } from './NotificationContext';
-import { formatCurrencyWithSymbol } from '../utils/economy';
+
+// Safe wrapper for formatCurrencyWithSymbol
+const safeFormatCurrency = (amount) => {
+  try {
+    if (typeof amount !== 'number' || isNaN(amount)) {
+      return '$0.00';
+    }
+    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  } catch (error) {
+    console.error('Error formatting currency:', error);
+    return '$0.00';
+  }
+};
 
 const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Early return if required props are missing
