@@ -76,11 +76,13 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       const result = await response.json();
       
-      if (result.success) {
+      if (result.success && result.combinations && Array.isArray(result.combinations)) {
         // Convert API response to internal format
         const autoSelected = {};
         result.combinations.forEach(combo => {
-          autoSelected[combo.type] = combo.quantity;
+          if (combo && combo.type && combo.quantity) {
+            autoSelected[combo.type] = combo.quantity;
+          }
         });
         
         setSelectedGems(autoSelected);
