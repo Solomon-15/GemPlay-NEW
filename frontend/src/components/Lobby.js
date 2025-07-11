@@ -310,6 +310,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
             <PlayerCard 
               key={game.id} 
               game={game} 
+              user={user}
               isMyBet={true}
               onCancel={handleCancelBet}
               currentTime={new Date()}
