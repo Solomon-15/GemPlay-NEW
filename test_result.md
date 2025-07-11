@@ -411,6 +411,17 @@ backend:
         comment: "COMPREHENSIVE ADMIN RESET-ALL ENDPOINT TEST COMPLETED: Successfully tested the new admin endpoint POST /api/admin/games/reset-all. Key findings: 1) Authentication works correctly - only admin users can access (403 for non-admin users). 2) Core functionality verified - successfully reset 1 active WAITING game, returned frozen gems (Ruby: 5, Emerald: 2), and returned commission ($1.50). 3) Data cleanup working properly - cancelled active games by setting status to CANCELLED, unfroze all frozen gems (frozen_quantity reset to 0), returned frozen commission balances to users, reset all frozen_quantity in user_gems to 0. 4) Response format correct - returns details about games_reset, gems_returned, and commission_returned. 5) Admin action logging implemented in code. 6) Endpoint works correctly when no active games exist (returns 0 games reset). 7) Fixed minor floating-point precision issue with frozen_balance. The endpoint fully meets all requirements and is working as designed."
 
 frontend:
+  - task: "Create Bet Modal Integration with Gem Calculation API"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/CreateBetModal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Integrated new backend API for gem combination calculation. Updated strategy buttons to call /api/gems/calculate-combination instead of frontend algorithm. Added loading states and error handling."
   - task: "Create Game Component"
     implemented: true
     working: true
