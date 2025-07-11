@@ -190,8 +190,10 @@ const PlayerCard = ({
           onClose={() => setShowAcceptModal(false)}
           onUpdateUser={() => {
             // Refresh user data if needed
-            if (onAccept) {
-              onAccept(game.id);
+            setShowAcceptModal(false);
+            // Если есть колбек для обновления, вызываем его
+            if (onUpdateUser) {
+              onUpdateUser();
             }
           }}
         />
