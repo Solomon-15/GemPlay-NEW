@@ -1813,7 +1813,7 @@ def test_gems_calculate_combination() -> None:
             expected_status=400
         )
         
-        if not success and "detail" in response and "commission" in response["detail"].lower():
+        if not success and "detail" in response and isinstance(response["detail"], str) and "commission" in response["detail"].lower():
             print_success(f"Correctly rejected bet due to insufficient commission balance: {response['detail']}")
             record_test("Gem Combination - Insufficient Commission Validation", True)
         else:
