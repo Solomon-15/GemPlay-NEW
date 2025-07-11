@@ -377,7 +377,11 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
                 </div>
               </div>
             );
-          })}
+          }) : (
+            <div className="col-span-2 text-center text-text-secondary py-4">
+              Loading gems...
+            </div>
+          )}
         </div>
       </div>
     </div>
