@@ -347,7 +347,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
               key={game.id} 
               game={game} 
               user={user}
-              onAccept={handleJoinGame}
               currentTime={new Date()}
             />
           ))}
