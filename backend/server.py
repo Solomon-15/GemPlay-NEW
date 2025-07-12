@@ -788,8 +788,19 @@ async def calculate_gem_combination(user_id: str, target_amount: float, strategy
         # Big = крупные дорогие гемы (Magic, Sapphire, Aquamarine) - дорогие первыми
         available_gems.sort(key=lambda x: x["price"], reverse=True)
     else:  # SMART
-        # Сбалансированный подход - средние цены вперед
-        available_gems.sort(key=lambda x: abs(x["price"] - 25.0))  # 25 - примерная средняя цена
+        # Smart = сбалансированный подход - средние цены вперед (Topaz $5, Emerald $10, Aquamarine $25)
+        # Сначала средние гемы, потом дешевые и дорогие
+        def smart_priority(gem):
+            price = gem["price"]
+            # Приоритет средним ценам (5-25 долларов)
+            if 5 <= price <= 25:
+                return 0  # Высший приоритет
+            elif price < 5:
+                return 1  # Дешевые - второй приоритет
+            else:
+                return 2  # Дорогие - третий приоритет
+        
+        available_gems.sort(key=smart_priority)
     
     # Пытаемся найти точную комбинацию
     result = find_exact_combination(available_gems, target_amount)
