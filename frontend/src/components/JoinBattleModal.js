@@ -803,7 +803,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           
           <button
             type="button"
-            onClick={debugOnClose}
+            onClick={onClose}
             className="text-text-secondary hover:text-white transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
