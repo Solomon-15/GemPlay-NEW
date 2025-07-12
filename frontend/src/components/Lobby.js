@@ -3,6 +3,7 @@ import axios from 'axios';
 import GemsHeader from './GemsHeader';
 import PlayerCard from './PlayerCard';
 import CreateBetModal from './CreateBetModal';
+import JoinBattleModal from './JoinBattleModal';
 import { useNotifications } from './NotificationContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
