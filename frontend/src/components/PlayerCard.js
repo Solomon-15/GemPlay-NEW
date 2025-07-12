@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGems } from './GemsContext';
-import AcceptBetModal from './AcceptBetModal';
+import JoinBattleModal from './JoinBattleModal';
 import { formatCurrencyWithSymbol } from '../utils/economy';
 
 const PlayerCard = ({ 
