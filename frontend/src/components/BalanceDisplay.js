@@ -38,6 +38,17 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
   useEffect(() => {
     if (user?.id) {
       fetchBalanceData();
+      
+      // 🔄 ПОДПИСЫВАЕМСЯ НА ГЛОБАЛЬНЫЕ ОБНОВЛЕНИЯ ДЛЯ АВТОМАТИЧЕСКОГО ОБНОВЛЕНИЯ БАЛАНСА
+      const globalRefresh = getGlobalLobbyRefresh();
+      const unregister = globalRefresh.registerRefreshCallback(() => {
+        console.log('💰 BalanceDisplay auto-refresh triggered by global operation');
+        fetchBalanceData();
+      });
+      
+      return () => {
+        unregister();
+      };
     }
   }, [user?.id, fetchBalanceData]);
 
