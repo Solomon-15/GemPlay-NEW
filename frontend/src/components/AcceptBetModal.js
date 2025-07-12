@@ -815,12 +815,13 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     return (
       <div 
         className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
-        onClick={(e) => {
-          // Only close if clicking directly on the overlay, not on the modal content
-          if (e.target === e.currentTarget) {
-            onClose();
-          }
-        }}
+        // ВРЕМЕННО ОТКЛЮЧЕН: onClick для закрытия по клику на overlay
+        // onClick={(e) => {
+        //   // Only close if clicking directly on the overlay, not on the modal content
+        //   if (e.target === e.currentTarget) {
+        //     onClose();
+        //   }
+        // }}
       >
         <div 
           className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden"
