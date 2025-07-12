@@ -16,6 +16,15 @@ const safeFormatCurrency = (amount) => {
 };
 
 const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
+  // ВРЕМЕННЫЙ ЛОГ ДЛЯ ОТЛАДКИ
+  const debugOnClose = (...args) => {
+    console.log('🚨 AcceptBetModal onClose called!', { 
+      stack: new Error().stack,
+      args,
+      timestamp: new Date().toISOString()
+    });
+    onClose(...args);
+  };
   // MUST call hooks first - before any conditional logic or early returns
   const { 
     gemsData = [], 
