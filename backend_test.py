@@ -3423,5 +3423,24 @@ def run_all_tests() -> None:
     # Print summary
     print_summary()
 
+def run_gem_combination_tests_only() -> None:
+    """Run only the gem combination strategy tests."""
+    print_header("FOCUSED GEM COMBINATION STRATEGY TESTING")
+    
+    # Reset test results
+    global test_results
+    test_results = {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "tests": []
+    }
+    
+    # Run only the gem combination strategy test
+    test_gem_combination_strategy_logic()
+    
+    # Print summary
+    print_summary()
+
 if __name__ == "__main__":
-    run_all_tests()
+    run_gem_combination_tests_only()
