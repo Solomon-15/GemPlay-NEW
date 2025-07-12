@@ -1,4 +1,5 @@
 import React from 'react';
+import { calculateGemCombination } from '../utils/gemCombinationAlgorithms';
 
 const GemSelectionStep = ({
   targetAmount,
@@ -48,10 +49,31 @@ const GemSelectionStep = ({
     onSelectedGemsChange(newSelectedGems);
   };
 
-  // Обработчик стратегий с предотвращением всплытия
+  // NEW STRATEGY HANDLER - Uses pure frontend algorithms
   const handleStrategyClick = (strategy) => {
-    if (onStrategySelect) {
-      onStrategySelect(strategy);
+    try {
+      // Use new frontend algorithms
+      const result = calculateGemCombination(strategy, gemsData, targetAmount);
+      
+      if (result.success) {
+        // Convert result to internal format
+        const autoSelected = {};
+        result.combination.forEach(item => {
+          autoSelected[item.type] = item.quantity;
+        });
+        
+        onSelectedGemsChange(autoSelected);
+        
+        // Call original onStrategySelect if provided (for loading state)
+        if (onStrategySelect) {
+          onStrategySelect(strategy);
+        }
+      } else {
+        showError(result.message);
+      }
+    } catch (error) {
+      console.error('Error calculating gem combination:', error);
+      showError('Error calculating gem combination');
     }
   };
 
@@ -77,7 +99,7 @@ const GemSelectionStep = ({
         )}
       </div>
 
-      {/* Auto Combination Buttons */}
+      {/* Auto Combination Buttons - NEW IMPLEMENTATION */}
       <div className="space-y-3">
         <h4 className="text-white font-rajdhani text-lg">Auto Combination</h4>
         <div className="grid grid-cols-3 gap-3">
@@ -90,7 +112,7 @@ const GemSelectionStep = ({
             }}
             disabled={loading}
             className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
-            title="Use more cheap gems"
+            title="🔴 Use more cheap gems (Ruby, Amber, then others)"
           >
             {loading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -108,7 +130,7 @@ const GemSelectionStep = ({
             }}
             disabled={loading}
             className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
-            title="Balance your bet with mid-value gems"
+            title="🟢 Balanced mid-range gems (60% mid, 30% low, 10% high)"
           >
             {loading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -126,7 +148,7 @@ const GemSelectionStep = ({
             }}
             disabled={loading}
             className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
-            title="Make a high-stake bet with fewer expensive gems"
+            title="🟣 Use fewer expensive gems (Magic, Sapphire, then others)"
           >
             {loading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
