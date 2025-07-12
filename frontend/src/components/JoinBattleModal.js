@@ -582,10 +582,16 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       });
       
       // Разные сообщения в зависимости от типа ошибки
-      if (error.message.includes('did not complete in time')) {
-        showError('Game is taking longer than expected. Please check the lobby for updates.');
-      } else if (error.message.includes('Missing opponent move')) {
-        showError('Game completed but data is incomplete. Please refresh and check results.');
+      if (error.message.includes('taking longer than expected')) {
+        showError('⏰ Battle is taking longer than expected. The game may still be in progress - please check the lobby in a few minutes.');
+      } else if (error.message.includes('Multiple opponent move')) {
+        showError('📊 Battle completed but data is incomplete. Please refresh and check results in the lobby.');
+      } else if (error.message.includes('multiple games simultaneously')) {
+        showError('🎮 Active game session detected. We attempted to clear it - please try again.');
+      } else if (error.message.includes('Game not found')) {
+        showError('🔍 Game not found. It may have been cancelled - please check the lobby.');
+      } else if (error.message.includes('cancelled')) {
+        showError('❌ Game was cancelled by the opponent or system.');
       } else {
         showError(error.message || 'Ошибка при запуске битвы');
       }
