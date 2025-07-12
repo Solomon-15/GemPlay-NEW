@@ -98,8 +98,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         onUpdateUser();
       }
       
-      // Переходим к результату
-      setCurrentStep(2);
+      // Переходим к результату (шаг 3)
+      setCurrentStep(3);
       
       // Показываем уведомление о результате
       const resultText = battleOutcome === 'win' ? 'Victory!' : 
