@@ -734,23 +734,16 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // Проверка возможности перехода на следующий шаг
-  const canGoNext = () => {
-    switch (currentStep) {
-      case 1:
-        // Проверить выбранные гемы и точность суммы
-        const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
-          const gem = gemsData.find(g => g.type === gemType);
-          return sum + (gem ? gem.price * quantity : 0);
-        }, 0);
-        
-        return Object.keys(selectedGems).length > 0 && Math.abs(totalGemValue - targetAmount) <= 0.01;
-      case 2:
-        // Проверить выбранный ход
-        return selectedMove !== '';
-      default:
-        return false;
-    }
+  // Проверка возможности присоединения к битве
+  const canJoinBattle = () => {
+    const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
+      const gem = gemsData.find(g => g.type === gemType);
+      return sum + (gem ? gem.price * quantity : 0);
+    }, 0);
+    
+    return Object.keys(selectedGems).length > 0 && 
+           Math.abs(totalGemValue - targetAmount) <= 0.01 &&
+           selectedMove !== '';
   };
 
   return (
