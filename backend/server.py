@@ -1748,7 +1748,16 @@ async def create_game(
             "game_id": game.id,
             "bet_amount": total_bet_amount,
             "commission_reserved": commission_required,
-            "new_balance": new_balance
+            "new_balance": new_balance,
+            "debug_info": {
+                "original_balance": user["virtual_balance"],
+                "original_frozen": user["frozen_balance"],
+                "commission_calculated": commission_required,
+                "balance_after_commission": new_balance,
+                "frozen_after_commission": user["frozen_balance"] + commission_required,
+                "expected_difference": commission_required,
+                "actual_difference": user["virtual_balance"] - new_balance
+            }
         }
         
     except HTTPException:
