@@ -173,8 +173,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     setLoading(true);
     
     try {
-      // Use new frontend algorithms from utils
-      const { calculateGemCombination } = require('../utils/gemCombinationAlgorithms');
+      // Use new frontend algorithms
       const result = calculateGemCombination(strategy, gemsData, targetAmount);
       
       if (result.success) {
