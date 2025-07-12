@@ -2561,15 +2561,18 @@ async def cancel_game(game_id: str, current_user: User = Depends(get_current_use
                 }
             )
         
-        # Return frozen commission
+        # Return frozen commission - ИСПРАВЛЕНИЕ: не добавляем к virtual_balance
         commission_to_return = game_obj.bet_amount * 0.06
         
+        # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: При отмене игры комиссия должна только 
+        # убираться из frozen_balance, но НЕ добавляться к virtual_balance,
+        # так как при создании игры мы НЕ списывали с virtual_balance
         await db.users.update_one(
             {"id": current_user.id},
             {
                 "$inc": {
-                    "virtual_balance": commission_to_return,
-                    "frozen_balance": -commission_to_return
+                    # virtual_balance НЕ изменяем - комиссия никогда не списывалась
+                    "frozen_balance": -commission_to_return  # Только убираем из заморозки
                 },
                 "$set": {"updated_at": datetime.utcnow()}
             }
