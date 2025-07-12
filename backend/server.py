@@ -1577,14 +1577,26 @@ async def get_economy_balance(current_user: User = Depends(get_current_user)):
         total_gem_value += user_gem["quantity"] * gem_price
         available_gem_value += (user_gem["quantity"] - user_gem["frozen_quantity"]) * gem_price
     
+    # Calculate available balance for spending
+    available_balance = user["virtual_balance"] - user["frozen_balance"]
+    
     return {
-        "virtual_balance": user["virtual_balance"],
-        "frozen_balance": user["frozen_balance"],
+        "virtual_balance": user["virtual_balance"],  # Total balance
+        "frozen_balance": user["frozen_balance"],    # Frozen from total balance
+        "available_balance": available_balance,       # Available for new operations
         "total_gem_value": total_gem_value,
         "available_gem_value": available_gem_value,
-        "total_value": user["virtual_balance"] + user["frozen_balance"] + total_gem_value,
+        "total_value": user["virtual_balance"] + total_gem_value,  # Updated: only count virtual_balance once
         "daily_limit_used": user["daily_limit_used"],
-        "daily_limit_max": user["daily_limit_max"]
+        "daily_limit_max": user["daily_limit_max"],
+        "balance_breakdown": {
+            "description": "Balance breakdown",
+            "total_dollars": user["virtual_balance"],
+            "frozen_dollars": user["frozen_balance"], 
+            "available_dollars": available_balance,
+            "total_gems_value": total_gem_value,
+            "available_gems_value": available_gem_value
+        }
     }
 
 @api_router.get("/transactions/history", response_model=List[Transaction])
