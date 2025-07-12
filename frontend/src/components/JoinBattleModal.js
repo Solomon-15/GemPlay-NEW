@@ -60,12 +60,12 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   ];
 
   // Функция polling для ожидания завершения игры
-  const pollGameResult = async (gameId, maxAttempts = 30) => {
-    console.log('🔄 Starting game polling:', { gameId, maxAttempts });
+  const pollGameResult = async (gameId, maxAttempts = 60) => {
+    console.log('🔄 Starting game polling:', { gameId, maxAttempts, totalTime: `${maxAttempts * 2} seconds` });
     
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        console.log(`🔄 Polling attempt ${attempt}/${maxAttempts}`);
+        console.log(`🔄 Polling attempt ${attempt}/${maxAttempts} (${attempt * 2}s elapsed)`);
         
         const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${gameId}`, {
           method: 'GET',
@@ -76,6 +76,15 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         
         if (!response.ok) {
           console.warn(`⚠️ Polling attempt ${attempt} failed:`, response.status);
+          
+          // Если статус 404 - игра не найдена, прекращаем polling
+          if (response.status === 404) {
+            console.error('🚨 Game not found - stopping polling');
+            throw new Error('Game not found. It may have been cancelled or completed.');
+          }
+          
+          // Для других ошибок продолжаем пытаться
+          await new Promise(resolve => setTimeout(resolve, 2000));
           continue;
         }
         
@@ -84,7 +93,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           status: gameData.status,
           hasWinnerId: 'winner_id' in gameData,
           hasCreatorMove: 'creator_move' in gameData,
-          hasJoinerMove: 'joiner_move' in gameData
+          hasJoinerMove: 'joiner_move' in gameData,
+          winnerId: gameData.winner_id
         });
         
         // Проверяем, завершена ли игра
@@ -93,16 +103,28 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           return gameData;
         }
         
+        // Если игра отменена или есть ошибка
+        if (gameData.status === 'CANCELLED' || gameData.status === 'ERROR') {
+          console.log('🚨 Game cancelled or error:', gameData);
+          throw new Error(`Game ${gameData.status.toLowerCase()}. ${gameData.message || ''}`);
+        }
+        
         // Ждем 2 секунды перед следующей попыткой
         await new Promise(resolve => setTimeout(resolve, 2000));
         
       } catch (error) {
+        if (error.message.includes('Game not found') || error.message.includes('cancelled')) {
+          throw error; // Прекращаем polling для критических ошибок
+        }
         console.error(`🚨 Polling attempt ${attempt} error:`, error);
+        
+        // Для обычных ошибок продолжаем
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
     
     console.error('🚨 Polling timeout - game did not complete in time');
-    throw new Error('Game did not complete in time. Please check the game manually.');
+    throw new Error('Game is taking longer than expected. The battle may still be in progress - please check the lobby for updates.');
   };
 
   // Функция для проверки логики Rock Paper Scissors
