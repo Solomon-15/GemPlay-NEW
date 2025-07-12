@@ -367,27 +367,7 @@ class CancelGameResponse(BaseModel):
     gems_returned: Dict[str, int]
     commission_returned: float
 
-class GemCombinationStrategy(str, Enum):
-    SMALL = "small"    # Предпочитает дешевые гемы
-    SMART = "smart"    # Сбалансированный подход
-    BIG = "big"        # Предпочитает дорогие гемы
-
-class GemCombinationRequest(BaseModel):
-    bet_amount: float = Field(..., gt=0, le=3000, description="Target bet amount in dollars")
-    strategy: GemCombinationStrategy = Field(..., description="Gem selection strategy")
-
-class GemCombinationItem(BaseModel):
-    type: GemType
-    name: str
-    price: float
-    quantity: int
-    total_value: float
-
-class GemCombinationResponse(BaseModel):
-    success: bool
-    total_amount: float
-    combinations: List[GemCombinationItem]
-    message: Optional[str] = None
+# Removed gem combination models - logic moved to frontend
 
 class AddBalanceRequest(BaseModel):
     amount: float = Field(..., gt=0, le=1000, description="Amount to add to balance (max $1000)")
