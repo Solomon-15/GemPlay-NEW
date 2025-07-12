@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGems } from './GemsContext';
 import { useNotifications } from './NotificationContext';
+import { calculateGemCombination } from '../utils/gemCombinationAlgorithms';
 import GemSelectionStep from './GemSelectionStep';
 import MoveSelectionStep from './MoveSelectionStep';
 import BattleResultStep from './BattleResultStep';
