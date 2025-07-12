@@ -90,38 +90,88 @@ const BattleResultStep = ({
 
   return (
     <div className="space-y-6">
-      {/* Result Header */}
-      <div className="text-center">
-        <h3 className={`text-3xl font-russo mb-4 ${resultConfig.color}`}>
+      {/* Result Header с увеличенным размером */}
+      <div className="text-center py-4">
+        <h3 className={`text-5xl font-russo mb-6 ${resultConfig.color} animate-pulse`}>
           {resultConfig.title}
         </h3>
+        
+        {/* Auto-close timer */}
+        <div className="text-text-secondary text-sm">
+          Auto-closing in {timeUntilAutoClose} seconds
+        </div>
       </div>
 
-      {/* Battle Moves */}
-      <div className="grid grid-cols-2 gap-6">
-        {/* Your Move */}
-        <div className="text-center">
-          <div className="text-white font-rajdhani font-bold mb-2">Your Move</div>
-          <img 
-            src={moves.find(m => m.id === selectedMove)?.icon} 
-            alt={selectedMove} 
-            className="w-20 h-20 mx-auto mb-2" 
-          />
-          <div className="text-accent-primary font-rajdhani capitalize font-bold">
-            {moves.find(m => m.id === selectedMove)?.name}
+      {/* Players Battle Section с аватарами */}
+      <div className={`${resultConfig.bgColor} bg-opacity-10 border-2 ${resultConfig.borderColor} rounded-xl p-6`}>
+        <div className="grid grid-cols-3 gap-4 items-center">
+          
+          {/* Player (You) */}
+          <div className="text-center">
+            <div className={`w-20 h-20 mx-auto mb-3 rounded-full border-4 ${
+              result === 'win' ? 'border-green-400' : result === 'lose' ? 'border-red-400' : 'border-yellow-400'
+            } bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center`}>
+              <span className="text-white font-russo text-xl">
+                {playerData?.player?.username?.charAt(0)?.toUpperCase() || 'Y'}
+              </span>
+            </div>
+            <div className="text-white font-rajdhani font-bold text-lg mb-2">
+              {playerData?.player?.username || 'You'}
+            </div>
+            <div className={`text-sm font-bold ${
+              result === 'win' ? 'text-green-400' : result === 'lose' ? 'text-red-400' : 'text-yellow-400'
+            }`}>
+              {result === 'win' ? 'WINNER' : result === 'lose' ? 'LOSER' : 'DRAW'}
+            </div>
+            
+            {/* Your Move */}
+            <div className="mt-4">
+              <img 
+                src={moves.find(m => m.id === selectedMove)?.icon} 
+                alt={selectedMove} 
+                className="w-16 h-16 mx-auto mb-2" 
+              />
+              <div className="text-accent-primary font-rajdhani capitalize font-bold">
+                {moves.find(m => m.id === selectedMove)?.name}
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Opponent Move */}
-        <div className="text-center">
-          <div className="text-white font-rajdhani font-bold mb-2">Opponent Move</div>
-          <img 
-            src={moves.find(m => m.id === opponentMove)?.icon} 
-            alt={opponentMove} 
-            className="w-20 h-20 mx-auto mb-2" 
-          />
-          <div className="text-accent-primary font-rajdhani capitalize font-bold">
-            {moves.find(m => m.id === opponentMove)?.name}
+          {/* VS Section */}
+          <div className="text-center">
+            <div className="text-4xl font-russo text-white mb-2">VS</div>
+            <div className="text-text-secondary text-sm">Rock Paper Scissors</div>
+          </div>
+
+          {/* Opponent */}
+          <div className="text-center">
+            <div className={`w-20 h-20 mx-auto mb-3 rounded-full border-4 ${
+              result === 'lose' ? 'border-green-400' : result === 'win' ? 'border-red-400' : 'border-yellow-400'
+            } bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center`}>
+              <span className="text-white font-russo text-xl">
+                {playerData?.opponent?.username?.charAt(0)?.toUpperCase() || 'O'}
+              </span>
+            </div>
+            <div className="text-white font-rajdhani font-bold text-lg mb-2">
+              {playerData?.opponent?.username || 'Opponent'}
+            </div>
+            <div className={`text-sm font-bold ${
+              result === 'lose' ? 'text-green-400' : result === 'win' ? 'text-red-400' : 'text-yellow-400'
+            }`}>
+              {result === 'lose' ? 'WINNER' : result === 'win' ? 'LOSER' : 'DRAW'}
+            </div>
+            
+            {/* Opponent Move */}
+            <div className="mt-4">
+              <img 
+                src={moves.find(m => m.id === opponentMove)?.icon} 
+                alt={opponentMove} 
+                className="w-16 h-16 mx-auto mb-2" 
+              />
+              <div className="text-accent-primary font-rajdhani capitalize font-bold">
+                {moves.find(m => m.id === opponentMove)?.name}
+              </div>
+            </div>
           </div>
         </div>
       </div>
