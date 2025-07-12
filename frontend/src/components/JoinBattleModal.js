@@ -9,6 +9,15 @@ import BattleResultStep from './BattleResultStep';
 // import RevealStep from './RevealStep';
 
 const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
+  // ВРЕМЕННЫЙ ЛОГ ДЛЯ ОТЛАДКИ
+  const debugOnClose = (...args) => {
+    console.log('🚨 JoinBattleModal onClose called!', { 
+      stack: new Error().stack,
+      args,
+      timestamp: new Date().toISOString()
+    });
+    onClose(...args);
+  };
   // Проверка обязательных пропсов
   if (!bet || !user || !onClose) {
     console.error('JoinBattleModal: Missing required props', { bet, user, onClose });
