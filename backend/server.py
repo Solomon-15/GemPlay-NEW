@@ -2313,11 +2313,11 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     await db.users.update_one(
                         {"id": player_id},
                         {
-                            "$set": {
-                                "virtual_balance": player["virtual_balance"] + commission_to_return,
-                                "frozen_balance": player["frozen_balance"] - commission_to_return,
-                                "updated_at": datetime.utcnow()
-                            }
+                            "$inc": {
+                                "virtual_balance": commission_to_return,  # Return to balance
+                                "frozen_balance": -commission_to_return   # Remove from frozen
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
                         }
                     )
         
