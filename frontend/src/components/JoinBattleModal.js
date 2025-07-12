@@ -398,8 +398,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         <div className="flex items-center justify-between p-4 border-b border-border-primary">
           <h2 className="text-white font-russo text-xl">Join Battle</h2>
           
-          {/* Timer - только на первом шаге */}
-          {currentStep === 1 && (
+          {/* Timer - только на первых двух шагах */}
+          {currentStep <= 2 && (
             <div className={`flex items-center space-x-2 ${
               timeRemaining <= 15 ? 'text-red-400' : 'text-yellow-400'
             }`}>
