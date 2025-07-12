@@ -44,6 +44,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Состояние для анимированного обратного отсчета
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownNumber, setCountdownNumber] = useState(3);
+  
+  // Состояние ожидания результата (polling)
+  const [isWaitingForResult, setIsWaitingForResult] = useState(false);
 
   // Контексты
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
