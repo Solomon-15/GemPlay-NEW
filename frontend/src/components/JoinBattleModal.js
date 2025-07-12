@@ -214,10 +214,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // Конфигурация шагов
+  // Конфигурация шагов - 3 отдельных шага
   const steps = [
-    { id: 1, name: 'Gem & Move', description: 'Select gems and move' },
-    { id: 2, name: 'Result', description: 'Battle result' }
+    { id: 1, name: 'Gem Selection', description: 'Select your gems' },
+    { id: 2, name: 'Move Selection', description: 'Choose your move' },
+    { id: 3, name: 'Battle Result', description: 'Battle result' }
   ];
 
   // Проверка доступности средств
