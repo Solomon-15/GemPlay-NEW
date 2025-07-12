@@ -392,10 +392,14 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         console.log('🔄 Game not completed yet, starting polling...');
         
         // Показываем индикатор ожидания
+        setIsWaitingForResult(true);
         showSuccess('Game joined! Waiting for opponent to reveal...');
         
         // Ждем завершения игры через polling
         const finalGameData = await pollGameResult(bet.id);
+        
+        // Скрываем индикатор ожидания
+        setIsWaitingForResult(false);
         
         // Анализируем финальные данные
         console.log('🎮 === FINAL GAME DATA ===');
