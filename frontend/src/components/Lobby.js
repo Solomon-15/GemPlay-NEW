@@ -374,6 +374,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
               key={game.game_id || game.id} 
               game={game} 
               user={user}
+              onOpenJoinBattle={handleOpenJoinBattle}
               onUpdateUser={() => {
                 fetchLobbyData();
                 if (onUpdateUser) {
