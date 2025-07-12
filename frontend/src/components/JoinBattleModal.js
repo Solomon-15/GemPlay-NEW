@@ -403,7 +403,17 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       showSuccess(`Игра завершена! ${resultText}`);
       
     } catch (error) {
-      console.error('Error starting battle:', error);
+      console.error('🚨 === BATTLE ERROR ===');
+      console.error('🚨 Error Details:', {
+        message: error.message,
+        stack: error.stack,
+        gameId: bet.id,
+        userId: user.id,
+        selectedMove: selectedMove,
+        timestamp: new Date().toISOString()
+      });
+      console.error('🚨 === END ERROR ===');
+      
       showError(error.message || 'Ошибка при запуске битвы');
       setCurrentStep(2); // Возвращаемся к выбору хода при ошибке
     } finally {
