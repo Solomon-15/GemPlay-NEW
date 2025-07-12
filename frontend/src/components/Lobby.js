@@ -594,6 +594,26 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           onUpdateUser={onUpdateUser}
         />
       )}
+
+      {showJoinBattleModal && selectedBetForJoin && (
+        <JoinBattleModal
+          bet={{
+            id: selectedBetForJoin.game_id || selectedBetForJoin.id,
+            bet_amount: selectedBetForJoin.bet_amount,
+            bet_gems: selectedBetForJoin.bet_gems,
+            creator: selectedBetForJoin.creator
+          }}
+          user={user}
+          onClose={handleCloseJoinBattle}
+          onUpdateUser={() => {
+            fetchLobbyData();
+            if (onUpdateUser) {
+              onUpdateUser();
+            }
+            // НЕ закрываем модальное окно здесь
+          }}
+        />
+      )}
     </div>
   );
 };
