@@ -146,9 +146,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     await joinBattle();
   };
 
-  // Таймер автозакрытия (1 минута)
+  // Таймер автозакрытия (1 минута) - только на первых двух шагах
   useEffect(() => {
-    if (currentStep >= 2) {
+    if (currentStep >= 3) {
       // Не запускаем таймер на шаге результата
       return;
     }
