@@ -173,7 +173,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       showSuccess(`Игра завершена! ${resultText}`);
       
       // Auto-close after 30 seconds
-      setTimeout(() => {
+        debugOnClose();
         onClose();
       }, 30000);
       
@@ -418,7 +418,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       showSuccess(`Игра завершена! ${resultText}`);
       
       // Auto-close after 30 seconds
-      setTimeout(() => {
+        debugOnClose();
         onClose();
       }, 30000);
       
