@@ -127,7 +127,44 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     throw new Error('Game is taking longer than expected. The battle may still be in progress - please check the lobby for updates.');
   };
 
-  // Функция для проверки логики Rock Paper Scissors
+  // Функция для проверки и очистки "зависших" игр пользователя
+  const checkAndClearUserGames = async () => {
+    try {
+      console.log('🔍 Checking user game status...');
+      
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/current-game`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔍 User game status:', data);
+        
+        if (data.hasActiveGame) {
+          console.log('⚠️ User has active game:', data.gameId);
+          
+          // Попробуем очистить зависшую игру
+          const clearResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/clear-game`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          
+          if (clearResponse.ok) {
+            console.log('✅ Successfully cleared user game status');
+            showSuccess('Previous game session cleared. You can now join a new battle.');
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not check/clear user game status:', error);
+      // Не прерываем процесс, если API не поддерживает эту функцию
+    }
+  };
   const getRPSResult = (playerMove, opponentMove) => {
     console.log('🎯 RPS Logic Check:', {
       input: {
