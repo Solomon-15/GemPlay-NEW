@@ -202,7 +202,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
           // Время истекло - закрываем модальное окно
-          debugOnClose();
+          onClose();
           return 0;
         }
         return prev - 1;
