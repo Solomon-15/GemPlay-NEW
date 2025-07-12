@@ -2216,30 +2216,36 @@ async def join_game(
             }
         )
         
-        # Set reveal deadline (60 seconds from now)
-        reveal_deadline = datetime.utcnow() + timedelta(seconds=60)
-        
-        # Update game with opponent and set to REVEAL phase
+        # Update game with opponent 
         await db.games.update_one(
             {"id": game_id},
             {
                 "$set": {
                     "opponent_id": current_user.id,
                     "opponent_move": join_data.move,
-                    "status": GameStatus.REVEAL,
-                    "started_at": datetime.utcnow(),
-                    "reveal_deadline": reveal_deadline
+                    "started_at": datetime.utcnow()
                 }
             }
         )
         
-        # Return game info (game is now in REVEAL phase, not completed)
+        # АСИНХРОННОЕ ЗАВЕРШЕНИЕ: Сразу определяем результат игры
+        logger.info(f"Determining game result immediately for game {game_id}")
+        game_result = await determine_game_winner(game_id)
+        
+        # Return complete game result (асинхронная система)
         return {
             "success": True,
             "game_id": game_id,
-            "status": "REVEAL",
-            "message": "Game joined successfully. Waiting for reveal phase.",
-            "reveal_deadline": reveal_deadline.isoformat()
+            "status": "COMPLETED",
+            "message": "Game completed successfully!",
+            "result": game_result["result"],
+            "creator_move": game_result["creator_move"],
+            "opponent_move": game_result["opponent_move"], 
+            "winner_id": game_result["winner_id"],
+            "bet_amount": game_result["bet_amount"],
+            "commission": game_result["commission"],
+            "creator": game_result["creator"],
+            "opponent": game_result["opponent"]
         }
         
     except HTTPException:
