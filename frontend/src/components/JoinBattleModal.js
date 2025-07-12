@@ -33,6 +33,54 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const { gemsData = [] } = useGems() || {};
   const { showSuccess, showError } = useNotifications() || {};
 
+  // Обработчик стратегий
+  const handleStrategySelect = async (strategy) => {
+    setLoading(true);
+    
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gems/calculate-combination`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          bet_amount: targetAmount,
+          strategy: strategy
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при расчете комбинации гемов');
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.combinations && Array.isArray(result.combinations)) {
+        // Преобразуем ответ API в внутренний формат
+        const autoSelected = {};
+        result.combinations.forEach(combo => {
+          if (combo && combo.type && combo.quantity) {
+            autoSelected[combo.type] = combo.quantity;
+          }
+        });
+        
+        setSelectedGems(autoSelected);
+        
+        const strategyNames = { small: 'Small', smart: 'Smart', big: 'Big' };
+        showSuccess(`${strategyNames[strategy]} стратегия: точная комбинация на сумму $${targetAmount.toFixed(2)}`);
+      } else {
+        showError(result.message || 'Недостаточно гемов для создания точной комбинации');
+      }
+    } catch (error) {
+      console.error('Error with strategy selection:', error);
+      showError(error.message || 'Ошибка при автоматическом подборе гемов');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Конфигурация шагов
   const steps = [
     { id: 1, name: 'Gem Selection', description: 'Select your gems' },
