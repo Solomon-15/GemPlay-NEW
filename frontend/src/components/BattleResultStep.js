@@ -251,13 +251,24 @@ const BattleResultStep = ({
             e.stopPropagation();
             handleClose();
           }}
-          className="w-full py-3 bg-gradient-accent text-white font-rajdhani font-bold text-lg rounded-lg hover:scale-105 transition-all duration-300"
+          className={`w-full py-4 text-white font-rajdhani font-bold text-lg rounded-xl hover:scale-105 transition-all duration-300 ${
+            result === 'win' ? 'bg-gradient-to-r from-green-600 to-green-700' :
+            result === 'lose' ? 'bg-gradient-to-r from-red-600 to-red-700' :
+            'bg-gradient-to-r from-yellow-600 to-yellow-700'
+          }`}
         >
-          Close & Return to Lobby
+          {result === 'win' ? '🎉 Claim Victory!' : 
+           result === 'lose' ? '💔 Accept Defeat' : '🤝 Continue Playing'} (OK)
         </button>
         
         <div className="text-center text-text-secondary text-sm">
-          Your balance and gems have been updated automatically
+          <div className="flex items-center justify-center space-x-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Window closes automatically in {timeUntilAutoClose} seconds</span>
+          </div>
+          <div className="mt-1">Your balance and gems have been updated automatically</div>
         </div>
       </div>
     </div>
