@@ -785,8 +785,19 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Wrap entire component in error boundary
   try {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
-        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden">
+      <div 
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
+        onClick={(e) => {
+          // Only close if clicking directly on the overlay, not on the modal content
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div 
+          className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden"
+          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+        >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border-primary">
             <h2 className="text-white font-russo text-xl">Join Battle</h2>
