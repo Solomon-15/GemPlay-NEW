@@ -548,10 +548,25 @@ frontend:
         agent: "testing"
         comment: "UPDATED PORTFOLIO OVERVIEW DESIGN TESTING COMPLETED AS REQUESTED: Successfully tested all critical requirements from the Russian review request for the updated Portfolio Overview design without header. Key findings: 1) LOGIN AND NAVIGATION - successfully logged in as admin@gemplay.com and navigated to Inventory section without issues. 2) PORTFOLIO OVERVIEW HEADER REMOVAL - CRITICAL SUCCESS: 'Portfolio Overview' header successfully removed as requested, section now displays only the three blocks without section title. 3) THREE BLOCKS STRUCTURE - CRITICAL SUCCESS: All three blocks (Available, Gems, Total) present and maintained in one horizontal row using grid-cols-3 layout. 4) AVAILABLE BLOCK YELLOW COLOR - CRITICAL SUCCESS: Frozen funds subtitle displays in yellow color (text-yellow-400 class) showing 'Frozen: $355.02' exactly as requested. 5) GEMS BLOCK YELLOW COLOR - CRITICAL SUCCESS: Frozen gems subtitle displays in yellow color (text-yellow-400 class) showing 'Frozen: 2227 / 5917' exactly as requested. 6) TOTAL BLOCK EMPTY SUBTITLE - CRITICAL SUCCESS: Total block has empty subtitle implemented with transparent text (text-transparent class) as requested, no 'Updated in real-time' text visible. 7) TOOLTIP FUNCTIONALITY - All three blocks have tooltip icons (i) present, tooltips show correct explanatory text for Available, Gems, and Total blocks. 8) MOBILE RESPONSIVENESS - CRITICAL SUCCESS: 3-column grid layout maintained on mobile (390x844), all blocks remain in one row, yellow text remains visible and readable. 9) VISUAL CONSISTENCY - Layout remains balanced without subtitle in Total block, proper spacing and alignment maintained across all three blocks. 10) COLOR SCHEME VERIFICATION - Yellow color (#fbbf24/text-yellow-400) properly implemented for frozen fund indicators, provides good contrast on dark background. All critical requirements from the review request have been successfully verified and are working as designed."
 
+  - task: "Critical Balance Exploit Fix - Bet Cancellation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "CRITICAL BALANCE EXPLOIT FIX: Fixed the balance exploit where users could potentially increase their balance by creating and cancelling bets repeatedly. The fix ensures that: 1) virtual_balance does NOT change during game creation (only frozen_balance increases by commission), 2) Both virtual_balance and frozen_balance are correctly restored to original values after game cancellation, 3) No infinite balance growth is possible through repeated create/cancel operations."
+      - working: true
+        agent: "testing"
+        comment: "CRITICAL BALANCE EXPLOIT FIX VERIFICATION COMPLETED: Successfully tested the complete balance exploit fix as requested in the Russian review request. COMPREHENSIVE TEST RESULTS: ✅ 1. ADMIN LOGIN - Successfully logged in as admin@gemplay.com with Admin123! credentials. ✅ 2. BASELINE BALANCE CAPTURE - Captured baseline state: Virtual: $3677.66, Frozen: $0.00 after ensuring sufficient Ruby gems available (45 gems). ✅ 3. GAME CREATION WITH RUBY 25 GEMS ($25 BET) - Successfully created game with 25 Ruby gems totaling $25 bet, commission calculated correctly at 6% = $1.50. ✅ 4. CRITICAL CHECK: VIRTUAL BALANCE UNCHANGED - virtual_balance remained exactly $3677.66 during game creation (NO CHANGE), proving the exploit is fixed. ✅ 5. CRITICAL CHECK: FROZEN BALANCE INCREASED CORRECTLY - frozen_balance correctly increased by exactly $1.50 (commission amount). ✅ 6. GAME CANCELLATION - Successfully cancelled game, received correct response with success=true, gems_returned={Ruby: 25}, commission_returned=1.5. ✅ 7. CRITICAL CHECK: VIRTUAL BALANCE RESTORED EXACTLY - virtual_balance restored to exactly $3677.66 (same as baseline). ✅ 8. CRITICAL CHECK: FROZEN BALANCE RESTORED EXACTLY - frozen_balance restored to exactly $0.00 (same as baseline). ✅ 9. NO INFINITE BALANCE GROWTH - Tested 3 create/cancel cycles, total balance change: Virtual: $0.00, Frozen: $0.00, confirming no exploit possible. ✅ 10. FINAL VERIFICATION - Total drift from baseline: Virtual: $0.00, Frozen: $0.00. SUCCESS RATE: 100% (16/16 tests passed). The critical balance exploit has been successfully fixed and verified. Users can no longer increase their balance through create/cancel operations."
+
   - task: "Asynchronous JoinBattleModal Implementation"
     implemented: true
-    working: false
-    needs_retesting: true
+    working: true
+    needs_retesting: false
     file: "/app/frontend/src/components/AcceptBetModal.js"
     stuck_count: 0
     priority: "high"
