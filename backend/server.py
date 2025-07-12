@@ -399,6 +399,7 @@ class CreateGameRequest(BaseModel):
 
 class JoinGameRequest(BaseModel):
     move: GameMove
+    gems: Dict[str, int]  # Player's selected gems combination
 
 # ==============================================================================
 # UTILITY FUNCTIONS
