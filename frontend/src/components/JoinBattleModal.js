@@ -258,9 +258,12 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     { id: 3, name: 'Battle Result', description: 'Battle result' }
   ];
 
-  // Проверка доступности средств
-  const availableBalance = (user?.virtual_balance || 0) - (user?.frozen_balance || 0);
-  if (availableBalance < commissionAmount) {
+  // Проверка доступности средств для оплаты комиссии
+  const totalBalance = user?.virtual_balance || 0;
+  const frozenBalance = user?.frozen_balance || 0; 
+  const availableForSpending = totalBalance - frozenBalance;
+  
+  if (availableForSpending < commissionAmount) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-surface-card border border-border-primary rounded-lg w-full max-w-md p-6">
@@ -269,7 +272,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             You need at least ${commissionAmount.toFixed(2)} for commission (6%) to join this bet.
           </p>
           <p className="text-text-secondary mb-4">
-            Available: ${availableBalance.toFixed(2)} | Required: ${commissionAmount.toFixed(2)}
+            Balance: ${totalBalance.toFixed(2)} | Frozen: ${frozenBalance.toFixed(2)} | Available: ${availableForSpending.toFixed(2)}
           </p>
           <button
             onClick={onClose}
