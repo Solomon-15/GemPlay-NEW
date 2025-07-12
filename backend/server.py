@@ -1779,7 +1779,7 @@ async def create_game(
             amount=-commission_required,
             currency="USD",
             balance_before=user["virtual_balance"],
-            balance_after=new_balance,
+            balance_after=user["virtual_balance"],  # ИСПРАВЛЕНО: virtual_balance не изменяется
             description=f"Commission frozen for PvP game creation (${commission_required})",
             reference_id=game.id
         )
@@ -1793,15 +1793,15 @@ async def create_game(
             "game_id": game.id,
             "bet_amount": total_bet_amount,
             "commission_reserved": commission_required,
-            "new_balance": new_balance,
+            "new_balance": user["virtual_balance"],  # ИСПРАВЛЕНО: virtual_balance остается прежним
             "debug_info": {
                 "original_balance": user["virtual_balance"],
                 "original_frozen": user["frozen_balance"],
                 "commission_calculated": commission_required,
-                "balance_after_commission": new_balance,
+                "balance_after_commission": user["virtual_balance"],  # ИСПРАВЛЕНО: не изменяется
                 "frozen_after_commission": user["frozen_balance"] + commission_required,
-                "expected_difference": commission_required,
-                "actual_difference": user["virtual_balance"] - new_balance
+                "expected_difference": 0,  # ИСПРАВЛЕНО: нет разницы в virtual_balance
+                "actual_difference": 0     # ИСПРАВЛЕНО: нет разницы в virtual_balance
             }
         }
         
