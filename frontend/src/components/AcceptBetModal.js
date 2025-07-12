@@ -424,7 +424,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
 
   const renderStep1 = () => (
     <div className="space-y-6">
-      {/* Header with timer */}
+      {/* Header */}
       <div className="text-center relative">
         <h3 className="text-white font-rajdhani text-xl mb-2">Match Opponent's Bet</h3>
         <div className="text-green-400 font-rajdhani text-2xl font-bold">
@@ -435,11 +435,6 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         </div>
         <div className="text-orange-400 font-rajdhani text-sm">
           Commission: {safeFormatCurrency(commissionAmount)}
-        </div>
-        
-        {/* Timer */}
-        <div className="absolute top-0 right-0 text-yellow-400 text-sm">
-          ⏱️ {Math.floor(modalTimer / 60)}:{(modalTimer % 60).toString().padStart(2, '0')}
         </div>
         
         {Math.abs(totalGemValue - targetAmount) > 0.01 && (
