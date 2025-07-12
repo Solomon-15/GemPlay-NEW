@@ -40,6 +40,10 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const [selectedGems, setSelectedGems] = useState({});
   const [selectedMove, setSelectedMove] = useState('');
   const [battleResult, setBattleResult] = useState(null);
+  
+  // Состояние для анимированного обратного отсчета
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [countdownNumber, setCountdownNumber] = useState(3);
 
   // Контексты
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
