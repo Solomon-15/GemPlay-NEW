@@ -838,7 +838,10 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
           </div>
 
           {/* Content */}
-          <div className="p-4 overflow-y-auto max-h-96">
+          <div 
+            className="p-4 overflow-y-auto max-h-96"
+            onScroll={(e) => e.stopPropagation()} // Prevent scroll events from bubbling up
+          >
             {currentStep === 1 && renderStep1()}
             {currentStep === 2 && renderStep2()}
             {currentStep === 3 && renderStep3()}
