@@ -17,8 +17,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const COMMISSION_RATE = 0.06; // 6%
   const commissionAmount = targetAmount * COMMISSION_RATE;
 
-  // НОВАЯ АСИНХРОННАЯ АРХИТЕКТУРА - упрощенное состояние
-  const [currentStep, setCurrentStep] = useState(1); // 1: выбор гемов/хода, 2: результат
+  // НОВАЯ АСИНХРОННАЯ АРХИТЕКТУРА - 3 шага для лучшего UX
+  const [currentStep, setCurrentStep] = useState(1); // 1: выбор гемов, 2: выбор хода, 3: результат
   const [loading, setLoading] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(60); // 1-минутный таймер
   
