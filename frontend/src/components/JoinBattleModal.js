@@ -323,6 +323,23 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border-primary">
           <h2 className="text-white font-russo text-xl">Join Battle</h2>
+          
+          {/* Timer - только на первых двух шагах */}
+          {currentStep < 3 && (
+            <div className={`flex items-center space-x-2 ${
+              timeRemaining <= 15 ? 'text-red-400' : 'text-yellow-400'
+            }`}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className={`font-rajdhani font-bold text-lg ${
+                timeRemaining <= 15 ? 'animate-pulse' : ''
+              }`}>
+                {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
+              </span>
+            </div>
+          )}
+          
           <button
             type="button"
             onClick={debugOnClose}
