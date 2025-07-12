@@ -1599,6 +1599,25 @@ async def get_transaction_history(
     
     return [Transaction(**transaction) for transaction in transactions]
 
+@api_router.get("/debug/balance/{user_id}")
+async def debug_user_balance(user_id: str):
+    """Debug endpoint to check user balance details."""
+    try:
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            return {"error": "User not found"}
+        
+        return {
+            "user_id": user_id,
+            "virtual_balance": user.get("virtual_balance", 0),
+            "frozen_balance": user.get("frozen_balance", 0),
+            "available_balance": user.get("virtual_balance", 0) - user.get("frozen_balance", 0),
+            "total_balance": user.get("virtual_balance", 0),
+            "updated_at": user.get("updated_at")
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
 # ==============================================================================
 # PVP GAME API ROUTES
 # ==============================================================================
