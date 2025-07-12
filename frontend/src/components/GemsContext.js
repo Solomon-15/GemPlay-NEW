@@ -22,6 +22,17 @@ export const GemsProvider = ({ children }) => {
 
   useEffect(() => {
     fetchInventoryData();
+    
+    // 🔄 ПОДПИСЫВАЕМСЯ НА ГЛОБАЛЬНЫЕ ОБНОВЛЕНИЯ ДЛЯ АВТОМАТИЧЕСКОГО ОБНОВЛЕНИЯ ИНВЕНТАРЯ
+    const globalRefresh = getGlobalLobbyRefresh();
+    const unregister = globalRefresh.registerRefreshCallback(() => {
+      console.log('💎 GemsContext auto-refresh triggered by global operation');
+      fetchInventoryData();
+    });
+    
+    return () => {
+      unregister();
+    };
   }, []);
 
   // Single source of truth: Inventory API only
