@@ -3,6 +3,7 @@ import { useGems } from './GemsContext';
 import { useNotifications } from './NotificationContext';
 import { formatCurrencyWithSymbol } from '../utils/economy';
 import { calculateGemCombination } from '../utils/gemCombinationAlgorithms';
+import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   const { 
