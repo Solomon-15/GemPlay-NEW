@@ -354,7 +354,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             commissionAmount={commissionAmount}
             playerData={{
               player: user,
-              opponent: battleResult?.gameData?.creator || { username: 'Opponent' }
+              opponent: bet?.creator || battleResult?.gameData?.creator || { username: 'Opponent' }
             }}
             onClose={debugOnClose}
           />
