@@ -276,10 +276,7 @@ const Inventory = ({ user, onUpdateUser }) => {
                     
                     <div className="mb-1 md:mb-2">
                       <div className="font-rajdhani text-lg md:text-2xl font-bold text-purple-400 break-words">
-                        {formatNumber(portfolioData.gems.totalCount)} gems
-                      </div>
-                      <div className="font-rajdhani text-sm md:text-lg font-bold text-accent-primary break-words">
-                        ${formatNumber(portfolioData.gems.totalValue)}
+                        {formatNumber(portfolioData.gems.totalCount)}/{formatNumber(portfolioData.gems.totalValue)}
                       </div>
                     </div>
                     
