@@ -80,7 +80,7 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
           </div>
         )}
         <div className="font-roboto text-xs text-text-secondary">
-          Available: {formatCurrencyWithSymbol(virtualBalance - frozenBalance)}
+          Available: {formatCurrencyWithSymbol(virtualBalance)}
         </div>
       </div>
 
