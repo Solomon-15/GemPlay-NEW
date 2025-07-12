@@ -100,6 +100,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         onUpdateUser();
       }
       
+      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ПРИСОЕДИНЕНИЯ К ИГРЕ
+      const globalRefresh = getGlobalLobbyRefresh();
+      globalRefresh.triggerLobbyRefresh();
+      console.log('⚔️ Battle joined/completed - triggering lobby refresh');
+      
       // Переходим к результату (шаг 3)
       setCurrentStep(3);
       
