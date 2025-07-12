@@ -332,7 +332,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         </div>
 
         {/* Footer Navigation */}
-        {currentStep < 3 && (
+        {currentStep < 3 && !loading && (
           <div className="p-4 border-t border-border-primary">
             <div className="flex space-x-3">
               {currentStep > 1 && (
