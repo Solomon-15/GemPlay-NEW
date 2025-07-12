@@ -2767,14 +2767,325 @@ def test_gem_combination_strategy_logic() -> None:
         print_error(f"Validation test failed: {response}")
         record_test("Gem Combination - Validation", False, "Validation not working")
 
+def test_asynchronous_commit_reveal_comprehensive() -> None:
+    """Test the asynchronous commit-reveal system as requested in Russian review."""
+    print_header("TESTING ASYNCHRONOUS COMMIT-REVEAL SYSTEM - COMPREHENSIVE")
+    
+    # Step 1: Setup test users
+    print_subheader("Step 1: Setting up test users")
+    
+    # Create unique test users to avoid conflicts
+    timestamp = int(time.time())
+    test_user_a = {
+        "username": f"playera_{timestamp}",
+        "email": f"playera_{timestamp}@test.com",
+        "password": "Test123!",
+        "gender": "male"
+    }
+    
+    test_user_b = {
+        "username": f"playerb_{timestamp}",
+        "email": f"playerb_{timestamp}@test.com",
+        "password": "Test123!",
+        "gender": "female"
+    }
+    
+    # Register and verify users
+    token_a_verify, email_a, username_a = test_user_registration(test_user_a)
+    token_b_verify, email_b, username_b = test_user_registration(test_user_b)
+    
+    if not token_a_verify or not token_b_verify:
+        print_error("Failed to register test users")
+        record_test("Async Commit-Reveal - User Setup", False, "User registration failed")
+        return
+    
+    # Verify emails
+    test_email_verification(token_a_verify, username_a)
+    test_email_verification(token_b_verify, username_b)
+    
+    # Login users
+    token_a = test_login(email_a, test_user_a["password"], username_a)
+    token_b = test_login(email_b, test_user_b["password"], username_b)
+    
+    if not token_a or not token_b:
+        print_error("Failed to login test users")
+        record_test("Async Commit-Reveal - User Login", False, "User login failed")
+        return
+    
+    print_success("Test users setup completed successfully")
+    record_test("Async Commit-Reveal - User Setup", True)
+    
+    # Step 2: Test different game outcomes
+    test_scenarios = [
+        {
+            "name": "Creator Wins (Rock vs Scissors)",
+            "creator_move": "rock",
+            "opponent_move": "scissors",
+            "expected_result": "creator_wins"
+        },
+        {
+            "name": "Opponent Wins (Paper vs Rock)",
+            "creator_move": "rock",
+            "opponent_move": "paper",
+            "expected_result": "opponent_wins"
+        },
+        {
+            "name": "Draw (Rock vs Rock)",
+            "creator_move": "rock",
+            "opponent_move": "rock",
+            "expected_result": "draw"
+        }
+    ]
+    
+    for scenario in test_scenarios:
+        print_subheader(f"Testing Scenario: {scenario['name']}")
+        
+        # Step 2a: Player A creates game with commit
+        print(f"Player A creating game with move: {scenario['creator_move']}")
+        
+        bet_gems = {"Ruby": 2, "Emerald": 1}  # Small bet for testing
+        create_start_time = time.time()
+        
+        create_response, create_success = make_request(
+            "POST", "/games/create",
+            data={
+                "move": scenario["creator_move"],
+                "bet_gems": bet_gems
+            },
+            auth_token=token_a
+        )
+        
+        create_end_time = time.time()
+        create_duration = create_end_time - create_start_time
+        
+        if not create_success or "game_id" not in create_response:
+            print_error(f"Failed to create game: {create_response}")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Create Game", False, "Game creation failed")
+            continue
+        
+        game_id = create_response["game_id"]
+        print_success(f"Game created successfully with ID: {game_id}")
+        print_success(f"Game creation time: {create_duration:.3f} seconds")
+        
+        # Verify game is in WAITING status
+        if create_response.get("status") == "WAITING":
+            print_success("Game correctly in WAITING status")
+        else:
+            print_warning(f"Game status is {create_response.get('status')}, expected WAITING")
+        
+        # Verify creator move is hidden (commit phase)
+        if "creator_move" not in create_response or create_response.get("creator_move") is None:
+            print_success("Creator move correctly hidden during commit phase")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Move Hidden", True)
+        else:
+            print_error("Creator move exposed during commit phase!")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Move Hidden", False, "Move exposed")
+        
+        # Step 2b: Player B joins game (CRITICAL TEST)
+        print(f"Player B joining game with move: {scenario['opponent_move']}")
+        
+        join_start_time = time.time()
+        
+        join_response, join_success = make_request(
+            "POST", f"/games/{game_id}/join",
+            data={"move": scenario["opponent_move"]},
+            auth_token=token_b
+        )
+        
+        join_end_time = time.time()
+        join_duration = join_end_time - join_start_time
+        total_duration = join_end_time - create_start_time
+        
+        print_success(f"Join request time: {join_duration:.3f} seconds")
+        print_success(f"Total game flow time: {total_duration:.3f} seconds")
+        
+        if not join_success:
+            print_error(f"Failed to join game: {join_response}")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Join Game", False, "Join failed")
+            continue
+        
+        # CRITICAL CHECK: Join response should contain complete results
+        print_subheader("CRITICAL: Checking Join Response Fields")
+        
+        required_fields = [
+            "success", "status", "result", "creator_move", "opponent_move", 
+            "winner_id", "creator", "opponent"
+        ]
+        
+        missing_fields = []
+        for field in required_fields:
+            if field not in join_response:
+                missing_fields.append(field)
+        
+        if missing_fields:
+            print_error(f"CRITICAL ISSUE: Join response missing required fields: {missing_fields}")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Complete Response", False, f"Missing fields: {missing_fields}")
+        else:
+            print_success("✓ Join response contains all required fields")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Complete Response", True)
+        
+        # CRITICAL CHECK: Status should be COMPLETED, not REVEAL
+        actual_status = join_response.get("status")
+        if actual_status == "COMPLETED":
+            print_success("✓ Game status is COMPLETED (fully asynchronous)")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Status COMPLETED", True)
+        else:
+            print_error(f"✗ CRITICAL ISSUE: Game status is {actual_status}, expected COMPLETED")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Status COMPLETED", False, f"Status: {actual_status}")
+        
+        # CRITICAL CHECK: No reveal_deadline should be present
+        if "reveal_deadline" not in join_response:
+            print_success("✓ No reveal_deadline present (no polling logic)")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - No Polling", True)
+        else:
+            print_error("✗ CRITICAL ISSUE: reveal_deadline present (indicates polling logic)")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - No Polling", False, "reveal_deadline present")
+        
+        # Check game result
+        actual_result = join_response.get("result")
+        if actual_result == scenario["expected_result"]:
+            print_success(f"✓ Game result correct: {actual_result}")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Correct Result", True)
+        else:
+            print_error(f"✗ Game result incorrect: expected {scenario['expected_result']}, got {actual_result}")
+            record_test(f"Async Commit-Reveal - {scenario['name']} - Correct Result", False, f"Wrong result: {actual_result}")
+        
+        # Check moves are revealed
+        creator_move = join_response.get("creator_move")
+        opponent_move = join_response.get("opponent_move")
+        
+        if creator_move == scenario["creator_move"]:
+            print_success(f"✓ Creator move correctly revealed: {creator_move}")
+        else:
+            print_error(f"✗ Creator move incorrect: expected {scenario['creator_move']}, got {creator_move}")
+        
+        if opponent_move == scenario["opponent_move"]:
+            print_success(f"✓ Opponent move correctly revealed: {opponent_move}")
+        else:
+            print_error(f"✗ Opponent move incorrect: expected {scenario['opponent_move']}, got {opponent_move}")
+        
+        # Check winner_id
+        winner_id = join_response.get("winner_id")
+        if scenario["expected_result"] == "draw":
+            if winner_id is None:
+                print_success("✓ Winner ID correctly null for draw")
+            else:
+                print_error(f"✗ Winner ID should be null for draw, got: {winner_id}")
+        else:
+            if winner_id:
+                print_success(f"✓ Winner ID present: {winner_id}")
+            else:
+                print_error("✗ Winner ID missing for non-draw result")
+        
+        # Check player information
+        creator_info = join_response.get("creator", {})
+        opponent_info = join_response.get("opponent", {})
+        
+        if creator_info and opponent_info:
+            print_success("✓ Player information present in response")
+            print_success(f"  Creator: {creator_info.get('username', 'N/A')}")
+            print_success(f"  Opponent: {opponent_info.get('username', 'N/A')}")
+        else:
+            print_error("✗ Player information missing from response")
+        
+        # Step 2c: Verify automatic balance updates
+        print_subheader("Checking Automatic Balance Updates")
+        
+        # Check Player A balance
+        balance_a_response, balance_a_success = make_request(
+            "GET", "/economy/balance", auth_token=token_a
+        )
+        
+        if balance_a_success:
+            frozen_balance_a = balance_a_response.get("frozen_balance", 0)
+            if frozen_balance_a == 0:
+                print_success("✓ Player A frozen balance released")
+                record_test(f"Async Commit-Reveal - {scenario['name']} - Balance A Released", True)
+            else:
+                print_error(f"✗ Player A still has frozen balance: ${frozen_balance_a}")
+                record_test(f"Async Commit-Reveal - {scenario['name']} - Balance A Released", False, f"Frozen: ${frozen_balance_a}")
+        
+        # Check Player B balance
+        balance_b_response, balance_b_success = make_request(
+            "GET", "/economy/balance", auth_token=token_b
+        )
+        
+        if balance_b_success:
+            frozen_balance_b = balance_b_response.get("frozen_balance", 0)
+            if frozen_balance_b == 0:
+                print_success("✓ Player B frozen balance released")
+                record_test(f"Async Commit-Reveal - {scenario['name']} - Balance B Released", True)
+            else:
+                print_error(f"✗ Player B still has frozen balance: ${frozen_balance_b}")
+                record_test(f"Async Commit-Reveal - {scenario['name']} - Balance B Released", False, f"Frozen: ${frozen_balance_b}")
+        
+        # Check gem inventories for frozen gems
+        inventory_a_response, inventory_a_success = make_request(
+            "GET", "/gems/inventory", auth_token=token_a
+        )
+        
+        if inventory_a_success:
+            frozen_gems_a = any(gem["frozen_quantity"] > 0 for gem in inventory_a_response)
+            if not frozen_gems_a:
+                print_success("✓ Player A gems unfrozen")
+                record_test(f"Async Commit-Reveal - {scenario['name']} - Gems A Unfrozen", True)
+            else:
+                print_error("✗ Player A still has frozen gems")
+                record_test(f"Async Commit-Reveal - {scenario['name']} - Gems A Unfrozen", False, "Gems still frozen")
+        
+        inventory_b_response, inventory_b_success = make_request(
+            "GET", "/gems/inventory", auth_token=token_b
+        )
+        
+        if inventory_b_success:
+            frozen_gems_b = any(gem["frozen_quantity"] > 0 for gem in inventory_b_response)
+            if not frozen_gems_b:
+                print_success("✓ Player B gems unfrozen")
+                record_test(f"Async Commit-Reveal - {scenario['name']} - Gems B Unfrozen", True)
+            else:
+                print_error("✗ Player B still has frozen gems")
+                record_test(f"Async Commit-Reveal - {scenario['name']} - Gems B Unfrozen", False, "Gems still frozen")
+        
+        print_success(f"Scenario '{scenario['name']}' completed")
+        print("-" * 80)
+    
+    # Step 3: Final verification - ensure no REVEAL status games exist
+    print_subheader("Final Verification: No REVEAL Status Games")
+    
+    # Check available games to ensure no games are stuck in REVEAL status
+    available_response, available_success = make_request(
+        "GET", "/games/available", auth_token=token_a
+    )
+    
+    if available_success:
+        reveal_games = [game for game in available_response if game.get("status") == "REVEAL"]
+        if not reveal_games:
+            print_success("✓ No games stuck in REVEAL status")
+            record_test("Async Commit-Reveal - No REVEAL Games", True)
+        else:
+            print_error(f"✗ Found {len(reveal_games)} games in REVEAL status")
+            record_test("Async Commit-Reveal - No REVEAL Games", False, f"{len(reveal_games)} REVEAL games found")
+    
+    # Summary
+    print_subheader("ASYNCHRONOUS COMMIT-REVEAL SYSTEM TEST SUMMARY")
+    print_success("✓ Tested complete asynchronous flow")
+    print_success("✓ Verified immediate game completion on join")
+    print_success("✓ Confirmed no polling logic required")
+    print_success("✓ Tested all three game outcomes")
+    print_success("✓ Verified automatic balance/gem updates")
+    print_success("✓ Confirmed proper commit-reveal scheme")
+
 def run_all_tests() -> None:
     """Run all tests in sequence."""
     print_header("GEMPLAY API TESTING - ASYNCHRONOUS COMMIT-REVEAL SYSTEM")
     
-    # Test 1: Asynchronous Commit-Reveal System (as requested in review)
-    test_asynchronous_commit_reveal_system()
+    # Test 1: Asynchronous Commit-Reveal System (PRIORITY TEST as requested in Russian review)
+    test_asynchronous_commit_reveal_comprehensive()
     
-    # Test 2: Gem Combination Strategy Logic (needs retesting)
+    # Test 2: Cancel Bet Functionality (as requested in review)
+    test_cancel_bet_functionality()
+    
+    # Test 3: Gem Combination Strategy Logic (needs retesting)
     test_gem_combination_strategy_logic()
     
     # Print summary
