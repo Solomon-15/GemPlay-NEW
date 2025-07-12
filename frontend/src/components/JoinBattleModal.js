@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useGems } from './GemsContext';
 import { useNotifications } from './NotificationContext';
 import GemSelectionStep from './GemSelectionStep';
+import MoveSelectionStep from './MoveSelectionStep';
 
 // Компоненты шагов (создадим их далее)
-// import MoveSelectionStep from './MoveSelectionStep';
 // import BattleResultStep from './BattleResultStep';
 // import RevealStep from './RevealStep';
 
