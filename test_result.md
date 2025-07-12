@@ -1,4 +1,16 @@
 backend:
+  - task: "Asynchronous Commit-Reveal System for PvP Games"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "ASYNCHRONOUS COMMIT-REVEAL SYSTEM TESTING COMPLETED: Tested the complete асинхронную commit-reveal систему для PvP игр as requested in the Russian review. Key findings: 1) COMMIT PHASE working correctly - Player A creates game with encrypted move, move is properly hidden in API responses, game creation fast (0.035 seconds). 2) SHA-256 IMPLEMENTATION verified - hash function produces valid 64-character hex output for commit-reveal scheme. 3) GAME FLOW partially working - Player B can join games successfully (0.030 seconds), total flow time 0.064 seconds indicating no polling delays. 4) CRITICAL ISSUE FOUND - System is NOT fully asynchronous as requested. When Player B joins, game enters 'REVEAL' status with reveal_deadline instead of immediately completing. Join response missing required fields: result, creator_move, opponent_move. Game status shows WAITING -> REVEAL instead of WAITING -> COMPLETED. 5) MOVE ENCRYPTION working - Player A's move properly hidden during waiting phase, no exposure in available games API. 6) MULTIPLE SCENARIOS blocked - Players cannot join multiple games simultaneously, preventing full scenario testing. 7) BALANCE/GEMS partially updated - APIs accessible immediately but frozen balance not released, indicating incomplete game completion. CONCLUSION: The commit-reveal system is implemented but NOT asynchronous as requested. It still uses traditional reveal phase instead of immediate result determination when Player B joins. Backend needs modification to automatically reveal and complete games upon second player joining."
+
   - task: "Gem Combination Strategy Logic Fix - Final"
     implemented: true
     working: true
