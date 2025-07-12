@@ -45,6 +45,27 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
   const { showSuccess, showError } = useNotifications() || {};
 
+  // Таймер автозакрытия
+  React.useEffect(() => {
+    if (currentStep >= 3) {
+      // Не запускаем таймер на шагах результата
+      return;
+    }
+    
+    const timer = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          // Время истекло - закрываем модальное окно
+          debugOnClose();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [currentStep]); // Перезапускаем при смене шага
+
   // Обработчик стратегий
   const handleStrategySelect = async (strategy) => {
     setLoading(true);
