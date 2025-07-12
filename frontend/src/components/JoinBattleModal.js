@@ -32,6 +32,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Состояние модального окна
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  
+  // Таймер для автозакрытия (60 секунд)
+  const [timeRemaining, setTimeRemaining] = useState(60);
 
   // Данные шагов
   const [selectedGems, setSelectedGems] = useState({});
