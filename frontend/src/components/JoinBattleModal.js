@@ -51,15 +51,46 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
 
   // Функция для проверки логики Rock Paper Scissors
   const getRPSResult = (playerMove, opponentMove) => {
-    if (playerMove === opponentMove) return 'draw';
+    console.log('🎯 RPS Logic Check:', {
+      input: {
+        player: playerMove,
+        opponent: opponentMove
+      }
+    });
     
+    // Нормализуем ходы к нижнему регистру
+    const player = playerMove?.toLowerCase();
+    const opponent = opponentMove?.toLowerCase();
+    
+    // Проверяем ничью
+    if (player === opponent) {
+      console.log('🎯 RPS Result: DRAW (same moves)');
+      return 'draw';
+    }
+    
+    // Правила Rock-Paper-Scissors
+    // rock > scissors, scissors > paper, paper > rock
     const winningCombos = {
-      'rock': 'scissors',
-      'paper': 'rock', 
-      'scissors': 'paper'
+      'rock': 'scissors',     // rock beats scissors
+      'scissors': 'paper',    // scissors beats paper  
+      'paper': 'rock'         // paper beats rock
     };
     
-    return winningCombos[playerMove] === opponentMove ? 'win' : 'lose';
+    const playerWins = winningCombos[player] === opponent;
+    const result = playerWins ? 'win' : 'lose';
+    
+    console.log('🎯 RPS Result:', {
+      player: player,
+      opponent: opponent, 
+      playerBeats: winningCombos[player],
+      playerWins: playerWins,
+      result: result,
+      explanation: playerWins ? 
+        `${player} beats ${opponent}` : 
+        `${opponent} beats ${player}`
+    });
+    
+    return result;
   };
 
   // Таймер автозакрытия
