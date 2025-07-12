@@ -155,6 +155,12 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
 
   // Рендер текущего шага
   const renderCurrentStep = () => {
+    // Вычисляем общую стоимость выбранных гемов
+    const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
+      const gem = gemsData.find(g => g.type === gemType);
+      return sum + (gem ? gem.price * quantity : 0);
+    }, 0);
+
     switch (currentStep) {
       case 1:
         return (
@@ -170,8 +176,14 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           />
         );
       case 2:
-        // return <MoveSelectionStep ... />;
-        return <div className="p-4 text-white">Move Selection Step (TODO)</div>;
+        return (
+          <MoveSelectionStep
+            targetAmount={targetAmount}
+            totalGemValue={totalGemValue}
+            selectedMove={selectedMove}
+            onSelectedMoveChange={setSelectedMove}
+          />
+        );
       case 3:
         // return <BattleResultStep ... />;
         return <div className="p-4 text-white">Battle Result Step (TODO)</div>;
