@@ -2271,7 +2271,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     currency="USD",
                     balance_before=winner["virtual_balance"],
                     balance_after=final_balance,
-                    description=f"PvP game commission (3% of ${game.bet_amount * 2})",
+                    description=f"PvP game commission (6% of ${game.bet_amount} bet)",
                     reference_id=game.id
                 )
                 await db.transactions.insert_one(commission_transaction.dict())
