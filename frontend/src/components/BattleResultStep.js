@@ -6,8 +6,25 @@ const BattleResultStep = ({
   targetAmount,
   totalGemValue,
   commissionAmount,
+  playerData, // Новый пропс для данных игроков
   onClose
 }) => {
+  const [timeUntilAutoClose, setTimeUntilAutoClose] = React.useState(7);
+
+  // Автозакрытие через 7 секунд
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeUntilAutoClose(prev => {
+        if (prev <= 1) {
+          onClose();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [onClose]);
   // Безопасное форматирование валюты
   const formatCurrency = (amount) => {
     try {
