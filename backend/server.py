@@ -191,7 +191,8 @@ class Game(BaseModel):
     creator_move_hash: Optional[str] = None  # Для commit-reveal схемы
     creator_salt: Optional[str] = None
     bet_amount: float
-    bet_gems: Dict[str, int]  # {"Ruby": 5, "Emerald": 2}
+    bet_gems: Dict[str, int]  # {"Ruby": 5, "Emerald": 2} - Creator's gems
+    opponent_gems: Optional[Dict[str, int]] = None  # {"Ruby": 3, "Sapphire": 1} - Opponent's gems
     status: GameStatus = GameStatus.WAITING
     winner_id: Optional[str] = None
     commission_amount: float = 0.0
