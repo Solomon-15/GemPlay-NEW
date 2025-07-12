@@ -169,7 +169,17 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
       }
       
       if (!exactMatch) {
-        // No exact solution possible
+        // Try advanced DP algorithm as fallback
+        const dpResult = findExactCombinationDP(availableGems, targetAmount);
+        if (dpResult.success) {
+          return {
+            success: true,
+            combination: dpResult.combination.sort((a, b) => a.price - b.price),
+            message: `Small strategy: Found exact combination for $${targetAmount.toFixed(2)}`
+          };
+        }
+        
+        // No solution possible
         return {
           success: false,
           combination: [],
