@@ -9,17 +9,19 @@ const PlayerCard = ({
   isOngoing = false,
   onAccept, 
   onCancel,
+  onOpenJoinBattle,  // Новый пропс для открытия модального окна
   onUpdateUser,
   currentTime = new Date(),
   user
 }) => {
   const { gemsDefinitions, getGemByType } = useGems();
-  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  // Убираем локальное состояние модального окна
+  // const [showAcceptModal, setShowAcceptModal] = useState(false);
 
   // ВРЕМЕННЫЙ ЛОГ ДЛЯ ОТЛАДКИ
   console.log('🔄 PlayerCard render:', {
     gameId: game.game_id || game.id,
-    showAcceptModal,
+    // showAcceptModal,
     timestamp: new Date().toISOString()
   });
 
