@@ -1982,9 +1982,11 @@ async def join_game(
         raise
     except Exception as e:
         logger.error(f"Error joining game: {e}")
+        logger.error(f"Error type: {type(e)}")
+        logger.error(f"Error traceback:", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to join game"
+            detail=f"Failed to join game: {str(e)}"
         )
 
 @api_router.post("/games/{game_id}/reveal", response_model=dict)
