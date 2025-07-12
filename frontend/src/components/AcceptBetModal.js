@@ -877,7 +877,11 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
                 
                 <button
                   type="button"
-                  onClick={handleNext}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleNext();
+                  }}
                   disabled={loading}
                   className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
                 >
