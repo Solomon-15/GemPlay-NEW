@@ -552,6 +552,41 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           />
         );
       case 3:
+        // Если ждем результат - показываем индикатор ожидания
+        if (isWaitingForResult) {
+          return (
+            <div className="p-8 text-center space-y-6">
+              <div className="text-white font-russo text-2xl mb-4">
+                ⚔️ Battle in Progress
+              </div>
+              
+              <div className="flex justify-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-accent-primary"></div>
+              </div>
+              
+              <div className="text-text-secondary">
+                <div className="font-rajdhani text-lg mb-2">Waiting for opponent to reveal...</div>
+                <div className="text-sm">This may take up to 60 seconds</div>
+              </div>
+              
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-white font-rajdhani font-bold mb-2">Your Move</div>
+                <div className="flex justify-center">
+                  <img 
+                    src={moves.find(m => m.id === selectedMove)?.icon} 
+                    alt={selectedMove} 
+                    className="w-12 h-12" 
+                  />
+                </div>
+                <div className="text-accent-primary font-rajdhani capitalize font-bold mt-2">
+                  {moves.find(m => m.id === selectedMove)?.name}
+                </div>
+              </div>
+            </div>
+          );
+        }
+        
+        // Показываем результат только когда получили финальные данные
         return (
           <BattleResultStep
             battleResult={battleResult}
