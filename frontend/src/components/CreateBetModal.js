@@ -2,14 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useGems } from './GemsContext';
 import { useNotifications } from './NotificationContext';
 import { formatCurrencyWithSymbol } from '../utils/economy';
+import { calculateGemCombination } from '../utils/gemCombinationAlgorithms';
 
 const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   const { 
     gemsData, 
-    getAvailableGems, 
     validateGemOperation, 
-    refreshInventory,
-    getSortedGems
+    refreshInventory
   } = useGems();
   const { showSuccess, showError } = useNotifications();
   
@@ -42,123 +41,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     { id: 3, name: 'Confirm', description: 'Create bet' }
   ];
 
-  // IMPROVED EXACT MATCHING ALGORITHM with iterative optimization
-  const selectGemsWithExactStrategy = (priorityGems, targetAmount, strategy) => {
-    // Get all available gems for fallback
-    const allAvailableGems = getSortedGems('price', 'asc').filter(gem => gem.has_available);
-    
-    if (allAvailableGems.length === 0) {
-      return { error: 'Недостаточно доступных гемов для формирования ставки на указанную сумму.' };
-    }
-
-    // Try to find exact combination using dynamic programming approach
-    const findExactCombination = () => {
-      // Create array of all possible gem units (each gem broken down to individual units)
-      const gemUnits = [];
-      
-      for (const gem of allAvailableGems) {
-        for (let i = 0; i < gem.available_quantity; i++) {
-          gemUnits.push({
-            type: gem.type,
-            price: gem.price,
-            isPriority: priorityGems.some(p => p.type === gem.type)
-          });
-        }
-      }
-
-      // Sort units by strategy priority and then by price
-      if (strategy === 'small') {
-        // Small: prefer cheap gems, then by price ascending
-        gemUnits.sort((a, b) => {
-          if (a.isPriority !== b.isPriority) return b.isPriority - a.isPriority;
-          return a.price - b.price;
-        });
-      } else if (strategy === 'big') {
-        // Big: prefer expensive gems, then by price descending  
-        gemUnits.sort((a, b) => {
-          if (a.isPriority !== b.isPriority) return b.isPriority - a.isPriority;
-          return b.price - a.price;
-        });
-      } else {
-        // Smart: balanced approach, medium priority first
-        gemUnits.sort((a, b) => {
-          if (a.isPriority !== b.isPriority) return b.isPriority - a.isPriority;
-          return Math.abs(a.price - 25) - Math.abs(b.price - 25); // Prefer around $25 (medium price)
-        });
-      }
-
-      // Use dynamic programming to find exact combination
-      const dp = Array(targetAmount + 1).fill(null);
-      dp[0] = [];
-
-      for (let i = 0; i < gemUnits.length; i++) {
-        const unit = gemUnits[i];
-        
-        // Go backwards to avoid using the same unit multiple times
-        for (let amount = targetAmount; amount >= unit.price; amount--) {
-          if (dp[amount - unit.price] !== null) {
-            const newCombination = [...dp[amount - unit.price], unit];
-            if (dp[amount] === null || newCombination.length < dp[amount].length) {
-              dp[amount] = newCombination;
-            }
-          }
-        }
-      }
-
-      return dp[targetAmount];
-    };
-
-    const exactCombination = findExactCombination();
-    
-    if (!exactCombination) {
-      return { error: 'Недостаточно доступных гемов для формирования ставки на указанную сумму.' };
-    }
-
-    // Convert combination back to gem counts
-    const result = {};
-    for (const unit of exactCombination) {
-      result[unit.type] = (result[unit.type] || 0) + 1;
-    }
-
-    // Verify the result
-    const actualTotal = Object.entries(result).reduce((sum, [gemType, quantity]) => {
-      const gem = gemsData.find(g => g.type === gemType);
-      return sum + (gem ? gem.price * quantity : 0);
-    }, 0);
-
-    if (actualTotal !== targetAmount) {
-      return { error: 'Недостаточно доступных гемов для формирования ставки на указанную сумму.' };
-    }
-
-    return result;
-  };
-
-  // STRATEGY-SPECIFIC IMPLEMENTATIONS with exact matching
-  const autoSelectSmall = (amount) => {
-    // Small: prioritize cheapest gems (Ruby, Amber, Topaz)
-    const cheapGems = getSortedGems('price', 'asc').filter(gem => 
-      gem.has_available && ['Ruby', 'Amber', 'Topaz'].includes(gem.type)
-    );
-    return selectGemsWithExactStrategy(cheapGems, amount, 'small');
-  };
-
-  const autoSelectSmart = (amount) => {
-    // Smart: prioritize medium-priced gems (Topaz, Emerald, Aquamarine)
-    const mediumGems = getSortedGems('price', 'asc').filter(gem => 
-      gem.has_available && ['Topaz', 'Emerald', 'Aquamarine'].includes(gem.type)
-    );
-    return selectGemsWithExactStrategy(mediumGems, amount, 'smart');
-  };
-
-  const autoSelectBig = (amount) => {
-    // Big: prioritize expensive gems (Magic, Sapphire, Aquamarine)
-    const expensiveGems = getSortedGems('price', 'desc').filter(gem => 
-      gem.has_available && ['Magic', 'Sapphire', 'Aquamarine'].includes(gem.type)
-    );
-    return selectGemsWithExactStrategy(expensiveGems, amount, 'big');
-  };
-
-  // Calculate total value
+  // Calculate total value when selectedGems changes
   useEffect(() => {
     const total = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
@@ -171,7 +54,10 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     setBetAmount(value);
   };
 
-  const handleStrategySelect = async (strategy) => {
+  /**
+   * NEW STRATEGY HANDLER - Uses pure frontend algorithms
+   */
+  const handleStrategySelect = (strategy) => {
     if (!betAmount || parseFloat(betAmount) <= 0) {
       showError('Please enter bet amount first');
       return;
@@ -181,41 +67,24 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     setLoading(true);
     
     try {
-      // Call the new backend API for gem combination calculation
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gems/calculate-combination`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          bet_amount: amount,
-          strategy: strategy
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Ошибка при расчете комбинации гемов');
-      }
-      
-      const result = await response.json();
+      // Use new frontend algorithms
+      const result = calculateGemCombination(strategy, gemsData, amount);
       
       if (result.success) {
-        // Convert API response to internal format
+        // Convert result to internal format
         const autoSelected = {};
-        result.combinations.forEach(combo => {
-          autoSelected[combo.type] = combo.quantity;
+        result.combination.forEach(item => {
+          autoSelected[item.type] = item.quantity;
         });
         
         setSelectedGems(autoSelected);
-        showSuccess(result.message || `Найдена комбинация на сумму $${result.total_amount}`);
+        showSuccess(result.message);
       } else {
-        showError(result.message || 'Недостаточно гемов для создания точной комбинации');
+        showError(result.message);
       }
     } catch (error) {
       console.error('Error calculating gem combination:', error);
-      showError(error.message || 'Ошибка при расчете комбинации гемов');
+      showError('Error calculating gem combination');
     } finally {
       setLoading(false);
     }
@@ -403,7 +272,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         </div>
       </div>
 
-      {/* Strategy Buttons */}
+      {/* Strategy Buttons - NEW IMPLEMENTATION */}
       <div>
         <label className="block text-white font-rajdhani text-lg mb-3">
           Auto Combination
@@ -413,36 +282,36 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
             onClick={() => handleStrategySelect('small')}
             disabled={!betAmount || parseFloat(betAmount) <= 0 || loading}
             className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            title="Use more cheap gems"
+            title="🔴 Use more cheap gems (Ruby, Amber, Topaz)"
           >
             {loading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             ) : (
-              'Small'
+              '🔴 Small'
             )}
           </button>
           <button
             onClick={() => handleStrategySelect('smart')}
             disabled={!betAmount || parseFloat(betAmount) <= 0 || loading}
             className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            title="Balance bet with medium gems"
+            title="🟢 Balanced mid-range gems (60% mid, 30% low, 10% high)"
           >
             {loading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             ) : (
-              'Smart'
+              '🟢 Smart'
             )}
           </button>
           <button
             onClick={() => handleStrategySelect('big')}
             disabled={!betAmount || parseFloat(betAmount) <= 0 || loading}
             className="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            title="Use minimum quantity of expensive gems"
+            title="🟣 Use fewer expensive gems (Magic, Sapphire, Aquamarine)"
           >
             {loading ? (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             ) : (
-              'Big'
+              '🟣 Big'
             )}
           </button>
         </div>
