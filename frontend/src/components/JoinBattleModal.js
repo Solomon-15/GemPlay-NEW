@@ -49,6 +49,52 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
   const { showSuccess, showError } = useNotifications() || {};
 
+  // Функция polling для ожидания завершения игры
+  const pollGameResult = async (gameId, maxAttempts = 30) => {
+    console.log('🔄 Starting game polling:', { gameId, maxAttempts });
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        console.log(`🔄 Polling attempt ${attempt}/${maxAttempts}`);
+        
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${gameId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (!response.ok) {
+          console.warn(`⚠️ Polling attempt ${attempt} failed:`, response.status);
+          continue;
+        }
+        
+        const gameData = await response.json();
+        console.log(`🔄 Polling result ${attempt}:`, {
+          status: gameData.status,
+          hasWinnerId: 'winner_id' in gameData,
+          hasCreatorMove: 'creator_move' in gameData,
+          hasJoinerMove: 'joiner_move' in gameData
+        });
+        
+        // Проверяем, завершена ли игра
+        if (gameData.status === 'COMPLETED' || gameData.status === 'FINISHED') {
+          console.log('✅ Game completed! Final data:', gameData);
+          return gameData;
+        }
+        
+        // Ждем 2 секунды перед следующей попыткой
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+      } catch (error) {
+        console.error(`🚨 Polling attempt ${attempt} error:`, error);
+      }
+    }
+    
+    console.error('🚨 Polling timeout - game did not complete in time');
+    throw new Error('Game did not complete in time. Please check the game manually.');
+  };
+
   // Функция для проверки логики Rock Paper Scissors
   const getRPSResult = (playerMove, opponentMove) => {
     console.log('🎯 RPS Logic Check:', {
