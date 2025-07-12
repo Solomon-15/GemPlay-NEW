@@ -128,6 +128,11 @@ const Inventory = ({ user, onUpdateUser }) => {
       await fetchInventory();
       await fetchBalance();
       
+      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ДАРЕНИЯ ГЕМОВ
+      const globalRefresh = getGlobalLobbyRefresh();
+      globalRefresh.triggerLobbyRefresh();
+      console.log(`🎁 Gifted ${quantity} ${gemType} gems - triggering lobby refresh`);
+      
       if (onUpdateUser) {
         onUpdateUser();
       }
