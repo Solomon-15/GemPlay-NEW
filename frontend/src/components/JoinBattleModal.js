@@ -272,7 +272,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     );
   }
 
-  // Рендер текущего шага - упрощенная логика
+  // Рендер текущего шага - 3 отдельных шага
   const renderCurrentStep = () => {
     // Вычисляем общую стоимость выбранных гемов
     const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
@@ -282,36 +282,31 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
 
     switch (currentStep) {
       case 1:
-        // Объединенный шаг: выбор гемов И выбор хода
+        // Шаг 1: Выбор гемов
         return (
-          <div className="space-y-6">
-            {/* Выбор гемов */}
-            <GemSelectionStep
-              targetAmount={targetAmount}
-              commissionAmount={commissionAmount}
-              selectedGems={selectedGems}
-              onSelectedGemsChange={setSelectedGems}
-              gemsData={gemsData}
-              loading={loading}
-              onStrategySelect={handleStrategySelect}
-              showError={showError}
-            />
-            
-            {/* Выбор хода - показываем только если гемы выбраны */}
-            {Object.keys(selectedGems).length > 0 && Math.abs(totalGemValue - targetAmount) <= 0.01 && (
-              <div className="border-t border-border-primary pt-6">
-                <MoveSelectionStep
-                  targetAmount={targetAmount}
-                  totalGemValue={totalGemValue}
-                  selectedMove={selectedMove}
-                  onSelectedMoveChange={setSelectedMove}
-                />
-              </div>
-            )}
-          </div>
+          <GemSelectionStep
+            targetAmount={targetAmount}
+            commissionAmount={commissionAmount}
+            selectedGems={selectedGems}
+            onSelectedGemsChange={setSelectedGems}
+            gemsData={gemsData}
+            loading={loading}
+            onStrategySelect={handleStrategySelect}
+            showError={showError}
+          />
         );
       case 2:
-        // Результат битвы
+        // Шаг 2: Выбор хода
+        return (
+          <MoveSelectionStep
+            targetAmount={targetAmount}
+            totalGemValue={totalGemValue}
+            selectedMove={selectedMove}
+            onSelectedMoveChange={setSelectedMove}
+          />
+        );
+      case 3:
+        // Шаг 3: Результат битвы
         return (
           <BattleResultStep
             battleResult={battleResult}
