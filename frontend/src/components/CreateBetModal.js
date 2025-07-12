@@ -201,6 +201,12 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         showSuccess(`Bet created! ${formatCurrencyWithSymbol(totalGemValue * COMMISSION_RATE)} (6%) frozen until game completion.`);
         await refreshInventory();
         onUpdateUser?.();
+        
+        // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY
+        const globalRefresh = getGlobalLobbyRefresh();
+        globalRefresh.triggerLobbyRefresh();
+        console.log('🎮 Bet created - triggering lobby refresh');
+        
         onClose();
       } else {
         showError(data.detail || 'Failed to create bet');
