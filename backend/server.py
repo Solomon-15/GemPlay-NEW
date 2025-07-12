@@ -1919,15 +1919,16 @@ async def join_game(
                 detail=f"Insufficient balance for commission. Required: ${commission_required:.2f}"
             )
         
-        # Freeze user's gems
-        for gem_type, quantity in game_obj.bet_gems.items():
-            await db.user_gems.update_one(
-                {"user_id": current_user.id, "gem_type": gem_type},
-                {
-                    "$inc": {"frozen_quantity": quantity},
-                    "$set": {"updated_at": datetime.utcnow()}
-                }
-            )
+        # Freeze user's own selected gems (not creator's gems)
+        for gem_type, quantity in join_data.gems.items():
+            if quantity > 0:
+                await db.user_gems.update_one(
+                    {"user_id": current_user.id, "gem_type": gem_type},
+                    {
+                        "$inc": {"frozen_quantity": quantity},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
         
         # Freeze commission balance
         new_balance = user["virtual_balance"] - commission_required
