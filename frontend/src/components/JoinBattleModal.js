@@ -345,6 +345,27 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
+      {/* Анимированный обратный отсчет 3-2-1 */}
+      {showCountdown && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-90">
+          <div className="text-center">
+            <div 
+              key={countdownNumber}
+              className="text-white font-russo text-8xl animate-pulse transform transition-all duration-300 scale-110"
+              style={{
+                animation: 'countdownPulse 1s ease-in-out',
+                textShadow: '0 0 20px rgba(255, 255, 255, 0.8)'
+              }}
+            >
+              {countdownNumber}
+            </div>
+            <div className="text-white font-rajdhani text-xl mt-4 opacity-80">
+              Starting Battle...
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div 
         className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
