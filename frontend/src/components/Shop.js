@@ -68,6 +68,11 @@ const Shop = ({ user, onUpdateUser }) => {
       showSuccess(`Successfully purchased ${quantity} ${gemType} gem${quantity > 1 ? 's' : ''}!`);
       await fetchBalance();
       
+      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ПОКУПКИ ГЕМОВ
+      const globalRefresh = getGlobalLobbyRefresh();
+      globalRefresh.triggerLobbyRefresh();
+      console.log(`💎 Bought ${quantity} ${gemType} gems - triggering lobby refresh`);
+      
       if (onUpdateUser) {
         onUpdateUser();
       }
