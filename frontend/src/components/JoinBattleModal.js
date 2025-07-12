@@ -491,11 +491,22 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         gameId: bet.id,
         userId: user.id,
         selectedMove: selectedMove,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        isPollingTimeout: error.message.includes('did not complete in time'),
+        isPossibleServerIssue: error.message.includes('Missing opponent move')
       });
+      
+      // Разные сообщения в зависимости от типа ошибки
+      if (error.message.includes('did not complete in time')) {
+        showError('Game is taking longer than expected. Please check the lobby for updates.');
+      } else if (error.message.includes('Missing opponent move')) {
+        showError('Game completed but data is incomplete. Please refresh and check results.');
+      } else {
+        showError(error.message || 'Ошибка при запуске битвы');
+      }
+      
       console.error('🚨 === END ERROR ===');
       
-      showError(error.message || 'Ошибка при запуске битвы');
       setCurrentStep(2); // Возвращаемся к выбору хода при ошибке
     } finally {
       setLoading(false);
