@@ -142,7 +142,10 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
 
   // Навигация между шагами
   const goToNextStep = () => {
-    if (currentStep < steps.length) {
+    if (currentStep === 2) {
+      // На втором шаге "Start Battle!" должен запустить битву
+      startBattle();
+    } else if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -151,6 +154,19 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  // Запуск битвы
+  const startBattle = async () => {
+    setLoading(true);
+    setCurrentStep(3); // Переход к шагу с результатом битвы
+    
+    // Здесь будет логика вызова API для присоединения к игре
+    // Пока просто переходим к следующему шагу
+    setTimeout(() => {
+      setLoading(false);
+      // TODO: Добавить реальную логику битвы
+    }, 1000);
   };
 
   // Рендер текущего шага
