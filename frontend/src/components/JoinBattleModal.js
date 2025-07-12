@@ -156,17 +156,60 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // Запуск битвы
+  // Запуск битвы - реальная API логика
   const startBattle = async () => {
     setLoading(true);
     setCurrentStep(3); // Переход к шагу с результатом битвы
     
-    // Здесь будет логика вызова API для присоединения к игре
-    // Пока просто переходим к следующему шагу
-    setTimeout(() => {
+    try {
+      // Вызов API для присоединения к игре
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          move: selectedMove
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
+      }
+      
+      const result = await response.json();
+      
+      // Определяем результат битвы
+      const battleOutcome = result.winner_id === user.id ? 'win' : 
+                           (result.winner_id ? 'lose' : 'draw');
+      
+      // Сохраняем результат битвы
+      setBattleResult({
+        result: battleOutcome,
+        opponentMove: result.creator_move,
+        gameData: result
+      });
+      
+      // Обновляем инвентарь и данные пользователя
+      await refreshInventory();
+      if (onUpdateUser) {
+        onUpdateUser();
+      }
+      
+      // Показываем уведомление о результате
+      const resultText = battleOutcome === 'win' ? 'Победа!' : 
+                        (battleOutcome === 'lose' ? 'Поражение!' : 'Ничья!');
+      showSuccess(`Игра завершена! ${resultText}`);
+      
+    } catch (error) {
+      console.error('Error starting battle:', error);
+      showError(error.message || 'Ошибка при запуске битвы');
+      setCurrentStep(2); // Возвращаемся к выбору хода при ошибке
+    } finally {
       setLoading(false);
-      // TODO: Добавить реальную логику битвы
-    }, 1000);
+    }
   };
 
   // Рендер текущего шага
