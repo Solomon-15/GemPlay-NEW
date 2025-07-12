@@ -1,15 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGems } from './GemsContext';
 import { useNotifications } from './NotificationContext';
 import GemSelectionStep from './GemSelectionStep';
 import MoveSelectionStep from './MoveSelectionStep';
 import BattleResultStep from './BattleResultStep';
 
-// Компоненты шагов (создадим их далее)
-// import RevealStep from './RevealStep';
-
 const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
-  // НОВАЯ АСИНХРОННАЯ АРХИТЕКТУРА
   // Проверка обязательных пропсов
   if (!bet || !user || !onClose) {
     console.error('JoinBattleModal: Missing required props', { bet, user, onClose });
@@ -21,10 +17,14 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const COMMISSION_RATE = 0.06; // 6%
   const commissionAmount = targetAmount * COMMISSION_RATE;
 
-  // Простое состояние - только два шага
+  // НОВАЯ АСИНХРОННАЯ АРХИТЕКТУРА - упрощенное состояние
   const [currentStep, setCurrentStep] = useState(1); // 1: выбор гемов/хода, 2: результат
   const [loading, setLoading] = useState(false);
-  const [timeRemaining, setTimeRemaining] = useState(60);
+  const [timeRemaining, setTimeRemaining] = useState(60); // 1-минутный таймер
+  
+  // Состояние countdown 3-2-1
+  const [showCountdown, setShowCountdown] = useState(false);
+  const [countdownNumber, setCountdownNumber] = useState(3);
 
   // Данные игрока
   const [selectedGems, setSelectedGems] = useState({});
@@ -42,159 +42,114 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     { id: 'scissors', name: 'Scissors', icon: '/Scissors.svg' }
   ];
 
-  // Функция polling для ожидания завершения игры
-  const pollGameResult = async (gameId, maxAttempts = 60) => {
-    console.log('🔄 Starting game polling:', { gameId, maxAttempts, totalTime: `${maxAttempts * 2} seconds` });
+  // НОВАЯ АСИНХРОННАЯ ЛОГИКА ПРИСОЕДИНЕНИЯ К БИТВЕ
+  const joinBattle = async () => {
+    setLoading(true);
     
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        console.log(`🔄 Polling attempt ${attempt}/${maxAttempts} (${attempt * 2}s elapsed)`);
-        
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${gameId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        if (!response.ok) {
-          console.warn(`⚠️ Polling attempt ${attempt} failed:`, response.status);
-          
-          // Если статус 404 - игра не найдена, прекращаем polling
-          if (response.status === 404) {
-            console.error('🚨 Game not found - stopping polling');
-            throw new Error('Game not found. It may have been cancelled or completed.');
-          }
-          
-          // Для других ошибок продолжаем пытаться
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          continue;
-        }
-        
-        const gameData = await response.json();
-        console.log(`🔄 Polling result ${attempt}:`, {
-          status: gameData.status,
-          hasWinnerId: 'winner_id' in gameData,
-          hasCreatorMove: 'creator_move' in gameData,
-          hasJoinerMove: 'joiner_move' in gameData,
-          winnerId: gameData.winner_id
-        });
-        
-        // Проверяем, завершена ли игра
-        if (gameData.status === 'COMPLETED' || gameData.status === 'FINISHED') {
-          console.log('✅ Game completed! Final data:', gameData);
-          return gameData;
-        }
-        
-        // Если игра отменена или есть ошибка
-        if (gameData.status === 'CANCELLED' || gameData.status === 'ERROR') {
-          console.log('🚨 Game cancelled or error:', gameData);
-          throw new Error(`Game ${gameData.status.toLowerCase()}. ${gameData.message || ''}`);
-        }
-        
-        // Ждем 2 секунды перед следующей попыткой
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-      } catch (error) {
-        if (error.message.includes('Game not found') || error.message.includes('cancelled')) {
-          throw error; // Прекращаем polling для критических ошибок
-        }
-        console.error(`🚨 Polling attempt ${attempt} error:`, error);
-        
-        // Для обычных ошибок продолжаем
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
-    }
-    
-    console.error('🚨 Polling timeout - game did not complete in time');
-    throw new Error('Game is taking longer than expected. The battle may still be in progress - please check the lobby for updates.');
-  };
-
-  // Функция для проверки и очистки "зависших" игр пользователя
-  const checkAndClearUserGames = async () => {
     try {
-      console.log('🔍 Checking user game status...');
-      
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/current-game`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+      console.log('🎮 === ASYNC BATTLE JOIN ===');
+      console.log('🎮 Joining battle:', {
+        gameId: bet.id,
+        selectedMove: selectedMove,
+        selectedGems: selectedGems,
+        userId: user.id
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🔍 User game status:', data);
-        
-        if (data.hasActiveGame) {
-          console.log('⚠️ User has active game:', data.gameId);
-          
-          // Попробуем очистить зависшую игру
-          const clearResponse = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/users/clear-game`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          });
-          
-          if (clearResponse.ok) {
-            console.log('✅ Successfully cleared user game status');
-            showSuccess('Previous game session cleared. You can now join a new battle.');
-          }
-        }
+      // Присоединяемся к игре - система автоматически определит результат
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          move: selectedMove,
+          gems: selectedGems
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
       }
+      
+      const result = await response.json();
+      console.log('🎮 Async battle result:', result);
+      
+      // Проверяем что результат завершен асинхронно
+      if (result.status !== 'COMPLETED') {
+        throw new Error('Game did not complete immediately. This indicates a backend issue.');
+      }
+      
+      // Определяем результат битвы из асинхронного ответа
+      const battleOutcome = result.winner_id === user.id ? 'win' : 
+                           (result.winner_id ? 'lose' : 'draw');
+      
+      // Сохраняем результат битвы
+      setBattleResult({
+        result: battleOutcome,
+        opponentMove: result.creator_move,
+        gameData: result
+      });
+      
+      // Обновляем инвентарь и данные пользователя
+      await refreshInventory();
+      if (onUpdateUser) {
+        onUpdateUser();
+      }
+      
+      // Переходим к результату
+      setCurrentStep(2);
+      
+      // Показываем уведомление о результате
+      const resultText = battleOutcome === 'win' ? 'Victory!' : 
+                        (battleOutcome === 'lose' ? 'Defeat!' : 'Draw!');
+      showSuccess(`Battle completed! ${resultText}`);
+      
     } catch (error) {
-      console.warn('⚠️ Could not check/clear user game status:', error);
-      // Не прерываем процесс, если API не поддерживает эту функцию
+      console.error('🚨 Async battle join error:', error);
+      showError(error.message || 'Ошибка при присоединении к битве');
+    } finally {
+      setLoading(false);
     }
-  };
-  const getRPSResult = (playerMove, opponentMove) => {
-    console.log('🎯 RPS Logic Check:', {
-      input: {
-        player: playerMove,
-        opponent: opponentMove
-      }
-    });
-    
-    // Нормализуем ходы к нижнему регистру
-    const player = playerMove?.toLowerCase();
-    const opponent = opponentMove?.toLowerCase();
-    
-    // Проверяем ничью
-    if (player === opponent) {
-      console.log('🎯 RPS Result: DRAW (same moves)');
-      return 'draw';
-    }
-    
-    // Правила Rock-Paper-Scissors
-    // rock > scissors, scissors > paper, paper > rock
-    const winningCombos = {
-      'rock': 'scissors',     // rock beats scissors
-      'scissors': 'paper',    // scissors beats paper  
-      'paper': 'rock'         // paper beats rock
-    };
-    
-    const playerWins = winningCombos[player] === opponent;
-    const result = playerWins ? 'win' : 'lose';
-    
-    console.log('🎯 RPS Result:', {
-      player: player,
-      opponent: opponent, 
-      playerBeats: winningCombos[player],
-      playerWins: playerWins,
-      result: result,
-      explanation: playerWins ? 
-        `${player} beats ${opponent}` : 
-        `${opponent} beats ${player}`
-    });
-    
-    return result;
   };
 
-  // Таймер автозакрытия
-  React.useEffect(() => {
-    if (currentStep >= 3) {
-      // Не запускаем таймер на шагах результата
+  // Запуск битвы с анимированным обратным отсчетом 3-2-1
+  const startBattle = async () => {
+    if (!selectedMove || Object.keys(selectedGems).length === 0) {
+      showError('Please select gems and choose your move');
+      return;
+    }
+    
+    setLoading(true);
+    
+    // Показываем анимированный обратный отсчет 3-2-1
+    setShowCountdown(true);
+    setCountdownNumber(3);
+    
+    // Обратный отсчет с анимацией
+    await new Promise(resolve => {
+      let count = 3;
+      const countdownInterval = setInterval(() => {
+        if (count <= 1) {
+          clearInterval(countdownInterval);
+          setShowCountdown(false);
+          resolve();
+        } else {
+          count--;
+          setCountdownNumber(count);
+        }
+      }, 1000);
+    });
+    
+    // Запускаем асинхронную битву
+    await joinBattle();
+  };
+
+  // Таймер автозакрытия (1 минута)
+  useEffect(() => {
+    if (currentStep >= 2) {
+      // Не запускаем таймер на шаге результата
       return;
     }
     
@@ -210,9 +165,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentStep]); // Перезапускаем при смене шага
+  }, [currentStep, onClose]);
 
-  // Обработчик стратегий
+  // Обработчик стратегий (сохраняем из оригинального кода)
   const handleStrategySelect = async (strategy) => {
     setLoading(true);
     
@@ -261,10 +216,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
 
   // Конфигурация шагов
   const steps = [
-    { id: 1, name: 'Gem Selection', description: 'Select your gems' },
-    { id: 2, name: 'Move', description: 'Choose your move' },
-    { id: 3, name: 'Battle', description: 'Battle result' },
-    { id: 4, name: 'Reveal', description: 'Reveal move' }
+    { id: 1, name: 'Gem & Move', description: 'Select gems and move' },
+    { id: 2, name: 'Result', description: 'Battle result' }
   ];
 
   // Проверка доступности средств
@@ -281,7 +234,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             Available: ${availableBalance.toFixed(2)} | Required: ${commissionAmount.toFixed(2)}
           </p>
           <button
-            onClick={debugOnClose}
+            onClick={onClose}
             className="w-full py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors"
           >
             Close
@@ -308,7 +261,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             Your total gem value: ${totalAvailableGemValue.toFixed(2)}
           </p>
           <button
-            onClick={debugOnClose}
+            onClick={onClose}
             className="w-full py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors"
           >
             Close
@@ -317,333 +270,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       </div>
     );
   }
-
-  // НОВАЯ АСИНХРОННАЯ ЛОГИКА ПРИСОЕДИНЕНИЯ К БИТВЕ
-  const joinBattle = async () => {
-    setLoading(true);
-    
-    try {
-      console.log('🎮 === ASYNC BATTLE JOIN ===');
-      console.log('🎮 Joining battle:', {
-        gameId: bet.id,
-        selectedMove: selectedMove,
-        selectedGems: selectedGems,
-        userId: user.id
-      });
-      
-      // Присоединяемся к игре - система автоматически определит результат
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/join`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          move: selectedMove,
-          gems: selectedGems
-        })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
-      }
-      
-      const result = await response.json();
-      
-      console.log('🎮 Battle result:', result);
-      
-      // Определяем результат битвы
-      const battleOutcome = result.winner_id === user.id ? 'win' : 
-                           (result.winner_id ? 'lose' : 'draw');
-      
-      // Сохраняем результат битвы
-      setBattleResult({
-        result: battleOutcome,
-        opponentMove: result.creator_move,
-        gameData: result
-      });
-      
-      // Обновляем инвентарь и данные пользователя
-      await refreshInventory();
-      if (onUpdateUser) {
-        onUpdateUser();
-      }
-      
-      // Переходим к результату
-      setCurrentStep(2);
-      
-      // Показываем уведомление о результате
-      const resultText = battleOutcome === 'win' ? 'Victory!' : 
-                        (battleOutcome === 'lose' ? 'Defeat!' : 'Draw!');
-      showSuccess(`Battle completed! ${resultText}`);
-      
-    } catch (error) {
-      console.error('🚨 Battle join error:', error);
-      showError(error.message || 'Ошибка при присоединении к битве');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Запуск битвы с анимированным обратным отсчетом
-  const startBattle = async () => {
-    setLoading(true);
-    
-    // Проверяем и очищаем зависшие игры пользователя
-    try {
-      await checkAndClearUserGames();
-    } catch (error) {
-      console.warn('⚠️ Could not clear user games, continuing anyway:', error);
-    }
-    
-    // Показываем анимированный обратный отсчет 3-2-1
-    setShowCountdown(true);
-    setCountdownNumber(3);
-    
-    // Обратный отсчет с анимацией
-    await new Promise(resolve => {
-      let count = 3;
-      const countdownInterval = setInterval(() => {
-        if (count <= 1) {
-          clearInterval(countdownInterval);
-          setShowCountdown(false);
-          resolve();
-        } else {
-          count--;
-          setCountdownNumber(count);
-        }
-      }, 1000);
-    });
-    
-    // Переходим к шагу результата
-    setCurrentStep(3);
-    
-    try {
-      // DEBUG: проверяем данные перед API вызовом
-      console.log('🎮 === STARTING BATTLE DEBUG ===');
-      console.log('🎮 Pre-API Check:', {
-        gameId: bet.id,
-        selectedMove: selectedMove,
-        selectedGems: selectedGems,
-        userId: user.id,
-        userName: user.username,
-        betData: bet
-      });
-      
-      const apiUrl = `${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/join`;
-      const requestBody = {
-        move: selectedMove,
-        gems: selectedGems
-      };
-      
-      console.log('🎮 API Request:', {
-        url: apiUrl,
-        method: 'POST',
-        body: requestBody
-      });
-      
-      // Вызов API для присоединения к игре
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-      
-      console.log('🎮 API Response Status:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.log('🚨 API Error Response:', {
-          status: response.status,
-          statusText: response.statusText,
-          errorData: errorData,
-          possibleCauses: [
-            'User already in another game',
-            'Game not found',
-            'Game already completed',
-            'Invalid move or gems'
-          ]
-        });
-        
-        // Специальная обработка ошибки множественных игр
-        if (errorData.detail && errorData.detail.includes('multiple games simultaneously')) {
-          console.log('🔧 Attempting to clear user game status...');
-          
-          // Попробуем очистить статус пользователя
-          await checkAndClearUserGames();
-          
-          // Предложим повторить попытку
-          throw new Error('You seem to have an active game session. We tried to clear it automatically. Please try joining the battle again.');
-        }
-        
-        throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
-      }
-
-      // Переменная для финального результата
-      let result;
-      
-      const joinResult = await response.json();
-      
-      // DEBUG: подробный анализ JOIN ответа API
-      console.log('🎮 === JOIN API SUCCESS RESPONSE ===');
-      console.log('🎮 Join API Response:', joinResult);
-      console.log('🎮 Join Response Analysis:', {
-        hasWinnerId: 'winner_id' in joinResult,
-        status: joinResult.status,
-        hasMessage: 'message' in joinResult,
-        needsPolling: joinResult.status === 'REVEAL' || joinResult.status === 'WAITING'
-      });
-      
-      // Если игра еще не завершена - начинаем polling
-      if (joinResult.status === 'REVEAL' || joinResult.status === 'WAITING') {
-        console.log('🔄 Game not completed yet, starting polling...');
-        
-        // Показываем индикатор ожидания
-        setIsWaitingForResult(true);
-        showSuccess('Game joined! Waiting for opponent to reveal...');
-        
-        // Ждем завершения игры через polling
-        const finalGameData = await pollGameResult(bet.id);
-        
-        // Скрываем индикатор ожидания
-        setIsWaitingForResult(false);
-        
-        // Анализируем финальные данные
-        console.log('🎮 === FINAL GAME DATA ===');
-        console.log('🎮 Final Game Data:', finalGameData);
-        
-        // Используем финальные данные вместо JOIN результата
-        result = finalGameData;
-        
-      } else {
-        // Игра уже завершена сразу после JOIN
-        console.log('🎮 Game completed immediately after join');
-        result = joinResult;
-      }
-      
-      // Определяем ходы игроков из финальных данных
-      const playerMove = selectedMove;
-      const opponentMove = result.creator_move || result.opponent_move;
-      
-      console.log('🎮 === FINAL MOVES ANALYSIS ===');
-      console.log('🎮 Final Moves Analysis:', {
-        playerMove: playerMove,
-        opponentMove: opponentMove,
-        userId: user.id,
-        winnerId: result.winner_id,
-        creatorId: result.creator_id || result.creator?.id,
-        gameStatus: result.status,
-        hasValidMoves: !!playerMove && !!opponentMove
-      });
-      
-      // Проверяем, что у нас есть все необходимые данные
-      if (!opponentMove) {
-        console.error('🚨 Missing opponent move in final result!');
-        throw new Error('Game completed but opponent move is missing');
-      }
-      
-      // Проверяем логику RPS на клиенте
-      const clientRPSResult = getRPSResult(playerMove, opponentMove);
-      
-      // Определяем результат битвы по API
-      const apiResult = result.winner_id === user.id ? 'win' : 
-                       (result.winner_id ? 'lose' : 'draw');
-      
-      console.log('🎮 === BATTLE RESULT COMPARISON ===');
-      console.log('🎮 Results Comparison:', {
-        apiResult: apiResult,
-        clientRPSResult: clientRPSResult,
-        match: apiResult === clientRPSResult,
-        winnerFromAPI: result.winner_id,
-        currentUserId: user.id,
-        isUserWinner: result.winner_id === user.id,
-        explanation: apiResult === clientRPSResult ? 'MATCH ✅' : 'MISMATCH ⚠️'
-      });
-      
-      if (apiResult !== clientRPSResult) {
-        console.warn('⚠️ MISMATCH: API result differs from client RPS logic!');
-        console.warn('⚠️ This could indicate a server-side logic issue');
-      } else {
-        console.log('✅ Results match! RPS logic is consistent');
-      }
-      
-      const battleOutcome = apiResult; // Используем результат API
-      
-      // Сохраняем результат битвы
-      setBattleResult({
-        result: battleOutcome,
-        opponentMove: opponentMove,
-        gameData: result
-      });
-      
-      console.log('🎮 === FINAL BATTLE RESULT ===');
-      console.log('🎮 Final Result Saved:', {
-        result: battleOutcome,
-        playerMove: playerMove,
-        opponentMove: opponentMove,
-        gameId: result.id || bet.id,
-        timestamp: new Date().toISOString()
-      });
-      console.log('🎮 === END BATTLE DEBUG ===');
-      
-      // Обновляем инвентарь и данные пользователя
-      await refreshInventory();
-      if (onUpdateUser) {
-        onUpdateUser();
-      }
-      
-      // Показываем уведомление о результате
-      const resultText = battleOutcome === 'win' ? 'Победа!' : 
-                        (battleOutcome === 'lose' ? 'Поражение!' : 'Ничья!');
-      showSuccess(`Игра завершена! ${resultText}`);
-      
-    } catch (error) {
-      console.log('🎮 === BATTLE ERROR ===');
-      console.error('🚨 Error Details:', {
-        message: error.message,
-        stack: error.stack,
-        gameId: bet.id,
-        userId: user.id,
-        selectedMove: selectedMove,
-        timestamp: new Date().toISOString(),
-        isPollingTimeout: error.message.includes('taking longer than expected'),
-        isPossibleServerIssue: error.message.includes('Missing opponent move'),
-        isMultipleGamesError: error.message.includes('multiple games simultaneously')
-      });
-      
-      // Разные сообщения в зависимости от типа ошибки
-      if (error.message.includes('taking longer than expected')) {
-        showError('⏰ Battle is taking longer than expected. The game may still be in progress - please check the lobby in a few minutes.');
-      } else if (error.message.includes('Missing opponent move')) {
-        showError('📊 Battle completed but data is incomplete. Please refresh and check results in the lobby.');
-      } else if (error.message.includes('multiple games simultaneously')) {
-        showError('🎮 Active game session detected. We attempted to clear it - please try again in a few seconds.');
-      } else if (error.message.includes('Game not found')) {
-        showError('🔍 Game not found. It may have been cancelled - please check the lobby.');
-      } else if (error.message.includes('cancelled')) {
-        showError('❌ Game was cancelled by the opponent or system.');
-      } else {
-        showError(error.message || 'Ошибка при запуске битвы');
-      }
-      
-      console.error('🚨 === END ERROR ===');
-      
-      // Скрываем индикаторы ожидания
-      setIsWaitingForResult(false);
-      setShowCountdown(false);
-      setCurrentStep(2); // Возвращаемся к выбору хода при ошибке
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Рендер текущего шага - упрощенная логика
   const renderCurrentStep = () => {
@@ -705,7 +331,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   };
 
   // Проверка возможности присоединения к битве
-  const canJoinBattle = () => {
+  const canStartBattle = () => {
     const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
       return sum + (gem ? gem.price * quantity : 0);
@@ -713,7 +339,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     
     return Object.keys(selectedGems).length > 0 && 
            Math.abs(totalGemValue - targetAmount) <= 0.01 &&
-           selectedMove !== '';
+           selectedMove !== '' &&
+           !loading;
   };
 
   return (
@@ -754,8 +381,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         <div className="flex items-center justify-between p-4 border-b border-border-primary">
           <h2 className="text-white font-russo text-xl">Join Battle</h2>
           
-          {/* Timer - только на первых двух шагах */}
-          {currentStep < 3 && (
+          {/* Timer - только на первом шаге */}
+          {currentStep === 1 && (
             <div className={`flex items-center space-x-2 ${
               timeRemaining <= 15 ? 'text-red-400' : 'text-yellow-400'
             }`}>
@@ -807,7 +434,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         </div>
 
         {/* Time Warning - показываем когда остается мало времени */}
-        {currentStep < 3 && timeRemaining <= 15 && (
+        {currentStep === 1 && timeRemaining <= 15 && (
           <div className="px-4 py-2 bg-red-900 bg-opacity-20 border-b border-red-600">
             <div className="flex items-center space-x-2 text-red-400">
               <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -825,30 +452,17 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           {renderCurrentStep()}
         </div>
 
-        {/* Footer Navigation */}
-        {currentStep < 3 && !loading && (
+        {/* Footer Navigation - только на первом шаге */}
+        {currentStep === 1 && (
           <div className="p-4 border-t border-border-primary">
-            <div className="flex space-x-3">
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={goToPrevStep}
-                  disabled={loading}
-                  className="px-4 py-2 bg-surface-sidebar text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
-                >
-                  Back
-                </button>
-              )}
-              
-              <button
-                type="button"
-                onClick={goToNextStep}
-                disabled={loading || !canGoNext()}
-                className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
-              >
-                {currentStep === 2 ? 'Start Battle!' : 'Next'}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={startBattle}
+              disabled={!canStartBattle()}
+              className="w-full px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+            >
+              {loading ? 'Starting Battle...' : 'Start Battle!'}
+            </button>
           </div>
         )}
       </div>
