@@ -19,6 +19,11 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('live-players');
   const [showCreateBetModal, setShowCreateBetModal] = useState(false);
+  
+  // Состояние для Join Battle модального окна
+  const [selectedBetForJoin, setSelectedBetForJoin] = useState(null);
+  const [showJoinBattleModal, setShowJoinBattleModal] = useState(false);
+  
   const [currentPage, setCurrentPage] = useState({
     myBets: 1,
     availableBets: 1,
