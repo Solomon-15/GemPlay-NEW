@@ -85,6 +85,11 @@ const Inventory = ({ user, onUpdateUser }) => {
       await fetchInventory();
       await fetchBalance();
       
+      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ПРОДАЖИ ГЕМОВ
+      const globalRefresh = getGlobalLobbyRefresh();
+      globalRefresh.triggerLobbyRefresh();
+      console.log(`💰 Sold ${quantity} ${gemType} gems - triggering lobby refresh`);
+      
       if (onUpdateUser) {
         onUpdateUser();
       }
