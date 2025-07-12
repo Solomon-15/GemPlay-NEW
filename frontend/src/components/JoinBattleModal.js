@@ -180,12 +180,16 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       startBattle();
     } else if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
+      // Сбрасываем таймер при переходе на новый шаг
+      setTimeRemaining(60);
     }
   };
 
   const goToPrevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      // Сбрасываем таймер при возврате на предыдущий шаг
+      setTimeRemaining(60);
     }
   };
 
