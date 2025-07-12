@@ -186,28 +186,6 @@ const PlayerCard = ({
           </div>
         </div>
       </div>
-
-      {/* Join Battle Modal */}
-      {showAcceptModal && (
-        <JoinBattleModal
-          bet={{
-            id: game.game_id || game.id,
-            bet_amount: totalAmount,
-            bet_gems: game.bet_gems,
-            creator: game.creator
-          }}
-          user={user}
-          onClose={() => setShowAcceptModal(false)}
-          onUpdateUser={() => {
-            // Refresh user data if needed
-            // НЕ закрываем модальное окно здесь, пусть оно закрывается само
-            // только после завершения игры
-            if (onUpdateUser) {
-              onUpdateUser();
-            }
-          }}
-        />
-      )}
     </>
   );
 };
