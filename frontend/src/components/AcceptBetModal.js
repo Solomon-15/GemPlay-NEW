@@ -173,6 +173,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       showSuccess(`Игра завершена! ${resultText}`);
       
       // Auto-close after 30 seconds
+      setTimeout(() => {
         debugOnClose();
       }, 30000);
       
@@ -415,10 +416,10 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       // Show success notification
       const resultText = result.winner_id === user.id ? 'Победа!' : (result.winner_id ? 'Поражение!' : 'Ничья!');
       showSuccess(`Игра завершена! ${resultText}`);
-      
       // Auto-close after 30 seconds
+      setTimeout(() => {
         debugOnClose();
-        debugOnClose();
+      }, 30000);
       
     } catch (error) {
       console.error('Error joining game:', error);
