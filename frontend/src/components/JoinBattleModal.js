@@ -244,8 +244,16 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           />
         );
       case 3:
-        // return <BattleResultStep ... />;
-        return <div className="p-4 text-white">Battle Result Step (TODO)</div>;
+        return (
+          <BattleResultStep
+            battleResult={battleResult}
+            selectedMove={selectedMove}
+            targetAmount={targetAmount}
+            totalGemValue={totalGemValue}
+            commissionAmount={commissionAmount}
+            onClose={onClose}
+          />
+        );
       case 4:
         // return <RevealStep ... />;
         return <div className="p-4 text-white">Reveal Step (TODO)</div>;
