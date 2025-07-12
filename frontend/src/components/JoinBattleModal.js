@@ -167,42 +167,26 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     return () => clearInterval(timer);
   }, [currentStep, onClose]);
 
-  // Обработчик стратегий (сохраняем из оригинального кода)
-  const handleStrategySelect = async (strategy) => {
+  // Обработчик стратегий - NEW FRONTEND IMPLEMENTATION
+  const handleStrategySelect = (strategy) => {
     setLoading(true);
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gems/calculate-combination`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          bet_amount: targetAmount,
-          strategy: strategy
-        })
-      });
+      // Use new frontend algorithms from utils
+      const { calculateGemCombination } = require('../utils/gemCombinationAlgorithms');
+      const result = calculateGemCombination(strategy, gemsData, targetAmount);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Ошибка при расчете комбинации гемов');
-      }
-      
-      const result = await response.json();
-      
-      if (result.success && result.combinations && Array.isArray(result.combinations)) {
+      if (result.success) {
+        // Convert result to internal format
         const autoSelected = {};
-        result.combinations.forEach(combo => {
-          if (combo && combo.type && combo.quantity) {
-            autoSelected[combo.type] = combo.quantity;
-          }
+        result.combination.forEach(item => {
+          autoSelected[item.type] = item.quantity;
         });
         
         setSelectedGems(autoSelected);
         
         const strategyNames = { small: 'Small', smart: 'Smart', big: 'Big' };
-        showSuccess(`${strategyNames[strategy]} strategy: exact combination for $${targetAmount.toFixed(2)}`);
+        showSuccess(result.message || `${strategyNames[strategy]} strategy: exact combination for $${targetAmount.toFixed(2)}`);
       } else {
         showError(result.message || 'Insufficient gems to create exact combination');
       }
