@@ -52,6 +52,13 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
   const { showSuccess, showError } = useNotifications() || {};
 
+  // Конфигурация ходов
+  const moves = [
+    { id: 'rock', name: 'Rock', icon: '/Rock.svg' },
+    { id: 'paper', name: 'Paper', icon: '/Paper.svg' },
+    { id: 'scissors', name: 'Scissors', icon: '/Scissors.svg' }
+  ];
+
   // Функция polling для ожидания завершения игры
   const pollGameResult = async (gameId, maxAttempts = 30) => {
     console.log('🔄 Starting game polling:', { gameId, maxAttempts });
