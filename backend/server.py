@@ -1874,6 +1874,7 @@ async def join_game(
     current_user: User = Depends(get_current_user_with_security)
 ):
     """Join an existing PvP game."""
+    logger.info(f"🤝 JOIN_GAME called for user {current_user.id}, game {game_id}")
     try:
         # Check if user can join another game (no active games as opponent)
         if not await check_user_concurrent_games(current_user.id):
