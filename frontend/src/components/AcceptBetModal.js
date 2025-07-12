@@ -187,21 +187,6 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
     setTotalGemValue(total);
   }, [selectedGems, gemsData]);
 
-  // 1-minute timer for modal auto-close
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setModalTimer(prev => {
-        if (prev <= 1) {
-          onClose();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []); // Убираем onClose из зависимостей, чтобы таймер не сбрасывался
-
   // Strategy functions for auto gem selection
   const handleStrategySelect = async (strategy) => {
     setLoading(true);
