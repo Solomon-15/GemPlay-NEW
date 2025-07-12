@@ -224,6 +224,14 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     setCurrentStep(3);
     
     try {
+      // DEBUG: проверяем данные перед API вызовом
+      console.log('🎮 Starting battle with:', {
+        gameId: bet.id,
+        selectedMove,
+        selectedGems,
+        user: user.id
+      });
+      
       // Вызов API для присоединения к игре
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/join`, {
         method: 'POST',
@@ -232,7 +240,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          move: selectedMove
+          move: selectedMove,
+          gems: selectedGems  // Добавляем выбранные гемы
         })
       });
       
