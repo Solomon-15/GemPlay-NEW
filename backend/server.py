@@ -2285,20 +2285,21 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 )
                 await db.profit_entries.insert_one(profit_entry.dict())
             
-            # Handle commission for loser
+            # Handle commission for loser - return frozen commission
             loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
             loser = await db.users.find_one({"id": loser_id})
             
             if loser:
                 # Loser is a human player - return frozen commission
+                commission_to_return = game.bet_amount * 0.06
                 await db.users.update_one(
                     {"id": loser_id},
                     {
-                        "$set": {
-                            "virtual_balance": loser["virtual_balance"] + (game.bet_amount * 0.06),
-                            "frozen_balance": loser["frozen_balance"] - (game.bet_amount * 0.06),
-                            "updated_at": datetime.utcnow()
-                        }
+                        "$inc": {
+                            "virtual_balance": commission_to_return,  # Return commission to balance
+                            "frozen_balance": -commission_to_return   # Remove from frozen
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
                     }
                 )
             
