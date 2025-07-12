@@ -309,31 +309,70 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('🚨 API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData: errorData,
+          possibleCauses: [
+            'User already in another game',
+            'Game not found',
+            'Game already completed',
+            'Invalid move or gems'
+          ]
+        });
         throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
       }
       
       const result = await response.json();
       
-      // DEBUG: проверяем ответ API
-      console.log('🎮 API Response:', result);
-      
-      // Определяем результат битвы
-      const battleOutcome = result.winner_id === user.id ? 'win' : 
-                           (result.winner_id ? 'lose' : 'draw');
-      
-      // DEBUG: Проверяем логику Rock Paper Scissors
-      const playerMove = selectedMove;
-      const opponentMove = result.creator_move;
-      const expectedResult = getRPSResult(playerMove, opponentMove);
-      
-      console.log('🎮 Battle Logic Check:', {
-        playerMove,
-        opponentMove,
-        apiResult: battleOutcome,
-        expectedResult,
-        winnerFromAPI: result.winner_id,
-        currentUserId: user.id
+      // DEBUG: подробный анализ ответа API
+      console.log('🎮 === API SUCCESS RESPONSE ===');
+      console.log('🎮 Full API Response:', result);
+      console.log('🎮 Response Analysis:', {
+        hasWinnerId: 'winner_id' in result,
+        winnerId: result.winner_id,
+        hasCreatorMove: 'creator_move' in result,
+        creatorMove: result.creator_move,
+        hasJoinerMove: 'joiner_move' in result,
+        joinerMove: result.joiner_move,
+        gameStatus: result.status,
+        allKeys: Object.keys(result)
       });
+      
+      // Определяем ходы игроков
+      const playerMove = selectedMove;
+      const opponentMove = result.creator_move || result.opponent_move;
+      
+      console.log('🎮 Moves Analysis:', {
+        playerMove: playerMove,
+        opponentMove: opponentMove,
+        userId: user.id,
+        winnerId: result.winner_id,
+        creatorId: result.creator_id || result.creator?.id
+      });
+      
+      // Проверяем логику RPS на клиенте
+      const clientRPSResult = getRPSResult(playerMove, opponentMove);
+      
+      // Определяем результат битвы по API
+      const apiResult = result.winner_id === user.id ? 'win' : 
+                       (result.winner_id ? 'lose' : 'draw');
+      
+      console.log('🎮 === BATTLE RESULT COMPARISON ===');
+      console.log('🎮 Results Comparison:', {
+        apiResult: apiResult,
+        clientRPSResult: clientRPSResult,
+        match: apiResult === clientRPSResult,
+        winnerFromAPI: result.winner_id,
+        currentUserId: user.id,
+        isUserWinner: result.winner_id === user.id
+      });
+      
+      if (apiResult !== clientRPSResult) {
+        console.warn('⚠️ MISMATCH: API result differs from client RPS logic!');
+      }
+      
+      const battleOutcome = apiResult; // Используем результат API
       
       // Сохраняем результат битвы
       setBattleResult({
