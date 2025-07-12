@@ -849,38 +849,29 @@ def find_exact_combination(available_gems: List[Dict], target_amount: float) -> 
     # Пытаемся найти точную комбинацию, используя жадный подход с приоритетом
     def find_combination_greedy(gems_list, target):
         """Жадный алгоритм, который учитывает порядок приоритетов"""
-        result = []
         remaining = target
         used_gems = {}
         
-        # Группируем гемы по типу для контроля количества
-        gems_by_type = {}
-        for gem in gems_list:
-            gem_type = gem["type"]
-            if gem_type not in gems_by_type:
-                gems_by_type[gem_type] = []
-            gems_by_type[gem_type].append(gem)
+        # Работаем с копией списка, чтобы сохранить порядок приоритетов
+        available_gems_copy = gems_list.copy()
         
         # Пытаемся найти точную комбинацию
         while remaining > 0:
             found = False
             
-            # Проходим по гемам в порядке приоритета
-            for gem_type, gems in gems_by_type.items():
-                if not gems:
-                    continue
-                    
-                gem = gems[0]
+            # Проходим по гемам в порядке приоритета (сохраняя порядок сортировки)
+            for i, gem in enumerate(available_gems_copy):
                 price_cents = gem["price_cents"]
+                gem_type = gem["type"]
                 
-                # Если этот гем может быть использован
-                if price_cents <= remaining:
+                # Проверяем, не превышаем ли доступное количество этого типа гемов
+                current_used = used_gems.get(gem_type, 0)
+                max_available = gem["original_gem"]["available_quantity"]
+                
+                # Если этот гем может быть использован и не превышает лимит
+                if price_cents <= remaining and current_used < max_available:
                     # Используем гем
-                    result.append(gem)
                     remaining -= price_cents
-                    
-                    # Убираем использованный гем из списка
-                    gems.pop(0)
                     
                     # Обновляем счетчик использованных гемов
                     if gem_type not in used_gems:
