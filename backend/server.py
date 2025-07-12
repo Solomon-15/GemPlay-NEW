@@ -2120,8 +2120,9 @@ async def determine_game_winner(game_id: str) -> dict:
             result_status = "opponent_wins"
         
         # Calculate commission
+        # Each player pays 6% commission on their bet amount
+        commission_amount = game_obj.bet_amount * 0.06 if winner_id else 0  # 6% from winner only
         total_pot = game_obj.bet_amount * 2  # Both players' bets
-        commission_amount = total_pot * 0.03 if winner_id else 0  # 3% only if there's a winner
         
         # Update game status
         await db.games.update_one(
