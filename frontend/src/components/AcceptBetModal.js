@@ -174,7 +174,6 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       // Auto-close after 30 seconds
         debugOnClose();
-        onClose();
       }, 30000);
       
     } catch (error) {
@@ -419,8 +418,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       // Auto-close after 30 seconds
         debugOnClose();
-        onClose();
-      }, 30000);
+        debugOnClose();
       
     } catch (error) {
       console.error('Error joining game:', error);
