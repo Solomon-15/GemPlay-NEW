@@ -1629,6 +1629,7 @@ async def create_game(
     current_user: User = Depends(get_current_user_with_security)
 ):
     """Create a new PvP game with gem stakes."""
+    logger.info(f"🎮 CREATE_GAME called for user {current_user.id}")
     try:
         # Validate bet gems format
         if not game_data.bet_gems or not isinstance(game_data.bet_gems, dict):
