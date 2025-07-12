@@ -1670,6 +1670,13 @@ async def create_game(
         # Check if user has enough balance for commission (6% of bet amount)
         commission_required = total_bet_amount * 0.06
         user = await db.users.find_one({"id": current_user.id})
+        
+        logger.info(f"💰 COMMISSION DEBUG - User: {current_user.id}")
+        logger.info(f"💰 Total bet amount: ${total_bet_amount}")
+        logger.info(f"💰 Commission required: ${commission_required} (6%)")
+        logger.info(f"💰 User virtual_balance before: ${user['virtual_balance']}")
+        logger.info(f"💰 User frozen_balance before: ${user['frozen_balance']}")
+        
         if user["virtual_balance"] < commission_required:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
