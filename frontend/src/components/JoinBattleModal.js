@@ -377,9 +377,19 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       // Сохраняем результат битвы
       setBattleResult({
         result: battleOutcome,
-        opponentMove: result.creator_move,
+        opponentMove: opponentMove,
         gameData: result
       });
+      
+      console.log('🎮 === FINAL BATTLE RESULT ===');
+      console.log('🎮 Final Result Saved:', {
+        result: battleOutcome,
+        playerMove: playerMove,
+        opponentMove: opponentMove,
+        gameId: result.id || bet.id,
+        timestamp: new Date().toISOString()
+      });
+      console.log('🎮 === END BATTLE DEBUG ===');
       
       // Обновляем инвентарь и данные пользователя
       await refreshInventory();
