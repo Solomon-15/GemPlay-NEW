@@ -132,14 +132,14 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       return false;
     }
 
-    // Check commission
+    // Check commission against total virtual balance
     const commission = totalGemValue * COMMISSION_RATE;
-    const availableBalance = user?.virtual_balance || 0;
+    const totalBalance = user?.virtual_balance || 0;
     const frozenBalance = user?.frozen_balance || 0;
-    const actualAvailable = availableBalance - frozenBalance;
+    const availableForSpending = totalBalance - frozenBalance;
     
-    if (actualAvailable < commission) {
-      showError(`Insufficient balance for commission. Required: ${formatCurrencyWithSymbol(commission)}, Available: ${formatCurrencyWithSymbol(actualAvailable)}`);
+    if (availableForSpending < commission) {
+      showError(`Insufficient balance for commission. Required: ${formatCurrencyWithSymbol(commission)}, Available: ${formatCurrencyWithSymbol(availableForSpending)}`);
       return false;
     }
 
