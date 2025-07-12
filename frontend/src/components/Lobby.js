@@ -294,7 +294,13 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       
       if (response.data && response.data.success) {
         showSuccess('Bet cancelled successfully');
-        // Refresh the lobby data after cancellation
+        
+        // 🔄 МГНОВЕННОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ОТМЕНЫ СТАВКИ
+        const globalRefresh = getGlobalLobbyRefresh();
+        globalRefresh.triggerLobbyRefresh();
+        console.log('❌ Bet cancelled - triggering lobby refresh');
+        
+        // Дополнительное обновление для надежности
         await fetchLobbyData();
         if (onUpdateUser) {
           onUpdateUser();
