@@ -16,6 +16,13 @@ const PlayerCard = ({
   const { gemsDefinitions, getGemByType } = useGems();
   const [showAcceptModal, setShowAcceptModal] = useState(false);
 
+  // ВРЕМЕННЫЙ ЛОГ ДЛЯ ОТЛАДКИ
+  console.log('🔄 PlayerCard render:', {
+    gameId: game.game_id || game.id,
+    showAcceptModal,
+    timestamp: new Date().toISOString()
+  });
+
   // Get time remaining for auto-cancel (24 hours format)
   const getTimeRemaining = () => {
     if (!game.created_at) return null;
