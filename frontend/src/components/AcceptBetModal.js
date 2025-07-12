@@ -614,7 +614,11 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         {moves.map(move => (
           <button
             key={move.id}
-            onClick={() => setSelectedMove(move.id)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setSelectedMove(move.id);
+            }}
             className={`p-6 rounded-lg border-2 transition-all duration-300 hover:scale-105 ${
               selectedMove === move.id
                 ? 'border-accent-primary bg-accent-primary bg-opacity-20'
