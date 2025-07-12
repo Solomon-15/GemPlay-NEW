@@ -559,7 +559,11 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
                 <div className="flex items-center space-x-1">
                   <button
                     type="button"
-                    onClick={() => handleGemQuantityChange(gem.type, Math.max(0, selected - 1))}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleGemQuantityChange(gem.type, Math.max(0, selected - 1));
+                    }}
                     disabled={selected <= 0}
                     className="w-5 h-5 bg-red-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
                   >
@@ -573,7 +577,11 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
                   
                   <button
                     type="button"
-                    onClick={() => handleGemQuantityChange(gem.type, selected + 1)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleGemQuantityChange(gem.type, selected + 1);
+                    }}
                     disabled={selected >= available}
                     className="w-5 h-5 bg-green-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
                   >
