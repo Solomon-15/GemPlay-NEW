@@ -233,86 +233,64 @@ const Inventory = ({ user, onUpdateUser }) => {
           Manage Your NFT Gem Collection
         </p>
         
-        {/* Three Portfolio Blocks - Moved directly under subtitle */}
+        {/* Two Portfolio Blocks - Balance and Gems */}
         {portfolioData && (
           <div className="max-w-6xl mx-auto mb-8">
-            <div className="grid grid-cols-3 gap-2 md:gap-4 min-w-0 overflow-x-auto">
-              {/* Available Block */}
-              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0 hover:border-green-500 transition-colors duration-200">
+            <div className="grid grid-cols-2 gap-4 md:gap-6 min-w-0 overflow-x-auto">
+              {/* Unified Balance Block */}
+              <div className="relative bg-surface-card rounded-lg p-4 md:p-6 border border-border-primary min-w-0 flex-shrink-0 hover:border-green-500 transition-colors duration-200">
                 <InfoTooltip 
-                  id="available" 
-                  tooltip="Available balance for creating new bets. This is your total balance minus any frozen funds."
+                  id="balance" 
+                  tooltip="Your virtual dollar balance. Shows total balance, frozen funds (reserved for active bets), and available amount for new bets."
                 >
                   <div className="text-center pt-2">
-                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Available</h3>
+                    <h3 className="font-rajdhani text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">Balance</h3>
                     
-                    <div className="mb-1 md:mb-2">
-                      <div className="font-rajdhani text-lg md:text-2xl font-bold text-green-400 break-words">
-                        ${formatNumber(portfolioData.available.value)}
+                    <div className="mb-2 md:mb-3">
+                      <div className="font-rajdhani text-2xl md:text-3xl font-bold text-green-400 break-words">
+                        ${formatNumber(portfolioData.balance.total)}
                       </div>
                     </div>
                     
-                    <div className="text-xs text-yellow-400">
-                      {portfolioData.available.frozenFunds > 0 
-                        ? `Frozen: $${formatNumber(portfolioData.available.frozenFunds)}`
-                        : 'No frozen funds'
-                      }
+                    {portfolioData.balance.frozen > 0 && (
+                      <div className="text-sm md:text-base text-orange-400 mb-1">
+                        Frozen: ${formatNumber(portfolioData.balance.frozen)}
+                      </div>
+                    )}
+                    
+                    <div className="text-xs md:text-sm text-text-secondary">
+                      Available: ${formatNumber(portfolioData.balance.available)}
                     </div>
                   </div>
                 </InfoTooltip>
               </div>
 
               {/* Gems Block */}
-              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0 hover:border-green-500 transition-colors duration-200">
+              <div className="relative bg-surface-card rounded-lg p-4 md:p-6 border border-border-primary min-w-0 flex-shrink-0 hover:border-purple-500 transition-colors duration-200">
                 <InfoTooltip 
                   id="gems" 
                   tooltip="Your gem collection. Gems are used to create and accept bets. Higher value gems allow for larger bets."
                 >
                   <div className="text-center pt-2">
-                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Gems</h3>
+                    <h3 className="font-rajdhani text-lg md:text-xl font-semibold text-white mb-3 md:mb-4">Gems</h3>
                     
-                    <div className="mb-1 md:mb-2">
-                      <div className="font-rajdhani text-lg md:text-2xl font-bold text-accent-primary break-words">
-                        {formatNumber(portfolioData.gems.totalCount)} / {formatNumber(portfolioData.gems.totalValue)}
+                    <div className="mb-2 md:mb-3">
+                      <div className="font-rajdhani text-xl md:text-2xl font-bold text-purple-400 break-words">
+                        {formatNumber(portfolioData.gems.totalCount)} gems
+                      </div>
+                      <div className="font-rajdhani text-lg md:text-xl font-bold text-accent-primary break-words">
+                        ${formatNumber(portfolioData.gems.totalValue)}
                       </div>
                     </div>
                     
-                    <div className="text-xs text-yellow-400">
-                      {portfolioData.gems.frozenCount > 0 
-                        ? `Frozen: ${formatNumber(portfolioData.gems.frozenCount)} / ${formatNumber(portfolioData.gems.frozenValue)}`
-                        : 'No frozen gems'
-                      }
-                    </div>
-                  </div>
-                </InfoTooltip>
-              </div>
-
-              {/* Total Block */}
-              <div className="relative bg-surface-card rounded-lg p-3 md:p-4 border border-border-primary min-w-0 flex-shrink-0 hover:border-green-500 transition-colors duration-200">
-                <InfoTooltip 
-                  id="total" 
-                  tooltip="Your total estimated value including both balance and gems."
-                >
-                  <div className="text-center pt-2">
-                    <h3 className="font-rajdhani text-sm md:text-lg font-semibold text-white mb-2 md:mb-3">Total</h3>
-                    
-                    <div className="mb-1 md:mb-2">
-                      <div className="font-rajdhani text-lg md:text-2xl font-bold text-purple-400 break-words">
-                        ${formatNumber(portfolioData.total.value)}
+                    {portfolioData.gems.frozenCount > 0 && (
+                      <div className="text-sm md:text-base text-orange-400 mb-1">
+                        Frozen: {formatNumber(portfolioData.gems.frozenCount)} / ${formatNumber(portfolioData.gems.frozenValue)}
                       </div>
-                    </div>
+                    )}
                     
-                    <div className="text-xs text-yellow-400">
-                      {(() => {
-                        const totalDeductions = portfolioData.available.frozenFunds + portfolioData.gems.frozenValue;
-                        const remainingTotal = portfolioData.total.value - totalDeductions;
-                        
-                        if (totalDeductions > 0) {
-                          return `$${formatNumber(remainingTotal)} remaining`;
-                        } else {
-                          return 'Remaining Total';
-                        }
-                      })()}
+                    <div className="text-xs md:text-sm text-text-secondary">
+                      Available: ${formatNumber(portfolioData.gems.availableValue)}
                     </div>
                   </div>
                 </InfoTooltip>
