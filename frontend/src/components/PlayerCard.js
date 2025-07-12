@@ -191,8 +191,8 @@ const PlayerCard = ({
           onClose={() => setShowAcceptModal(false)}
           onUpdateUser={() => {
             // Refresh user data if needed
-            setShowAcceptModal(false);
-            // Если есть колбек для обновления, вызываем его
+            // НЕ закрываем модальное окно здесь, пусть оно закрывается само
+            // только после завершения игры
             if (onUpdateUser) {
               onUpdateUser();
             }
