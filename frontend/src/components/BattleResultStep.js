@@ -9,7 +9,7 @@ const BattleResultStep = ({
   playerData, // Новый пропс для данных игроков
   onClose
 }) => {
-  const [timeUntilAutoClose, setTimeUntilAutoClose] = React.useState(7);
+  const [timeUntilAutoClose, setTimeUntilAutoClose] = React.useState(30);
 
   // Автозакрытие через 7 секунд
   React.useEffect(() => {
