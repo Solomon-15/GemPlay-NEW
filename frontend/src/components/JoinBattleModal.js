@@ -407,17 +407,26 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         result = joinResult;
       }
       
-      // Определяем ходы игроков
+      // Определяем ходы игроков из финальных данных
       const playerMove = selectedMove;
       const opponentMove = result.creator_move || result.opponent_move;
       
-      console.log('🎮 Moves Analysis:', {
+      console.log('🎮 === FINAL MOVES ANALYSIS ===');
+      console.log('🎮 Final Moves Analysis:', {
         playerMove: playerMove,
         opponentMove: opponentMove,
         userId: user.id,
         winnerId: result.winner_id,
-        creatorId: result.creator_id || result.creator?.id
+        creatorId: result.creator_id || result.creator?.id,
+        gameStatus: result.status,
+        hasValidMoves: !!playerMove && !!opponentMove
       });
+      
+      // Проверяем, что у нас есть все необходимые данные
+      if (!opponentMove) {
+        console.error('🚨 Missing opponent move in final result!');
+        throw new Error('Game completed but opponent move is missing');
+      }
       
       // Проверяем логику RPS на клиенте
       const clientRPSResult = getRPSResult(playerMove, opponentMove);
@@ -433,11 +442,15 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         match: apiResult === clientRPSResult,
         winnerFromAPI: result.winner_id,
         currentUserId: user.id,
-        isUserWinner: result.winner_id === user.id
+        isUserWinner: result.winner_id === user.id,
+        explanation: apiResult === clientRPSResult ? 'MATCH ✅' : 'MISMATCH ⚠️'
       });
       
       if (apiResult !== clientRPSResult) {
         console.warn('⚠️ MISMATCH: API result differs from client RPS logic!');
+        console.warn('⚠️ This could indicate a server-side logic issue');
+      } else {
+        console.log('✅ Results match! RPS logic is consistent');
       }
       
       const battleOutcome = apiResult; // Используем результат API
