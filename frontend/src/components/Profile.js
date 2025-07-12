@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { formatCurrencyWithSymbol, validateDailyLimit, ECONOMY_CONFIG } from '../utils/economy';
+import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
