@@ -1943,13 +1943,14 @@ async def join_game(
             }
         )
         
-        # Update game with opponent 
+        # Update game with opponent and their gems
         await db.games.update_one(
             {"id": game_id},
             {
                 "$set": {
                     "opponent_id": current_user.id,
                     "opponent_move": join_data.move,
+                    "opponent_gems": join_data.gems,  # Save opponent's gem combination
                     "started_at": datetime.utcnow()
                 }
             }
