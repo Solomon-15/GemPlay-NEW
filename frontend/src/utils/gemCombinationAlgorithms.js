@@ -324,6 +324,16 @@ export const calculateSmartStrategy = (gemsData, targetAmount) => {
 
   // Check if we achieved the exact target
   if (remaining > 0) {
+    // Try advanced DP algorithm as fallback
+    const dpResult = findExactCombinationDP(availableGems, targetAmount);
+    if (dpResult.success) {
+      return {
+        success: true,
+        combination: dpResult.combination.sort((a, b) => a.price - b.price),
+        message: `Smart strategy: Found balanced combination for $${targetAmount.toFixed(2)}`
+      };
+    }
+    
     return {
       success: false,
       combination: [],
