@@ -1760,6 +1760,19 @@ async def create_game(
         )
         await db.transactions.insert_one(transaction.dict())
         
+        # Create transaction for commission freeze
+        commission_transaction = Transaction(
+            user_id=current_user.id,
+            transaction_type=TransactionType.COMMISSION,
+            amount=-commission_required,
+            currency="USD",
+            balance_before=user["virtual_balance"],
+            balance_after=new_balance,
+            description=f"Commission frozen for PvP game creation (${commission_required})",
+            reference_id=game.id
+        )
+        await db.transactions.insert_one(commission_transaction.dict())
+        
         # Monitor for suspicious betting patterns
         await monitor_transaction_patterns(current_user.id, "BET", total_bet_amount)
         
