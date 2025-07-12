@@ -326,17 +326,38 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // Проверка возможности присоединения к битве
-  const canStartBattle = () => {
+  // Проверка возможности перехода к следующему шагу
+  const canGoNext = () => {
     const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
       return sum + (gem ? gem.price * quantity : 0);
     }, 0);
     
-    return Object.keys(selectedGems).length > 0 && 
-           Math.abs(totalGemValue - targetAmount) <= 0.01 &&
-           selectedMove !== '' &&
-           !loading;
+    switch (currentStep) {
+      case 1:
+        // Шаг 1: Проверяем что гемы выбраны и сумма точная
+        return Object.keys(selectedGems).length > 0 && 
+               Math.abs(totalGemValue - targetAmount) <= 0.01;
+      case 2:
+        // Шаг 2: Проверяем что ход выбран
+        return selectedMove !== '';
+      default:
+        return false;
+    }
+  };
+
+  // Навигация между шагами
+  const goToNextStep = () => {
+    if (currentStep === 2) {
+      // На шаге 2 кнопка "Next" запускает битву
+      startBattle();
+    } else if (canGoNext()) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const goToPrevStep = () => {
+    setCurrentStep(prev => Math.max(1, prev - 1));
   };
 
   return (
