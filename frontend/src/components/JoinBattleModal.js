@@ -657,7 +657,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
               
               <div className="text-text-secondary">
                 <div className="font-rajdhani text-lg mb-2">Waiting for opponent to reveal...</div>
-                <div className="text-sm">This may take up to 60 seconds</div>
+                <div className="text-sm">This may take up to 2 minutes</div>
+                <div className="text-xs mt-1 opacity-75">Checking every 2 seconds</div>
               </div>
               
               <div className="bg-surface-sidebar rounded-lg p-4">
