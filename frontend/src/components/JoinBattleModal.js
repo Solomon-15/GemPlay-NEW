@@ -24,6 +24,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Простое состояние - только два шага
   const [currentStep, setCurrentStep] = useState(1); // 1: выбор гемов/хода, 2: результат
   const [loading, setLoading] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(60);
 
   // Данные игрока
   const [selectedGems, setSelectedGems] = useState({});
