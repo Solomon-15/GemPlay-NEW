@@ -2262,13 +2262,14 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 )
                 
                 # Record commission transaction
+                final_balance = new_winner_balance if 'new_winner_balance' in locals() else winner["virtual_balance"]
                 commission_transaction = Transaction(
                     user_id=winner_id,
                     transaction_type=TransactionType.COMMISSION,
                     amount=commission_amount,
                     currency="USD",
                     balance_before=winner["virtual_balance"],
-                    balance_after=new_winner_balance,
+                    balance_after=final_balance,
                     description=f"PvP game commission (3% of ${game.bet_amount * 2})",
                     reference_id=game.id
                 )
