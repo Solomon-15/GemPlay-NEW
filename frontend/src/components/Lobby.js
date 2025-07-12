@@ -38,9 +38,21 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
 
   useEffect(() => {
     fetchLobbyData();
+    
     // Обновляем данные каждые 10 секунд
     const interval = setInterval(fetchLobbyData, 10000);
-    return () => clearInterval(interval);
+    
+    // Регистрируем колбэк для мгновенного обновления после операций
+    const globalRefresh = getGlobalLobbyRefresh();
+    const unregister = globalRefresh.registerRefreshCallback(() => {
+      console.log('🔄 Lobby auto-refresh triggered by operation');
+      fetchLobbyData();
+    });
+    
+    return () => {
+      clearInterval(interval);
+      unregister();
+    };
   }, []);
 
   const fetchLobbyData = async () => {
