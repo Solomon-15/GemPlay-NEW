@@ -407,11 +407,34 @@ export const calculateBigStrategy = (gemsData, targetAmount) => {
     
     // If no gem can be used, we can't reach the target
     if (!foundGem) {
-      return {
-        success: false,
-        combination: [],
-        message: "Not enough gems in inventory to form this bet. Please adjust your balance or select manually."
-      };
+      // Try to find exact match with any remaining gem
+      for (const gem of sortedGems) {
+        const currentUsed = selectedGems[gem.type] || 0;
+        if (currentUsed < gem.availableQuantity && gem.price === remaining) {
+          selectedGems[gem.type] = currentUsed + 1;
+          remaining = 0;
+          foundGem = true;
+          break;
+        }
+      }
+      
+      if (!foundGem) {
+        // Try advanced DP algorithm as fallback
+        const dpResult = findExactCombinationDP(availableGems, targetAmount);
+        if (dpResult.success) {
+          return {
+            success: true,
+            combination: dpResult.combination.sort((a, b) => a.price - b.price),
+            message: `Big strategy: Found combination with fewest gems for $${targetAmount.toFixed(2)}`
+          };
+        }
+        
+        return {
+          success: false,
+          combination: [],
+          message: "Not enough gems in inventory to form this bet. Please adjust your balance or select manually."
+        };
+      }
     }
   }
   
