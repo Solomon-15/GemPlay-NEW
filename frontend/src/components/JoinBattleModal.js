@@ -435,6 +435,18 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             'Invalid move or gems'
           ]
         });
+        
+        // Специальная обработка ошибки множественных игр
+        if (errorData.detail && errorData.detail.includes('multiple games simultaneously')) {
+          console.log('🔧 Attempting to clear user game status...');
+          
+          // Попробуем очистить статус пользователя
+          await checkAndClearUserGames();
+          
+          // Предложим повторить попытку
+          throw new Error('You seem to have an active game session. We tried to clear it automatically. Please try joining the battle again.');
+        }
+        
         throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
       }
 
