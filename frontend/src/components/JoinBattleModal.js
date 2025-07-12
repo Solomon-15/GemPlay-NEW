@@ -576,7 +576,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       showSuccess(`Игра завершена! ${resultText}`);
       
     } catch (error) {
-      console.error('🚨 === BATTLE ERROR ===');
+      console.log('🎮 === BATTLE ERROR ===');
       console.error('🚨 Error Details:', {
         message: error.message,
         stack: error.stack,
@@ -584,17 +584,18 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         userId: user.id,
         selectedMove: selectedMove,
         timestamp: new Date().toISOString(),
-        isPollingTimeout: error.message.includes('did not complete in time'),
-        isPossibleServerIssue: error.message.includes('Missing opponent move')
+        isPollingTimeout: error.message.includes('taking longer than expected'),
+        isPossibleServerIssue: error.message.includes('Missing opponent move'),
+        isMultipleGamesError: error.message.includes('multiple games simultaneously')
       });
       
       // Разные сообщения в зависимости от типа ошибки
       if (error.message.includes('taking longer than expected')) {
         showError('⏰ Battle is taking longer than expected. The game may still be in progress - please check the lobby in a few minutes.');
-      } else if (error.message.includes('Multiple opponent move')) {
+      } else if (error.message.includes('Missing opponent move')) {
         showError('📊 Battle completed but data is incomplete. Please refresh and check results in the lobby.');
       } else if (error.message.includes('multiple games simultaneously')) {
-        showError('🎮 Active game session detected. We attempted to clear it - please try again.');
+        showError('🎮 Active game session detected. We attempted to clear it - please try again in a few seconds.');
       } else if (error.message.includes('Game not found')) {
         showError('🔍 Game not found. It may have been cancelled - please check the lobby.');
       } else if (error.message.includes('cancelled')) {
@@ -605,6 +606,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       console.error('🚨 === END ERROR ===');
       
+      // Скрываем индикаторы ожидания
+      setIsWaitingForResult(false);
+      setShowCountdown(false);
       setCurrentStep(2); // Возвращаемся к выбору хода при ошибке
     } finally {
       setLoading(false);
