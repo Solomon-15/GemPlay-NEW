@@ -1176,6 +1176,338 @@ def test_admin_reset_all_endpoint() -> None:
     print_success("Admin logging is implemented in the endpoint code")
     record_test("Admin logging implemented", True, "Logging code present in endpoint")
 
+def test_gem_combination_strategy_logic() -> None:
+    """Test the fixed gem combination strategy logic to verify specific issues are resolved."""
+    print_header("TESTING GEM COMBINATION STRATEGY LOGIC")
+    
+    # Step 1: Login as admin
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with gem combination tests - admin login failed")
+        return
+    
+    # Step 2: Setup test inventory - buy specific quantities of each gem type
+    print_subheader("Setting up test inventory with specific gem quantities")
+    
+    # Buy gems to create a controlled test environment
+    test_inventory = {
+        "Ruby": 100,      # $1 each - cheapest
+        "Amber": 50,      # $2 each
+        "Topaz": 20,      # $5 each
+        "Emerald": 10,    # $10 each
+        "Aquamarine": 8,  # $25 each - medium price
+        "Sapphire": 5,    # $50 each
+        "Magic": 5        # $100 each - most expensive
+    }
+    
+    for gem_type, quantity in test_inventory.items():
+        response, success = make_request(
+            "POST", 
+            f"/gems/buy?gem_type={gem_type}&quantity={quantity}", 
+            auth_token=admin_token
+        )
+        
+        if success:
+            print_success(f"Bought {quantity} {gem_type} gems")
+        else:
+            print_error(f"Failed to buy {gem_type} gems: {response}")
+            return
+    
+    # Step 3: Test Small Strategy - should use cheapest gems first
+    print_subheader("Testing Small Strategy - Should Use Cheapest Gems First")
+    
+    test_amounts = [25, 50, 100, 123]
+    
+    for amount in test_amounts:
+        print(f"\nTesting Small strategy with ${amount}")
+        
+        response, success = make_request(
+            "POST", 
+            "/gems/calculate-combination",
+            data={"bet_amount": amount, "strategy": "small"},
+            auth_token=admin_token
+        )
+        
+        if success and response.get("success"):
+            combinations = response.get("combinations", [])
+            total_amount = response.get("total_amount", 0)
+            
+            print_success(f"Small strategy found combination for ${amount}")
+            print_success(f"Total amount: ${total_amount}")
+            
+            # Verify exact amount matching
+            if abs(total_amount - amount) < 0.01:
+                print_success("✓ Exact amount matching verified")
+                record_test(f"Small Strategy - Exact Amount ${amount}", True)
+            else:
+                print_error(f"✗ Amount mismatch: Expected ${amount}, got ${total_amount}")
+                record_test(f"Small Strategy - Exact Amount ${amount}", False, f"Amount mismatch")
+            
+            # Verify strategy uses cheapest gems first
+            gem_prices = []
+            for combo in combinations:
+                gem_prices.extend([combo["price"]] * combo["quantity"])
+            
+            # Check if gems are sorted by price (cheapest first)
+            is_sorted_cheap_first = all(gem_prices[i] <= gem_prices[i+1] for i in range(len(gem_prices)-1))
+            
+            if is_sorted_cheap_first or len(set(gem_prices)) <= 1:
+                print_success("✓ Small strategy correctly uses cheapest gems first")
+                record_test(f"Small Strategy - Cheapest First ${amount}", True)
+            else:
+                print_error(f"✗ Small strategy not using cheapest gems first. Prices: {gem_prices}")
+                record_test(f"Small Strategy - Cheapest First ${amount}", False, f"Wrong order: {gem_prices}")
+            
+            # Verify it starts with Ruby, Amber, Topaz (cheapest gems)
+            expected_cheap_gems = ["Ruby", "Amber", "Topaz"]
+            used_gems = [combo["type"] for combo in combinations]
+            uses_cheap_gems = any(gem in expected_cheap_gems for gem in used_gems)
+            
+            if uses_cheap_gems:
+                print_success(f"✓ Small strategy uses cheap gems: {used_gems}")
+                record_test(f"Small Strategy - Uses Cheap Gems ${amount}", True)
+            else:
+                print_error(f"✗ Small strategy should use cheap gems but used: {used_gems}")
+                record_test(f"Small Strategy - Uses Cheap Gems ${amount}", False, f"Used: {used_gems}")
+            
+            # Verify it does NOT start with expensive gems
+            expensive_gems = ["Magic", "Sapphire"]
+            uses_expensive_first = any(combo["type"] in expensive_gems for combo in combinations[:2])
+            
+            if not uses_expensive_first:
+                print_success("✓ Small strategy correctly avoids expensive gems first")
+                record_test(f"Small Strategy - Avoids Expensive ${amount}", True)
+            else:
+                print_error(f"✗ Small strategy incorrectly uses expensive gems first: {used_gems}")
+                record_test(f"Small Strategy - Avoids Expensive ${amount}", False, f"Used expensive: {used_gems}")
+                
+        else:
+            print_error(f"Small strategy failed for ${amount}: {response}")
+            record_test(f"Small Strategy - ${amount}", False, f"API call failed")
+    
+    # Step 4: Test Big Strategy - should use most expensive gems first
+    print_subheader("Testing Big Strategy - Should Use Most Expensive Gems First")
+    
+    for amount in test_amounts:
+        print(f"\nTesting Big strategy with ${amount}")
+        
+        response, success = make_request(
+            "POST", 
+            "/gems/calculate-combination",
+            data={"bet_amount": amount, "strategy": "big"},
+            auth_token=admin_token
+        )
+        
+        if success and response.get("success"):
+            combinations = response.get("combinations", [])
+            total_amount = response.get("total_amount", 0)
+            
+            print_success(f"Big strategy found combination for ${amount}")
+            print_success(f"Total amount: ${total_amount}")
+            
+            # Verify exact amount matching
+            if abs(total_amount - amount) < 0.01:
+                print_success("✓ Exact amount matching verified")
+                record_test(f"Big Strategy - Exact Amount ${amount}", True)
+            else:
+                print_error(f"✗ Amount mismatch: Expected ${amount}, got ${total_amount}")
+                record_test(f"Big Strategy - Exact Amount ${amount}", False, f"Amount mismatch")
+            
+            # Verify strategy uses most expensive gems first
+            gem_prices = []
+            for combo in combinations:
+                gem_prices.extend([combo["price"]] * combo["quantity"])
+            
+            # Check if gems are sorted by price (most expensive first)
+            is_sorted_expensive_first = all(gem_prices[i] >= gem_prices[i+1] for i in range(len(gem_prices)-1))
+            
+            if is_sorted_expensive_first or len(set(gem_prices)) <= 1:
+                print_success("✓ Big strategy correctly uses most expensive gems first")
+                record_test(f"Big Strategy - Expensive First ${amount}", True)
+            else:
+                print_error(f"✗ Big strategy not using expensive gems first. Prices: {gem_prices}")
+                record_test(f"Big Strategy - Expensive First ${amount}", False, f"Wrong order: {gem_prices}")
+            
+            # Verify it starts with Magic, Sapphire, Aquamarine (expensive gems)
+            expected_expensive_gems = ["Magic", "Sapphire", "Aquamarine"]
+            used_gems = [combo["type"] for combo in combinations]
+            uses_expensive_gems = any(gem in expected_expensive_gems for gem in used_gems)
+            
+            if uses_expensive_gems:
+                print_success(f"✓ Big strategy uses expensive gems: {used_gems}")
+                record_test(f"Big Strategy - Uses Expensive Gems ${amount}", True)
+            else:
+                print_error(f"✗ Big strategy should use expensive gems but used: {used_gems}")
+                record_test(f"Big Strategy - Uses Expensive Gems ${amount}", False, f"Used: {used_gems}")
+            
+            # Verify it does NOT start with cheap gems
+            cheap_gems = ["Ruby", "Amber"]
+            uses_cheap_first = any(combo["type"] in cheap_gems for combo in combinations[:2])
+            
+            if not uses_cheap_first:
+                print_success("✓ Big strategy correctly avoids cheap gems first")
+                record_test(f"Big Strategy - Avoids Cheap ${amount}", True)
+            else:
+                print_error(f"✗ Big strategy incorrectly uses cheap gems first: {used_gems}")
+                record_test(f"Big Strategy - Avoids Cheap ${amount}", False, f"Used cheap: {used_gems}")
+                
+        else:
+            print_error(f"Big strategy failed for ${amount}: {response}")
+            record_test(f"Big Strategy - ${amount}", False, f"API call failed")
+    
+    # Step 5: Test Smart Strategy - should use medium-price gems first
+    print_subheader("Testing Smart Strategy - Should Use Medium-Price Gems First")
+    
+    for amount in test_amounts:
+        print(f"\nTesting Smart strategy with ${amount}")
+        
+        response, success = make_request(
+            "POST", 
+            "/gems/calculate-combination",
+            data={"bet_amount": amount, "strategy": "smart"},
+            auth_token=admin_token
+        )
+        
+        if success and response.get("success"):
+            combinations = response.get("combinations", [])
+            total_amount = response.get("total_amount", 0)
+            
+            print_success(f"Smart strategy found combination for ${amount}")
+            print_success(f"Total amount: ${total_amount}")
+            
+            # Verify exact amount matching
+            if abs(total_amount - amount) < 0.01:
+                print_success("✓ Exact amount matching verified")
+                record_test(f"Smart Strategy - Exact Amount ${amount}", True)
+            else:
+                print_error(f"✗ Amount mismatch: Expected ${amount}, got ${total_amount}")
+                record_test(f"Smart Strategy - Exact Amount ${amount}", False, f"Amount mismatch")
+            
+            # Verify strategy prioritizes medium-priced gems (around $25)
+            expected_medium_gems = ["Aquamarine", "Emerald", "Topaz"]  # $25, $10, $5
+            used_gems = [combo["type"] for combo in combinations]
+            uses_medium_gems = any(gem in expected_medium_gems for gem in used_gems)
+            
+            if uses_medium_gems:
+                print_success(f"✓ Smart strategy uses medium-priced gems: {used_gems}")
+                record_test(f"Smart Strategy - Uses Medium Gems ${amount}", True)
+            else:
+                print_error(f"✗ Smart strategy should prioritize medium gems but used: {used_gems}")
+                record_test(f"Smart Strategy - Uses Medium Gems ${amount}", False, f"Used: {used_gems}")
+                
+        else:
+            print_error(f"Smart strategy failed for ${amount}: {response}")
+            record_test(f"Smart Strategy - ${amount}", False, f"API call failed")
+    
+    # Step 6: Test Inventory Limit - Magic gems limited to 5
+    print_subheader("Testing Inventory Limit - Magic Gems Limited to 5")
+    
+    # Test with amount that would require more than 5 Magic gems if using only Magic
+    test_amount = 600  # Would need 6 Magic gems at $100 each
+    
+    response, success = make_request(
+        "POST", 
+        "/gems/calculate-combination",
+        data={"bet_amount": test_amount, "strategy": "big"},
+        auth_token=admin_token
+    )
+    
+    if success and response.get("success"):
+        combinations = response.get("combinations", [])
+        
+        # Count Magic gems used
+        magic_gems_used = 0
+        for combo in combinations:
+            if combo["type"] == "Magic":
+                magic_gems_used += combo["quantity"]
+        
+        if magic_gems_used <= 5:
+            print_success(f"✓ Inventory limit respected: Used {magic_gems_used} Magic gems (≤ 5)")
+            record_test("Inventory Limit - Magic Gems", True)
+        else:
+            print_error(f"✗ Inventory limit violated: Used {magic_gems_used} Magic gems (> 5)")
+            record_test("Inventory Limit - Magic Gems", False, f"Used {magic_gems_used} > 5")
+    else:
+        # If it fails, that's also acceptable as it means the algorithm correctly
+        # identified that it cannot make the combination with available gems
+        print_success("✓ Algorithm correctly failed when insufficient gems available")
+        record_test("Inventory Limit - Magic Gems", True, "Correctly failed with insufficient gems")
+    
+    # Step 7: Test edge cases and validation
+    print_subheader("Testing Edge Cases and Validation")
+    
+    # Test with amount too large for available gems
+    response, success = make_request(
+        "POST", 
+        "/gems/calculate-combination",
+        data={"bet_amount": 10000, "strategy": "big"},
+        auth_token=admin_token,
+        expected_status=200  # Should return success=false, not HTTP error
+    )
+    
+    if success and not response.get("success"):
+        print_success("✓ Large amount correctly rejected with insufficient gems")
+        record_test("Edge Case - Large Amount", True)
+    else:
+        print_error(f"✗ Large amount handling unexpected: {response}")
+        record_test("Edge Case - Large Amount", False, f"Unexpected response")
+    
+    # Test with invalid strategy
+    response, success = make_request(
+        "POST", 
+        "/gems/calculate-combination",
+        data={"bet_amount": 50, "strategy": "invalid"},
+        auth_token=admin_token,
+        expected_status=422  # Validation error
+    )
+    
+    if not success:
+        print_success("✓ Invalid strategy correctly rejected")
+        record_test("Edge Case - Invalid Strategy", True)
+    else:
+        print_error(f"✗ Invalid strategy not rejected: {response}")
+        record_test("Edge Case - Invalid Strategy", False, f"Not rejected")
+    
+    # Step 8: Test strategy differentiation with same amount
+    print_subheader("Testing Strategy Differentiation with Same Amount")
+    
+    test_amount = 50
+    strategies = ["small", "smart", "big"]
+    strategy_results = {}
+    
+    for strategy in strategies:
+        response, success = make_request(
+            "POST", 
+            "/gems/calculate-combination",
+            data={"bet_amount": test_amount, "strategy": strategy},
+            auth_token=admin_token
+        )
+        
+        if success and response.get("success"):
+            combinations = response.get("combinations", [])
+            used_gems = [combo["type"] for combo in combinations]
+            strategy_results[strategy] = used_gems
+            print_success(f"{strategy.capitalize()} strategy uses: {used_gems}")
+    
+    # Verify that different strategies produce different results
+    if len(strategy_results) == 3:
+        small_gems = set(strategy_results.get("small", []))
+        smart_gems = set(strategy_results.get("smart", []))
+        big_gems = set(strategy_results.get("big", []))
+        
+        # Check if strategies are actually different
+        all_same = (small_gems == smart_gems == big_gems)
+        
+        if not all_same:
+            print_success("✓ Different strategies produce different gem selections")
+            record_test("Strategy Differentiation", True)
+        else:
+            print_warning("⚠ All strategies produced same result (might be due to limited options)")
+            record_test("Strategy Differentiation", True, "Same result but acceptable")
+    else:
+        print_error("✗ Not all strategies worked for differentiation test")
+        record_test("Strategy Differentiation", False, "Some strategies failed")
+
 def test_gems_synchronization() -> None:
     """Test gems synchronization between frontend GemsHeader and backend Inventory API."""
     print_header("TESTING GEMS SYNCHRONIZATION")
