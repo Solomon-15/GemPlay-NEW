@@ -360,9 +360,13 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const startBattle = async () => {
     setLoading(true);
     
-    // Показываем анимированный обратный отсчет 3-2-1
-    setShowCountdown(true);
-    setCountdownNumber(3);
+    try {
+      // Проверяем и очищаем зависшие игры пользователя
+      await checkAndClearUserGames();
+      
+      // Показываем анимированный обратный отсчет 3-2-1
+      setShowCountdown(true);
+      setCountdownNumber(3);
     
     // Обратный отсчет с анимацией
     await new Promise(resolve => {
