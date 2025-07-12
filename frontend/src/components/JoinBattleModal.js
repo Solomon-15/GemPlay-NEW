@@ -369,21 +369,40 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
       }
       
-      const result = await response.json();
+      const joinResult = await response.json();
       
-      // DEBUG: подробный анализ ответа API
-      console.log('🎮 === API SUCCESS RESPONSE ===');
-      console.log('🎮 Full API Response:', result);
-      console.log('🎮 Response Analysis:', {
-        hasWinnerId: 'winner_id' in result,
-        winnerId: result.winner_id,
-        hasCreatorMove: 'creator_move' in result,
-        creatorMove: result.creator_move,
-        hasJoinerMove: 'joiner_move' in result,
-        joinerMove: result.joiner_move,
-        gameStatus: result.status,
-        allKeys: Object.keys(result)
+      // DEBUG: подробный анализ JOIN ответа API
+      console.log('🎮 === JOIN API SUCCESS RESPONSE ===');
+      console.log('🎮 Join API Response:', joinResult);
+      console.log('🎮 Join Response Analysis:', {
+        hasWinnerId: 'winner_id' in joinResult,
+        status: joinResult.status,
+        hasMessage: 'message' in joinResult,
+        needsPolling: joinResult.status === 'REVEAL' || joinResult.status === 'WAITING'
       });
+      
+      // Если игра еще не завершена - начинаем polling
+      if (joinResult.status === 'REVEAL' || joinResult.status === 'WAITING') {
+        console.log('🔄 Game not completed yet, starting polling...');
+        
+        // Показываем индикатор ожидания
+        showSuccess('Game joined! Waiting for opponent to reveal...');
+        
+        // Ждем завершения игры через polling
+        const finalGameData = await pollGameResult(bet.id);
+        
+        // Анализируем финальные данные
+        console.log('🎮 === FINAL GAME DATA ===');
+        console.log('🎮 Final Game Data:', finalGameData);
+        
+        // Используем финальные данные вместо JOIN результата
+        result = finalGameData;
+        
+      } else {
+        // Игра уже завершена сразу после JOIN
+        console.log('🎮 Game completed immediately after join');
+        result = joinResult;
+      }
       
       // Определяем ходы игроков
       const playerMove = selectedMove;
