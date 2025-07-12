@@ -724,7 +724,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
               player: user,
               opponent: bet?.creator || battleResult?.gameData?.creator || { username: 'Opponent' }
             }}
-            onClose={debugOnClose}
+            onClose={onClose}
           />
         );
       case 4:
