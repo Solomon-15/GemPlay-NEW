@@ -542,9 +542,10 @@ frontend:
         agent: "testing"
         comment: "UPDATED PORTFOLIO OVERVIEW DESIGN TESTING COMPLETED AS REQUESTED: Successfully tested all critical requirements from the Russian review request for the updated Portfolio Overview design without header. Key findings: 1) LOGIN AND NAVIGATION - successfully logged in as admin@gemplay.com and navigated to Inventory section without issues. 2) PORTFOLIO OVERVIEW HEADER REMOVAL - CRITICAL SUCCESS: 'Portfolio Overview' header successfully removed as requested, section now displays only the three blocks without section title. 3) THREE BLOCKS STRUCTURE - CRITICAL SUCCESS: All three blocks (Available, Gems, Total) present and maintained in one horizontal row using grid-cols-3 layout. 4) AVAILABLE BLOCK YELLOW COLOR - CRITICAL SUCCESS: Frozen funds subtitle displays in yellow color (text-yellow-400 class) showing 'Frozen: $355.02' exactly as requested. 5) GEMS BLOCK YELLOW COLOR - CRITICAL SUCCESS: Frozen gems subtitle displays in yellow color (text-yellow-400 class) showing 'Frozen: 2227 / 5917' exactly as requested. 6) TOTAL BLOCK EMPTY SUBTITLE - CRITICAL SUCCESS: Total block has empty subtitle implemented with transparent text (text-transparent class) as requested, no 'Updated in real-time' text visible. 7) TOOLTIP FUNCTIONALITY - All three blocks have tooltip icons (i) present, tooltips show correct explanatory text for Available, Gems, and Total blocks. 8) MOBILE RESPONSIVENESS - CRITICAL SUCCESS: 3-column grid layout maintained on mobile (390x844), all blocks remain in one row, yellow text remains visible and readable. 9) VISUAL CONSISTENCY - Layout remains balanced without subtitle in Total block, proper spacing and alignment maintained across all three blocks. 10) COLOR SCHEME VERIFICATION - Yellow color (#fbbf24/text-yellow-400) properly implemented for frozen fund indicators, provides good contrast on dark background. All critical requirements from the review request have been successfully verified and are working as designed."
 
-  - task: "Accept Bet Modal Implementation"
+  - task: "Asynchronous JoinBattleModal Implementation"
     implemented: true
-    working: true
+    working: false
+    needs_retesting: true
     file: "/app/frontend/src/components/AcceptBetModal.js"
     stuck_count: 0
     priority: "high"
