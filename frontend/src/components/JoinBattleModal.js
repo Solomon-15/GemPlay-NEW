@@ -645,7 +645,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // Рендер текущего шага
+  // Рендер текущего шага - упрощенная логика
   const renderCurrentStep = () => {
     // Вычисляем общую стоимость выбранных гемов
     const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
@@ -655,64 +655,36 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
 
     switch (currentStep) {
       case 1:
+        // Объединенный шаг: выбор гемов И выбор хода
         return (
-          <GemSelectionStep
-            targetAmount={targetAmount}
-            commissionAmount={commissionAmount}
-            selectedGems={selectedGems}
-            onSelectedGemsChange={setSelectedGems}
-            gemsData={gemsData}
-            loading={loading}
-            onStrategySelect={handleStrategySelect}
-            showError={showError}
-          />
+          <div className="space-y-6">
+            {/* Выбор гемов */}
+            <GemSelectionStep
+              targetAmount={targetAmount}
+              commissionAmount={commissionAmount}
+              selectedGems={selectedGems}
+              onSelectedGemsChange={setSelectedGems}
+              gemsData={gemsData}
+              loading={loading}
+              onStrategySelect={handleStrategySelect}
+              showError={showError}
+            />
+            
+            {/* Выбор хода - показываем только если гемы выбраны */}
+            {Object.keys(selectedGems).length > 0 && Math.abs(totalGemValue - targetAmount) <= 0.01 && (
+              <div className="border-t border-border-primary pt-6">
+                <MoveSelectionStep
+                  targetAmount={targetAmount}
+                  totalGemValue={totalGemValue}
+                  selectedMove={selectedMove}
+                  onSelectedMoveChange={setSelectedMove}
+                />
+              </div>
+            )}
+          </div>
         );
       case 2:
-        return (
-          <MoveSelectionStep
-            targetAmount={targetAmount}
-            totalGemValue={totalGemValue}
-            selectedMove={selectedMove}
-            onSelectedMoveChange={setSelectedMove}
-          />
-        );
-      case 3:
-        // Если ждем результат - показываем индикатор ожидания
-        if (isWaitingForResult) {
-          return (
-            <div className="p-8 text-center space-y-6">
-              <div className="text-white font-russo text-2xl mb-4">
-                ⚔️ Battle in Progress
-              </div>
-              
-              <div className="flex justify-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-accent-primary"></div>
-              </div>
-              
-              <div className="text-text-secondary">
-                <div className="font-rajdhani text-lg mb-2">Waiting for opponent to reveal...</div>
-                <div className="text-sm">This may take up to 2 minutes</div>
-                <div className="text-xs mt-1 opacity-75">Checking every 2 seconds</div>
-              </div>
-              
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-white font-rajdhani font-bold mb-2">Your Move</div>
-                <div className="flex justify-center">
-                  <img 
-                    src={moves.find(m => m.id === selectedMove)?.icon} 
-                    alt={selectedMove} 
-                    className="w-12 h-12" 
-                  />
-                </div>
-                <div className="text-accent-primary font-rajdhani capitalize font-bold mt-2">
-                  {moves.find(m => m.id === selectedMove)?.name}
-                </div>
-              </div>
-            </div>
-          );
-        }
-        
-        // Показываем результат только когда получили финальные данные
+        // Результат битвы
         return (
           <BattleResultStep
             battleResult={battleResult}
@@ -727,9 +699,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             onClose={onClose}
           />
         );
-      case 4:
-        // return <RevealStep ... />;
-        return <div className="p-4 text-white">Reveal Step (TODO)</div>;
       default:
         return <div className="p-4 text-white">Unknown Step</div>;
     }
