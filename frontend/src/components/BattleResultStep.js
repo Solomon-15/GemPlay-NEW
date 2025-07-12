@@ -176,34 +176,52 @@ const BattleResultStep = ({
         </div>
       </div>
 
-      {/* Battle Summary */}
-      <div className="bg-surface-sidebar rounded-lg p-4 space-y-3">
-        <h5 className="text-white font-rajdhani font-bold mb-3">Battle Summary</h5>
+      {/* Financial Summary - улучшенный дизайн */}
+      <div className="bg-surface-sidebar rounded-xl p-6 border border-border-primary">
+        <h5 className="text-white font-rajdhani font-bold text-xl mb-4 text-center">💰 Battle Summary</h5>
         
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Bet Amount:</span>
-          <span className="text-white font-rajdhani font-bold">{formatCurrency(totalGemValue)}</span>
-        </div>
-        
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Commission:</span>
-          <span className="text-orange-400 font-rajdhani font-bold">
-            {formatCurrency(commissionAmount)}
-          </span>
-        </div>
-        
-        <div className="border-t border-border-primary pt-3">
-          <div className="flex justify-between">
-            <span className="text-text-secondary">Result:</span>
-            <span className={`font-rajdhani font-bold ${resultConfig.color}`}>
-              {result === 'win' ? 'You Win!' : 
-               result === 'lose' ? 'You Lose!' : 'Draw!'}
+        <div className="space-y-3">
+          <div className="flex justify-between items-center py-2 border-b border-border-primary border-opacity-30">
+            <span className="text-text-secondary font-rajdhani">Total Bet Amount:</span>
+            <span className="text-white font-rajdhani font-bold text-lg">{formatCurrency(totalGemValue)}</span>
+          </div>
+          
+          <div className="flex justify-between items-center py-2 border-b border-border-primary border-opacity-30">
+            <span className="text-text-secondary font-rajdhani">Platform Commission (6%):</span>
+            <span className="text-orange-400 font-rajdhani font-bold">
+              -{formatCurrency(commissionAmount)}
             </span>
+          </div>
+          
+          <div className="flex justify-between items-center py-2 border-b border-border-primary border-opacity-30">
+            <span className="text-text-secondary font-rajdhani">Prize Pool:</span>
+            <span className="text-green-400 font-rajdhani font-bold text-lg">
+              {formatCurrency(totalGemValue * 2 - commissionAmount)}
+            </span>
+          </div>
+          
+          <div className="pt-3 border-t-2 border-accent-primary border-opacity-30">
+            <div className="flex justify-between items-center">
+              <span className="text-white font-rajdhani font-bold text-lg">Your Result:</span>
+              <span className={`font-rajdhani font-bold text-xl ${resultConfig.color}`}>
+                {result === 'win' ? 
+                  `+${formatCurrency(totalGemValue * 2 - commissionAmount)}` : 
+                 result === 'lose' ? 
+                  `-${formatCurrency(totalGemValue)}` : 
+                  `±${formatCurrency(0)}`}
+              </span>
+            </div>
+            <div className="text-center mt-2">
+              <span className={`text-sm font-rajdhani ${resultConfig.color}`}>
+                {result === 'win' ? 'You won all gems!' : 
+                 result === 'lose' ? 'You lost your gems!' : 'All gems returned!'}
+              </span>
+            </div>
           </div>
         </div>
         
         {gameData && (
-          <div className="text-xs text-text-secondary">
+          <div className="text-xs text-text-secondary text-center mt-4 pt-3 border-t border-border-primary border-opacity-20">
             Game ID: {gameData.id}
           </div>
         )}
