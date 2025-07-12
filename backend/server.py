@@ -2238,22 +2238,23 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 # Winner is a human player
                 commission_to_deduct = commission_amount  # 3% of total pot
                 
-                new_winner_balance = winner["virtual_balance"]
+                # ИСПРАВЛЕНИЕ: Просто списываем комиссию из frozen_balance, не трогаем virtual_balance
                 new_winner_frozen = winner["frozen_balance"] - (game.bet_amount * 0.06)  # Unfreeze winner's commission
                 
-                # Deduct actual commission from winner's balance
+                # Deduct actual commission from frozen balance only
                 if new_winner_frozen >= commission_to_deduct:
                     new_winner_frozen -= commission_to_deduct
                 else:
+                    # If not enough in frozen, take remaining from virtual balance
                     remaining = commission_to_deduct - new_winner_frozen
-                    new_winner_balance -= remaining
+                    new_winner_balance = winner["virtual_balance"] - remaining
                     new_winner_frozen = 0
                 
                 await db.users.update_one(
                     {"id": winner_id},
                     {
                         "$set": {
-                            "virtual_balance": new_winner_balance,
+                            "virtual_balance": new_winner_balance if 'new_winner_balance' in locals() else winner["virtual_balance"],
                             "frozen_balance": new_winner_frozen,
                             "updated_at": datetime.utcnow()
                         }
