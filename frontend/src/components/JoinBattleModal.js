@@ -260,7 +260,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             targetAmount={targetAmount}
             totalGemValue={totalGemValue}
             commissionAmount={commissionAmount}
-            onClose={onClose}
+            onClose={debugOnClose}
           />
         );
       case 4:
