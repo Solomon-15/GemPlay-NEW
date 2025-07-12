@@ -135,8 +135,8 @@ const Inventory = ({ user, onUpdateUser }) => {
   // Calculate portfolio data
   const getPortfolioData = () => {
     if (!balance) return null;
-
-    const availableBalance = balance.virtual_balance - balance.frozen_balance;
+    
+    const virtualBalance = balance.virtual_balance;
     const frozenBalance = balance.frozen_balance;
     const totalGemsCount = gems.reduce((sum, gem) => sum + gem.quantity, 0);
     const frozenGemsCount = gems.reduce((sum, gem) => sum + gem.frozen_quantity, 0);
@@ -145,15 +145,17 @@ const Inventory = ({ user, onUpdateUser }) => {
     const totalValue = balance.total_value;
 
     return {
-      available: {
-        value: availableBalance,
-        frozenFunds: frozenBalance
+      balance: {
+        total: virtualBalance,
+        frozen: frozenBalance,
+        available: virtualBalance - frozenBalance
       },
       gems: {
         totalCount: totalGemsCount,
         totalValue: balance.total_gem_value,
         frozenCount: frozenGemsCount,
-        frozenValue: frozenGemValue
+        frozenValue: frozenGemValue,
+        availableValue: availableGemValue
       },
       total: {
         value: totalValue
