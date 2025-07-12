@@ -90,7 +90,7 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
             Your total gem value: {safeFormatCurrency(totalAvailableGemValue)}
           </p>
           <button
-            onClick={onClose}
+            onClick={debugOnClose}
             className="w-full py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors"
           >
             Close
