@@ -1869,8 +1869,23 @@ async def join_game(
                 detail="Game already has an opponent"
             )
         
-        # Check if user has enough gems to match the bet
-        for gem_type, quantity in game_obj.bet_gems.items():
+        # Check if user has enough gems for THEIR OWN combination (not creator's)
+        total_gems_value = 0.0
+        
+        # Validate user's selected gems combination
+        for gem_type, quantity in join_data.gems.items():
+            if quantity <= 0:
+                continue
+                
+            # Get gem definition for price
+            gem_def = await db.gem_definitions.find_one({"type": gem_type})
+            if not gem_def:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid gem type: {gem_type}"
+                )
+            
+            # Check user's inventory for this gem type
             user_gems = await db.user_gems.find_one({"user_id": current_user.id, "gem_type": gem_type})
             if not user_gems:
                 raise HTTPException(
@@ -1884,6 +1899,16 @@ async def join_game(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Insufficient {gem_type} gems. Available: {available_quantity}, Required: {quantity}"
                 )
+            
+            # Add to total value
+            total_gems_value += gem_def["price"] * quantity
+        
+        # Check if total value matches the bet amount
+        if abs(total_gems_value - game_obj.bet_amount) > 0.01:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Gem combination value (${total_gems_value:.2f}) must match bet amount (${game_obj.bet_amount:.2f})"
+            )
         
         # Check if user has enough balance for commission
         commission_required = game_obj.bet_amount * 0.06
