@@ -252,9 +252,26 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       const result = await response.json();
       
+      // DEBUG: проверяем ответ API
+      console.log('🎮 API Response:', result);
+      
       // Определяем результат битвы
       const battleOutcome = result.winner_id === user.id ? 'win' : 
                            (result.winner_id ? 'lose' : 'draw');
+      
+      // DEBUG: Проверяем логику Rock Paper Scissors
+      const playerMove = selectedMove;
+      const opponentMove = result.creator_move;
+      const expectedResult = getRPSResult(playerMove, opponentMove);
+      
+      console.log('🎮 Battle Logic Check:', {
+        playerMove,
+        opponentMove,
+        apiResult: battleOutcome,
+        expectedResult,
+        winnerFromAPI: result.winner_id,
+        currentUserId: user.id
+      });
       
       // Сохраняем результат битвы
       setBattleResult({
