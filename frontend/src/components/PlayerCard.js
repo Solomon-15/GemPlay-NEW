@@ -96,8 +96,8 @@ const PlayerCard = ({
   const handleAcceptClick = () => {
     if (onAccept) {
       onAccept(game.game_id || game.id); // Передаем ID игры, а не объект
-    } else {
-      setShowAcceptModal(true);
+    } else if (onOpenJoinBattle) {
+      onOpenJoinBattle(game); // Передаем весь объект игры
     }
   };
 
