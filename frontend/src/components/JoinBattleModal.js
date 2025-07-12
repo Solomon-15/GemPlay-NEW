@@ -347,20 +347,27 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
       {/* Анимированный обратный отсчет 3-2-1 */}
       {showCountdown && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-90">
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-sm">
           <div className="text-center">
             <div 
               key={countdownNumber}
-              className="text-white font-russo text-8xl animate-pulse transform transition-all duration-300 scale-110"
+              className="countdown-number text-white font-russo text-9xl transform transition-all duration-500"
               style={{
-                animation: 'countdownPulse 1s ease-in-out',
-                textShadow: '0 0 20px rgba(255, 255, 255, 0.8)'
+                filter: 'drop-shadow(0 0 30px rgba(255, 255, 255, 0.8))'
               }}
             >
               {countdownNumber}
             </div>
-            <div className="text-white font-rajdhani text-xl mt-4 opacity-80">
-              Starting Battle...
+            <div className="text-white font-rajdhani text-2xl mt-8 opacity-90 animate-pulse">
+              ⚔️ Starting Battle...
+            </div>
+            
+            {/* Дополнительные визуальные эффекты */}
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <div className="w-96 h-96 border-2 border-white border-opacity-20 rounded-full animate-ping"></div>
+                <div className="absolute inset-4 border border-accent-primary border-opacity-40 rounded-full animate-pulse"></div>
+              </div>
             </div>
           </div>
         </div>
