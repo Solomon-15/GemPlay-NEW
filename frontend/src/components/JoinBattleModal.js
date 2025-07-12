@@ -236,7 +236,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       const result = await response.json();
       
       if (result.success && result.combinations && Array.isArray(result.combinations)) {
-        // Преобразуем ответ API в внутренний формат
         const autoSelected = {};
         result.combinations.forEach(combo => {
           if (combo && combo.type && combo.quantity) {
@@ -247,13 +246,13 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         setSelectedGems(autoSelected);
         
         const strategyNames = { small: 'Small', smart: 'Smart', big: 'Big' };
-        showSuccess(`${strategyNames[strategy]} стратегия: точная комбинация на сумму $${targetAmount.toFixed(2)}`);
+        showSuccess(`${strategyNames[strategy]} strategy: exact combination for $${targetAmount.toFixed(2)}`);
       } else {
-        showError(result.message || 'Недостаточно гемов для создания точной комбинации');
+        showError(result.message || 'Insufficient gems to create exact combination');
       }
     } catch (error) {
       console.error('Error with strategy selection:', error);
-      showError(error.message || 'Ошибка при автоматическом подборе гемов');
+      showError(error.message || 'Error with automatic gem selection');
     } finally {
       setLoading(false);
     }
