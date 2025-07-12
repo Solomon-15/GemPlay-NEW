@@ -13,10 +13,92 @@ const GEM_CATEGORIES = {
 };
 
 /**
- * Get available gems from inventory data with proper sorting
- * @param {Array} gemsData - Raw gems data from context
- * @returns {Array} Processed available gems
+ * Advanced fallback algorithm using dynamic programming
+ * @param {Array} availableGems - Available gems with quantities
+ * @param {number} targetAmount - Target amount to achieve
+ * @returns {Object} { success: boolean, combination: Array }
  */
+const findExactCombinationDP = (availableGems, targetAmount) => {
+  const targetCents = Math.round(targetAmount * 100); // Work with cents for precision
+  
+  // Create array of all possible gem units
+  const gemUnits = [];
+  for (const gem of availableGems) {
+    const priceCents = Math.round(gem.price * 100);
+    for (let i = 0; i < gem.availableQuantity; i++) {
+      gemUnits.push({
+        type: gem.type,
+        name: gem.name,
+        price: gem.price,
+        priceCents: priceCents,
+        icon: gem.icon,
+        color: gem.color
+      });
+    }
+  }
+  
+  // DP table: dp[i] = True if we can make amount i
+  const dp = new Array(targetCents + 1).fill(false);
+  dp[0] = true;
+  
+  // parent[i] = gem index used to achieve amount i
+  const parent = new Array(targetCents + 1).fill(-1);
+  
+  // Fill DP table
+  for (let i = 0; i < gemUnits.length; i++) {
+    const unit = gemUnits[i];
+    const priceCents = unit.priceCents;
+    
+    // Go backwards to avoid using same unit multiple times
+    for (let amount = targetCents; amount >= priceCents; amount--) {
+      if (dp[amount - priceCents] && !dp[amount]) {
+        dp[amount] = true;
+        parent[amount] = i;
+      }
+    }
+  }
+  
+  // If exact amount not achievable
+  if (!dp[targetCents]) {
+    return { success: false, combination: [] };
+  }
+  
+  // Reconstruct solution
+  const usedUnits = [];
+  let currentAmount = targetCents;
+  
+  while (currentAmount > 0 && parent[currentAmount] !== -1) {
+    const gemIndex = parent[currentAmount];
+    const unit = gemUnits[gemIndex];
+    usedUnits.push(unit);
+    currentAmount -= unit.priceCents;
+  }
+  
+  // Convert to combination format
+  const gemCounts = {};
+  for (const unit of usedUnits) {
+    const gemType = unit.type;
+    if (!gemCounts[gemType]) {
+      gemCounts[gemType] = 0;
+    }
+    gemCounts[gemType]++;
+  }
+  
+  const combination = Object.entries(gemCounts).map(([gemType, quantity]) => {
+    const gemInfo = availableGems.find(g => g.type === gemType);
+    return {
+      type: gemType,
+      name: gemInfo.name,
+      price: gemInfo.price,
+      quantity: quantity,
+      totalValue: gemInfo.price * quantity,
+      icon: gemInfo.icon,
+      color: gemInfo.color
+    };
+  });
+  
+  return { success: true, combination };
+};
 const getAvailableGems = (gemsData) => {
   return gemsData
     .filter(gem => gem.available_quantity > 0)
