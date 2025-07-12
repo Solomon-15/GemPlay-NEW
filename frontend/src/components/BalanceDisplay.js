@@ -57,14 +57,13 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
 
   const virtualBalance = balance.virtual_balance || 0;
   const frozenBalance = balance.frozen_balance || 0;
-  const availableBalance = virtualBalance - frozenBalance;
   const totalGemsValue = calculateGemValue(gems, false);
   const availableGemsValue = calculateGemValue(gems, true);
   const totalWorth = virtualBalance + totalGemsValue;
 
   return (
     <div className="flex items-center space-x-6">
-      {/* Virtual Balance */}
+      {/* Unified Balance Display */}
       <div className="text-right">
         <div className="flex items-center space-x-2">
           <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,13 +72,16 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
           <span className="font-rajdhani text-sm text-text-secondary">Balance</span>
         </div>
         <div className="font-rajdhani text-lg font-bold text-green-400">
-          {formatCurrencyWithSymbol(availableBalance)}
+          {formatCurrencyWithSymbol(virtualBalance)}
         </div>
         {frozenBalance > 0 && (
-          <div className="font-roboto text-xs text-warning">
+          <div className="font-roboto text-xs text-orange-400">
             {formatCurrencyWithSymbol(frozenBalance)} frozen
           </div>
         )}
+        <div className="font-roboto text-xs text-text-secondary">
+          Available: {formatCurrencyWithSymbol(virtualBalance - frozenBalance)}
+        </div>
       </div>
 
       {/* Gems Value */}
