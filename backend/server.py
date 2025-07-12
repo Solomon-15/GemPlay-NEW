@@ -2188,16 +2188,28 @@ async def determine_game_winner(game_id: str) -> dict:
 async def distribute_game_rewards(game: Game, winner_id: str, commission_amount: float):
     """Distribute gems and handle commissions after game completion."""
     try:
-        # Unfreeze gems for both players
-        for player_id in [game.creator_id, game.opponent_id]:
-            for gem_type, quantity in game.bet_gems.items():
-                await db.user_gems.update_one(
-                    {"user_id": player_id, "gem_type": gem_type},
-                    {
-                        "$inc": {"frozen_quantity": -quantity},
-                        "$set": {"updated_at": datetime.utcnow()}
-                    }
-                )
+        # Unfreeze gems for both players using their respective gem combinations
+        
+        # Unfreeze creator's gems
+        for gem_type, quantity in game.bet_gems.items():
+            await db.user_gems.update_one(
+                {"user_id": game.creator_id, "gem_type": gem_type},
+                {
+                    "$inc": {"frozen_quantity": -quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+        
+        # Unfreeze opponent's gems (use opponent_gems if available, otherwise bet_gems)
+        opponent_gems = game.opponent_gems if game.opponent_gems else game.bet_gems
+        for gem_type, quantity in opponent_gems.items():
+            await db.user_gems.update_one(
+                {"user_id": game.opponent_id, "gem_type": gem_type},
+                {
+                    "$inc": {"frozen_quantity": -quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
         
         if winner_id:
             # Winner gets all gems (double the bet)
