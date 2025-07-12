@@ -5,6 +5,7 @@ import { calculateGemCombination } from '../utils/gemCombinationAlgorithms';
 import GemSelectionStep from './GemSelectionStep';
 import MoveSelectionStep from './MoveSelectionStep';
 import BattleResultStep from './BattleResultStep';
+import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Проверка обязательных пропсов
