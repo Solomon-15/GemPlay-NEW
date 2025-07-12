@@ -112,7 +112,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             Available: ${availableBalance.toFixed(2)} | Required: ${commissionAmount.toFixed(2)}
           </p>
           <button
-            onClick={onClose}
+            onClick={debugOnClose}
             className="w-full py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors"
           >
             Close
