@@ -157,8 +157,18 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        // return <GemSelectionStep ... />;
-        return <div className="p-4 text-white">Gem Selection Step (TODO)</div>;
+        return (
+          <GemSelectionStep
+            targetAmount={targetAmount}
+            commissionAmount={commissionAmount}
+            selectedGems={selectedGems}
+            onSelectedGemsChange={setSelectedGems}
+            gemsData={gemsData}
+            loading={loading}
+            onStrategySelect={handleStrategySelect}
+            showError={showError}
+          />
+        );
       case 2:
         // return <MoveSelectionStep ... />;
         return <div className="p-4 text-white">Move Selection Step (TODO)</div>;
