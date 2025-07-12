@@ -867,7 +867,11 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
                 {currentStep > 1 && (
                   <button
                     type="button"
-                    onClick={handleBack}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleBack();
+                    }}
                     disabled={loading}
                     className="px-4 py-2 bg-surface-sidebar text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
                   >
