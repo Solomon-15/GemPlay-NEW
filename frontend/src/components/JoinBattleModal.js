@@ -49,6 +49,19 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
   const { showSuccess, showError } = useNotifications() || {};
 
+  // Функция для проверки логики Rock Paper Scissors
+  const getRPSResult = (playerMove, opponentMove) => {
+    if (playerMove === opponentMove) return 'draw';
+    
+    const winningCombos = {
+      'rock': 'scissors',
+      'paper': 'rock', 
+      'scissors': 'paper'
+    };
+    
+    return winningCombos[playerMove] === opponentMove ? 'win' : 'lose';
+  };
+
   // Таймер автозакрытия
   React.useEffect(() => {
     if (currentStep >= 3) {
