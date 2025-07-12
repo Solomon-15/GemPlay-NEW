@@ -10,7 +10,7 @@ const API = `${BACKEND_URL}/api`;
 
 const Shop = ({ user, onUpdateUser }) => {
   const { showSuccess, showError } = useNotifications();
-  const { getGemIconPath } = useGems();
+  const { getGemIconPath, refreshInventory } = useGems();
   const [gems, setGems] = useState([]);
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
