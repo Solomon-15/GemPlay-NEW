@@ -368,6 +368,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         });
         throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
       }
+
+      // Переменная для финального результата
+      let result;
       
       const joinResult = await response.json();
       
