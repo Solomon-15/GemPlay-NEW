@@ -34,6 +34,12 @@ const Profile = ({ user, onUpdateUser }) => {
       });
       
       setDepositAmount('');
+      
+      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ДОБАВЛЕНИЯ БАЛАНСА
+      const globalRefresh = getGlobalLobbyRefresh();
+      globalRefresh.triggerLobbyRefresh();
+      console.log(`💵 Added $${amount} balance - triggering lobby refresh`);
+      
       if (onUpdateUser) {
         onUpdateUser();
       }
