@@ -687,7 +687,11 @@ const AcceptBetModal = ({ bet, user, onClose, onUpdateUser }) => {
         
         <button
           type="button"
-          onClick={revealGame}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            revealGame();
+          }}
           disabled={loading}
           className="w-full py-4 bg-gradient-accent text-white font-rajdhani font-bold text-lg rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
