@@ -197,10 +197,31 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // Запуск битвы - реальная API логика
+  // Запуск битвы с анимированным обратным отсчетом
   const startBattle = async () => {
     setLoading(true);
-    setCurrentStep(3); // Переход к шагу с результатом битвы
+    
+    // Показываем анимированный обратный отсчет 3-2-1
+    setShowCountdown(true);
+    setCountdownNumber(3);
+    
+    // Обратный отсчет с анимацией
+    await new Promise(resolve => {
+      let count = 3;
+      const countdownInterval = setInterval(() => {
+        if (count <= 1) {
+          clearInterval(countdownInterval);
+          setShowCountdown(false);
+          resolve();
+        } else {
+          count--;
+          setCountdownNumber(count);
+        }
+      }, 1000);
+    });
+    
+    // Переходим к шагу результата
+    setCurrentStep(3);
     
     try {
       // Вызов API для присоединения к игре
