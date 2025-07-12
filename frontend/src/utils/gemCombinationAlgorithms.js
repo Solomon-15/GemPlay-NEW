@@ -32,7 +32,7 @@ const getAvailableGems = (gemsData) => {
 
 /**
  * 🔴 SMALL STRATEGY - Use more cheap gems
- * Prioritizes cheapest gems first (Ruby, Amber, then others in ascending price order)
+ * Prioritizes cheapest gems first, but adapts when cheap gems run out
  * 
  * @param {Array} gemsData - Gems inventory data
  * @param {number} targetAmount - Target bet amount
@@ -55,10 +55,11 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
   let remaining = targetAmount;
   const selectedGems = {};
   
-  // Greedy algorithm: use cheapest gems first
+  // FLEXIBLE GREEDY ALGORITHM: use cheapest gems first, adapt when needed
   while (remaining > 0) {
     let foundGem = false;
     
+    // Try to find the cheapest gem that fits
     for (const gem of sortedGems) {
       const currentUsed = selectedGems[gem.type] || 0;
       
@@ -71,13 +72,28 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
       }
     }
     
-    // If no gem can be used, we can't reach the target
+    // If no exact gem found, try to use larger gems to finish
     if (!foundGem) {
-      return {
-        success: false,
-        combination: [],
-        message: "Not enough gems in inventory to form this bet. Please adjust your balance or select manually."
-      };
+      // Try to find any gem that can cover the remaining amount exactly
+      let exactMatch = false;
+      for (const gem of sortedGems) {
+        const currentUsed = selectedGems[gem.type] || 0;
+        if (currentUsed < gem.availableQuantity && gem.price === remaining) {
+          selectedGems[gem.type] = currentUsed + 1;
+          remaining = 0;
+          exactMatch = true;
+          break;
+        }
+      }
+      
+      if (!exactMatch) {
+        // No exact solution possible
+        return {
+          success: false,
+          combination: [],
+          message: "Not enough gems in inventory to form this bet. Please adjust your balance or select manually."
+        };
+      }
     }
   }
   
@@ -106,7 +122,7 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
 
 /**
  * 🟢 SMART STRATEGY - Balanced mid-range gems
- * Distribution: ~60% mid-range, ~30% low, ~10% high (by value)
+ * Tries 60% mid, 30% low, 10% high but adapts flexibly when needed
  * 
  * @param {Array} gemsData - Gems inventory data
  * @param {number} targetAmount - Target bet amount
@@ -135,29 +151,23 @@ export const calculateSmartStrategy = (gemsData, targetAmount) => {
   categorizedGems.mid.sort((a, b) => a.price - b.price);
   categorizedGems.high.sort((a, b) => b.price - a.price); // High gems: expensive first
 
-  // Calculate target amounts for each category
-  const targetMid = targetAmount * 0.6;   // 60%
-  const targetLow = targetAmount * 0.3;   // 30%
-  const targetHigh = targetAmount * 0.1;  // 10%
-
   const selectedGems = {};
-  let totalSelected = 0;
+  let remaining = targetAmount;
 
   // Helper function to select gems from a category
-  const selectFromCategory = (gems, targetValue) => {
-    let remaining = targetValue;
-    let selected = 0;
+  const selectFromCategory = (gems, maxToSpend) => {
+    let spent = 0;
     
-    while (remaining > 0 && gems.length > 0) {
+    while (remaining > 0 && spent < maxToSpend && gems.length > 0) {
       let foundGem = false;
       
       for (const gem of gems) {
         const currentUsed = selectedGems[gem.type] || 0;
         
-        if (currentUsed < gem.availableQuantity && gem.price <= remaining) {
+        if (currentUsed < gem.availableQuantity && gem.price <= remaining && gem.price <= (maxToSpend - spent)) {
           selectedGems[gem.type] = currentUsed + 1;
           remaining -= gem.price;
-          selected += gem.price;
+          spent += gem.price;
           foundGem = true;
           break;
         }
@@ -166,34 +176,62 @@ export const calculateSmartStrategy = (gemsData, targetAmount) => {
       if (!foundGem) break;
     }
     
-    return selected;
+    return spent;
   };
 
-  // 1. Try to select mid-range gems (60%)
-  totalSelected += selectFromCategory(categorizedGems.mid, targetMid);
+  // FLEXIBLE APPROACH: Try ideal distribution first, then adapt
+  
+  // Phase 1: Try ideal distribution
+  const targetMid = targetAmount * 0.6;   // 60%
+  const targetLow = targetAmount * 0.3;   // 30% 
+  const targetHigh = targetAmount * 0.1;  // 10%
 
-  // 2. Try to select low-range gems (30%)
-  totalSelected += selectFromCategory(categorizedGems.low, targetLow);
+  selectFromCategory(categorizedGems.mid, targetMid);
+  selectFromCategory(categorizedGems.low, targetLow);
+  selectFromCategory(categorizedGems.high, targetHigh);
 
-  // 3. Try to select high-range gems (10%)
-  totalSelected += selectFromCategory(categorizedGems.high, targetHigh);
-
-  // 4. Fill remaining amount with any available gems
-  const remainingAmount = targetAmount - totalSelected;
-  if (remainingAmount > 0) {
-    const allAvailable = [...categorizedGems.mid, ...categorizedGems.low, ...categorizedGems.high]
-      .sort((a, b) => a.price - b.price); // Prefer cheaper gems for filling
+  // Phase 2: If still have remaining amount, use ANY available gems flexibly
+  if (remaining > 0) {
+    // Try all categories in order of preference for Smart: mid first, then low, then high
+    const allGemsOrdered = [
+      ...categorizedGems.mid,
+      ...categorizedGems.low, 
+      ...categorizedGems.high
+    ];
     
-    selectFromCategory(allAvailable, remainingAmount);
+    while (remaining > 0) {
+      let foundGem = false;
+      
+      for (const gem of allGemsOrdered) {
+        const currentUsed = selectedGems[gem.type] || 0;
+        
+        if (currentUsed < gem.availableQuantity && gem.price <= remaining) {
+          selectedGems[gem.type] = currentUsed + 1;
+          remaining -= gem.price;
+          foundGem = true;
+          break;
+        }
+      }
+      
+      if (!foundGem) {
+        // Try to find exact match with any remaining gem
+        for (const gem of allGemsOrdered) {
+          const currentUsed = selectedGems[gem.type] || 0;
+          if (currentUsed < gem.availableQuantity && gem.price === remaining) {
+            selectedGems[gem.type] = currentUsed + 1;
+            remaining = 0;
+            foundGem = true;
+            break;
+          }
+        }
+        
+        if (!foundGem) break;
+      }
+    }
   }
 
-  // Check if we reached the exact target
-  const currentTotal = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
-    const gemInfo = availableGems.find(g => g.type === gemType);
-    return sum + (gemInfo.price * quantity);
-  }, 0);
-
-  if (Math.abs(currentTotal - targetAmount) > 0.01) {
+  // Check if we achieved the exact target
+  if (remaining > 0) {
     return {
       success: false,
       combination: [],
@@ -215,10 +253,12 @@ export const calculateSmartStrategy = (gemsData, targetAmount) => {
     };
   });
 
+  const totalValue = combination.reduce((sum, item) => sum + item.totalValue, 0);
+
   return {
     success: true,
     combination: combination.sort((a, b) => a.price - b.price), // Sort by price for display
-    message: `Smart strategy: Found balanced combination for $${currentTotal.toFixed(2)}`
+    message: `Smart strategy: Found balanced combination for $${totalValue.toFixed(2)}`
   };
 };
 
