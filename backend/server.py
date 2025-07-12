@@ -1809,47 +1809,7 @@ async def gift_gems(
         "new_balance": new_sender_balance
     }
 
-@api_router.post("/gems/calculate-combination", response_model=GemCombinationResponse)
-async def calculate_gem_combination_endpoint(
-    request: GemCombinationRequest,
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Рассчитать точную комбинацию гемов для заданной суммы ставки.
-    
-    Этот endpoint принимает целевую сумму и стратегию подбора гемов,
-    а возвращает точную комбинацию гемов из инвентаря пользователя.
-    """
-    if request.bet_amount <= 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Bet amount must be positive"
-        )
-    
-    if request.bet_amount > 3000:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Bet amount cannot exceed $3000"
-        )
-    
-    # Проверяем, что у пользователя достаточно комиссии для создания ставки
-    user = await db.users.find_one({"id": current_user.id})
-    commission_amount = request.bet_amount * 0.06  # 6% комиссия
-    
-    if user["virtual_balance"] < commission_amount:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Insufficient balance for commission. Required: ${commission_amount:.2f}"
-        )
-    
-    # Вызываем функцию расчета комбинации
-    result = await calculate_gem_combination(
-        user_id=current_user.id,
-        target_amount=request.bet_amount,
-        strategy=request.strategy
-    )
-    
-    return result
+# Endpoint removed - Frontend now handles gem combination logic
 
 @api_router.get("/economy/balance", response_model=dict)
 async def get_economy_balance(current_user: User = Depends(get_current_user)):
