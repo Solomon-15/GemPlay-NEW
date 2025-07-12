@@ -9,15 +9,7 @@ import BattleResultStep from './BattleResultStep';
 // import RevealStep from './RevealStep';
 
 const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
-  // ВРЕМЕННЫЙ ЛОГ ДЛЯ ОТЛАДКИ
-  const debugOnClose = (...args) => {
-    console.log('🚨 JoinBattleModal onClose called!', { 
-      stack: new Error().stack,
-      args,
-      timestamp: new Date().toISOString()
-    });
-    onClose(...args);
-  };
+  // НОВАЯ АСИНХРОННАЯ АРХИТЕКТУРА
   // Проверка обязательных пропсов
   if (!bet || !user || !onClose) {
     console.error('JoinBattleModal: Missing required props', { bet, user, onClose });
@@ -29,24 +21,14 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const COMMISSION_RATE = 0.06; // 6%
   const commissionAmount = targetAmount * COMMISSION_RATE;
 
-  // Состояние модального окна
-  const [currentStep, setCurrentStep] = useState(1);
+  // Простое состояние - только два шага
+  const [currentStep, setCurrentStep] = useState(1); // 1: выбор гемов/хода, 2: результат
   const [loading, setLoading] = useState(false);
-  
-  // Таймер для автозакрытия (60 секунд)
-  const [timeRemaining, setTimeRemaining] = useState(60);
 
-  // Данные шагов
+  // Данные игрока
   const [selectedGems, setSelectedGems] = useState({});
   const [selectedMove, setSelectedMove] = useState('');
   const [battleResult, setBattleResult] = useState(null);
-  
-  // Состояние для анимированного обратного отсчета
-  const [showCountdown, setShowCountdown] = useState(false);
-  const [countdownNumber, setCountdownNumber] = useState(3);
-  
-  // Состояние ожидания результата (polling)
-  const [isWaitingForResult, setIsWaitingForResult] = useState(false);
 
   // Контексты
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
