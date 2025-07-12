@@ -1729,20 +1729,18 @@ async def create_game(
                 }
             )
         
-        # Freeze commission balance
-        new_balance = user["virtual_balance"] - commission_required
+        # Freeze commission balance - ПРАВИЛЬНАЯ ЛОГИКА: НЕ списываем с virtual_balance
         await db.users.update_one(
             {"id": current_user.id},
             {
-                "$set": {
-                    "virtual_balance": new_balance,
-                    "frozen_balance": user["frozen_balance"] + commission_required,
-                    "updated_at": datetime.utcnow()
-                }
+                "$inc": {
+                    "frozen_balance": commission_required  # Только увеличиваем frozen_balance
+                },
+                "$set": {"updated_at": datetime.utcnow()}
             }
         )
         
-        logger.info(f"💰 User virtual_balance after: ${new_balance}")
+        logger.info(f"💰 User virtual_balance after: ${user['virtual_balance']} (UNCHANGED)")
         logger.info(f"💰 User frozen_balance after: ${user['frozen_balance'] + commission_required}")
         logger.info(f"💰 Commission frozen: ${commission_required}")
 
