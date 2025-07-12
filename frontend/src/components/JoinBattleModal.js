@@ -360,13 +360,16 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const startBattle = async () => {
     setLoading(true);
     
+    // Проверяем и очищаем зависшие игры пользователя
     try {
-      // Проверяем и очищаем зависшие игры пользователя
       await checkAndClearUserGames();
-      
-      // Показываем анимированный обратный отсчет 3-2-1
-      setShowCountdown(true);
-      setCountdownNumber(3);
+    } catch (error) {
+      console.warn('⚠️ Could not clear user games, continuing anyway:', error);
+    }
+    
+    // Показываем анимированный обратный отсчет 3-2-1
+    setShowCountdown(true);
+    setCountdownNumber(3);
     
     // Обратный отсчет с анимацией
     await new Promise(resolve => {
