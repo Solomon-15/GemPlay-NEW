@@ -318,23 +318,71 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     );
   }
 
-  // Навигация между шагами
-  const goToNextStep = () => {
-    if (currentStep === 2) {
-      // На втором шаге "Start Battle!" должен запустить битву
-      startBattle();
-    } else if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
-      // Сбрасываем таймер при переходе на новый шаг
-      setTimeRemaining(60);
-    }
-  };
-
-  const goToPrevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-      // Сбрасываем таймер при возврате на предыдущий шаг
-      setTimeRemaining(60);
+  // НОВАЯ АСИНХРОННАЯ ЛОГИКА ПРИСОЕДИНЕНИЯ К БИТВЕ
+  const joinBattle = async () => {
+    setLoading(true);
+    
+    try {
+      console.log('🎮 === ASYNC BATTLE JOIN ===');
+      console.log('🎮 Joining battle:', {
+        gameId: bet.id,
+        selectedMove: selectedMove,
+        selectedGems: selectedGems,
+        userId: user.id
+      });
+      
+      // Присоединяемся к игре - система автоматически определит результат
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          move: selectedMove,
+          gems: selectedGems
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
+      }
+      
+      const result = await response.json();
+      
+      console.log('🎮 Battle result:', result);
+      
+      // Определяем результат битвы
+      const battleOutcome = result.winner_id === user.id ? 'win' : 
+                           (result.winner_id ? 'lose' : 'draw');
+      
+      // Сохраняем результат битвы
+      setBattleResult({
+        result: battleOutcome,
+        opponentMove: result.creator_move,
+        gameData: result
+      });
+      
+      // Обновляем инвентарь и данные пользователя
+      await refreshInventory();
+      if (onUpdateUser) {
+        onUpdateUser();
+      }
+      
+      // Переходим к результату
+      setCurrentStep(2);
+      
+      // Показываем уведомление о результате
+      const resultText = battleOutcome === 'win' ? 'Victory!' : 
+                        (battleOutcome === 'lose' ? 'Defeat!' : 'Draw!');
+      showSuccess(`Battle completed! ${resultText}`);
+      
+    } catch (error) {
+      console.error('🚨 Battle join error:', error);
+      showError(error.message || 'Ошибка при присоединении к битве');
+    } finally {
+      setLoading(false);
     }
   };
 
