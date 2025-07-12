@@ -115,10 +115,61 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
+  // Валидация перед запуском битвы
+  const validateBeforeBattle = () => {
+    // Проверяем выбор хода
+    if (!selectedMove) {
+      showError('Please select your move');
+      return false;
+    }
+    
+    // Проверяем выбор гемов
+    if (Object.keys(selectedGems).length === 0) {
+      showError('Please select gems to match opponent\'s bet');
+      return false;
+    }
+    
+    // Проверяем точность суммы гемов
+    const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
+      const gem = gemsData.find(g => g.type === gemType);
+      return sum + (gem ? gem.price * quantity : 0);
+    }, 0);
+    
+    if (Math.abs(totalGemValue - targetAmount) > 0.01) {
+      showError(`Selected gems value ($${totalGemValue.toFixed(2)}) must match opponent's bet ($${targetAmount.toFixed(2)})`);
+      return false;
+    }
+    
+    // Проверяем доступность гемов в инвентаре
+    for (const [gemType, quantity] of Object.entries(selectedGems)) {
+      const gem = gemsData.find(g => g.type === gemType);
+      if (!gem) {
+        showError(`Invalid gem type: ${gemType}`);
+        return false;
+      }
+      
+      if (gem.available_quantity < quantity) {
+        showError(`Insufficient ${gem.name} gems. Available: ${gem.available_quantity}, Required: ${quantity}`);
+        return false;
+      }
+    }
+    
+    // Проверяем комиссию
+    const commissionRequired = targetAmount * 0.06;
+    const availableBalance = (user?.virtual_balance || 0) - (user?.frozen_balance || 0);
+    
+    if (availableBalance < commissionRequired) {
+      showError(`Insufficient balance for commission. Required: $${commissionRequired.toFixed(2)}, Available: $${availableBalance.toFixed(2)}`);
+      return false;
+    }
+    
+    return true;
+  };
+
   // Запуск битвы с анимированным обратным отсчетом 3-2-1
   const startBattle = async () => {
-    if (!selectedMove || Object.keys(selectedGems).length === 0) {
-      showError('Please select gems and choose your move');
+    // ВАЛИДАЦИЯ ДО COUNTDOWN - ЭТО КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ
+    if (!validateBeforeBattle()) {
       return;
     }
     
