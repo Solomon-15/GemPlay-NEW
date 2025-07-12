@@ -148,7 +148,7 @@ const Inventory = ({ user, onUpdateUser }) => {
       balance: {
         total: virtualBalance,
         frozen: frozenBalance,
-        available: virtualBalance  // ИСПРАВЛЕНО: virtualBalance уже учитывает замороженные средства
+        available: virtualBalance - frozenBalance  // ИСПРАВЛЕНО: правильная формула Available
       },
       gems: {
         totalCount: totalGemsCount,
