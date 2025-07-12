@@ -451,7 +451,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         </div>
 
         {/* Time Warning - показываем когда остается мало времени */}
-        {currentStep === 1 && timeRemaining <= 15 && (
+        {currentStep <= 2 && timeRemaining <= 15 && (
           <div className="px-4 py-2 bg-red-900 bg-opacity-20 border-b border-red-600">
             <div className="flex items-center space-x-2 text-red-400">
               <svg className="w-4 h-4 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
