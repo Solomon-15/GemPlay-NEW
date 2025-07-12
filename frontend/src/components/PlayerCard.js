@@ -178,9 +178,9 @@ const PlayerCard = ({
         </div>
       </div>
 
-      {/* Accept Bet Modal */}
+      {/* Join Battle Modal */}
       {showAcceptModal && (
-        <AcceptBetModal
+        <JoinBattleModal
           bet={{
             id: game.game_id || game.id,
             bet_amount: totalAmount,
