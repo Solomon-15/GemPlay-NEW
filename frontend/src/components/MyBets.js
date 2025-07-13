@@ -66,24 +66,24 @@ const MyBets = ({ user }) => {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-accent rounded-full flex items-center justify-center">
-            <span className="font-russo text-white">#{bet.id.slice(-4)}</span>
+            <span className="font-russo text-white">#{bet.id ? bet.id.slice(-4) : 'N/A'}</span>
           </div>
           <div>
-            <h4 className="font-rajdhani font-bold text-white">Game #{bet.id.substring(0, 8)}</h4>
+            <h4 className="font-rajdhani font-bold text-white">Game #{bet.id ? bet.id.substring(0, 8) : 'Unknown'}</h4>
             <p className="font-roboto text-xs text-text-secondary">
-              {new Date(bet.created_at).toLocaleString()}
+              {bet.created_at ? new Date(bet.created_at).toLocaleString() : 'Unknown date'}
             </p>
           </div>
         </div>
-        <span className={`px-3 py-1 text-xs rounded-full font-rajdhani font-bold ${getStatusColor(bet.status)}`}>
-          {bet.status}
+        <span className={`px-3 py-1 text-xs rounded-full font-rajdhani font-bold ${getStatusColor(bet.status || 'UNKNOWN')}`}>
+          {bet.status || 'UNKNOWN'}
         </span>
       </div>
       
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <span className="font-roboto text-text-secondary text-sm">Bet Amount:</span>
-          <p className="font-rajdhani text-green-400 font-bold">${bet.bet_amount}</p>
+          <p className="font-rajdhani text-green-400 font-bold">${bet.bet_amount || '0'}</p>
         </div>
         <div>
           <span className="font-roboto text-text-secondary text-sm">Opponent:</span>
@@ -94,11 +94,14 @@ const MyBets = ({ user }) => {
       <div className="mb-4">
         <span className="font-roboto text-text-secondary text-sm">Gems:</span>
         <p className="font-rajdhani text-white text-sm">
-          {Object.entries(bet.bet_gems || {}).map(([type, qty]) => `${type}: ${qty}`).join(', ')}
+          {bet.bet_gems && Object.keys(bet.bet_gems).length > 0 
+            ? Object.entries(bet.bet_gems).map(([type, qty]) => `${type}: ${qty}`).join(', ')
+            : 'No gems'
+          }
         </p>
       </div>
       
-      {bet.status === 'COMPLETED' && user && (
+      {bet.status === 'COMPLETED' && user && bet.winner_id && (
         <div className="pt-3 border-t border-accent-primary border-opacity-30">
           <div className="flex justify-between items-center">
             <span className="font-roboto text-text-secondary">Result:</span>
