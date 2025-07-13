@@ -5170,6 +5170,120 @@ async def delete_user_gems(
             detail="Failed to delete user gems"
         )
 
+@api_router.post("/admin/users/{user_id}/gems/modify", response_model=dict)
+async def modify_user_gems(
+    user_id: str,
+    modify_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Modify (increase/decrease) specific gems for a user (admin only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        gem_type = modify_data.get("gem_type")
+        change = modify_data.get("change", 0)  # positive to increase, negative to decrease
+        reason = modify_data.get("reason", "Admin action")
+        notification_message = modify_data.get("notification", "")
+        
+        if change == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Change amount must not be zero"
+            )
+        
+        # Get user's gem data
+        user_gem = await db.user_gems.find_one({"user_id": user_id, "gem_type": gem_type})
+        
+        if change < 0:  # Decreasing gems
+            if not user_gem or user_gem.get("quantity", 0) < abs(change):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Insufficient gems to decrease"
+                )
+            
+            # Check if trying to decrease below frozen amount
+            frozen_quantity = user_gem.get("frozen_quantity", 0)
+            new_total = user_gem.get("quantity", 0) + change
+            if new_total < frozen_quantity:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot decrease below frozen amount"
+                )
+        
+        # Apply the change
+        if not user_gem and change > 0:
+            # Create new gem entry
+            new_gem = {
+                "user_id": user_id,
+                "gem_type": gem_type,
+                "quantity": change,
+                "frozen_quantity": 0,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            await db.user_gems.insert_one(new_gem)
+        else:
+            # Update existing gem
+            new_quantity = user_gem.get("quantity", 0) + change
+            if new_quantity <= 0:
+                await db.user_gems.delete_one({"user_id": user_id, "gem_type": gem_type})
+            else:
+                await db.user_gems.update_one(
+                    {"user_id": user_id, "gem_type": gem_type},
+                    {
+                        "$inc": {"quantity": change},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="MODIFY_USER_GEMS",
+            target_type="user_gems",
+            target_id=user_id,
+            details={
+                "gem_type": gem_type,
+                "change": change,
+                "reason": reason
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        # Send notification to user
+        action_word = "добавил" if change > 0 else "удалил"
+        default_message = f"Администратор {action_word} {abs(change)} {gem_type} гемов"
+        
+        notification = Notification(
+            user_id=user_id,
+            type="ADMIN_ACTION",
+            title="Изменение гемов",
+            message=notification_message or default_message
+        )
+        await db.notifications.insert_one(notification.dict())
+        
+        return {
+            "message": f"Successfully modified {gem_type} gems by {change}",
+            "gem_type": gem_type,
+            "change": change,
+            "reason": reason
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error modifying user gems: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to modify user gems"
+        )
+
 @api_router.post("/admin/users/{user_id}/flag-suspicious", response_model=dict)
 async def flag_user_suspicious(
     user_id: str,
