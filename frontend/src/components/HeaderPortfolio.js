@@ -135,7 +135,7 @@ const HeaderPortfolio = ({ user }) => {
           </div>
           {portfolioData.gems.frozenCount > 0 && (
             <div className="text-xs text-orange-400 hidden sm:block">
-              Frozen: {formatNumber(portfolioData.gems.frozenCount)}
+              Frozen: {formatNumber(portfolioData.gems.frozenCount)}/{formatNumber(portfolioData.gems.frozenValue)}
             </div>
           )}
           <div className="text-xs text-text-secondary hidden md:block">
