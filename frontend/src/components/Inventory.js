@@ -123,7 +123,7 @@ const Inventory = ({ user, onUpdateUser }) => {
     const availableQuantity = gem.quantity - gem.frozen_quantity;
     
     if (quantity > availableQuantity) {
-      showError('Нельзя подарить больше гемов, чем доступно');
+      showError('Cannot gift more gems than available');
       return;
     }
 
