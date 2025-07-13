@@ -121,7 +121,7 @@ const UserManagement = ({ user: currentUser }) => {
     const statusMap = {
       'ACTIVE': { color: 'bg-green-600', text: 'Активен' },
       'BANNED': { color: 'bg-red-600', text: 'Заблокирован' },
-      'EMAIL_PENDING': { color: 'bg-yellow-600', text: 'Ожидает подтверждения' }
+      'EMAIL_PENDING': { color: 'bg-yellow-600', text: 'Ожидает подтв.' }
     };
     
     const statusInfo = statusMap[status] || { color: 'bg-gray-600', text: status };
