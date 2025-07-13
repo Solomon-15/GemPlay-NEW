@@ -483,41 +483,17 @@ const Inventory = ({ user, onUpdateUser }) => {
         )}
       </div>
 
-      {/* Gift Modal */}
-      {giftingGem && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-card border border-border-primary rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="font-russo text-xl text-white mb-4">Gift Gems</h3>
-            <div className="mb-4">
-              <label className="font-roboto text-text-secondary text-sm block mb-2">
-                Recipient Email:
-              </label>
-              <input
-                type="email"
-                value={recipientEmail}
-                onChange={(e) => setRecipientEmail(e.target.value)}
-                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-                placeholder="Enter email address"
-              />
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setGiftingGem(null)}
-                className="flex-1 py-2 px-4 bg-gray-600 text-white rounded-lg font-rajdhani font-bold hover:bg-gray-700 transition-colors"
-              >
-                CANCEL
-              </button>
-              <button
-                onClick={() => handleGiftGem(giftingGem)}
-                disabled={!recipientEmail.trim()}
-                className="flex-1 py-2 px-4 bg-accent-primary text-white rounded-lg font-rajdhani font-bold hover:bg-accent-secondary transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
-              >
-                SEND GIFT
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Gift Confirmation Modal */}
+      <GiftConfirmationModal
+        isOpen={showGiftModal}
+        onClose={() => setShowGiftModal(false)}
+        gemType={selectedGemForGift?.gemType}
+        quantity={selectedGemForGift?.quantity}
+        gemPrice={selectedGemForGift?.gemPrice}
+        senderName={user?.username}
+        senderEmail={user?.email}
+        onGiftSuccess={handleGiftSuccess}
+      />
     </div>
   );
 };
