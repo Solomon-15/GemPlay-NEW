@@ -335,7 +335,7 @@ function App() {
                   <MyBets user={user} onUpdateUser={checkAuthStatus} />
                 )}
                 {currentView === 'profile' && (
-                  <Profile user={user} onUpdateUser={checkAuthStatus} />
+                  <Profile user={user} onUpdateUser={checkAuthStatus} setCurrentView={setCurrentView} />
                 )}
                 {currentView === 'shop' && (
                   <Shop user={user} onUpdateUser={checkAuthStatus} />
