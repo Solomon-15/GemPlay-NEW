@@ -301,9 +301,9 @@ function App() {
                   {/* Mobile: Empty space */}
                   <div className="md:hidden"></div>
 
-                  {/* Desktop: Balance Display */}
+                  {/* Desktop: Header Portfolio */}
                   <div className="hidden md:block">
-                    <BalanceDisplay user={user} onUpdateUser={checkAuthStatus} />
+                    <HeaderPortfolio user={user} />
                   </div>
 
                   {/* Mobile: Profile Avatar */}
