@@ -282,8 +282,8 @@ function App() {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-h-screen">
-              {/* Top Bar */}
-              <nav className="bg-surface-sidebar border-b border-border-primary p-4 flex-shrink-0">
+              {/* Top Bar - Sticky Header */}
+              <nav className="sticky top-0 z-40 bg-surface-sidebar border-b border-border-primary p-4 flex-shrink-0">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     {/* Mobile Menu Button */}
