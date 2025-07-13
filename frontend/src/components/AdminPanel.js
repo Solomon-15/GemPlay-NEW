@@ -493,7 +493,7 @@ const AdminPanel = ({ user, onClose }) => {
       case 'dashboard':
         return <DashboardContent />;
       case 'users':
-        return <UserManagement />;
+        return <UserManagement user={user} />;
       case 'bots':
         return <div className="text-white">Управление ботами (в разработке)</div>;
       case 'games':
