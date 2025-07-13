@@ -323,7 +323,9 @@ function App() {
               </nav>
 
               {/* Page Content */}
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto pb-20 md:pb-0">
+                {/* Mobile responsive wrapper */}
+                <div className="min-w-0 px-4 md:px-0">
                 {currentView === 'lobby' && (
                   <Lobby user={user} onUpdateUser={checkAuthStatus} setCurrentView={setCurrentView} />
                 )}
