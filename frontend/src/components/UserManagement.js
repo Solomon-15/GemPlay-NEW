@@ -1111,18 +1111,26 @@ const UserManagement = ({ user: currentUser }) => {
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-1">
                           {/* Suspicious Activity Flag */}
-                          {suspiciousFlags.length > 0 && (
-                            <div className="relative group">
-                              <button className="p-1 bg-red-600 text-white rounded hover:bg-red-700" title="Подозрительная активность">
-                                🚩
-                              </button>
+                          <div className="relative group">
+                            <button 
+                              onClick={() => handleToggleSuspicious(user, 'Admin manual flag')}
+                              className={`p-1 text-white rounded hover:opacity-80 ${
+                                suspiciousFlags.length > 0 
+                                  ? 'bg-red-600 hover:bg-red-700' 
+                                  : 'bg-gray-600 hover:bg-gray-700 opacity-50'
+                              }`}
+                              title={suspiciousFlags.length > 0 ? "Снять флаг подозрительности" : "Отметить как подозрительного"}
+                            >
+                              🚩
+                            </button>
+                            {suspiciousFlags.length > 0 && (
                               <div className="absolute bottom-full left-0 mb-2 w-48 bg-red-900 border border-red-500 rounded-lg p-2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
                                 {suspiciousFlags.map((flag, idx) => (
                                   <div key={idx}>{flag.message}</div>
                                 ))}
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
 
                           {/* Info Button */}
                           <button
