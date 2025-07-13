@@ -42,19 +42,18 @@ const PlayerCard = ({
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
-  // Get card background color based on time remaining
+  // Get card background color based on game status and type
   const getCardBackground = () => {
-    if (!game.created_at) return 'bg-surface-card border-border-primary';
+    // Основной фон для всех карточек - тёмно-синий мистический
+    const baseBackground = 'bg-[#09295e]';
     
-    const createdTime = new Date(game.created_at);
-    const cancelTime = new Date(createdTime.getTime() + 24 * 60 * 60 * 1000);
-    const now = currentTime;
-    const diff = cancelTime - now;
-    const hoursRemaining = diff / (1000 * 60 * 60);
+    // Если это карточка в процессе игры (ACTIVE status для создателя)
+    if (isMyBet && game.status === 'ACTIVE') {
+      return `bg-[#23233e] border-[#23d364] border-opacity-40 hover:border-opacity-60`;
+    }
     
-    if (hoursRemaining <= 1) return 'bg-red-900/20 border-red-500/50';
-    if (hoursRemaining <= 3) return 'bg-yellow-900/20 border-yellow-500/50';
-    return 'bg-surface-card border-border-primary';
+    // Стандартное оформление с зелёной рамкой
+    return `${baseBackground} border-[#23d364] border-opacity-30 hover:border-opacity-50`;
   };
 
   // Format username to max 15 characters
