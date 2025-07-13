@@ -1,121 +1,120 @@
 <analysis>
-The previous AI engineer's work on the GemPlay application involved a series of intricate bug fixes and feature enhancements. Initially, the focus was on refining the Join Battle modal, including state management and integrating game timers and result screens. A significant architectural shift involved moving to an asynchronous commit-reveal PvP game logic, eliminating client-side polling. The engineer then tackled a critical set of issues: first, rectifying the Gem Selection algorithms for Small, Smart, and Big strategies, transitioning the logic from backend to frontend and implementing dynamic programming for robustness. Subsequently, errors related to joining games, specifically incorrect gem validation and Failed to join game errors, were addressed by correcting backend validation and data storage. The most extensive debugging centered on a double commission charge, which required a deep dive into backend transaction logic and frontend balance display. This led to a crucial redefinition of how , , and  are handled and displayed. Finally, UI/UX improvements unified balance displays and refined gem inventory formatting. Each phase involved detailed code inspection, iterative fixes, and validation via screenshots, indicating a thorough problem-solving trajectory.
+The previous AI engineer's trajectory on the GemPlay application involved a sequence of significant bug fixes and feature enhancements, transforming it from an MVP to a more robust and feature-rich platform. Initially, the engineer resolved a critical double commission exploit, ensuring correct balance handling upon bet creation and cancellation. This was followed by implementing a real-time update system for the Lobby, crucial for UX responsiveness. Extensive UI/UX refinements included header modifications, sidebar reordering, and the removal of deprecated elements. A major mobile adaptation was undertaken, redesigning the header and navigation for smaller screens. The admin panel received full Russian localization and a new, detailed profit metrics dashboard. A complete user-to-user gem gifting system was built, incorporating commission tracking and notifications. The final task initiated was activating and integrating a real-time notification bell for user alerts.
 </analysis>
 
 <product_requirements>
-GemPlay is an asynchronous PvP game where players bet virtual gems. The application aims to provide a seamless betting and battle experience.
+GemPlay is an asynchronous PvP game where players bet virtual gems. The initial requirements focused on a 3-step Join Battle modal with timers and results, asynchronous commit-reveal PvP logic, and three distinct gem selection algorithms (Small, Smart, Big) moved to the frontend with robust validation. A core need was accurate balance display (Balance, Frozen, Available) and correct commission handling (6% of bet, frozen on creation, processed on completion).
 
-**Key Features and Requirements:**
-1.  **Join Battle Modal:**
-    *   Opens from Available Bets.
-    *   Includes a 1-minute auto-close timer (red at 15s).
-    *   Ensures no unexpected closures during interaction.
-    *   Features a 3-2-1 countdown before battle results.
-    *   Battle Result screen with a 30-second auto-close, showing winner/loser, chosen moves, and financial summary (gems/dollars, commission) with themed designs.
-    *   Revised to a 3-step process: Gem Selection, Move Selection, Battle Result.
-2.  **Asynchronous PvP Game Logic (Commit-Reveal):**
-    *   Player A creates a bet, chooses a move, and commits a hash (SHA-256). Player A can go offline.
-    *   Player B accepts, selects gems/move.
-    *   System automatically determines result based on revealed moves, updating balances. Draws return gems.
-    *   All actions logged, Player A can view results later.
-3.  **Gem Selection Algorithms (Small, Smart, Big):**
-    *   **Small:** Prioritizes cheaper gems (Ruby, Amber, etc.), picking from low to high prices, respecting inventory.
-    *   **Smart:** Balanced mix (~60% mid, ~30% low, ~10% high *by cost*), adapting to available gems. Mid-range (Topaz, Emerald, Aquamarine), Low-range (Ruby, Amber), High-range (Sapphire, Magic).
-    *   **Big:** Prioritizes expensive gems (Magic, Sapphire, Aquamarine, etc.), picking high to low prices, aiming for minimal quantity.
-    *   All combinations must strictly use gems from inventory, stop if the exact bet amount cannot be met, and show an error message (Not enough gems in inventory to form this bet. Please adjust your balance or select manually.) if the full sum is unattainable.
-    *   Logic for these algorithms moved entirely to the frontend.
-4.  **Accurate Balance Display & Commission Handling:**
-    *   Frontend displays Balance (total virtual dollars), Frozen (commission/bet in play), and Available ().
-    *   No double deduction of commission. Commission (6% of bet) is frozen upon bet creation, then processed (deducted for winner, returned for loser/draw) from the frozen amount upon game completion.
-    *   Available and Balance UI elements unified to avoid user confusion.
-    *   Total portfolio value block should be present.
-    *   Gems block formatted as Count/Value (e.g., 42/2,732).
+Subsequent requirements included:
+- Real-time Lobby updates for all game/balance operations.
+- UI/UX refinements: repositioning 'Logout' to Sidebar, removing 'Daily Bonus', reordering Sidebar items, changing 'Lobby' icon, and adding toast notifications for gem sales.
+- Header made sticky.
+- Full mobile adaptation for widths 360px+: empty header on mobile, desktop header only shows titles, bottom fixed navigation for 5 key sections, 'Profile' moved to a header avatar on mobile, containing other sections.
+- Removal of Made with Emergent badge.
+- Header redesign to integrate compact 'Balance', 'Gems', and 'Total' blocks from 'Inventory' with reduced height and specific mobile display.
+- Backend endpoint to reset all user balances and gems (admin function).
+- Full Russian localization of the admin panel.
+- Enhanced Profit section in admin panel with detailed, real-time metrics for 'Commissions from Bets', 'Gifts', 'Bot Revenue', 'Frozen Funds', 'Total Profit', 'Expenses', and 'Net Profit'.
+- User-to-user gem gifting via 'Inventory': search by email/name, non-frozen gems only, confirmation modal with commission (3% from sender's balance), and notifications.
+- Activation of a real-time notification system via a bell icon.
 </product_requirements>
 
 <key_technical_concepts>
--   **React Components**: Functional components (, , ).
--   **State Management**: Local component state, React Context API ().
--   **API Integration**: FastAPI backend,  for HTTP requests.
--   **Frontend Styling**: Tailwind CSS (implied by typical React setup).
--   **Asynchronous PvP**: Game logic independent of player presence using a commit-reveal scheme.
--   **Commit-Reveal Principle**:  for fair, asynchronous play.
--   **Dynamic Programming (DP)**: Used in frontend gem combination algorithms for robust solution finding.
--   **MongoDB**: Backend database for storing game and user data.
+-   **React Components & Hooks**: , , , custom hooks ().
+-   **State Management**: React Context API (, ).
+-   **API Integration**: FastAPI backend,  for HTTP requests, new admin endpoints.
+-   **Asynchronous PvP**: Commit-reveal game logic.
+-   **Dynamic Programming**: Gem combination algorithms.
+-   **MongoDB**: Backend data storage.
+-   **Responsive Design**: Tailwind CSS for mobile-first UI adaptation.
+-   **Localization**: Multi-language support for Admin Panel.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a standard React frontend with a FastAPI backend and MongoDB.
+The application follows a standard React frontend with a FastAPI backend and MongoDB.
 
 
 
 -   :
-    *   **Importance**: Main FastAPI backend file, handles API endpoints, game logic, user management, and economy.
-    *   **Changes Made**:
-        *   **Deleted/Refactored**:  and  functions, along with , , ,  models. The gem combination logic was moved to the frontend.
-        *   **Modified **: Initially checked creator's gems; updated to check the joining player's  for validation and freezing. Added  to  model.
-        *   **Modified **: Fixed double commission deduction logic for winner, corrected return of commission for loser/draw, ensuring correct unfreezing and profit recording. Corrected commission calculation from 3% of total pot to 6% of player's bet amount.
-        *   **Modified **: Crucially fixed the commission handling upon bet creation. Instead of reducing  by the commission amount and then adding it to  (which effectively reduced  as perceived by the user), it now *only* increments  by the commission amount, leaving  unchanged at this stage.
-        *   **Modified  endpoint**: Updated to return clearer , , and  for frontend consumption.
+    *   **Importance**: Main FastAPI backend, handles API, game logic, user management, economy.
+    *   **Changes Made**:  and  fixed for commission logic (no double deduction).  updated for validation. New admin endpoint  for user data reset.  updated to return detailed profit metrics. Gift  endpoint added.  updated for detailed notifications.
 -   :
-    *   **Importance**: Original modal for accepting bets.
-    *   **Changes Made**: Deleted, replaced by .
+    *   **Importance**: Root component, manages routing, global state, and main layout.
+    *   **Changes Made**: Integrated ,  (later ), , etc. Modified for sticky header, mobile header visibility (removed content for mobile, kept titles for desktop). Removed  and  buttons from header. Passes  to  and  to . Removed  function. Adjusted content wrapper for mobile padding.
 -   :
-    *   **Importance**: Central component for the battle join process, orchestrating the 3-step flow.
-    *   **Changes Made**: Replaced . Initially included polling, then refactored for asynchronous commit-reveal. Significantly restructured into a 3-step architecture (Gem Selection, Move Selection, Battle Result). Updated to integrate new frontend-only gem combination algorithms. Added client-side validation for moves, gems, amount, inventory, and commission *before* the 3-2-1 countdown. Updated to reflect unified balance display logic.
+    *   **Importance**: Displays available bets and user's games.
+    *   **Changes Made**: Integrated  hook for real-time updates after various game operations (create, join, cancel).
 -   :
-    *   **Importance**: Modal for creating new bets, including gem selection.
-    *   **Changes Made**: Fully rewritten to integrate the new frontend-only gem combination algorithms (Small, Smart, Big). Updated to use the unified balance display logic.
+    *   **Importance**: Modal for creating new bets.
+    *   **Changes Made**: Integrated  to trigger real-time updates after a bet is successfully created.
 -   :
-    *   **Importance**: Step 1 in  and  for gem selection.
-    *   **Changes Made**: Created from scratch. Updated to use new frontend-only gem combination algorithms, supporting manual/auto selection and quantity changes.
+    *   **Importance**: Modal for joining existing bets.
+    *   **Changes Made**: Integrated  to trigger real-time updates after joining a battle.
 -   :
-    *   **Importance**: Step 2 in  for choosing RPS.
-    *   **Changes Made**: Created from scratch.
+    *   **Importance**: Component for buying gems.
+    *   **Changes Made**: Integrated  and  refresh to ensure Lobby, , and  update automatically after gem purchases.
 -   :
-    *   **Importance**: Step 3 in  for displaying battle outcome.
-    *   **Changes Made**: Created from scratch to show victory/defeat/draw, moves, and financial summary.
+    *   **Importance**: Displays user's gems and allows selling/gifting.
+    *   **Changes Made**: Integrated  for updates after selling/gifting gems. Implemented full gifting flow using , replaced old gifting logic, and added toast notifications for gem sales. All error messages localized to English for the gift modal.
 -   :
-    *   **Importance**: Displays player bets, contains Accept button.
-    *   **Changes Made**: Fixed  causing modal closure.  state removed, modal opening responsibility hoisted to .
+    *   **Importance**: User profile page.
+    *   **Changes Made**: Integrated  for updates after adding balance. Modified to display additional menu items (History, Notifications) on mobile, accessible from a profile avatar in the header. Changed  to .
 -   :
-    *   **Importance**: Main lobby component, orchestrates modal opening.
-    *   **Changes Made**:  state hoisted here, managing modal visibility and selected bet.
+    *   **Importance**: Main navigation menu.
+    *   **Changes Made**: Rearranged menu items ( moved below ). Changed  icon to 'home'. Added  button to the bottom, passed  prop. Hidden on mobile (). Will integrate .
 -   :
-    *   **Importance**: Provides gem inventory data.
-    *   **Changes Made**: Debug logs added.
+    *   **Importance**: Displays user's balance in header.
+    *   **Changes Made**: Refactored to unify balance display (Balance, Frozen, Available). Later replaced by . Updated to use  and refresh from .
 -   :
-    *   **Importance**: Displays user's balance in the application header.
-    *   **Changes Made**: Significantly refactored to unify the display of Balance (total virtual dollars), Frozen (committed funds), and Available (spendable funds) in a single coherent block. Previously, Balance only showed available funds, causing user confusion.
+    *   **Importance**: Provides gem inventory data via context.
+    *   **Changes Made**: Added  function and integrated it with  to ensure real-time updates for gem data across components.
 -   :
-    *   **Importance**: Displays a detailed breakdown of user's financial assets (money and gems).
-    *   **Changes Made**: Unified Available and Balance into a single Balance block, reflecting the same // breakdown as the header. The Total block was restored after a temporary removal. The Gems block formatting was updated from two separate lines to a compact Count/Value format (e.g., 42/2,732).
+    *   **Importance**: Contains gem selection logic.
+    *   **Changes Made**: (No direct changes in this trajectory, but mentioned as previously moved to frontend).
 -   :
-    *   **Importance**: New utility file containing the core logic for the Small, Smart, and Big gem selection strategies.
-    *   **Changes Made**: Created from scratch. Implemented greedy algorithms with precise sorting (ascending for Small, descending for Big) and a robust Dynamic Programming (DP) fallback for complex scenarios, ensuring strict adherence to inventory limits and exact bet amount matching or explicit error messaging.
+    *   **Importance**: Main HTML file.
+    *   **Changes Made**: Removed the Made with Emergent badge element.
+-   :
+    *   **Importance**: Main admin interface.
+    *   **Changes Made**: Fully localized to Russian, including menu items, statistics, dangerous actions, buttons, and loading messages.
+-   :
+    *   **Importance**: Admin component for user management.
+    *   **Changes Made**: Partially localized (some existing localization, but also new strings localized as part of the overall admin panel effort).
+-   :
+    *   **Importance**: Admin component for tracking profit.
+    *   **Changes Made**: Fully localized to Russian. Significant overhaul to display new profit metric tiles (Commissions from Bets/Gifts, Bot Revenue, Frozen Funds, Total Profit, Expenses, Net Profit) with specific styling and dynamic data fetching from updated backend API.
+-   :
+    *   **Importance**: Admin component for security alerts.
+    *   **Changes Made**: Fully localized to Russian.
+-    (NEW):
+    *   **Importance**: Dedicated modal for confirming gem gifts between users.
+    *   **Changes Made**: Created from scratch to display sender/recipient, gem details, value, commission, and warnings. Fully translated to English.
+-    (NEW):
+    *   **Importance**: Replaces  in the header, displaying compact 'Balance', 'Gems', and 'Total' blocks.
+    *   **Changes Made**: Created from scratch, integrated into  and . Adapted for compact display, removed Available text (keeping numbers), and added thin green borders. Made visible on mobile.
+-    (NEW):
+    *   **Importance**: Custom hook for triggering global data refresh.
+    *   **Changes Made**: Created from scratch, implemented  function and  for memoization. Integrated across various components.
+-    (NEW):
+    *   **Importance**: Component for displaying notifications via a bell icon.
+    *   **Changes Made**: Created from scratch. (Work in progress to integrate with backend and ).
 </code_architecture>
 
 <pending_tasks>
-- There are no explicitly pending tasks from the trajectory that were left unaddressed. The last problem regarding the double commission charge was marked as fully solved.
+-   **Activate Notification Bell**: The implementation of the notification bell and its integration with the backend notification system is currently in progress.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the previous AI engineer was focused on resolving a critical double commission charge issue, specifically when creating a bet. The user reported that upon creating a bet, 6% commission was deducted from their , and another 6% was also reflected as 'frozen', leading to a perceived 12% deduction from their main balance, with a further deduction on game completion.
+Immediately before this summary, the AI engineer was tasked with activating the notification bell and ensuring notifications arrive via it, specifically the request Активируй колокольчик, пусть уведомление приходит на колокольчик. Не тестируй.
 
-The problem was pinpointed to a misunderstanding in how , , and  were handled both on the backend and displayed on the frontend.
-**Backend ():**
-The  function was initially reducing the  by the commission amount and *also* adding the commission amount to the . This effectively removed the commission from the  twice from the user's perspective when combined with frontend display. The engineer corrected this so that upon bet creation, the  *remains unchanged*, and *only* the  is incremented by the commission amount. This represents a transfer of funds into a frozen state, not a deduction from the overall .
+The work initiated for this task includes:
+1.  **Backend API for Notifications**: A new endpoint () was added to  to retrieve user notifications. This endpoint handles fetching unread notifications and marking them as read.
+2.  **Frontend Component Creation**: A new React component, , was created. This component is intended to display the bell icon, potentially with a count of unread notifications, and handle the interaction for viewing them.
+3.  **Sidebar Integration**: The  component was being updated to incorporate the new  component. The last action in the trajectory was the start of this integration, specifically updating the  file.
 
-**Frontend ( and ):**
-The frontend components were incorrectly calculating the Available balance. If the  was already reduced by the commission on the backend (as it was before the fix), and the frontend then further subtracted the  from this already-reduced , it created a perceived double deduction. The fix involved ensuring that the frontend correctly calculates  as , where  now consistently reflects the user's total funds, unimpacted by mere freezing.
-
-The  in the header and  now correctly show:
--   **Balance:** The full  (e.g., ,551.76).
--   **Frozen:** The amount frozen for commissions/bets (e.g., 0).
--   **Available:**  (e.g., ,491.76).
-
-This ensures that the  displayed as Balance remains full, and the Available balance accurately reflects the liquid funds after accounting for frozen amounts. The problem was confirmed as fully resolved based on the final screenshots showing the correct numbers and logic.
+The current state is that the backend API for notifications exists, the  component has been created, and the integration into  has begun. The full functionality of fetching and displaying notifications through the bell, and managing their read/unread status, is still under development.
 </current_work>
 
 <optional_next_step>
-The previous task of fixing the double commission charge has been fully resolved and verified. No explicit next step was requested by the user.
+Continue implementing the  component and its integration into  to display real-time notifications.
 </optional_next_step>
