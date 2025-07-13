@@ -301,13 +301,13 @@ function App() {
                   {/* Mobile: Empty space */}
                   <div className="md:hidden"></div>
 
-                  {/* Desktop: Header Portfolio */}
-                  <div className="hidden md:block">
+                  {/* Header Portfolio - Visible on all devices */}
+                  <div className="block">
                     <HeaderPortfolio user={user} />
                   </div>
 
                   {/* Mobile: Profile Avatar */}
-                  <div className="md:hidden">
+                  <div className="md:hidden ml-2">
                     <button
                       onClick={() => setCurrentView('profile')}
                       className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
