@@ -5357,6 +5357,241 @@ async def flag_user_suspicious(
             detail="Failed to flag user"
         )
 
+# ==============================================================================
+# BOT MANAGEMENT SYSTEM ENDPOINTS
+# ==============================================================================
+
+@api_router.post("/admin/bots/toggle-all", response_model=dict)
+async def toggle_all_bots(
+    toggle_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Enable or disable all bots (admin only)."""
+    try:
+        enabled = toggle_data.get("enabled", True)
+        
+        # Update all bots
+        result = await db.bots.update_many(
+            {},
+            {
+                "$set": {
+                    "is_active": enabled,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="TOGGLE_ALL_BOTS",
+            target_type="bots",
+            target_id="all",
+            details={
+                "enabled": enabled,
+                "bots_affected": result.modified_count
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        action = "включены" if enabled else "отключены"
+        return {
+            "message": f"Все боты {action}",
+            "enabled": enabled,
+            "bots_affected": result.modified_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error toggling all bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to toggle bots"
+        )
+
+@api_router.get("/admin/bets/stats", response_model=dict)
+async def get_bets_stats(current_user: User = Depends(get_current_admin)):
+    """Get comprehensive betting statistics."""
+    try:
+        # Total bets
+        total_bets = await db.games.count_documents({})
+        total_bets_value = await db.games.aggregate([
+            {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+        ]).to_list(1)
+        total_value = total_bets_value[0]["total"] if total_bets_value else 0
+        
+        # Active bets
+        active_bets = await db.games.count_documents({"status": "WAITING"})
+        
+        # Completed bets
+        completed_bets = await db.games.count_documents({"status": "COMPLETED"})
+        
+        # Cancelled bets
+        cancelled_bets = await db.games.count_documents({"status": "CANCELLED"})
+        
+        # Expired bets (older than 24 hours in WAITING status)
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        expired_bets = await db.games.count_documents({
+            "status": "WAITING",
+            "created_at": {"$lt": yesterday}
+        })
+        
+        # Average bet amount
+        avg_bet = await db.games.aggregate([
+            {"$group": {"_id": None, "avg": {"$avg": "$bet_amount"}}}
+        ]).to_list(1)
+        average_bet = avg_bet[0]["avg"] if avg_bet else 0
+        
+        return {
+            "total_bets": total_bets,
+            "total_bets_value": round(total_value, 2),
+            "active_bets": active_bets,
+            "completed_bets": completed_bets,
+            "cancelled_bets": cancelled_bets,
+            "expired_bets": expired_bets,
+            "average_bet": round(average_bet, 2)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching bet stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bet statistics"
+        )
+
+@api_router.get("/admin/bots/regular/stats", response_model=dict)
+async def get_regular_bots_stats(current_user: User = Depends(get_current_admin)):
+    """Get regular bots statistics."""
+    try:
+        # Total active regular bots
+        active_bots = await db.bots.count_documents({
+            "type": "REGULAR",
+            "is_active": True
+        })
+        
+        # Bets created in last 24h
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        bets_24h = await db.games.count_documents({
+            "creator_type": "bot",
+            "created_at": {"$gte": yesterday}
+        })
+        
+        # Wins in last 24h
+        wins_24h = await db.games.count_documents({
+            "creator_type": "bot",
+            "status": "COMPLETED",
+            "winner_type": "bot",
+            "created_at": {"$gte": yesterday}
+        })
+        
+        # Win percentage
+        total_bot_games = await db.games.count_documents({
+            "creator_type": "bot",
+            "status": "COMPLETED"
+        })
+        bot_wins = await db.games.count_documents({
+            "creator_type": "bot",
+            "status": "COMPLETED",
+            "winner_type": "bot"
+        })
+        win_percentage = (bot_wins / total_bot_games * 100) if total_bot_games > 0 else 0
+        
+        # Total bet value
+        total_bet_value = await db.games.aggregate([
+            {"$match": {"creator_type": "bot"}},
+            {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+        ]).to_list(1)
+        total_value = total_bet_value[0]["total"] if total_bet_value else 0
+        
+        # Most active bots
+        most_active = await db.bots.find({
+            "type": "REGULAR",
+            "is_active": True
+        }).sort("games_played", -1).limit(3).to_list(3)
+        
+        return {
+            "active_bots": active_bots,
+            "bets_24h": bets_24h,
+            "wins_24h": wins_24h,
+            "win_percentage": round(win_percentage, 1),
+            "total_bet_value": round(total_value, 2),
+            "errors": 0,  # TODO: implement error tracking
+            "most_active": [{"id": bot.get("id"), "games": bot.get("games_played", 0)} for bot in most_active]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching regular bot stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch regular bot statistics"
+        )
+
+@api_router.get("/admin/bots/human/stats", response_model=dict)
+async def get_human_bots_stats(current_user: User = Depends(get_current_admin)):
+    """Get human bots statistics."""
+    try:
+        # Total active human bots
+        active_bots = await db.bots.count_documents({
+            "type": "HUMAN",
+            "is_active": True
+        })
+        
+        # Bets created in last 24h
+        yesterday = datetime.utcnow() - timedelta(days=1)
+        bets_24h = await db.games.count_documents({
+            "creator_type": "human_bot",
+            "created_at": {"$gte": yesterday}
+        })
+        
+        # Wins in last 24h
+        wins_24h = await db.games.count_documents({
+            "creator_type": "human_bot",
+            "status": "COMPLETED",
+            "winner_type": "human_bot",
+            "created_at": {"$gte": yesterday}
+        })
+        
+        # Win percentage
+        total_human_bot_games = await db.games.count_documents({
+            "creator_type": "human_bot",
+            "status": "COMPLETED"
+        })
+        human_bot_wins = await db.games.count_documents({
+            "creator_type": "human_bot",
+            "status": "COMPLETED",
+            "winner_type": "human_bot"
+        })
+        win_percentage = (human_bot_wins / total_human_bot_games * 100) if total_human_bot_games > 0 else 0
+        
+        # Total bet value
+        total_bet_value = await db.games.aggregate([
+            {"$match": {"creator_type": "human_bot"}},
+            {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+        ]).to_list(1)
+        total_value = total_bet_value[0]["total"] if total_bet_value else 0
+        
+        # Most active human bots
+        most_active = await db.bots.find({
+            "type": "HUMAN",
+            "is_active": True
+        }).sort("games_played", -1).limit(3).to_list(3)
+        
+        return {
+            "active_bots": active_bots,
+            "bets_24h": bets_24h,
+            "wins_24h": wins_24h,
+            "win_percentage": round(win_percentage, 1),
+            "total_bet_value": round(total_value, 2),
+            "errors": 0,  # TODO: implement error tracking
+            "most_active": [{"id": bot.get("id"), "name": bot.get("name", "Unknown"), "games": bot.get("games_played", 0)} for bot in most_active]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching human bot stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch human bot statistics"
+        )
+
 @api_router.delete("/admin/users/{user_id}", response_model=dict)
 async def delete_user_account(
     user_id: str,
