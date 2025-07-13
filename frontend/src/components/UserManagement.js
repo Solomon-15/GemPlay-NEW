@@ -748,6 +748,7 @@ const UserManagement = ({ user: currentUser }) => {
                 Уведомление игроку (опционально):
               </label>
               <textarea
+                key={`notification-text-${selectedUser?.id || 'default'}`}
                 value={notificationText}
                 onChange={(e) => setNotificationText(e.target.value)}
                 placeholder="Напишите сообщение пользователю о изменениях..."
