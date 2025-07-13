@@ -249,19 +249,6 @@ function App() {
     setIsAdminPanelOpen(false);
   };
 
-  const handleClaimDailyBonus = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/auth/daily-bonus`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      alert(response.data.message);
-      checkAuthStatus(); // Refresh user data
-    } catch (error) {
-      alert(error.response?.data?.detail || 'Error claiming daily bonus');
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
