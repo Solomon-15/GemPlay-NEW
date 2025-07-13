@@ -3442,5 +3442,350 @@ def run_gem_combination_tests_only() -> None:
     # Print summary
     print_summary()
 
+def test_admin_panel_user_management() -> None:
+    """Test the newly implemented Admin Panel User Management endpoints."""
+    print_header("TESTING ADMIN PANEL USER MANAGEMENT ENDPOINTS")
+    
+    # Step 1: Login as admin
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with admin panel tests - admin login failed")
+        return
+    
+    # Step 2: Create a test user for management operations
+    print_subheader("Setting up test user for management operations")
+    
+    test_user = {
+        "username": f"admintest_{int(time.time())}",
+        "email": f"admintest_{int(time.time())}@test.com",
+        "password": "Test123!",
+        "gender": "male"
+    }
+    
+    # Register and verify test user
+    user_token_verify, user_email, user_username = test_user_registration(test_user)
+    if not user_token_verify:
+        print_error("Cannot proceed - test user registration failed")
+        return
+    
+    test_email_verification(user_token_verify, user_username)
+    user_token = test_login(user_email, test_user["password"], user_username)
+    
+    if not user_token:
+        print_error("Cannot proceed - test user login failed")
+        return
+    
+    # Get test user ID
+    user_info_response, user_info_success = make_request("GET", "/auth/me", auth_token=user_token)
+    if not user_info_success:
+        print_error("Cannot get test user info")
+        return
+    
+    test_user_id = user_info_response["id"]
+    print_success(f"Test user created with ID: {test_user_id}")
+    
+    # Step 3: Give test user some gems for testing
+    print_subheader("Setting up test user gems")
+    
+    # Buy gems for the test user
+    test_buy_gems(user_token, user_username, "Ruby", 50)
+    test_buy_gems(user_token, user_username, "Emerald", 20)
+    test_buy_gems(user_token, user_username, "Sapphire", 10)
+    
+    # Step 4: Test User Details APIs (already implemented)
+    print_subheader("Testing User Details APIs")
+    
+    # Test GET /api/admin/users/{user_id}/gems
+    print("Testing GET /api/admin/users/{user_id}/gems")
+    gems_response, gems_success = make_request(
+        "GET", f"/admin/users/{test_user_id}/gems",
+        auth_token=admin_token
+    )
+    
+    if gems_success:
+        print_success("✓ GET user gems endpoint working")
+        if "gems" in gems_response and "total_gems" in gems_response:
+            print_success(f"✓ User has {gems_response['total_gems']} total gems")
+            record_test("Admin - Get User Gems", True)
+        else:
+            print_error("✗ Response missing expected fields")
+            record_test("Admin - Get User Gems", False, "Missing fields")
+    else:
+        print_error("✗ GET user gems failed")
+        record_test("Admin - Get User Gems", False, "Request failed")
+    
+    # Test GET /api/admin/users/{user_id}/bets
+    print("Testing GET /api/admin/users/{user_id}/bets")
+    bets_response, bets_success = make_request(
+        "GET", f"/admin/users/{test_user_id}/bets",
+        auth_token=admin_token
+    )
+    
+    if bets_success:
+        print_success("✓ GET user bets endpoint working")
+        if "active_bets" in bets_response and "total_active_bets" in bets_response:
+            print_success(f"✓ User has {bets_response['total_active_bets']} active bets")
+            record_test("Admin - Get User Bets", True)
+        else:
+            print_error("✗ Response missing expected fields")
+            record_test("Admin - Get User Bets", False, "Missing fields")
+    else:
+        print_error("✗ GET user bets failed")
+        record_test("Admin - Get User Bets", False, "Request failed")
+    
+    # Test GET /api/admin/users/{user_id}/stats
+    print("Testing GET /api/admin/users/{user_id}/stats")
+    stats_response, stats_success = make_request(
+        "GET", f"/admin/users/{test_user_id}/stats",
+        auth_token=admin_token
+    )
+    
+    if stats_success:
+        print_success("✓ GET user stats endpoint working")
+        if "user_id" in stats_response:
+            print_success("✓ User stats retrieved successfully")
+            record_test("Admin - Get User Stats", True)
+        else:
+            print_error("✗ Response missing expected fields")
+            record_test("Admin - Get User Stats", False, "Missing fields")
+    else:
+        print_error("✗ GET user stats failed")
+        record_test("Admin - Get User Stats", False, "Request failed")
+    
+    # Step 5: Test New Gem Management APIs
+    print_subheader("Testing New Gem Management APIs")
+    
+    # Test POST /api/admin/users/{user_id}/gems/freeze
+    print("Testing POST /api/admin/users/{user_id}/gems/freeze")
+    freeze_data = {
+        "gem_type": "Ruby",
+        "quantity": 10,
+        "reason": "Testing freeze functionality"
+    }
+    
+    freeze_response, freeze_success = make_request(
+        "POST", f"/admin/users/{test_user_id}/gems/freeze",
+        data=freeze_data,
+        auth_token=admin_token
+    )
+    
+    if freeze_success:
+        print_success("✓ Freeze gems endpoint working")
+        if "message" in freeze_response and "quantity" in freeze_response:
+            print_success(f"✓ Successfully froze {freeze_response['quantity']} gems")
+            record_test("Admin - Freeze User Gems", True)
+        else:
+            print_error("✗ Response missing expected fields")
+            record_test("Admin - Freeze User Gems", False, "Missing fields")
+    else:
+        print_error("✗ Freeze gems failed")
+        record_test("Admin - Freeze User Gems", False, "Request failed")
+    
+    # Test POST /api/admin/users/{user_id}/gems/unfreeze
+    print("Testing POST /api/admin/users/{user_id}/gems/unfreeze")
+    unfreeze_data = {
+        "gem_type": "Ruby",
+        "quantity": 5,
+        "reason": "Testing unfreeze functionality"
+    }
+    
+    unfreeze_response, unfreeze_success = make_request(
+        "POST", f"/admin/users/{test_user_id}/gems/unfreeze",
+        data=unfreeze_data,
+        auth_token=admin_token
+    )
+    
+    if unfreeze_success:
+        print_success("✓ Unfreeze gems endpoint working")
+        if "message" in unfreeze_response and "quantity" in unfreeze_response:
+            print_success(f"✓ Successfully unfroze {unfreeze_response['quantity']} gems")
+            record_test("Admin - Unfreeze User Gems", True)
+        else:
+            print_error("✗ Response missing expected fields")
+            record_test("Admin - Unfreeze User Gems", False, "Missing fields")
+    else:
+        print_error("✗ Unfreeze gems failed")
+        record_test("Admin - Unfreeze User Gems", False, "Request failed")
+    
+    # Test DELETE /api/admin/users/{user_id}/gems/{gem_type}
+    print("Testing DELETE /api/admin/users/{user_id}/gems/{gem_type}")
+    delete_gems_response, delete_gems_success = make_request(
+        "DELETE", f"/admin/users/{test_user_id}/gems/Emerald?quantity=5&reason=Testing delete functionality",
+        auth_token=admin_token
+    )
+    
+    if delete_gems_success:
+        print_success("✓ Delete gems endpoint working")
+        if "message" in delete_gems_response:
+            print_success("✓ Successfully deleted gems")
+            record_test("Admin - Delete User Gems", True)
+        else:
+            print_error("✗ Response missing expected fields")
+            record_test("Admin - Delete User Gems", False, "Missing fields")
+    else:
+        print_error("✗ Delete gems failed")
+        record_test("Admin - Delete User Gems", False, "Request failed")
+    
+    # Step 6: Test User Management APIs
+    print_subheader("Testing User Management APIs")
+    
+    # Test POST /api/admin/users/{user_id}/flag-suspicious
+    print("Testing POST /api/admin/users/{user_id}/flag-suspicious")
+    flag_data = {
+        "is_suspicious": True,
+        "reason": "Testing suspicious flag functionality"
+    }
+    
+    flag_response, flag_success = make_request(
+        "POST", f"/admin/users/{test_user_id}/flag-suspicious",
+        data=flag_data,
+        auth_token=admin_token
+    )
+    
+    if flag_success:
+        print_success("✓ Flag suspicious endpoint working")
+        if "message" in flag_response and "is_suspicious" in flag_response:
+            print_success(f"✓ Successfully flagged user as suspicious: {flag_response['is_suspicious']}")
+            record_test("Admin - Flag User Suspicious", True)
+        else:
+            print_error("✗ Response missing expected fields")
+            record_test("Admin - Flag User Suspicious", False, "Missing fields")
+    else:
+        print_error("✗ Flag suspicious failed")
+        record_test("Admin - Flag User Suspicious", False, "Request failed")
+    
+    # Test unflagging
+    print("Testing unflagging user")
+    unflag_data = {
+        "is_suspicious": False,
+        "reason": "Testing unflag functionality"
+    }
+    
+    unflag_response, unflag_success = make_request(
+        "POST", f"/admin/users/{test_user_id}/flag-suspicious",
+        data=unflag_data,
+        auth_token=admin_token
+    )
+    
+    if unflag_success:
+        print_success("✓ Unflag user endpoint working")
+        record_test("Admin - Unflag User", True)
+    else:
+        print_error("✗ Unflag user failed")
+        record_test("Admin - Unflag User", False, "Request failed")
+    
+    # Step 7: Test Error Cases
+    print_subheader("Testing Error Cases")
+    
+    # Test with invalid user ID
+    print("Testing with invalid user ID")
+    invalid_response, invalid_success = make_request(
+        "GET", "/admin/users/invalid-user-id/gems",
+        auth_token=admin_token,
+        expected_status=404
+    )
+    
+    if not invalid_success:
+        print_success("✓ Invalid user ID correctly rejected")
+        record_test("Admin - Invalid User ID", True)
+    else:
+        print_error("✗ Invalid user ID not properly rejected")
+        record_test("Admin - Invalid User ID", False, "Should have failed")
+    
+    # Test insufficient permissions (non-admin access)
+    print("Testing non-admin access (should be denied)")
+    non_admin_response, non_admin_success = make_request(
+        "GET", f"/admin/users/{test_user_id}/gems",
+        auth_token=user_token,
+        expected_status=403
+    )
+    
+    if not non_admin_success:
+        print_success("✓ Non-admin access correctly denied")
+        record_test("Admin - Non-admin Access Denied", True)
+    else:
+        print_error("✗ Non-admin access was not properly denied")
+        record_test("Admin - Non-admin Access Denied", False, "Access was not denied")
+    
+    # Test invalid gem operations
+    print("Testing invalid gem operations")
+    
+    # Try to freeze more gems than available
+    invalid_freeze_data = {
+        "gem_type": "Magic",
+        "quantity": 1000,
+        "reason": "Testing invalid freeze"
+    }
+    
+    invalid_freeze_response, invalid_freeze_success = make_request(
+        "POST", f"/admin/users/{test_user_id}/gems/freeze",
+        data=invalid_freeze_data,
+        auth_token=admin_token,
+        expected_status=400
+    )
+    
+    if not invalid_freeze_success:
+        print_success("✓ Invalid freeze operation correctly rejected")
+        record_test("Admin - Invalid Freeze Operation", True)
+    else:
+        print_error("✗ Invalid freeze operation not properly rejected")
+        record_test("Admin - Invalid Freeze Operation", False, "Should have failed")
+    
+    # Try to unfreeze more gems than frozen
+    invalid_unfreeze_data = {
+        "gem_type": "Ruby",
+        "quantity": 1000,
+        "reason": "Testing invalid unfreeze"
+    }
+    
+    invalid_unfreeze_response, invalid_unfreeze_success = make_request(
+        "POST", f"/admin/users/{test_user_id}/gems/unfreeze",
+        data=invalid_unfreeze_data,
+        auth_token=admin_token,
+        expected_status=400
+    )
+    
+    if not invalid_unfreeze_success:
+        print_success("✓ Invalid unfreeze operation correctly rejected")
+        record_test("Admin - Invalid Unfreeze Operation", True)
+    else:
+        print_error("✗ Invalid unfreeze operation not properly rejected")
+        record_test("Admin - Invalid Unfreeze Operation", False, "Should have failed")
+    
+    # Step 8: Test Super Admin Only Operations
+    print_subheader("Testing Super Admin Only Operations")
+    
+    # Test DELETE /api/admin/users/{user_id} (super admin only)
+    print("Testing DELETE /api/admin/users/{user_id} (should require super admin)")
+    delete_user_data = {
+        "reason": "Testing user deletion functionality"
+    }
+    
+    delete_user_response, delete_user_success = make_request(
+        "DELETE", f"/admin/users/{test_user_id}",
+        data=delete_user_data,
+        auth_token=admin_token,
+        expected_status=403  # Regular admin should not be able to delete users
+    )
+    
+    if not delete_user_success:
+        print_success("✓ User deletion correctly requires super admin permissions")
+        record_test("Admin - User Deletion Requires Super Admin", True)
+    else:
+        print_error("✗ User deletion should require super admin permissions")
+        record_test("Admin - User Deletion Requires Super Admin", False, "Should require super admin")
+    
+    print_success("Admin Panel User Management endpoint testing completed!")
+
+def run_admin_panel_tests_only() -> None:
+    """Run only the admin panel user management tests."""
+    print_header("GEMPLAY ADMIN PANEL USER MANAGEMENT API TESTING")
+    
+    # Test admin panel user management endpoints
+    test_admin_panel_user_management()
+    
+    # Print summary
+    print_summary()
+
 if __name__ == "__main__":
-    run_gem_combination_tests_only()
+    run_admin_panel_tests_only()
