@@ -2350,6 +2350,24 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 )
                 await db.profit_entries.insert_one(profit_entry.dict())
             
+            # Check if this is a bot game and record bot revenue
+            if game.is_bot_game:
+                loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
+                loser = await db.users.find_one({"id": loser_id})
+                
+                # If human player lost to bot, record this as bot revenue
+                if loser and winner_id != loser_id:
+                    bot_revenue = game.bet_amount  # Bot wins the full bet amount
+                    
+                    profit_entry = ProfitEntry(
+                        entry_type="BOT_REVENUE",
+                        amount=bot_revenue,
+                        source_user_id=loser_id,
+                        reference_id=game.id,
+                        description=f"Bot victory revenue: ${bot_revenue} from player {loser.get('username', 'Unknown')}"
+                    )
+                    await db.profit_entries.insert_one(profit_entry.dict())
+            
             # Handle commission for loser - return frozen commission
             loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
             loser = await db.users.find_one({"id": loser_id})
