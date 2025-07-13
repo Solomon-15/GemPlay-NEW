@@ -320,23 +320,6 @@ function App() {
 
                   {/* Balance Display */}
                   <BalanceDisplay user={user} onUpdateUser={checkAuthStatus} />
-
-                  {/* Actions */}
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={handleClaimDailyBonus}
-                      className="px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity text-sm"
-                    >
-                      DAILY BONUS
-                    </button>
-                    
-                    <button
-                      onClick={handleLogout}
-                      className="px-4 py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors text-sm"
-                    >
-                      LOGOUT
-                    </button>
-                  </div>
                 </div>
               </nav>
 
