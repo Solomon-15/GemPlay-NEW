@@ -56,7 +56,7 @@ const MyBets = ({ user }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'WAITING': return 'bg-yellow-600 text-yellow-100';
-      case 'ACTIVE': return 'bg-blue-600 text-blue-100';
+      case 'ACTIVE': return 'bg-orange-600 text-orange-100'; // Статус "In Progress"
       case 'COMPLETED': return 'bg-green-600 text-green-100';
       case 'CANCELLED': return 'bg-red-600 text-red-100';
       case 'UNKNOWN': return 'bg-gray-500 text-gray-100';
