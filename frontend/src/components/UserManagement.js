@@ -76,31 +76,35 @@ const UserManagement = ({ user: currentUser }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Mock data for demonstration - replace with actual API calls
-      setUserGems([
-        { type: 'Ruby', quantity: 5, price: 10.50, frozen: false },
-        { type: 'Emerald', quantity: 3, price: 15.00, frozen: true },
-        { type: 'Sapphire', quantity: 8, price: 8.25, frozen: false }
+      // Fetch real data from API endpoints
+      const [gemsResponse, betsResponse, statsResponse] = await Promise.all([
+        axios.get(`${API}/admin/users/${userId}/gems`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/admin/users/${userId}/bets`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/admin/users/${userId}/stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
       ]);
-      
-      setUserBets([
-        { id: '1', amount: 50.00, status: 'ACTIVE', created_at: new Date(), opponent: 'Player123' },
-        { id: '2', amount: 25.00, status: 'WAITING', created_at: new Date(), opponent: null }
-      ]);
-      
+
+      setUserGems(gemsResponse.data.gems || []);
+      setUserBets(betsResponse.data.active_bets || []);
       setUserStats({
-        total_games: 45,
-        games_won: 28,
-        games_lost: 15,
-        games_draw: 2,
-        win_rate: 62.2,
-        profit: 156.75,
-        gifts_sent: 3,
-        gifts_received: 7,
-        ip_history: ['192.168.1.1', '10.0.0.1', '172.16.0.1']
+        total_games: statsResponse.data.game_stats?.total_games || 0,
+        games_won: statsResponse.data.game_stats?.games_won || 0,
+        games_lost: statsResponse.data.game_stats?.games_lost || 0,
+        games_draw: statsResponse.data.game_stats?.games_draw || 0,
+        win_rate: statsResponse.data.game_stats?.win_rate || 0,
+        profit: statsResponse.data.financial_stats?.total_profit || 0,
+        gifts_sent: statsResponse.data.financial_stats?.gifts_sent || 0,
+        gifts_received: statsResponse.data.financial_stats?.gifts_received || 0,
+        ip_history: statsResponse.data.ip_history || []
       });
     } catch (error) {
       console.error('Error fetching user details:', error);
+      showErrorRU('Ошибка при загрузке данных пользователя');
     }
   };
 
