@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapsed, onOpenAdminPanel }) => {
+const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapsed, onOpenAdminPanel, onLogout }) => {
   const menuItems = [
     {
       id: 'lobby',
