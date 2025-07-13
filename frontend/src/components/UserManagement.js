@@ -533,67 +533,201 @@ const UserManagement = ({ user: currentUser }) => {
     </div>
   );
 
-  const GemsModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-rajdhani text-xl font-bold text-white">💎 Управление гемами - {selectedUser?.username}</h3>
-          <button
-            onClick={() => setIsGemsModalOpen(false)}
-            className="text-gray-400 hover:text-white"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+  const GemsModal = () => {
+    const [gemAction, setGemAction] = useState(''); // 'freeze', 'unfreeze', 'delete'
+    const [selectedGem, setSelectedGem] = useState(null);
+    const [actionQuantity, setActionQuantity] = useState(1);
+    const [actionReason, setActionReason] = useState('');
 
-        <div className="space-y-4">
-          {userGems.length === 0 ? (
-            <p className="text-text-secondary text-center py-4">У пользователя нет гемов</p>
-          ) : (
-            userGems.map((gem, index) => (
-              <div key={index} className="bg-surface-sidebar rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-accent flex items-center justify-center">
-                    💎
-                  </div>
-                  <div>
-                    <div className="text-white font-rajdhani font-bold">{gem.type}</div>
-                    <div className="text-text-secondary text-sm">
-                      {gem.quantity} шт × ${gem.price} = ${(gem.quantity * gem.price).toFixed(2)}
-                      {gem.frozen && <span className="text-orange-400 ml-2">(Заморожен)</span>}
+    const handleGemAction = async (action, gem) => {
+      setGemAction(action);
+      setSelectedGem(gem);
+      setActionQuantity(1);
+      setActionReason('');
+    };
+
+    const submitGemAction = async () => {
+      if (!selectedGem || !actionQuantity || actionQuantity <= 0) {
+        showWarningRU('Укажите корректное количество');
+        return;
+      }
+
+      try {
+        if (gemAction === 'freeze') {
+          const availableQuantity = selectedGem.quantity - (selectedGem.frozen_quantity || 0);
+          if (actionQuantity > availableQuantity) {
+            showWarningRU('Недостаточно доступных гемов для заморозки');
+            return;
+          }
+          await handleFreezeGems(selectedGem.type, actionQuantity, actionReason);
+        } else if (gemAction === 'unfreeze') {
+          if (actionQuantity > (selectedGem.frozen_quantity || 0)) {
+            showWarningRU('Недостаточно замороженных гемов для разморозки');
+            return;
+          }
+          await handleUnfreezeGems(selectedGem.type, actionQuantity, actionReason);
+        } else if (gemAction === 'delete') {
+          const availableQuantity = selectedGem.quantity - (selectedGem.frozen_quantity || 0);
+          if (actionQuantity > availableQuantity) {
+            showWarningRU('Нельзя удалять замороженные гемы. Сначала разморозьте их.');
+            return;
+          }
+          await handleDeleteGems(selectedGem.type, actionQuantity, actionReason);
+        }
+        
+        setGemAction('');
+        setSelectedGem(null);
+      } catch (error) {
+        console.error('Ошибка операции с гемами:', error);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-rajdhani text-xl font-bold text-white">💎 Управление гемами - {selectedUser?.username}</h3>
+            <button
+              onClick={() => setIsGemsModalOpen(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {userGems.length === 0 ? (
+              <p className="text-text-secondary text-center py-4">У пользователя нет гемов</p>
+            ) : (
+              userGems.map((gem, index) => (
+                <div key={index} className="bg-surface-sidebar rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-accent flex items-center justify-center">
+                        💎
+                      </div>
+                      <div>
+                        <div className="text-white font-rajdhani font-bold">{gem.type}</div>
+                        <div className="text-text-secondary text-sm">
+                          Всего: {gem.quantity} шт | Доступно: {gem.quantity - (gem.frozen_quantity || 0)} шт | Заморожено: {gem.frozen_quantity || 0} шт
+                        </div>
+                        <div className="text-accent-primary text-sm">
+                          Общая стоимость: ${(gem.quantity * gem.price).toFixed(2)}
+                        </div>
+                      </div>
                     </div>
                   </div>
+                  
+                  <div className="flex space-x-2 mt-2">
+                    <button 
+                      onClick={() => handleGemAction('freeze', gem)}
+                      className="px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700"
+                      disabled={gem.quantity - (gem.frozen_quantity || 0) <= 0}
+                    >
+                      Заморозить
+                    </button>
+                    <button 
+                      onClick={() => handleGemAction('unfreeze', gem)}
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                      disabled={(gem.frozen_quantity || 0) <= 0}
+                    >
+                      Разморозить
+                    </button>
+                    <button 
+                      onClick={() => handleGemAction('delete', gem)}
+                      className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                      disabled={gem.quantity - (gem.frozen_quantity || 0) <= 0}
+                    >
+                      Удалить
+                    </button>
+                  </div>
                 </div>
-                <div className="flex space-x-2">
-                  <button className="px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700">
-                    {gem.frozen ? 'Разморозить' : 'Заморозить'}
-                  </button>
-                  <button className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700">
-                    Удалить
-                  </button>
+              ))
+            )}
+
+            {/* Action Modal */}
+            {gemAction && selectedGem && (
+              <div className="mt-4 bg-surface-sidebar rounded-lg p-4 border border-accent-primary border-opacity-30">
+                <h4 className="font-rajdhani font-bold text-white mb-2">
+                  {gemAction === 'freeze' && 'Заморозить гемы'}
+                  {gemAction === 'unfreeze' && 'Разморозить гемы'}
+                  {gemAction === 'delete' && 'Удалить гемы'}
+                </h4>
+                <p className="text-text-secondary text-sm mb-3">
+                  Гем: {selectedGem.type} | 
+                  {gemAction === 'freeze' && ` Доступно: ${selectedGem.quantity - (selectedGem.frozen_quantity || 0)} шт`}
+                  {gemAction === 'unfreeze' && ` Заморожено: ${selectedGem.frozen_quantity || 0} шт`}
+                  {gemAction === 'delete' && ` Доступно: ${selectedGem.quantity - (selectedGem.frozen_quantity || 0)} шт`}
+                </p>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Количество:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max={
+                        gemAction === 'freeze' ? selectedGem.quantity - (selectedGem.frozen_quantity || 0) :
+                        gemAction === 'unfreeze' ? (selectedGem.frozen_quantity || 0) :
+                        selectedGem.quantity - (selectedGem.frozen_quantity || 0)
+                      }
+                      value={actionQuantity}
+                      onChange={(e) => setActionQuantity(parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Причина (опционально):</label>
+                    <input
+                      type="text"
+                      value={actionReason}
+                      onChange={(e) => setActionReason(e.target.value)}
+                      placeholder="Причина действия..."
+                      className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={submitGemAction}
+                      className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary font-rajdhani font-bold"
+                    >
+                      Подтвердить
+                    </button>
+                    <button
+                      onClick={() => {
+                        setGemAction('');
+                        setSelectedGem(null);
+                      }}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                    >
+                      Отмена
+                    </button>
+                  </div>
                 </div>
               </div>
-            ))
-          )}
-          
-          <div className="mt-6 border-t border-border-primary pt-4">
-            <label className="block text-text-secondary text-sm font-rajdhani mb-2">
-              Уведомление игроку (опционально):
-            </label>
-            <textarea
-              value={notificationText}
-              onChange={(e) => setNotificationText(e.target.value)}
-              placeholder="Напишите сообщение пользователю о изменениях..."
-              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-              rows="3"
-            />
+            )}
+            
+            <div className="mt-6 border-t border-border-primary pt-4">
+              <label className="block text-text-secondary text-sm font-rajdhani mb-2">
+                Уведомление игроку (опционально):
+              </label>
+              <textarea
+                value={notificationText}
+                onChange={(e) => setNotificationText(e.target.value)}
+                placeholder="Напишите сообщение пользователю о изменениях..."
+                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+                rows="3"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const BetsModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
