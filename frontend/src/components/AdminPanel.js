@@ -478,7 +478,7 @@ const AdminPanel = ({ user, onClose }) => {
               <div className="text-2xl font-bold text-orange-400">{stats.games?.active || '—'}</div>
             </div>
             <div className="bg-surface-sidebar rounded-lg p-4">
-              <div className="text-text-secondary text-sm">Completed Games</div>
+              <div className="text-text-secondary text-sm">Завершённых игр</div>
               <div className="text-2xl font-bold text-green-400">{stats.games?.completed || '—'}</div>
             </div>
           </div>
@@ -494,21 +494,21 @@ const AdminPanel = ({ user, onClose }) => {
       case 'users':
         return <UserManagement />;
       case 'bots':
-        return <div className="text-white">Bot management (in development)</div>;
+        return <div className="text-white">Управление ботами (в разработке)</div>;
       case 'games':
         return <GamesContent />;
       case 'bets':
         return <BetsContent />;
       case 'gems':
-        return <div className="text-white">Gem management (in development)</div>;
+        return <div className="text-white">Управление гемами (в разработке)</div>;
       case 'profit':
         return <ProfitAdmin user={user} />;
       case 'settings':
-        return <div className="text-white">System settings (in development)</div>;
+        return <div className="text-white">Системные настройки (в разработке)</div>;
       case 'analytics':
-        return <div className="text-white">Analytics (in development)</div>;
+        return <div className="text-white">Аналитика (в разработке)</div>;
       case 'logs':
-        return <div className="text-white">System logs (in development)</div>;
+        return <div className="text-white">Системные логи (в разработке)</div>;
       default:
         return <DashboardContent />;
     }
@@ -517,7 +517,7 @@ const AdminPanel = ({ user, onClose }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Loading admin panel...</div>
+        <div className="text-white text-xl font-roboto">Загружается админ-панель...</div>
       </div>
     );
   }
