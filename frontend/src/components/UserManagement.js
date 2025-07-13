@@ -5,7 +5,7 @@ import { useNotifications } from './NotificationContext';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const UserManagement = () => {
+const UserManagement = ({ user: currentUser }) => {
   const { showSuccessRU, showErrorRU, showWarningRU } = useNotifications();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,10 +14,33 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
+  
+  // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBanModalOpen, setIsBanModalOpen] = useState(false);
+  const [isGemsModalOpen, setIsGemsModalOpen] = useState(false);
+  const [isBetsModalOpen, setIsBetsModalOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  
+  // Form states
   const [banReason, setBanReason] = useState('');
   const [banDuration, setBanDuration] = useState('');
+  const [deleteReason, setDeleteReason] = useState('');
+  const [notificationText, setNotificationText] = useState('');
+  
+  // Edit form
+  const [editForm, setEditForm] = useState({
+    username: '',
+    email: '',
+    role: '',
+    virtual_balance: 0
+  });
+
+  // User details states
+  const [userGems, setUserGems] = useState([]);
+  const [userBets, setUserBets] = useState([]);
+  const [userStats, setUserStats] = useState({});
 
   useEffect(() => {
     fetchUsers();
@@ -49,9 +72,117 @@ const UserManagement = () => {
     }
   };
 
+  const fetchUserDetails = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch user gems, bets, and stats
+      const [gemsResponse, betsResponse, statsResponse] = await Promise.allSettled([
+        axios.get(`${API}/admin/users/${userId}/gems`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/admin/users/${userId}/bets`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/admin/users/${userId}/stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+
+      if (gemsResponse.status === 'fulfilled') {
+        setUserGems(gemsResponse.value.data || []);
+      }
+      if (betsResponse.status === 'fulfilled') {
+        setUserBets(betsResponse.value.data || []);
+      }
+      if (statsResponse.status === 'fulfilled') {
+        setUserStats(statsResponse.value.data || {});
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+    }
+  };
+
+  // Utility functions
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ru-RU');
+  };
+
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleString('ru-RU');
+  };
+
+  const getUserStatusBadge = (status) => {
+    const statusMap = {
+      'ACTIVE': { color: 'bg-green-600', text: 'Активен' },
+      'BANNED': { color: 'bg-red-600', text: 'Заблокирован' },
+      'EMAIL_PENDING': { color: 'bg-yellow-600', text: 'Ожидает подтверждения' }
+    };
+    
+    const statusInfo = statusMap[status] || { color: 'bg-gray-600', text: status };
+    
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold ${statusInfo.color}`}>
+        {statusInfo.text}
+      </span>
+    );
+  };
+
+  const getUserRoleBadge = (role) => {
+    const roleMap = {
+      'USER': { color: 'bg-blue-600', text: 'Игрок' },
+      'ADMIN': { color: 'bg-purple-600', text: 'Админ' },
+      'SUPER_ADMIN': { color: 'bg-red-600', text: 'Супер-админ' }
+    };
+    
+    const roleInfo = roleMap[role] || { color: 'bg-gray-600', text: role };
+    
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold ${roleInfo.color}`}>
+        {roleInfo.text}
+      </span>
+    );
+  };
+
+  // Calculate suspicious activity flags
+  const getSuspiciousFlags = (user) => {
+    const flags = [];
+    
+    // High win rate (>80% over 10+ games)
+    const totalGames = user.total_games_played || 0;
+    const gamesWon = user.total_games_won || 0;
+    const winRate = totalGames > 0 ? (gamesWon / totalGames) * 100 : 0;
+    
+    if (totalGames >= 10 && winRate > 80) {
+      flags.push({
+        type: 'high_winrate',
+        message: `Высокий винрейт: ${winRate.toFixed(1)}% за ${totalGames} игр`
+      });
+    }
+    
+    // Frequent bot games (placeholder - would need actual data)
+    if (user.bot_games_ratio && user.bot_games_ratio > 0.7) {
+      flags.push({
+        type: 'bot_games',
+        message: 'Часто играет только с ботами'
+      });
+    }
+    
+    // Frequent gifts (placeholder - would need actual data)
+    if (user.recent_gifts_count && user.recent_gifts_count > 3) {
+      flags.push({
+        type: 'frequent_gifts',
+        message: `${user.recent_gifts_count} подарков подряд одному игроку`
+      });
+    }
+    
+    return flags;
+  };
+
+  // Event handlers
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Сброс на первую страницу при поиске
+    setCurrentPage(1);
   };
 
   const handleStatusFilter = (status) => {
@@ -61,7 +192,30 @@ const UserManagement = () => {
 
   const handleEditUser = (user) => {
     setSelectedUser(user);
+    setEditForm({
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      virtual_balance: user.virtual_balance || 0
+    });
     setIsEditModalOpen(true);
+  };
+
+  const handleSubmitEdit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/admin/users/${selectedUser.id}`, editForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setIsEditModalOpen(false);
+      fetchUsers();
+      showSuccessRU('Пользователь обновлен');
+    } catch (error) {
+      console.error('Ошибка обновления пользователя:', error);
+      showErrorRU('Ошибка при обновлении пользователя');
+    }
   };
 
   const handleBanUser = (user) => {
@@ -69,21 +223,6 @@ const UserManagement = () => {
     setBanReason('');
     setBanDuration('');
     setIsBanModalOpen(true);
-  };
-
-  const handleUnbanUser = async (userId) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/admin/users/${userId}/unban`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      fetchUsers(); // Обновляем список
-      showSuccessRU('Пользователь разбанен');
-    } catch (error) {
-      console.error('Ошибка разбана:', error);
-      showErrorRU('Ошибка при разбане пользователя');
-    }
   };
 
   const submitBan = async () => {
@@ -98,6 +237,85 @@ const UserManagement = () => {
         reason: banReason,
         duration: banDuration || undefined
       };
+
+      await axios.post(`${API}/admin/users/${selectedUser.id}/ban`, banData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setIsBanModalOpen(false);
+      fetchUsers();
+      showSuccessRU('Пользователь забанен');
+    } catch (error) {
+      console.error('Ошибка бана:', error);
+      showErrorRU('Ошибка при бане пользователя');
+    }
+  };
+
+  const handleUnbanUser = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/users/${userId}/unban`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      fetchUsers();
+      showSuccessRU('Пользователь разбанен');
+    } catch (error) {
+      console.error('Ошибка разбана:', error);
+      showErrorRU('Ошибка при разбане пользователя');
+    }
+  };
+
+  const handleGemsModal = async (user) => {
+    setSelectedUser(user);
+    await fetchUserDetails(user.id);
+    setIsGemsModalOpen(true);
+  };
+
+  const handleBetsModal = async (user) => {
+    setSelectedUser(user);
+    await fetchUserDetails(user.id);
+    setIsBetsModalOpen(true);
+  };
+
+  const handleInfoModal = async (user) => {
+    setSelectedUser(user);
+    await fetchUserDetails(user.id);
+    setIsInfoModalOpen(true);
+  };
+
+  const handleDeleteUser = (user) => {
+    setSelectedUser(user);
+    setDeleteReason('');
+    setIsDeleteModalOpen(true);
+  };
+
+  const submitDelete = async () => {
+    if (!deleteReason.trim()) {
+      showWarningRU('Укажите причину удаления');
+      return;
+    }
+
+    if (currentUser.role !== 'SUPER_ADMIN') {
+      showErrorRU('Только SUPER_ADMIN может удалять аккаунты');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/admin/users/${selectedUser.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { reason: deleteReason }
+      });
+
+      setIsDeleteModalOpen(false);
+      fetchUsers();
+      showSuccessRU('Пользователь удален');
+    } catch (error) {
+      console.error('Ошибка удаления:', error);
+      showErrorRU('Ошибка при удалении пользователя');
+    }
+  };
 
       await axios.post(`${API}/admin/users/${selectedUser.id}/ban`, banData, {
         headers: { Authorization: `Bearer ${token}` }
