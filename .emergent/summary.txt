@@ -1,120 +1,87 @@
 <analysis>
-The previous AI engineer's trajectory on the GemPlay application involved a sequence of significant bug fixes and feature enhancements, transforming it from an MVP to a more robust and feature-rich platform. Initially, the engineer resolved a critical double commission exploit, ensuring correct balance handling upon bet creation and cancellation. This was followed by implementing a real-time update system for the Lobby, crucial for UX responsiveness. Extensive UI/UX refinements included header modifications, sidebar reordering, and the removal of deprecated elements. A major mobile adaptation was undertaken, redesigning the header and navigation for smaller screens. The admin panel received full Russian localization and a new, detailed profit metrics dashboard. A complete user-to-user gem gifting system was built, incorporating commission tracking and notifications. The final task initiated was activating and integrating a real-time notification bell for user alerts.
+The previous AI engineer effectively transitioned GemPlay from MVP to a more feature-rich application. Key accomplishments include resolving a critical double commission bug, implementing real-time lobby updates via a custom hook, and performing extensive UI/UX refinements, including a significant mobile adaptation and a sticky header. The admin panel received full Russian localization and a detailed profit dashboard. A complete user-to-user gem gifting system, with commission tracking and notifications, was integrated. The final phase of work involved activating and refining the real-time notification bell, addressing its positioning and scrollability, and performing full English localization for relevant UI elements, including fixing a My Bets error. Most recently, the focus shifted to a major expansion of the Admin Panel's Users section, requiring new backend API endpoints for detailed user statistics, gem management, and advanced actions. The engineer was in the process of implementing these backend updates, facing linting and file structure issues while adding new API routes.
 </analysis>
 
 <product_requirements>
-GemPlay is an asynchronous PvP game where players bet virtual gems. The initial requirements focused on a 3-step Join Battle modal with timers and results, asynchronous commit-reveal PvP logic, and three distinct gem selection algorithms (Small, Smart, Big) moved to the frontend with robust validation. A core need was accurate balance display (Balance, Frozen, Available) and correct commission handling (6% of bet, frozen on creation, processed on completion).
-
-Subsequent requirements included:
-- Real-time Lobby updates for all game/balance operations.
-- UI/UX refinements: repositioning 'Logout' to Sidebar, removing 'Daily Bonus', reordering Sidebar items, changing 'Lobby' icon, and adding toast notifications for gem sales.
-- Header made sticky.
-- Full mobile adaptation for widths 360px+: empty header on mobile, desktop header only shows titles, bottom fixed navigation for 5 key sections, 'Profile' moved to a header avatar on mobile, containing other sections.
-- Removal of Made with Emergent badge.
-- Header redesign to integrate compact 'Balance', 'Gems', and 'Total' blocks from 'Inventory' with reduced height and specific mobile display.
-- Backend endpoint to reset all user balances and gems (admin function).
-- Full Russian localization of the admin panel.
-- Enhanced Profit section in admin panel with detailed, real-time metrics for 'Commissions from Bets', 'Gifts', 'Bot Revenue', 'Frozen Funds', 'Total Profit', 'Expenses', and 'Net Profit'.
-- User-to-user gem gifting via 'Inventory': search by email/name, non-frozen gems only, confirmation modal with commission (3% from sender's balance), and notifications.
-- Activation of a real-time notification system via a bell icon.
+GemPlay is an asynchronous PvP gem betting game. Initial core requirements were a 3-step battle modal, commit-reveal PvP logic, and client-side gem selection algorithms. The application needed accurate balance display (Balance, Frozen, Available) and 6% commission handling. Subsequent enhancements included real-time Lobby updates, UI/UX improvements (sticky header, mobile adaptation, sidebar reordering, toast notifications, Emergent badge removal). A new header design displaying compact 'Balance', 'Gems', and 'Total' was required. Backend endpoints for admin functions like resetting user balances and gems were specified. Full Russian localization for the admin panel and an enhanced Profit section with detailed metrics (Commissions, Bot Revenue, Frozen Funds, Net Profit) were key. A user-to-user gem gifting system, involving search, non-frozen gems, a confirmation modal (3% commission), and notifications, was implemented. Finally, activation and refinement of a real-time notification bell with specific UI/UX constraints (dropdown positioning, scroll, fixed width/max height) and full English localization for notifications were requested. The latest major request involved significantly expanding the Admin Panel's Users section with new columns for Gems (quantity/value, editable via modal, notification), Bets (active count, list in modal), Games (Win/Loss/Draw ratio), Registration/Last Visit, and enhanced Actions (Suspicious Flag, Infoblock, Delete).
 </product_requirements>
 
 <key_technical_concepts>
--   **React Components & Hooks**: , , , custom hooks ().
--   **State Management**: React Context API (, ).
--   **API Integration**: FastAPI backend,  for HTTP requests, new admin endpoints.
--   **Asynchronous PvP**: Commit-reveal game logic.
--   **Dynamic Programming**: Gem combination algorithms.
--   **MongoDB**: Backend data storage.
--   **Responsive Design**: Tailwind CSS for mobile-first UI adaptation.
--   **Localization**: Multi-language support for Admin Panel.
+- **React Components & Hooks**: , , , , custom hooks ().
+- **State Management**: React Context API (, ).
+- **API Integration**: FastAPI backend,  for HTTP requests.
+- **Responsive Design**: Tailwind CSS for mobile-first UI.
+- **Localization**: Multi-language support (Russian, English).
+- **MongoDB**: Backend data storage.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a standard React frontend with a FastAPI backend and MongoDB.
+The application employs a React frontend with a FastAPI backend, utilizing MongoDB for data persistence.
 
 
 
--   :
-    *   **Importance**: Main FastAPI backend, handles API, game logic, user management, economy.
-    *   **Changes Made**:  and  fixed for commission logic (no double deduction).  updated for validation. New admin endpoint  for user data reset.  updated to return detailed profit metrics. Gift  endpoint added.  updated for detailed notifications.
--   :
-    *   **Importance**: Root component, manages routing, global state, and main layout.
-    *   **Changes Made**: Integrated ,  (later ), , etc. Modified for sticky header, mobile header visibility (removed content for mobile, kept titles for desktop). Removed  and  buttons from header. Passes  to  and  to . Removed  function. Adjusted content wrapper for mobile padding.
--   :
-    *   **Importance**: Displays available bets and user's games.
-    *   **Changes Made**: Integrated  hook for real-time updates after various game operations (create, join, cancel).
--   :
-    *   **Importance**: Modal for creating new bets.
-    *   **Changes Made**: Integrated  to trigger real-time updates after a bet is successfully created.
--   :
-    *   **Importance**: Modal for joining existing bets.
-    *   **Changes Made**: Integrated  to trigger real-time updates after joining a battle.
--   :
-    *   **Importance**: Component for buying gems.
-    *   **Changes Made**: Integrated  and  refresh to ensure Lobby, , and  update automatically after gem purchases.
--   :
-    *   **Importance**: Displays user's gems and allows selling/gifting.
-    *   **Changes Made**: Integrated  for updates after selling/gifting gems. Implemented full gifting flow using , replaced old gifting logic, and added toast notifications for gem sales. All error messages localized to English for the gift modal.
--   :
-    *   **Importance**: User profile page.
-    *   **Changes Made**: Integrated  for updates after adding balance. Modified to display additional menu items (History, Notifications) on mobile, accessible from a profile avatar in the header. Changed  to .
--   :
-    *   **Importance**: Main navigation menu.
-    *   **Changes Made**: Rearranged menu items ( moved below ). Changed  icon to 'home'. Added  button to the bottom, passed  prop. Hidden on mobile (). Will integrate .
--   :
-    *   **Importance**: Displays user's balance in header.
-    *   **Changes Made**: Refactored to unify balance display (Balance, Frozen, Available). Later replaced by . Updated to use  and refresh from .
--   :
-    *   **Importance**: Provides gem inventory data via context.
-    *   **Changes Made**: Added  function and integrated it with  to ensure real-time updates for gem data across components.
--   :
-    *   **Importance**: Contains gem selection logic.
-    *   **Changes Made**: (No direct changes in this trajectory, but mentioned as previously moved to frontend).
--   :
-    *   **Importance**: Main HTML file.
-    *   **Changes Made**: Removed the Made with Emergent badge element.
--   :
-    *   **Importance**: Main admin interface.
-    *   **Changes Made**: Fully localized to Russian, including menu items, statistics, dangerous actions, buttons, and loading messages.
--   :
-    *   **Importance**: Admin component for user management.
-    *   **Changes Made**: Partially localized (some existing localization, but also new strings localized as part of the overall admin panel effort).
--   :
-    *   **Importance**: Admin component for tracking profit.
-    *   **Changes Made**: Fully localized to Russian. Significant overhaul to display new profit metric tiles (Commissions from Bets/Gifts, Bot Revenue, Frozen Funds, Total Profit, Expenses, Net Profit) with specific styling and dynamic data fetching from updated backend API.
--   :
-    *   **Importance**: Admin component for security alerts.
-    *   **Changes Made**: Fully localized to Russian.
--    (NEW):
-    *   **Importance**: Dedicated modal for confirming gem gifts between users.
-    *   **Changes Made**: Created from scratch to display sender/recipient, gem details, value, commission, and warnings. Fully translated to English.
--    (NEW):
-    *   **Importance**: Replaces  in the header, displaying compact 'Balance', 'Gems', and 'Total' blocks.
-    *   **Changes Made**: Created from scratch, integrated into  and . Adapted for compact display, removed Available text (keeping numbers), and added thin green borders. Made visible on mobile.
--    (NEW):
-    *   **Importance**: Custom hook for triggering global data refresh.
-    *   **Changes Made**: Created from scratch, implemented  function and  for memoization. Integrated across various components.
--    (NEW):
-    *   **Importance**: Component for displaying notifications via a bell icon.
-    *   **Changes Made**: Created from scratch. (Work in progress to integrate with backend and ).
+- :
+    * Importance: Main FastAPI backend, handles API, game logic, user management, economy.
+    * Changes Made: Commission logic fixes, new admin endpoint , updated  for detailed metrics. Gift  and  updated. New  endpoint added for fetching/marking notifications. Ongoing work involves adding new endpoints for Admin Panel User Management (e.g., user gems, active bets, IP history, delete user).
+- :
+    * Importance: Root component, manages routing, global state, and main layout.
+    * Changes Made: Integrated , . Modified for sticky header, mobile header visibility. Removed deprecated elements. Localized loading text to English. Passed  and  to .
+- :
+    * Importance: Displays available bets and user's games.
+    * Changes Made: Integrated  for real-time updates. Removed Available, Gems, Total information blocks.
+- :
+    * Importance: Component for buying gems.
+    * Changes Made: Integrated  and  refresh. Removed Account Balance block.
+- :
+    * Importance: Displays user's gems and allows selling/gifting.
+    * Changes Made: Full gifting flow using , replaced old logic, added toast notifications.
+- :
+    * Importance: Main navigation menu.
+    * Changes Made: Rearranged items, added , hidden on mobile. Integrated .
+-  (NEW):
+    * Importance: Replaces  in header, showing compact 'Balance', 'Gems', 'Total'.
+    * Changes Made: Displays Frozen gems as count/value.
+-  (NEW):
+    * Importance: Custom hook for triggering global data refresh.
+-  (NEW):
+    * Importance: Component for displaying notifications via a bell icon.
+    * Changes Made: Initial creation. Refined positioning, fixed width/max height, added vertical scroll. Fully localized to English.
+- :
+    * Importance: Displays user's active and historical bets.
+    * Changes Made: Added robust / checks for  and  properties, especially for , , , , , . Improved  and filtering for robustness. Implemented new UI styling for bet cards and In Progress status.
+- :
+    * Importance: Reusable component for displaying bet information.
+    * Changes Made: Updated styling to adhere to new visual requirements (main background, weak green border, hover effect).
+- :
+    * Importance: Main admin interface.
+    * Changes Made: Fully localized to Russian. Profit section overhaul. Updated sidebar with new SVG icons for Dashboard, Users, Bots, Bets, Gems, Profit, ensuring consistent outline/monochrome style, unified size, and tooltips on collapse. Refined specific icons (Home, Bots, Gems) based on further user feedback.
+- :
+    * Importance: Admin component for user management.
+    * Changes Made: Significant expansion. Re-created to add new columns for Gems (with modal for management), Bets (with modal for active bets), Games (W/L/D ratio), Registration/Last Visit. Expanded Actions column with Suspicious Flag, Infoblock (user details, IP history), and Delete user functionality. Backend integration for these new features is in progress.
+- :
+    * Importance: Global CSS styles.
+    * Changes Made: Added custom scrollbar styles for  dropdown and tooltip styles for Admin Panel sidebar.
+- :
+    * Importance: Main HTML file.
+    * Changes Made: Removed Made with Emergent badge.
+
 </code_architecture>
 
 <pending_tasks>
--   **Activate Notification Bell**: The implementation of the notification bell and its integration with the backend notification system is currently in progress.
+- **Backend API for Admin Panel - User Management**: Implementing the API endpoints in  to support the new Gems, Bets, Suspicious Flag, Infoblock, and Delete functionalities in the  component. This includes fetching user gem details, active bets, game statistics, IP history, and handling gem modifications/user deletion.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was tasked with activating the notification bell and ensuring notifications arrive via it, specifically the request Активируй колокольчик, пусть уведомление приходит на колокольчик. Не тестируй.
+Immediately before this summary, the AI engineer was focused on a major expansion of the Users section within the Admin Panel. The frontend component  was substantially rewritten to include new columns and functionalities:
+-   **Gems Column**: To display total gems/value and provide a modal for freezing/unfreezing/deleting gems.
+-   **Bets Column**: To show active bets and a modal listing bet details.
+-   **Games Column**: To display Win/Loss/Draw ratios.
+-   **Registration/Last Visit Column**: To show user activity.
+-   **Actions Column Enhancement**: This includes a Suspicious Activity Flag with a tooltip, an Infoblock button to open a detailed user card (total games, win rate, gifts, IP history), and a Delete button (admin-only, with confirmation and reason input).
 
-The work initiated for this task includes:
-1.  **Backend API for Notifications**: A new endpoint () was added to  to retrieve user notifications. This endpoint handles fetching unread notifications and marking them as read.
-2.  **Frontend Component Creation**: A new React component, , was created. This component is intended to display the bell icon, potentially with a count of unread notifications, and handle the interaction for viewing them.
-3.  **Sidebar Integration**: The  component was being updated to incorporate the new  component. The last action in the trajectory was the start of this integration, specifically updating the  file.
-
-The current state is that the backend API for notifications exists, the  component has been created, and the integration into  has begun. The full functionality of fetching and displaying notifications through the bell, and managing their read/unread status, is still under development.
+The AI engineer initiated the backend implementation to support these new frontend features, specifically modifying . The last reported action was an attempt to add new API endpoints to the  file, but it encountered linting errors and file structure issues, prompting the engineer to try and locate the correct section for insertion. The work is currently stalled at identifying the appropriate placement for these new backend routes to facilitate the expanded user management capabilities.
 </current_work>
 
 <optional_next_step>
-Continue implementing the  component and its integration into  to display real-time notifications.
+Locate the correct section in  and implement the remaining API endpoints for the expanded Admin Panel User Management features.
 </optional_next_step>
