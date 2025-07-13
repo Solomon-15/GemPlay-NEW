@@ -307,6 +307,82 @@ const UserManagement = ({ user: currentUser }) => {
     }
   };
 
+  // Gem management functions
+  const handleFreezeGems = async (gemType, quantity, reason) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/users/${selectedUser.id}/gems/freeze`, {
+        gem_type: gemType,
+        quantity: quantity,
+        reason: reason || 'Admin action'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      showSuccessRU(`${quantity} ${gemType} гемов заморожено`);
+      await fetchUserDetails(selectedUser.id); // Refresh data
+    } catch (error) {
+      console.error('Ошибка заморозки гемов:', error);
+      showErrorRU('Ошибка при заморозке гемов');
+    }
+  };
+
+  const handleUnfreezeGems = async (gemType, quantity, reason) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/users/${selectedUser.id}/gems/unfreeze`, {
+        gem_type: gemType,
+        quantity: quantity,
+        reason: reason || 'Admin action'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      showSuccessRU(`${quantity} ${gemType} гемов разморожено`);
+      await fetchUserDetails(selectedUser.id); // Refresh data
+    } catch (error) {
+      console.error('Ошибка разморозки гемов:', error);
+      showErrorRU('Ошибка при разморозке гемов');
+    }
+  };
+
+  const handleDeleteGems = async (gemType, quantity, reason) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/admin/users/${selectedUser.id}/gems/${gemType}?quantity=${quantity}&reason=${encodeURIComponent(reason || 'Admin action')}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      showSuccessRU(`${quantity} ${gemType} гемов удалено`);
+      await fetchUserDetails(selectedUser.id); // Refresh data
+    } catch (error) {
+      console.error('Ошибка удаления гемов:', error);
+      showErrorRU('Ошибка при удалении гемов');
+    }
+  };
+
+  const handleToggleSuspicious = async (user, reason) => {
+    try {
+      const token = localStorage.getItem('token');
+      const currentFlags = getSuspiciousFlags(user);
+      const isSuspicious = currentFlags.length === 0; // Toggle logic
+
+      await axios.post(`${API}/admin/users/${user.id}/flag-suspicious`, {
+        is_suspicious: isSuspicious,
+        reason: reason || 'Admin action'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const action = isSuspicious ? 'отмечен как подозрительный' : 'снята метка подозрительности';
+      showSuccessRU(`Пользователь ${action}`);
+      fetchUsers(); // Refresh users list
+    } catch (error) {
+      console.error('Ошибка изменения флага подозрительности:', error);
+      showErrorRU('Ошибка при изменении статуса пользователя');
+    }
+  };
+
   // Modal Components
   const EditUserModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
