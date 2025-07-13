@@ -3980,15 +3980,18 @@ async def get_all_users(
         for user in users:
             user_id = user.get("id")
             
-            # Calculate gem statistics
+            # Calculate gem statistics from user_gems collection
             total_gems = 0
             total_gems_value = 0.0
-            for gem_type, gem_data in user.get("gems", {}).items():
-                if isinstance(gem_data, dict):
-                    quantity = gem_data.get("quantity", 0)
-                    price = GEM_PRICES.get(gem_type, 0)
-                    total_gems += quantity
-                    total_gems_value += quantity * price
+            
+            # Get gems from user_gems collection
+            user_gems = await db.user_gems.find({"user_id": user_id}).to_list(100)
+            for gem_doc in user_gems:
+                gem_type = gem_doc.get("gem_type")
+                quantity = gem_doc.get("quantity", 0)
+                price = GEM_PRICES.get(gem_type, 0)
+                total_gems += quantity
+                total_gems_value += quantity * price
             
             # Calculate active bets count
             active_bets_pipeline = [
