@@ -714,6 +714,7 @@ const UserManagement = ({ user: currentUser }) => {
                   <div>
                     <label className="block text-text-secondary text-sm mb-1">Причина (опционально):</label>
                     <input
+                      key={`action-reason-${selectedGem?.type || 'default'}`}
                       type="text"
                       value={actionReason}
                       onChange={(e) => setActionReason(e.target.value)}
