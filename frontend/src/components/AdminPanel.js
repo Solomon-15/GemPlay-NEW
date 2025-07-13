@@ -591,14 +591,16 @@ const AdminPanel = ({ user, onClose }) => {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg transition-all duration-200 ${
+                className={`admin-tooltip w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg transition-all duration-200 ${
                   activeSection === item.id
                     ? 'bg-accent-primary bg-opacity-20 text-accent-primary border-l-4 border-accent-primary'
                     : 'text-text-secondary hover:text-white hover:bg-surface-card'
                 }`}
-                title={sidebarCollapsed ? item.title : undefined}
+                title={sidebarCollapsed ? item.title : ''}
               >
-                {item.icon}
+                <div className="flex-shrink-0">
+                  {item.icon}
+                </div>
                 {!sidebarCollapsed && (
                   <span className="font-rajdhani font-medium">{item.title}</span>
                 )}
