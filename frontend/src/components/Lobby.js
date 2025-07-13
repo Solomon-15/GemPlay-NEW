@@ -526,40 +526,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       {/* Gems Header */}
       <GemsHeader user={user} />
 
-      {/* Info Blocks */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 max-w-4xl mx-auto">
-        <InfoBlock
-          title="Available"
-          value={stats.available}
-          color="bg-green-600/20"
-          icon={
-            <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-            </svg>
-          }
-        />
-        <InfoBlock
-          title="Gems"
-          value={stats.gems}
-          color="bg-purple-600/20"
-          icon={
-            <svg className="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M6,2L2,8L12,22L22,8L18,2H6M6.5,3H17.5L20.5,8L12,19L3.5,8L6.5,3Z" />
-            </svg>
-          }
-        />
-        <InfoBlock
-          title="Total"
-          value={stats.total}
-          color="bg-accent-primary/20"
-          icon={
-            <svg className="w-6 h-6 text-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          }
-        />
-      </div>
-
       {/* Create Bet Button */}
       <div className="text-center mb-8">
         <button 
