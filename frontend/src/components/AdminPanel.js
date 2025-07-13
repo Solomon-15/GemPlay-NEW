@@ -176,10 +176,10 @@ const AdminPanel = ({ user, onClose }) => {
   const DashboardContent = () => (
     <div className="space-y-8">
       <div>
-        <h2 className="font-russo text-2xl text-white mb-6">System Overview</h2>
+        <h2 className="font-russo text-2xl text-white mb-6">Обзор системы</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Total Users"
+            title="Всего пользователей"
             value={stats.users?.total || '—'}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,7 +188,7 @@ const AdminPanel = ({ user, onClose }) => {
             }
           />
           <StatCard
-            title="Active Bots"
+            title="Активных ботов"
             value={stats.bots || '—'}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,7 +198,7 @@ const AdminPanel = ({ user, onClose }) => {
             color="text-blue-400"
           />
           <StatCard
-            title="Total Games"
+            title="Всего игр"
             value={stats.games?.total || '—'}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,7 +208,7 @@ const AdminPanel = ({ user, onClose }) => {
             color="text-purple-400"
           />
           <StatCard
-            title="Active Games"
+            title="Активных игр"
             value={stats.games?.active || '—'}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
