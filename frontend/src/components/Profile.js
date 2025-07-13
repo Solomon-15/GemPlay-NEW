@@ -388,6 +388,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
         {activeTab === 'overview' && <ProfileOverview />}
         {activeTab === 'settings' && <ProfileSettings />}
       </div>
+      </div>
     </div>
   );
 };
