@@ -1573,6 +1573,17 @@ async def gift_gems(
     )
     await db.profit_entries.insert_one(profit_entry.dict())
     
+    # Create notification for recipient
+    notification = {
+        "user_id": recipient["id"],
+        "type": "GIFT_RECEIVED",
+        "title": "Gift Received!",
+        "message": f"You received a gift from {current_user.username} — {quantity} {gem_type} gems worth ${gem_value:.2f}.",
+        "read": False,
+        "created_at": datetime.utcnow()
+    }
+    await db.notifications.insert_one(notification)
+    
     # Recipient transaction
     recipient_transaction = Transaction(
         user_id=recipient["id"],
