@@ -52,6 +52,16 @@ SUSPICIOUS_ACTIVITY_THRESHOLDS = {
     "max_balance_change_per_hour": 5000,
     "unusual_login_locations": True
 }
+# Gem prices
+GEM_PRICES = {
+    "Ruby": 1.0,
+    "Amber": 2.0,
+    "Topaz": 5.0,
+    "Emerald": 10.0,
+    "Aquamarine": 25.0,
+    "Sapphire": 50.0,
+    "Magic": 100.0
+}
 
 # In-memory rate limiting (in production, use Redis)
 request_counts = defaultdict(lambda: defaultdict(int))
