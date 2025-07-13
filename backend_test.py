@@ -3700,7 +3700,7 @@ def test_admin_panel_user_management() -> None:
         expected_status=403
     )
     
-    if not non_admin_success:
+    if non_admin_success:  # Success means we got the expected 403 status
         print_success("✓ Non-admin access correctly denied")
         record_test("Admin - Non-admin Access Denied", True)
     else:
