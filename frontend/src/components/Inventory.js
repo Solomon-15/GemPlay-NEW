@@ -460,9 +460,9 @@ const Inventory = ({ user, onUpdateUser }) => {
                       
                       <button 
                         onClick={() => handleGiftGem(gem.type)}
-                        disabled={availableQuantity === 0 || giftingGem === gem.type}
+                        disabled={availableQuantity === 0}
                         className={`w-full py-2 px-4 rounded-lg font-rajdhani font-bold text-sm transition-all duration-300 uppercase tracking-wider ${
-                          availableQuantity > 0 && giftingGem !== gem.type
+                          availableQuantity > 0
                             ? 'text-white hover:scale-105'
                             : 'text-gray-500 cursor-not-allowed'
                         }`}
@@ -472,7 +472,7 @@ const Inventory = ({ user, onUpdateUser }) => {
                           color: availableQuantity > 0 ? '#23d364' : '#666'
                         }}
                       >
-                        {giftingGem === gem.type ? 'GIFTING...' : 'GIFT'}
+                        GIFT
                       </button>
                     </div>
                   </div>
