@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -8,6 +8,9 @@ const NotificationBell = ({ isCollapsed }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ right: 0, top: '100%' });
+  const bellRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // Fetch notifications
   const fetchNotifications = async () => {
@@ -24,6 +27,49 @@ const NotificationBell = ({ isCollapsed }) => {
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
+  };
+
+  // Calculate optimal dropdown position
+  const calculateDropdownPosition = () => {
+    if (!bellRef.current) return;
+
+    const bellRect = bellRef.current.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    const dropdownWidth = 320;
+    const dropdownMaxHeight = 400;
+    
+    let position = {
+      right: 0,
+      top: '100%',
+      left: 'auto',
+      bottom: 'auto',
+      maxHeight: `${dropdownMaxHeight}px`
+    };
+
+    // Check if dropdown would go off right edge of screen
+    if (bellRect.right - dropdownWidth < 0) {
+      // Position to the left of bell
+      position.left = 0;
+      position.right = 'auto';
+    }
+
+    // Check if dropdown would go off bottom of screen
+    const spaceBelow = viewportHeight - bellRect.bottom - 8; // 8px margin
+    const spaceAbove = bellRect.top - 8;
+    
+    if (spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow) {
+      // Position above the bell
+      position.bottom = '100%';
+      position.top = 'auto';
+      position.maxHeight = `${Math.min(spaceAbove, dropdownMaxHeight)}px`;
+    } else {
+      // Position below the bell (default)
+      position.maxHeight = `${Math.min(spaceBelow, dropdownMaxHeight)}px`;
+    }
+
+    setDropdownPosition(position);
   };
 
   // Mark notification as read
@@ -90,6 +136,23 @@ const NotificationBell = ({ isCollapsed }) => {
     return `${Math.floor(diffInMinutes / 1440)}d ago`;
   };
 
+  // Handle bell click
+  const handleBellClick = () => {
+    if (!isOpen) {
+      calculateDropdownPosition();
+      fetchNotifications();
+    }
+    setIsOpen(!isOpen);
+  };
+
+  // Handle click outside
+  const handleClickOutside = (event) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
+        bellRef.current && !bellRef.current.contains(event.target)) {
+      setIsOpen(false);
+    }
+  };
+
   useEffect(() => {
     fetchNotifications();
     
@@ -99,16 +162,23 @@ const NotificationBell = ({ isCollapsed }) => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('resize', calculateDropdownPosition);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        window.removeEventListener('resize', calculateDropdownPosition);
+      };
+    }
+  }, [isOpen]);
+
   return (
     <div className="relative">
       {/* Notification Bell Button */}
       <button 
-        onClick={() => {
-          setIsOpen(!isOpen);
-          if (!isOpen) {
-            fetchNotifications();
-          }
-        }}
+        ref={bellRef}
+        onClick={handleBellClick}
         className={`p-2 hover:bg-surface-card rounded-lg transition-colors relative ${
           isCollapsed ? 'w-full flex justify-center' : ''
         }`}
@@ -128,36 +198,49 @@ const NotificationBell = ({ isCollapsed }) => {
       {/* Notifications Dropdown */}
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Enhanced Backdrop with higher z-index */}
           <div 
-            className="fixed inset-0 z-40" 
+            className="fixed inset-0 z-[9998]" 
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Dropdown Panel */}
-          <div className="absolute right-0 top-full mt-2 w-80 bg-surface-card border border-border-primary rounded-lg shadow-xl z-50 max-h-96 overflow-hidden">
+          {/* Dropdown Panel with enhanced positioning */}
+          <div 
+            ref={dropdownRef}
+            className="fixed z-[9999] w-80 bg-surface-card border border-border-primary rounded-lg shadow-2xl overflow-hidden"
+            style={{
+              ...dropdownPosition,
+              right: dropdownPosition.right !== 'auto' ? `${bellRef.current?.getBoundingClientRect().right - (bellRef.current?.getBoundingClientRect().width || 0) - 320 + (bellRef.current?.getBoundingClientRect().width || 0)}px` : dropdownPosition.right,
+              left: dropdownPosition.left !== 'auto' ? `${bellRef.current?.getBoundingClientRect().left}px` : dropdownPosition.left,
+              top: dropdownPosition.top !== 'auto' ? `${(bellRef.current?.getBoundingClientRect().bottom || 0) + 8}px` : dropdownPosition.top,
+              bottom: dropdownPosition.bottom !== 'auto' ? `${window.innerHeight - (bellRef.current?.getBoundingClientRect().top || 0) + 8}px` : dropdownPosition.bottom,
+              maxHeight: dropdownPosition.maxHeight,
+              minWidth: '320px',
+              maxWidth: '320px'
+            }}
+          >
             {/* Header */}
-            <div className="px-4 py-3 border-b border-border-primary flex items-center justify-between">
-              <h3 className="font-rajdhani font-bold text-white">Notifications</h3>
+            <div className="px-4 py-3 border-b border-border-primary flex items-center justify-between bg-surface-card">
+              <h3 className="font-rajdhani font-bold text-white">Уведомления</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   className="text-xs text-accent-primary hover:text-accent-secondary transition-colors"
                 >
-                  Mark all read
+                  Отметить все
                 </button>
               )}
             </div>
 
             {/* Notifications List */}
-            <div className="max-h-80 overflow-y-auto">
+            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100% - 60px)' }}>
               {notifications.length === 0 ? (
                 <div className="px-4 py-8 text-center text-text-secondary">
                   <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                   </svg>
-                  <div className="text-sm">No notifications yet</div>
-                  <div className="text-xs mt-1">You'll see notifications here when something happens</div>
+                  <div className="text-sm">Пока нет уведомлений</div>
+                  <div className="text-xs mt-1">Уведомления появятся здесь</div>
                 </div>
               ) : (
                 notifications.map((notification) => {
@@ -218,7 +301,7 @@ const NotificationBell = ({ isCollapsed }) => {
                   onClick={() => setIsOpen(false)}
                   className="w-full text-xs text-text-secondary hover:text-white transition-colors text-center"
                 >
-                  Close notifications
+                  Закрыть уведомления
                 </button>
               </div>
             )}
