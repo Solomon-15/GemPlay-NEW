@@ -414,6 +414,28 @@ const UserManagement = ({ user: currentUser }) => {
     }
   };
 
+  const handleModifyGems = async (gemType, change, reason, notificationMessage) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/admin/users/${selectedUser.id}/gems/modify`, {
+        gem_type: gemType,
+        change: change,
+        reason: reason || 'Admin action',
+        notification: notificationMessage
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const action = change > 0 ? 'добавлено' : 'удалено';
+      showSuccessRU(`${Math.abs(change)} ${gemType} гемов ${action}`);
+      await fetchUserDetails(selectedUser.id); // Refresh data
+      fetchUsers(); // Refresh users list to update totals
+    } catch (error) {
+      console.error('Ошибка изменения гемов:', error);
+      showErrorRU('Ошибка при изменении гемов');
+    }
+  };
+
   // Modal Components
   const EditUserModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
