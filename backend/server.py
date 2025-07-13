@@ -4109,44 +4109,67 @@ async def get_profit_stats(current_admin: User = Depends(get_current_admin)):
         week_ago = current_time - timedelta(weeks=1)
         month_ago = current_time - timedelta(days=30)
         
-        # Get total profits
-        total_profit = await db.profit_entries.aggregate([
-            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
-        ]).to_list(1)
-        total_profit = total_profit[0]["total"] if total_profit else 0
-        
         # Get profits by type
         profit_by_type = await db.profit_entries.aggregate([
             {"$group": {"_id": "$entry_type", "total": {"$sum": "$amount"}}}
         ]).to_list(10)
         
-        # Get recent profits (last 24 hours)
-        recent_profit = await db.profit_entries.aggregate([
+        profit_breakdown = {}
+        for item in profit_by_type:
+            profit_breakdown[item["_id"]] = item["total"]
+        
+        # Extract specific commission types
+        bet_commission = profit_breakdown.get("BET_COMMISSION", 0)
+        gift_commission = profit_breakdown.get("GIFT_COMMISSION", 0)
+        bot_revenue = profit_breakdown.get("BOT_REVENUE", 0)
+        
+        # Get total from all entries
+        total_profit = sum(profit_breakdown.values())
+        
+        # Calculate periods
+        today_profit = await db.profit_entries.aggregate([
             {"$match": {"created_at": {"$gte": day_ago}}},
             {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
         ]).to_list(1)
-        recent_profit = recent_profit[0]["total"] if recent_profit else 0
+        today_profit = today_profit[0]["total"] if today_profit else 0
         
-        # Get weekly profit
-        weekly_profit = await db.profit_entries.aggregate([
+        week_profit = await db.profit_entries.aggregate([
             {"$match": {"created_at": {"$gte": week_ago}}},
             {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
         ]).to_list(1)
-        weekly_profit = weekly_profit[0]["total"] if weekly_profit else 0
+        week_profit = week_profit[0]["total"] if week_profit else 0
         
-        # Get monthly profit
-        monthly_profit = await db.profit_entries.aggregate([
+        month_profit = await db.profit_entries.aggregate([
             {"$match": {"created_at": {"$gte": month_ago}}},
             {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
         ]).to_list(1)
-        monthly_profit = monthly_profit[0]["total"] if monthly_profit else 0
+        month_profit = month_profit[0]["total"] if month_profit else 0
+        
+        # Get frozen funds from all users
+        frozen_funds_result = await db.users.aggregate([
+            {"$group": {"_id": None, "total": {"$sum": "$frozen_balance"}}}
+        ]).to_list(1)
+        frozen_funds = frozen_funds_result[0]["total"] if frozen_funds_result else 0
+        
+        # Calculate expenses (для будущего использования)
+        total_expenses = profit_breakdown.get("REFUND", 0) + profit_breakdown.get("BONUS", 0) + profit_breakdown.get("EXPENSE", 0)
         
         return {
-            "total_profit": total_profit,
-            "recent_profit": recent_profit,
-            "weekly_profit": weekly_profit,
-            "monthly_profit": monthly_profit,
-            "profit_by_type": {item["_id"]: item["total"] for item in profit_by_type}
+            # Main metrics for new design
+            "bet_commission": bet_commission,           # Комиссия от ставок
+            "gift_commission": gift_commission,         # Комиссия от подарков
+            "bot_revenue": bot_revenue,                 # Доход от ботов
+            "frozen_funds": frozen_funds,               # Замороженные средства
+            "total_profit": total_profit,               # Общая прибыль
+            "total_expenses": total_expenses,           # Расходы
+            
+            # Period statistics
+            "today_profit": today_profit,
+            "week_profit": week_profit,
+            "month_profit": month_profit,
+            
+            # Full breakdown for compatibility
+            "profit_by_type": profit_breakdown
         }
         
     except Exception as e:
