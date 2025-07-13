@@ -1121,7 +1121,9 @@ const UserManagement = ({ user: currentUser }) => {
                               }`}
                               title={suspiciousFlags.length > 0 ? "Снять флаг подозрительности" : "Отметить как подозрительного"}
                             >
-                              🚩
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                              </svg>
                             </button>
                             {suspiciousFlags.length > 0 && (
                               <div className="absolute bottom-full left-0 mb-2 w-48 bg-red-900 border border-red-500 rounded-lg p-2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
@@ -1138,7 +1140,9 @@ const UserManagement = ({ user: currentUser }) => {
                             className="p-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                             title="Информация о игроке"
                           >
-                            ℹ️
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                           </button>
 
                           {/* Edit Button */}
