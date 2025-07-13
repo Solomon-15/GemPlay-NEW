@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import UserManagement from './UserManagement';
 import ProfitAdmin from './ProfitAdmin';
+import BetsManagement from './BetsManagement';
+import RegularBotsManagement from './RegularBotsManagement';
+import HumanBotsManagement from './HumanBotsManagement';
 import NotificationContainer from './NotificationContainer';
 import { useNotifications } from './NotificationContext';
 
