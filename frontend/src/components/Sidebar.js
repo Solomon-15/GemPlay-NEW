@@ -215,7 +215,7 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
       {/* User Info */}
       {!isCollapsed && user && (
         <div className="p-4 border-t border-border-primary">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 mb-3">
             <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-green-700 rounded-full flex items-center justify-center">
               <span className="font-russo text-white text-sm">
                 {user.username.charAt(0).toUpperCase()}
@@ -230,16 +230,40 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
               </p>
             </div>
           </div>
+          
+          {/* Logout Button */}
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center justify-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 group"
+          >
+            <svg className="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            LOGOUT
+          </button>
         </div>
       )}
 
       {/* Collapsed User Avatar */}
       {isCollapsed && user && (
-        <div className="p-2 border-t border-border-primary flex justify-center">
-          <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-green-700 rounded-full flex items-center justify-center">
-            <span className="font-russo text-white text-xs">
-              {user.username.charAt(0).toUpperCase()}
-            </span>
+        <div className="p-2 border-t border-border-primary">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-green-600 to-green-700 rounded-full flex items-center justify-center">
+              <span className="font-russo text-white text-xs">
+                {user.username.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            
+            {/* Collapsed Logout Button */}
+            <button
+              onClick={onLogout}
+              className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 group flex items-center justify-center"
+              title="Logout"
+            >
+              <svg className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
           </div>
         </div>
       )}
