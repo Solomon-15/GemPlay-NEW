@@ -32,15 +32,17 @@ const MyBets = ({ user }) => {
   };
 
   const getFilteredBets = () => {
+    const safeBets = bets.filter(bet => bet && bet.status); // Filter out any undefined/null bets
+    
     switch (activeTab) {
       case 'active':
-        return bets.filter(bet => bet.status === 'WAITING' || bet.status === 'ACTIVE');
+        return safeBets.filter(bet => bet.status === 'WAITING' || bet.status === 'ACTIVE');
       case 'completed':
-        return bets.filter(bet => bet.status === 'COMPLETED');
+        return safeBets.filter(bet => bet.status === 'COMPLETED');
       case 'cancelled':
-        return bets.filter(bet => bet.status === 'CANCELLED');
+        return safeBets.filter(bet => bet.status === 'CANCELLED');
       default:
-        return bets;
+        return safeBets;
     }
   };
 
