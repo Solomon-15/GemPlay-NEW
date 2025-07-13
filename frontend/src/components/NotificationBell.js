@@ -233,7 +233,11 @@ const NotificationBell = ({ isCollapsed }) => {
             </div>
 
             {/* Notifications List */}
-            <div className="overflow-y-auto" style={{ maxHeight: 'calc(100% - 60px)' }}>
+            <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800" 
+                 style={{ 
+                   maxHeight: 'calc(100% - 120px)',
+                   minHeight: '200px'
+                 }}>
               {notifications.length === 0 ? (
                 <div className="px-4 py-8 text-center text-text-secondary">
                   <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,54 +247,56 @@ const NotificationBell = ({ isCollapsed }) => {
                   <div className="text-xs mt-1">You'll see notifications here when something happens</div>
                 </div>
               ) : (
-                notifications.map((notification) => {
-                  const { icon, color } = getNotificationIcon(notification.type);
-                  
-                  return (
-                    <div
-                      key={notification.id}
-                      onClick={() => {
-                        if (!notification.read) {
-                          markAsRead(notification.id);
-                        }
-                      }}
-                      className={`px-4 py-3 border-b border-border-primary last:border-b-0 hover:bg-surface-sidebar cursor-pointer transition-colors ${
-                        !notification.read ? 'bg-accent-primary bg-opacity-5' : ''
-                      }`}
-                    >
-                      <div className="flex items-start space-x-3">
-                        {/* Icon */}
-                        <div className={`text-lg ${color} flex-shrink-0 mt-0.5`}>
-                          {icon}
-                        </div>
-                        
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <h4 className={`text-sm font-medium ${
-                              !notification.read ? 'text-white' : 'text-text-secondary'
-                            }`}>
-                              {notification.title}
-                            </h4>
-                            {!notification.read && (
-                              <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
-                            )}
+                <div className="space-y-0">
+                  {notifications.map((notification) => {
+                    const { icon, color } = getNotificationIcon(notification.type);
+                    
+                    return (
+                      <div
+                        key={notification.id}
+                        onClick={() => {
+                          if (!notification.read) {
+                            markAsRead(notification.id);
+                          }
+                        }}
+                        className={`px-4 py-3 border-b border-border-primary last:border-b-0 hover:bg-surface-sidebar cursor-pointer transition-colors ${
+                          !notification.read ? 'bg-accent-primary bg-opacity-5' : ''
+                        }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          {/* Icon */}
+                          <div className={`text-lg ${color} flex-shrink-0 mt-0.5`}>
+                            {icon}
                           </div>
                           
-                          <p className={`text-xs ${
-                            !notification.read ? 'text-text-secondary' : 'text-gray-500'
-                          } leading-relaxed mb-1`}>
-                            {notification.message}
-                          </p>
-                          
-                          <div className="text-xs text-gray-500">
-                            {timeAgo(notification.created_at)}
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <h4 className={`text-sm font-medium ${
+                                !notification.read ? 'text-white' : 'text-text-secondary'
+                              }`}>
+                                {notification.title}
+                              </h4>
+                              {!notification.read && (
+                                <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
+                              )}
+                            </div>
+                            
+                            <p className={`text-xs ${
+                              !notification.read ? 'text-text-secondary' : 'text-gray-500'
+                            } leading-relaxed mb-1`}>
+                              {notification.message}
+                            </p>
+                            
+                            <div className="text-xs text-gray-500">
+                              {timeAgo(notification.created_at)}
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })}
+                </div>
               )}
             </div>
 
