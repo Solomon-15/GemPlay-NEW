@@ -854,6 +854,18 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
+  - task: "My Bets Section Error Fix and English Localization"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/MyBets.js, /app/frontend/src/App.js, /app/frontend/src/components/NotificationBell.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "MY BETS SECTION ERROR FIX AND ENGLISH LOCALIZATION COMPLETED: Successfully fixed potential errors in My Bets section and converted all UI text to English as requested. Key fixes implemented: 1) MY BETS ERROR FIX - added null safety checks for user prop in BetCard component, preventing crashes when user data is not available, added user existence check before accessing user.id in winner determination, fixed statistics calculation with proper null checks for won/lost games count. 2) ENGLISH LOCALIZATION COMPLETE - converted all notification bell text from Russian to English (Уведомления → Notifications, Отметить все → Mark all read, Пока нет уведомлений → No notifications yet, Уведомления появятся здесь → You'll see notifications here when something happens, Закрыть уведомления → Close notifications), updated loading text from Загрузка to Loading in App.js, removed Russian comment and replaced with English equivalent. 3) USER PROP VALIDATION - ensured MyBets component properly receives user prop from App.js (confirmed correct passing on line 335), added defensive programming to handle cases where user might be undefined, maintained existing functionality while improving error handling. 4) TECHNICAL IMPROVEMENTS - preserved all existing notification bell positioning and z-index functionality, maintained dropdown width of 320px and proper viewport calculations, kept all API integration and real-time update features intact. The My Bets section now has improved error handling and the entire UI is consistently in English as requested."
+
   - task: "Notification Bell Dropdown Positioning and Functionality"
     implemented: true
     working: true
