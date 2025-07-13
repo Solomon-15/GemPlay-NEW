@@ -264,7 +264,7 @@ function App() {
   return (
     <NotificationProvider>
       <GemsProvider>
-        {/* Если открыта админ панель, показываем только её */}
+        {/* If admin panel is open, show only it */}
         {isAdminPanelOpen ? (
           <AdminPanel user={user} onClose={handleCloseAdminPanel} />
         ) : (
