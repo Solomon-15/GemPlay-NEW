@@ -120,6 +120,9 @@ const HeaderPortfolio = ({ user }) => {
               Frozen: ${formatNumber(portfolioData.balance.frozen)}
             </div>
           )}
+          <div className="text-xs text-text-secondary hidden md:block">
+            ${formatNumber(portfolioData.balance.available)}
+          </div>
         </div>
       </div>
 
@@ -135,6 +138,9 @@ const HeaderPortfolio = ({ user }) => {
               Frozen: {formatNumber(portfolioData.gems.frozenCount)}
             </div>
           )}
+          <div className="text-xs text-text-secondary hidden md:block">
+            ${formatNumber(portfolioData.gems.availableValue)}
+          </div>
         </div>
       </div>
 
@@ -144,6 +150,14 @@ const HeaderPortfolio = ({ user }) => {
           <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Total</h3>
           <div className="font-rajdhani text-xs sm:text-sm md:text-lg font-bold text-accent-primary break-words whitespace-nowrap">
             ${formatNumber(portfolioData.total.value)}
+          </div>
+          <div className="text-xs text-text-secondary hidden md:block">
+            {(() => {
+              const totalFrozen = portfolioData.balance.frozen + portfolioData.gems.frozenValue;
+              const totalAvailable = portfolioData.total.value - totalFrozen;
+              
+              return `${formatNumber(totalAvailable)}`;
+            })()}
           </div>
         </div>
       </div>
