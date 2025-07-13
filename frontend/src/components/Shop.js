@@ -107,35 +107,6 @@ const Shop = ({ user, onUpdateUser }) => {
         </p>
       </div>
 
-      {/* Balance Display */}
-      {balance && (
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-            <h2 className="font-russo text-2xl text-accent-secondary mb-4">Account Balance</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="font-roboto text-text-secondary">Virtual Dollars</p>
-                <p className="font-rajdhani text-3xl font-bold text-green-400">
-                  {formatCurrencyWithSymbol(balance.virtual_balance)}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="font-roboto text-text-secondary">Gem Value</p>
-                <p className="font-rajdhani text-3xl font-bold text-accent-primary">
-                  {formatCurrencyWithSymbol(balance.total_gem_value)}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="font-roboto text-text-secondary">Total Worth</p>
-                <p className="font-rajdhani text-3xl font-bold text-white">
-                  {formatCurrencyWithSymbol(balance.total_value)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Gems Grid */}
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
