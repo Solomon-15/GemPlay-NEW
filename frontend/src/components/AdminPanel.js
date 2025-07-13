@@ -537,7 +537,7 @@ const AdminPanel = ({ user, onClose }) => {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="font-russo text-xl text-accent-primary">Admin Panel</h1>
+                  <h1 className="font-russo text-xl text-accent-primary">Админ-панель</h1>
                   <p className="font-roboto text-text-secondary text-sm">GemPlay</p>
                 </div>
               </div>
@@ -568,7 +568,7 @@ const AdminPanel = ({ user, onClose }) => {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="text-sm font-rajdhani">Back</span>
+              <span className="text-sm font-rajdhani">Назад</span>
             </button>
           )}
 
