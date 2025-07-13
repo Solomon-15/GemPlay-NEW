@@ -44,6 +44,30 @@ button {
   animation: slide-in-right 0.3s ease-out;
 }
 
+/* Custom scrollbar styles for notifications */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #4a5568 #1a202c;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #1a202c;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
 /* Анимация для обратного отсчета 3-2-1 */
 @keyframes countdownPulse {
   0% {
