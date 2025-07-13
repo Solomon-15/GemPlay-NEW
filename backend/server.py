@@ -4714,14 +4714,6 @@ async def reset_all_user_balances(current_user: User = Depends(get_current_admin
                 "games_cancelled": cancelled_games,
                 "reset_timestamp": datetime.utcnow().isoformat()
             }
-
-# ==============================================================================
-# NEW EXTENDED ADMIN USER MANAGEMENT ENDPOINTS
-# ==============================================================================
-
-# ==============================================================================
-# NEW EXTENDED ADMIN USER MANAGEMENT ENDPOINTS
-# ==============================================================================
         }
         
     except Exception as e:
@@ -4729,6 +4721,182 @@ async def reset_all_user_balances(current_user: User = Depends(get_current_admin
         raise HTTPException(
             status_code=500,
             detail=f"Failed to reset user balances: {str(e)}"
+        )
+
+# ==============================================================================
+# NEW EXTENDED ADMIN USER MANAGEMENT ENDPOINTS
+# ==============================================================================
+
+@api_router.get("/admin/users/{user_id}/gems", response_model=dict)
+async def get_user_gems(
+    user_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get detailed gem inventory for a specific user."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Get user's gems
+        gems_data = []
+        for gem_type, gem_data in user.get("gems", {}).items():
+            if isinstance(gem_data, dict) and gem_data.get("quantity", 0) > 0:
+                price = GEM_PRICES.get(gem_type, 0)
+                gems_data.append({
+                    "type": gem_type,
+                    "quantity": gem_data.get("quantity", 0),
+                    "frozen_quantity": gem_data.get("frozen_quantity", 0),
+                    "price": price,
+                    "total_value": gem_data.get("quantity", 0) * price,
+                    "frozen": gem_data.get("frozen_quantity", 0) > 0
+                })
+        
+        return {
+            "user_id": user_id,
+            "username": user.get("username"),
+            "gems": gems_data,
+            "total_gems": sum(gem["quantity"] for gem in gems_data),
+            "total_value": sum(gem["total_value"] for gem in gems_data)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching user gems: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch user gems"
+        )
+
+@api_router.get("/admin/users/{user_id}/bets", response_model=dict)
+async def get_user_bets(
+    user_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get active bets for a specific user."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Get user's active bets
+        bets = await db.games.find({
+            "$or": [
+                {"creator_id": user_id},
+                {"opponent_id": user_id}
+            ],
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        }).sort("created_at", -1).to_list(50)
+        
+        # Process bets data
+        bets_data = []
+        for bet in bets:
+            opponent_id = bet.get("opponent_id") if bet.get("creator_id") == user_id else bet.get("creator_id")
+            opponent = None
+            if opponent_id:
+                opponent_doc = await db.users.find_one({"id": opponent_id})
+                opponent = opponent_doc.get("username") if opponent_doc else "Unknown"
+            
+            bets_data.append({
+                "id": bet.get("id"),
+                "amount": bet.get("bet_amount"),
+                "status": bet.get("status"),
+                "created_at": bet.get("created_at"),
+                "opponent": opponent,
+                "is_creator": bet.get("creator_id") == user_id,
+                "gems": bet.get("bet_gems", {})
+            })
+        
+        return {
+            "user_id": user_id,
+            "username": user.get("username"),
+            "active_bets": bets_data,
+            "total_active_bets": len(bets_data)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching user bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch user bets"
+        )
+
+@api_router.get("/admin/users/{user_id}/stats", response_model=dict)
+async def get_user_stats(
+    user_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get comprehensive statistics for a specific user."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Game statistics
+        total_games = user.get("total_games_played", 0)
+        games_won = user.get("total_games_won", 0)
+        games_lost = total_games - games_won
+        games_draw = user.get("total_games_draw", 0)
+        win_rate = round((games_won / total_games * 100), 1) if total_games > 0 else 0
+        
+        # Financial statistics (simplified for demo)
+        profit = user.get("total_profit", 0.0)
+        gifts_sent = user.get("gifts_sent_count", 0)
+        gifts_received = user.get("gifts_received_count", 0)
+        
+        # IP history (simplified for demo)
+        ip_history = user.get("ip_history", [user.get("last_ip", "192.168.1.1")])
+        if len(ip_history) == 0:
+            ip_history = ["192.168.1.1"]
+        
+        return {
+            "user_id": user_id,
+            "username": user.get("username"),
+            "email": user.get("email"),
+            "game_stats": {
+                "total_games": total_games,
+                "games_won": games_won,
+                "games_lost": games_lost,
+                "games_draw": games_draw,
+                "win_rate": win_rate
+            },
+            "financial_stats": {
+                "current_balance": user.get("virtual_balance", 0),
+                "total_profit": profit,
+                "gifts_sent": gifts_sent,
+                "gifts_received": gifts_received
+            },
+            "activity_stats": {
+                "created_at": user.get("created_at"),
+                "last_login": user.get("last_login"),
+                "last_ip": user.get("last_ip"),
+                "status": user.get("status")
+            },
+            "ip_history": ip_history[:50]  # Last 50 IPs
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching user stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch user stats"
         )
 
 @api_router.post("/admin/games/reset-all", response_model=dict)
