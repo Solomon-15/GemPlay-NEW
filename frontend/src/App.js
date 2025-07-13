@@ -359,6 +359,7 @@ function App() {
                 {currentView === 'monitoring' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
                   <SecurityMonitoring user={user} />
                 )}
+                </div>
               </div>
             </div>
             
