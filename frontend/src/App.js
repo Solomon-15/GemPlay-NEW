@@ -285,18 +285,8 @@ function App() {
               {/* Top Bar - Sticky Header */}
               <nav className="sticky top-0 z-40 bg-surface-sidebar border-b border-border-primary p-4 flex-shrink-0">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {/* Mobile Menu Button */}
-                    <button
-                      onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                      className="lg:hidden p-2 hover:bg-surface-card rounded-lg transition-colors"
-                    >
-                      <svg className="w-6 h-6 text-text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                      </svg>
-                    </button>
-
-                    {/* Page Title */}
+                  {/* Desktop: Page Title Only */}
+                  <div className="hidden md:block">
                     <h1 className="text-xl font-russo text-text-primary capitalize">
                       {currentView === 'my-bets' ? 'My Bets' : 
                        currentView === 'game-lobby' ? 'Game Lobby' : 
@@ -306,8 +296,29 @@ function App() {
                     </h1>
                   </div>
 
-                  {/* Balance Display */}
-                  <BalanceDisplay user={user} onUpdateUser={checkAuthStatus} />
+                  {/* Mobile: Empty space */}
+                  <div className="md:hidden"></div>
+
+                  {/* Desktop: Balance Display */}
+                  <div className="hidden md:block">
+                    <BalanceDisplay user={user} onUpdateUser={checkAuthStatus} />
+                  </div>
+
+                  {/* Mobile: Profile Avatar */}
+                  <div className="md:hidden">
+                    <button
+                      onClick={() => setCurrentView('profile')}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        currentView === 'profile' 
+                          ? 'bg-gradient-to-r from-green-600 to-green-700 ring-2 ring-accent-primary' 
+                          : 'bg-gradient-to-r from-green-600 to-green-700 hover:ring-2 hover:ring-accent-primary/50'
+                      }`}
+                    >
+                      <span className="font-russo text-white text-sm">
+                        {user.username.charAt(0).toUpperCase()}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </nav>
 
