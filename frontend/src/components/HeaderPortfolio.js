@@ -1,0 +1,172 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
+
+const HeaderPortfolio = ({ user }) => {
+  const [balance, setBalance] = useState(null);
+  const [gems, setGems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const API = process.env.REACT_APP_BACKEND_URL;
+
+  const fetchBalance = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/economy/balance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBalance(response.data);
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+    }
+  };
+
+  const fetchGems = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/gems/inventory`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setGems(response.data || []);
+    } catch (error) {
+      console.error('Error fetching gems:', error);
+    }
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    await Promise.all([fetchBalance(), fetchGems()]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchData();
+      
+      // Subscribe to global updates
+      const globalRefresh = getGlobalLobbyRefresh();
+      const unregister = globalRefresh.registerRefreshCallback(() => {
+        fetchData();
+      });
+      
+      return () => {
+        unregister();
+      };
+    }
+  }, [user?.id]);
+
+  // Calculate portfolio data
+  const getPortfolioData = () => {
+    if (!balance) return null;
+    
+    const virtualBalance = balance.virtual_balance;
+    const frozenBalance = balance.frozen_balance;
+    const totalGemsCount = gems.reduce((sum, gem) => sum + gem.quantity, 0);
+    const frozenGemsCount = gems.reduce((sum, gem) => sum + gem.frozen_quantity, 0);
+    const availableGemValue = balance.available_gem_value;
+    const frozenGemValue = balance.total_gem_value - balance.available_gem_value;
+    const totalValue = balance.total_value;
+
+    return {
+      balance: {
+        total: virtualBalance,
+        frozen: frozenBalance,
+        available: virtualBalance - frozenBalance
+      },
+      gems: {
+        totalCount: totalGemsCount,
+        totalValue: balance.total_gem_value,
+        frozenCount: frozenGemsCount,
+        frozenValue: frozenGemValue,
+        availableValue: availableGemValue
+      },
+      total: {
+        value: totalValue
+      }
+    };
+  };
+
+  const portfolioData = getPortfolioData();
+
+  // Format numbers with commas
+  const formatNumber = (number) => {
+    return number.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  };
+
+  if (loading || !portfolioData) {
+    return (
+      <div className="flex space-x-3">
+        <div className="w-24 h-12 bg-gray-700 rounded animate-pulse"></div>
+        <div className="w-24 h-12 bg-gray-700 rounded animate-pulse"></div>
+        <div className="w-24 h-12 bg-gray-700 rounded animate-pulse"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex space-x-2 md:space-x-4">
+      {/* Balance Block - Compact for Header */}
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-border-primary hover:border-green-500 transition-colors duration-200 min-w-0">
+        <div className="text-center">
+          <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Balance</h3>
+          <div className="font-rajdhani text-sm md:text-lg font-bold text-green-400 break-words">
+            ${formatNumber(portfolioData.balance.total)}
+          </div>
+          {portfolioData.balance.frozen > 0 && (
+            <div className="text-xs text-orange-400 hidden sm:block">
+              Frozen: ${formatNumber(portfolioData.balance.frozen)}
+            </div>
+          )}
+          <div className="text-xs text-text-secondary hidden md:block">
+            Available: ${formatNumber(portfolioData.balance.available)}
+          </div>
+        </div>
+      </div>
+
+      {/* Gems Block - Compact for Header */}
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-border-primary hover:border-purple-500 transition-colors duration-200 min-w-0">
+        <div className="text-center">
+          <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Gems</h3>
+          <div className="font-rajdhani text-sm md:text-lg font-bold text-purple-400 break-words">
+            {formatNumber(portfolioData.gems.totalCount)}/{formatNumber(portfolioData.gems.totalValue)}
+          </div>
+          {portfolioData.gems.frozenCount > 0 && (
+            <div className="text-xs text-orange-400 hidden sm:block">
+              Frozen: {formatNumber(portfolioData.gems.frozenCount)}
+            </div>
+          )}
+          <div className="text-xs text-text-secondary hidden md:block">
+            Available: ${formatNumber(portfolioData.gems.availableValue)}
+          </div>
+        </div>
+      </div>
+
+      {/* Total Block - Compact for Header */}
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-border-primary hover:border-accent-primary transition-colors duration-200 min-w-0">
+        <div className="text-center">
+          <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Total</h3>
+          <div className="font-rajdhani text-sm md:text-lg font-bold text-accent-primary break-words">
+            ${formatNumber(portfolioData.total.value)}
+          </div>
+          <div className="text-xs text-text-secondary hidden md:block">
+            {(() => {
+              const totalFrozen = portfolioData.balance.frozen + portfolioData.gems.frozenValue;
+              const totalAvailable = portfolioData.total.value - totalFrozen;
+              
+              if (totalFrozen > 0) {
+                return `${formatNumber(totalAvailable)} available`;
+              } else {
+                return 'All available';
+              }
+            })()}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HeaderPortfolio;
