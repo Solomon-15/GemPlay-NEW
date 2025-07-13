@@ -4640,7 +4640,7 @@ async def bot_join_game_automatically(bot: Bot):
 async def reset_all_user_balances(current_user: User = Depends(get_current_admin)):
     """Reset all user balances and gems to zero (admin only)."""
     try:
-        # Reset all user balances to zero
+        # Reset all user balances and frozen balances to 0
         user_balance_result = await db.users.update_many(
             {},  # All users
             {
