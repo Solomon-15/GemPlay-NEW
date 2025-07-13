@@ -3724,7 +3724,7 @@ def test_admin_panel_user_management() -> None:
         expected_status=400
     )
     
-    if not invalid_freeze_success:
+    if invalid_freeze_success:  # Success means we got the expected 400 status
         print_success("✓ Invalid freeze operation correctly rejected")
         record_test("Admin - Invalid Freeze Operation", True)
     else:
