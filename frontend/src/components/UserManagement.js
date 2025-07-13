@@ -170,16 +170,34 @@ const UserManagement = ({ user: currentUser }) => {
   };
 
   // Additional gem utilities
-  const getGemsTooltipContent = (user) => {
-    // Приблизительная разбивка гемов (в реальном приложении эти данные должны поступать с API)
-    const gemBreakdown = [
-      { type: 'Ruby', count: Math.floor((user.total_gems || 0) * 0.4) },
-      { type: 'Emerald', count: Math.floor((user.total_gems || 0) * 0.25) },
-      { type: 'Sapphire', count: Math.floor((user.total_gems || 0) * 0.2) },
-      { type: 'Magic', count: Math.floor((user.total_gems || 0) * 0.15) }
-    ].filter(gem => gem.count > 0);
-    
-    return gemBreakdown.map(gem => `${gem.type} x${gem.count}`).join(', ') || 'Нет гемов';
+  const getGemsTooltipContent = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/users/${userId}/gems`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.gems && response.data.gems.length > 0) {
+        return response.data.gems
+          .map(gem => `${gem.type} x${gem.quantity}`)
+          .join(', ');
+      }
+      return 'Нет гемов';
+    } catch (error) {
+      console.error('Ошибка получения данных о гемах:', error);
+      return 'Ошибка загрузки';
+    }
+  };
+
+  // State for gems tooltips
+  const [gemsTooltips, setGemsTooltips] = useState({});
+
+  // Load gems tooltip data
+  const loadGemsTooltip = async (userId) => {
+    if (!gemsTooltips[userId]) {
+      const content = await getGemsTooltipContent(userId);
+      setGemsTooltips(prev => ({ ...prev, [userId]: content }));
+    }
   };
 
   // Event handlers
