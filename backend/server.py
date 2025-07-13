@@ -3919,6 +3919,16 @@ async def get_games_stats(current_user: User = Depends(get_current_admin)):
             detail="Failed to fetch games stats"
         )
 
+GEM_PRICES = {
+    "Ruby": 1.0,
+    "Amber": 2.0,
+    "Topaz": 5.0,
+    "Emerald": 10.0,
+    "Aquamarine": 25.0,
+    "Sapphire": 50.0,
+    "Magic": 100.0
+}
+
 @api_router.get("/admin/users", response_model=dict)
 async def get_all_users(
     page: int = 1,
@@ -3949,6 +3959,38 @@ async def get_all_users(
         # Clean user data
         cleaned_users = []
         for user in users:
+            user_id = user.get("id")
+            
+            # Calculate gem statistics
+            total_gems = 0
+            total_gems_value = 0.0
+            for gem_type, gem_data in user.get("gems", {}).items():
+                if isinstance(gem_data, dict):
+                    quantity = gem_data.get("quantity", 0)
+                    price = GEM_PRICES.get(gem_type, 0)
+                    total_gems += quantity
+                    total_gems_value += quantity * price
+            
+            # Calculate active bets count
+            active_bets_pipeline = [
+                {"$match": {
+                    "$or": [
+                        {"creator_id": user_id},
+                        {"opponent_id": user_id}
+                    ],
+                    "status": {"$in": ["WAITING", "ACTIVE"]}
+                }},
+                {"$count": "active_bets"}
+            ]
+            active_bets_result = await db.games.aggregate(active_bets_pipeline).to_list(1)
+            active_bets_count = active_bets_result[0]["active_bets"] if active_bets_result else 0
+            
+            # Calculate game statistics
+            total_games_played = user.get("total_games_played", 0)
+            total_games_won = user.get("total_games_won", 0)
+            total_games_lost = total_games_played - total_games_won
+            total_games_draw = user.get("total_games_draw", 0)
+            
             cleaned_user = {
                 "id": user.get("id"),
                 "username": user.get("username"),
@@ -3957,8 +3999,13 @@ async def get_all_users(
                 "status": user.get("status"),
                 "gender": user.get("gender"),
                 "virtual_balance": user.get("virtual_balance", 0),
-                "total_games_played": user.get("total_games_played", 0),
-                "total_games_won": user.get("total_games_won", 0),
+                "total_games_played": total_games_played,
+                "total_games_won": total_games_won,
+                "total_games_lost": total_games_lost,
+                "total_games_draw": total_games_draw,
+                "total_gems": total_gems,
+                "total_gems_value": round(total_gems_value, 2),
+                "active_bets_count": active_bets_count,
                 "created_at": user.get("created_at"),
                 "last_login": user.get("last_login"),
                 "ban_reason": user.get("ban_reason"),
