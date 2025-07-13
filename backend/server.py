@@ -4718,6 +4718,9 @@ async def reset_all_user_balances(current_user: User = Depends(get_current_admin
                 "games_cancelled": cancelled_games,
                 "reset_timestamp": datetime.utcnow().isoformat()
             }
+# ==============================================================================
+# NEW EXTENDED ADMIN USER MANAGEMENT ENDPOINTS
+# ==============================================================================
 
 # ==============================================================================
 # NEW EXTENDED ADMIN USER MANAGEMENT ENDPOINTS
