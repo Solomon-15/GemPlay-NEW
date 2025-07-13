@@ -167,12 +167,22 @@ const PlayerCard = ({
           {/* Action Button */}
           <div className="flex-shrink-0">
             {isMyBet ? (
-              <button
-                onClick={handleCancelClick}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105"
-              >
-                Cancel
-              </button>
+              // Если игра в процессе (ACTIVE status)
+              game.status === 'ACTIVE' ? (
+                <button
+                  disabled
+                  className="px-4 py-2 bg-gray-600 text-gray-400 font-rajdhani font-bold rounded-lg cursor-not-allowed"
+                >
+                  In Progress
+                </button>
+              ) : (
+                <button
+                  onClick={handleCancelClick}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105"
+                >
+                  Cancel
+                </button>
+              )
             ) : (
               <button
                 onClick={handleAcceptClick}
