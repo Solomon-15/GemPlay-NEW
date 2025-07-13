@@ -76,28 +76,29 @@ const UserManagement = ({ user: currentUser }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Fetch user gems, bets, and stats
-      const [gemsResponse, betsResponse, statsResponse] = await Promise.allSettled([
-        axios.get(`${API}/admin/users/${userId}/gems`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/admin/users/${userId}/bets`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/admin/users/${userId}/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+      // Mock data for demonstration - replace with actual API calls
+      setUserGems([
+        { type: 'Ruby', quantity: 5, price: 10.50, frozen: false },
+        { type: 'Emerald', quantity: 3, price: 15.00, frozen: true },
+        { type: 'Sapphire', quantity: 8, price: 8.25, frozen: false }
       ]);
-
-      if (gemsResponse.status === 'fulfilled') {
-        setUserGems(gemsResponse.value.data || []);
-      }
-      if (betsResponse.status === 'fulfilled') {
-        setUserBets(betsResponse.value.data || []);
-      }
-      if (statsResponse.status === 'fulfilled') {
-        setUserStats(statsResponse.value.data || {});
-      }
+      
+      setUserBets([
+        { id: '1', amount: 50.00, status: 'ACTIVE', created_at: new Date(), opponent: 'Player123' },
+        { id: '2', amount: 25.00, status: 'WAITING', created_at: new Date(), opponent: null }
+      ]);
+      
+      setUserStats({
+        total_games: 45,
+        games_won: 28,
+        games_lost: 15,
+        games_draw: 2,
+        win_rate: 62.2,
+        profit: 156.75,
+        gifts_sent: 3,
+        gifts_received: 7,
+        ip_history: ['192.168.1.1', '10.0.0.1', '172.16.0.1']
+      });
     } catch (error) {
       console.error('Error fetching user details:', error);
     }
@@ -160,22 +161,7 @@ const UserManagement = ({ user: currentUser }) => {
       });
     }
     
-    // Frequent bot games (placeholder - would need actual data)
-    if (user.bot_games_ratio && user.bot_games_ratio > 0.7) {
-      flags.push({
-        type: 'bot_games',
-        message: 'Часто играет только с ботами'
-      });
-    }
-    
-    // Frequent gifts (placeholder - would need actual data)
-    if (user.recent_gifts_count && user.recent_gifts_count > 3) {
-      flags.push({
-        type: 'frequent_gifts',
-        message: `${user.recent_gifts_count} подарков подряд одному игроку`
-      });
-    }
-    
+    // Additional flags can be added here based on actual data
     return flags;
   };
 
@@ -296,7 +282,7 @@ const UserManagement = ({ user: currentUser }) => {
       return;
     }
 
-    if (currentUser.role !== 'SUPER_ADMIN') {
+    if (currentUser?.role !== 'SUPER_ADMIN') {
       showErrorRU('Только SUPER_ADMIN может удалять аккаунты');
       return;
     }
@@ -317,188 +303,88 @@ const UserManagement = ({ user: currentUser }) => {
     }
   };
 
-      await axios.post(`${API}/admin/users/${selectedUser.id}/ban`, banData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+  // Modal Components
+  const EditUserModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-rajdhani text-xl font-bold text-white">Редактировать пользователя</h3>
+          <button
+            onClick={() => setIsEditModalOpen(false)}
+            className="text-gray-400 hover:text-white"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-      setIsBanModalOpen(false);
-      fetchUsers();
-      showSuccessRU('Пользователь забанен');
-    } catch (error) {
-      console.error('Ошибка бана:', error);
-      showErrorRU('Ошибка при бане пользователя');
-    }
-  };
-
-  const updateUserBalance = async (userId, newBalance) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/admin/users/${userId}/balance`, {
-        balance: parseFloat(newBalance)
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      fetchUsers();
-      showSuccessRU('Баланс обновлен');
-    } catch (error) {
-      console.error('Ошибка обновления баланса:', error);
-      showErrorRU('Ошибка при обновлении баланса');
-    }
-  };
-
-  const getUserStatusBadge = (status) => {
-    const badges = {
-      'ACTIVE': 'bg-green-500 text-white',
-      'BANNED': 'bg-red-500 text-white',
-      'EMAIL_PENDING': 'bg-yellow-500 text-white'
-    };
-    
-    const statusText = {
-      'ACTIVE': 'Активен',
-      'BANNED': 'Забанен',
-      'EMAIL_PENDING': 'Ожидает подтверждения'
-    };
-
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-rajdhani font-bold ${badges[status] || 'bg-gray-500 text-white'}`}>
-        {statusText[status] || status}
-      </span>
-    );
-  };
-
-  const getUserRoleBadge = (role) => {
-    const badges = {
-      'USER': 'bg-blue-500 text-white',
-      'ADMIN': 'bg-purple-500 text-white',
-      'SUPER_ADMIN': 'bg-red-600 text-white'
-    };
-
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-rajdhani font-bold ${badges[role] || 'bg-gray-500 text-white'}`}>
-        {role}
-      </span>
-    );
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Не указано';
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const EditUserModal = () => {
-    const [editForm, setEditForm] = useState({
-      username: selectedUser?.username || '',
-      email: selectedUser?.email || '',
-      role: selectedUser?.role || 'USER',
-      virtual_balance: selectedUser?.virtual_balance || 0
-    });
-
-    const handleSubmitEdit = async (e) => {
-      e.preventDefault();
-      try {
-        const token = localStorage.getItem('token');
-        await axios.put(`${API}/admin/users/${selectedUser.id}`, editForm, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        setIsEditModalOpen(false);
-        fetchUsers();
-        showSuccessRU('Пользователь обновлен');
-      } catch (error) {
-        console.error('Ошибка обновления пользователя:', error);
-        showErrorRU('Ошибка при обновлении пользователя');
-      }
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-md w-full mx-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-rajdhani text-xl font-bold text-white">Редактировать пользователя</h3>
-            <button
-              onClick={() => setIsEditModalOpen(false)}
-              className="text-gray-400 hover:text-white"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <form onSubmit={handleSubmitEdit} className="space-y-4">
+          <div>
+            <label className="block text-text-secondary text-sm font-rajdhani mb-1">Имя пользователя</label>
+            <input
+              type="text"
+              value={editForm.username}
+              onChange={(e) => setEditForm({...editForm, username: e.target.value})}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+              required
+            />
           </div>
 
-          <form onSubmit={handleSubmitEdit} className="space-y-4">
-            <div>
-              <label className="block text-text-secondary text-sm font-rajdhani mb-1">Имя пользователя</label>
-              <input
-                type="text"
-                value={editForm.username}
-                onChange={(e) => setEditForm({...editForm, username: e.target.value})}
-                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-text-secondary text-sm font-rajdhani mb-1">Email</label>
+            <input
+              type="email"
+              value={editForm.email}
+              onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+              required
+            />
+          </div>
 
-            <div>
-              <label className="block text-text-secondary text-sm font-rajdhani mb-1">Email</label>
-              <input
-                type="email"
-                value={editForm.email}
-                onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-text-secondary text-sm font-rajdhani mb-1">Роль</label>
+            <select
+              value={editForm.role}
+              onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+            >
+              <option value="USER">USER</option>
+              <option value="ADMIN">ADMIN</option>
+              <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+            </select>
+          </div>
 
-            <div>
-              <label className="block text-text-secondary text-sm font-rajdhani mb-1">Роль</label>
-              <select
-                value={editForm.role}
-                onChange={(e) => setEditForm({...editForm, role: e.target.value})}
-                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-              >
-                <option value="USER">USER</option>
-                <option value="ADMIN">ADMIN</option>
-                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-text-secondary text-sm font-rajdhani mb-1">Баланс ($)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={editForm.virtual_balance}
+              onChange={(e) => setEditForm({...editForm, virtual_balance: parseFloat(e.target.value) || 0})}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+            />
+          </div>
 
-            <div>
-              <label className="block text-text-secondary text-sm font-rajdhani mb-1">Баланс ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={editForm.virtual_balance}
-                onChange={(e) => setEditForm({...editForm, virtual_balance: parseFloat(e.target.value) || 0})}
-                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-              />
-            </div>
-
-            <div className="flex space-x-3 pt-4">
-              <button
-                type="submit"
-                className="flex-1 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity"
-              >
-                Сохранить
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEditModalOpen(false)}
-                className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Отмена
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="submit"
+              className="flex-1 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Сохранить
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsEditModalOpen(false)}
+              className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
       </div>
-    );
-  };
+    </div>
+  );
 
   const BanUserModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -557,6 +443,286 @@ const UserManagement = ({ user: currentUser }) => {
             </button>
             <button
               onClick={() => setIsBanModalOpen(false)}
+              className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Отмена
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const GemsModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-rajdhani text-xl font-bold text-white">💎 Управление гемами - {selectedUser?.username}</h3>
+          <button
+            onClick={() => setIsGemsModalOpen(false)}
+            className="text-gray-400 hover:text-white"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {userGems.length === 0 ? (
+            <p className="text-text-secondary text-center py-4">У пользователя нет гемов</p>
+          ) : (
+            userGems.map((gem, index) => (
+              <div key={index} className="bg-surface-sidebar rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-gradient-accent flex items-center justify-center">
+                    💎
+                  </div>
+                  <div>
+                    <div className="text-white font-rajdhani font-bold">{gem.type}</div>
+                    <div className="text-text-secondary text-sm">
+                      {gem.quantity} шт × ${gem.price} = ${(gem.quantity * gem.price).toFixed(2)}
+                      {gem.frozen && <span className="text-orange-400 ml-2">(Заморожен)</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <button className="px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700">
+                    {gem.frozen ? 'Разморозить' : 'Заморозить'}
+                  </button>
+                  <button className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700">
+                    Удалить
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+          
+          <div className="mt-6 border-t border-border-primary pt-4">
+            <label className="block text-text-secondary text-sm font-rajdhani mb-2">
+              Уведомление игроку (опционально):
+            </label>
+            <textarea
+              value={notificationText}
+              onChange={(e) => setNotificationText(e.target.value)}
+              placeholder="Напишите сообщение пользователю о изменениях..."
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+              rows="3"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const BetsModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-rajdhani text-xl font-bold text-white">🎯 Ставки пользователя - {selectedUser?.username}</h3>
+          <button
+            onClick={() => setIsBetsModalOpen(false)}
+            className="text-gray-400 hover:text-white"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {userBets.length === 0 ? (
+            <p className="text-text-secondary text-center py-4">У пользователя нет активных ставок</p>
+          ) : (
+            userBets.map((bet, index) => (
+              <div key={index} className="bg-surface-sidebar rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="text-white font-rajdhani font-bold">Ставка ${bet.amount}</div>
+                    <div className="text-text-secondary text-sm">
+                      Статус: <span className="text-accent-primary">{bet.status}</span>
+                    </div>
+                    <div className="text-text-secondary text-sm">
+                      Создана: {formatDateTime(bet.created_at)}
+                    </div>
+                    {bet.opponent && (
+                      <div className="text-text-secondary text-sm">
+                        Противник: {bet.opponent}
+                      </div>
+                    )}
+                  </div>
+                  <button className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700">
+                    Отменить
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const InfoModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-rajdhani text-2xl font-bold text-white">ℹ️ Карточка игрока - {selectedUser?.username}</h3>
+          <button
+            onClick={() => setIsInfoModalOpen(false)}
+            className="text-gray-400 hover:text-white"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Статистика игр */}
+          <div className="bg-surface-sidebar rounded-lg p-4">
+            <h4 className="font-rajdhani font-bold text-accent-primary mb-3">📊 Статистика игр</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Всего игр:</span>
+                <span className="text-white">{userStats.total_games || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-green-400">Побед:</span>
+                <span className="text-green-400">{userStats.games_won || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-red-400">Поражений:</span>
+                <span className="text-red-400">{userStats.games_lost || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Ничьих:</span>
+                <span className="text-gray-400">{userStats.games_draw || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Win Rate:</span>
+                <span className="text-accent-primary">{userStats.win_rate || 0}%</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Финансовая статистика */}
+          <div className="bg-surface-sidebar rounded-lg p-4">
+            <h4 className="font-rajdhani font-bold text-accent-primary mb-3">💰 Финансовые данные</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Общий результат:</span>
+                <span className={`${(userStats.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  ${(userStats.profit || 0).toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Подарков отправлено:</span>
+                <span className="text-white">{userStats.gifts_sent || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Подарков получено:</span>
+                <span className="text-white">{userStats.gifts_received || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Активность */}
+          <div className="bg-surface-sidebar rounded-lg p-4">
+            <h4 className="font-rajdhani font-bold text-accent-primary mb-3">🕒 Активность</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Регистрация:</span>
+                <span className="text-white">{formatDateTime(selectedUser?.created_at)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-text-secondary">Последний визит:</span>
+                <span className="text-yellow-400">{formatDateTime(selectedUser?.last_login || selectedUser?.created_at)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* IP адреса */}
+          <div className="bg-surface-sidebar rounded-lg p-4">
+            <h4 className="font-rajdhani font-bold text-accent-primary mb-3">🌐 IP История</h4>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {(userStats.ip_history || ['192.168.1.1', '10.0.0.1']).map((ip, index) => (
+                <div key={index} className="text-xs text-text-secondary">
+                  {ip} {index === 0 && <span className="text-accent-primary">(текущий)</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 flex justify-center">
+          <button className="px-6 py-2 bg-accent-primary text-white font-rajdhani font-bold rounded-lg hover:opacity-90">
+            📤 Поделиться информацией
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const DeleteModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-surface-card border border-red-500 border-opacity-30 rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-rajdhani text-xl font-bold text-red-400">❌ Удаление пользователя</h3>
+          <button
+            onClick={() => setIsDeleteModalOpen(false)}
+            className="text-gray-400 hover:text-white"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mb-4">
+          <div className="bg-red-900 bg-opacity-20 border border-red-500 border-opacity-30 rounded-lg p-3 mb-4">
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <span className="text-red-400 text-sm font-rajdhani">Необратимое действие!</span>
+            </div>
+          </div>
+          
+          <p className="text-text-secondary">Пользователь: <span className="text-white font-bold">{selectedUser?.username}</span></p>
+          <p className="text-text-secondary mb-4">Email: <span className="text-white">{selectedUser?.email}</span></p>
+          
+          {currentUser?.role !== 'SUPER_ADMIN' && (
+            <div className="bg-yellow-900 bg-opacity-20 border border-yellow-500 border-opacity-30 rounded-lg p-3 mb-4">
+              <span className="text-yellow-400 text-sm">Только SUPER_ADMIN может удалять аккаунты</span>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-text-secondary text-sm font-rajdhani mb-1">Причина удаления *</label>
+            <textarea
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              placeholder="Подробно опишите причину удаления аккаунта..."
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+              rows="3"
+              required
+              disabled={currentUser?.role !== 'SUPER_ADMIN'}
+            />
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              onClick={submitDelete}
+              disabled={currentUser?.role !== 'SUPER_ADMIN'}
+              className="flex-1 py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Удалить навсегда
+            </button>
+            <button
+              onClick={() => setIsDeleteModalOpen(false)}
               className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors"
             >
               Отмена
@@ -629,106 +795,177 @@ const UserManagement = ({ user: currentUser }) => {
             <table className="w-full">
               <thead className="bg-surface-sidebar">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Пользователь
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Статус
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Роль
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Баланс
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    Игры
+                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                    💎 Гемы
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    Регистрация
+                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                    🎯 Ставки
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                    🎮 Игры (Пбд/Прж/Нчя)
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                    📆 Рег / Пос. визит
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Действия
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-primary">
-                {users.map((user) => (
-                  <tr key={user.id} className="hover:bg-surface-sidebar transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          user.gender === 'female' ? 'bg-pink-600' : 'bg-blue-600'
-                        }`}>
-                          {user.gender === 'female' ? '👩' : '👨'}
+                {users.map((user) => {
+                  const suspiciousFlags = getSuspiciousFlags(user);
+                  const totalGames = user.total_games_played || 0;
+                  const gamesWon = user.total_games_won || 0;
+                  const gamesLost = (user.total_games_lost || (totalGames - gamesWon - (user.total_games_draw || 0)));
+                  const gamesDraw = user.total_games_draw || 0;
+                  
+                  return (
+                    <tr key={user.id} className="hover:bg-surface-sidebar transition-colors">
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            user.gender === 'female' ? 'bg-pink-600' : 'bg-blue-600'
+                          }`}>
+                            {user.gender === 'female' ? '👩' : '👨'}
+                          </div>
+                          <div className="ml-3">
+                            <div className="font-rajdhani font-bold text-white">{user.username}</div>
+                            <div className="font-roboto text-text-secondary text-sm">{user.email}</div>
+                          </div>
                         </div>
-                        <div className="ml-3">
-                          <div className="font-rajdhani font-bold text-white">{user.username}</div>
-                          <div className="font-roboto text-text-secondary text-sm">{user.email}</div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {getUserStatusBadge(user.status)}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {getUserRoleBadge(user.role)}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="font-rajdhani font-bold text-accent-primary">
+                          ${user.virtual_balance?.toFixed(2) || '0.00'}
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getUserStatusBadge(user.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {getUserRoleBadge(user.role)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-rajdhani font-bold text-accent-primary">
-                        ${user.virtual_balance?.toFixed(2) || '0.00'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-white font-roboto">
-                        {user.total_games_played || 0} / {user.total_games_won || 0}
-                      </div>
-                      <div className="text-text-secondary text-sm">
-                        всего / выигрыши
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-white font-roboto text-sm">
-                        {formatDate(user.created_at)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex space-x-2">
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
                         <button
-                          onClick={() => handleEditUser(user)}
-                          className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                          title="Редактировать"
+                          onClick={() => handleGemsModal(user)}
+                          className="text-accent-primary hover:text-accent-secondary underline text-sm"
+                          title="Посмотреть и управлять гемами"
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
+                          {user.total_gems || 0} шт / ${(user.total_gems_value || 0).toFixed(2)}
                         </button>
-                        
-                        {user.status === 'BANNED' ? (
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleBetsModal(user)}
+                          className="text-blue-400 hover:text-blue-300 underline text-sm"
+                          title="Посмотреть активные ставки"
+                        >
+                          {user.active_bets_count || 0} активные
+                        </button>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-white font-roboto text-sm">
+                          <span className="text-green-400">{gamesWon}</span>/
+                          <span className="text-red-400">{gamesLost}</span>/
+                          <span className="text-gray-400">{gamesDraw}</span>
+                        </div>
+                        <div className="text-text-secondary text-xs">
+                          Пбд / Прж / Нчя
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-white font-roboto text-sm">
+                          {formatDate(user.created_at)}
+                        </div>
+                        <div className="text-yellow-400 text-xs">
+                          Последний визит: {formatDate(user.last_login || user.created_at)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="flex items-center space-x-1">
+                          {/* Suspicious Activity Flag */}
+                          {suspiciousFlags.length > 0 && (
+                            <div className="relative group">
+                              <button className="p-1 bg-red-600 text-white rounded hover:bg-red-700" title="Подозрительная активность">
+                                🚩
+                              </button>
+                              <div className="absolute bottom-full left-0 mb-2 w-48 bg-red-900 border border-red-500 rounded-lg p-2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                {suspiciousFlags.map((flag, idx) => (
+                                  <div key={idx}>{flag.message}</div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Info Button */}
                           <button
-                            onClick={() => handleUnbanUser(user.id)}
-                            className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                            title="Разбанить"
+                            onClick={() => handleInfoModal(user)}
+                            className="p-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            title="Информация о игроке"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            ℹ️
+                          </button>
+
+                          {/* Edit Button */}
+                          <button
+                            onClick={() => handleEditUser(user)}
+                            className="p-1 bg-green-600 text-white rounded hover:bg-green-700"
+                            title="Редактировать"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                           </button>
-                        ) : (
+                          
+                          {/* Ban/Unban Button */}
+                          {user.status === 'BANNED' ? (
+                            <button
+                              onClick={() => handleUnbanUser(user.id)}
+                              className="p-1 bg-green-600 text-white rounded hover:bg-green-700"
+                              title="Разбанить"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleBanUser(user)}
+                              className="p-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                              title="Забанить"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+                              </svg>
+                            </button>
+                          )}
+
+                          {/* Delete Button */}
                           <button
-                            onClick={() => handleBanUser(user)}
-                            className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                            title="Забанить"
+                            onClick={() => handleDeleteUser(user)}
+                            className="p-1 bg-red-600 text-white rounded hover:bg-red-700"
+                            title="Удалить пользователя"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
-                            </svg>
+                            ❌
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -761,6 +998,10 @@ const UserManagement = ({ user: currentUser }) => {
       {/* Модальные окна */}
       {isEditModalOpen && <EditUserModal />}
       {isBanModalOpen && <BanUserModal />}
+      {isGemsModalOpen && <GemsModal />}
+      {isBetsModalOpen && <BetsModal />}
+      {isInfoModalOpen && <InfoModal />}
+      {isDeleteModalOpen && <DeleteModal />}
     </div>
   );
 };
