@@ -98,7 +98,7 @@ const MyBets = ({ user }) => {
         </p>
       </div>
       
-      {bet.status === 'COMPLETED' && (
+      {bet.status === 'COMPLETED' && user && (
         <div className="pt-3 border-t border-accent-primary border-opacity-30">
           <div className="flex justify-between items-center">
             <span className="font-roboto text-text-secondary">Result:</span>
