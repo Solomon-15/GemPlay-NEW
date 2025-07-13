@@ -549,7 +549,8 @@ const AdminPanel = ({ user, onClose }) => {
             {/* Collapse/Expand button */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="flex items-center justify-center p-2 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white hover:border-accent-primary hover:border-opacity-100 transition-all duration-300"
+              className="admin-tooltip flex items-center justify-center p-2 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white hover:border-accent-primary hover:border-opacity-100 transition-all duration-300"
+              title={sidebarCollapsed ? "Развернуть меню" : "Свернуть меню"}
             >
               <svg 
                 className={`w-4 h-4 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`} 
