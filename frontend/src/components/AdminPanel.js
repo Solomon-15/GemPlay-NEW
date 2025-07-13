@@ -21,9 +21,9 @@ const AdminPanel = ({ user, onClose }) => {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
         <div className="bg-surface-card border border-red-500 rounded-lg p-8 text-center">
-          <h2 className="font-russo text-2xl text-red-400 mb-4">Access Denied</h2>
+          <h2 className="font-russo text-2xl text-red-400 mb-4">Доступ запрещён</h2>
           <p className="font-roboto text-text-secondary">
-            You don't have permission to access the admin panel
+            У вас нет разрешения для доступа к админ-панели
           </p>
         </div>
       </div>
