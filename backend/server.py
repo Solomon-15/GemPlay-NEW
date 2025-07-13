@@ -4418,6 +4418,74 @@ async def bot_join_game_automatically(bot: Bot):
 # ADMIN GAME MANAGEMENT
 # ==============================================================================
 
+@api_router.post("/admin/users/reset-all-balances", response_model=dict)
+async def reset_all_user_balances(current_user: User = Depends(get_current_admin)):
+    """Reset all user balances and gems to zero (admin only)."""
+    try:
+        # Reset all user balances to zero
+        user_balance_result = await db.users.update_many(
+            {},  # All users
+            {
+                "$set": {
+                    "virtual_balance": 0.0,
+                    "frozen_balance": 0.0,
+                    "daily_limit_used": 0.0,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Reset all user gems to zero
+        user_gems_result = await db.user_gems.update_many(
+            {},  # All user gems
+            {
+                "$set": {
+                    "quantity": 0,
+                    "frozen_quantity": 0,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Reset all active games (cancel them)
+        games_result = await db.games.update_many(
+            {"status": {"$in": [GameStatus.WAITING, GameStatus.ACTIVE]}},
+            {
+                "$set": {
+                    "status": GameStatus.CANCELLED,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Clear transaction history (optional - keep for audit)
+        # transactions_result = await db.transactions.delete_many({})
+        
+        # Get final counts
+        total_users = await db.users.count_documents({})
+        total_gems_records = await db.user_gems.count_documents({})
+        cancelled_games = games_result.modified_count
+        
+        return {
+            "success": True,
+            "message": "All user balances and gems have been reset to zero",
+            "details": {
+                "users_affected": user_balance_result.modified_count,
+                "total_users": total_users,
+                "gem_records_reset": user_gems_result.modified_count,
+                "total_gem_records": total_gems_records,
+                "games_cancelled": cancelled_games,
+                "reset_timestamp": datetime.utcnow().isoformat()
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error resetting all user balances: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to reset user balances: {str(e)}"
+        )
+
 @api_router.post("/admin/games/reset-all", response_model=dict)
 async def reset_all_bets(current_user: User = Depends(get_current_admin)):
     """Reset all bets for all players and bots (admin only)."""
