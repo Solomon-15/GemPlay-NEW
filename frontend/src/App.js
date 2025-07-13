@@ -269,16 +269,18 @@ function App() {
           <AdminPanel user={user} onClose={handleCloseAdminPanel} />
         ) : (
           <div className="min-h-screen bg-gradient-primary flex">
-            {/* Sidebar */}
-            <Sidebar 
-              currentView={currentView}
-              setCurrentView={setCurrentView}
-              user={user}
-              isCollapsed={sidebarCollapsed}
-              setIsCollapsed={setSidebarCollapsed}
-              onOpenAdminPanel={handleOpenAdminPanel}
-              onLogout={handleLogout}
-            />
+            {/* Desktop Sidebar - Hidden on Mobile */}
+            <div className="hidden md:block">
+              <Sidebar 
+                currentView={currentView}
+                setCurrentView={setCurrentView}
+                user={user}
+                isCollapsed={sidebarCollapsed}
+                setIsCollapsed={setSidebarCollapsed}
+                onOpenAdminPanel={handleOpenAdminPanel}
+                onLogout={handleLogout}
+              />
+            </div>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-h-screen">
