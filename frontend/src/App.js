@@ -13,7 +13,7 @@ import CreateGame from "./components/CreateGame";
 import GameLobby from "./components/GameLobby";
 import SecurityMonitoring from "./components/SecurityMonitoring";
 import AdminPanel from "./components/AdminPanel";
-import BalanceDisplay from "./components/BalanceDisplay";
+import HeaderPortfolio from "./components/HeaderPortfolio";
 import NotificationProvider from "./components/NotificationContext";
 import { GemsProvider } from './components/GemsContext';
 import NotificationContainer from "./components/NotificationContainer";
