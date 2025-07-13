@@ -57,6 +57,7 @@ const MyBets = ({ user }) => {
       case 'ACTIVE': return 'bg-blue-600 text-blue-100';
       case 'COMPLETED': return 'bg-green-600 text-green-100';
       case 'CANCELLED': return 'bg-red-600 text-red-100';
+      case 'UNKNOWN': return 'bg-gray-500 text-gray-100';
       default: return 'bg-gray-600 text-gray-100';
     }
   };
