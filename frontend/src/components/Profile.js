@@ -318,7 +318,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
     <div className="min-h-screen bg-gradient-primary">
       {/* Mobile: Balance Display at top */}
       <div className="md:hidden sticky top-0 z-30 bg-surface-sidebar border-b border-border-primary p-4">
-        <BalanceDisplay user={user} onUpdateUser={checkAuthStatus} />
+        <BalanceDisplay user={user} onUpdateUser={onUpdateUser} />
       </div>
       
       <div className="p-4 sm:p-6">
