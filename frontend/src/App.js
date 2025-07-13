@@ -290,6 +290,7 @@ function App() {
               isCollapsed={sidebarCollapsed}
               setIsCollapsed={setSidebarCollapsed}
               onOpenAdminPanel={handleOpenAdminPanel}
+              onLogout={handleLogout}
             />
 
             {/* Main Content */}
