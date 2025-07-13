@@ -521,6 +521,7 @@ const UserManagement = ({ user: currentUser }) => {
           <div>
             <label className="block text-text-secondary text-sm font-rajdhani mb-1">Причина бана *</label>
             <textarea
+              key={`ban-reason-${selectedUser?.id || 'default'}`}
               value={banReason}
               onChange={(e) => setBanReason(e.target.value)}
               placeholder="Укажите причину бана..."
