@@ -9,6 +9,7 @@ const API = `${BACKEND_URL}/api`;
 
 const Inventory = ({ user, onUpdateUser }) => {
   const { getGemIconPath } = useGems();
+  const { showSuccess, showError } = useNotifications();
   const [gems, setGems] = useState([]);
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
