@@ -169,6 +169,19 @@ const UserManagement = ({ user: currentUser }) => {
     return flags;
   };
 
+  // Additional gem utilities
+  const getGemsTooltipContent = (user) => {
+    // Приблизительная разбивка гемов (в реальном приложении эти данные должны поступать с API)
+    const gemBreakdown = [
+      { type: 'Ruby', count: Math.floor((user.total_gems || 0) * 0.4) },
+      { type: 'Emerald', count: Math.floor((user.total_gems || 0) * 0.25) },
+      { type: 'Sapphire', count: Math.floor((user.total_gems || 0) * 0.2) },
+      { type: 'Magic', count: Math.floor((user.total_gems || 0) * 0.15) }
+    ].filter(gem => gem.count > 0);
+    
+    return gemBreakdown.map(gem => `${gem.type} x${gem.count}`).join(', ') || 'Нет гемов';
+  };
+
   // Event handlers
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
