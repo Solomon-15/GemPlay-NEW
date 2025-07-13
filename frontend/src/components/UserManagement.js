@@ -588,16 +588,20 @@ const UserManagement = ({ user: currentUser }) => {
   );
 
   const GemsModal = () => {
-    const [gemAction, setGemAction] = useState(''); // 'freeze', 'unfreeze', 'delete'
+    const [gemAction, setGemAction] = useState(''); // 'freeze', 'unfreeze', 'delete', 'modify'
     const [selectedGem, setSelectedGem] = useState(null);
     const [actionQuantity, setActionQuantity] = useState(1);
     const [actionReason, setActionReason] = useState('');
+    const [modifyType, setModifyType] = useState('increase'); // 'increase' or 'decrease'
+    const [customNotification, setCustomNotification] = useState('');
 
     const handleGemAction = async (action, gem) => {
       setGemAction(action);
       setSelectedGem(gem);
       setActionQuantity(1);
       setActionReason('');
+      setCustomNotification('');
+      setModifyType('increase');
     };
 
     const submitGemAction = async () => {
@@ -627,6 +631,13 @@ const UserManagement = ({ user: currentUser }) => {
             return;
           }
           await handleDeleteGems(selectedGem.type, actionQuantity, actionReason);
+        } else if (gemAction === 'modify') {
+          const change = modifyType === 'increase' ? actionQuantity : -actionQuantity;
+          if (modifyType === 'decrease' && actionQuantity > selectedGem.quantity) {
+            showWarningRU('Недостаточно гемов для уменьшения');
+            return;
+          }
+          await handleModifyGems(selectedGem.type, change, actionReason, customNotification);
         }
         
         setGemAction('');
@@ -674,24 +685,30 @@ const UserManagement = ({ user: currentUser }) => {
                     </div>
                   </div>
                   
-                  <div className="flex space-x-2 mt-2">
+                  <div className="flex space-x-2 mt-2 flex-wrap">
+                    <button 
+                      onClick={() => handleGemAction('modify', gem)}
+                      className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 mb-1"
+                    >
+                      Изменить кол-во
+                    </button>
                     <button 
                       onClick={() => handleGemAction('freeze', gem)}
-                      className="px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700"
+                      className="px-3 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 mb-1"
                       disabled={gem.quantity - (gem.frozen_quantity || 0) <= 0}
                     >
                       Заморозить
                     </button>
                     <button 
                       onClick={() => handleGemAction('unfreeze', gem)}
-                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 mb-1"
                       disabled={(gem.frozen_quantity || 0) <= 0}
                     >
                       Разморозить
                     </button>
                     <button 
                       onClick={() => handleGemAction('delete', gem)}
-                      className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                      className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 mb-1"
                       disabled={gem.quantity - (gem.frozen_quantity || 0) <= 0}
                     >
                       Удалить
@@ -708,15 +725,31 @@ const UserManagement = ({ user: currentUser }) => {
                   {gemAction === 'freeze' && 'Заморозить гемы'}
                   {gemAction === 'unfreeze' && 'Разморозить гемы'}
                   {gemAction === 'delete' && 'Удалить гемы'}
+                  {gemAction === 'modify' && 'Изменить количество гемов'}
                 </h4>
                 <p className="text-text-secondary text-sm mb-3">
                   Гем: {selectedGem.type} | 
                   {gemAction === 'freeze' && ` Доступно: ${selectedGem.quantity - (selectedGem.frozen_quantity || 0)} шт`}
                   {gemAction === 'unfreeze' && ` Заморожено: ${selectedGem.frozen_quantity || 0} шт`}
                   {gemAction === 'delete' && ` Доступно: ${selectedGem.quantity - (selectedGem.frozen_quantity || 0)} шт`}
+                  {gemAction === 'modify' && ` Текущее количество: ${selectedGem.quantity} шт`}
                 </p>
                 
                 <div className="space-y-3">
+                  {gemAction === 'modify' && (
+                    <div>
+                      <label className="block text-text-secondary text-sm mb-1">Действие:</label>
+                      <select
+                        value={modifyType}
+                        onChange={(e) => setModifyType(e.target.value)}
+                        className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white"
+                      >
+                        <option value="increase">Увеличить количество</option>
+                        <option value="decrease">Уменьшить количество</option>
+                      </select>
+                    </div>
+                  )}
+                  
                   <div>
                     <label className="block text-text-secondary text-sm mb-1">Количество:</label>
                     <input
@@ -725,7 +758,9 @@ const UserManagement = ({ user: currentUser }) => {
                       max={
                         gemAction === 'freeze' ? selectedGem.quantity - (selectedGem.frozen_quantity || 0) :
                         gemAction === 'unfreeze' ? (selectedGem.frozen_quantity || 0) :
-                        selectedGem.quantity - (selectedGem.frozen_quantity || 0)
+                        gemAction === 'delete' ? selectedGem.quantity - (selectedGem.frozen_quantity || 0) :
+                        gemAction === 'modify' && modifyType === 'decrease' ? selectedGem.quantity :
+                        999999
                       }
                       value={actionQuantity}
                       onChange={(e) => setActionQuantity(parseInt(e.target.value) || 1)}
@@ -744,6 +779,20 @@ const UserManagement = ({ user: currentUser }) => {
                       className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white"
                     />
                   </div>
+
+                  {gemAction === 'modify' && (
+                    <div>
+                      <label className="block text-text-secondary text-sm mb-1">Уведомление пользователю:</label>
+                      <textarea
+                        key={`custom-notification-${selectedGem?.type || 'default'}`}
+                        value={customNotification}
+                        onChange={(e) => setCustomNotification(e.target.value)}
+                        placeholder="Персональное сообщение пользователю о изменении гемов..."
+                        className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white"
+                        rows="2"
+                      />
+                    </div>
+                  )}
                   
                   <div className="flex space-x-2">
                     <button
@@ -768,13 +817,13 @@ const UserManagement = ({ user: currentUser }) => {
             
             <div className="mt-6 border-t border-border-primary pt-4">
               <label className="block text-text-secondary text-sm font-rajdhani mb-2">
-                Уведомление игроку (опционально):
+                Общее уведомление игроку (опционально):
               </label>
               <textarea
                 key={`notification-text-${selectedUser?.id || 'default'}`}
                 value={notificationText}
                 onChange={(e) => setNotificationText(e.target.value)}
-                placeholder="Напишите сообщение пользователю о изменениях..."
+                placeholder="Напишите общее сообщение пользователю о изменениях..."
                 className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
                 rows="3"
               />
