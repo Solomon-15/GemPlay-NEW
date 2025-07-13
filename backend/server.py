@@ -4899,6 +4899,444 @@ async def get_user_stats(
             detail="Failed to fetch user stats"
         )
 
+# ==============================================================================
+# ADDITIONAL ADMIN USER MANAGEMENT ENDPOINTS
+# ==============================================================================
+
+@api_router.post("/admin/users/{user_id}/gems/freeze", response_model=dict)
+async def freeze_user_gems(
+    user_id: str,
+    freeze_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Freeze specific gems for a user (admin only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        gem_type = freeze_data.get("gem_type")
+        quantity = freeze_data.get("quantity", 0)
+        reason = freeze_data.get("reason", "Admin action")
+        
+        if quantity <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Quantity must be greater than 0"
+            )
+        
+        # Get user's gem data
+        user_gem = await db.user_gems.find_one({"user_id": user_id, "gem_type": gem_type})
+        if not user_gem or user_gem.get("quantity", 0) < quantity:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Insufficient gems to freeze"
+            )
+        
+        # Check available (non-frozen) gems
+        available_quantity = user_gem.get("quantity", 0) - user_gem.get("frozen_quantity", 0)
+        if available_quantity < quantity:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Insufficient available gems to freeze"
+            )
+        
+        # Freeze the gems
+        await db.user_gems.update_one(
+            {"user_id": user_id, "gem_type": gem_type},
+            {
+                "$inc": {"frozen_quantity": quantity},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="FREEZE_USER_GEMS",
+            target_type="user_gems",
+            target_id=user_id,
+            details={
+                "gem_type": gem_type,
+                "quantity": quantity,
+                "reason": reason
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        # Send notification to user
+        notification = Notification(
+            user_id=user_id,
+            type="ADMIN_ACTION",
+            title="Гемы заморожены",
+            message=f"Администратор заморозил {quantity} {gem_type} гемов. Причина: {reason}"
+        )
+        await db.notifications.insert_one(notification.dict())
+        
+        return {
+            "message": f"Successfully froze {quantity} {gem_type} gems",
+            "gem_type": gem_type,
+            "quantity": quantity,
+            "reason": reason
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error freezing user gems: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to freeze user gems"
+        )
+
+@api_router.post("/admin/users/{user_id}/gems/unfreeze", response_model=dict)
+async def unfreeze_user_gems(
+    user_id: str,
+    unfreeze_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Unfreeze specific gems for a user (admin only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        gem_type = unfreeze_data.get("gem_type")
+        quantity = unfreeze_data.get("quantity", 0)
+        reason = unfreeze_data.get("reason", "Admin action")
+        
+        if quantity <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Quantity must be greater than 0"
+            )
+        
+        # Get user's gem data
+        user_gem = await db.user_gems.find_one({"user_id": user_id, "gem_type": gem_type})
+        if not user_gem or user_gem.get("frozen_quantity", 0) < quantity:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Insufficient frozen gems to unfreeze"
+            )
+        
+        # Unfreeze the gems
+        await db.user_gems.update_one(
+            {"user_id": user_id, "gem_type": gem_type},
+            {
+                "$inc": {"frozen_quantity": -quantity},
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="UNFREEZE_USER_GEMS",
+            target_type="user_gems",
+            target_id=user_id,
+            details={
+                "gem_type": gem_type,
+                "quantity": quantity,
+                "reason": reason
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        # Send notification to user
+        notification = Notification(
+            user_id=user_id,
+            type="ADMIN_ACTION",
+            title="Гемы разморожены",
+            message=f"Администратор разморозил {quantity} {gem_type} гемов. Причина: {reason}"
+        )
+        await db.notifications.insert_one(notification.dict())
+        
+        return {
+            "message": f"Successfully unfroze {quantity} {gem_type} gems",
+            "gem_type": gem_type,
+            "quantity": quantity,
+            "reason": reason
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error unfreezing user gems: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to unfreeze user gems"
+        )
+
+@api_router.delete("/admin/users/{user_id}/gems/{gem_type}", response_model=dict)
+async def delete_user_gems(
+    user_id: str,
+    gem_type: str,
+    quantity: int,
+    reason: str = "Admin action",
+    current_user: User = Depends(get_current_admin)
+):
+    """Delete specific gems from user inventory (admin only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        if quantity <= 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Quantity must be greater than 0"
+            )
+        
+        # Get user's gem data
+        user_gem = await db.user_gems.find_one({"user_id": user_id, "gem_type": gem_type})
+        if not user_gem or user_gem.get("quantity", 0) < quantity:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Insufficient gems to delete"
+            )
+        
+        # Calculate available (non-frozen) quantity
+        available_quantity = user_gem.get("quantity", 0) - user_gem.get("frozen_quantity", 0)
+        if available_quantity < quantity:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete frozen gems. Unfreeze them first."
+            )
+        
+        # Delete the gems
+        new_quantity = user_gem.get("quantity", 0) - quantity
+        if new_quantity <= 0:
+            await db.user_gems.delete_one({"user_id": user_id, "gem_type": gem_type})
+        else:
+            await db.user_gems.update_one(
+                {"user_id": user_id, "gem_type": gem_type},
+                {
+                    "$inc": {"quantity": -quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="DELETE_USER_GEMS",
+            target_type="user_gems",
+            target_id=user_id,
+            details={
+                "gem_type": gem_type,
+                "quantity": quantity,
+                "reason": reason
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        # Send notification to user
+        notification = Notification(
+            user_id=user_id,
+            type="ADMIN_ACTION",
+            title="Гемы удалены",
+            message=f"Администратор удалил {quantity} {gem_type} гемов из вашего инвентаря. Причина: {reason}"
+        )
+        await db.notifications.insert_one(notification.dict())
+        
+        return {
+            "message": f"Successfully deleted {quantity} {gem_type} gems",
+            "gem_type": gem_type,
+            "quantity": quantity,
+            "reason": reason
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting user gems: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete user gems"
+        )
+
+@api_router.post("/admin/users/{user_id}/flag-suspicious", response_model=dict)
+async def flag_user_suspicious(
+    user_id: str,
+    flag_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Flag or unflag user as suspicious (admin only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        is_suspicious = flag_data.get("is_suspicious", False)
+        reason = flag_data.get("reason", "Admin action")
+        
+        # Update user's suspicious flag
+        await db.users.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    "is_suspicious": is_suspicious,
+                    "suspicious_reason": reason if is_suspicious else None,
+                    "suspicious_flagged_at": datetime.utcnow() if is_suspicious else None,
+                    "suspicious_flagged_by": current_user.id if is_suspicious else None,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="FLAG_SUSPICIOUS" if is_suspicious else "UNFLAG_SUSPICIOUS",
+            target_type="user",
+            target_id=user_id,
+            details={
+                "is_suspicious": is_suspicious,
+                "reason": reason
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        # Send notification to user if flagged
+        if is_suspicious:
+            notification = Notification(
+                user_id=user_id,
+                type="ADMIN_WARNING",
+                title="Аккаунт отмечен",
+                message=f"Ваш аккаунт отмечен администрацией за подозрительную активность. Причина: {reason}"
+            )
+            await db.notifications.insert_one(notification.dict())
+        
+        action = "flagged as suspicious" if is_suspicious else "unflagged"
+        return {
+            "message": f"User successfully {action}",
+            "user_id": user_id,
+            "is_suspicious": is_suspicious,
+            "reason": reason
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error flagging user as suspicious: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to flag user"
+        )
+
+@api_router.delete("/admin/users/{user_id}", response_model=dict)
+async def delete_user_account(
+    user_id: str,
+    delete_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Delete user account completely (super admin only)."""
+    try:
+        # Check if current user is super admin
+        if current_user.role != UserRole.SUPER_ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only super admins can delete user accounts"
+            )
+        
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        reason = delete_data.get("reason", "No reason provided")
+        
+        # Don't allow deletion of other admins
+        if user.get("role") in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete admin accounts"
+            )
+        
+        # Cancel all user's active games first
+        active_games = await db.games.find({
+            "$or": [
+                {"creator_id": user_id, "status": {"$in": [GameStatus.WAITING, GameStatus.ACTIVE]}},
+                {"opponent_id": user_id, "status": {"$in": [GameStatus.WAITING, GameStatus.ACTIVE]}}
+            ]
+        }).to_list(100)
+        
+        for game in active_games:
+            game_obj = Game(**game)
+            # Cancel the game and return gems/commissions
+            await db.games.update_one(
+                {"id": game_obj.id},
+                {"$set": {"status": GameStatus.CANCELLED, "cancelled_at": datetime.utcnow()}}
+            )
+            
+            # Unfreeze gems and return commissions (simplified)
+            if game_obj.creator_id == user_id:
+                for gem_type, quantity in game_obj.bet_gems.items():
+                    await db.user_gems.update_one(
+                        {"user_id": user_id, "gem_type": gem_type},
+                        {"$inc": {"frozen_quantity": -quantity}}
+                    )
+        
+        # Delete user's data
+        await db.user_gems.delete_many({"user_id": user_id})
+        await db.notifications.delete_many({"user_id": user_id})
+        await db.refresh_tokens.delete_many({"user_id": user_id})
+        
+        # Delete the user
+        await db.users.delete_one({"id": user_id})
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="DELETE_USER_ACCOUNT",
+            target_type="user",
+            target_id=user_id,
+            details={
+                "deleted_user": {
+                    "username": user.get("username"),
+                    "email": user.get("email"),
+                    "balance": user.get("virtual_balance", 0)
+                },
+                "reason": reason
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": "User account deleted successfully",
+            "deleted_user_id": user_id,
+            "username": user.get("username"),
+            "reason": reason
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting user account: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete user account"
+        )
+
 @api_router.post("/admin/games/reset-all", response_model=dict)
 async def reset_all_bets(current_user: User = Depends(get_current_admin)):
     """Reset all bets for all players and bots (admin only)."""
