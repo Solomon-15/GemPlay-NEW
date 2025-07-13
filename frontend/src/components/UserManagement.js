@@ -1115,7 +1115,7 @@ const UserManagement = ({ user: currentUser }) => {
                             className="text-accent-primary hover:text-accent-secondary underline text-sm"
                             title="Посмотреть и управлять гемами"
                           >
-                            {user.total_gems || 0} шт
+                            {user.total_gems || 0} шт / ${(user.total_gems_value || 0).toFixed(2)}
                           </button>
                           {/* Tooltip */}
                           <div className="absolute bottom-full left-0 mb-2 w-48 bg-gray-900 border border-gray-600 rounded-lg p-2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity z-10">
