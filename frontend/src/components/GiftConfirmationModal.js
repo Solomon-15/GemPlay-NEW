@@ -114,7 +114,7 @@ const GiftConfirmationModal = ({
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-md w-full">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h3 className="font-russo text-xl text-accent-primary">🎁 Подтверждение подарка</h3>
+          <h3 className="font-russo text-xl text-accent-primary">🎁 Gift Confirmation</h3>
           <button
             onClick={onClose}
             className="text-text-secondary hover:text-white transition-colors"
@@ -127,21 +127,21 @@ const GiftConfirmationModal = ({
 
         {/* Sender Info */}
         <div className="mb-4 p-3 bg-surface-sidebar rounded-lg">
-          <div className="text-sm text-text-secondary mb-1">От кого:</div>
+          <div className="text-sm text-text-secondary mb-1">From:</div>
           <div className="text-white font-rajdhani font-semibold">{senderName} ({senderEmail})</div>
         </div>
 
         {/* Recipient Search */}
         <div className="mb-4">
           <label className="block text-sm text-text-secondary mb-2">
-            Кому (email или имя пользователя):
+            To (email or username):
           </label>
           <div className="relative">
             <input
               type="text"
               value={recipientIdentifier}
               onChange={(e) => setRecipientIdentifier(e.target.value)}
-              placeholder="Введите email или имя получателя..."
+              placeholder="Enter recipient's email or username..."
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:border-accent-primary focus:outline-none"
             />
             {isValidating && (
@@ -172,7 +172,7 @@ const GiftConfirmationModal = ({
                 <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-                <div className="text-red-400 text-sm">Пользователь не найден</div>
+                <div className="text-red-400 text-sm">User not found</div>
               </div>
             </div>
           )}
@@ -180,27 +180,27 @@ const GiftConfirmationModal = ({
 
         {/* Gift Details */}
         <div className="mb-6 p-4 bg-surface-sidebar rounded-lg">
-          <h4 className="font-rajdhani font-bold text-white mb-3">Детали подарка:</h4>
+          <h4 className="font-rajdhani font-bold text-white mb-3">Gift Details:</h4>
           
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-text-secondary">Гем:</span>
+              <span className="text-text-secondary">Gem:</span>
               <span className="text-white font-medium">{quantity}x {gemType}</span>
             </div>
             
             <div className="flex justify-between">
-              <span className="text-text-secondary">Стоимость:</span>
+              <span className="text-text-secondary">Value:</span>
               <span className="text-white font-medium">${totalValue.toFixed(2)}</span>
             </div>
             
             <div className="flex justify-between">
-              <span className="text-text-secondary">Комиссия (3%):</span>
+              <span className="text-text-secondary">Commission (3%):</span>
               <span className="text-orange-400 font-medium">-${commission.toFixed(2)}</span>
             </div>
             
             <div className="border-t border-border-primary pt-2 mt-2">
               <div className="flex justify-between">
-                <span className="text-text-secondary">Получатель получит:</span>
+                <span className="text-text-secondary">Recipient will receive:</span>
                 <span className="text-green-400 font-bold">{quantity}x {gemType} (${finalValue.toFixed(2)})</span>
               </div>
             </div>
@@ -214,8 +214,8 @@ const GiftConfirmationModal = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
             <div className="text-yellow-400 text-sm">
-              <div className="font-medium mb-1">Внимание!</div>
-              <div>Это действие нельзя отменить. Убедитесь, что указали правильного получателя.</div>
+              <div className="font-medium mb-1">Warning!</div>
+              <div>This action cannot be undone. Make sure you've entered the correct recipient.</div>
             </div>
           </div>
         </div>
@@ -226,7 +226,7 @@ const GiftConfirmationModal = ({
             onClick={onClose}
             className="flex-1 px-4 py-3 bg-surface-sidebar border border-border-primary rounded-lg text-text-secondary hover:text-white hover:border-accent-primary transition-colors font-rajdhani font-medium"
           >
-            Отмена
+            Cancel
           </button>
           
           <button
@@ -241,10 +241,10 @@ const GiftConfirmationModal = ({
             {isGifting ? (
               <div className="flex items-center justify-center space-x-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Отправка...</span>
+                <span>Sending...</span>
               </div>
             ) : (
-              'Подтвердить подарок'
+              'Confirm Gift'
             )}
           </button>
         </div>
