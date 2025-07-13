@@ -1022,16 +1022,16 @@ const UserManagement = ({ user: currentUser }) => {
                     Баланс
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    💎 Гемы
+                    Гемы
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    🎯 Ставки
+                    Ставки
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    🎮 Игры (Пбд/Прж/Нчя)
+                    ИГРЫ
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    📆 Рег / Пос. визит
+                    Рег / Пос. визит
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Действия
