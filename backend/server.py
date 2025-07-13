@@ -1390,6 +1390,45 @@ async def sell_gems(gem_type: GemType, quantity: int, current_user: User = Depen
         "new_balance": new_balance
     }
 
+@api_router.get("/users/search", response_model=List[dict])
+async def search_users(query: str, current_user: User = Depends(get_current_user)):
+    """Search users by email or username for gifting."""
+    try:
+        # Исключаем текущего пользователя из результатов
+        # Ищем по email или username (case-insensitive)
+        search_filter = {
+            "$and": [
+                {"id": {"$ne": current_user.id}},  # Исключаем себя
+                {
+                    "$or": [
+                        {"email": {"$regex": f"^{query}", "$options": "i"}},
+                        {"username": {"$regex": f"^{query}", "$options": "i"}}
+                    ]
+                }
+            ]
+        }
+        
+        users = await db.users.find(
+            search_filter,
+            {"username": 1, "email": 1, "id": 1}  # Возвращаем только нужные поля
+        ).limit(5).to_list(5)
+        
+        return [
+            {
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"]
+            }
+            for user in users
+        ]
+        
+    except Exception as e:
+        logger.error(f"Error searching users: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to search users"
+        )
+
 @api_router.post("/gems/gift", response_model=dict)
 async def gift_gems(
     recipient_email: str, 
