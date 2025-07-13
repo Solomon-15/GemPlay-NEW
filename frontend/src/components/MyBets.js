@@ -64,8 +64,21 @@ const MyBets = ({ user }) => {
     }
   };
 
+  // Функция для получения стилей карточки в зависимости от статуса
+  const getCardStyles = (bet) => {
+    const baseStyles = "rounded-lg p-4 transition-all duration-300";
+    
+    // Если ставка принята и в процессе игры (ACTIVE)
+    if (bet.status === 'ACTIVE') {
+      return `${baseStyles} bg-[#23233e] border-[#23d364] border-opacity-40 hover:border-opacity-60 border`;
+    }
+    
+    // Стандартные стили для всех остальных статусов
+    return `${baseStyles} bg-[#09295e] border-[#23d364] border-opacity-30 hover:border-opacity-50 border`;
+  };
+
   const BetCard = ({ bet }) => (
-    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 hover:border-accent-primary hover:border-opacity-100 transition-all duration-300">
+    <div className={getCardStyles(bet)}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-accent rounded-full flex items-center justify-center">
@@ -79,7 +92,7 @@ const MyBets = ({ user }) => {
           </div>
         </div>
         <span className={`px-3 py-1 text-xs rounded-full font-rajdhani font-bold ${getStatusColor(bet.status || 'UNKNOWN')}`}>
-          {bet.status || 'UNKNOWN'}
+          {bet.status === 'ACTIVE' ? 'In Progress' : bet.status || 'UNKNOWN'}
         </span>
       </div>
       
