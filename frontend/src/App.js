@@ -252,7 +252,7 @@ function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Загрузка...</div>
+        <div className="text-white text-xl font-roboto">Loading...</div>
       </div>
     );
   }
