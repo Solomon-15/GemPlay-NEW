@@ -15,10 +15,12 @@ const Inventory = ({ user, onUpdateUser }) => {
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sellingGem, setSellingGem] = useState(null);
-  const [giftingGem, setGiftingGem] = useState(null);
   const [quantities, setQuantities] = useState({});
-  const [recipientEmail, setRecipientEmail] = useState('');
   const [tooltipVisible, setTooltipVisible] = useState(null);
+  
+  // Gift modal state
+  const [showGiftModal, setShowGiftModal] = useState(false);
+  const [selectedGemForGift, setSelectedGemForGift] = useState(null);
 
   useEffect(() => {
     fetchInventory();
