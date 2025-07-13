@@ -4698,6 +4698,10 @@ async def reset_all_user_balances(current_user: User = Depends(get_current_admin
             "message": "All user balances and gems have been reset to zero",
             "details": {
                 "users_affected": user_balance_result.modified_count,
+
+# ==============================================================================
+# NEW EXTENDED ADMIN USER MANAGEMENT ENDPOINTS
+# ==============================================================================
                 "total_users": total_users,
                 "gem_records_reset": user_gems_result.modified_count,
                 "total_gem_records": total_gems_records,
