@@ -72,12 +72,12 @@ const GiftConfirmationModal = ({
 
   const handleGift = async () => {
     if (!recipientInfo) {
-      showError('Пожалуйста, выберите действительного получателя');
+      showError('Please select a valid recipient');
       return;
     }
 
     if (recipientInfo.email === senderEmail) {
-      showError('Нельзя отправить подарок самому себе');
+      showError('Cannot send a gift to yourself');
       return;
     }
 
@@ -101,7 +101,7 @@ const GiftConfirmationModal = ({
       
       onClose();
     } catch (error) {
-      showError(error.response?.data?.detail || 'Ошибка при отправке подарка');
+      showError(error.response?.data?.detail || 'Error sending gift');
     } finally {
       setIsGifting(false);
     }
