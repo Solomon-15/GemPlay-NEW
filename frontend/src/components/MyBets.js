@@ -147,9 +147,9 @@ const MyBets = ({ user }) => {
       <div className="max-w-4xl mx-auto mb-8">
         <div className="flex space-x-1 bg-surface-sidebar rounded-lg p-1">
           {[
-            { id: 'active', label: 'Active Bets', count: bets.filter(b => b.status === 'WAITING' || b.status === 'ACTIVE').length },
-            { id: 'completed', label: 'Completed', count: bets.filter(b => b.status === 'COMPLETED').length },
-            { id: 'cancelled', label: 'Cancelled', count: bets.filter(b => b.status === 'CANCELLED').length }
+            { id: 'active', label: 'Active Bets', count: bets.filter(b => b && (b.status === 'WAITING' || b.status === 'ACTIVE')).length },
+            { id: 'completed', label: 'Completed', count: bets.filter(b => b && b.status === 'COMPLETED').length },
+            { id: 'cancelled', label: 'Cancelled', count: bets.filter(b => b && b.status === 'CANCELLED').length }
           ].map((tab) => (
             <button
               key={tab.id}
