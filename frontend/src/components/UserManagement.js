@@ -1105,7 +1105,7 @@ const UserManagement = ({ user: currentUser }) => {
                           {formatDate(user.created_at)}
                         </div>
                         <div className="text-yellow-400 text-xs">
-                          Последний визит: {formatDate(user.last_login || user.created_at)}
+                          {formatDate(user.last_login || user.created_at)}
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
