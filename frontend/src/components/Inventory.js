@@ -71,7 +71,7 @@ const Inventory = ({ user, onUpdateUser }) => {
     const availableQuantity = gem.quantity - gem.frozen_quantity;
     
     if (quantity > availableQuantity) {
-      alert('Cannot sell more gems than available');
+      showError('Cannot sell more gems than available');
       return;
     }
 
@@ -83,7 +83,19 @@ const Inventory = ({ user, onUpdateUser }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert(response.data.message);
+      // 🔔 НОВОЕ УВЕДОМЛЕНИЕ ПРИ ПРОДАЖЕ ГЕМОВ
+      const totalValue = (gem.price * quantity).toFixed(2);
+      const gemDisplayName = gemType === 'Ruby' ? 'Rubies' : 
+                            gemType === 'Emerald' ? 'Emeralds' :
+                            gemType === 'Sapphire' ? 'Sapphires' :
+                            gemType === 'Aquamarine' ? 'Aquamarines' :
+                            gemType === 'Topaz' ? 'Topazes' :
+                            gemType === 'Amber' ? 'Ambers' :
+                            gemType === 'Magic' ? 'Magic gems' : `${gemType}s`;
+      
+      const finalGemName = quantity === 1 ? gemType : gemDisplayName;
+      showSuccess(`✅ You sold ${quantity} ${finalGemName} for $${totalValue}`);
+      
       await fetchInventory();
       await fetchBalance();
       
@@ -96,7 +108,7 @@ const Inventory = ({ user, onUpdateUser }) => {
         onUpdateUser();
       }
     } catch (error) {
-      alert(error.response?.data?.detail || 'Error selling gems');
+      showError(error.response?.data?.detail || 'Error selling gems');
     } finally {
       setSellingGem(null);
     }
