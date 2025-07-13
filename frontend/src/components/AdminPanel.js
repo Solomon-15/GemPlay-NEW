@@ -280,23 +280,16 @@ const AdminPanel = ({ user, onClose }) => {
     setResetLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(
+      await axios.post(
         `${API}/admin/games/reset-all`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      showSuccessRU(
-        `Все ставки сброшены успешно! Игр сброшено: ${response.data.games_reset}, Комиссия возвращена: $${response.data.commission_returned}`
-      );
-      
-      // Обновляем статистику
-      await fetchDashboardStats();
-      
+      showSuccessRU('Все ставки успешно сброшены');
+      await fetchDashboardStats(); // Обновляем статистику
     } catch (error) {
-      console.error('Error resetting bets:', error);
+      console.error('Ошибка при сбросе ставок:', error);
       showErrorRU('Ошибка при сбросе ставок: ' + (error.response?.data?.detail || error.message));
     } finally {
       setResetLoading(false);
