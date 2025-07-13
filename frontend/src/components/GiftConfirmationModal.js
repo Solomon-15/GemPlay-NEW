@@ -88,7 +88,7 @@ const GiftConfirmationModal = ({
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      showSuccess(`Подарок успешно отправлен пользователю ${recipientInfo.username}! Комиссия $${commission.toFixed(2)} списана с вашего баланса.`);
+      showSuccess(`You sent a gift to ${recipientInfo.username}. A commission of $${commission.toFixed(2)} has been deducted from your balance.`);
       
       // Автоматическое обновление Lobby
       const globalRefresh = getGlobalLobbyRefresh();
