@@ -107,12 +107,12 @@ const HeaderPortfolio = ({ user }) => {
   }
 
   return (
-    <div className="flex space-x-2 md:space-x-4">
+    <div className="flex space-x-1 sm:space-x-2 md:space-x-4 overflow-x-auto">
       {/* Balance Block - Compact for Header */}
-      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-border-primary hover:border-green-500 transition-colors duration-200 min-w-0">
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-border-primary hover:border-green-500 transition-colors duration-200 min-w-0 flex-shrink-0">
         <div className="text-center">
           <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Balance</h3>
-          <div className="font-rajdhani text-sm md:text-lg font-bold text-green-400 break-words">
+          <div className="font-rajdhani text-xs sm:text-sm md:text-lg font-bold text-green-400 break-words whitespace-nowrap">
             ${formatNumber(portfolioData.balance.total)}
           </div>
           {portfolioData.balance.frozen > 0 && (
@@ -127,10 +127,10 @@ const HeaderPortfolio = ({ user }) => {
       </div>
 
       {/* Gems Block - Compact for Header */}
-      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-border-primary hover:border-purple-500 transition-colors duration-200 min-w-0">
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-border-primary hover:border-purple-500 transition-colors duration-200 min-w-0 flex-shrink-0">
         <div className="text-center">
           <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Gems</h3>
-          <div className="font-rajdhani text-sm md:text-lg font-bold text-purple-400 break-words">
+          <div className="font-rajdhani text-xs sm:text-sm md:text-lg font-bold text-purple-400 break-words whitespace-nowrap">
             {formatNumber(portfolioData.gems.totalCount)}/{formatNumber(portfolioData.gems.totalValue)}
           </div>
           {portfolioData.gems.frozenCount > 0 && (
@@ -145,10 +145,10 @@ const HeaderPortfolio = ({ user }) => {
       </div>
 
       {/* Total Block - Compact for Header */}
-      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-border-primary hover:border-accent-primary transition-colors duration-200 min-w-0">
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-border-primary hover:border-accent-primary transition-colors duration-200 min-w-0 flex-shrink-0">
         <div className="text-center">
           <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Total</h3>
-          <div className="font-rajdhani text-sm md:text-lg font-bold text-accent-primary break-words">
+          <div className="font-rajdhani text-xs sm:text-sm md:text-lg font-bold text-accent-primary break-words whitespace-nowrap">
             ${formatNumber(portfolioData.total.value)}
           </div>
           <div className="text-xs text-text-secondary hidden md:block">
