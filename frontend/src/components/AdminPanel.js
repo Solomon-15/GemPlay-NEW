@@ -563,7 +563,7 @@ const AdminPanel = ({ user, onClose }) => {
           </div>
 
           {/* Back button */}
-          {!sidebarCollapsed && (
+          {!sidebarCollapsed ? (
             <button
               onClick={onClose}
               className="w-full flex items-center space-x-2 px-4 py-2 mb-6 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white hover:border-accent-primary hover:border-opacity-100 transition-all duration-300"
@@ -572,6 +572,16 @@ const AdminPanel = ({ user, onClose }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span className="text-sm font-rajdhani">Назад</span>
+            </button>
+          ) : (
+            <button
+              onClick={onClose}
+              className="w-full flex items-center justify-center px-2 py-2 mb-6 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white hover:border-accent-primary hover:border-opacity-100 transition-all duration-300"
+              title="Назад"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
             </button>
           )}
 
