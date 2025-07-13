@@ -117,46 +117,31 @@ const Inventory = ({ user, onUpdateUser }) => {
     }
   };
 
-  const handleGiftGem = async (gemType) => {
-    if (!recipientEmail.trim()) {
-      alert('Please enter recipient email');
-      return;
-    }
-
+  const handleGiftGem = (gemType) => {
     const gem = gems.find(g => g.type === gemType);
     const quantity = quantities[gemType] || 1;
     const availableQuantity = gem.quantity - gem.frozen_quantity;
     
     if (quantity > availableQuantity) {
-      alert('Cannot gift more gems than available');
+      showError('Нельзя подарить больше гемов, чем доступно');
       return;
     }
 
-    setGiftingGem(gemType);
+    setSelectedGemForGift({
+      gemType,
+      quantity,
+      gemPrice: gem.price,
+      availableQuantity
+    });
+    setShowGiftModal(true);
+  };
 
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/gems/gift?recipient_email=${recipientEmail}&gem_type=${gemType}&quantity=${quantity}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      alert(response.data.message);
-      setRecipientEmail('');
-      await fetchInventory();
-      await fetchBalance();
-      
-      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ДАРЕНИЯ ГЕМОВ
-      const globalRefresh = getGlobalLobbyRefresh();
-      globalRefresh.triggerLobbyRefresh();
-      console.log(`🎁 Gifted ${quantity} ${gemType} gems - triggering lobby refresh`);
-      
-      if (onUpdateUser) {
-        onUpdateUser();
-      }
-    } catch (error) {
-      alert(error.response?.data?.detail || 'Error gifting gems');
-    } finally {
-      setGiftingGem(null);
+  const handleGiftSuccess = async () => {
+    await fetchInventory();
+    await fetchBalance();
+    
+    if (onUpdateUser) {
+      onUpdateUser();
     }
   };
 
