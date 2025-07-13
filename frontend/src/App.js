@@ -363,6 +363,81 @@ function App() {
               </div>
             </div>
             
+            {/* Mobile Bottom Navigation */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-surface-sidebar border-t border-border-primary">
+              <div className="flex items-center justify-around py-2 px-4">
+                {/* Lobby */}
+                <button
+                  onClick={() => setCurrentView('lobby')}
+                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-300 ${
+                    currentView === 'lobby' 
+                      ? 'text-accent-primary bg-accent-primary/10' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                </button>
+
+                {/* My Bets */}
+                <button
+                  onClick={() => setCurrentView('my-bets')}
+                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-300 ${
+                    currentView === 'my-bets' 
+                      ? 'text-accent-primary bg-accent-primary/10' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                  </svg>
+                </button>
+
+                {/* Shop */}
+                <button
+                  onClick={() => setCurrentView('shop')}
+                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-300 ${
+                    currentView === 'shop' 
+                      ? 'text-accent-primary bg-accent-primary/10' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l-1 12H6L5 9z" />
+                  </svg>
+                </button>
+
+                {/* Inventory */}
+                <button
+                  onClick={() => setCurrentView('inventory')}
+                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-300 ${
+                    currentView === 'inventory' 
+                      ? 'text-accent-primary bg-accent-primary/10' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </button>
+
+                {/* Leaderboard */}
+                <button
+                  onClick={() => setCurrentView('leaderboard')}
+                  className={`flex flex-col items-center py-2 px-3 rounded-lg transition-all duration-300 ${
+                    currentView === 'leaderboard' 
+                      ? 'text-accent-primary bg-accent-primary/10' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
             {/* Notification Container */}
             <NotificationContainer />
           </div>
