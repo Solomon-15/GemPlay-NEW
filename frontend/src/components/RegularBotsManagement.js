@@ -304,6 +304,38 @@ const RegularBotsManagement = () => {
     }
   };
 
+  const handleActiveBetsModal = async (bot) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bots/${bot.id}/active-bets`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setActiveBetsBot(bot);
+      setActiveBetsData(response.data);
+      setIsActiveBetsModalOpen(true);
+    } catch (error) {
+      console.error('Ошибка загрузки активных ставок:', error);
+      showErrorRU('Ошибка при загрузке активных ставок');
+    }
+  };
+
+  const handleCycleModal = async (bot) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setCycleBot(bot);
+      setCycleData(response.data);
+      setIsCycleModalOpen(true);
+    } catch (error) {
+      console.error('Ошибка загрузки истории цикла:', error);
+      showErrorRU('Ошибка при загрузке истории цикла');
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU');
   };
