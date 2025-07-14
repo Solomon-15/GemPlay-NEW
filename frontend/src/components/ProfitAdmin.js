@@ -32,6 +32,8 @@ const ProfitAdmin = ({ user }) => {
   // Состояния для модальных окон и интерактивности
   const [activeModal, setActiveModal] = useState(null);
   const [modalData, setModalData] = useState([]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState(null);
   const [modalPagination, setModalPagination] = useState({ current_page: 1, total_pages: 1 });
   const [periodFilter, setPeriodFilter] = useState('month'); // day, week, month
   const [expensesSettings, setExpensesSettings] = useState({ percentage: 60, manual_amount: 0 });
