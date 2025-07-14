@@ -2716,22 +2716,23 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     )
             
         else:
-            # Draw - return frozen commissions to both players (only human players)
-            for player_id in [game.creator_id, game.opponent_id]:
-                player = await db.users.find_one({"id": player_id})
-                if player:  # Only process human players
-                    commission_to_return = game.bet_amount * 0.06
-                    
-                    await db.users.update_one(
-                        {"id": player_id},
-                        {
-                            "$inc": {
-                                "virtual_balance": commission_to_return,  # Return to balance
-                                "frozen_balance": -commission_to_return   # Remove from frozen
-                            },
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
+            # Draw - return frozen commissions to both players (only if commission was charged)
+            if not is_regular_bot_game:
+                for player_id in [game.creator_id, game.opponent_id]:
+                    player = await db.users.find_one({"id": player_id})
+                    if player:  # Only process human players
+                        commission_to_return = game.bet_amount * 0.06
+                        
+                        await db.users.update_one(
+                            {"id": player_id},
+                            {
+                                "$inc": {
+                                    "virtual_balance": commission_to_return,  # Return to balance
+                                    "frozen_balance": -commission_to_return   # Remove from frozen
+                                },
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
         
         # Record game result transactions (only for human players)
         result_description = "Draw - gems returned" if not winner_id else f"{'Won' if winner_id == game.creator_id else 'Lost'} PvP game"
