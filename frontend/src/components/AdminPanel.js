@@ -6,6 +6,7 @@ import BetsManagement from './BetsManagement';
 import RegularBotsManagement from './RegularBotsManagement';
 import HumanBotsManagement from './HumanBotsManagement';
 import BotSettings from './BotSettings';
+import BotAnalytics from './BotAnalytics';
 import NotificationContainer from './NotificationContainer';
 import { useNotifications } from './NotificationContext';
 
