@@ -5516,11 +5516,12 @@ async def create_regular_bots(
         for i in range(count):
             bot = Bot(
                 type=BotType.REGULAR,
-                name=None,  # Обычные боты без имени
+                name="",  # Пустая строка вместо None для обычных ботов
                 min_bet_amount=min_bet,
                 max_bet_amount=max_bet,
                 win_percentage=win_rate,
-                is_active=True
+                is_active=True,
+                bot_type="REGULAR"
             )
             
             await db.bots.insert_one(bot.dict())
