@@ -149,6 +149,27 @@ const BetsManagement = () => {
     }
   };
 
+  const resetSingleBet = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/bets/${resettingBet.id}/cancel`,
+        { reason: 'Сброс ставки администратором' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showSuccessRU(response.data.message);
+      setIsResetBetModalOpen(false);
+      setResettingBet(null);
+      await fetchStats();
+      await fetchBets();
+    } catch (error) {
+      console.error('Error resetting bet:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при сбросе ставки';
+      showErrorRU(errorMessage);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString('ru-RU');
   };
