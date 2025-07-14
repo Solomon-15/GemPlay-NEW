@@ -340,7 +340,7 @@ const ProfitAdmin = ({ user }) => {
               
               <div className="text-center">
                 <div className="text-text-secondary text-sm mb-2">Этот месяц</div>
-                <div className="font-russo text-3xl font-bold text-orange-400 mb-1">{formatCurrencyWithSymbol(stats.month_profit || 0)}</div>
+                <div className="font-russo text-3xl font-bold text-orange-400 mb-1">{formatCurrencyWithSymbol(stats.month_profit || 0, true)}</div>
                 <div className="text-xs text-text-secondary">Прибыль за месяц</div>
               </div>
             </div>
