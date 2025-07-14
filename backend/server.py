@@ -2016,15 +2016,22 @@ async def create_game(
         )
 
 async def check_user_concurrent_games(user_id: str) -> bool:
-    """Check if user can join another game (no active games as opponent)."""
+    """Check if user can join another game (no active games as creator or opponent)."""
     try:
         # Check if user is already in an active game as opponent
-        active_game = await db.games.find_one({
+        active_as_opponent = await db.games.find_one({
             "opponent_id": user_id,
             "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
         })
         
-        return active_game is None
+        # Check if user is already in an active game as creator
+        active_as_creator = await db.games.find_one({
+            "creator_id": user_id,
+            "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
+        })
+        
+        # User can join if they have no active games
+        return active_as_opponent is None and active_as_creator is None
     except Exception as e:
         logger.error(f"Error checking concurrent games for user {user_id}: {e}")
         return False
