@@ -328,7 +328,7 @@ const ProfitAdmin = ({ user }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-text-secondary text-sm mb-2">Сегодня</div>
-                <div className="font-russo text-3xl font-bold text-blue-400 mb-1">{formatCurrencyWithSymbol(stats.today_profit || 0)}</div>
+                <div className="font-russo text-3xl font-bold text-blue-400 mb-1">{formatCurrencyWithSymbol(stats.today_profit || 0, true)}</div>
                 <div className="text-xs text-text-secondary">Прибыль за день</div>
               </div>
               
