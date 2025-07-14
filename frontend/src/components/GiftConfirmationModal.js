@@ -202,7 +202,7 @@ const GiftConfirmationModal = ({
             <div className="border-t border-border-primary pt-2 mt-2">
               <div className="flex justify-between">
                 <span className="text-text-secondary">Recipient will receive:</span>
-                <span className="text-green-400 font-bold">{quantity}x {gemType} (${finalValue.toFixed(2)})</span>
+                <span className="text-green-400 font-bold">{quantity}x {gemType} ({formatGemValue(finalValue)})</span>
               </div>
             </div>
           </div>
