@@ -84,15 +84,15 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
           <span className="font-rajdhani text-sm text-text-secondary">Balance</span>
         </div>
         <div className="font-rajdhani text-lg font-bold text-green-400">
-          {formatCurrencyWithSymbol(virtualBalance)}
+          {formatDollarAmount(virtualBalance)}
         </div>
         {frozenBalance > 0 && (
           <div className="font-roboto text-xs text-orange-400">
-            {formatCurrencyWithSymbol(frozenBalance)} frozen
+            {formatDollarAmount(frozenBalance)} frozen
           </div>
         )}
         <div className="font-roboto text-xs text-text-secondary">
-          Available: {formatCurrencyWithSymbol(virtualBalance - frozenBalance)}
+          Available: {formatDollarAmount(virtualBalance - frozenBalance)}
         </div>
       </div>
 
