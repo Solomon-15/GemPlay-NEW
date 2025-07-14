@@ -645,9 +645,13 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-white font-roboto">
-                        {bot.cycle_games}
-                      </div>
+                      <button
+                        onClick={() => handleCycleModal(bot)}
+                        className="text-green-400 hover:text-green-300 underline font-roboto cursor-pointer"
+                        title="Показать историю цикла"
+                      >
+                        {(bot.games_stats.wins + bot.games_stats.losses)}/{bot.cycle_games || 12}
+                      </button>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-accent-primary font-rajdhani font-bold">
