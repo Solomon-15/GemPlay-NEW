@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демонстрация графиков прибыли - GemPlay Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Rajdhani:wght@300;400;500;600;700&family=Russo+One&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            color: #ffffff;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #4a90e2;
+        }
+        
+        .header h1 {
+            font-family: 'Russo One', cursive;
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+            color: #4a90e2;
+        }
+        
+        .section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+        
+        .section h2 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2em;
+            margin: 0 0 20px 0;
+            color: #4a90e2;
+        }
+        
+        .chart-container {
+            background: #0f0f0f;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #444;
+        }
+        
+        .chart-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4a90e2;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        
+        .feature-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4a90e2;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .demo-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .demo-button {
+            padding: 10px 20px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .demo-button:hover {
+            background: #3a7bd5;
+            transform: translateY(-2px);
+        }
+        
+        .demo-button.active {
+            background: #22c55e;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4a90e2;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 GemPlay Admin - Демонстрация графиков прибыли</h1>
+            <p>Интерактивная демонстрация новой системы визуализации данных в админ-панели</p>
+        </div>
+
+        <!-- Обзор функций -->
+        <div class="section">
+            <h2>🎯 Новые возможности визуализации</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-title">📈 Типы графиков</div>
+                    <ul class="feature-list">
+                        <li>• Линейные графики - для трендов</li>
+                        <li>• Столбчатые графики - для сравнения</li>
+                        <li>• Круговые диаграммы - для долей</li>
+                        <li>• Комбинированные графики</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">🔄 Интерактивность</div>
+                    <ul class="feature-list">
+                        <li>• Динамическое обновление по периодам</li>
+                        <li>• Hover-эффекты с данными</li>
+                        <li>• Анимированные переходы</li>
+                        <li>• Адаптивный дизайн</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">🎨 Стилизация</div>
+                    <ul class="feature-list">
+                        <li>• Темная тема по умолчанию</li>
+                        <li>• Цветовая кодировка данных</li>
+                        <li>• Консистентные шрифты</li>
+                        <li>• Профессиональный вид</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Демонстрация графиков -->
+        <div class="section">
+            <h2>📊 Демонстрация графиков</h2>
+            
+            <!-- Контролы для демонстрации -->
+            <div class="demo-controls">
+                <button class="demo-button active" onclick="showChart('revenue')">Доходы от ботов</button>
+                <button class="demo-button" onclick="showChart('breakdown')">Распределение доходов</button>
+                <button class="demo-button" onclick="showChart('expenses')">Расходы</button>
+                <button class="demo-button" onclick="showChart('profit')">Чистая прибыль</button>
+            </div>
+
+            <!-- Статистика -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalRevenue">$1,234.56</div>
+                    <div class="stat-label">Общий доход</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalExpenses">$456.78</div>
+                    <div class="stat-label">Общие расходы</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="netProfit">$777.78</div>
+                    <div class="stat-label">Чистая прибыль</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="profitMargin">63.0%</div>
+                    <div class="stat-label">Маржа прибыли</div>
+                </div>
+            </div>
+
+            <!-- Графики -->
+            <div class="grid">
+                <div class="chart-container" id="chart1">
+                    <div class="chart-title">📈 Доходы от ботов</div>
+                    <div class="chart-wrapper">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container" id="chart2">
+                    <div class="chart-title">🥧 Распределение доходов</div>
+                    <div class="chart-wrapper">
+                        <canvas id="breakdownChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Техническая информация -->
+        <div class="section">
+            <h2>🔧 Техническая реализация</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-title">Frontend компоненты</div>
+                    <ul class="feature-list">
+                        <li>• ProfitChart.js - универсальный компонент</li>
+                        <li>• chartUtils.js - утилиты для данных</li>
+                        <li>• Chart.js + react-chartjs-2</li>
+                        <li>• Адаптивная верстка</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Интеграция с API</div>
+                    <ul class="feature-list">
+                        <li>• Реальные данные от backend</li>
+                        <li>• Фильтрация по периодам</li>
+                        <li>• Автоматическое обновление</li>
+                        <li>• Обработка ошибок</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-title">Оптимизация</div>
+                    <ul class="feature-list">
+                        <li>• Ленивая загрузка компонентов</li>
+                        <li>• Кэширование данных</li>
+                        <li>• Плавные анимации</li>
+                        <li>• Мобильная адаптация</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Данные для демонстрации
+        const mockData = {
+            revenue: {
+                labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+                datasets: [{
+                    label: 'Доход от ботов',
+                    data: [120, 190, 300, 500, 200, 300, 450],
+                    borderColor: '#4A90E2',
+                    backgroundColor: 'rgba(74, 144, 226, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            breakdown: {
+                labels: ['Комиссия от ставок', 'Доход от ботов', 'Комиссия от подарков', 'Прочие доходы'],
+                datasets: [{
+                    data: [45, 30, 15, 10],
+                    backgroundColor: [
+                        '#4A90E2',
+                        '#22C55E',
+                        '#FBBF24',
+                        '#9333EA'
+                    ],
+                    borderColor: [
+                        '#4A90E2',
+                        '#22C55E',
+                        '#FBBF24',
+                        '#9333EA'
+                    ],
+                    borderWidth: 2,
+                    hoverOffset: 4
+                }]
+            },
+            expenses: {
+                labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+                datasets: [
+                    {
+                        label: 'Операционные расходы',
+                        data: [50, 60, 70, 80, 65, 75, 85],
+                        backgroundColor: 'rgba(239, 68, 68, 0.6)',
+                        borderColor: '#EF4444',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Дополнительные расходы',
+                        data: [20, 25, 30, 35, 25, 30, 40],
+                        backgroundColor: 'rgba(249, 115, 22, 0.6)',
+                        borderColor: '#F97316',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            profit: {
+                labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+                datasets: [
+                    {
+                        label: 'Доходы',
+                        data: [200, 250, 300, 350, 280, 320, 380],
+                        borderColor: '#22C55E',
+                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Расходы',
+                        data: [70, 85, 100, 115, 90, 105, 125],
+                        borderColor: '#EF4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Чистая прибыль',
+                        data: [130, 165, 200, 235, 190, 215, 255],
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            }
+        };
+
+        // Опции для графиков
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        color: '#e2e8f0',
+                        font: {
+                            family: 'Rajdhani',
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#e2e8f0',
+                    bodyColor: '#e2e8f0',
+                    borderColor: '#4a90e2',
+                    borderWidth: 1,
+                    titleFont: {
+                        family: 'Rajdhani',
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        family: 'Rajdhani'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(74, 144, 226, 0.1)'
+                    },
+                    ticks: {
+                        color: '#a0a0a0',
+                        font: {
+                            family: 'Rajdhani',
+                            size: 11
+                        }
+                    }
+                },
+                y: {
+                    grid: {
+                        color: 'rgba(74, 144, 226, 0.1)'
+                    },
+                    ticks: {
+                        color: '#a0a0a0',
+                        font: {
+                            family: 'Rajdhani',
+                            size: 11
+                        },
+                        callback: function(value) {
+                            return '$' + value.toFixed(0);
+                        }
+                    }
+                }
+            }
+        };
+
+        // Опции для круговой диаграммы
+        const doughnutOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        color: '#e2e8f0',
+                        font: {
+                            family: 'Rajdhani',
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#e2e8f0',
+                    bodyColor: '#e2e8f0',
+                    borderColor: '#4a90e2',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + context.parsed + '%';
+                        }
+                    }
+                }
+            }
+        };
+
+        // Инициализация графиков
+        let chart1, chart2;
+
+        function initCharts() {
+            const ctx1 = document.getElementById('revenueChart').getContext('2d');
+            const ctx2 = document.getElementById('breakdownChart').getContext('2d');
+
+            chart1 = new Chart(ctx1, {
+                type: 'line',
+                data: mockData.revenue,
+                options: chartOptions
+            });
+
+            chart2 = new Chart(ctx2, {
+                type: 'doughnut',
+                data: mockData.breakdown,
+                options: doughnutOptions
+            });
+        }
+
+        function showChart(type) {
+            // Обновить кнопки
+            document.querySelectorAll('.demo-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Обновить заголовки
+            const titles = {
+                revenue: '📈 Доходы от ботов',
+                breakdown: '🥧 Распределение доходов',
+                expenses: '📊 Расходы',
+                profit: '💹 Чистая прибыль'
+            };
+
+            document.querySelector('#chart1 .chart-title').textContent = titles[type];
+            document.querySelector('#chart2 .chart-title').textContent = 'Дополнительная аналитика';
+
+            // Обновить данные
+            switch(type) {
+                case 'revenue':
+                    chart1.data = mockData.revenue;
+                    chart1.config.type = 'line';
+                    chart1.options = chartOptions;
+                    break;
+                case 'breakdown':
+                    chart1.data = mockData.breakdown;
+                    chart1.config.type = 'doughnut';
+                    chart1.options = doughnutOptions;
+                    break;
+                case 'expenses':
+                    chart1.data = mockData.expenses;
+                    chart1.config.type = 'bar';
+                    chart1.options = chartOptions;
+                    break;
+                case 'profit':
+                    chart1.data = mockData.profit;
+                    chart1.config.type = 'line';
+                    chart1.options = chartOptions;
+                    break;
+            }
+
+            chart1.update('active');
+        }
+
+        // Инициализация при загрузке
+        document.addEventListener('DOMContentLoaded', function() {
+            initCharts();
+            console.log('📊 GemPlay Charts Demo загружен');
+        });
+    </script>
+</body>
+</html>
