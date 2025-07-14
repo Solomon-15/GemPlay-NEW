@@ -1,3 +1,15 @@
+  - task: "Backend API Endpoints for Detailed Data"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "УСПЕШНО СОЗДАНЫ ВСЕ BACKEND API ENDPOINTS ДЛЯ ДЕТАЛЬНЫХ ДАННЫХ: Завершена полная реализация 5 новых API endpoints для загрузки детальных данных каждой плитки. Ключевые achievements: 1) BOT REVENUE DETAILS (/api/admin/profit/bot-revenue-details): Получение всех обычных ботов, расчет доходов от завершенных циклов, статистика игр и процент побед, средний доход на бота, сортировка по доходности. Возвращает: total_revenue, active_bots, total_bots, avg_revenue_per_bot, entries[] с детализацией по каждому боту. 2) FROZEN FUNDS DETAILS (/api/admin/profit/frozen-funds-details): Поиск активных игр, расчет замороженной комиссии (6% от ставки), информация о игроках, время создания, статус игры. Возвращает: total_frozen, active_games, avg_frozen_per_game, entries[] с детализацией игр. 3) TOTAL REVENUE BREAKDOWN (/api/admin/profit/total-revenue-breakdown): Разбивка доходов по источникам (ставки, подарки, боты), расчет процентов от общей суммы, количество транзакций, средняя сумма транзакции, цветовая кодировка. Возвращает: total_revenue, breakdown[] по источникам, summary с статистикой. 4) EXPENSES DETAILS (/api/admin/profit/expenses-details): Расчет операционных расходов (60% от прибыли), дополнительные фиксированные расходы, история расходов, настройки процента, статистика эффективности. Возвращает: total_expenses, breakdown[] по категориям, settings, statistics. 5) NET PROFIT ANALYSIS (/api/admin/profit/net-profit-analysis): Полный анализ прибыли, пошаговый расчет (5 шагов), анализ трендов, оценка эффективности, потенциал роста. Возвращает: analysis (revenue, expense, profit), calculation_steps[], summary, trends. ТЕХНИЧЕСКИЕ ОСОБЕННОСТИ: Все endpoints используют правильную авторизацию через get_current_admin, обработку ошибок с HTTP exceptions, запросы к базе данных MongoDB, структурированные response models, защиту от division by zero. Все endpoints протестированы через curl и возвращают корректные JSON responses. Создана демонстрация в /app/backend_endpoints_demo.html."
+
   - task: "Detailed Modal Windows for All Tiles"
     implemented: true
     working: true
