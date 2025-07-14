@@ -227,6 +227,12 @@ const RegularBotsManagement = () => {
         <h2 className="text-2xl font-rajdhani font-bold text-white">Обычные Боты</h2>
         <div className="flex space-x-3">
           <button
+            onClick={() => setIsGlobalSettingsOpen(true)}
+            className="px-6 py-3 rounded-lg font-rajdhani font-bold text-white bg-purple-600 hover:bg-purple-700 transition-colors"
+          >
+            Общие настройки
+          </button>
+          <button
             onClick={() => setIsCreateModalOpen(true)}
             className="px-6 py-3 rounded-lg font-rajdhani font-bold text-white bg-green-600 hover:bg-green-700 transition-colors"
           >
@@ -253,6 +259,56 @@ const RegularBotsManagement = () => {
           >
             {allBotsEnabled ? 'Отключить всех ботов' : 'Включить всех ботов'}
           </button>
+        </div>
+      </div>
+
+      {/* Статистика активных ставок */}
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
+        <h3 className="text-lg font-rajdhani font-bold text-white mb-3">Активные ставки обычных ботов</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-surface-sidebar rounded-lg p-3">
+            <div className="text-text-secondary text-sm">Текущие активные ставки</div>
+            <div className="text-white text-xl font-rajdhani font-bold">
+              {activeBetsStats.regular_bots.current}
+            </div>
+          </div>
+          <div className="bg-surface-sidebar rounded-lg p-3">
+            <div className="text-text-secondary text-sm">Максимальный лимит</div>
+            <div className="text-accent-primary text-xl font-rajdhani font-bold">
+              {activeBetsStats.regular_bots.max}
+            </div>
+          </div>
+          <div className="bg-surface-sidebar rounded-lg p-3">
+            <div className="text-text-secondary text-sm">Доступные слоты</div>
+            <div className="text-green-400 text-xl font-rajdhani font-bold">
+              {activeBetsStats.regular_bots.available}
+            </div>
+          </div>
+          <div className="bg-surface-sidebar rounded-lg p-3">
+            <div className="text-text-secondary text-sm">Заполненность</div>
+            <div className={`text-xl font-rajdhani font-bold ${
+              activeBetsStats.regular_bots.percentage >= 90 ? 'text-red-400' :
+              activeBetsStats.regular_bots.percentage >= 70 ? 'text-yellow-400' : 'text-green-400'
+            }`}>
+              {activeBetsStats.regular_bots.percentage}%
+            </div>
+          </div>
+        </div>
+        
+        {/* Прогресс-бар */}
+        <div className="mt-4">
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div 
+              className={`h-2 rounded-full transition-all duration-300 ${
+                activeBetsStats.regular_bots.percentage >= 90 ? 'bg-red-500' :
+                activeBetsStats.regular_bots.percentage >= 70 ? 'bg-yellow-500' : 'bg-green-500'
+              }`}
+              style={{ width: `${Math.min(100, activeBetsStats.regular_bots.percentage)}%` }}
+            ></div>
+          </div>
+          <div className="text-text-secondary text-xs mt-1">
+            {activeBetsStats.regular_bots.current} из {activeBetsStats.regular_bots.max} активных ставок
+          </div>
         </div>
       </div>
 
