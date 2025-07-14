@@ -203,6 +203,11 @@ const BetsManagement = () => {
     setIsCancelModalOpen(true);
   };
 
+  const handleResetBetModal = (bet) => {
+    setResettingBet(bet);
+    setIsResetBetModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
