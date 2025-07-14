@@ -4182,19 +4182,19 @@ def test_regular_bot_commission_logic() -> None:
     
     bot_data = {
         "name": f"RegularBot_Test_{int(time.time())}",
-        "bot_type": "REGULAR",
-        "is_active": True,
-        "min_bet": 10.0,
-        "max_bet": 100.0,
-        "win_rate": 0.6,
+        "pause_timer": 5,
+        "recreate_interval": 30,
         "cycle_games": 12,
-        "pause_between_games": 5,
+        "cycle_total_amount": 500.0,
+        "win_percentage": 60.0,
+        "min_bet_amount": 10.0,
+        "max_bet_amount": 100.0,
         "can_accept_bets": False,
         "can_play_with_bots": False
     }
     
     response, success = make_request(
-        "POST", "/admin/bots/regular",
+        "POST", "/admin/bots/create-individual",
         data=bot_data,
         auth_token=admin_token
     )
