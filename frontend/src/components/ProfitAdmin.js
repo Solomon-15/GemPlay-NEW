@@ -1943,7 +1943,13 @@ const ProfitAdmin = ({ user }) => {
                         <div className="text-4xl font-bold text-emerald-400">
                           {formatCurrencyWithSymbol(modalData.summary?.net_profit || 0, true)}
                         </div>
-                        <div className="text-sm text-text-secondary">Чистая прибыль</div>
+                        <div className="text-sm text-text-secondary">
+                          Чистая прибыль
+                          {modalData.period === 'day' && ' за день'}
+                          {modalData.period === 'week' && ' за неделю'}
+                          {modalData.period === 'month' && ' за месяц'}
+                          {modalData.period === 'all' && ' за все время'}
+                        </div>
                         <div className="text-xs text-emerald-400 mt-1">
                           {modalData.summary?.profit_margin?.toFixed(1) || 0}% маржа
                         </div>
