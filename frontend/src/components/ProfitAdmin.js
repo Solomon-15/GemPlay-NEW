@@ -133,21 +133,46 @@ const ProfitAdmin = ({ user }) => {
   const categories = {
     'BET_COMMISSION': {
       name: 'Комиссия от ставок',
-      icon: '💰',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="8" strokeWidth="2"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 9h3m-3 3h3m-3 3h3M9 12l2 2 4-4"/>
+          <text x="12" y="16" textAnchor="middle" fontSize="8" fill="currentColor">%</text>
+        </svg>
+      ),
       color: 'green',
       description: '3% комиссия с PvP-игр'
     },
     'BOT_REVENUE': {
-      name: 'Доход от ботов',
-      icon: '🤖',
+      name: 'Доход от ботов от ставок',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="4" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+          <rect x="14" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+          <rect x="4" y="14" width="16" height="6" strokeWidth="2" rx="1"/>
+          <circle cx="17" cy="7" r="1" fill="currentColor"/>
+          <circle cx="7" cy="7" r="1" fill="currentColor"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
+          <circle cx="18" cy="15" r="3" strokeWidth="1.5"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 14v2l1 1"/>
+        </svg>
+      ),
       color: 'blue',
-      description: 'Прибыль от циклов ботов'
+      description: 'Прибыль когда боты выигрывают против игроков'
     },
     'GIFT_COMMISSION': {
       name: 'Комиссия от подарков',
-      icon: '🎁',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="3" y="8" width="18" height="12" strokeWidth="2" rx="2"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8V20"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2"/>
+          <circle cx="17" cy="13" r="2" strokeWidth="1.5"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 12v2l1 1"/>
+        </svg>
+      ),
       color: 'purple',
-      description: '3% за передачу гемов'
+      description: '3% за передачу гемов между игроками'
     }
   };
 
