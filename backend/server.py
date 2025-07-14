@@ -6013,6 +6013,185 @@ async def get_regular_bots_list(current_user: User = Depends(get_current_admin))
             detail="Failed to fetch regular bots list"
         )
 
+@api_router.get("/admin/bots/{bot_id}", response_model=dict)
+async def get_bot_details(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get detailed bot information with all saved parameters."""
+    try:
+        bot_doc = await db.bots.find_one({"id": bot_id})
+        if not bot_doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Count active bets for this bot
+        active_bets = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Get game statistics
+        total_games = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "COMPLETED"
+        })
+        
+        wins = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "COMPLETED",
+            "winner_id": bot_id
+        })
+        
+        losses = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "COMPLETED",
+            "winner_id": {"$ne": bot_id}
+        })
+        
+        win_rate = (wins / total_games * 100) if total_games > 0 else 0
+        
+        # Return all saved parameters exactly as they were stored
+        return {
+            "bot": {
+                "id": bot_doc["id"],
+                "name": bot_doc.get("name", ""),
+                "status": "Активен" if bot_doc.get("is_active", True) else "Отключён",
+                "is_active": bot_doc.get("is_active", True),
+                "bot_type": bot_doc.get("bot_type", "REGULAR"),
+                
+                # User-defined parameters - return exactly as saved
+                "pause_timer": bot_doc.get("pause_timer"),
+                "recreate_timer": bot_doc.get("recreate_timer"),
+                "cycle_games": bot_doc.get("cycle_length"),
+                "cycle_total_amount": bot_doc.get("cycle_total_amount"),
+                "win_percentage": bot_doc.get("win_percentage"),
+                "min_bet_amount": bot_doc.get("min_bet_amount"),
+                "max_bet_amount": bot_doc.get("max_bet_amount"),
+                "can_accept_bets": bot_doc.get("can_accept_bets", False),
+                "can_play_with_bots": bot_doc.get("can_play_with_bots", False),
+                
+                # Statistics
+                "active_bets": active_bets,
+                "games_stats": {
+                    "wins": wins,
+                    "losses": losses,
+                    "draws": 0,
+                    "total": total_games
+                },
+                "win_rate": round(win_rate, 1),
+                "created_at": bot_doc.get("created_at"),
+                "last_game_time": bot_doc.get("last_game_time"),
+                "last_bet_time": bot_doc.get("last_bet_time")
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching bot details: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bot details"
+        )
+
+@api_router.put("/admin/bots/{bot_id}", response_model=dict)
+async def update_bot_settings(
+    bot_id: str,
+    update_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Update bot settings with user-defined parameters."""
+    try:
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Validate parameters
+        pause_timer = update_data.get("pause_timer")
+        recreate_timer = update_data.get("recreate_timer")
+        cycle_games = update_data.get("cycle_games")
+        cycle_total_amount = update_data.get("cycle_total_amount")
+        win_percentage = update_data.get("win_percentage")
+        min_bet_amount = update_data.get("min_bet_amount")
+        max_bet_amount = update_data.get("max_bet_amount")
+        
+        # Validation
+        if pause_timer is not None and (pause_timer < 1 or pause_timer > 1000):
+            raise HTTPException(status_code=400, detail="Pause timer must be between 1 and 1000 minutes")
+        
+        if recreate_timer is not None and recreate_timer < 1:
+            raise HTTPException(status_code=400, detail="Recreate timer must be at least 1 second")
+            
+        if cycle_games is not None and cycle_games < 1:
+            raise HTTPException(status_code=400, detail="Cycle games must be at least 1")
+            
+        if min_bet_amount is not None and max_bet_amount is not None and min_bet_amount >= max_bet_amount:
+            raise HTTPException(status_code=400, detail="Min bet must be less than max bet")
+        
+        # Prepare update data - only update provided fields
+        update_fields = {"updated_at": datetime.utcnow()}
+        
+        if "name" in update_data:
+            update_fields["name"] = update_data["name"]
+        if pause_timer is not None:
+            update_fields["pause_timer"] = pause_timer
+        if recreate_timer is not None:
+            update_fields["recreate_timer"] = recreate_timer
+        if cycle_games is not None:
+            update_fields["cycle_length"] = cycle_games
+        if cycle_total_amount is not None:
+            update_fields["cycle_total_amount"] = cycle_total_amount
+        if win_percentage is not None:
+            update_fields["win_percentage"] = win_percentage
+        if min_bet_amount is not None:
+            update_fields["min_bet_amount"] = min_bet_amount
+        if max_bet_amount is not None:
+            update_fields["max_bet_amount"] = max_bet_amount
+        if "can_accept_bets" in update_data:
+            update_fields["can_accept_bets"] = update_data["can_accept_bets"]
+        if "can_play_with_bots" in update_data:
+            update_fields["can_play_with_bots"] = update_data["can_play_with_bots"]
+        
+        # Update bot in database
+        await db.bots.update_one(
+            {"id": bot_id},
+            {"$set": update_fields}
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="UPDATE_BOT_SETTINGS",
+            target_type="bot",
+            target_id=bot_id,
+            details={
+                "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
+                "updated_fields": update_fields
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": f"Настройки бота обновлены",
+            "bot_id": bot_id,
+            "updated_fields": list(update_fields.keys())
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating bot settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update bot settings"
+        )
+
 @api_router.post("/admin/bots/{bot_id}/toggle", response_model=dict)
 async def toggle_bot_status(
     bot_id: str,
