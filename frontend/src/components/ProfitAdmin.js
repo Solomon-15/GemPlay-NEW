@@ -505,7 +505,7 @@ const ProfitAdmin = ({ user }) => {
               )}
             </div>
             
-            {pagination.totalPages > 1 && (
+            {pagination.totalPages > 1 && pagination.handlePageChange && (
               <div className="border-t border-border-primary p-4">
                 <Pagination
                   currentPage={pagination.currentPage}
