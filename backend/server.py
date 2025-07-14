@@ -10288,6 +10288,80 @@ async def get_bot_queue_stats(current_user: User = Depends(get_current_admin)):
             detail="Failed to fetch bot queue statistics"
         )
 
+@api_router.put("/admin/bots/{bot_id}/limit", response_model=dict)
+async def update_bot_limit(
+    bot_id: str,
+    limit_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Update individual bot bet limit."""
+    try:
+        max_individual_bets = limit_data.get('maxIndividualBets', 12)
+        
+        # Validate limit
+        if max_individual_bets < 1 or max_individual_bets > 50:
+            raise HTTPException(
+                status_code=400,
+                detail="Individual bot limit must be between 1 and 50"
+            )
+        
+        # Get global settings
+        global_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        global_max = global_settings.get("globalMaxActiveBets", 50) if global_settings else 50
+        
+        # Get all other active bots to check global limit
+        other_bots = await db.bots.find({
+            "id": {"$ne": bot_id},
+            "is_active": True,
+            "$or": [
+                {"type": "REGULAR"},
+                {"bot_type": "REGULAR"}
+            ]
+        }).to_list(None)
+        
+        # Calculate total limit of other bots
+        other_bots_total = sum(bot.get("max_individual_bets", 12) for bot in other_bots)
+        
+        # Check if new limit would exceed global limit
+        if other_bots_total + max_individual_bets > global_max:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Total bots limit would exceed global limit {global_max}. Available: {global_max - other_bots_total}"
+            )
+        
+        # Update bot limit
+        result = await db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "max_individual_bets": max_individual_bets,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=404,
+                detail="Bot not found"
+            )
+        
+        return {
+            "success": True,
+            "message": "Bot limit updated successfully",
+            "bot_id": bot_id,
+            "new_limit": max_individual_bets
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating bot limit: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update bot limit"
+        )
+
 # ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
