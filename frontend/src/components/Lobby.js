@@ -513,7 +513,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   );
 
   const BotPlayersContent = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Available Bots */}
       <SectionBlock
         title="Available Bots"
@@ -525,12 +525,14 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           </svg>
         }
       >
-        <div className="space-y-3 max-h-64 overflow-y-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {getPaginatedItems(availableBots, currentPage.availableBots).map((game) => (
             <GameCard key={game.game_id || game.id} game={game} onJoin={handleJoinGame} isBot={true} />
           ))}
           {availableBots.length === 0 && (
-            <p className="text-text-secondary text-center py-8">No available bots</p>
+            <div className="col-span-full text-text-secondary text-center py-8">
+              No available bots
+            </div>
           )}
         </div>
         <PaginationControls
@@ -552,12 +554,14 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           </svg>
         }
       >
-        <div className="space-y-3 max-h-64 overflow-y-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {getPaginatedItems(ongoingBotBattles, currentPage.ongoingBotBattles).map((game) => (
             <GameCard key={game.game_id || game.id} game={game} onJoin={handleJoinGame} isBot={true} />
           ))}
           {ongoingBotBattles.length === 0 && (
-            <p className="text-text-secondary text-center py-8">No ongoing bot battles</p>
+            <div className="col-span-full text-text-secondary text-center py-8">
+              No ongoing bot battles
+            </div>
           )}
         </div>
         <PaginationControls
