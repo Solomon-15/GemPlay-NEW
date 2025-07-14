@@ -1885,15 +1885,39 @@ const ProfitAdmin = ({ user }) => {
               {/* Модальное окно для чистой прибыли */}
               {activeModal === 'net_profit' && (
                 <div className="space-y-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-rajdhani text-lg font-bold text-white">Чистая прибыль</h4>
+                        <p className="text-sm text-text-secondary">Итоговая прибыль после вычета всех расходов</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-rajdhani text-lg font-bold text-white">Чистая прибыль</h4>
-                      <p className="text-sm text-text-secondary">Итоговая прибыль после вычета всех расходов</p>
+                    
+                    {/* Переключатель периодов */}
+                    <div className="flex bg-surface-sidebar rounded-lg p-1">
+                      {[
+                        { key: 'day', label: 'День' },
+                        { key: 'week', label: 'Неделя' },
+                        { key: 'month', label: 'Месяц' },
+                        { key: 'all', label: 'Все' }
+                      ].map((period) => (
+                        <button
+                          key={period.key}
+                          onClick={() => handlePeriodChange(period.key)}
+                          className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                            activePeriod === period.key
+                              ? 'bg-emerald-500 text-white'
+                              : 'text-text-secondary hover:text-white'
+                          }`}
+                        >
+                          {period.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
