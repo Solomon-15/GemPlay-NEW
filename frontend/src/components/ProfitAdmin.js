@@ -12,6 +12,7 @@ const ProfitAdmin = ({ user }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filterType, setFilterType] = useState('');
+  const [dateFilter, setDateFilter] = useState({ from: '', to: '' });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -20,10 +21,10 @@ const ProfitAdmin = ({ user }) => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'entries') {
+    if (activeTab === 'history') {
       fetchEntries();
     }
-  }, [activeTab, currentPage, filterType]);
+  }, [activeTab, currentPage, filterType, dateFilter]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -56,6 +57,8 @@ const ProfitAdmin = ({ user }) => {
       });
 
       if (filterType) params.append('type', filterType);
+      if (dateFilter.from) params.append('date_from', dateFilter.from);
+      if (dateFilter.to) params.append('date_to', dateFilter.to);
 
       const response = await axios.get(`${API}/admin/profit/entries?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -70,24 +73,67 @@ const ProfitAdmin = ({ user }) => {
 
   const getEntryTypeName = (type) => {
     const types = {
-      'game_commission': 'Комиссия с игры',
-      'shop_sale': 'Продажа в магазине',
-      'penalty': 'Штраф',
-      'refund': 'Возврат',
-      'other': 'Прочее'
+      'bet_commission': '💰 Комиссия от ставок',
+      'gift_commission': '🎁 Комиссия от подарков',
+      'bot_profit': '🤖 Доход от ботов',
+      'human_bot_profit': '🤖 Доход от Human ботов',
+      'penalty': '🚨 Штрафы и удержания',
+      'refund': '🔄 Возвраты средств',
+      'system_credit': '⚙️ Системные начисления',
+      'game_commission': '💰 Комиссия с игры',
+      'shop_sale': '🛒 Продажа в магазине',
+      'other': '📊 Прочее'
     };
     return types[type] || type;
   };
 
   const getEntryTypeColor = (type) => {
     const colors = {
+      'bet_commission': 'text-green-400',
+      'gift_commission': 'text-pink-400',
+      'bot_profit': 'text-blue-400',
+      'human_bot_profit': 'text-cyan-400',
+      'penalty': 'text-red-400',
+      'refund': 'text-yellow-400',
+      'system_credit': 'text-purple-400',
       'game_commission': 'text-green-400',
       'shop_sale': 'text-blue-400',
-      'penalty': 'text-orange-400',
-      'refund': 'text-red-400',
       'other': 'text-gray-400'
     };
     return colors[type] || 'text-gray-400';
+  };
+
+  const exportToCSV = () => {
+    const headers = ['Дата', 'Время', 'Тип операции', 'Сумма', 'Источник', 'ID игрока/бота', 'Описание'];
+    const csvContent = [
+      headers.join(','),
+      ...entries.map(entry => [
+        new Date(entry.created_at).toLocaleDateString('ru-RU'),
+        new Date(entry.created_at).toLocaleTimeString('ru-RU'),
+        `"${getEntryTypeName(entry.type)}"`,
+        entry.amount,
+        `"${entry.source || '—'}"`,
+        entry.source_user_id || entry.bot_id || '—',
+        `"${entry.description || '—'}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `profit_history_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString('ru-RU'),
+      time: date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+    };
   };
 
   if (loading) {
