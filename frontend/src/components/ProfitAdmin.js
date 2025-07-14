@@ -36,6 +36,13 @@ const ProfitAdmin = ({ user }) => {
   const [periodFilter, setPeriodFilter] = useState('month'); // day, week, month
   const [expensesSettings, setExpensesSettings] = useState({ percentage: 60, manual_amount: 0 });
   const [showExpensesModal, setShowExpensesModal] = useState(false);
+  
+  // Состояния для настройки комиссий
+  const [commissionModalSettings, setCommissionModalSettings] = useState({
+    bet_commission_rate: 3,
+    gift_commission_rate: 3
+  });
+  const [savingCommission, setSavingCommission] = useState(false);
 
   // Пагинация для истории прибыли
   const pagination = usePagination(1, 10);
