@@ -513,7 +513,7 @@ const ProfitAdmin = ({ user }) => {
                         </td>
                         <td className="px-4 py-4 whitespace-nowrap">
                           <span className="text-sm font-bold text-green-400 font-rajdhani">
-                            {formatCurrencyWithSymbol(entry.amount)}
+                            {formatCurrencyWithSymbol(entry.amount, true)}
                           </span>
                         </td>
                         <td className="px-4 py-4 text-sm text-white">
