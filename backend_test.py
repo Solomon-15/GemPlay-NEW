@@ -3777,6 +3777,359 @@ def test_admin_panel_user_management() -> None:
     
     print_success("Admin Panel User Management endpoint testing completed!")
 
+def test_comprehensive_bet_management_system() -> None:
+    """Test comprehensive bet management system as requested in the review."""
+    print_header("COMPREHENSIVE BET MANAGEMENT SYSTEM TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with bet management tests - admin login failed")
+        return
+    
+    # Step 2: Create test users and bets for testing
+    print_subheader("Step 2: Setup Test Data")
+    
+    # Register and verify test users
+    user1_token = None
+    user2_token = None
+    user1_id = None
+    user2_id = None
+    
+    for i, user_data in enumerate(TEST_USERS):
+        # Generate unique email to avoid conflicts
+        random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+        user_data["email"] = f"testuser{i+1}_{random_suffix}@test.com"
+        
+        # Register user
+        response, success = make_request("POST", "/auth/register", data=user_data)
+        if success and "verification_token" in response:
+            # Verify email
+            verify_response, verify_success = make_request(
+                "POST", "/auth/verify-email", 
+                data={"token": response["verification_token"]}
+            )
+            
+            if verify_success:
+                # Login user
+                login_response, login_success = make_request(
+                    "POST", "/auth/login", 
+                    data={"email": user_data["email"], "password": user_data["password"]}
+                )
+                
+                if login_success and "access_token" in login_response:
+                    if i == 0:
+                        user1_token = login_response["access_token"]
+                        user1_id = login_response["user"]["id"]
+                        print_success(f"User1 setup complete: {user_data['email']}")
+                    else:
+                        user2_token = login_response["access_token"]
+                        user2_id = login_response["user"]["id"]
+                        print_success(f"User2 setup complete: {user_data['email']}")
+    
+    if not user1_token or not user2_token:
+        print_error("Failed to setup test users - cannot proceed")
+        return
+    
+    # Create some test bets
+    test_bets = []
+    
+    # User1 creates a WAITING bet
+    bet_gems_1 = {"Ruby": 5, "Emerald": 2}
+    game_data_1 = {"move": "rock", "bet_gems": bet_gems_1}
+    
+    response, success = make_request("POST", "/games/create", data=game_data_1, auth_token=user1_token)
+    if success and "game_id" in response:
+        test_bets.append({
+            "game_id": response["game_id"],
+            "user_id": user1_id,
+            "status": "WAITING",
+            "bet_amount": response.get("bet_amount", 0)
+        })
+        print_success(f"Created WAITING bet: {response['game_id']}")
+    
+    # User2 creates another WAITING bet
+    bet_gems_2 = {"Amber": 10, "Topaz": 3}
+    game_data_2 = {"move": "paper", "bet_gems": bet_gems_2}
+    
+    response, success = make_request("POST", "/games/create", data=game_data_2, auth_token=user2_token)
+    if success and "game_id" in response:
+        test_bets.append({
+            "game_id": response["game_id"],
+            "user_id": user2_id,
+            "status": "WAITING",
+            "bet_amount": response.get("bet_amount", 0)
+        })
+        print_success(f"Created second WAITING bet: {response['game_id']}")
+    
+    # Step 3: Test GET /admin/bets/stats endpoint
+    print_subheader("Step 3: Test GET /admin/bets/stats Endpoint")
+    
+    response, success = make_request("GET", "/admin/bets/stats", auth_token=admin_token)
+    if success:
+        print_success("Admin bets stats endpoint accessible")
+        
+        # Check required fields
+        required_fields = ["total_bets", "active_bets", "completed_bets", "cancelled_bets", "stuck_bets", "average_bet"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if not missing_fields:
+            print_success("Stats response contains all required fields")
+            print_success(f"Total bets: {response['total_bets']}")
+            print_success(f"Active bets: {response['active_bets']}")
+            print_success(f"Completed bets: {response['completed_bets']}")
+            print_success(f"Cancelled bets: {response['cancelled_bets']}")
+            print_success(f"Stuck bets: {response['stuck_bets']}")
+            print_success(f"Average bet: ${response['average_bet']}")
+            record_test("Admin Bets Stats - All Fields Present", True)
+            
+            # Verify data types
+            if (isinstance(response['total_bets'], int) and 
+                isinstance(response['active_bets'], int) and
+                isinstance(response['completed_bets'], int) and
+                isinstance(response['cancelled_bets'], int) and
+                isinstance(response['stuck_bets'], int) and
+                isinstance(response['average_bet'], (int, float))):
+                print_success("All stats fields have correct data types")
+                record_test("Admin Bets Stats - Data Types", True)
+            else:
+                print_error("Some stats fields have incorrect data types")
+                record_test("Admin Bets Stats - Data Types", False, "Incorrect data types")
+        else:
+            print_error(f"Stats response missing fields: {missing_fields}")
+            record_test("Admin Bets Stats - All Fields Present", False, f"Missing: {missing_fields}")
+    else:
+        print_error(f"Admin bets stats failed: {response}")
+        record_test("Admin Bets Stats Endpoint", False, f"Request failed: {response}")
+    
+    # Step 4: Test GET /admin/bets/list endpoint with pagination
+    print_subheader("Step 4: Test GET /admin/bets/list Endpoint with Pagination")
+    
+    # Test basic list
+    response, success = make_request("GET", "/admin/bets/list", auth_token=admin_token)
+    if success:
+        print_success("Admin bets list endpoint accessible")
+        
+        # Check response structure
+        required_fields = ["bets", "total_count", "current_page", "total_pages", "items_per_page", "has_next", "has_prev"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if not missing_fields:
+            print_success("List response contains all pagination fields")
+            print_success(f"Total count: {response['total_count']}")
+            print_success(f"Current page: {response['current_page']}")
+            print_success(f"Total pages: {response['total_pages']}")
+            print_success(f"Items per page: {response['items_per_page']}")
+            print_success(f"Has next: {response['has_next']}")
+            print_success(f"Has prev: {response['has_prev']}")
+            record_test("Admin Bets List - Pagination Structure", True)
+            
+            # Check bet structure
+            bets = response.get("bets", [])
+            if bets:
+                sample_bet = bets[0]
+                bet_required_fields = ["bet_id", "user_id", "status", "bet_amount", "created_at", "age_hours", "is_stuck", "can_cancel"]
+                bet_missing_fields = [field for field in bet_required_fields if field not in sample_bet]
+                
+                if not bet_missing_fields:
+                    print_success("Bet entries contain all required fields")
+                    print_success(f"Sample bet: {sample_bet}")
+                    record_test("Admin Bets List - Bet Structure", True)
+                else:
+                    print_error(f"Bet entries missing fields: {bet_missing_fields}")
+                    record_test("Admin Bets List - Bet Structure", False, f"Missing: {bet_missing_fields}")
+            else:
+                print_warning("No bets found in list (might be expected)")
+                record_test("Admin Bets List - Bet Structure", True, "No bets to check")
+        else:
+            print_error(f"List response missing fields: {missing_fields}")
+            record_test("Admin Bets List - Pagination Structure", False, f"Missing: {missing_fields}")
+    else:
+        print_error(f"Admin bets list failed: {response}")
+        record_test("Admin Bets List Endpoint", False, f"Request failed: {response}")
+    
+    # Test pagination parameters
+    response, success = make_request("GET", "/admin/bets/list?page=1&limit=5", auth_token=admin_token)
+    if success:
+        if response.get("items_per_page") == 5 and response.get("current_page") == 1:
+            print_success("Pagination parameters working correctly")
+            record_test("Admin Bets List - Pagination Parameters", True)
+        else:
+            print_error(f"Pagination parameters not working: page={response.get('current_page')}, limit={response.get('items_per_page')}")
+            record_test("Admin Bets List - Pagination Parameters", False, "Parameters not applied")
+    
+    # Test filtering by status
+    response, success = make_request("GET", "/admin/bets/list?status=WAITING", auth_token=admin_token)
+    if success:
+        bets = response.get("bets", [])
+        if all(bet.get("status") == "WAITING" for bet in bets):
+            print_success("Status filtering working correctly")
+            record_test("Admin Bets List - Status Filtering", True)
+        else:
+            print_error("Status filtering not working correctly")
+            record_test("Admin Bets List - Status Filtering", False, "Filter not applied")
+    
+    # Test filtering by user_id
+    if test_bets:
+        test_user_id = test_bets[0]["user_id"]
+        response, success = make_request("GET", f"/admin/bets/list?user_id={test_user_id}", auth_token=admin_token)
+        if success:
+            bets = response.get("bets", [])
+            if all(bet.get("user_id") == test_user_id for bet in bets):
+                print_success("User ID filtering working correctly")
+                record_test("Admin Bets List - User ID Filtering", True)
+            else:
+                print_error("User ID filtering not working correctly")
+                record_test("Admin Bets List - User ID Filtering", False, "Filter not applied")
+    
+    # Step 5: Test POST /admin/bets/{bet_id}/cancel endpoint
+    print_subheader("Step 5: Test POST /admin/bets/{bet_id}/cancel Endpoint")
+    
+    if test_bets:
+        test_bet = test_bets[0]
+        bet_id = test_bet["game_id"]
+        
+        # Get user's balance before cancellation
+        response, success = make_request("GET", "/economy/balance", auth_token=user1_token)
+        if success:
+            balance_before = response.get("virtual_balance", 0)
+            frozen_before = response.get("frozen_balance", 0)
+            print_success(f"User balance before cancel: ${balance_before}, Frozen: ${frozen_before}")
+        
+        # Cancel the bet
+        response, success = make_request("POST", f"/admin/bets/{bet_id}/cancel", auth_token=admin_token)
+        if success:
+            print_success("Admin bet cancellation successful")
+            
+            # Check response structure
+            required_fields = ["success", "message", "gems_returned", "commission_returned"]
+            missing_fields = [field for field in required_fields if field not in response]
+            
+            if not missing_fields:
+                print_success("Cancel response contains all required fields")
+                print_success(f"Success: {response['success']}")
+                print_success(f"Message: {response['message']}")
+                print_success(f"Gems returned: {response['gems_returned']}")
+                print_success(f"Commission returned: ${response['commission_returned']}")
+                record_test("Admin Bet Cancel - Response Structure", True)
+                
+                # Verify user's balance after cancellation
+                response, success = make_request("GET", "/economy/balance", auth_token=user1_token)
+                if success:
+                    balance_after = response.get("virtual_balance", 0)
+                    frozen_after = response.get("frozen_balance", 0)
+                    print_success(f"User balance after cancel: ${balance_after}, Frozen: ${frozen_after}")
+                    
+                    # Frozen balance should be reduced
+                    if frozen_after < frozen_before:
+                        print_success("Frozen balance correctly reduced after cancellation")
+                        record_test("Admin Bet Cancel - Balance Restoration", True)
+                    else:
+                        print_error("Frozen balance not reduced after cancellation")
+                        record_test("Admin Bet Cancel - Balance Restoration", False, "Balance not restored")
+            else:
+                print_error(f"Cancel response missing fields: {missing_fields}")
+                record_test("Admin Bet Cancel - Response Structure", False, f"Missing: {missing_fields}")
+        else:
+            print_error(f"Admin bet cancellation failed: {response}")
+            record_test("Admin Bet Cancel Endpoint", False, f"Request failed: {response}")
+    else:
+        print_warning("No test bets available for cancellation test")
+        record_test("Admin Bet Cancel Endpoint", True, "No bets to test")
+    
+    # Step 6: Test POST /admin/bets/cleanup-stuck endpoint
+    print_subheader("Step 6: Test POST /admin/bets/cleanup-stuck Endpoint")
+    
+    response, success = make_request("POST", "/admin/bets/cleanup-stuck", auth_token=admin_token)
+    if success:
+        print_success("Admin stuck bets cleanup endpoint accessible")
+        
+        # Check response structure
+        required_fields = ["success", "message", "cleaned_up_count", "total_gems_returned", "total_commission_returned"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if not missing_fields:
+            print_success("Cleanup response contains all required fields")
+            print_success(f"Success: {response['success']}")
+            print_success(f"Message: {response['message']}")
+            print_success(f"Cleaned up count: {response['cleaned_up_count']}")
+            print_success(f"Total gems returned: {response['total_gems_returned']}")
+            print_success(f"Total commission returned: ${response['total_commission_returned']}")
+            record_test("Admin Stuck Bets Cleanup - Response Structure", True)
+            
+            # Verify cleanup logic (24-hour threshold)
+            cleanup_count = response.get("cleaned_up_count", 0)
+            if cleanup_count >= 0:  # Should be non-negative
+                print_success(f"Cleanup processed {cleanup_count} stuck bets")
+                record_test("Admin Stuck Bets Cleanup - Processing", True)
+            else:
+                print_error(f"Invalid cleanup count: {cleanup_count}")
+                record_test("Admin Stuck Bets Cleanup - Processing", False, "Invalid count")
+        else:
+            print_error(f"Cleanup response missing fields: {missing_fields}")
+            record_test("Admin Stuck Bets Cleanup - Response Structure", False, f"Missing: {missing_fields}")
+    else:
+        print_error(f"Admin stuck bets cleanup failed: {response}")
+        record_test("Admin Stuck Bets Cleanup Endpoint", False, f"Request failed: {response}")
+    
+    # Step 7: Test stuck bet detection (24-hour threshold)
+    print_subheader("Step 7: Test Stuck Bet Detection")
+    
+    # Get current bets list to check stuck detection
+    response, success = make_request("GET", "/admin/bets/list", auth_token=admin_token)
+    if success:
+        bets = response.get("bets", [])
+        
+        # Check that age_hours and is_stuck fields are present and logical
+        stuck_detection_working = True
+        for bet in bets:
+            age_hours = bet.get("age_hours", 0)
+            is_stuck = bet.get("is_stuck", False)
+            
+            # Logic: bet should be stuck if age_hours > 24 and status is problematic
+            expected_stuck = age_hours > 24 and bet.get("status") in ["WAITING", "ACTIVE", "REVEAL"]
+            
+            if is_stuck == expected_stuck:
+                print_success(f"Bet {bet.get('bet_id', 'unknown')}: age={age_hours}h, stuck={is_stuck} (correct)")
+            else:
+                print_warning(f"Bet {bet.get('bet_id', 'unknown')}: age={age_hours}h, stuck={is_stuck} (expected {expected_stuck})")
+                stuck_detection_working = False
+        
+        if stuck_detection_working:
+            record_test("Admin Bets - Stuck Detection Logic", True)
+        else:
+            record_test("Admin Bets - Stuck Detection Logic", False, "Logic inconsistency")
+    
+    # Step 8: Test authentication and authorization
+    print_subheader("Step 8: Test Authentication and Authorization")
+    
+    # Test non-admin access (should be denied)
+    response, success = make_request("GET", "/admin/bets/stats", auth_token=user1_token, expected_status=403)
+    if not success:
+        print_success("Non-admin access correctly denied for stats")
+        record_test("Admin Bets - Non-admin Access Denied (Stats)", True)
+    else:
+        print_error("Non-admin access was not properly denied for stats")
+        record_test("Admin Bets - Non-admin Access Denied (Stats)", False, "Access not denied")
+    
+    response, success = make_request("GET", "/admin/bets/list", auth_token=user1_token, expected_status=403)
+    if not success:
+        print_success("Non-admin access correctly denied for list")
+        record_test("Admin Bets - Non-admin Access Denied (List)", True)
+    else:
+        print_error("Non-admin access was not properly denied for list")
+        record_test("Admin Bets - Non-admin Access Denied (List)", False, "Access not denied")
+    
+    # Test no token access
+    response, success = make_request("GET", "/admin/bets/stats", expected_status=401)
+    if not success:
+        print_success("No token access correctly denied")
+        record_test("Admin Bets - No Token Access Denied", True)
+    else:
+        print_error("No token access was not properly denied")
+        record_test("Admin Bets - No Token Access Denied", False, "Access not denied")
+
 def run_admin_panel_tests_only() -> None:
     """Run only the admin panel user management tests."""
     print_header("GEMPLAY ADMIN PANEL USER MANAGEMENT API TESTING")
@@ -3787,5 +4140,15 @@ def run_admin_panel_tests_only() -> None:
     # Print summary
     print_summary()
 
+def run_bet_management_tests() -> None:
+    """Run comprehensive bet management system tests as requested in review."""
+    print_header("GEMPLAY COMPREHENSIVE BET MANAGEMENT SYSTEM TESTING")
+    
+    # Test comprehensive bet management system
+    test_comprehensive_bet_management_system()
+    
+    # Print summary
+    print_summary()
+
 if __name__ == "__main__":
-    run_admin_panel_tests_only()
+    run_bet_management_tests()
