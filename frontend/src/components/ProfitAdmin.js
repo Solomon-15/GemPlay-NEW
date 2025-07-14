@@ -29,9 +29,20 @@ const ProfitAdmin = ({ user }) => {
 
   useEffect(() => {
     if (activeTab === 'history') {
+      // Сброс на первую страницу при смене категории
+      if (pagination.currentPage > 1) {
+        pagination.handlePageChange(1);
+      } else {
+        fetchEntries();
+      }
+    }
+  }, [activeTab, activeCategory, sortBy, sortOrder, dateFilter]);
+
+  useEffect(() => {
+    if (activeTab === 'history') {
       fetchEntries();
     }
-  }, [activeTab, pagination.currentPage, activeCategory, sortBy, sortOrder, dateFilter]);
+  }, [pagination.currentPage]);
 
   const fetchData = async () => {
     setLoading(true);
