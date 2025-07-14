@@ -1,3 +1,15 @@
+  - task: "Regular Bot Game Commission Logic Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "REGULAR BOT GAME COMMISSION LOGIC COMPLETED: Successfully finished the commission-free logic for games against Regular Bots. Key fixes: 1) PROFIT ENTRY CREATION: Modified distribute_game_rewards() to only create BET_COMMISSION profit entries for non-regular bot games, preventing commission records for regular bot games. 2) LOSER COMMISSION HANDLING: Added is_regular_bot_game check to loser commission handling, ensuring no commission return/processing for regular bot games since no commission was charged. 3) DRAW COMMISSION HANDLING: Added is_regular_bot_game check to draw scenario commission handling, ensuring no commission return for regular bot games. 4) WINNER COMMISSION CALCULATION: Fixed determine_game_winner() to set commission_amount to 0 for regular bot games, ensuring no commission is calculated or charged. The system now provides completely commission-free gameplay for Regular Bot games: Bot join refunds commission immediately, Winner gets full payout with no commission deduction, Loser has no commission-related balance changes, No profit entries created for commission, Draw scenarios handle no commission return. This ensures full win/loss gameplay with no percentages going to profit section as requested."
+
 backend:
   - task: "Bot Game Commit-Reveal Logic Fix"
     implemented: true
