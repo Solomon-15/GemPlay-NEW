@@ -191,7 +191,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
                   ? 'text-green-400' 
                   : 'text-red-400'
               }`}>
-                ${((user.total_amount_won || 0) - (user.total_amount_wagered || 0)).toFixed(2)}
+                {formatDollarAmount((user.total_amount_won || 0) - (user.total_amount_wagered || 0))}
               </span>
             </div>
             <div className="flex justify-between">
