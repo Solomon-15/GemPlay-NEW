@@ -339,7 +339,7 @@ const ProfitAdmin = ({ user }) => {
                   }`}
                 >
                   <div className="flex items-center space-x-3 mb-3">
-                    <div className={`p-3 rounded-lg ${getCategoryBadgeColor(key)}/20`}>
+                    <div className={`p-3 rounded-lg ${getCategoryBadgeOpacity(key)}`}>
                       <span className="text-2xl">{category.icon}</span>
                     </div>
                     <div>
