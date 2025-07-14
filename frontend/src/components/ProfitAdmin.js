@@ -435,13 +435,14 @@ const ProfitAdmin = ({ user }) => {
             <div className="space-y-2 p-4">
               {entries.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">{categories[activeCategory].icon}</div>
+                  <div className="text-6xl mb-4">{categories[activeCategory]?.icon || '📊'}</div>
                   <h4 className="font-rajdhani text-xl font-bold text-white mb-2">Нет транзакций</h4>
-                  <p className="text-text-secondary">В категории "{categories[activeCategory].name}" пока нет данных</p>
+                  <p className="text-text-secondary">В категории "{categories[activeCategory]?.name || 'Неизвестная категория'}" пока нет данных</p>
                 </div>
               ) : (
                 entries.map((entry, index) => {
                   const { date, time } = formatDateTime(entry.created_at);
+                  const currentCategory = categories[activeCategory] || { color: 'gray' };
                   return (
                     <div key={index} className="bg-surface-sidebar rounded-lg p-4 border border-border-primary hover:border-accent-primary transition-all duration-200 hover:shadow-lg">
                       <div className="flex items-center justify-between">
@@ -472,9 +473,9 @@ const ProfitAdmin = ({ user }) => {
                         
                         <div className="text-right">
                           <div className={`text-2xl font-bold font-russo ${
-                            categories[activeCategory].color === 'green' ? 'text-green-400' : 
-                            categories[activeCategory].color === 'blue' ? 'text-blue-400' : 
-                            'text-purple-400'
+                            currentCategory.color === 'green' ? 'text-green-400' : 
+                            currentCategory.color === 'blue' ? 'text-blue-400' : 
+                            currentCategory.color === 'purple' ? 'text-purple-400' : 'text-gray-400'
                           }`}>
                             {formatCurrencyWithSymbol(entry.amount, true)}
                           </div>
