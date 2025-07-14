@@ -45,6 +45,9 @@ const RegularBotsManagement = () => {
   const [cycleBot, setCycleBot] = useState(null);
   const [cycleData, setCycleData] = useState(null);
 
+  // Пагинация для списка ботов
+  const pagination = usePagination(1, 10);
+
   // Form states for creating bot
   const [botForm, setBotForm] = useState({
     name: '',
