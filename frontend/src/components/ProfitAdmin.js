@@ -301,6 +301,19 @@ const ProfitAdmin = ({ user }) => {
     }
   };
 
+  const getModalTitle = (modalType) => {
+    const titles = {
+      'bet_commission': 'Комиссия от ставок',
+      'human_bot_commission': 'Комиссия от Human-ботов',
+      'gift_commission': 'Комиссия от подарков',
+      'bot_revenue': 'Доход от ботов',
+      'frozen_funds': 'Замороженные средства',
+      'total_revenue': 'Общая прибыль',
+      'net_profit': 'Чистая прибыль'
+    };
+    return titles[modalType] || 'Неизвестно';
+  };
+
   const exportToCSV = () => {
     const headers = ['Дата', 'Время', 'Тип операции', 'Сумма', 'Источник', 'ID игрока/бота', 'Описание'];
     const csvContent = [
