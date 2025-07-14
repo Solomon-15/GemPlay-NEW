@@ -10129,6 +10129,166 @@ async def startup_event():
     logger.info("Game timeout checker started successfully")
 
 # ==============================================================================
+# BOT SETTINGS API
+# ==============================================================================
+
+@api_router.get("/admin/bot-settings", response_model=dict)
+async def get_bot_settings(current_user: User = Depends(get_current_admin)):
+    """Get bot settings."""
+    try:
+        # Get bot settings from database
+        settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        
+        if not settings:
+            # Create default settings if not exists
+            default_settings = {
+                "id": "bot_settings",
+                "globalMaxActiveBets": 50,
+                "globalMaxHumanBots": 30,
+                "paginationSize": 10,
+                "autoActivateFromQueue": True,
+                "priorityType": "order",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            await db.bot_settings.insert_one(default_settings)
+            settings = default_settings
+        
+        return {
+            "success": True,
+            "settings": {
+                "globalMaxActiveBets": settings.get("globalMaxActiveBets", 50),
+                "globalMaxHumanBots": settings.get("globalMaxHumanBots", 30),
+                "paginationSize": settings.get("paginationSize", 10),
+                "autoActivateFromQueue": settings.get("autoActivateFromQueue", True),
+                "priorityType": settings.get("priorityType", "order")
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching bot settings: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch bot settings"
+        )
+
+@api_router.put("/admin/bot-settings", response_model=dict)
+async def update_bot_settings(
+    settings: BotSettingsRequest,
+    current_user: User = Depends(get_current_admin)
+):
+    """Update bot settings."""
+    try:
+        # Validate settings
+        if settings.globalMaxActiveBets < 1 or settings.globalMaxActiveBets > 200:
+            raise HTTPException(
+                status_code=400,
+                detail="Global max active bets must be between 1 and 200"
+            )
+        
+        if settings.globalMaxHumanBots < 1 or settings.globalMaxHumanBots > 100:
+            raise HTTPException(
+                status_code=400,
+                detail="Global max human bots must be between 1 and 100"
+            )
+        
+        # Update or create settings
+        await db.bot_settings.update_one(
+            {"id": "bot_settings"},
+            {
+                "$set": {
+                    "globalMaxActiveBets": settings.globalMaxActiveBets,
+                    "globalMaxHumanBots": settings.globalMaxHumanBots,
+                    "paginationSize": settings.paginationSize,
+                    "autoActivateFromQueue": settings.autoActivateFromQueue,
+                    "priorityType": settings.priorityType,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        return {
+            "success": True,
+            "message": "Bot settings updated successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating bot settings: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update bot settings"
+        )
+
+@api_router.get("/admin/bot-queue-stats", response_model=dict)
+async def get_bot_queue_stats(current_user: User = Depends(get_current_admin)):
+    """Get bot queue statistics."""
+    try:
+        # Count active regular bot bets
+        active_regular_bets = await db.games.count_documents({
+            "status": GameStatus.WAITING,
+            "is_bot_game": True,
+            "$or": [
+                {"is_regular_bot_game": True},
+                {"metadata.bot_type": "REGULAR"}
+            ]
+        })
+        
+        # Count active human bot bets
+        active_human_bets = await db.games.count_documents({
+            "status": GameStatus.WAITING,
+            "is_bot_game": True,
+            "$or": [
+                {"is_regular_bot_game": False},
+                {"metadata.bot_type": "HUMAN"}
+            ]
+        })
+        
+        # Count total regular bots
+        total_regular_bots = await db.bots.count_documents({
+            "is_active": True,
+            "$or": [
+                {"type": "REGULAR"},
+                {"bot_type": "REGULAR"}
+            ]
+        })
+        
+        # Count total human bots
+        total_human_bots = await db.bots.count_documents({
+            "is_active": True,
+            "$or": [
+                {"type": "HUMAN"},
+                {"bot_type": "HUMAN"}
+            ]
+        })
+        
+        # Get bot settings for max limits
+        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        max_regular_bets = bot_settings.get("globalMaxActiveBets", 50) if bot_settings else 50
+        
+        # Calculate queued bets (this is a simplified calculation)
+        total_queued_bets = max(0, active_regular_bets - max_regular_bets)
+        
+        return {
+            "success": True,
+            "stats": {
+                "totalActiveRegularBets": active_regular_bets,
+                "totalQueuedBets": total_queued_bets,
+                "totalRegularBots": total_regular_bots,
+                "totalHumanBots": total_human_bots
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching bot queue stats: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch bot queue statistics"
+        )
+
+# ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
 
