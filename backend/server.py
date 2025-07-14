@@ -294,6 +294,22 @@ class ProfitEntry(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     admin_id: Optional[str] = None  # Если создано админом
 
+class BotProfitAccumulator(BaseModel):
+    """Модель для накопления прибыли от ботов"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    bot_id: str
+    cycle_number: int
+    total_spent: float  # Общая сумма, потраченная ботом на цикл
+    total_earned: float  # Общая сумма, заработанная ботом в цикле
+    games_completed: int  # Количество завершенных игр в цикле
+    games_won: int  # Количество выигранных игр
+    cycle_start_date: datetime
+    cycle_end_date: Optional[datetime] = None
+    is_cycle_completed: bool = False
+    profit_transferred: float = 0  # Сумма прибыли, переданная в "Доход от ботов"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 class FrozenBalance(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
