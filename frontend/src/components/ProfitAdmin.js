@@ -517,7 +517,7 @@ const ProfitAdmin = ({ user }) => {
                   min="0"
                   max="100"
                   step="0.1"
-                  defaultValue={commissionSettings.bet_commission_rate || 6}
+                  defaultValue={commissionSettings.bet_commission_rate || 3}
                   className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
                 />
               </div>
