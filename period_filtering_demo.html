@@ -13,43 +13,86 @@
         .font-roboto { font-family: 'Roboto', sans-serif; }
         
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            color: #e2e8f0;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            color: #ffffff;
         }
         
-        .modal {
-            display: none;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
         
-        .modal.active {
+        .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 2px solid #4a90e2;
+        }
+        
+        .header h1 {
+            font-family: 'Russo One', cursive;
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+            color: #4a90e2;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            margin: 0;
+            opacity: 0.8;
+        }
+        
+        .section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid #333;
+        }
+        
+        .section h2 {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2em;
+            margin: 0 0 20px 0;
+            color: #4a90e2;
+        }
+        
+        .demo-container {
+            background: #0f0f0f;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #444;
+        }
+        
+        .period-switcher {
             display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
         
-        .period-btn {
+        .period-button {
+            padding: 8px 16px;
+            background: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             transition: all 0.3s ease;
         }
         
-        .period-btn.active {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
+        .period-button:hover {
+            background: #4a90e2;
         }
         
-        .period-btn:not(.active) {
-            color: #9ca3af;
-        }
-        
-        .period-btn:not(.active):hover {
-            color: white;
-        }
-        
-        .tile-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        }
-        
-        .tile-interactive {
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .period-button.active {
+            background: #4a90e2;
+            color: #fff;
         }
     </style>
 </head>
