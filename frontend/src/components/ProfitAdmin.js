@@ -539,7 +539,15 @@ const ProfitAdmin = ({ user }) => {
             <div className="overflow-hidden">
               {entries.length === 0 ? (
                 <div className="text-center py-16">
-                  <div className="text-6xl mb-4">{categories[activeCategory]?.icon || '📊'}</div>
+                  <div className={`mb-4 flex justify-center ${
+                    categories[activeCategory]?.color === 'green' ? 'text-green-400' :
+                    categories[activeCategory]?.color === 'blue' ? 'text-blue-400' :
+                    categories[activeCategory]?.color === 'purple' ? 'text-purple-400' : 'text-gray-400'
+                  }`}>
+                    <div style={{ transform: 'scale(3)' }}>
+                      {categories[activeCategory]?.icon}
+                    </div>
+                  </div>
                   <h4 className="font-rajdhani text-xl font-bold text-white mb-2">Нет транзакций</h4>
                   <p className="text-text-secondary">В категории "{categories[activeCategory]?.name || 'Неизвестная категория'}" пока нет данных</p>
                   <p className="text-text-secondary text-sm mt-2">Попробуйте изменить фильтры или период</p>
