@@ -169,6 +169,52 @@ const ProfitAdmin = ({ user }) => {
     return colors[categoryKey] || 'bg-gray-600/20';
   };
 
+  // Функции для копирования в буфер и tooltip
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+    }
+  };
+
+  const showTooltip = (e, text) => {
+    setTooltip({
+      show: true,
+      text: text,
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
+  const hideTooltip = () => {
+    setTooltip({ show: false, text: '', x: 0, y: 0 });
+  };
+
+  // Функции для определения типа действия и игрока
+  const getActionType = (entry, category) => {
+    if (category === 'BET_COMMISSION') {
+      return 'Победа в PvP';
+    } else if (category === 'BOT_REVENUE') {
+      return 'Бот-победа';
+    } else if (category === 'GIFT_COMMISSION') {
+      return 'Подарок';
+    }
+    return 'Неизвестно';
+  };
+
+  const getPlayerInfo = (entry) => {
+    if (entry.source_user_id) {
+      return `Игрок ${entry.source_user_id.substring(0, 8)}...`;
+    }
+    if (entry.bot_id) {
+      return `Бот ${entry.bot_id.substring(0, 8)}...`;
+    }
+    return '—';
+  };
+
   const exportToCSV = () => {
     const headers = ['Дата', 'Время', 'Тип операции', 'Сумма', 'Источник', 'ID игрока/бота', 'Описание'];
     const csvContent = [
