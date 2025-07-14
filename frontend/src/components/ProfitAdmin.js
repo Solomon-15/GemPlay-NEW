@@ -1754,16 +1754,40 @@ const ProfitAdmin = ({ user }) => {
               {/* Модальное окно для расходов */}
               {activeModal === 'expenses' && (
                 <div className="space-y-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                      </svg>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-rajdhani text-lg font-bold text-white">Расходы</h4>
+                        <p className="text-sm text-text-secondary">Операционные расходы и затраты платформы</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-rajdhani text-lg font-bold text-white">Расходы</h4>
-                      <p className="text-sm text-text-secondary">Операционные расходы и затраты платформы</p>
+                    
+                    {/* Переключатель периодов */}
+                    <div className="flex bg-surface-sidebar rounded-lg p-1">
+                      {[
+                        { key: 'day', label: 'День' },
+                        { key: 'week', label: 'Неделя' },
+                        { key: 'month', label: 'Месяц' },
+                        { key: 'all', label: 'Все' }
+                      ].map((period) => (
+                        <button
+                          key={period.key}
+                          onClick={() => handlePeriodChange(period.key)}
+                          className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                            activePeriod === period.key
+                              ? 'bg-red-500 text-white'
+                              : 'text-text-secondary hover:text-white'
+                          }`}
+                        >
+                          {period.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
