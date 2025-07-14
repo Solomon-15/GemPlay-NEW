@@ -196,7 +196,7 @@ const BattleResultStep = ({
                 {result === 'win' ? 
                   `+${formatGemValue(totalGemValue * 2 - commissionAmount)}` : 
                  result === 'lose' ? 
-                  `-${formatCurrency(totalGemValue)}` : 
+                  `-${formatGemValue(totalGemValue)}` : 
                   `±${formatCurrency(0)}`}
               </span>
             </div>
