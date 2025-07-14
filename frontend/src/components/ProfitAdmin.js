@@ -302,7 +302,11 @@ const ProfitAdmin = ({ user }) => {
       setActiveModal(type);
       // Для модальных окон с настройками комиссий загружаем текущие настройки
       if (type === 'bet_commission' || type === 'gift_commission') {
-        // Настройки уже загружены в commissionSettings
+        // Инициализируем текущими значениями из commissionSettings
+        setCommissionModalSettings({
+          bet_commission_rate: commissionSettings?.bet_commission_rate || 3,
+          gift_commission_rate: commissionSettings?.gift_commission_rate || 3
+        });
         setModalData([]);
       } else {
         // Для других типов будем загружать соответствующие данные
@@ -310,6 +314,36 @@ const ProfitAdmin = ({ user }) => {
       }
     } catch (error) {
       console.error('Error opening modal:', error);
+    }
+  };
+
+  // Функция для сохранения настроек комиссий
+  const saveCommissionSettings = async () => {
+    setSavingCommission(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(`${API}/admin/profit/commission-settings`, {
+        bet_commission_rate: commissionModalSettings.bet_commission_rate,
+        gift_commission_rate: commissionModalSettings.gift_commission_rate
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Обновляем состояние с новыми настройками
+      setCommissionSettings(response.data);
+      
+      // Обновляем статистику, чтобы отразить изменения
+      await fetchData();
+      
+      // Показываем уведомление об успехе (можно добавить toast)
+      console.log('Настройки комиссий успешно сохранены');
+      
+    } catch (error) {
+      console.error('Ошибка сохранения настроек комиссий:', error);
+      // Показываем уведомление об ошибке
+      alert('Ошибка при сохранении настроек комиссий');
+    } finally {
+      setSavingCommission(false);
     }
   };
 
