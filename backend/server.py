@@ -116,6 +116,7 @@ class Bot(BaseModel):
     name: Optional[str] = None  # Только для Human ботов
     mode: BotMode = BotMode.ALGORITHMIC
     is_active: bool = True
+    bot_type: Optional[str] = None  # Добавляем для совместимости
     
     # Настройки поведения
     min_bet_amount: float = 1.0
