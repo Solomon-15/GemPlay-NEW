@@ -36,6 +36,12 @@ const RegularBotsManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingBot, setDeletingBot] = useState(null);
   const [deleteReason, setDeleteReason] = useState('');
+  const [isActiveBetsModalOpen, setIsActiveBetsModalOpen] = useState(false);
+  const [activeBetsBot, setActiveBetsBot] = useState(null);
+  const [activeBetsData, setActiveBetsData] = useState(null);
+  const [isCycleModalOpen, setIsCycleModalOpen] = useState(false);
+  const [cycleBot, setCycleBot] = useState(null);
+  const [cycleData, setCycleData] = useState(null);
 
   // Form states for creating bot
   const [botForm, setBotForm] = useState({
