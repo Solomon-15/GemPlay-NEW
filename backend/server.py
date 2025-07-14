@@ -2534,6 +2534,11 @@ async def determine_game_winner(game_id: str) -> dict:
             }
         )
         
+        # Refresh game object to get latest data
+        updated_game = await db.games.find_one({"id": game_id})
+        if updated_game:
+            game_obj = Game(**updated_game)
+        
         # Distribute rewards
         await distribute_game_rewards(game_obj, winner_id, commission_amount)
         
