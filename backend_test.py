@@ -4013,7 +4013,8 @@ def test_comprehensive_bet_management_system() -> None:
             print_success(f"User balance before cancel: ${balance_before}, Frozen: ${frozen_before}")
         
         # Cancel the bet
-        response, success = make_request("POST", f"/admin/bets/{bet_id}/cancel", auth_token=admin_token)
+        cancel_data = {"reason": "Test cancellation by admin"}
+        response, success = make_request("POST", f"/admin/bets/{bet_id}/cancel", data=cancel_data, auth_token=admin_token)
         if success:
             print_success("Admin bet cancellation successful")
             
