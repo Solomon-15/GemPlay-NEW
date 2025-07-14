@@ -25,9 +25,11 @@ const BetsManagement = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isResetAllModalOpen, setIsResetAllModalOpen] = useState(false);
+  const [isResetBetModalOpen, setIsResetBetModalOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [cancellingBet, setCancellingBet] = useState(null);
   const [resettingAll, setResettingAll] = useState(false);
+  const [resettingBet, setResettingBet] = useState(null);
 
   // Пагинация
   const pagination = usePagination(1, 10);
