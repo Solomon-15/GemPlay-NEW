@@ -1127,13 +1127,13 @@ const ProfitAdmin = ({ user }) => {
         </div>
       )}
 
-      {/* Универсальное модальное окно для детализации */}
+      {/* Специализированные модальные окна */}
       {activeModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-card border border-accent-primary border-opacity-50 rounded-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+          <div className="bg-surface-card border border-accent-primary border-opacity-50 rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-border-primary">
               <h3 className="font-rajdhani text-xl font-bold text-white">
-                Детализация: {getModalTitle(activeModal)}
+                {getModalTitle(activeModal)}
               </h3>
               <button
                 onClick={() => setActiveModal(null)}
@@ -1146,21 +1146,168 @@ const ProfitAdmin = ({ user }) => {
             </div>
 
             <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-              <div className="text-center text-text-secondary py-8">
-                <div className="text-4xl mb-4">📊</div>
-                <h4 className="font-rajdhani text-lg font-bold mb-2">Детализация в разработке</h4>
-                <p>Здесь будет отображаться подробная информация о {getModalTitle(activeModal)}</p>
-                <p className="text-sm mt-2">История операций, графики и аналитика</p>
-              </div>
+              {/* Модальное окно для комиссии от ставок */}
+              {activeModal === 'bet_commission' && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="8" strokeWidth="2"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 9h3m-3 3h3m-3 3h3M9 12l2 2 4-4"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-rajdhani text-lg font-bold text-white">Настройка комиссии от ставок</h4>
+                      <p className="text-sm text-text-secondary">Процент комиссии, взимаемый с выигрыша в PvP-играх</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <span className="text-sm text-text-secondary">Текущая комиссия:</span>
+                        <div className="text-2xl font-bold text-green-400">{commissionSettings?.bet_commission_rate || 3}%</div>
+                      </div>
+                      <div>
+                        <span className="text-sm text-text-secondary">Общая сумма:</span>
+                        <div className="text-2xl font-bold text-green-400">{formatCurrencyWithSymbol(stats.bet_commission || 0, true)}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-2">
+                        Процент комиссии (%)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={commissionModalSettings.bet_commission_rate}
+                        onChange={(e) => setCommissionModalSettings(prev => ({
+                          ...prev,
+                          bet_commission_rate: parseFloat(e.target.value) || 0
+                        }))}
+                        className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                      />
+                      <p className="text-xs text-text-secondary mt-1">
+                        Рекомендуемый диапазон: 1-10%. Текущий: {commissionSettings?.bet_commission_rate || 3}%
+                      </p>
+                    </div>
+
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                      <div className="flex items-center space-x-2">
+                        <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                        <span className="text-sm font-medium text-yellow-400">Внимание</span>
+                      </div>
+                      <p className="text-sm text-yellow-300 mt-1">
+                        Изменение комиссии повлияет на все новые ставки. Существующие игры останутся с прежним процентом.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Модальное окно для комиссии от подарков */}
+              {activeModal === 'gift_commission' && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="3" y="8" width="18" height="12" strokeWidth="2" rx="2"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8V20"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-rajdhani text-lg font-bold text-white">Настройка комиссии от подарков</h4>
+                      <p className="text-sm text-text-secondary">Процент комиссии, взимаемый при передаче гемов между игроками</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <span className="text-sm text-text-secondary">Текущая комиссия:</span>
+                        <div className="text-2xl font-bold text-purple-400">{commissionSettings?.gift_commission_rate || 3}%</div>
+                      </div>
+                      <div>
+                        <span className="text-sm text-text-secondary">Общая сумма:</span>
+                        <div className="text-2xl font-bold text-purple-400">{formatCurrencyWithSymbol(stats.gift_commission || 0, true)}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-2">
+                        Процент комиссии (%)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={commissionModalSettings.gift_commission_rate}
+                        onChange={(e) => setCommissionModalSettings(prev => ({
+                          ...prev,
+                          gift_commission_rate: parseFloat(e.target.value) || 0
+                        }))}
+                        className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                      />
+                      <p className="text-xs text-text-secondary mt-1">
+                        Рекомендуемый диапазон: 1-10%. Текущий: {commissionSettings?.gift_commission_rate || 3}%
+                      </p>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                      <div className="flex items-center space-x-2">
+                        <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-sm font-medium text-blue-400">Информация</span>
+                      </div>
+                      <p className="text-sm text-blue-300 mt-1">
+                        Комиссия за подарки взимается с отправителя при каждой передаче гемов другому игроку.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Заглушка для других модальных окон */}
+              {activeModal !== 'bet_commission' && activeModal !== 'gift_commission' && (
+                <div className="text-center text-text-secondary py-8">
+                  <div className="text-4xl mb-4">📊</div>
+                  <h4 className="font-rajdhani text-lg font-bold mb-2">Детализация в разработке</h4>
+                  <p>Здесь будет отображаться подробная информация о {getModalTitle(activeModal)}</p>
+                  <p className="text-sm mt-2">История операций, графики и аналитика</p>
+                </div>
+              )}
             </div>
 
-            <div className="flex justify-end p-6 border-t border-border-primary">
+            <div className="flex justify-between p-6 border-t border-border-primary">
               <button
                 onClick={() => setActiveModal(null)}
                 className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
               >
                 Закрыть
               </button>
+              
+              {/* Кнопка сохранения только для модальных окон настройки комиссий */}
+              {(activeModal === 'bet_commission' || activeModal === 'gift_commission') && (
+                <button
+                  onClick={saveCommissionSettings}
+                  disabled={savingCommission}
+                  className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/80 disabled:opacity-50"
+                >
+                  {savingCommission ? 'Сохранение...' : 'Сохранить настройки'}
+                </button>
+              )}
             </div>
           </div>
         </div>
