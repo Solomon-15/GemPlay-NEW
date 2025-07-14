@@ -1620,6 +1620,76 @@ const UserManagement = ({ user: currentUser }) => {
       {isBetsModalOpen && <BetsModal />}
       {isInfoModalOpen && <InfoModal />}
       {isDeleteModalOpen && <DeleteModal />}
+
+      {/* Reset All Balances Modal */}
+      {isResetBalancesModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-red-600 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-red-400">💰 Обнулить все балансы</h3>
+              <button
+                onClick={() => setIsResetBalancesModalOpen(false)}
+                disabled={resettingBalances}
+                className="text-gray-400 hover:text-white disabled:opacity-50"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-red-900 border border-red-600 rounded-lg p-4">
+                <div className="text-red-400 text-sm mb-2">
+                  ⚠️ <strong>ВНИМАНИЕ!</strong> Это действие нельзя отменить!
+                </div>
+                <div className="text-red-300 text-sm space-y-1">
+                  <div>• Обнулится баланс ВСЕХ пользователей</div>
+                  <div>• Очистятся все инвентари гемов</div>
+                  <div>• Выдастся $1000 + гемы на $1000</div>
+                  <div>• Будут затронуты ВСЕ игроки</div>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <p className="text-white font-rajdhani text-lg mb-2">
+                  Вы уверены, что хотите обнулить все балансы?
+                </p>
+                <p className="text-text-secondary text-sm">
+                  Всем игрокам будут выданы стартовые значения
+                </p>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setIsResetBalancesModalOpen(false)}
+                  disabled={resettingBalances}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-rajdhani font-bold transition-colors disabled:opacity-50"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={resetAllBalances}
+                  disabled={resettingBalances}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-rajdhani font-bold transition-colors disabled:opacity-50 flex items-center justify-center"
+                >
+                  {resettingBalances ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Сброс...
+                    </>
+                  ) : (
+                    '💰 Обнулить все'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
