@@ -272,6 +272,22 @@ const RegularBotsManagement = () => {
     }
   };
 
+  const recalculateBotBets = async (botId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/${botId}/recalculate-bets`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      showSuccessRU(`Пересчитано ${response.data.generated_bets} ставок для бота`);
+      await fetchBotsList();
+    } catch (error) {
+      console.error('Ошибка пересчета ставок:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при пересчете ставок';
+      showErrorRU(errorMessage);
+    }
+  };
+
   const handleDeleteModal = (bot) => {
     setDeletingBot(bot);
     setDeleteReason('');
