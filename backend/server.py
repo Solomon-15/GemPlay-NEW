@@ -5972,7 +5972,7 @@ async def create_individual_bot(
             admin_id=current_user.id,
             action="CREATE_INDIVIDUAL_BOT",
             target_type="bot",
-            target_id=bot.id,
+            target_id=created_bot_id,
             details={
                 "bot_name": name,
                 "config": bot_config
@@ -5982,7 +5982,7 @@ async def create_individual_bot(
         
         return {
             "message": f"Бот {name} создан успешно",
-            "bot_id": bot.id,
+            "bot_id": created_bot_id,
             "bot_name": name
         }
         
