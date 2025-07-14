@@ -344,6 +344,70 @@ const UserManagement = ({ user: currentUser }) => {
     }
   };
 
+  const resetAllBalances = async () => {
+    try {
+      setResettingBalances(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/users/reset-all-balances`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showSuccessRU(`${response.data.message}. Обработано: ${response.data.total_users_processed} пользователей`);
+      setIsResetBalancesModalOpen(false);
+      await fetchUsers(); // Refresh data
+    } catch (error) {
+      console.error('Error resetting all balances:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при сбросе всех балансов';
+      showErrorRU(errorMessage);
+    } finally {
+      setResettingBalances(false);
+    }
+  };
+
+  const resetUserBets = async (user) => {
+    try {
+      setResettingUserBets(user.id);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/users/${user.id}/reset-bets`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showSuccessRU(`${response.data.message}. Обработано: ${response.data.total_processed} ставок`);
+      await fetchUsers(); // Refresh data
+    } catch (error) {
+      console.error('Error resetting user bets:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при сбросе ставок пользователя';
+      showErrorRU(errorMessage);
+    } finally {
+      setResettingUserBets(null);
+    }
+  };
+
+  const resetUserBalance = async (user) => {
+    try {
+      setResettingUserBalance(user.id);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/users/${user.id}/reset-balance`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showSuccessRU(`${response.data.message}. Баланс: $${response.data.new_balance}`);
+      await fetchUsers(); // Refresh data
+    } catch (error) {
+      console.error('Error resetting user balance:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при сбросе баланса пользователя';
+      showErrorRU(errorMessage);
+    } finally {
+      setResettingUserBalance(null);
+    }
+  };
+
   const handleInfoModal = async (user) => {
     setSelectedUser(user);
     await fetchUserDetails(user.id);
