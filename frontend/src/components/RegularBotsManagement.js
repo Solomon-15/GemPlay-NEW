@@ -312,16 +312,129 @@ const RegularBotsManagement = () => {
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
         <div className="p-4 border-b border-border-primary">
           <h3 className="text-lg font-rajdhani font-bold text-white">Список обычных ботов</h3>
-          <p className="text-text-secondary text-sm">Пока оставлено пустым, добавлю позже</p>
         </div>
-        <div className="p-8 text-center">
-          <div className="text-text-secondary">
-            <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="font-rajdhani">Таблица будет добавлена позже</p>
-            <p className="text-sm">Раздел находится в разработке</p>
-          </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-surface-sidebar">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Имя
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Статус
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Активные ставки
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Поб/Пр/Нч
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Win Rate
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Цикл
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Сумма за цикл
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Мин/Макс ставка
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Регистрация
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Действия
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-primary">
+              {botsList.length === 0 ? (
+                <tr>
+                  <td colSpan="10" className="px-4 py-8 text-center text-text-secondary">
+                    Нет ботов для отображения
+                  </td>
+                </tr>
+              ) : (
+                botsList.map((bot) => (
+                  <tr key={bot.id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-white font-rajdhani font-bold">
+                        {bot.name || `Bot #${bot.id.substring(0, 3)}`}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs rounded-full font-rajdhani font-bold ${
+                        bot.is_active 
+                          ? 'bg-green-600 text-white' 
+                          : 'bg-red-600 text-white'
+                      }`}>
+                        {bot.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-white font-roboto">
+                        {bot.active_bets || 0}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-white font-roboto text-sm">
+                        {bot.games_stats.wins}/{bot.games_stats.losses}/{bot.games_stats.draws}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-accent-primary font-rajdhani font-bold">
+                        {bot.win_rate}%
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-white font-roboto">
+                        {bot.cycle_games}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-accent-primary font-rajdhani font-bold">
+                        ${bot.cycle_total_amount}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-white font-roboto text-sm">
+                        ${bot.min_bet} / ${bot.max_bet}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-white font-roboto text-sm">
+                        {formatDate(bot.created_at)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleSettingsModal(bot)}
+                          className="p-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                          title="Настройки"
+                        >
+                          ⚙
+                        </button>
+                        <button
+                          onClick={() => toggleBotStatus(bot.id)}
+                          className={`p-1 text-white rounded ${
+                            bot.is_active 
+                              ? 'bg-red-600 hover:bg-red-700' 
+                              : 'bg-green-600 hover:bg-green-700'
+                          }`}
+                          title={bot.is_active ? "Отключить" : "Включить"}
+                        >
+                          {bot.is_active ? '🛑' : '✅'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
