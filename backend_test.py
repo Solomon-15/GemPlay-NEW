@@ -4376,8 +4376,8 @@ def test_regular_bot_commission_logic() -> None:
         record_test("Regular Bot - No Frozen Balance", False, f"Frozen balance: ${final_frozen_balance}")
     
     # CRITICAL TEST 2: Check that no commission was deducted from balance
-    bet_value = 30.0  # 10 Ruby ($10) + 2 Emerald ($20)
-    expected_commission = bet_value * 0.06  # 6% commission = $1.80
+    bet_value = 10.0  # 10 Ruby ($10) total value
+    expected_commission = bet_value * 0.06  # 6% commission = $0.60
     
     if user_is_winner:
         # Winner should get full payout with no commission deduction
