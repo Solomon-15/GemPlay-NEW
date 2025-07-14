@@ -100,8 +100,9 @@ const ProfitAdmin = ({ user }) => {
   const getEntryTypeColor = (type) => {
     const colors = {
       'bet_commission': 'text-green-400',
-      'gift_commission': 'text-pink-400',
+      'gift_commission': 'text-purple-400',
       'bot_profit': 'text-blue-400',
+      'BOT_REVENUE': 'text-blue-400',
       'human_bot_profit': 'text-cyan-400',
       'penalty': 'text-red-400',
       'refund': 'text-yellow-400',
