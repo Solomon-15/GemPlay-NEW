@@ -1,4 +1,16 @@
 backend:
+  - task: "Added Target Win Percentage Column and Header Styling"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/RegularBotsManagement.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED WIN PERCENTAGE COLUMN ADDITION: Successfully added new '% Выигрыша' column to the Regular Bots table that displays the target win percentage set during bot creation (default: 60%). Frontend implementation: 1) Added new column header '% Выигрыша' with consistent styling matching all other table headers. 2) Positioned between 'Win Rate' and 'Цикл' columns for logical data flow. 3) Displays bot.win_percentage value with fallback to 60% default if not set. 4) Used orange color (text-orange-400) to distinguish from actual win rate column. 5) Updated table colspan for empty state row to accommodate new column. 6) Verified all table headers maintain uniform styling with same CSS classes: 'px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider'. The column shows the configured target percentage that the bot aims to achieve within each cycle, providing clear distinction from current performance metrics."
+
   - task: "Enhanced Bot Management - Active Bets and Cycle Details"
     implemented: true
     working: true
