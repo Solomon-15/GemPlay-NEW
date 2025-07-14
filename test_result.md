@@ -1,4 +1,16 @@
 backend:
+  - task: "Bot Cards Gem Display Logic Enhancement"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Lobby.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED BOT CARDS GEM DISPLAY ENHANCEMENT: Successfully updated the bot card display logic to show gem-based betting instead of dollar amounts. Frontend implementation: 1) Removed dollar-based display for bots - bots now show only gem values as integers without decimal places (e.g., '150' instead of '$150.00'). 2) Replaced textual gem names (Ruby, Emerald) with proper SVG icons using the established gem icon system (/gems/gem-red.svg, /gems/gem-green.svg, etc.). 3) Implemented proper gem quantity display format using '×3', '×2' notation for better readability and compactness. 4) Added gem sorting by price in ascending order (Ruby→Amber→Topaz→Emerald→Aquamarine→Sapphire→Magic) for consistent display across all bot cards. 5) Enhanced gem value calculation system using proper gem price definitions (Ruby: 1, Amber: 2, Topaz: 5, Emerald: 10, Aquamarine: 25, Sapphire: 50, Magic: 100). 6) Implemented responsive gem icon display with proper spacing and separators (•) between different gem types. 7) Maintained consistency with existing gem system from GemsContext while adapting display specifically for bot betting interface. The bot cards now accurately represent gem-only betting system with clear visual hierarchy and professional icon-based gem representation."
+
   - task: "Bot Players UI Unification and Functionality Improvements"
     implemented: true
     working: true
