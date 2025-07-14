@@ -1247,6 +1247,242 @@ const RegularBotsManagement = () => {
         </div>
       )}
 
+      {/* Модальное окно активных ставок */}
+      {isActiveBetsModalOpen && activeBetsBot && activeBetsData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-blue-500 border-opacity-50 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-blue-400">
+                📊 Активные ставки: {activeBetsData.bot_name}
+              </h3>
+              <button
+                onClick={() => setIsActiveBetsModalOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Статистика */}
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-2">Сводка:</h4>
+                <div className="text-text-secondary">
+                  Всего активных ставок: <span className="text-white font-bold">{activeBetsData.active_bets_count}</span>
+                </div>
+              </div>
+
+              {/* Список ставок */}
+              {activeBetsData.bets.length === 0 ? (
+                <div className="text-center py-8 text-text-secondary">
+                  Нет активных ставок
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {activeBetsData.bets.map((bet, index) => (
+                    <div key={bet.game_id} className="bg-surface-sidebar rounded-lg p-4 border border-border-primary">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <div className="text-text-secondary text-sm">Сумма ставки:</div>
+                          <div className="text-accent-primary font-rajdhani font-bold text-lg">
+                            ${bet.bet_amount}
+                          </div>
+                          <div className="text-text-secondary text-xs">
+                            {Object.entries(bet.bet_gems).map(([gem, qty]) => `${gem}: ${qty}`).join(', ')}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-text-secondary text-sm">Противник:</div>
+                          <div className="text-white">
+                            {bet.opponent ? bet.opponent.username : 'Ожидает'}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <div className="text-text-secondary text-sm">Статус:</div>
+                          <span className={`px-2 py-1 text-xs rounded-full font-rajdhani font-bold ${
+                            bet.status === 'Ожидает' 
+                              ? 'bg-yellow-600 text-white' 
+                              : 'bg-blue-600 text-white'
+                          }`}>
+                            {bet.status}
+                          </span>
+                        </div>
+                        
+                        <div>
+                          <div className="text-text-secondary text-sm">Создана:</div>
+                          <div className="text-white text-sm">
+                            {new Date(bet.created_at).toLocaleString('ru-RU')}
+                          </div>
+                          {bet.time_until_cancel && (
+                            <div className="text-yellow-400 text-xs">
+                              ⏰ {bet.time_until_cancel}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Кнопки */}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={() => setIsActiveBetsModalOpen(false)}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно истории цикла */}
+      {isCycleModalOpen && cycleBot && cycleData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-green-500 border-opacity-50 rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-green-400">
+                📈 История цикла: {cycleData.bot_name}
+              </h3>
+              <button
+                onClick={() => setIsCycleModalOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Статистика цикла */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-surface-sidebar rounded-lg p-4">
+                  <h4 className="font-rajdhani font-bold text-white mb-2">Прогресс цикла:</h4>
+                  <div className="text-2xl font-rajdhani font-bold text-green-400">
+                    {cycleData.cycle_info.progress}
+                  </div>
+                  <div className="text-text-secondary text-sm">
+                    Завершено игр (без ничьих)
+                  </div>
+                  <div className="mt-2 text-sm">
+                    <div className="text-green-400">Побед: {cycleData.cycle_info.current_wins}</div>
+                    <div className="text-red-400">Поражений: {cycleData.cycle_info.current_losses}</div>
+                    <div className="text-yellow-400">Ничьих: {cycleData.cycle_info.draws}</div>
+                  </div>
+                </div>
+
+                <div className="bg-surface-sidebar rounded-lg p-4">
+                  <h4 className="font-rajdhani font-bold text-white mb-2">Финансы:</h4>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-text-secondary">Поставлено:</span>
+                      <span className="text-white ml-2">${cycleData.cycle_stats.total_bet_amount}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-secondary">Выиграно:</span>
+                      <span className="text-green-400 ml-2">${cycleData.cycle_stats.total_winnings}</span>
+                    </div>
+                    <div>
+                      <span className="text-text-secondary">Проиграно:</span>
+                      <span className="text-red-400 ml-2">${cycleData.cycle_stats.total_losses}</span>
+                    </div>
+                    <div className="border-t border-border-primary pt-2">
+                      <span className="text-text-secondary">Итого:</span>
+                      <span className={`ml-2 font-bold ${
+                        cycleData.cycle_stats.net_profit >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        ${cycleData.cycle_stats.net_profit}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-surface-sidebar rounded-lg p-4">
+                  <h4 className="font-rajdhani font-bold text-white mb-2">Эффективность:</h4>
+                  <div className="text-2xl font-rajdhani font-bold text-accent-primary">
+                    {cycleData.cycle_stats.win_percentage}%
+                  </div>
+                  <div className="text-text-secondary text-sm">
+                    Процент побед
+                  </div>
+                </div>
+              </div>
+
+              {/* Таблица игр */}
+              <div className="bg-surface-sidebar rounded-lg overflow-hidden">
+                <div className="p-4 border-b border-border-primary">
+                  <h4 className="font-rajdhani font-bold text-white">Лог матчей текущего цикла</h4>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-surface-card">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">№</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ставка</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Гемы</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Противник</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Результат</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Выигрыш</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-primary">
+                      {cycleData.games.map((game, index) => (
+                        <tr key={game.game_id} className="hover:bg-surface-card hover:bg-opacity-50">
+                          <td className="px-4 py-3 text-white">{game.game_number}</td>
+                          <td className="px-4 py-3 text-accent-primary font-bold">${game.bet_amount}</td>
+                          <td className="px-4 py-3 text-text-secondary text-xs">
+                            {Object.entries(game.bet_gems).map(([gem, qty]) => `${gem}: ${qty}`).join(', ')}
+                          </td>
+                          <td className="px-4 py-3 text-white">{game.opponent}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 text-xs rounded-full font-rajdhani font-bold ${
+                              game.result === 'Победа' ? 'bg-green-600 text-white' :
+                              game.result === 'Поражение' ? 'bg-red-600 text-white' :
+                              'bg-yellow-600 text-white'
+                            }`}>
+                              {game.result}
+                            </span>
+                          </td>
+                          <td className={`px-4 py-3 font-bold ${
+                            game.winnings > 0 ? 'text-green-400' :
+                            game.winnings < 0 ? 'text-red-400' :
+                            'text-gray-400'
+                          }`}>
+                            {game.winnings > 0 ? '+' : ''}${game.winnings}
+                          </td>
+                          <td className="px-4 py-3 text-text-secondary text-sm">
+                            {new Date(game.completed_at).toLocaleString('ru-RU')}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Кнопки */}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={() => setIsCycleModalOpen(false)}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Модальное окно удаления бота */}
       {isDeleteModalOpen && deletingBot && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
