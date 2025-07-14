@@ -138,11 +138,12 @@ def create_test_user() -> Optional[Tuple[str, str]]:
     """Create a test user and return user_id and token."""
     print_subheader("Creating Test User")
     
-    # Generate unique test user
+    # Generate unique test user with random suffix
     timestamp = str(int(time.time()))
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
     test_user = {
-        "username": f"testuser_{timestamp}",
-        "email": f"testuser_{timestamp}@test.com",
+        "username": f"testuser_{timestamp}_{random_suffix}",
+        "email": f"testuser_{timestamp}_{random_suffix}@test.com",
         "password": "Test123!",
         "gender": "male"
     }
