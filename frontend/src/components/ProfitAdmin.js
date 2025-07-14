@@ -442,7 +442,15 @@ const ProfitAdmin = ({ user }) => {
                         : 'border-transparent text-text-secondary hover:text-white hover:bg-surface-card'
                     }`}
                   >
-                    <span className="text-lg">{category.icon}</span>
+                    <div className={`${
+                      activeCategory === key
+                        ? (category.color === 'green' ? 'text-green-400' :
+                           category.color === 'blue' ? 'text-blue-400' :
+                           'text-purple-400')
+                        : 'text-text-secondary'
+                    }`}>
+                      {category.icon}
+                    </div>
                     <span>{category.name}</span>
                     <span className={`px-2 py-1 text-xs rounded-full font-bold ${
                       activeCategory === key 
