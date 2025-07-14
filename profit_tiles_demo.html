@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демонстрация плиток "Прибыль" - GemPlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Roboto:wght@300;400;500;700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+        
+        .font-russo { font-family: 'Russo One', sans-serif; }
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+        }
+        
+        .tile-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tile-interactive {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="font-russo text-4xl text-green-400 mb-4">GemPlay - Плитки "Прибыль"</h1>
+            <p class="font-roboto text-gray-400 text-lg">Демонстрация 8 информационных плиток раздела "Обзор"</p>
+            <p class="font-rajdhani text-sm text-gray-500 mt-2">Все плитки интерактивны и отображают данные в формате $XX.XX</p>
+        </div>
+
+        <!-- Main Metrics Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            
+            <!-- 1. Комиссия от ставок -->
+            <div class="bg-slate-800 border border-green-500/30 rounded-lg p-6 tile-hover tile-interactive">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="8" stroke-width="2"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 9h3m-3 3h3m-3 3h3M9 12l2 2 4-4"/>
+                                    <text x="12" y="16" text-anchor="middle" font-size="8" fill="currentColor">%</text>
+                                </svg>
+                            </div>
+                            <div class="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded-full">
+                                LIVE
+                            </div>
+                        </div>
+                        <h3 class="font-roboto text-gray-400 text-sm mb-1">Комиссия от ставок</h3>
+                        <p class="font-russo text-2xl font-bold text-green-400">$402.18</p>
+                        <p class="text-xs text-gray-400 mt-1">3% от выигрыша в PvP-играх</p>
+                        <p class="text-xs text-green-300 mt-1">Клик для детализации</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Комиссия от Human-ботов -->
+            <div class="bg-slate-800 border border-cyan-500/30 rounded-lg p-6 tile-hover tile-interactive">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="4" y="4" width="6" height="6" stroke-width="2" rx="1"/>
+                                    <rect x="14" y="4" width="6" height="6" stroke-width="2" rx="1"/>
+                                    <rect x="4" y="14" width="16" height="6" stroke-width="2" rx="1"/>
+                                    <circle cx="17" cy="7" r="1" fill="currentColor"/>
+                                    <circle cx="7" cy="7" r="1" fill="currentColor"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17h8"/>
+                                    <text x="18" y="16" text-anchor="middle" font-size="6" fill="currentColor">%</text>
+                                </svg>
+                            </div>
+                            <div class="bg-cyan-500/20 text-cyan-400 text-xs font-bold px-2 py-1 rounded-full">
+                                LIVE
+                            </div>
+                        </div>
+                        <h3 class="font-roboto text-gray-400 text-sm mb-1">Комиссия от Human-ботов</h3>
+                        <p class="font-russo text-2xl font-bold text-cyan-400">$0.00</p>
+                        <p class="text-xs text-gray-400 mt-1">3% от выигрыша Human-ботов</p>
+                        <p class="text-xs text-cyan-300 mt-1">Клик для детализации</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Комиссия от подарков -->
+            <div class="bg-slate-800 border border-purple-500/30 rounded-lg p-6 tile-hover tile-interactive">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="3" y="8" width="18" height="12" stroke-width="2" rx="2"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8V20"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                                    <text x="17" y="14" text-anchor="middle" font-size="6" fill="currentColor">%</text>
+                                </svg>
+                            </div>
+                            <div class="bg-purple-500/20 text-purple-400 text-xs font-bold px-2 py-1 rounded-full">
+                                LIVE
+                            </div>
+                        </div>
+                        <h3 class="font-roboto text-gray-400 text-sm mb-1">Комиссия от подарков</h3>
+                        <p class="font-russo text-2xl font-bold text-purple-400">$1.74</p>
+                        <p class="text-xs text-gray-400 mt-1">3% от стоимости переданных гемов</p>
+                        <p class="text-xs text-purple-300 mt-1">Клик для детализации</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Доход от ботов -->
+            <div class="bg-slate-800 border border-blue-500/30 rounded-lg p-6 tile-hover tile-interactive">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <rect x="4" y="4" width="6" height="6" stroke-width="2" rx="1"/>
+                                    <rect x="14" y="4" width="6" height="6" stroke-width="2" rx="1"/>
+                                    <rect x="4" y="14" width="16" height="6" stroke-width="2" rx="1"/>
+                                    <circle cx="17" cy="7" r="1" fill="currentColor"/>
+                                    <circle cx="7" cy="7" r="1" fill="currentColor"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 17h8"/>
+                                    <circle cx="18" cy="15" r="3" stroke-width="1.5"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 14v2l1 1"/>
+                                </svg>
+                            </div>
+                            <div class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">
+                                LIVE
+                            </div>
+                        </div>
+                        <h3 class="font-roboto text-gray-400 text-sm mb-1">Доход от Обычных ботов</h3>
+                        <p class="font-russo text-2xl font-bold text-blue-400">$176.00</p>
+                        <p class="text-xs text-gray-400 mt-1">Прибыль от циклов обычных ботов</p>
+                        <p class="text-xs text-blue-300 mt-1">Клик для детализации</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Замороженные средства -->
+            <div class="bg-slate-800 border border-orange-500/30 rounded-lg p-6 tile-hover tile-interactive">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                            </div>
+                            <div class="bg-orange-500/20 text-orange-400 text-xs font-bold px-2 py-1 rounded-full">
+                                FROZEN
+                            </div>
+                        </div>
+                        <h3 class="font-roboto text-gray-400 text-sm mb-1">Замороженные средства</h3>
+                        <p class="font-russo text-2xl font-bold text-orange-400">$0.00</p>
+                        <p class="text-xs text-gray-400 mt-1">Комиссия в активных играх</p>
+                        <p class="text-xs text-orange-300 mt-1">Обновляется при создании ставок</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Общая прибыль -->
+            <div class="bg-slate-800 border border-yellow-500/30 rounded-lg p-6 tile-hover tile-interactive">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                                </svg>
+                            </div>
+                            <div class="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-1 rounded-full">
+                                TOTAL
+                            </div>
+                        </div>
+                        <h3 class="font-roboto text-gray-400 text-sm mb-1">Общая прибыль</h3>
+                        <p class="font-russo text-2xl font-bold text-yellow-400">$579.92</p>
+                        <p class="text-xs text-gray-400 mt-1">Сумма всех источников дохода</p>
+                        <p class="text-xs text-yellow-300 mt-1">Клик для детализации</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Расходы -->
+            <div class="bg-slate-800 border border-red-500/30 rounded-lg p-6 tile-hover tile-interactive">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 rounded-full">
+                                CALC
+                            </div>
+                        </div>
+                        <h3 class="font-roboto text-gray-400 text-sm mb-1">Расходы</h3>
+                        <p class="font-russo text-2xl font-bold text-red-400">$347.95</p>
+                        <p class="text-xs text-gray-400 mt-1">60% от общей прибыли + дополнительные</p>
+                        <p class="text-xs text-red-300 mt-1">Клик для настройки</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. Чистая прибыль -->
+            <div class="bg-slate-800 border border-emerald-500/30 rounded-lg p-6 tile-hover tile-interactive">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">
+                                NET
+                            </div>
+                        </div>
+                        <h3 class="font-roboto text-gray-400 text-sm mb-1">Чистая прибыль</h3>
+                        <p class="font-russo text-2xl font-bold text-emerald-400">$231.97</p>
+                        <p class="text-xs text-gray-400 mt-1">Общая прибыль минус расходы</p>
+                        <p class="text-xs text-emerald-300 mt-1">Клик для детализации</p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- Status Information -->
+        <div class="mt-12 bg-slate-800 border border-slate-600 rounded-lg p-6">
+            <h2 class="font-russo text-xl text-white mb-4">Статус реализации</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-rajdhani text-lg font-bold text-green-400 mb-2">✅ Выполнено</h3>
+                    <ul class="text-sm text-gray-300 space-y-1">
+                        <li>• Все 8 плиток реализованы согласно требованиям</li>
+                        <li>• Иконки, заголовки и описания добавлены</li>
+                        <li>• Интерактивность (cursor: pointer, hover effects)</li>
+                        <li>• Форматирование валют в $XX.XX</li>
+                        <li>• Статусные теги (LIVE, FROZEN, CALC, NET)</li>
+                        <li>• Использование вспомогательных функций расчета</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-rajdhani text-lg font-bold text-blue-400 mb-2">📋 Плитки</h3>
+                    <ul class="text-sm text-gray-300 space-y-1">
+                        <li>1. Комиссия от ставок</li>
+                        <li>2. Комиссия от Human-ботов</li>
+                        <li>3. Комиссия от подарков</li>
+                        <li>4. Доход от ботов</li>
+                        <li>5. Замороженные средства</li>
+                        <li>6. Общая прибыль</li>
+                        <li>7. Расходы</li>
+                        <li>8. Чистая прибыль</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Добавляем интерактивность
+        document.querySelectorAll('.tile-interactive').forEach(tile => {
+            tile.addEventListener('click', function() {
+                const title = this.querySelector('h3').textContent;
+                alert(`Клик по плитке: ${title}\nВ реальном приложении здесь откроется модальное окно с детализацией.`);
+            });
+        });
+    </script>
+</body>
+</html>
