@@ -693,9 +693,101 @@ const RegularBotsManagement = () => {
         </div>
       </div>
 
+      {/* Секция мониторинга очереди и приоритетов */}
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+        <h3 className="text-lg font-rajdhani font-bold text-white mb-4">📊 Мониторинг очереди и приоритетов</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Статистика очереди */}
+          <div className="space-y-4">
+            <h4 className="font-rajdhani text-md font-bold text-accent-primary">Состояние очереди</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-surface-sidebar rounded-lg p-3">
+                <div className="text-text-secondary text-sm">Ставок в очереди</div>
+                <div className="text-orange-400 text-xl font-rajdhani font-bold">
+                  {Math.max(0, activeBetsStats.regular_bots.current - activeBetsStats.regular_bots.max)}
+                </div>
+              </div>
+              <div className="bg-surface-sidebar rounded-lg p-3">
+                <div className="text-text-secondary text-sm">Время ожидания</div>
+                <div className="text-yellow-400 text-xl font-rajdhani font-bold">~2м</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Топ ботов по активности */}
+          <div className="space-y-4">
+            <h4 className="font-rajdhani text-md font-bold text-accent-primary">Топ ботов по лимитам</h4>
+            <div className="space-y-2">
+              {botsList
+                .filter(bot => bot.is_active)
+                .sort((a, b) => (b.max_individual_bets || 12) - (a.max_individual_bets || 12))
+                .slice(0, 3)
+                .map((bot, index) => (
+                  <div key={bot.id} className="flex items-center justify-between bg-surface-sidebar rounded-lg p-2">
+                    <div className="flex items-center space-x-2">
+                      <div className={`w-2 h-2 rounded-full ${
+                        index === 0 ? 'bg-yellow-400' : 
+                        index === 1 ? 'bg-gray-400' : 'bg-orange-400'
+                      }`}></div>
+                      <span className="text-white text-sm font-rajdhani">
+                        {bot.name || `Bot #${bot.id.substring(0, 3)}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-accent-primary font-rajdhani font-bold">
+                        {bot.max_individual_bets || 12}
+                      </span>
+                      <span className="text-text-secondary text-xs">лимит</span>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Индикаторы системы */}
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-surface-sidebar rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-text-secondary text-sm">Автоактивация</div>
+                <div className="text-green-400 font-rajdhani font-bold">Включена</div>
+              </div>
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+          </div>
+          <div className="bg-surface-sidebar rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-text-secondary text-sm">Тип приоритета</div>
+                <div className="text-blue-400 font-rajdhani font-bold">По порядку</div>
+              </div>
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+            </div>
+          </div>
+          <div className="bg-surface-sidebar rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-text-secondary text-sm">Сумма лимитов</div>
+                <div className={`font-rajdhani font-bold ${
+                  botsList.reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0) <= globalMaxBets 
+                    ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {botsList.reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0)}/{globalMaxBets}
+                </div>
+              </div>
+              <div className={`w-3 h-3 rounded-full ${
+                botsList.reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0) <= globalMaxBets 
+                  ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Информационные блоки */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
-        {/* Активные и отключенные боты */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">{/* Активные и отключенные боты */}
         <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
           <div className="flex items-center">
             <div className="p-2 bg-green-600 rounded-lg">
