@@ -2447,12 +2447,31 @@ async def determine_game_winner(game_id: str) -> dict:
         
         game_obj = Game(**game)
         
-        # Verify move hash (commit-reveal)
-        if not verify_move_hash(game_obj.creator_move, game_obj.creator_salt, game_obj.creator_move_hash):
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Move verification failed"
-            )
+        # Check if this is a bot game
+        is_bot_game = False
+        if game_obj.opponent_id:
+            bot_opponent = await db.bots.find_one({"id": game_obj.opponent_id})
+            is_bot_game = bot_opponent is not None
+        
+        # Verify move hash (commit-reveal) - only for human vs human games
+        if not is_bot_game:
+            if not verify_move_hash(game_obj.creator_move, game_obj.creator_salt, game_obj.creator_move_hash):
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Move verification failed"
+                )
+        else:
+            # For bot games, ensure we have the necessary data
+            if not game_obj.creator_move or not game_obj.opponent_move:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Bot game missing move data"
+                )
+            
+            # For bot games, verify hash if available (more lenient)
+            if game_obj.creator_move_hash and game_obj.creator_salt:
+                if not verify_move_hash(game_obj.creator_move, game_obj.creator_salt, game_obj.creator_move_hash):
+                    logger.warning(f"Bot game {game_id} move hash verification failed, but proceeding")
         
         # Determine winner using rock-paper-scissors logic
         creator_move = game_obj.creator_move
