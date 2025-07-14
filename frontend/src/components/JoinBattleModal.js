@@ -17,7 +17,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Основные константы
   const targetAmount = bet?.bet_amount || 0;
   const COMMISSION_RATE = 0.06; // 6%
-  const commissionAmount = targetAmount * COMMISSION_RATE;
+  const isBotGame = bet?.is_bot_game || false; // Определяем, является ли это игрой с ботом
+  const commissionAmount = isBotGame ? 0 : targetAmount * COMMISSION_RATE; // Для игр с ботами комиссия = 0
 
   // НОВАЯ АСИНХРОННАЯ АРХИТЕКТУРА - 3 шага для лучшего UX
   const [currentStep, setCurrentStep] = useState(1); // 1: выбор гемов, 2: выбор хода, 3: результат
