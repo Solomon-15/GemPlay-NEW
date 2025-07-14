@@ -1687,7 +1687,13 @@ const ProfitAdmin = ({ user }) => {
                         <div className="text-4xl font-bold text-yellow-400">
                           {formatCurrencyWithSymbol(modalData.total_revenue || 0, true)}
                         </div>
-                        <div className="text-sm text-text-secondary">Общая прибыль</div>
+                        <div className="text-sm text-text-secondary">
+                          Общая прибыль 
+                          {modalData.period === 'day' && ' за день'}
+                          {modalData.period === 'week' && ' за неделю'}
+                          {modalData.period === 'month' && ' за месяц'}
+                          {modalData.period === 'all' && ' за все время'}
+                        </div>
                       </div>
 
                       {modalData.breakdown && modalData.breakdown.length > 0 ? (
