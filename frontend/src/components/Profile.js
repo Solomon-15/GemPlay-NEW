@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { formatCurrencyWithSymbol, validateDailyLimit, ECONOMY_CONFIG } from '../utils/economy';
+import { formatCurrencyWithSymbol, formatDollarAmount, validateDailyLimit, ECONOMY_CONFIG } from '../utils/economy';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 import HeaderPortfolio from './HeaderPortfolio';
 
