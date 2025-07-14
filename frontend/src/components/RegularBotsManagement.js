@@ -411,51 +411,6 @@ const RegularBotsManagement = () => {
       setProfitAccumulators(response.data.accumulators || []);
       setProfitPagination(response.data.pagination || { current_page: 1, total_pages: 1 });
       setIsProfitAccumulatorsModalOpen(true);
-      showSuccessRU('Данные накопителей прибыли загружены');
-    } catch (error) {
-      console.error('Error fetching profit accumulators:', error);
-      showErrorRU('Ошибка при загрузке накопителей прибыли');
-    }
-  };
-
-  const handleForceCompleteModal = (bot) => {
-    setSelectedBotForForceComplete(bot);
-    setIsForceCompleteModalOpen(true);
-  };
-
-  const handleForceCompleteCycle = async () => {
-    if (!selectedBotForForceComplete) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/admin/bots/${selectedBotForForceComplete.id}/force-complete-cycle`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      showSuccessRU(`Цикл бота завершён принудительно. Прибыль: $${response.data.profit.toFixed(2)}`);
-      setIsForceCompleteModalOpen(false);
-      setSelectedBotForForceComplete(null);
-      
-      // Обновляем данные
-      fetchBotStats();
-    } catch (error) {
-      console.error('Error force completing cycle:', error);
-      const errorMessage = error.response?.data?.detail || 'Ошибка при принудительном завершении цикла';
-      showErrorRU(errorMessage);
-    }
-  };
-
-  // Функции для управления прибылью ботов
-  const handleOpenProfitAccumulators = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/profit-accumulators?page=1&limit=20`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setProfitAccumulators(response.data.accumulators || []);
-      setProfitPagination(response.data.pagination || { current_page: 1, total_pages: 1 });
-      setIsProfitAccumulatorsModalOpen(true);
       showSuccess('Данные накопителей прибыли загружены');
     } catch (error) {
       console.error('Error fetching profit accumulators:', error);
