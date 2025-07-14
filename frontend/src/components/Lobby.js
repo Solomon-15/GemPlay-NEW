@@ -132,29 +132,55 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     
     // For bots, use unified styling similar to PlayerCard
     if (isBot || isActiveBotEntry) {
-      // Get total bet amount for bots
-      const getTotalBetAmount = () => {
-        if (typeof game.bet_amount === 'string') {
-          // For range display like "5 - 100", show as is
-          return game.bet_amount;
-        }
-        return `$${game.bet_amount}`;
+      // Calculate total gems value (not in dollars, just gem quantity)
+      const getTotalGemsValue = () => {
+        if (!game.bet_gems || typeof game.bet_gems !== 'object') return 0;
+        
+        // Define gem prices for calculation
+        const gemPrices = {
+          'Ruby': 1,
+          'Amber': 2, 
+          'Topaz': 5,
+          'Emerald': 10,
+          'Aquamarine': 25,
+          'Sapphire': 50,
+          'Magic': 100
+        };
+
+        return Object.entries(game.bet_gems).reduce((total, [gemType, quantity]) => {
+          const price = gemPrices[gemType] || 1;
+          return total + (price * quantity);
+        }, 0);
       };
 
-      // Get sorted gems
+      // Get sorted gems by price (ascending)
       const getSortedGems = () => {
         if (!game.bet_gems || typeof game.bet_gems !== 'object') return [];
         
-        return Object.entries(game.bet_gems).map(([gemType, quantity]) => ({
-          type: gemType,
-          quantity: quantity,
-          // Simple gem icons mapping - you can expand this
-          icon: `/gems/${gemType}.png`, // Assuming gem icons are in public/gems/
-          name: gemType
-        }));
+        const gemDefinitions = {
+          'Ruby': { price: 1, icon: '/gems/gem-red.svg', color: '#ef4444' },
+          'Amber': { price: 2, icon: '/gems/gem-orange.svg', color: '#f97316' },
+          'Topaz': { price: 5, icon: '/gems/gem-yellow.svg', color: '#eab308' },
+          'Emerald': { price: 10, icon: '/gems/gem-green.svg', color: '#22c55e' },
+          'Aquamarine': { price: 25, icon: '/gems/gem-cyan.svg', color: '#06b6d4' },
+          'Sapphire': { price: 50, icon: '/gems/gem-blue.svg', color: '#3b82f6' },
+          'Magic': { price: 100, icon: '/gems/gem-purple.svg', color: '#a855f7' }
+        };
+
+        return Object.entries(game.bet_gems)
+          .map(([gemType, quantity]) => ({
+            type: gemType,
+            quantity: quantity,
+            price: gemDefinitions[gemType]?.price || 1,
+            icon: gemDefinitions[gemType]?.icon || '/gems/gem-red.svg',
+            color: gemDefinitions[gemType]?.color || '#ef4444'
+          }))
+          .filter(gem => gem.quantity > 0)
+          .sort((a, b) => a.price - b.price); // Sort by price ascending
       };
 
       const sortedGems = getSortedGems();
+      const totalGemsValue = getTotalGemsValue();
 
       return (
         <div className="bg-[#09295e] border border-[#23d364] border-opacity-30 hover:border-opacity-50 rounded-lg p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
@@ -178,25 +204,31 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
                 </span>
               </div>
 
-              {/* Gems Row */}
+              {/* Gems Row with SVG Icons */}
               {sortedGems.length > 0 && (
-                <div className="flex items-center space-x-1 mb-2 overflow-x-auto">
+                <div className="flex items-center space-x-2 mb-2 overflow-x-auto">
                   {sortedGems.map((gem, index) => (
                     <div key={gem.type} className="flex items-center space-x-1 flex-shrink-0">
-                      <span className="text-text-secondary text-xs font-rajdhani">
-                        {gem.type}: {gem.quantity}
+                      <img 
+                        src={gem.icon} 
+                        alt={gem.type} 
+                        className="w-4 h-4" 
+                        style={{ filter: `hue-rotate(0deg)` }}
+                      />
+                      <span className="text-text-secondary text-xs font-rajdhani font-bold">
+                        ×{gem.quantity}
                       </span>
                       {index < sortedGems.length - 1 && (
-                        <span className="text-text-secondary text-xs">•</span>
+                        <span className="text-text-secondary text-xs mx-1">•</span>
                       )}
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* Bet Amount */}
+              {/* Total Gems Value (no dollar sign, just number) */}
               <div className="text-green-400 font-rajdhani font-bold text-xl">
-                {getTotalBetAmount()}
+                {Math.round(totalGemsValue)}
               </div>
 
               {/* Bot Status */}
