@@ -6176,6 +6176,149 @@ async def get_bot_details(
             detail="Failed to fetch bot details"
         )
 
+@api_router.post("/admin/bots/{bot_id}/recalculate-bets", response_model=dict)
+async def recalculate_bot_bets(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Recalculate active bets for a bot based on its cycle parameters."""
+    try:
+        # Find the bot
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Get bot parameters
+        cycle_length = bot.get("cycle_length", 12)
+        cycle_total_amount = bot.get("cycle_total_amount", 500.0)
+        win_percentage = bot.get("win_percentage", 60)
+        min_bet_amount = bot.get("min_bet_amount", 5.0)
+        max_bet_amount = bot.get("max_bet_amount", 100.0)
+        
+        # Cancel existing active bets for this bot
+        await db.games.delete_many({
+            "creator_id": bot_id,
+            "status": "WAITING"
+        })
+        
+        # Generate new bet structure
+        new_bets = await generate_bot_cycle_bets(
+            bot_id, cycle_length, cycle_total_amount, 
+            win_percentage, min_bet_amount, max_bet_amount
+        )
+        
+        # Count active bets after generation
+        active_bets_count = len(new_bets)
+        
+        return {
+            "message": f"Пересчитаны ставки для бота {bot.get('name', bot_id[:8])}",
+            "bot_id": bot_id,
+            "generated_bets": active_bets_count,
+            "cycle_parameters": {
+                "cycle_length": cycle_length,
+                "cycle_total_amount": cycle_total_amount,
+                "win_percentage": win_percentage,
+                "min_bet": min_bet_amount,
+                "max_bet": max_bet_amount
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error recalculating bot bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to recalculate bot bets"
+        )
+
+async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
+                                win_percentage: int, min_bet: float, max_bet: float):
+    """Generate optimized bet amounts for a bot's cycle."""
+    try:
+        # Ensure bot has sufficient gems
+        await BotGameLogic.setup_bot_gems(bot_id, db)
+        
+        # Calculate number of winning and losing bets
+        winning_bets_count = int((win_percentage / 100.0) * cycle_length)
+        losing_bets_count = cycle_length - winning_bets_count
+        
+        # Generate bet amounts that sum to cycle_total_amount
+        bet_amounts = []
+        remaining_amount = cycle_total_amount
+        
+        for i in range(cycle_length):
+            if i == cycle_length - 1:  # Last bet gets remaining amount
+                bet_amount = max(min_bet, min(max_bet, remaining_amount))
+            else:
+                # Calculate reasonable bet amount within constraints
+                max_possible = min(max_bet, remaining_amount - (cycle_length - i - 1) * min_bet)
+                min_possible = max(min_bet, remaining_amount - (cycle_length - i - 1) * max_bet)
+                
+                if max_possible < min_possible:
+                    bet_amount = min_bet
+                else:
+                    bet_amount = random.uniform(min_possible, max_possible)
+                    bet_amount = round(bet_amount, 2)
+            
+            bet_amounts.append(bet_amount)
+            remaining_amount -= bet_amount
+            
+        # Adjust if total doesn't match exactly
+        total_generated = sum(bet_amounts)
+        if abs(total_generated - cycle_total_amount) > 0.01:
+            # Adjust the largest bet to match total
+            largest_idx = bet_amounts.index(max(bet_amounts))
+            adjustment = cycle_total_amount - total_generated
+            bet_amounts[largest_idx] = max(min_bet, min(max_bet, bet_amounts[largest_idx] + adjustment))
+        
+        # Randomly assign winning/losing outcome (for future reference)
+        bet_outcomes = ['win'] * winning_bets_count + ['lose'] * losing_bets_count
+        random.shuffle(bet_outcomes)
+        
+        # Create actual game entries
+        created_bets = []
+        for i, (bet_amount, outcome) in enumerate(zip(bet_amounts, bet_outcomes)):
+            # Generate random gems for bet
+            gem_types = list(GemType)
+            selected_gems = random.sample(gem_types, random.randint(1, min(3, len(gem_types))))
+            bet_gems = {gem_type.value: random.randint(1, 5) for gem_type in selected_gems}
+            
+            # Generate bot's move
+            bot = await db.bots.find_one({"id": bot_id})
+            bot_move = BotGameLogic.calculate_bot_move(Bot(**bot))
+            salt = secrets.token_hex(32)
+            
+            # Create game with metadata about intended outcome
+            game = Game(
+                creator_id=bot_id,
+                creator_move=bot_move,
+                creator_move_hash=hashlib.sha256(f"{bot_move.value}{salt}".encode()).hexdigest(),
+                creator_salt=salt,
+                bet_amount=bet_amount,
+                bet_gems=bet_gems,
+                is_bot_game=True,
+                bot_id=bot_id,
+                metadata={
+                    "cycle_position": i + 1,
+                    "intended_outcome": outcome,
+                    "cycle_id": f"{bot_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+                }
+            )
+            
+            await db.games.insert_one(game.dict())
+            created_bets.append(game.dict())
+        
+        logger.info(f"Generated {len(created_bets)} bets for bot {bot_id} with total ${sum(bet_amounts):.2f}")
+        return created_bets
+        
+    except Exception as e:
+        logger.error(f"Error generating bot cycle bets: {e}")
+        raise
+
 @api_router.put("/admin/bots/{bot_id}", response_model=dict)
 async def update_bot_settings(
     bot_id: str,
