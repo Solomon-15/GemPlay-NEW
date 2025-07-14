@@ -515,22 +515,20 @@ const AdminPanel = ({ user, onClose }) => {
         return <DashboardContent />;
       case 'users':
         return <UserManagement user={user} />;
+      case 'bets':
+        return <BetsManagement />;
+      case 'regular-bots':
+        return <RegularBotsManagement />;
+      case 'human-bots':
+        return <HumanBotsManagement />;
       case 'bots':
         return <div className="text-white">Управление ботами (в разработке)</div>;
       case 'games':
         return <GamesContent />;
-      case 'bets':
-        return <BetsContent />;
       case 'gems':
         return <div className="text-white">Управление гемами (в разработке)</div>;
       case 'profit':
         return <ProfitAdmin user={user} />;
-      case 'settings':
-        return <div className="text-white">Системные настройки (в разработке)</div>;
-      case 'analytics':
-        return <div className="text-white">Аналитика (в разработке)</div>;
-      case 'logs':
-        return <div className="text-white">Системные логи (в разработке)</div>;
       default:
         return <DashboardContent />;
     }
