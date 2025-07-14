@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фильтрация по периодам - GemPlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Roboto:wght@300;400;500;700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+        
+        .font-russo { font-family: 'Russo One', sans-serif; }
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+        }
+        
+        .modal {
+            display: none;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .period-btn {
+            transition: all 0.3s ease;
+        }
+        
+        .period-btn.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+        }
+        
+        .period-btn:not(.active) {
+            color: #9ca3af;
+        }
+        
+        .period-btn:not(.active):hover {
+            color: white;
+        }
+        
+        .tile-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tile-interactive {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="font-russo text-4xl text-green-400 mb-4">Фильтрация по периодам</h1>
+            <p class="font-roboto text-gray-400 text-lg">Демонстрация фильтрации данных по временным периодам</p>
+            <p class="font-rajdhani text-sm text-gray-500 mt-2">День • Неделя • Месяц • Все время</p>
+        </div>
+
+        <!-- Демонстрация плиток -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+            
+            <!-- Доход от ботов -->
+            <div class="bg-slate-800 border border-blue-500/30 rounded-lg p-6 tile-hover tile-interactive" onclick="openModal('bot_revenue')">
+                <div class="flex items-center space-x-2 mb-2">
+                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <rect x="4" y="4" width="6" height="6" stroke-width="2" rx="1"/>
+                            <rect x="14" y="4" width="6" height="6" stroke-width="2" rx="1"/>
+                            <rect x="4" y="14" width="16" height="6" stroke-width="2" rx="1"/>
+                        </svg>
+                    </div>
+                    <div class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">LIVE</div>
+                </div>
+                <h3 class="font-roboto text-gray-400 text-sm mb-1">Доход от ботов</h3>
+                <p class="font-russo text-2xl font-bold text-blue-400">$176.00</p>
+                <p class="text-xs text-gray-400 mt-1">Прибыль от циклов ботов</p>
+                <p class="text-xs text-blue-300 mt-1">С фильтрацией по периодам</p>
+            </div>
+
+            <!-- Общая прибыль -->
+            <div class="bg-slate-800 border border-yellow-500/30 rounded-lg p-6 tile-hover tile-interactive" onclick="openModal('total_revenue')">
+                <div class="flex items-center space-x-2 mb-2">
+                    <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                        </svg>
+                    </div>
+                    <div class="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-1 rounded-full">TOTAL</div>
+                </div>
+                <h3 class="font-roboto text-gray-400 text-sm mb-1">Общая прибыль</h3>
+                <p class="font-russo text-2xl font-bold text-yellow-400">$579.92</p>
+                <p class="text-xs text-gray-400 mt-1">Сумма всех источников</p>
+                <p class="text-xs text-yellow-300 mt-1">С фильтрацией по периодам</p>
+            </div>
+
+            <!-- Расходы -->
+            <div class="bg-slate-800 border border-red-500/30 rounded-lg p-6 tile-hover tile-interactive" onclick="openModal('expenses')">
+                <div class="flex items-center space-x-2 mb-2">
+                    <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 rounded-full">CALC</div>
+                </div>
+                <h3 class="font-roboto text-gray-400 text-sm mb-1">Расходы</h3>
+                <p class="font-russo text-2xl font-bold text-red-400">$347.95</p>
+                <p class="text-xs text-gray-400 mt-1">60% от общей прибыли</p>
+                <p class="text-xs text-red-300 mt-1">С фильтрацией по периодам</p>
+            </div>
+
+            <!-- Чистая прибыль -->
+            <div class="bg-slate-800 border border-emerald-500/30 rounded-lg p-6 tile-hover tile-interactive" onclick="openModal('net_profit')">
+                <div class="flex items-center space-x-2 mb-2">
+                    <div class="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">NET</div>
+                </div>
+                <h3 class="font-roboto text-gray-400 text-sm mb-1">Чистая прибыль</h3>
+                <p class="font-russo text-2xl font-bold text-emerald-400">$231.97</p>
+                <p class="text-xs text-gray-400 mt-1">Общая прибыль минус расходы</p>
+                <p class="text-xs text-emerald-300 mt-1">С фильтрацией по периодам</p>
+            </div>
+        </div>
+
+        <!-- Демонстрация переключателя периодов -->
+        <div class="bg-slate-800 border border-slate-600 rounded-lg p-6 mb-8">
+            <h2 class="font-russo text-xl text-white mb-4">Переключатель периодов</h2>
+            <div class="flex items-center justify-center">
+                <div class="flex bg-gray-700 rounded-lg p-1">
+                    <button class="period-btn active px-4 py-2 text-sm rounded-md" onclick="setPeriod('day')">
+                        День
+                    </button>
+                    <button class="period-btn px-4 py-2 text-sm rounded-md" onclick="setPeriod('week')">
+                        Неделя
+                    </button>
+                    <button class="period-btn px-4 py-2 text-sm rounded-md" onclick="setPeriod('month')">
+                        Месяц
+                    </button>
+                    <button class="period-btn px-4 py-2 text-sm rounded-md" onclick="setPeriod('all')">
+                        Все время
+                    </button>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <p class="text-sm text-gray-400">Выбранный период: <span id="selected-period" class="text-blue-400 font-bold">День</span></p>
+            </div>
+        </div>
+
+        <!-- Универсальное модальное окно -->
+        <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
+            <div class="bg-slate-800 border border-accent-primary border-opacity-50 rounded-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+                <div class="flex justify-between items-center p-6 border-b border-gray-700">
+                    <div class="flex items-center space-x-4">
+                        <h3 id="modal-title" class="font-rajdhani text-xl font-bold text-white">Модальное окно</h3>
+                        
+                        <!-- Переключатель периодов в модальном окне -->
+                        <div class="flex bg-gray-700 rounded-lg p-1">
+                            <button class="modal-period-btn active px-3 py-1 text-xs rounded-md" onclick="setModalPeriod('day')">
+                                День
+                            </button>
+                            <button class="modal-period-btn px-3 py-1 text-xs rounded-md" onclick="setModalPeriod('week')">
+                                Неделя
+                            </button>
+                            <button class="modal-period-btn px-3 py-1 text-xs rounded-md" onclick="setModalPeriod('month')">
+                                Месяц
+                            </button>
+                            <button class="modal-period-btn px-3 py-1 text-xs rounded-md" onclick="setModalPeriod('all')">
+                                Все
+                            </button>
+                        </div>
+                    </div>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div id="modal-content" class="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+                    <div class="text-center text-gray-400 py-8">
+                        <div class="text-4xl mb-4">📊</div>
+                        <h4 class="font-rajdhani text-lg font-bold mb-2">Загрузка данных</h4>
+                        <p>Данные фильтруются по выбранному периоду</p>
+                        <p class="text-sm mt-2">Период: <span id="modal-period-display" class="text-blue-400 font-bold">Месяц</span></p>
+                    </div>
+                </div>
+
+                <div class="flex justify-end p-6 border-t border-gray-700">
+                    <button onclick="closeModal()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                        Закрыть
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Особенности реализации -->
+        <div class="bg-slate-800 border border-slate-600 rounded-lg p-6">
+            <h2 class="font-russo text-xl text-white mb-4">Особенности реализации фильтрации</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-rajdhani text-lg font-bold text-green-400 mb-2">✅ Backend изменения</h3>
+                    <ul class="text-sm text-gray-300 space-y-1">
+                        <li>• Добавлен параметр <code>period</code> в API endpoints</li>
+                        <li>• Логика фильтрации по датам (day, week, month, all)</li>
+                        <li>• Возвращение периода в response для frontend</li>
+                        <li>• Обновлены все 4 основных endpoints</li>
+                        <li>• Исключение замороженных средств (не зависят от времени)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="font-rajdhani text-lg font-bold text-blue-400 mb-2">📋 Frontend изменения</h3>
+                    <ul class="text-sm text-gray-300 space-y-1">
+                        <li>• Состояние <code>activePeriod</code> для управления периодом</li>
+                        <li>• Функция <code>handlePeriodChange()</code> для смены периода</li>
+                        <li>• Переключатель периодов в модальных окнах</li>
+                        <li>• Обновление <code>loadModalData()</code> с параметром период</li>
+                        <li>• Индикаторы выбранного периода в UI</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                <h3 class="font-rajdhani text-lg font-bold text-blue-400 mb-2">🔧 Техническая реализация</h3>
+                <div class="text-sm text-blue-300">
+                    <p class="mb-2"><strong>Backend фильтрация:</strong></p>
+                    <div class="bg-slate-900 rounded p-2 mb-2">
+                        <code>
+                            if period == "day": start_date = now - timedelta(days=1)<br>
+                            elif period == "week": start_date = now - timedelta(weeks=1)<br>
+                            elif period == "month": start_date = now - timedelta(days=30)<br>
+                            else: start_date = None  # "all"
+                        </code>
+                    </div>
+                    <p class="mb-2"><strong>Frontend интеграция:</strong></p>
+                    <div class="bg-slate-900 rounded p-2">
+                        <code>
+                            const loadModalData = async (type, period = activePeriod) => {<br>
+                            &nbsp;&nbsp;const response = await axios.get(`${API}/endpoint?period=${period}`)<br>
+                            }
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPeriod = 'day';
+        let modalPeriod = 'month';
+        let currentModal = null;
+
+        function setPeriod(period) {
+            currentPeriod = period;
+            
+            // Обновляем кнопки
+            document.querySelectorAll('.period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Обновляем отображение
+            const periodNames = {
+                'day': 'День',
+                'week': 'Неделя', 
+                'month': 'Месяц',
+                'all': 'Все время'
+            };
+            document.getElementById('selected-period').textContent = periodNames[period];
+            
+            console.log(`Выбран период: ${periodNames[period]}`);
+        }
+
+        function setModalPeriod(period) {
+            modalPeriod = period;
+            
+            // Обновляем кнопки в модальном окне
+            document.querySelectorAll('.modal-period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Обновляем отображение
+            const periodNames = {
+                'day': 'День',
+                'week': 'Неделя', 
+                'month': 'Месяц',
+                'all': 'Все время'
+            };
+            document.getElementById('modal-period-display').textContent = periodNames[period];
+            
+            console.log(`Данные перезагружены для периода: ${periodNames[period]}`);
+            
+            // Имитируем загрузку данных
+            const content = document.getElementById('modal-content');
+            content.innerHTML = `
+                <div class="text-center text-gray-400 py-8">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mb-4"></div>
+                    <h4 class="font-rajdhani text-lg font-bold mb-2">Загрузка данных</h4>
+                    <p>Фильтрация по периоду: <span class="text-blue-400 font-bold">${periodNames[period]}</span></p>
+                </div>
+            `;
+            
+            // Имитируем завершение загрузки
+            setTimeout(() => {
+                content.innerHTML = `
+                    <div class="text-center text-gray-400 py-8">
+                        <div class="text-4xl mb-4">📊</div>
+                        <h4 class="font-rajdhani text-lg font-bold mb-2">Данные обновлены</h4>
+                        <p>Отображены данные за: <span class="text-blue-400 font-bold">${periodNames[period]}</span></p>
+                        <p class="text-sm mt-2">В реальном приложении здесь будут отфильтрованные данные</p>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        function openModal(type) {
+            currentModal = type;
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modal-title');
+            
+            const titles = {
+                'bot_revenue': 'Доход от ботов',
+                'total_revenue': 'Общая прибыль',
+                'expenses': 'Расходы',
+                'net_profit': 'Чистая прибыль'
+            };
+            
+            title.textContent = titles[type];
+            modal.classList.add('active');
+            
+            // Сбрасываем период в модальном окне
+            modalPeriod = 'month';
+            document.querySelectorAll('.modal-period-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.modal-period-btn')[2].classList.add('active'); // Месяц
+            document.getElementById('modal-period-display').textContent = 'Месяц';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('active');
+            currentModal = null;
+        }
+
+        // Закрытие модального окна при клике на фон
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'modal') {
+                closeModal();
+            }
+        });
+
+        // Закрытие модального окна при нажатии Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
