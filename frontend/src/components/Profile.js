@@ -221,7 +221,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
             <div className="flex justify-between items-center mb-2">
               <span className="font-roboto text-text-secondary">Daily Deposit Limit:</span>
               <span className="font-rajdhani text-white font-bold">
-                {formatCurrencyWithSymbol(user.daily_limit_max)}
+                {formatDollarAmount(user.daily_limit_max)}
               </span>
             </div>
             <div className="flex justify-between items-center mb-2">
