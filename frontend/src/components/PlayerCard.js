@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useGems } from './GemsContext';
-import { formatCurrencyWithSymbol } from '../utils/economy';
+import { formatCurrencyWithSymbol, formatDollarAmount, formatGemValue } from '../utils/economy';
 
 const PlayerCard = ({ 
   game, 
