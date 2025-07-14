@@ -267,6 +267,7 @@ class Game(BaseModel):
     reveal_deadline: Optional[datetime] = None  # Крайний срок для reveal
     is_bot_game: bool = False
     bot_id: Optional[str] = None
+    is_regular_bot_game: bool = False  # Флаг для игр против обычных ботов (без комиссии)
 
 class Transaction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
