@@ -4107,9 +4107,9 @@ def test_comprehensive_bet_management_system() -> None:
             expected_stuck = age_hours > 24 and bet.get("status") in ["WAITING", "ACTIVE", "REVEAL"]
             
             if is_stuck == expected_stuck:
-                print_success(f"Bet {bet.get('bet_id', 'unknown')}: age={age_hours}h, stuck={is_stuck} (correct)")
+                print_success(f"Bet {bet.get('id', 'unknown')}: age={age_hours}h, stuck={is_stuck} (correct)")
             else:
-                print_warning(f"Bet {bet.get('bet_id', 'unknown')}: age={age_hours}h, stuck={is_stuck} (expected {expected_stuck})")
+                print_warning(f"Bet {bet.get('id', 'unknown')}: age={age_hours}h, stuck={is_stuck} (expected {expected_stuck})")
                 stuck_detection_working = False
         
         if stuck_detection_working:
