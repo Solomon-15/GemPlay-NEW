@@ -168,7 +168,7 @@ const PlayerCard = ({
 
             {/* Total Amount */}
             <div className="text-green-400 font-rajdhani font-bold text-xl">
-              {formatCurrencyWithSymbol(totalAmount)}
+              {formatGemValue(totalAmount)}
             </div>
 
             {/* Timer */}
