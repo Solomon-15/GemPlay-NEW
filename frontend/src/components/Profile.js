@@ -21,7 +21,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
     
     const remainingLimit = user.daily_limit_max - user.daily_limit_used;
     if (amount > remainingLimit) {
-      alert(`You can only add up to $${remainingLimit.toFixed(2)} more today`);
+      alert(`You can only add up to ${formatDollarAmount(remainingLimit).replace('$', '$')} more today`);
       return;
     }
     
