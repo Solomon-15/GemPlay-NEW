@@ -1870,7 +1870,7 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   ) : (
                     <>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <div className="bg-surface-sidebar rounded-lg p-4">
                           <span className="text-sm text-text-secondary">Общие расходы:</span>
                           <div className="text-2xl font-bold text-red-400">
@@ -1888,6 +1888,23 @@ const ProfitAdmin = ({ user }) => {
                           <div className="text-2xl font-bold text-red-400">{modalData.expense_percentage || 60}%</div>
                           <div className="text-xs text-red-300 mt-1">настроенный процент</div>
                         </div>
+                      </div>
+
+                      {/* График расходов */}
+                      <div className="bg-surface-sidebar rounded-lg p-4 mb-6">
+                        <h5 className="font-rajdhani text-lg font-bold text-red-400 mb-4">
+                          📊 Динамика расходов
+                        </h5>
+                        <ProfitChart
+                          type="bar"
+                          data={generateExpensesData(activePeriod)}
+                          title={`Расходы ${
+                            modalData.period === 'day' ? 'за день' :
+                            modalData.period === 'week' ? 'за неделю' :
+                            modalData.period === 'month' ? 'за месяц' :
+                            'за все время'
+                          }`}
+                        />
                       </div>
 
                       {modalData.breakdown && modalData.breakdown.length > 0 && (
