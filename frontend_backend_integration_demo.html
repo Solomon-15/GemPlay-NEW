@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интеграция Frontend + Backend API - GemPlay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Russo+One&family=Roboto:wght@300;400;500;700&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+        
+        .font-russo { font-family: 'Russo One', sans-serif; }
+        .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-rajdhani { font-family: 'Rajdhani', sans-serif; }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid #475569;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 16px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border-color: #64748b;
+        }
+        
+        .code-block {
+            background: #0f172a;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        
+        .status-integrated {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        }
+        
+        .status-loading {
+            background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+        }
+        
+        .status-error {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="font-russo text-4xl text-green-400 mb-4">Frontend + Backend Интеграция</h1>
+            <p class="font-roboto text-gray-400 text-lg">Полная интеграция модальных окон с реальными API endpoints</p>
+            <p class="font-rajdhani text-sm text-gray-500 mt-2">Состояния загрузки, обработка ошибок и отображение реальных данных</p>
+        </div>
+
+        <!-- Ключевые улучшения -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            
+            <!-- Состояния загрузки -->
+            <div class="feature-card">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-rajdhani text-lg font-bold text-white">Состояния загрузки</h3>
+                        <div class="status-integrated px-2 py-1 rounded-full text-xs font-bold text-white">
+                            РЕАЛИЗОВАНО
+                        </div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-300 mb-3">
+                    <p>• Spinner анимации для всех модальных окон</p>
+                    <p>• Состояние modalLoading для контроля UI</p>
+                    <p>• Плавные переходы между состояниями</p>
+                </div>
+                <div class="code-block">
+{modalLoading ? (
+  &lt;div className="text-center py-8"&gt;
+    &lt;div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"&gt;&lt;/div&gt;
+    &lt;p className="text-sm text-text-secondary mt-2"&gt;Загрузка данных...&lt;/p&gt;
+  &lt;/div&gt;
+) : (
+  // Содержимое модального окна
+)}
+                </div>
+            </div>
+
+            <!-- Обработка ошибок -->
+            <div class="feature-card">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-rajdhani text-lg font-bold text-white">Обработка ошибок</h3>
+                        <div class="status-integrated px-2 py-1 rounded-full text-xs font-bold text-white">
+                            РЕАЛИЗОВАНО
+                        </div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-300 mb-3">
+                    <p>• Состояние modalError для отслеживания ошибок</p>
+                    <p>• Кнопка "Повторить попытку" для каждого modal</p>
+                    <p>• Информативные сообщения об ошибках</p>
+                </div>
+                <div class="code-block">
+{modalError ? (
+  &lt;div className="text-center py-8"&gt;
+    &lt;div className="text-red-400 mb-2"&gt;⚠️&lt;/div&gt;
+    &lt;p className="text-sm text-red-400"&gt;{modalError}&lt;/p&gt;
+    &lt;button onClick={() =&gt; loadModalData('bot_revenue')}&gt;
+      Повторить попытку
+    &lt;/button&gt;
+  &lt;/div&gt;
+) : (
+  // Содержимое модального окна
+)}
+                </div>
+            </div>
+
+            <!-- Реальные данные -->
+            <div class="feature-card">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-rajdhani text-lg font-bold text-white">Реальные данные</h3>
+                        <div class="status-integrated px-2 py-1 rounded-full text-xs font-bold text-white">
+                            РЕАЛИЗОВАНО
+                        </div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-300 mb-3">
+                    <p>• Модальные окна используют API endpoints</p>
+                    <p>• Отображение полной структуры данных</p>
+                    <p>• Динамическое обновление информации</p>
+                </div>
+                <div class="code-block">
+// Доход от ботов
+{formatCurrencyWithSymbol(modalData.total_revenue || 0, true)}
+{modalData.active_bots || 0}
+{formatCurrencyWithSymbol(modalData.avg_revenue_per_bot || 0, true)}
+
+// Замороженные средства  
+{formatCurrencyWithSymbol(modalData.total_frozen || 0, true)}
+{modalData.active_games || 0}
+                </div>
+            </div>
+
+            <!-- Детализация -->
+            <div class="feature-card">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-rajdhani text-lg font-bold text-white">Детализация</h3>
+                        <div class="status-integrated px-2 py-1 rounded-full text-xs font-bold text-white">
+                            РЕАЛИЗОВАНО
+                        </div>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-300 mb-3">
+                    <p>• Таблицы с entries для каждого modal</p>
+                    <p>• Статистика и аналитика</p>
+                    <p>• Пошаговые расчеты для чистой прибыли</p>
+                </div>
+                <div class="code-block">
+{modalData.entries && modalData.entries.length > 0 ? (
+  &lt;div className="space-y-3"&gt;
+    {modalData.entries.map((entry, index) =&gt; (
+      &lt;div key={index} className="bg-surface-sidebar rounded-lg p-3"&gt;
+        // Детализация каждого элемента
+      &lt;/div&gt;
+    ))}
+  &lt;/div&gt;
+) : (
+  &lt;div className="text-center text-text-secondary py-8"&gt;
+    Нет данных для отображения
+  &lt;/div&gt;
+)}
+                </div>
+            </div>
+        </div>
+
+        <!-- Интеграция по модальным окнам -->
+        <div class="space-y-6">
+            <h2 class="font-russo text-2xl text-white text-center mb-8">Интеграция по модальным окнам</h2>
+
+            <!-- Bot Revenue -->
+            <div class="feature-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <rect x="4" y="4" width="6" height="6" stroke-width="2" rx="1"/>
+                                <rect x="14" y="4" width="6" height="6" stroke-width="2" rx="1"/>
+                                <rect x="4" y="14" width="16" height="6" stroke-width="2" rx="1"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-rajdhani text-lg font-bold text-white">Доход от ботов</h3>
+                            <p class="text-sm text-gray-400">GET /api/admin/profit/bot-revenue-details</p>
+                        </div>
+                    </div>
+                    <div class="status-integrated px-3 py-1 rounded-full text-xs font-bold text-white">
+                        INTEGRATED
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-400">modalData.total_revenue</div>
+                        <div class="text-sm text-gray-400">Общий доход</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-400">modalData.active_bots</div>
+                        <div class="text-sm text-gray-400">Активные боты</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-400">modalData.avg_revenue_per_bot</div>
+                        <div class="text-sm text-gray-400">Средний доход</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Frozen Funds -->
+            <div class="feature-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-rajdhani text-lg font-bold text-white">Замороженные средства</h3>
+                            <p class="text-sm text-gray-400">GET /api/admin/profit/frozen-funds-details</p>
+                        </div>
+                    </div>
+                    <div class="status-integrated px-3 py-1 rounded-full text-xs font-bold text-white">
+                        INTEGRATED
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-orange-400">modalData.total_frozen</div>
+                        <div class="text-sm text-gray-400">Замороженная комиссия</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-orange-400">modalData.active_games</div>
+                        <div class="text-sm text-gray-400">Активные игры</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Revenue -->
+            <div class="feature-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-rajdhani text-lg font-bold text-white">Общая прибыль</h3>
+                            <p class="text-sm text-gray-400">GET /api/admin/profit/total-revenue-breakdown</p>
+                        </div>
+                    </div>
+                    <div class="status-integrated px-3 py-1 rounded-full text-xs font-bold text-white">
+                        INTEGRATED
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-yellow-400">modalData.total_revenue</div>
+                    <div class="text-sm text-gray-400">modalData.breakdown[] - разбивка по источникам</div>
+                </div>
+            </div>
+
+            <!-- Expenses -->
+            <div class="feature-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-rajdhani text-lg font-bold text-white">Расходы</h3>
+                            <p class="text-sm text-gray-400">GET /api/admin/profit/expenses-details</p>
+                        </div>
+                    </div>
+                    <div class="status-integrated px-3 py-1 rounded-full text-xs font-bold text-white">
+                        INTEGRATED
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-red-400">modalData.total_expenses</div>
+                        <div class="text-sm text-gray-400">Общие расходы</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-red-400">modalData.breakdown[]</div>
+                        <div class="text-sm text-gray-400">Разбивка по категориям</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Net Profit -->
+            <div class="feature-card">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-rajdhani text-lg font-bold text-white">Чистая прибыль</h3>
+                            <p class="text-sm text-gray-400">GET /api/admin/profit/net-profit-analysis</p>
+                        </div>
+                    </div>
+                    <div class="status-integrated px-3 py-1 rounded-full text-xs font-bold text-white">
+                        INTEGRATED
+                    </div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-emerald-400">modalData.summary.net_profit</div>
+                    <div class="text-sm text-gray-400">modalData.calculation_steps[] - пошаговый расчет</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Итоговая сводка -->
+        <div class="bg-slate-800 border border-slate-600 rounded-lg p-8 mt-12">
+            <h2 class="font-russo text-2xl text-white text-center mb-6">Итоговая сводка интеграции</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-green-400 mb-2">5</div>
+                    <div class="text-sm text-gray-400">API Endpoints</div>
+                    <div class="text-xs text-green-300">Полностью интегрированы</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-blue-400 mb-2">7</div>
+                    <div class="text-sm text-gray-400">Модальных окон</div>
+                    <div class="text-xs text-blue-300">Используют реальные данные</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-purple-400 mb-2">3</div>
+                    <div class="text-sm text-gray-400">Состояния UI</div>
+                    <div class="text-xs text-purple-300">Loading, Error, Success</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold text-emerald-400 mb-2">100%</div>
+                    <div class="text-sm text-gray-400">Готовность</div>
+                    <div class="text-xs text-emerald-300">Готово к продакшену</div>
+                </div>
+            </div>
+
+            <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-6">
+                <h3 class="font-rajdhani text-lg font-bold text-green-400 mb-3">✅ Результат интеграции</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-green-300 mb-2"><strong>Frontend обновления:</strong></p>
+                        <ul class="text-green-300 space-y-1">
+                            <li>• Состояния modalLoading и modalError</li>
+                            <li>• Функция loadModalData() для API вызовов</li>
+                            <li>• Отображение реальных данных в модальных окнах</li>
+                            <li>• Кнопки повторной попытки для ошибок</li>
+                            <li>• Spinner анимации для всех состояний</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <p class="text-green-300 mb-2"><strong>Backend endpoints:</strong></p>
+                        <ul class="text-green-300 space-y-1">
+                            <li>• /bot-revenue-details - доходы от ботов</li>
+                            <li>• /frozen-funds-details - замороженные средства</li>
+                            <li>• /total-revenue-breakdown - общая прибыль</li>
+                            <li>• /expenses-details - расходы</li>
+                            <li>• /net-profit-analysis - чистая прибыль</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
