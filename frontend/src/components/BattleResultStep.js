@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatGemValue, formatDollarAmount } from '../utils/economy';
 
 const BattleResultStep = ({
   battleResult,
@@ -25,9 +26,6 @@ const BattleResultStep = ({
 
     return () => clearInterval(timer);
   }, [onClose]);
-  // Безопасное форматирование валюты
-  const formatCurrency = (amount) => {
-    try {
       if (typeof amount !== 'number' || isNaN(amount)) {
         return '$0.00';
       }
