@@ -55,8 +55,8 @@ const ProfitAdmin = ({ user }) => {
     try {
       const token = localStorage.getItem('token');
       const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '20'
+        page: pagination.currentPage.toString(),
+        limit: pagination.itemsPerPage.toString()
       });
 
       if (filterType) params.append('type', filterType);
@@ -68,7 +68,7 @@ const ProfitAdmin = ({ user }) => {
       });
 
       setEntries(response.data.entries || []);
-      setTotalPages(response.data.total_pages || 1);
+      pagination.updatePagination(response.data.total_count || 0);
     } catch (error) {
       console.error('Ошибка загрузки записей прибыли:', error);
     }
