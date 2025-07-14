@@ -4123,7 +4123,7 @@ def test_comprehensive_bet_management_system() -> None:
     
     # Test non-admin access (should be denied)
     response, success = make_request("GET", "/admin/bets/stats", auth_token=user1_token, expected_status=403)
-    if not success:
+    if success:
         print_success("Non-admin access correctly denied for stats")
         record_test("Admin Bets - Non-admin Access Denied (Stats)", True)
     else:
@@ -4131,7 +4131,7 @@ def test_comprehensive_bet_management_system() -> None:
         record_test("Admin Bets - Non-admin Access Denied (Stats)", False, "Access not denied")
     
     response, success = make_request("GET", "/admin/bets/list", auth_token=user1_token, expected_status=403)
-    if not success:
+    if success:
         print_success("Non-admin access correctly denied for list")
         record_test("Admin Bets - Non-admin Access Denied (List)", True)
     else:
@@ -4140,7 +4140,7 @@ def test_comprehensive_bet_management_system() -> None:
     
     # Test no token access
     response, success = make_request("GET", "/admin/bets/stats", expected_status=401)
-    if not success:
+    if success:
         print_success("No token access correctly denied")
         record_test("Admin Bets - No Token Access Denied", True)
     else:
