@@ -5988,15 +5988,15 @@ async def get_regular_bots_list(current_user: User = Depends(get_current_admin))
                     "total": total_games
                 },
                 "win_rate": round(win_rate, 1),
-                "cycle_games": getattr(bot, 'cycle_length', 12),
-                "cycle_total_amount": getattr(bot, 'cycle_total_amount', 500.0),
-                "min_bet": getattr(bot, 'min_bet_amount', 1.0),
-                "max_bet": getattr(bot, 'max_bet_amount', 100.0),
-                "pause_timer": getattr(bot, 'pause_timer', 5),
-                "recreate_timer": getattr(bot, 'recreate_timer', 30),
-                "win_percentage": getattr(bot, 'win_percentage', 60.0),
-                "can_accept_bets": getattr(bot, 'can_accept_bets', False),
-                "can_play_with_bots": getattr(bot, 'can_play_with_bots', False),
+                "cycle_games": bot_doc.get('cycle_length', 12),  # Используем реальные сохраненные значения
+                "cycle_total_amount": bot_doc.get('cycle_total_amount', 500.0),
+                "min_bet": bot_doc.get('min_bet_amount', 1.0),
+                "max_bet": bot_doc.get('max_bet_amount', 100.0),
+                "pause_timer": bot_doc.get('pause_timer', 5),
+                "recreate_timer": bot_doc.get('recreate_timer', 30),
+                "win_percentage": bot_doc.get('win_percentage', 60.0),
+                "can_accept_bets": bot_doc.get('can_accept_bets', False),
+                "can_play_with_bots": bot_doc.get('can_play_with_bots', False),
                 "created_at": bot.created_at,
                 "last_game_time": bot.last_game_time
             })
