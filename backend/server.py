@@ -2611,6 +2611,21 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
         # Check if this is a regular bot game (no commission)
         is_regular_bot_game = getattr(game, 'is_regular_bot_game', False)
         
+        # Дополнительная проверка: если один из участников - обычный бот
+        if not is_regular_bot_game:
+            # Проверяем создателя игры
+            creator_bot = await db.bots.find_one({"id": game.creator_id})
+            creator_is_regular_bot = creator_bot and creator_bot.get("bot_type") == "REGULAR"
+            
+            # Проверяем оппонента
+            opponent_is_regular_bot = False
+            if game.opponent_id:
+                opponent_bot = await db.bots.find_one({"id": game.opponent_id})
+                opponent_is_regular_bot = opponent_bot and opponent_bot.get("bot_type") == "REGULAR"
+            
+            # Если хотя бы один из участников - обычный бот, игра без комиссии
+            is_regular_bot_game = creator_is_regular_bot or opponent_is_regular_bot
+        
         if is_regular_bot_game:
             logger.info(f"💰 REGULAR BOT GAME - No commission will be charged for game {game.id}")
             # Override commission amount to 0 for regular bot games
