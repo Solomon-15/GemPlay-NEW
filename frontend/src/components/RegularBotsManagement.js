@@ -46,6 +46,13 @@ const RegularBotsManagement = () => {
   const [cycleData, setCycleData] = useState(null);
   const [resettingBotBets, setResettingBotBets] = useState(null);
 
+  // Новые состояния для управления прибылью ботов
+  const [isProfitAccumulatorsModalOpen, setIsProfitAccumulatorsModalOpen] = useState(false);
+  const [profitAccumulators, setProfitAccumulators] = useState([]);
+  const [profitPagination, setProfitPagination] = useState({ current_page: 1, total_pages: 1 });
+  const [isForceCompleteModalOpen, setIsForceCompleteModalOpen] = useState(false);
+  const [selectedBotForForceComplete, setSelectedBotForForceComplete] = useState(null);
+
   // Пагинация для списка ботов
   const pagination = usePagination(1, 10);
 
