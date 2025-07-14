@@ -12,6 +12,7 @@ import asyncio
 import os
 import logging
 import uuid
+import random
 from pathlib import Path
 from enum import Enum
 import pytz
@@ -23,7 +24,6 @@ import json
 import secrets
 from collections import defaultdict
 import ipaddress
-import random
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
