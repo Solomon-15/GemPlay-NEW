@@ -4544,7 +4544,7 @@ async def get_profit_stats(current_admin: User = Depends(get_current_admin)):
 @api_router.get("/admin/profit/entries", response_model=dict)
 async def get_profit_entries(
     page: int = 1,
-    limit: int = 50,
+    limit: int = 10,
     entry_type: Optional[str] = None,
     current_admin: User = Depends(get_current_admin)
 ):
