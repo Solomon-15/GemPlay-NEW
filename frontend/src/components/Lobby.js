@@ -122,7 +122,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       </div>
       <h3 className="font-rajdhani font-bold text-lg text-white">{title}</h3>
       <p className="font-roboto text-2xl font-bold text-accent-primary">
-        {typeof value === 'number' ? `$${value.toFixed(2)}` : value}
+        {typeof value === 'number' ? `$${Math.floor(value)}` : value}
       </p>
     </div>
   );
