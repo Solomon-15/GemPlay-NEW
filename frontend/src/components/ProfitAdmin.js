@@ -138,18 +138,18 @@ const ProfitAdmin = ({ user }) => {
 
   const getCategoryBadgeColor = (categoryKey) => {
     const colors = {
-      'bet_commission': 'bg-green-600',
-      'bot_profit': 'bg-blue-600', 
-      'gift_commission': 'bg-purple-600'
+      'BET_COMMISSION': 'bg-green-600',
+      'BOT_REVENUE': 'bg-blue-600', 
+      'GIFT_COMMISSION': 'bg-purple-600'
     };
     return colors[categoryKey] || 'bg-gray-600';
   };
 
   const getCategoryBadgeOpacity = (categoryKey) => {
     const colors = {
-      'bet_commission': 'bg-green-600/20',
-      'bot_profit': 'bg-blue-600/20',
-      'gift_commission': 'bg-purple-600/20'
+      'BET_COMMISSION': 'bg-green-600/20',
+      'BOT_REVENUE': 'bg-blue-600/20',
+      'GIFT_COMMISSION': 'bg-purple-600/20'
     };
     return colors[categoryKey] || 'bg-gray-600/20';
   };
