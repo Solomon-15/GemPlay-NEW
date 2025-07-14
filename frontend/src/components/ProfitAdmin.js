@@ -16,7 +16,7 @@ const ProfitAdmin = ({ user }) => {
   const [activeTab, setActiveTab] = useState('overview');
   
   // Новые состояния для категорий транзакций
-  const [activeCategory, setActiveCategory] = useState('bet_commission');
+  const [activeCategory, setActiveCategory] = useState('BET_COMMISSION');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
 
