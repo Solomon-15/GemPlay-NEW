@@ -61,10 +61,12 @@ const ProfitAdmin = ({ user }) => {
       const token = localStorage.getItem('token');
       const params = new URLSearchParams({
         page: pagination.currentPage.toString(),
-        limit: pagination.itemsPerPage.toString()
+        limit: pagination.itemsPerPage.toString(),
+        type: activeCategory, // Используем активную категорию
+        sort_by: sortBy,
+        sort_order: sortOrder
       });
 
-      if (filterType) params.append('type', filterType);
       if (dateFilter.from) params.append('date_from', dateFilter.from);
       if (dateFilter.to) params.append('date_to', dateFilter.to);
 
