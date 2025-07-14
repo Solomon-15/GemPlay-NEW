@@ -436,7 +436,7 @@ const Inventory = ({ user, onUpdateUser }) => {
                     <div className="mb-4">
                       <span className="font-roboto text-text-secondary text-sm">Value: </span>
                       <span className="font-rajdhani text-lg font-bold text-green-400">
-                        ${totalValue.toFixed(2)}
+                        {formatGemValue(totalValue)}
                       </span>
                     </div>
                     
