@@ -544,6 +544,8 @@ const AdminPanel = ({ user, onClose }) => {
         return <HumanBotsManagement />;
       case 'bot-settings':
         return <BotSettings user={user} />;
+      case 'bot-analytics':
+        return <BotAnalytics />;
       case 'bots':
         return <div className="text-white">Управление ботами (в разработке)</div>;
       case 'games':
