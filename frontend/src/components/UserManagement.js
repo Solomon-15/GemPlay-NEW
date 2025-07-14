@@ -1318,27 +1318,14 @@ const UserManagement = ({ user: currentUser }) => {
       </div>
 
       {/* Пагинация */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center space-x-2">
-          <button
-            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage === 1}
-            className="px-4 py-2 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
-          >
-            Назад
-          </button>
-          <span className="font-roboto text-text-secondary">
-            Страница {currentPage} из {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-            disabled={currentPage === totalPages}
-            className="px-4 py-2 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
-          >
-            Вперед
-          </button>
-        </div>
-      )}
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        onPageChange={pagination.handlePageChange}
+        itemsPerPage={pagination.itemsPerPage}
+        totalItems={pagination.totalItems}
+        className="mt-6"
+      />
 
       {/* Модальные окна */}
       {isEditModalOpen && <EditUserModal />}
