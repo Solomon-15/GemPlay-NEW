@@ -2615,6 +2615,9 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
             logger.info(f"💰 REGULAR BOT GAME - No commission will be charged for game {game.id}")
             # Override commission amount to 0 for regular bot games
             commission_amount = 0
+            
+            # Накопление прибыли для обычных ботов
+            await accumulate_bot_profit(game, winner_id)
         
         # Unfreeze gems for both players using their respective gem combinations
         
