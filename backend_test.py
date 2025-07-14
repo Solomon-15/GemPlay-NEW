@@ -4323,8 +4323,8 @@ def test_regular_bot_commission_logic() -> None:
     # Step 6: Join the Regular Bot game
     print_subheader("Step 5: Join Regular Bot Game")
     
-    # Calculate gems needed for the bot game
-    user_bet_gems = {"Ruby": min(bot_bet_amount, 10)}  # Use Ruby gems up to bet amount
+    # Use the gems required by the bot game
+    user_bet_gems = bot_bet_gems
     
     # Join the bot game
     join_data = {
