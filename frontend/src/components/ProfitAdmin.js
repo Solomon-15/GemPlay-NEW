@@ -330,7 +330,7 @@ const ProfitAdmin = ({ user }) => {
                   key={key}
                   onClick={() => {
                     setActiveCategory(key);
-                    pagination.goToPage(1);
+                    pagination.handlePageChange(1);
                   }}
                   className={`p-6 rounded-lg border-2 transition-all duration-200 text-left hover:scale-105 ${
                     activeCategory === key
