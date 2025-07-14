@@ -437,7 +437,9 @@ const RegularBotsManagement = () => {
       setSelectedBotForForceComplete(null);
       
       // Обновляем данные
-      fetchBotStats();
+      await fetchStats();
+      await fetchBotsList();
+      await fetchActiveBetsStats();
     } catch (error) {
       console.error('Error force completing cycle:', error);
       const errorMessage = error.response?.data?.detail || 'Ошибка при принудительном завершении цикла';
