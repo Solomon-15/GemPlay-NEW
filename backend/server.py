@@ -5928,36 +5928,8 @@ async def create_individual_bot(
         await db.bots.insert_one(bot_data)
         
         created_bot_id = bot_data["id"]
-            
-            # Statistics
-            "games_played": 0,
-            "games_won": 0,
-            "current_cycle_games": 0,
-            "current_cycle_wins": 0,
-            "current_cycle_losses": 0,
-            "total_bet_amount": 0.0,
-            
-            # State
-            "last_game_time": None,
-            "last_bet_time": None,
-            "current_bet_id": None,
-            
-            "created_at": datetime.utcnow(),
-            "updated_at": datetime.utcnow()
-        }
         
-        await db.bots.insert_one(bot_data)
-        
-        created_bot_id = bot_data["id"]
-        bot = Bot(
-            type=BotType.REGULAR,
-            name=name,
-            min_bet_amount=min_bet,
-            max_bet_amount=max_bet,
-            win_percentage=win_percentage,
-            cycle_length=cycle_games,  # Важно! Это поле называется cycle_length в модели
-            cycle_total_amount=cycle_total_amount,  # Добавляем это поле
-            pause_timer=pause_timer,
+        # Log admin action
             recreate_timer=recreate_interval,
             is_active=True,
             bot_type="REGULAR",
