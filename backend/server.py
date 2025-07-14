@@ -5698,6 +5698,134 @@ async def create_bot_bet(bot: Bot) -> bool:
         logger.error(f"Error creating bot bet: {e}")
         return False
 
+@api_router.get("/admin/bots/settings", response_model=dict)
+async def get_bot_settings(current_user: User = Depends(get_current_admin)):
+    """Get bot settings."""
+    try:
+        settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        
+        if not settings:
+            # Create default settings if not exists
+            default_settings = BotSettings()
+            await db.bot_settings.insert_one(default_settings.dict())
+            settings = default_settings.dict()
+        
+        return {
+            "settings": settings,
+            "max_active_bets_regular": settings.get("max_active_bets_regular", 50),
+            "max_active_bets_human": settings.get("max_active_bets_human", 30)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching bot settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bot settings"
+        )
+
+@api_router.post("/admin/bots/settings", response_model=dict)
+async def update_bot_settings(
+    settings_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Update bot settings."""
+    try:
+        max_active_bets_regular = settings_data.get("max_active_bets_regular", 50)
+        max_active_bets_human = settings_data.get("max_active_bets_human", 30)
+        
+        # Validation
+        if max_active_bets_regular < 0 or max_active_bets_regular > 1000:
+            raise HTTPException(status_code=400, detail="Max active bets for regular bots must be between 0 and 1000")
+        
+        if max_active_bets_human < 0 or max_active_bets_human > 1000:
+            raise HTTPException(status_code=400, detail="Max active bets for human bots must be between 0 and 1000")
+        
+        # Update settings
+        await db.bot_settings.update_one(
+            {"id": "bot_settings"},
+            {
+                "$set": {
+                    "max_active_bets_regular": max_active_bets_regular,
+                    "max_active_bets_human": max_active_bets_human,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="UPDATE_BOT_SETTINGS",
+            target_type="bot_settings",
+            target_id="bot_settings",
+            details={
+                "max_active_bets_regular": max_active_bets_regular,
+                "max_active_bets_human": max_active_bets_human
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": "Настройки ботов обновлены",
+            "max_active_bets_regular": max_active_bets_regular,
+            "max_active_bets_human": max_active_bets_human
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating bot settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update bot settings"
+        )
+
+@api_router.get("/admin/bots/stats/active-bets", response_model=dict)
+async def get_active_bets_stats(current_user: User = Depends(get_current_admin)):
+    """Get current active bets count for different bot types."""
+    try:
+        # Count active bets created by regular bots
+        regular_bots_active_bets = await db.games.count_documents({
+            "creator_type": "bot",
+            "bot_type": "REGULAR", 
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Count active bets created by human bots
+        human_bots_active_bets = await db.games.count_documents({
+            "creator_type": "human_bot",
+            "bot_type": "HUMAN",
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Get current settings
+        settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        max_regular = settings.get("max_active_bets_regular", 50) if settings else 50
+        max_human = settings.get("max_active_bets_human", 30) if settings else 30
+        
+        return {
+            "regular_bots": {
+                "current": regular_bots_active_bets,
+                "max": max_regular,
+                "available": max(0, max_regular - regular_bots_active_bets),
+                "percentage": round((regular_bots_active_bets / max_regular * 100), 1) if max_regular > 0 else 0
+            },
+            "human_bots": {
+                "current": human_bots_active_bets,
+                "max": max_human,
+                "available": max(0, max_human - human_bots_active_bets),
+                "percentage": round((human_bots_active_bets / max_human * 100), 1) if max_human > 0 else 0
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching active bets stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch active bets stats"
+        )
+
 @api_router.post("/admin/bots/create-individual", response_model=dict)
 async def create_individual_bot(
     bot_config: dict,
