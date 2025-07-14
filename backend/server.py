@@ -3856,6 +3856,60 @@ async def get_active_bots(current_user: User = Depends(get_current_user)):
             detail="Failed to fetch active bots"
         )
 
+@api_router.get("/bots/active-games", response_model=List[dict])
+async def get_active_bot_games(current_user: User = Depends(get_current_user)):
+    """Get all active games created by bots."""
+    try:
+        # Find active bots to get their IDs
+        active_bots = await db.bots.find({"is_active": True}).to_list(100)
+        bot_ids = [bot["id"] for bot in active_bots]
+        
+        if not bot_ids:
+            return []
+        
+        # Find games created by active bots with status WAITING
+        bot_games = await db.games.find({
+            "creator_id": {"$in": bot_ids},
+            "status": "WAITING"
+        }).sort("created_at", -1).to_list(100)
+        
+        result = []
+        for game in bot_games:
+            # Get bot info
+            bot = next((b for b in active_bots if b["id"] == game["creator_id"]), None)
+            if not bot:
+                continue
+                
+            game_data = {
+                "id": game["id"],
+                "game_id": game["id"],
+                "creator_id": game["creator_id"],
+                "creator_username": bot["name"],
+                "creator": {
+                    "username": bot["name"],
+                    "gender": bot.get("avatar_gender", "male")
+                },
+                "bet_amount": game["bet_amount"],
+                "bet_gems": game["bet_gems"],
+                "status": game["status"],
+                "created_at": game["created_at"],
+                "is_bot": True,
+                "is_bot_game": True,
+                "bot_id": bot["id"],
+                "bot_type": bot["bot_type"],
+                "can_accept_bets": bot.get("can_accept_bets", False)
+            }
+            result.append(game_data)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error fetching active bot games: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch active bot games"
+        )
+
 @api_router.get("/bots/{bot_id}/stats", response_model=dict)
 async def get_bot_stats(
     bot_id: str,
