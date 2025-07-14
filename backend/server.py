@@ -2212,18 +2212,55 @@ async def join_game(
             }
         )
         
-        # Update game with opponent and their gems
-        await db.games.update_one(
-            {"id": game_id},
+        # ATOMIC UPDATE: Try to update game with opponent only if it still has no opponent
+        # This prevents race conditions where multiple users try to join the same game
+        update_result = await db.games.update_one(
+            {
+                "id": game_id,
+                "opponent_id": None,  # Only update if opponent_id is still None
+                "status": "WAITING"   # And status is still WAITING
+            },
             {
                 "$set": {
                     "opponent_id": current_user.id,
                     "opponent_move": join_data.move,
                     "opponent_gems": join_data.gems,  # Save opponent's gem combination
-                    "started_at": datetime.utcnow()
+                    "started_at": datetime.utcnow(),
+                    "status": "ACTIVE"  # Mark as active immediately
                 }
             }
         )
+        
+        # Check if the update was successful
+        if update_result.modified_count == 0:
+            # The game was already taken by another player or changed state
+            # Refund the user's gems and balance
+            for gem_type, quantity in join_data.gems.items():
+                if quantity > 0:
+                    await db.user_gems.update_one(
+                        {"user_id": current_user.id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+            
+            # Refund balance
+            await db.users.update_one(
+                {"id": current_user.id},
+                {
+                    "$set": {
+                        "virtual_balance": user["virtual_balance"],  # Restore original balance
+                        "frozen_balance": user["frozen_balance"],     # Restore original frozen balance
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Game is no longer available - another player may have joined it"
+            )
         
         # АСИНХРОННОЕ ЗАВЕРШЕНИЕ: Сразу определяем результат игры
         logger.info(f"Determining game result immediately for game {game_id}")
