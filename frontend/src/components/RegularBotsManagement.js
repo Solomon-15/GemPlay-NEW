@@ -776,6 +776,16 @@ const RegularBotsManagement = () => {
         </div>
       </div>
 
+      {/* Пагинация для списка ботов */}
+      <Pagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        onPageChange={pagination.handlePageChange}
+        itemsPerPage={pagination.itemsPerPage}
+        totalItems={pagination.totalItems}
+        className="mt-6"
+      />
+
       {/* Модальное окно создания бота */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
