@@ -166,6 +166,12 @@ const RegularBotsManagement = () => {
         <h2 className="text-2xl font-rajdhani font-bold text-white">Обычные Боты</h2>
         <div className="flex space-x-3">
           <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-6 py-3 rounded-lg font-rajdhani font-bold text-white bg-green-600 hover:bg-green-700 transition-colors"
+          >
+            Создать Бота
+          </button>
+          <button
             onClick={startRegularBots}
             disabled={startingBots}
             className={`px-6 py-3 rounded-lg font-rajdhani font-bold text-white transition-colors ${
