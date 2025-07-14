@@ -2449,9 +2449,18 @@ async def determine_game_winner(game_id: str) -> dict:
         
         # Check if this is a bot game
         is_bot_game = False
+        
+        # Check if creator is a bot
+        if game_obj.creator_id:
+            bot_creator = await db.bots.find_one({"id": game_obj.creator_id})
+            if bot_creator:
+                is_bot_game = True
+        
+        # Check if opponent is a bot
         if game_obj.opponent_id:
             bot_opponent = await db.bots.find_one({"id": game_obj.opponent_id})
-            is_bot_game = bot_opponent is not None
+            if bot_opponent:
+                is_bot_game = True
         
         # Verify move hash (commit-reveal) - only for human vs human games
         if not is_bot_game:
