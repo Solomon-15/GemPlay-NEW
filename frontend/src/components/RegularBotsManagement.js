@@ -411,10 +411,10 @@ const RegularBotsManagement = () => {
       setProfitAccumulators(response.data.accumulators || []);
       setProfitPagination(response.data.pagination || { current_page: 1, total_pages: 1 });
       setIsProfitAccumulatorsModalOpen(true);
-      showSuccess('Данные накопителей прибыли загружены');
+      showSuccessRU('Данные накопителей прибыли загружены');
     } catch (error) {
       console.error('Error fetching profit accumulators:', error);
-      showError('Ошибка при загрузке накопителей прибыли');
+      showErrorRU('Ошибка при загрузке накопителей прибыли');
     }
   };
 
@@ -432,7 +432,7 @@ const RegularBotsManagement = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      showSuccess(`Цикл бота завершён принудительно. Прибыль: $${response.data.profit.toFixed(2)}`);
+      showSuccessRU(`Цикл бота завершён принудительно. Прибыль: $${response.data.profit.toFixed(2)}`);
       setIsForceCompleteModalOpen(false);
       setSelectedBotForForceComplete(null);
       
@@ -441,7 +441,7 @@ const RegularBotsManagement = () => {
     } catch (error) {
       console.error('Error force completing cycle:', error);
       const errorMessage = error.response?.data?.detail || 'Ошибка при принудительном завершении цикла';
-      showError(errorMessage);
+      showErrorRU(errorMessage);
     }
   };
 
