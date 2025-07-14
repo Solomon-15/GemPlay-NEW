@@ -89,7 +89,7 @@ const GiftConfirmationModal = ({
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      showSuccess(`You sent a gift to ${recipientInfo.username}. A commission of $${commission.toFixed(2)} has been deducted from your balance.`);
+      showSuccess(`You sent a gift to ${recipientInfo.username}. A commission of ${formatDollarAmount(commission)} has been deducted from your balance.`);
       
       // Автоматическое обновление Lobby
       const globalRefresh = getGlobalLobbyRefresh();
