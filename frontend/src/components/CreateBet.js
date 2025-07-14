@@ -275,7 +275,7 @@ const CreateBet = ({ onClose, onGameCreated }) => {
               <div className="text-center">
                 <p className="text-text-secondary text-sm">Total Selected</p>
                 <p className="font-rajdhani text-xl font-bold text-accent-primary">
-                  ${totalAmount.toFixed(2)}
+                  {formatGemValue(totalAmount)}
                 </p>
               </div>
             </div>
