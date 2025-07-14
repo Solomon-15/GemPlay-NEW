@@ -302,6 +302,8 @@ const ProfitAdmin = ({ user }) => {
   const openModal = async (type) => {
     try {
       setActiveModal(type);
+      setModalError(null);
+      
       // Для модальных окон с настройками комиссий загружаем текущие настройки
       if (type === 'bet_commission' || type === 'gift_commission') {
         // Инициализируем текущими значениями из commissionSettings
@@ -316,6 +318,7 @@ const ProfitAdmin = ({ user }) => {
       }
     } catch (error) {
       console.error('Error opening modal:', error);
+      setModalError('Ошибка при открытии модального окна');
     }
   };
 
