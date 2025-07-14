@@ -1354,7 +1354,7 @@ const RegularBotsManagement = () => {
             <tbody className="divide-y divide-border-primary">
               {botsList.length === 0 ? (
                 <tr>
-                  <td colSpan="12" className="px-4 py-8 text-center text-text-secondary">
+                  <td colSpan="13" className="px-4 py-8 text-center text-text-secondary">
                     Нет ботов для отображения
                   </td>
                 </tr>
