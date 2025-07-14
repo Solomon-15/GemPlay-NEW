@@ -259,27 +259,44 @@
             </div>
         </div>
 
-        <!-- Демонстрация переключателя периодов -->
-        <div class="bg-slate-800 border border-slate-600 rounded-lg p-6 mb-8">
-            <h2 class="font-russo text-xl text-white mb-4">Переключатель периодов</h2>
-            <div class="flex items-center justify-center">
-                <div class="flex bg-gray-700 rounded-lg p-1">
-                    <button class="period-btn active px-4 py-2 text-sm rounded-md" onclick="setPeriod('day')">
-                        День
-                    </button>
-                    <button class="period-btn px-4 py-2 text-sm rounded-md" onclick="setPeriod('week')">
-                        Неделя
-                    </button>
-                    <button class="period-btn px-4 py-2 text-sm rounded-md" onclick="setPeriod('month')">
-                        Месяц
-                    </button>
-                    <button class="period-btn px-4 py-2 text-sm rounded-md" onclick="setPeriod('all')">
-                        Все время
-                    </button>
+        <div class="section">
+            <h2>🔄 Интерактивная демонстрация</h2>
+            <div class="demo-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h3>🤖 Доход от ботов</h3>
+                        <p style="opacity: 0.7;">Прибыль от завершенных циклов обычных ботов</p>
+                    </div>
+                    <div class="period-switcher">
+                        <button class="period-button" onclick="switchPeriod('day')">День</button>
+                        <button class="period-button" onclick="switchPeriod('week')">Неделя</button>
+                        <button class="period-button active" onclick="switchPeriod('month')">Месяц</button>
+                        <button class="period-button" onclick="switchPeriod('all')">Все</button>
+                    </div>
                 </div>
-            </div>
-            <div class="text-center mt-4">
-                <p class="text-sm text-gray-400">Выбранный период: <span id="selected-period" class="text-blue-400 font-bold">День</span></p>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-title">Общий доход:</div>
+                        <div class="metric-value" id="totalRevenue">$1,234.56</div>
+                        <div class="metric-subtitle" id="periodLabel">за месяц</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Активных ботов:</div>
+                        <div class="metric-value" id="activeBots">15</div>
+                        <div class="metric-subtitle">в системе</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Средний доход:</div>
+                        <div class="metric-value" id="avgRevenue">$82.30</div>
+                        <div class="metric-subtitle">на бота</div>
+                    </div>
+                </div>
+                
+                <div class="loading-indicator" id="loadingState" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>Загрузка данных...</p>
+                </div>
             </div>
         </div>
 
