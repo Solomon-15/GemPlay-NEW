@@ -124,8 +124,15 @@ const RegularBotsManagement = () => {
         params: { page, limit }
       });
       
-      setBotsList(response.data.bots || []);
-      pagination.updatePagination(response.data.total_count || 0);
+      // Сортируем ботов по приоритету
+      const sortedBots = (response.data.bots || []).sort((a, b) => {
+        const priorityA = a.priority_order || 999;
+        const priorityB = b.priority_order || 999;
+        return priorityA - priorityB;
+      });
+      
+      setBotsList(sortedBots);
+      pagination.setTotalItems(response.data.total || 0);
     } catch (error) {
       console.error('Ошибка загрузки списка ботов:', error);
     }
