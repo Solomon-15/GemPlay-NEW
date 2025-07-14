@@ -5888,6 +5888,46 @@ async def create_individual_bot(
         if min_bet >= max_bet:
             raise HTTPException(status_code=400, detail="Min bet must be less than max bet")
         
+        # Create bot dictionary manually to ensure all fields are saved
+        bot_data = {
+            "id": str(uuid.uuid4()),
+            "type": "REGULAR",
+            "name": name,
+            "mode": "ALGORITHMIC", 
+            "is_active": True,
+            "bot_type": "REGULAR",
+            
+            # User-defined parameters
+            "min_bet_amount": min_bet,
+            "max_bet_amount": max_bet,
+            "win_percentage": win_percentage,
+            "cycle_length": cycle_games,
+            "cycle_total_amount": cycle_total_amount,
+            "pause_timer": pause_timer,
+            "recreate_timer": recreate_interval,
+            "can_accept_bets": can_accept_bets,
+            "can_play_with_bots": can_play_with_bots,
+            
+            # Statistics
+            "games_played": 0,
+            "games_won": 0,
+            "current_cycle_games": 0,
+            "current_cycle_wins": 0,
+            "current_cycle_losses": 0,
+            "total_bet_amount": 0.0,
+            
+            # State
+            "last_game_time": None,
+            "last_bet_time": None,
+            "current_bet_id": None,
+            
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.bots.insert_one(bot_data)
+        
+        created_bot_id = bot_data["id"]
         bot = Bot(
             type=BotType.REGULAR,
             name=name,
