@@ -1,4 +1,16 @@
 backend:
+  - task: "Bot Game Join Modal Window Fix - PlayerCard Integration"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Lobby.js, /app/frontend/src/components/PlayerCard.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED BOT MODAL WINDOW FIX: Successfully resolved the issue where clicking 'Accept' button in Bot Players section did not open the Join Battle modal window. Frontend implementation: 1) Replaced GameCard with PlayerCard component for bot games in both Available Bots and Ongoing Bot Battles sections to ensure consistent modal behavior. 2) Updated BotPlayersContent to use PlayerCard with onOpenJoinBattle={handleOpenJoinBattle} handler instead of GameCard with onJoin={handleJoinGame}, matching the behavior of Live Players section. 3) Enhanced PlayerCard component with isBot prop support to properly handle bot-specific display requirements while maintaining unified modal functionality. 4) Updated PlayerCard to display 'Bot' as username for all bots instead of showing internal bot names, with proper bot type badges (AI/Human-like). 5) Implemented bot-specific avatar display using blue rounded background with robot emoji (🤖) instead of user avatars. 6) Added proper prop forwarding for onUpdateUser, currentTime, and other required PlayerCard properties. 7) Ensured consistent grid layout and pagination behavior between Live Players and Bot Players sections. The Join Battle modal now opens correctly for bot games with identical interface, logic, and functionality as regular PvP games, allowing users to select moves, use auto-combinations, and complete matches with bots seamlessly."
+
   - task: "Remove Decimal Places from Gem Values - Application-wide Currency Formatting"
     implemented: true
     working: true
