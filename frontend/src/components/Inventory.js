@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useGems } from './GemsContext';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 import { useNotifications } from './NotificationContext';
+import { formatGemValue } from '../utils/economy';
 import GiftConfirmationModal from './GiftConfirmationModal';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
