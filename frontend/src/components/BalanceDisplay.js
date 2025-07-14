@@ -105,7 +105,7 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
           <span className="font-rajdhani text-sm text-text-secondary">Gems</span>
         </div>
         <div className="font-rajdhani text-lg font-bold text-purple-400">
-          {formatCurrencyWithSymbol(availableGemsValue, false)} / {formatCurrencyWithSymbol(totalGemsValue, false)}
+          {formatGemValue(availableGemsValue)} / {formatGemValue(totalGemsValue)}
         </div>
       </div>
 
