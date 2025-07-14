@@ -231,12 +231,26 @@ const ProfitAdmin = ({ user }) => {
   };
 
   const getPlayerInfo = (entry) => {
+    // Для ботов
+    if (entry.bot_id) {
+      return `Bot_${entry.bot_id.substring(0, 8)}`;
+    }
+    
+    // Для пользователей - показываем имя и почту если есть
     if (entry.source_user_id) {
+      // Если есть дополнительная информация о пользователе
+      if (entry.user_name && entry.user_email) {
+        return (
+          <div>
+            <div className="font-medium">{entry.user_name}</div>
+            <div className="text-xs text-text-secondary">{entry.user_email}</div>
+          </div>
+        );
+      }
+      // Если нет дополнительной информации, показываем ID
       return `Игрок ${entry.source_user_id.substring(0, 8)}...`;
     }
-    if (entry.bot_id) {
-      return `Бот ${entry.bot_id.substring(0, 8)}...`;
-    }
+    
     return '—';
   };
 
