@@ -16,11 +16,20 @@ const RegularBotsManagement = () => {
     most_active: []
   });
   const [botsList, setBotsList] = useState([]);
+  const [botSettings, setBotSettings] = useState({
+    max_active_bets_regular: 50,
+    max_active_bets_human: 30
+  });
+  const [activeBetsStats, setActiveBetsStats] = useState({
+    regular_bots: { current: 0, max: 50, available: 50, percentage: 0 },
+    human_bots: { current: 0, max: 30, available: 30, percentage: 0 }
+  });
   const [allBotsEnabled, setAllBotsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [startingBots, setStartingBots] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isGlobalSettingsOpen, setIsGlobalSettingsOpen] = useState(false);
   const [selectedBot, setSelectedBot] = useState(null);
 
   // Form states for creating bot
