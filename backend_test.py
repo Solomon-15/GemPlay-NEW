@@ -4293,17 +4293,24 @@ def test_regular_bot_commission_logic() -> None:
                 required_gems = game.get("bet_gems", {})
                 can_afford = True
                 
+                # Calculate the actual value of required gems
+                gem_value = 0
+                gem_prices = {"Ruby": 1.0, "Amber": 2.0, "Topaz": 5.0, "Emerald": 10.0, "Aquamarine": 25.0}
+                
                 for gem_type, quantity in required_gems.items():
                     if initial_gems.get(gem_type, 0) < quantity:
                         can_afford = False
                         break
+                    gem_value += gem_prices.get(gem_type, 0) * quantity
                 
-                if can_afford:
+                # Check if gem value matches bet amount (within reasonable tolerance)
+                bet_amount = game.get("bet_amount", 0)
+                if can_afford and abs(gem_value - bet_amount) < 0.01:
                     bot_game_id = game["game_id"]
-                    bot_bet_amount = game.get("bet_amount", 10)
+                    bot_bet_amount = bet_amount
                     bot_bet_gems = required_gems
                     print_success(f"Found suitable bot game: {bot_game_id} with bet ${bot_bet_amount}")
-                    print_success(f"Required gems: {bot_bet_gems}")
+                    print_success(f"Required gems: {bot_bet_gems} (value: ${gem_value})")
                     break
     
     if not bot_game_id:
