@@ -29,6 +29,14 @@ const ProfitAdmin = ({ user }) => {
   const [amountFilter, setAmountFilter] = useState({ min: '', max: '' });
   const [transactionIdFilter, setTransactionIdFilter] = useState('');
 
+  // Состояния для модальных окон и интерактивности
+  const [activeModal, setActiveModal] = useState(null);
+  const [modalData, setModalData] = useState([]);
+  const [modalPagination, setModalPagination] = useState({ current_page: 1, total_pages: 1 });
+  const [periodFilter, setPeriodFilter] = useState('month'); // day, week, month
+  const [expensesSettings, setExpensesSettings] = useState({ percentage: 60, manual_amount: 0 });
+  const [showExpensesModal, setShowExpensesModal] = useState(false);
+
   // Пагинация для истории прибыли
   const pagination = usePagination(1, 10);
 
@@ -153,7 +161,7 @@ const ProfitAdmin = ({ user }) => {
       description: '3% комиссия с PvP-игр'
     },
     'BOT_REVENUE': {
-      name: 'Доход от ботов от ставок',
+      name: 'Доход от Обычных ботов',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <rect x="4" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
@@ -451,7 +459,7 @@ const ProfitAdmin = ({ user }) => {
                       LIVE
                     </div>
                   </div>
-                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Доход от ботов от ставок</h3>
+                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Доход от Обычных ботов</h3>
                   <p className="font-russo text-2xl font-bold text-blue-400">{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</p>
                   <p className="text-xs text-text-secondary mt-1">Прибыль от циклов обычных ботов</p>
                   <p className="text-xs text-blue-300 mt-1">Обновляется при завершении циклов</p>
