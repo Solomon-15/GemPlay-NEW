@@ -118,7 +118,7 @@ const ProfitAdmin = ({ user }) => {
       name: 'Комиссия от ставок',
       icon: '💰',
       color: 'green',
-      description: '6% комиссия с PvP-игр'
+      description: '3% комиссия с PvP-игр'
     },
     'bot_profit': {
       name: 'Доход от ботов',
