@@ -5685,6 +5685,214 @@ async def create_bot_bet(bot: Bot) -> bool:
         logger.error(f"Error creating bot bet: {e}")
         return False
 
+@api_router.post("/admin/bots/create-individual", response_model=dict)
+async def create_individual_bot(
+    bot_config: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Create individual bot with custom settings (admin only)."""
+    try:
+        name = bot_config.get("name", "Bot #001")
+        pause_timer = bot_config.get("pause_timer", 5)  # minutes
+        recreate_interval = bot_config.get("recreate_interval", 30)  # seconds
+        cycle_games = bot_config.get("cycle_games", 12)
+        cycle_total_amount = bot_config.get("cycle_total_amount", 500.0)
+        win_percentage = bot_config.get("win_percentage", 60.0)
+        min_bet = bot_config.get("min_bet_amount", 1.0)
+        max_bet = bot_config.get("max_bet_amount", 100.0)
+        can_accept_bets = bot_config.get("can_accept_bets", False)
+        can_play_with_bots = bot_config.get("can_play_with_bots", False)
+        
+        # Validation
+        if pause_timer < 1 or pause_timer > 1000:
+            raise HTTPException(status_code=400, detail="Pause timer must be between 1 and 1000 minutes")
+        
+        if recreate_interval < 1:
+            raise HTTPException(status_code=400, detail="Recreate interval must be at least 1 second")
+            
+        if cycle_games < 1:
+            raise HTTPException(status_code=400, detail="Cycle games must be at least 1")
+            
+        if min_bet >= max_bet:
+            raise HTTPException(status_code=400, detail="Min bet must be less than max bet")
+        
+        bot = Bot(
+            type=BotType.REGULAR,
+            name=name,
+            min_bet_amount=min_bet,
+            max_bet_amount=max_bet,
+            win_percentage=win_percentage,
+            cycle_length=cycle_games,
+            pause_timer=pause_timer,
+            recreate_timer=recreate_interval,
+            is_active=True,
+            bot_type="REGULAR",
+            cycle_total_amount=cycle_total_amount,
+            can_accept_bets=can_accept_bets,
+            can_play_with_bots=can_play_with_bots
+        )
+        
+        await db.bots.insert_one(bot.dict())
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="CREATE_INDIVIDUAL_BOT",
+            target_type="bot",
+            target_id=bot.id,
+            details={
+                "bot_name": name,
+                "config": bot_config
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": f"Бот {name} создан успешно",
+            "bot_id": bot.id,
+            "bot_name": name
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating individual bot: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create individual bot"
+        )
+
+@api_router.get("/admin/bots/regular/list", response_model=dict)
+async def get_regular_bots_list(current_user: User = Depends(get_current_admin)):
+    """Get detailed list of regular bots."""
+    try:
+        bots = await db.bots.find({
+            "bot_type": "REGULAR"
+        }).to_list(100)
+        
+        bot_details = []
+        
+        for bot_doc in bots:
+            bot = Bot(**bot_doc)
+            
+            # Count active bets for this bot
+            active_bets = await db.games.count_documents({
+                "creator_id": bot.id,
+                "status": {"$in": ["WAITING", "ACTIVE"]}
+            })
+            
+            # Get game statistics
+            total_games = await db.games.count_documents({
+                "creator_id": bot.id,
+                "status": "COMPLETED"
+            })
+            
+            wins = await db.games.count_documents({
+                "creator_id": bot.id,
+                "status": "COMPLETED",
+                "winner_id": bot.id
+            })
+            
+            losses = await db.games.count_documents({
+                "creator_id": bot.id,
+                "status": "COMPLETED",
+                "winner_id": {"$ne": bot.id}
+            })
+            
+            draws = 0  # Assuming no draws for now
+            
+            win_rate = (wins / total_games * 100) if total_games > 0 else 0
+            
+            bot_details.append({
+                "id": bot.id,
+                "name": bot.name or f"Bot #{bot.id[:8]}",
+                "status": "Активен" if bot.is_active else "Отключён",
+                "is_active": bot.is_active,
+                "active_bets": active_bets,
+                "games_stats": {
+                    "wins": wins,
+                    "losses": losses,
+                    "draws": draws,
+                    "total": total_games
+                },
+                "win_rate": round(win_rate, 1),
+                "cycle_games": bot.cycle_length,
+                "cycle_total_amount": getattr(bot, 'cycle_total_amount', 500.0),
+                "min_bet": bot.min_bet_amount,
+                "max_bet": bot.max_bet_amount,
+                "pause_timer": bot.pause_timer,
+                "recreate_timer": bot.recreate_timer,
+                "win_percentage": bot.win_percentage,
+                "can_accept_bets": getattr(bot, 'can_accept_bets', False),
+                "can_play_with_bots": getattr(bot, 'can_play_with_bots', False),
+                "created_at": bot.created_at,
+                "last_game_time": bot.last_game_time
+            })
+        
+        return {
+            "bots": bot_details,
+            "total_count": len(bot_details)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching regular bots list: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch regular bots list"
+        )
+
+@api_router.post("/admin/bots/{bot_id}/toggle", response_model=dict)
+async def toggle_bot_status(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Toggle bot active status."""
+    try:
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(status_code=404, detail="Bot not found")
+        
+        new_status = not bot.get("is_active", True)
+        
+        await db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "is_active": new_status,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="TOGGLE_BOT_STATUS",
+            target_type="bot",
+            target_id=bot_id,
+            details={
+                "new_status": new_status,
+                "bot_name": bot.get("name", f"Bot #{bot_id[:8]}")
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        status_text = "включен" if new_status else "отключен"
+        return {
+            "message": f"Бот {status_text}",
+            "bot_id": bot_id,
+            "is_active": new_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error toggling bot status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to toggle bot status"
+        )
+
 @api_router.get("/admin/bots/regular/stats", response_model=dict)
 async def get_regular_bots_stats(current_user: User = Depends(get_current_admin)):
     """Get regular bots statistics."""
