@@ -105,6 +105,60 @@ const RegularBotsManagement = () => {
     }
   };
 
+  const createIndividualBot = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/create-individual`, botForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      showSuccessRU(response.data.message);
+      setIsCreateModalOpen(false);
+      setBotForm({
+        name: '',
+        pause_timer: 5,
+        recreate_interval: 30,
+        cycle_games: 12,
+        cycle_total_amount: 500,
+        win_percentage: 60,
+        min_bet_amount: 1,
+        max_bet_amount: 100,
+        can_accept_bets: false,
+        can_play_with_bots: false
+      });
+      await fetchStats();
+      await fetchBotsList();
+    } catch (error) {
+      console.error('Ошибка создания бота:', error);
+      showErrorRU('Ошибка при создании бота');
+    }
+  };
+
+  const toggleBotStatus = async (botId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/${botId}/toggle`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      showSuccessRU(response.data.message);
+      await fetchStats();
+      await fetchBotsList();
+    } catch (error) {
+      console.error('Ошибка переключения статуса бота:', error);
+      showErrorRU('Ошибка при изменении статуса бота');
+    }
+  };
+
+  const handleSettingsModal = (bot) => {
+    setSelectedBot(bot);
+    setIsSettingsModalOpen(true);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ru-RU');
+  };
+
   return (
     <div className="space-y-6">
       {/* Кнопки управления */}
