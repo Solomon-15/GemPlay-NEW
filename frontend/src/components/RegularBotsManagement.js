@@ -16,6 +16,9 @@ const RegularBotsManagement = () => {
   });
   const [allBotsEnabled, setAllBotsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [startingBots, setStartingBots] = useState(false);
+
+  const { showSuccessRU, showErrorRU } = useNotifications();
 
   useEffect(() => {
     fetchStats();
