@@ -324,6 +324,9 @@ const ProfitAdmin = ({ user }) => {
 
   // Функция для загрузки данных для модальных окон
   const loadModalData = async (type) => {
+    setModalLoading(true);
+    setModalError(null);
+    
     try {
       const token = localStorage.getItem('token');
       
@@ -373,7 +376,10 @@ const ProfitAdmin = ({ user }) => {
       }
     } catch (error) {
       console.error(`Error loading modal data for ${type}:`, error);
+      setModalError('Ошибка при загрузке данных');
       setModalData([]);
+    } finally {
+      setModalLoading(false);
     }
   };
 
