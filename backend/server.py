@@ -5691,7 +5691,7 @@ async def get_regular_bots_stats(current_user: User = Depends(get_current_admin)
     try:
         # Total active regular bots
         active_bots = await db.bots.count_documents({
-            "type": "REGULAR",
+            "bot_type": "REGULAR",
             "is_active": True
         })
         
