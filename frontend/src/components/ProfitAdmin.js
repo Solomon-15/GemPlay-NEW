@@ -1815,10 +1815,17 @@ const ProfitAdmin = ({ user }) => {
                           <div className="text-2xl font-bold text-red-400">
                             {formatCurrencyWithSymbol(modalData.total_expenses || 0, true)}
                           </div>
+                          <div className="text-xs text-red-300 mt-1">
+                            {modalData.period === 'day' && 'за день'}
+                            {modalData.period === 'week' && 'за неделю'}
+                            {modalData.period === 'month' && 'за месяц'}
+                            {modalData.period === 'all' && 'за все время'}
+                          </div>
                         </div>
                         <div className="bg-surface-sidebar rounded-lg p-4">
                           <span className="text-sm text-text-secondary">Процент от прибыли:</span>
                           <div className="text-2xl font-bold text-red-400">{modalData.expense_percentage || 60}%</div>
+                          <div className="text-xs text-red-300 mt-1">настроенный процент</div>
                         </div>
                       </div>
 
