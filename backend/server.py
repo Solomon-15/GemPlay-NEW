@@ -2464,6 +2464,13 @@ async def determine_game_winner(game_id: str) -> dict:
         
         # Verify move hash (commit-reveal) - only for human vs human games
         if not is_bot_game:
+            # For human vs human games, strict hash verification is required
+            if not game_obj.creator_move_hash or not game_obj.creator_salt:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Missing hash verification data for human game"
+                )
+            
             if not verify_move_hash(game_obj.creator_move, game_obj.creator_salt, game_obj.creator_move_hash):
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -2481,6 +2488,8 @@ async def determine_game_winner(game_id: str) -> dict:
             if game_obj.creator_move_hash and game_obj.creator_salt:
                 if not verify_move_hash(game_obj.creator_move, game_obj.creator_salt, game_obj.creator_move_hash):
                     logger.warning(f"Bot game {game_id} move hash verification failed, but proceeding")
+            else:
+                logger.info(f"Bot game {game_id} has no hash verification data, proceeding without verification")
         
         # Determine winner using rock-paper-scissors logic
         creator_move = game_obj.creator_move
