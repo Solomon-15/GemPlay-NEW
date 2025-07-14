@@ -1465,30 +1465,83 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Замороженная комиссия:</span>
-                      <div className="text-2xl font-bold text-orange-400">{formatCurrencyWithSymbol(stats.frozen_funds || 0, true)}</div>
+                  {modalLoading ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-400"></div>
+                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
                     </div>
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Активных игр:</span>
-                      <div className="text-2xl font-bold text-orange-400">{modalData.length || 0}</div>
+                  ) : modalError ? (
+                    <div className="text-center py-8">
+                      <div className="text-red-400 mb-2">⚠️</div>
+                      <p className="text-sm text-red-400">{modalError}</p>
+                      <button 
+                        onClick={() => loadModalData('frozen_funds')}
+                        className="mt-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 text-sm"
+                      >
+                        Повторить попытку
+                      </button>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Замороженная комиссия:</span>
+                          <div className="text-2xl font-bold text-orange-400">
+                            {formatCurrencyWithSymbol(modalData.total_frozen || 0, true)}
+                          </div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Активных игр:</span>
+                          <div className="text-2xl font-bold text-orange-400">{modalData.active_games || 0}</div>
+                        </div>
+                      </div>
 
-                  <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
-                    <h5 className="font-rajdhani text-sm font-bold text-orange-400 mb-2">Что такое замороженные средства:</h5>
-                    <p className="text-sm text-orange-300">
-                      Когда игрок создает ставку, комиссия (6%) замораживается и будет разморожена только после завершения игры. 
-                      Это обеспечивает справедливость и предотвращает злоупотребления.
-                    </p>
-                  </div>
+                      <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
+                        <h5 className="font-rajdhani text-sm font-bold text-orange-400 mb-2">Что такое замороженные средства:</h5>
+                        <p className="text-sm text-orange-300">
+                          Когда игрок создает ставку, комиссия (6%) замораживается и будет разморожена только после завершения игры. 
+                          Это обеспечивает справедливость и предотвращает злоупотребления.
+                        </p>
+                      </div>
 
-                  <div className="text-center text-text-secondary">
-                    <div className="text-lg mb-2">🔒</div>
-                    <p className="text-sm">Список активных игр с замороженной комиссией</p>
-                    <p className="text-xs mt-1">Будет добавлен в следующей версии</p>
-                  </div>
+                      {modalData.entries && modalData.entries.length > 0 ? (
+                        <div className="space-y-3">
+                          <h5 className="font-rajdhani text-sm font-bold text-orange-400">Активные игры:</h5>
+                          <div className="max-h-64 overflow-y-auto space-y-2">
+                            {modalData.entries.map((game, index) => (
+                              <div key={index} className="bg-surface-sidebar rounded-lg p-3">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <div className="font-medium text-white">
+                                      {game.creator?.username || 'Unknown'} vs {game.opponent?.username || 'Ожидание'}
+                                    </div>
+                                    <div className="text-xs text-text-secondary">
+                                      Ставка: {formatCurrencyWithSymbol(game.bet_amount || 0, true)} • 
+                                      Статус: {game.status || 'Unknown'}
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-orange-400">
+                                      {formatCurrencyWithSymbol(game.frozen_commission || 0, true)}
+                                    </div>
+                                    <div className="text-xs text-text-secondary">
+                                      {game.commission_rate ? `${(game.commission_rate * 100).toFixed(1)}%` : '6%'}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-text-secondary py-8">
+                          <div className="text-lg mb-2">🔒</div>
+                          <p className="text-sm">Нет активных игр с замороженными средствами</p>
+                          <p className="text-xs mt-1">Данные появятся при создании новых игр</p>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
 
