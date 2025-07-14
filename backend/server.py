@@ -4909,6 +4909,26 @@ async def bot_join_game_automatically(bot: Bot):
             # Standard move calculation
             bot_move = BotGameLogic.calculate_bot_move(bot)
         
+        # For REGULAR bots, return commission to creator (no commission charged)
+        commission_returned = 0
+        if bot.bot_type == "REGULAR":
+            commission_amount = game_obj.bet_amount * 0.06
+            
+            # Return commission from frozen balance to virtual balance
+            await db.users.update_one(
+                {"id": game_obj.creator_id},
+                {
+                    "$inc": {
+                        "virtual_balance": commission_amount,
+                        "frozen_balance": -commission_amount
+                    },
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+            commission_returned = commission_amount
+            
+            logger.info(f"💰 REGULAR BOT GAME - Returned commission ${commission_amount} to creator {game_obj.creator_id}")
+        
         # Update game with bot as opponent and move to REVEAL phase
         await db.games.update_one(
             {"id": game_obj.id},
@@ -4918,7 +4938,9 @@ async def bot_join_game_automatically(bot: Bot):
                     "opponent_move": bot_move,
                     "status": GameStatus.REVEAL,  # Changed from ACTIVE to REVEAL
                     "started_at": datetime.utcnow(),
-                    "reveal_deadline": datetime.utcnow() + timedelta(minutes=1)  # Give 1 minute for reveal
+                    "reveal_deadline": datetime.utcnow() + timedelta(minutes=1),  # Give 1 minute for reveal
+                    "is_regular_bot_game": bot.bot_type == "REGULAR",  # Mark as regular bot game
+                    "commission_returned": commission_returned  # Track returned commission
                 }
             }
         )
