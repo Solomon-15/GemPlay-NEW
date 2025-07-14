@@ -271,6 +271,36 @@ const ProfitAdmin = ({ user }) => {
     return '—';
   };
 
+  // Функции расчёта для блоков
+  const calculateTotalRevenue = (stats) => {
+    return (stats.bet_commission || 0) + 
+           (stats.human_bot_commission || 0) + 
+           (stats.gift_commission || 0) + 
+           (stats.bot_revenue || 0);
+  };
+
+  const calculateExpenses = (stats) => {
+    const totalRevenue = calculateTotalRevenue(stats);
+    const percentageExpenses = (totalRevenue * expensesSettings.percentage) / 100;
+    return percentageExpenses + (expensesSettings.manual_amount || 0);
+  };
+
+  const calculateNetProfit = (stats) => {
+    return calculateTotalRevenue(stats) - calculateExpenses(stats);
+  };
+
+  // Функции для модальных окон
+  const openModal = async (type) => {
+    try {
+      setActiveModal(type);
+      // Здесь будет загрузка данных для конкретного типа
+      // В реальной реализации это будет API вызов
+      setModalData([]);
+    } catch (error) {
+      console.error('Error opening modal:', error);
+    }
+  };
+
   const exportToCSV = () => {
     const headers = ['Дата', 'Время', 'Тип операции', 'Сумма', 'Источник', 'ID игрока/бота', 'Описание'];
     const csvContent = [
