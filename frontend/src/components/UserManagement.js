@@ -302,6 +302,42 @@ const UserManagement = ({ user: currentUser }) => {
     setIsBetsModalOpen(true);
   };
 
+  const cancelUserBet = async (betId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/users/${selectedUser.id}/bets/${betId}/cancel`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showSuccessRU(response.data.message);
+      await fetchUserDetails(selectedUser.id); // Refresh data
+    } catch (error) {
+      console.error('Error cancelling bet:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при отмене ставки';
+      showErrorRU(errorMessage);
+    }
+  };
+
+  const cleanupStuckBets = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/users/${selectedUser.id}/bets/cleanup-stuck`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showSuccessRU(`${response.data.message}. Обработано: ${response.data.total_processed} ставок`);
+      await fetchUserDetails(selectedUser.id); // Refresh data
+    } catch (error) {
+      console.error('Error cleaning up stuck bets:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при очистке зависших ставок';
+      showErrorRU(errorMessage);
+    }
+  };
+
   const handleInfoModal = async (user) => {
     setSelectedUser(user);
     await fetchUserDetails(user.id);
