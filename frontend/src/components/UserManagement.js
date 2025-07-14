@@ -47,7 +47,7 @@ const UserManagement = ({ user: currentUser }) => {
 
   useEffect(() => {
     fetchUsers();
-  }, [currentPage, searchTerm, statusFilter]);
+  }, [pagination.currentPage, searchTerm, statusFilter]);
 
   const fetchUsers = async () => {
     try {
@@ -55,8 +55,8 @@ const UserManagement = ({ user: currentUser }) => {
       const token = localStorage.getItem('token');
       
       const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '20'
+        page: pagination.currentPage.toString(),
+        limit: pagination.itemsPerPage.toString()
       });
       
       if (searchTerm) params.append('search', searchTerm);
@@ -67,7 +67,7 @@ const UserManagement = ({ user: currentUser }) => {
       });
       
       setUsers(response.data.users || []);
-      setTotalPages(response.data.pages || 1);
+      pagination.updatePagination(response.data.total || 0);
       setLoading(false);
     } catch (error) {
       console.error('Ошибка загрузки пользователей:', error);
