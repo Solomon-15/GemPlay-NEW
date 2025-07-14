@@ -164,14 +164,14 @@ const ProfitAdmin = ({ user }) => {
           Обзор
         </button>
         <button
-          onClick={() => setActiveTab('entries')}
+          onClick={() => setActiveTab('history')}
           className={`px-4 py-2 font-rajdhani font-medium transition-colors ${
-            activeTab === 'entries'
+            activeTab === 'history'
               ? 'text-accent-primary border-b-2 border-accent-primary'
               : 'text-text-secondary hover:text-white'
           }`}
         >
-          Записи прибыли
+          История прибыли
         </button>
         <button
           onClick={() => setActiveTab('settings')}
