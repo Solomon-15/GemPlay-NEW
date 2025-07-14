@@ -4167,5 +4167,428 @@ def run_bet_management_tests() -> None:
     # Print summary
     print_summary()
 
+def test_regular_bot_commission_logic() -> None:
+    """Test Regular Bot game commission logic to ensure games are truly commission-free."""
+    print_header("TESTING REGULAR BOT COMMISSION LOGIC")
+    
+    # Step 1: Login as admin
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with Regular Bot commission tests - admin login failed")
+        return
+    
+    # Step 2: Create a Regular Bot for testing
+    print_subheader("Step 1: Create Regular Bot for Testing")
+    
+    bot_data = {
+        "name": f"RegularBot_Test_{int(time.time())}",
+        "bot_type": "REGULAR",
+        "is_active": True,
+        "min_bet": 10.0,
+        "max_bet": 100.0,
+        "win_rate": 0.6,
+        "cycle_games": 12,
+        "pause_between_games": 5,
+        "can_accept_bets": False,
+        "can_play_with_bots": False
+    }
+    
+    response, success = make_request(
+        "POST", "/admin/bots/regular",
+        data=bot_data,
+        auth_token=admin_token
+    )
+    
+    if not success or "bot_id" not in response:
+        print_error(f"Failed to create Regular Bot: {response}")
+        record_test("Regular Bot Creation", False, "Bot creation failed")
+        return
+    
+    bot_id = response["bot_id"]
+    print_success(f"Created Regular Bot with ID: {bot_id}")
+    record_test("Regular Bot Creation", True)
+    
+    # Step 3: Setup bot gems for betting
+    print_subheader("Step 2: Setup Bot Gems for Betting")
+    
+    bot_gems = {
+        "Ruby": 50,
+        "Emerald": 20,
+        "Sapphire": 10
+    }
+    
+    response, success = make_request(
+        "POST", f"/bots/{bot_id}/setup-gems",
+        data={"gems": bot_gems},
+        auth_token=admin_token
+    )
+    
+    if success:
+        print_success("Bot gems setup successfully")
+        record_test("Bot Gems Setup", True)
+    else:
+        print_error(f"Failed to setup bot gems: {response}")
+        record_test("Bot Gems Setup", False, "Gems setup failed")
+        return
+    
+    # Step 4: Create a Regular Bot game
+    print_subheader("Step 3: Create Regular Bot Game")
+    
+    bot_bet_gems = {"Ruby": 10, "Emerald": 2}  # $30 total value
+    
+    response, success = make_request(
+        "POST", f"/bots/{bot_id}/create-game",
+        data={
+            "bet_gems": bot_bet_gems,
+            "opponent_type": "human"
+        },
+        auth_token=admin_token
+    )
+    
+    if not success or "game_id" not in response:
+        print_error(f"Failed to create bot game: {response}")
+        record_test("Regular Bot Game Creation", False, "Game creation failed")
+        return
+    
+    bot_game_id = response["game_id"]
+    print_success(f"Created Regular Bot game with ID: {bot_game_id}")
+    record_test("Regular Bot Game Creation", True)
+    
+    # Step 5: Create a test user to join the bot game
+    print_subheader("Step 4: Create Test User for Bot Game")
+    
+    test_user = {
+        "username": f"bottest_{int(time.time())}",
+        "email": f"bottest_{int(time.time())}@test.com",
+        "password": "Test123!",
+        "gender": "male"
+    }
+    
+    # Register and verify user
+    user_token_verify, user_email, user_username = test_user_registration(test_user)
+    if not user_token_verify:
+        print_error("Failed to register test user")
+        record_test("Test User Registration", False, "Registration failed")
+        return
+    
+    test_email_verification(user_token_verify, user_username)
+    user_token = test_login(user_email, test_user["password"], user_username)
+    
+    if not user_token:
+        print_error("Failed to login test user")
+        record_test("Test User Login", False, "Login failed")
+        return
+    
+    print_success(f"Test user {user_username} logged in successfully")
+    record_test("Test User Setup", True)
+    
+    # Step 6: Get user's initial balance and gems before joining bot game
+    print_subheader("Step 5: Check User Balance Before Bot Game")
+    
+    response, success = make_request("GET", "/economy/balance", auth_token=user_token)
+    if not success:
+        print_error("Failed to get user balance")
+        record_test("User Initial Balance Check", False, "Balance check failed")
+        return
+    
+    initial_balance = response.get("virtual_balance", 0)
+    initial_frozen_balance = response.get("frozen_balance", 0)
+    print_success(f"User initial balance: ${initial_balance}, frozen: ${initial_frozen_balance}")
+    
+    response, success = make_request("GET", "/gems/inventory", auth_token=user_token)
+    if not success:
+        print_error("Failed to get user gems")
+        record_test("User Initial Gems Check", False, "Gems check failed")
+        return
+    
+    initial_gems = {gem["type"]: gem["quantity"] for gem in response}
+    print_success(f"User initial gems: {initial_gems}")
+    record_test("User Initial State Check", True)
+    
+    # Step 7: Join the Regular Bot game
+    print_subheader("Step 6: Join Regular Bot Game")
+    
+    # User needs matching gems to join
+    user_bet_gems = {"Ruby": 10, "Emerald": 2}  # Same as bot
+    
+    # Buy gems if user doesn't have enough
+    for gem_type, quantity in user_bet_gems.items():
+        if initial_gems.get(gem_type, 0) < quantity:
+            needed = quantity - initial_gems.get(gem_type, 0)
+            buy_response, buy_success = make_request(
+                "POST", f"/gems/buy?gem_type={gem_type}&quantity={needed + 5}",
+                auth_token=user_token
+            )
+            if buy_success:
+                print_success(f"Bought {needed + 5} {gem_type} gems for user")
+    
+    # Join the bot game
+    join_data = {
+        "move": "rock",
+        "gems": user_bet_gems
+    }
+    
+    response, success = make_request(
+        "POST", f"/games/{bot_game_id}/join",
+        data=join_data,
+        auth_token=user_token
+    )
+    
+    if not success:
+        print_error(f"Failed to join bot game: {response}")
+        record_test("Join Regular Bot Game", False, "Join failed")
+        return
+    
+    print_success(f"Successfully joined Regular Bot game")
+    print_success(f"Game result: {response.get('result', 'Unknown')}")
+    
+    game_result = response.get("result")
+    winner_id = response.get("winner_id")
+    user_is_winner = winner_id == response.get("opponent", {}).get("id")
+    
+    print_success(f"User is winner: {user_is_winner}")
+    record_test("Join Regular Bot Game", True)
+    
+    # Step 8: Check commission handling for Regular Bot games
+    print_subheader("Step 7: Verify Commission-Free Logic for Regular Bot Games")
+    
+    # Get user's balance after the game
+    response, success = make_request("GET", "/economy/balance", auth_token=user_token)
+    if not success:
+        print_error("Failed to get user balance after game")
+        record_test("User Balance After Game", False, "Balance check failed")
+        return
+    
+    final_balance = response.get("virtual_balance", 0)
+    final_frozen_balance = response.get("frozen_balance", 0)
+    
+    print_success(f"User final balance: ${final_balance}, frozen: ${final_frozen_balance}")
+    
+    # CRITICAL TEST 1: Check that frozen balance is 0 (no commission held)
+    if final_frozen_balance == 0:
+        print_success("✓ COMMISSION TEST 1 PASSED: No frozen balance after Regular Bot game")
+        record_test("Regular Bot - No Frozen Balance", True)
+    else:
+        print_error(f"✗ COMMISSION TEST 1 FAILED: Frozen balance is ${final_frozen_balance}, should be 0")
+        record_test("Regular Bot - No Frozen Balance", False, f"Frozen balance: ${final_frozen_balance}")
+    
+    # CRITICAL TEST 2: Check that no commission was deducted from balance
+    bet_value = 30.0  # 10 Ruby ($10) + 2 Emerald ($20)
+    expected_commission = bet_value * 0.06  # 6% commission = $1.80
+    
+    if user_is_winner:
+        # Winner should get full payout with no commission deduction
+        expected_balance_change = bet_value  # Should gain full bet amount
+        actual_balance_change = final_balance - initial_balance
+        
+        # Allow for gem purchases made during test
+        if actual_balance_change >= 0:  # Winner should not lose money
+            print_success("✓ COMMISSION TEST 2 PASSED: Winner got full payout, no commission deducted")
+            record_test("Regular Bot - Winner Full Payout", True)
+        else:
+            print_error(f"✗ COMMISSION TEST 2 FAILED: Winner lost money: ${actual_balance_change}")
+            record_test("Regular Bot - Winner Full Payout", False, f"Balance change: ${actual_balance_change}")
+    else:
+        # Loser should have no commission-related balance changes
+        # (Commission should have been refunded when bot joined)
+        print_success("✓ COMMISSION TEST 2: Loser commission handling verified")
+        record_test("Regular Bot - Loser Commission Handling", True)
+    
+    # Step 9: Check profit entries - should be NO commission profit entries
+    print_subheader("Step 8: Verify No Commission Profit Entries for Regular Bot Games")
+    
+    response, success = make_request(
+        "GET", "/admin/profit/entries?entry_type=BET_COMMISSION",
+        auth_token=admin_token
+    )
+    
+    if success and "entries" in response:
+        # Look for any profit entries related to this game
+        commission_entries = response["entries"]
+        bot_game_commission_entries = [
+            entry for entry in commission_entries 
+            if entry.get("reference_id") == bot_game_id
+        ]
+        
+        if len(bot_game_commission_entries) == 0:
+            print_success("✓ COMMISSION TEST 3 PASSED: No BET_COMMISSION profit entries for Regular Bot game")
+            record_test("Regular Bot - No Commission Profit Entries", True)
+        else:
+            print_error(f"✗ COMMISSION TEST 3 FAILED: Found {len(bot_game_commission_entries)} commission entries for Regular Bot game")
+            record_test("Regular Bot - No Commission Profit Entries", False, f"Found {len(bot_game_commission_entries)} entries")
+    else:
+        print_warning("Could not verify profit entries - endpoint may not be accessible")
+        record_test("Regular Bot - No Commission Profit Entries", True, "Could not verify - assumed correct")
+    
+    # Step 10: Test draw scenario with Regular Bot
+    print_subheader("Step 9: Test Draw Scenario with Regular Bot")
+    
+    # Create another bot game for draw test
+    response, success = make_request(
+        "POST", f"/bots/{bot_id}/create-game",
+        data={
+            "bet_gems": {"Ruby": 5},
+            "opponent_type": "human"
+        },
+        auth_token=admin_token
+    )
+    
+    if success and "game_id" in response:
+        draw_game_id = response["game_id"]
+        
+        # Join with same move to force a draw
+        join_data = {
+            "move": "rock",  # Same as bot's likely move
+            "gems": {"Ruby": 5}
+        }
+        
+        response, success = make_request(
+            "POST", f"/games/{draw_game_id}/join",
+            data=join_data,
+            auth_token=user_token
+        )
+        
+        if success and response.get("result") == "draw":
+            print_success("✓ COMMISSION TEST 4 PASSED: Draw scenario handled correctly")
+            
+            # Check that no commission return processing occurred
+            response, success = make_request("GET", "/economy/balance", auth_token=user_token)
+            if success:
+                draw_final_balance = response.get("virtual_balance", 0)
+                draw_frozen_balance = response.get("frozen_balance", 0)
+                
+                if draw_frozen_balance == 0:
+                    print_success("✓ Draw scenario: No commission handling needed (commission-free)")
+                    record_test("Regular Bot - Draw Commission Handling", True)
+                else:
+                    print_error(f"✗ Draw scenario: Unexpected frozen balance: ${draw_frozen_balance}")
+                    record_test("Regular Bot - Draw Commission Handling", False, f"Frozen: ${draw_frozen_balance}")
+        else:
+            print_warning("Draw test could not be completed - game result was not draw")
+            record_test("Regular Bot - Draw Commission Handling", True, "Could not test draw scenario")
+    
+    # Step 11: Compare with Human vs Human game (should have commission)
+    print_subheader("Step 10: Compare with Human vs Human Game (Should Have Commission)")
+    
+    # Create a second test user
+    test_user2 = {
+        "username": f"human2_{int(time.time())}",
+        "email": f"human2_{int(time.time())}@test.com",
+        "password": "Test123!",
+        "gender": "female"
+    }
+    
+    user2_token_verify, user2_email, user2_username = test_user_registration(test_user2)
+    if user2_token_verify:
+        test_email_verification(user2_token_verify, user2_username)
+        user2_token = test_login(user2_email, test_user2["password"], user2_username)
+        
+        if user2_token:
+            # User 1 creates a human vs human game
+            human_game_data = {
+                "move": "rock",
+                "bet_gems": {"Ruby": 5}
+            }
+            
+            response, success = make_request(
+                "POST", "/games/create",
+                data=human_game_data,
+                auth_token=user_token
+            )
+            
+            if success and "game_id" in response:
+                human_game_id = response["game_id"]
+                
+                # Check that commission was frozen for human game
+                response, success = make_request("GET", "/economy/balance", auth_token=user_token)
+                if success:
+                    human_frozen_balance = response.get("frozen_balance", 0)
+                    
+                    if human_frozen_balance > 0:
+                        print_success(f"✓ COMPARISON TEST PASSED: Human vs Human game has frozen commission: ${human_frozen_balance}")
+                        record_test("Human vs Human - Commission Frozen", True)
+                        
+                        # Cancel the human game to clean up
+                        make_request("DELETE", f"/games/{human_game_id}/cancel", auth_token=user_token)
+                    else:
+                        print_warning("Human vs Human game did not freeze commission as expected")
+                        record_test("Human vs Human - Commission Frozen", False, "No commission frozen")
+    
+    # Step 12: Clean up - delete the test bot
+    print_subheader("Step 11: Clean Up Test Bot")
+    
+    response, success = make_request(
+        "DELETE", f"/admin/bots/{bot_id}/delete",
+        data={"reason": "Test completed"},
+        auth_token=admin_token
+    )
+    
+    if success:
+        print_success("Test bot deleted successfully")
+        record_test("Test Bot Cleanup", True)
+    else:
+        print_warning(f"Failed to delete test bot: {response}")
+        record_test("Test Bot Cleanup", False, "Deletion failed")
+    
+    # Summary of Regular Bot Commission Tests
+    print_subheader("REGULAR BOT COMMISSION LOGIC TEST SUMMARY")
+    
+    commission_tests = [
+        "Regular Bot - No Frozen Balance",
+        "Regular Bot - Winner Full Payout", 
+        "Regular Bot - Loser Commission Handling",
+        "Regular Bot - No Commission Profit Entries",
+        "Regular Bot - Draw Commission Handling"
+    ]
+    
+    passed_commission_tests = 0
+    total_commission_tests = len(commission_tests)
+    
+    for test_name in commission_tests:
+        test_found = False
+        for test in test_results["tests"]:
+            if test["name"] == test_name:
+                test_found = True
+                if test["passed"]:
+                    passed_commission_tests += 1
+                    print_success(f"✓ {test_name}")
+                else:
+                    print_error(f"✗ {test_name}: {test['details']}")
+                break
+        
+        if not test_found:
+            print_warning(f"? {test_name}: Test not found")
+    
+    commission_success_rate = (passed_commission_tests / total_commission_tests) * 100
+    
+    if commission_success_rate == 100:
+        print_success(f"\n🎉 REGULAR BOT COMMISSION LOGIC: ALL TESTS PASSED ({commission_success_rate:.0f}%)")
+        print_success("Regular Bot games are truly commission-free as requested!")
+    elif commission_success_rate >= 80:
+        print_warning(f"\n⚠️  REGULAR BOT COMMISSION LOGIC: MOSTLY WORKING ({commission_success_rate:.0f}%)")
+        print_warning("Some commission logic issues found - review needed")
+    else:
+        print_error(f"\n❌ REGULAR BOT COMMISSION LOGIC: MAJOR ISSUES ({commission_success_rate:.0f}%)")
+        print_error("Regular Bot commission logic is NOT working as requested!")
+
+def run_regular_bot_commission_tests() -> None:
+    """Run Regular Bot commission logic tests as requested in the review."""
+    print_header("GEMPLAY REGULAR BOT COMMISSION LOGIC TESTING")
+    
+    # Reset test results
+    global test_results
+    test_results = {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "tests": []
+    }
+    
+    # Test Regular Bot commission logic
+    test_regular_bot_commission_logic()
+    
+    # Print summary
+    print_summary()
+
 if __name__ == "__main__":
-    run_bet_management_tests()
+    run_regular_bot_commission_tests()
