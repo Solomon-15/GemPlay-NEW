@@ -206,12 +206,12 @@ const UserManagement = ({ user: currentUser }) => {
   // Event handlers
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1);
+    pagination.handlePageChange(1);
   };
 
   const handleStatusFilter = (status) => {
     setStatusFilter(status);
-    setCurrentPage(1);
+    pagination.handlePageChange(1);
   };
 
   const handleEditUser = (user) => {
