@@ -5411,6 +5411,10 @@ async def get_net_profit_analysis(current_admin: User = Depends(get_current_admi
         total_expenses = (total_revenue * expense_percentage / 100) + manual_expenses
         net_profit = total_revenue - total_expenses
         
+        # Avoid division by zero
+        profit_margin = (net_profit / total_revenue * 100) if total_revenue > 0 else 0
+        expense_ratio = (total_expenses / total_revenue * 100) if total_revenue > 0 else 0
+        
         # Build detailed analysis
         analysis = {
             "revenue_analysis": {
@@ -5429,13 +5433,13 @@ async def get_net_profit_analysis(current_admin: User = Depends(get_current_admi
                 "gross_profit": total_revenue,
                 "total_expenses": total_expenses,
                 "net_profit": net_profit,
-                "profit_margin": (net_profit / total_revenue * 100) if total_revenue > 0 else 0,
-                "expense_ratio": (total_expenses / total_revenue * 100) if total_revenue > 0 else 0
+                "profit_margin": profit_margin,
+                "expense_ratio": expense_ratio
             },
             "trends": {
                 "is_profitable": net_profit > 0,
                 "efficiency_rating": "high" if net_profit > total_expenses else "medium" if net_profit > 0 else "low",
-                "growth_potential": "high" if (net_profit / total_revenue * 100) > 30 else "medium" if (net_profit / total_revenue * 100) > 10 else "low"
+                "growth_potential": "high" if profit_margin > 30 else "medium" if profit_margin > 10 else "low"
             }
         }
         
