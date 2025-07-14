@@ -5485,9 +5485,9 @@ async def get_net_profit_analysis(current_admin: User = Depends(get_current_admi
                 "total_revenue": total_revenue,
                 "total_expenses": total_expenses,
                 "net_profit": net_profit,
-                "profit_margin": (net_profit / total_revenue * 100) if total_revenue > 0 else 0,
+                "profit_margin": profit_margin,
                 "is_profitable": net_profit > 0,
-                "efficiency_score": max(0, 100 - (total_expenses / total_revenue * 100)) if total_revenue > 0 else 0
+                "efficiency_score": max(0, 100 - expense_ratio) if total_revenue > 0 else 0
             }
         }
         
