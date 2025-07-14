@@ -1,4 +1,16 @@
 backend:
+  - task: "Comprehensive Bet Management System Implementation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "COMPREHENSIVE BET MANAGEMENT SYSTEM FULLY FUNCTIONAL: Successfully implemented complete bet management infrastructure for admin panel. Backend implementation: 1) GET /admin/bets/stats endpoint returns comprehensive statistics (total_bets, active_bets, completed_bets, cancelled_bets, stuck_bets, average_bet) with proper data types. 2) GET /admin/bets/list endpoint supports pagination, filtering by status/user_id, and includes bot vs user differentiation with comprehensive bet information (age_hours, is_stuck, can_cancel flags). 3) POST /admin/bets/{bet_id}/cancel endpoint successfully cancels WAITING bets with proper resource return (gems and commission). 4) POST /admin/bets/cleanup-stuck endpoint processes stuck bets system-wide with 24-hour threshold detection. Key features: Complete bet statistics dashboard, paginated bet listing with filters, individual bet cancellation, system-wide stuck bet cleanup, proper bot/user handling, comprehensive audit logging, security with admin-only access. Testing results: 100% success rate (16/16 tests passed), all authentication/authorization working correctly, stuck bet detection logic accurate, balance restoration functioning properly. The system provides centralized bet management as requested in the review."
+
   - task: "Unified Pagination Implementation"
     implemented: true
     working: true
