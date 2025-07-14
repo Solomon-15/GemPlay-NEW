@@ -874,9 +874,11 @@ const RegularBotsManagement = () => {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-text-secondary text-sm">Тип приоритета</div>
-                <div className="text-blue-400 font-rajdhani font-bold">По порядку</div>
+                <div className={`font-rajdhani font-bold ${priorityType === 'manual' ? 'text-orange-400' : 'text-blue-400'}`}>
+                  {priorityType === 'manual' ? 'Ручное управление' : 'По порядку'}
+                </div>
               </div>
-              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <div className={`w-3 h-3 rounded-full ${priorityType === 'manual' ? 'bg-orange-500' : 'bg-blue-500'}`}></div>
             </div>
           </div>
           <div className="bg-surface-sidebar rounded-lg p-3">
@@ -897,6 +899,19 @@ const RegularBotsManagement = () => {
             </div>
           </div>
         </div>
+        
+        {/* Кнопка сброса приоритетов */}
+        {priorityType === 'manual' && (
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={handleResetPriorities}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-rajdhani font-bold"
+              title="Сбросить приоритеты всех ботов"
+            >
+              🔄 Сбросить приоритеты
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Информационные блоки */}
