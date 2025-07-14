@@ -161,15 +161,17 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       }
     }
     
-    // Проверяем комиссию против общего баланса
-    const commissionRequired = targetAmount * 0.06;
-    const totalBalance = user?.virtual_balance || 0;
-    const frozenBalance = user?.frozen_balance || 0;
-    const availableForSpending = totalBalance - frozenBalance;
-    
-    if (availableForSpending < commissionRequired) {
-      showError(`Insufficient balance for commission. Required: $${commissionRequired.toFixed(2)}, Available: $${availableForSpending.toFixed(2)}`);
-      return false;
+    // Проверяем комиссию против общего баланса (только для игр с людьми)
+    if (!isBotGame) {
+      const commissionRequired = targetAmount * 0.06;
+      const totalBalance = user?.virtual_balance || 0;
+      const frozenBalance = user?.frozen_balance || 0;
+      const availableForSpending = totalBalance - frozenBalance;
+      
+      if (availableForSpending < commissionRequired) {
+        showError(`Insufficient balance for commission. Required: $${commissionRequired.toFixed(2)}, Available: $${availableForSpending.toFixed(2)}`);
+        return false;
+      }
     }
     
     return true;
