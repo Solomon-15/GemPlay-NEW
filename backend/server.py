@@ -5042,9 +5042,10 @@ async def get_user_gems(
 @api_router.get("/admin/users/{user_id}/bets", response_model=dict)
 async def get_user_bets(
     user_id: str,
+    include_completed: bool = False,
     current_user: User = Depends(get_current_admin)
 ):
-    """Get active bets for a specific user."""
+    """Get bets for a specific user (active by default, optionally include completed)."""
     try:
         # Find user
         user = await db.users.find_one({"id": user_id})
@@ -5054,14 +5055,22 @@ async def get_user_bets(
                 detail="User not found"
             )
         
-        # Get user's active bets
+        # Build query based on parameters
+        if include_completed:
+            # Include all games
+            status_filter = {"$in": ["WAITING", "ACTIVE", "REVEAL", "COMPLETED", "CANCELLED"]}
+        else:
+            # Only active games
+            status_filter = {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+        
+        # Get user's bets
         bets = await db.games.find({
             "$or": [
                 {"creator_id": user_id},
                 {"opponent_id": user_id}
             ],
-            "status": {"$in": ["WAITING", "ACTIVE"]}
-        }).sort("created_at", -1).to_list(50)
+            "status": status_filter
+        }).sort("created_at", -1).to_list(100)
         
         # Process bets data
         bets_data = []
@@ -5069,24 +5078,55 @@ async def get_user_bets(
             opponent_id = bet.get("opponent_id") if bet.get("creator_id") == user_id else bet.get("creator_id")
             opponent = None
             if opponent_id:
+                # Check if opponent is a user
                 opponent_doc = await db.users.find_one({"id": opponent_id})
-                opponent = opponent_doc.get("username") if opponent_doc else "Unknown"
+                if opponent_doc:
+                    opponent = opponent_doc.get("username")
+                else:
+                    # Check if opponent is a bot
+                    bot_doc = await db.bots.find_one({"id": opponent_id})
+                    if bot_doc:
+                        opponent = f"Bot: {bot_doc.get('name', 'Unknown')}"
+                    else:
+                        opponent = "Unknown"
+            
+            # Calculate bet age in hours
+            bet_age_hours = (datetime.utcnow() - bet.get("created_at")).total_seconds() / 3600
             
             bets_data.append({
                 "id": bet.get("id"),
                 "amount": bet.get("bet_amount"),
                 "status": bet.get("status"),
                 "created_at": bet.get("created_at"),
+                "completed_at": bet.get("completed_at"),
+                "cancelled_at": bet.get("cancelled_at"),
                 "opponent": opponent,
                 "is_creator": bet.get("creator_id") == user_id,
-                "gems": bet.get("bet_gems", {})
+                "gems": bet.get("bet_gems", {}),
+                "opponent_gems": bet.get("opponent_gems", {}),
+                "winner_id": bet.get("winner_id"),
+                "age_hours": round(bet_age_hours, 1),
+                "is_stuck": bet_age_hours > 24 and bet.get("status") in ["WAITING", "ACTIVE", "REVEAL"],
+                "can_cancel": bet.get("status") == "WAITING"
             })
+        
+        # Count different types
+        active_count = len([b for b in bets_data if b["status"] in ["WAITING", "ACTIVE", "REVEAL"]])
+        completed_count = len([b for b in bets_data if b["status"] == "COMPLETED"])
+        cancelled_count = len([b for b in bets_data if b["status"] == "CANCELLED"])
+        stuck_count = len([b for b in bets_data if b["is_stuck"]])
         
         return {
             "user_id": user_id,
             "username": user.get("username"),
             "active_bets": bets_data,
-            "total_active_bets": len(bets_data)
+            "summary": {
+                "total_bets": len(bets_data),
+                "active_count": active_count,
+                "completed_count": completed_count,
+                "cancelled_count": cancelled_count,
+                "stuck_count": stuck_count
+            }
         }
         
     except HTTPException:
