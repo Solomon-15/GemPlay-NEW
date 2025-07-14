@@ -202,19 +202,19 @@ const CreateBet = ({ onClose, onGameCreated }) => {
                 <div className="text-center">
                   <p className="text-text-secondary text-sm">Virtual Balance</p>
                   <p className="font-rajdhani text-xl font-bold text-green-400">
-                    ${balance.virtual_balance.toFixed(2)}
+                    {formatGemValue(balance.virtual_balance)}
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-text-secondary text-sm">Available Gems</p>
                   <p className="font-rajdhani text-xl font-bold text-accent-primary">
-                    ${balance.available_gem_value.toFixed(2)}
+                    {formatGemValue(balance.available_gem_value)}
                   </p>
                 </div>
                 <div className="text-center">
                   <p className="text-text-secondary text-sm">Commission (6%)</p>
                   <p className={`font-rajdhani text-xl font-bold ${canAfford ? 'text-yellow-400' : 'text-red-400'}`}>
-                    ${commissionRequired.toFixed(2)}
+                    {formatGemValue(commissionRequired)}
                   </p>
                 </div>
               </div>
