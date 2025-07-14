@@ -175,12 +175,14 @@ const BattleResultStep = ({
             <span className="text-white font-rajdhani font-bold text-lg">{formatGemValue(totalGemValue)}</span>
           </div>
           
-          <div className="flex justify-between items-center py-2 border-b border-border-primary border-opacity-30">
-            <span className="text-text-secondary font-rajdhani">Platform Commission (6%):</span>
-            <span className="text-orange-400 font-rajdhani font-bold">
-              -{formatDollarAmount(commissionAmount)}
-            </span>
-          </div>
+          {commissionAmount > 0 && (
+            <div className="flex justify-between items-center py-2 border-b border-border-primary border-opacity-30">
+              <span className="text-text-secondary font-rajdhani">Platform Commission (6%):</span>
+              <span className="text-orange-400 font-rajdhani font-bold">
+                -{formatDollarAmount(commissionAmount)}
+              </span>
+            </div>
+          )}
           
           <div className="flex justify-between items-center py-2 border-b border-border-primary border-opacity-30">
             <span className="text-text-secondary font-rajdhani">Prize Pool:</span>
