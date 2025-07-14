@@ -20,6 +20,10 @@ const ProfitAdmin = ({ user }) => {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
 
+  // Дополнительные состояния
+  const [tooltip, setTooltip] = useState({ show: false, text: '', x: 0, y: 0 });
+  const [copySuccess, setCopySuccess] = useState(false);
+
   // Пагинация для истории прибыли
   const pagination = usePagination(1, 10);
 
