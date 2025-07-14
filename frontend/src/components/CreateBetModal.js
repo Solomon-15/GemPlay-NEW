@@ -338,7 +338,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
             {formatGemValue(totalGemValue)}
             {betAmount && parseFloat(betAmount) > 0 && (
               <span className="text-text-secondary text-sm ml-2">
-                / {formatCurrencyWithSymbol(parseFloat(betAmount))}
+                / {formatDollarAmount(parseFloat(betAmount))}
               </span>
             )}
           </div>
