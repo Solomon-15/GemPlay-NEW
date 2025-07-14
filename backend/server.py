@@ -5232,6 +5232,7 @@ async def get_frozen_funds_details(
         
         return {
             "success": True,
+            "period": period,
             "total_frozen": total_frozen,
             "active_games": len(active_games),
             "avg_frozen_per_game": total_frozen / len(active_games) if len(active_games) > 0 else 0,
