@@ -1720,6 +1720,43 @@ const ProfitAdmin = ({ user }) => {
                         </div>
                       </div>
 
+                      {/* График разбивки доходов */}
+                      {modalData.breakdown && modalData.breakdown.length > 0 && (
+                        <div className="bg-surface-sidebar rounded-lg p-4 mb-6">
+                          <h5 className="font-rajdhani text-lg font-bold text-yellow-400 mb-4">
+                            🥧 Распределение доходов
+                          </h5>
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div className="h-64">
+                              <ProfitChart
+                                type="doughnut"
+                                data={generateRevenueBreakdownData(modalData.breakdown)}
+                              />
+                            </div>
+                            <div className="space-y-3">
+                              {modalData.breakdown.map((item, index) => (
+                                <div key={index} className="flex items-center justify-between p-3 bg-surface-card rounded-lg">
+                                  <div className="flex items-center space-x-3">
+                                    <div className={`w-4 h-4 rounded-full`} style={{
+                                      backgroundColor: ['#4A90E2', '#22C55E', '#FBBF24', '#9333EA', '#F97316'][index % 5]
+                                    }}></div>
+                                    <span className="text-sm text-white">{item.name}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-yellow-400">
+                                      {formatCurrencyWithSymbol(item.amount || 0, true)}
+                                    </div>
+                                    <div className="text-xs text-text-secondary">
+                                      {item.percentage?.toFixed(1)}%
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {modalData.breakdown && modalData.breakdown.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-3">
