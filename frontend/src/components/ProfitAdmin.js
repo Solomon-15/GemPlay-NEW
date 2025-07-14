@@ -1367,36 +1367,86 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Общий доход:</span>
-                      <div className="text-2xl font-bold text-blue-400">{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</div>
+                  {modalLoading ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
                     </div>
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Активных ботов:</span>
-                      <div className="text-2xl font-bold text-blue-400">{modalData.length || 0}</div>
+                  ) : modalError ? (
+                    <div className="text-center py-8">
+                      <div className="text-red-400 mb-2">⚠️</div>
+                      <p className="text-sm text-red-400">{modalError}</p>
+                      <button 
+                        onClick={() => loadModalData('bot_revenue')}
+                        className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+                      >
+                        Повторить попытку
+                      </button>
                     </div>
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Средний доход:</span>
-                      <div className="text-2xl font-bold text-blue-400">
-                        {formatCurrencyWithSymbol(modalData.length ? (stats.bot_revenue || 0) / modalData.length : 0, true)}
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Общий доход:</span>
+                          <div className="text-2xl font-bold text-blue-400">
+                            {formatCurrencyWithSymbol(modalData.total_revenue || 0, true)}
+                          </div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Активных ботов:</span>
+                          <div className="text-2xl font-bold text-blue-400">{modalData.active_bots || 0}</div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Средний доход:</span>
+                          <div className="text-2xl font-bold text-blue-400">
+                            {formatCurrencyWithSymbol(modalData.avg_revenue_per_bot || 0, true)}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                    <h5 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Как работает доход от ботов:</h5>
-                    <p className="text-sm text-blue-300">
-                      Обычные боты накапливают выигрыши в защищенном контейнере. После завершения полного цикла (обычно 12 игр) 
-                      прибыль переводится в общий фонд платформы.
-                    </p>
-                  </div>
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                        <h5 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Как работает доход от ботов:</h5>
+                        <p className="text-sm text-blue-300">
+                          Обычные боты накапливают выигрыши в защищенном контейнере. После завершения полного цикла (обычно 12 игр) 
+                          прибыль переводится в общий фонд платформы.
+                        </p>
+                      </div>
 
-                  <div className="text-center text-text-secondary">
-                    <div className="text-lg mb-2">📊</div>
-                    <p className="text-sm">Детальная история доходов от каждого бота</p>
-                    <p className="text-xs mt-1">Будет добавлена в следующей версии</p>
-                  </div>
+                      {modalData.entries && modalData.entries.length > 0 ? (
+                        <div className="space-y-3">
+                          <h5 className="font-rajdhani text-sm font-bold text-blue-400">Детализация по ботам:</h5>
+                          <div className="max-h-64 overflow-y-auto space-y-2">
+                            {modalData.entries.map((bot, index) => (
+                              <div key={index} className="bg-surface-sidebar rounded-lg p-3">
+                                <div className="flex justify-between items-center">
+                                  <div>
+                                    <div className="font-medium text-white">{bot.bot_name}</div>
+                                    <div className="text-xs text-text-secondary">
+                                      {bot.games_played} игр • {bot.win_rate?.toFixed(1)}% побед
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-blue-400">
+                                      {formatCurrencyWithSymbol(bot.total_revenue || 0, true)}
+                                    </div>
+                                    <div className="text-xs text-text-secondary">
+                                      {bot.cycles_completed} циклов
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-text-secondary py-8">
+                          <div className="text-lg mb-2">📊</div>
+                          <p className="text-sm">Нет данных о доходах от ботов</p>
+                          <p className="text-xs mt-1">Данные появятся после завершения первых циклов</p>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
 
