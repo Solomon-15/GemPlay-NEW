@@ -5498,6 +5498,191 @@ async def get_bets_stats(current_user: User = Depends(get_current_admin)):
             detail="Failed to fetch bet statistics"
         )
 
+@api_router.post("/admin/bots/create-regular", response_model=dict)
+async def create_regular_bots(
+    bot_config: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Create regular bots (admin only)."""
+    try:
+        count = bot_config.get("count", 5)
+        min_bet = bot_config.get("min_bet_amount", 1.0)
+        max_bet = bot_config.get("max_bet_amount", 50.0)
+        win_rate = bot_config.get("win_percentage", 60.0)
+        
+        created_bots = []
+        
+        for i in range(count):
+            bot = Bot(
+                type=BotType.REGULAR,
+                name=None,  # Обычные боты без имени
+                min_bet_amount=min_bet,
+                max_bet_amount=max_bet,
+                win_percentage=win_rate,
+                is_active=True
+            )
+            
+            await db.bots.insert_one(bot.dict())
+            created_bots.append(bot.id)
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="CREATE_REGULAR_BOTS",
+            target_type="bots",
+            target_id="bulk",
+            details={
+                "count": count,
+                "bot_ids": created_bots,
+                "config": bot_config
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": f"Создано {count} обычных ботов",
+            "created_bots": created_bots,
+            "count": count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating regular bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create regular bots"
+        )
+
+@api_router.post("/admin/bots/start-regular", response_model=dict)
+async def start_regular_bots(
+    current_user: User = Depends(get_current_admin)
+):
+    """Start all regular bots to create bets."""
+    try:
+        # Получаем всех активных обычных ботов
+        active_bots = await db.bots.find({
+            "type": "REGULAR",
+            "is_active": True
+        }).to_list(100)
+        
+        if not active_bots:
+            # Создаем ботов если их нет
+            await create_regular_bots(
+                {"count": 5, "min_bet_amount": 1.0, "max_bet_amount": 50.0},
+                current_user
+            )
+            active_bots = await db.bots.find({
+                "type": "REGULAR",
+                "is_active": True
+            }).to_list(100)
+        
+        started_bots = 0
+        
+        for bot_doc in active_bots:
+            bot = Bot(**bot_doc)
+            
+            # Проверяем, не создавал ли бот ставку недавно
+            now = datetime.utcnow()
+            if bot.last_bet_time:
+                time_since_last_bet = (now - bot.last_bet_time).total_seconds()
+                if time_since_last_bet < bot.recreate_timer:
+                    continue
+            
+            # Создаем ставку для бота
+            success = await create_bot_bet(bot)
+            if success:
+                started_bots += 1
+                
+                # Обновляем время последней ставки
+                await db.bots.update_one(
+                    {"id": bot.id},
+                    {
+                        "$set": {
+                            "last_bet_time": now,
+                            "updated_at": now
+                        }
+                    }
+                )
+        
+        return {
+            "message": f"Запущено {started_bots} ботов",
+            "started_bots": started_bots,
+            "total_active_bots": len(active_bots)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error starting regular bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to start regular bots"
+        )
+
+async def create_bot_bet(bot: Bot) -> bool:
+    """Create a bet for a bot."""
+    try:
+        import random
+        
+        # Генерируем размер ставки
+        bet_amount = round(random.uniform(bot.min_bet_amount, bot.max_bet_amount), 2)
+        
+        # Создаем случайную комбинацию гемов для ставки
+        gem_types = ["RUBY", "EMERALD", "SAPPHIRE", "DIAMOND"]
+        bet_gems = {}
+        total_value = 0.0
+        
+        # Распределяем ставку по гемам
+        remaining_amount = bet_amount
+        for i, gem_type in enumerate(gem_types):
+            if i == len(gem_types) - 1:  # Последний гем получает остаток
+                gem_value = remaining_amount
+            else:
+                max_for_this_gem = remaining_amount * 0.7  # Максимум 70% от остатка
+                gem_value = round(random.uniform(0.1, max_for_this_gem), 2)
+            
+            if gem_value > 0:
+                gem_price = GEM_PRICES.get(gem_type, 1.0)
+                quantity = max(1, int(gem_value / gem_price))
+                bet_gems[gem_type] = quantity
+                total_value += quantity * gem_price
+                remaining_amount -= quantity * gem_price
+                
+                if remaining_amount <= 0:
+                    break
+        
+        # Создаем игру/ставку
+        game = Game(
+            creator_id=bot.id,
+            creator_type="bot",
+            bet_amount=total_value,
+            bet_gems=bet_gems,
+            status=GameStatus.WAITING,
+            commission=round(total_value * 0.06, 2),
+            bot_type="REGULAR" if bot.type == BotType.REGULAR else "HUMAN"
+        )
+        
+        # Сохраняем в базе данных
+        await db.games.insert_one(game.dict())
+        
+        # Обновляем статистику бота
+        await db.bots.update_one(
+            {"id": bot.id},
+            {
+                "$set": {
+                    "current_bet_id": game.id,
+                    "updated_at": datetime.utcnow()
+                },
+                "$inc": {
+                    "total_bet_amount": total_value
+                }
+            }
+        )
+        
+        logger.info(f"Bot {bot.id} created bet {game.id} for ${total_value}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error creating bot bet: {e}")
+        return False
+
 @api_router.get("/admin/bots/regular/stats", response_model=dict)
 async def get_regular_bots_stats(current_user: User = Depends(get_current_admin)):
     """Get regular bots statistics."""
