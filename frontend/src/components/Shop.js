@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { formatCurrencyWithSymbol } from '../utils/economy';
+import { formatCurrencyWithSymbol, formatDollarAmount, formatGemValue } from '../utils/economy';
 import { useNotifications } from './NotificationContext';
 import { useGems } from './GemsContext';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
