@@ -1,4 +1,16 @@
 backend:
+  - task: "Remove Decimal Places from Gem Values - Application-wide Currency Formatting"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/utils/economy.js, /app/frontend/src/components/MoveSelectionStep.js, /app/frontend/src/components/CreateBet.js, /app/frontend/src/components/Inventory.js, /app/frontend/src/components/Lobby.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED CURRENCY FORMATTING OVERHAUL: Successfully removed decimal places (.00) from all gem value displays across the entire application. Frontend implementation: 1) Updated core economy utility functions in /app/frontend/src/utils/economy.js by changing default showCents parameter from true to false, added Math.floor() rounding for gem values, and created new formatGemValue() and formatInteger() helper functions for consistent integer display. 2) Enhanced MoveSelectionStep.js by replacing custom formatCurrency function to use Math.floor() and remove decimal formatting, ensuring all bet amounts display as whole numbers. 3) Updated CreateBet.js component to use formatGemValue() function for virtual balance, available gems, commission, and total amount displays, removing all .toFixed(2) calls. 4) Modified Inventory.js to use formatGemValue() for gem total calculations and display, ensuring inventory values show as integers without decimals. 5) Updated Lobby.js InfoBlock component to use Math.floor() instead of toFixed(2) for numeric value displays. 6) Applied floor rounding (Math.floor()) as requested to ensure values round down to maintain gem value accuracy. 7) Created formatGemValue() utility that consistently formats gem amounts as '$150' instead of '$150.00' across all components. The changes ensure that all gem-related monetary values throughout Bot Players, Live Players, Shop, Inventory, Create Bet, Join Battle modals, and admin panel sections display as clean integer values without decimal places."
+
   - task: "React Error Fix - Bot Game Joining Error Handling"
     implemented: true
     working: true
