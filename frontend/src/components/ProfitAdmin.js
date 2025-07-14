@@ -309,11 +309,66 @@ const ProfitAdmin = ({ user }) => {
         });
         setModalData([]);
       } else {
-        // Для других типов будем загружать соответствующие данные
-        setModalData([]);
+        // Для других типов загружаем соответствующие данные
+        await loadModalData(type);
       }
     } catch (error) {
       console.error('Error opening modal:', error);
+    }
+  };
+
+  // Функция для загрузки данных для модальных окон
+  const loadModalData = async (type) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      switch (type) {
+        case 'bot_revenue':
+          // Загружаем данные о доходах от ботов
+          const botRevenueResponse = await axios.get(`${API}/admin/profit/bot-revenue-details`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setModalData(botRevenueResponse.data.entries || []);
+          break;
+          
+        case 'frozen_funds':
+          // Загружаем данные о замороженных средствах
+          const frozenFundsResponse = await axios.get(`${API}/admin/profit/frozen-funds-details`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setModalData(frozenFundsResponse.data.entries || []);
+          break;
+          
+        case 'total_revenue':
+          // Загружаем сводку по всем источникам дохода
+          const totalRevenueResponse = await axios.get(`${API}/admin/profit/total-revenue-breakdown`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setModalData(totalRevenueResponse.data.breakdown || []);
+          break;
+          
+        case 'expenses':
+          // Загружаем данные о расходах
+          const expensesResponse = await axios.get(`${API}/admin/profit/expenses-details`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setModalData(expensesResponse.data.entries || []);
+          break;
+          
+        case 'net_profit':
+          // Загружаем данные о чистой прибыли
+          const netProfitResponse = await axios.get(`${API}/admin/profit/net-profit-analysis`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setModalData(netProfitResponse.data.analysis || []);
+          break;
+          
+        default:
+          setModalData([]);
+      }
+    } catch (error) {
+      console.error(`Error loading modal data for ${type}:`, error);
+      setModalData([]);
     }
   };
 
