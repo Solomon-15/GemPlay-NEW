@@ -873,53 +873,185 @@ const UserManagement = ({ user: currentUser }) => {
     );
   };
 
-  const BetsModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-rajdhani text-xl font-bold text-white">🎯 Ставки пользователя - {selectedUser?.username}</h3>
-          <button
-            onClick={() => setIsBetsModalOpen(false)}
-            className="text-gray-400 hover:text-white"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+  const BetsModal = () => {
+    const getStatusBadge = (status) => {
+      const statusMap = {
+        'WAITING': { color: 'bg-yellow-600', text: 'Ожидание' },
+        'ACTIVE': { color: 'bg-blue-600', text: 'Активная' },
+        'REVEAL': { color: 'bg-purple-600', text: 'Раскрытие' },
+        'COMPLETED': { color: 'bg-green-600', text: 'Завершена' },
+        'CANCELLED': { color: 'bg-red-600', text: 'Отменена' }
+      };
+      
+      const statusInfo = statusMap[status] || { color: 'bg-gray-600', text: status };
+      
+      return (
+        <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold ${statusInfo.color}`}>
+          {statusInfo.text}
+        </span>
+      );
+    };
 
-        <div className="space-y-3">
-          {userBets.length === 0 ? (
-            <p className="text-text-secondary text-center py-4">У пользователя нет активных ставок</p>
-          ) : (
-            userBets.map((bet, index) => (
-              <div key={index} className="bg-surface-sidebar rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="text-white font-rajdhani font-bold">Ставка ${bet.amount}</div>
-                    <div className="text-text-secondary text-sm">
-                      Статус: <span className="text-accent-primary">{bet.status}</span>
-                    </div>
-                    <div className="text-text-secondary text-sm">
-                      Создана: {formatDateTime(bet.created_at)}
-                    </div>
-                    {bet.opponent && (
-                      <div className="text-text-secondary text-sm">
-                        Противник: {bet.opponent}
-                      </div>
-                    )}
-                  </div>
-                  <button className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700">
-                    Отменить
-                  </button>
+    const canCancelBet = (bet) => {
+      return bet.status === 'WAITING';
+    };
+
+    const isStuckBet = (bet) => {
+      const betTime = new Date(bet.created_at);
+      const now = new Date();
+      const hoursDiff = (now - betTime) / (1000 * 60 * 60);
+      return hoursDiff > 24 && ['WAITING', 'ACTIVE', 'REVEAL'].includes(bet.status);
+    };
+
+    const hasStuckBets = userBets.some(bet => isStuckBet(bet));
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-rajdhani text-xl font-bold text-white">🎯 Ставки пользователя - {selectedUser?.username}</h3>
+            <button
+              onClick={() => setIsBetsModalOpen(false)}
+              className="text-gray-400 hover:text-white"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Cleanup stuck bets button */}
+          {hasStuckBets && (
+            <div className="mb-4 p-3 bg-yellow-900 border border-yellow-600 rounded-lg">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-yellow-400 font-rajdhani font-bold text-sm">⚠️ Обнаружены зависшие ставки</div>
+                  <div className="text-yellow-300 text-xs">Ставки, находящиеся в состоянии ожидания более 24 часов</div>
                 </div>
+                <button
+                  onClick={cleanupStuckBets}
+                  className="px-4 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 font-rajdhani font-bold transition-colors"
+                >
+                  🧹 Очистить зависшие
+                </button>
               </div>
-            ))
+            </div>
+          )}
+
+          <div className="space-y-3">
+            {userBets.length === 0 ? (
+              <p className="text-text-secondary text-center py-4">У пользователя нет активных ставок</p>
+            ) : (
+              userBets.map((bet, index) => (
+                <div key={index} className={`bg-surface-sidebar rounded-lg p-4 border-l-4 ${
+                  isStuckBet(bet) ? 'border-yellow-500' : 
+                  bet.status === 'WAITING' ? 'border-blue-500' : 
+                  bet.status === 'ACTIVE' ? 'border-green-500' : 'border-gray-500'
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <div className="text-white font-rajdhani font-bold text-lg">
+                          ${bet.amount}
+                        </div>
+                        {getStatusBadge(bet.status)}
+                        {bet.is_creator && (
+                          <span className="px-2 py-1 text-xs rounded-full bg-purple-600 text-white font-rajdhani">
+                            Создатель
+                          </span>
+                        )}
+                        {isStuckBet(bet) && (
+                          <span className="px-2 py-1 text-xs rounded-full bg-yellow-600 text-white font-rajdhani">
+                            ⏰ Зависла
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                        <div className="text-text-secondary">
+                          <span className="text-white">ID:</span> {bet.id}
+                        </div>
+                        <div className="text-text-secondary">
+                          <span className="text-white">Создана:</span> {formatDateTime(bet.created_at)}
+                        </div>
+                        {bet.opponent && (
+                          <div className="text-text-secondary">
+                            <span className="text-white">Противник:</span> {bet.opponent}
+                          </div>
+                        )}
+                        <div className="text-text-secondary">
+                          <span className="text-white">Возраст:</span> {
+                            Math.round((new Date() - new Date(bet.created_at)) / (1000 * 60 * 60))
+                          }ч
+                        </div>
+                      </div>
+
+                      {/* Gems display */}
+                      {bet.gems && Object.keys(bet.gems).length > 0 && (
+                        <div className="mt-2">
+                          <div className="text-text-secondary text-xs mb-1">Ставка:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {Object.entries(bet.gems).map(([gemType, quantity]) => (
+                              quantity > 0 && (
+                                <span key={gemType} className="px-2 py-1 bg-accent-primary bg-opacity-20 text-accent-primary text-xs rounded font-rajdhani">
+                                  {gemType}: {quantity}
+                                </span>
+                              )
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-col space-y-2 ml-4">
+                      {canCancelBet(bet) && (
+                        <button 
+                          onClick={() => cancelUserBet(bet.id)}
+                          className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 font-rajdhani font-bold transition-colors"
+                          title="Отменить ставку"
+                        >
+                          🚫 Отменить
+                        </button>
+                      )}
+                      {!canCancelBet(bet) && (
+                        <span className="px-3 py-1 bg-gray-600 text-gray-300 text-xs rounded font-rajdhani text-center">
+                          Нельзя отменить
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Summary */}
+          {userBets.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-border-primary">
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Всего ставок:</span>
+                <span className="text-white font-rajdhani font-bold">{userBets.length}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Можно отменить:</span>
+                <span className="text-green-400 font-rajdhani font-bold">
+                  {userBets.filter(bet => canCancelBet(bet)).length}
+                </span>
+              </div>
+              {hasStuckBets && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-yellow-400">Зависших:</span>
+                  <span className="text-yellow-400 font-rajdhani font-bold">
+                    {userBets.filter(bet => isStuckBet(bet)).length}
+                  </span>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const InfoModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
