@@ -335,7 +335,10 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                     <div>
                       <h4 className={`font-rajdhani font-bold text-lg ${
-                        activeCategory === key ? `text-${category.color}-400` : 'text-white'
+                        activeCategory === key ? 
+                          (category.color === 'green' ? 'text-green-400' :
+                           category.color === 'blue' ? 'text-blue-400' :
+                           'text-purple-400') : 'text-white'
                       }`}>
                         {category.name}
                       </h4>
