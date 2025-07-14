@@ -167,6 +167,7 @@ const RegularBotsManagement = () => {
       
       if (response.data.success) {
         setGlobalMaxBets(response.data.settings.globalMaxActiveBets);
+        setPriorityType(response.data.settings.priorityType);
       }
     } catch (error) {
       console.error('Ошибка загрузки глобальных настроек ботов:', error);
