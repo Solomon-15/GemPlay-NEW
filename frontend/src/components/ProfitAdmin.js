@@ -2033,6 +2033,23 @@ const ProfitAdmin = ({ user }) => {
                         </div>
                       </div>
 
+                      {/* График чистой прибыли */}
+                      <div className="bg-surface-sidebar rounded-lg p-4 mb-6">
+                        <h5 className="font-rajdhani text-lg font-bold text-emerald-400 mb-4">
+                          💹 Динамика прибыли и расходов
+                        </h5>
+                        <ProfitChart
+                          type="line"
+                          data={generateNetProfitData(activePeriod)}
+                          title={`Анализ прибыли ${
+                            modalData.period === 'day' ? 'за день' :
+                            modalData.period === 'week' ? 'за неделю' :
+                            modalData.period === 'month' ? 'за месяц' :
+                            'за все время'
+                          }`}
+                        />
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-surface-sidebar rounded-lg p-4">
                           <span className="text-sm text-text-secondary">Общая прибыль:</span>
