@@ -1005,6 +1005,107 @@ const ProfitAdmin = ({ user }) => {
           ✓ ID скопирован в буфер обмена
         </div>
       )}
+
+      {/* Модальное окно для настройки расходов */}
+      {showExpensesModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-red-500 border-opacity-50 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-red-400">Настройка расходов</h3>
+              <button
+                onClick={() => setShowExpensesModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-white font-bold mb-2">Процент от общей прибыли (%)</label>
+                <input
+                  type="number"
+                  value={expensesSettings.percentage}
+                  onChange={(e) => setExpensesSettings(prev => ({ ...prev, percentage: parseInt(e.target.value) || 0 }))}
+                  className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-2 text-white"
+                  min="0"
+                  max="100"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-white font-bold mb-2">Дополнительные расходы ($)</label>
+                <input
+                  type="number"
+                  value={expensesSettings.manual_amount}
+                  onChange={(e) => setExpensesSettings(prev => ({ ...prev, manual_amount: parseFloat(e.target.value) || 0 }))}
+                  className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-2 text-white"
+                  step="0.01"
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowExpensesModal(false)}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded font-bold"
+                >
+                  Сохранить
+                </button>
+                <button
+                  onClick={() => {
+                    setExpensesSettings({ percentage: 60, manual_amount: 0 });
+                    setShowExpensesModal(false);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded"
+                >
+                  Сбросить
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Универсальное модальное окно для детализации */}
+      {activeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-50 rounded-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-border-primary">
+              <h3 className="font-rajdhani text-xl font-bold text-white">
+                Детализация: {getModalTitle(activeModal)}
+              </h3>
+              <button
+                onClick={() => setActiveModal(null)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+              <div className="text-center text-text-secondary py-8">
+                <div className="text-4xl mb-4">📊</div>
+                <h4 className="font-rajdhani text-lg font-bold mb-2">Детализация в разработке</h4>
+                <p>Здесь будет отображаться подробная информация о {getModalTitle(activeModal)}</p>
+                <p className="text-sm mt-2">История операций, графики и аналитика</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end p-6 border-t border-border-primary">
+              <button
+                onClick={() => setActiveModal(null)}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
