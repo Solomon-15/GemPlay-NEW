@@ -117,6 +117,21 @@ class BotSettings(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Bot Settings Request model
+class BotSettingsRequest(BaseModel):
+    globalMaxActiveBets: int = Field(ge=1, le=200)
+    globalMaxHumanBots: int = Field(ge=1, le=100)
+    paginationSize: int = Field(ge=5, le=50)
+    autoActivateFromQueue: bool = True
+    priorityType: str = Field(default="order")  # 'order' or 'manual'
+
+# Bot Queue Stats model
+class BotQueueStats(BaseModel):
+    totalActiveRegularBets: int = 0
+    totalQueuedBets: int = 0
+    totalRegularBots: int = 0
+    totalHumanBots: int = 0
+
 # Bot model
 class Bot(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
