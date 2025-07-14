@@ -5,6 +5,7 @@ import ProfitAdmin from './ProfitAdmin';
 import BetsManagement from './BetsManagement';
 import RegularBotsManagement from './RegularBotsManagement';
 import HumanBotsManagement from './HumanBotsManagement';
+import BotSettings from './BotSettings';
 import NotificationContainer from './NotificationContainer';
 import { useNotifications } from './NotificationContext';
 
