@@ -196,7 +196,7 @@ const GiftConfirmationModal = ({
             
             <div className="flex justify-between">
               <span className="text-text-secondary">Commission (3%):</span>
-              <span className="text-orange-400 font-medium">-${commission.toFixed(2)}</span>
+              <span className="text-orange-400 font-medium">-{formatDollarAmount(commission)}</span>
             </div>
             
             <div className="border-t border-border-primary pt-2 mt-2">
