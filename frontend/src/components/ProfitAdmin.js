@@ -375,7 +375,7 @@ const ProfitAdmin = ({ user }) => {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
               <div className="flex items-center space-x-4">
                 <h3 className="font-rajdhani text-lg font-bold text-white">
-                  {categories[activeCategory].icon} {categories[activeCategory].name}
+                  {categories[activeCategory]?.icon || '📊'} {categories[activeCategory]?.name || 'Неизвестная категория'}
                 </h3>
                 <span className={`px-2 py-1 text-xs rounded-full font-bold ${getCategoryBadgeColor(activeCategory)} text-white`}>
                   {entries.length} записей
