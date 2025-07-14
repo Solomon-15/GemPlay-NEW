@@ -786,6 +786,18 @@ frontend:
         comment: "COMPREHENSIVE REAL-TIME LOBBY UPDATES TESTING COMPLETED: Successfully tested the complete automatic real-time Lobby updates system as requested in the Russian review request. CRITICAL FINDINGS: ✅ 1. LOGIN SUCCESSFUL - Successfully logged in as admin@gemplay.com with Admin123! credentials. ✅ 2. BASELINE STATE CAPTURED - Available: $1634.66, Gems: $4820.00, My Bets count: 0 (no active bets). ✅ 3. BET CREATION FLOW WORKING - Successfully created $25 bet using Smart strategy with Ruby (10) and Topaz (5) gems, Rock move selected, bet creation completed via JavaScript click. ✅ 4. CRITICAL SUCCESS: AUTOMATIC LOBBY UPDATES AFTER BET CREATION - Console logs confirm: '🔄 Lobby auto-refresh triggered by operation' and '🎮 Bet created - triggering lobby refresh', new game ID appeared (acb5d89a-9511-40a5-9834-5001b57814f0), Live Players count changed from 1 to 2, My Bets section immediately showed new bet with $25.00 amount and Cancel button, success notification displayed: 'Bet created! $1.50 (6%) frozen until game completion.', gems properly frozen (Ruby: 10 Frozen, Topaz: 5 Frozen). ✅ 5. BET CANCELLATION FLOW WORKING - Successfully cancelled the created bet, console logs confirm: 'Cancel bet response: {success: true, message: Game cancelled successfully, gems_returned: Object, commission_returned: 1.5}'. ✅ 6. CRITICAL SUCCESS: AUTOMATIC LOBBY UPDATES AFTER BET CANCELLATION - Console logs confirm: '🔄 Lobby auto-refresh triggered by operation' and '❌ Bet cancelled - triggering lobby refresh', My Bets section immediately returned to 'You have no active bets', Live Players count restored to 1, success notification displayed: 'Bet cancelled successfully', frozen gems status removed (no more 'Frozen' indicators). ✅ 7. REAL-TIME SYNCHRONIZATION VERIFIED - All updates happen instantly without page reload, proper use of global lobby refresh system (getGlobalLobbyRefresh().triggerLobbyRefresh()), automatic updates in My Bets section, Live Players count, gem freezing status, and user notifications. ✅ 8. BALANCE AND GEM MANAGEMENT WORKING - Gems properly frozen during active bets, commission correctly calculated and displayed ($1.50 for $25 bet = 6%), all frozen assets restored after cancellation. The automatic real-time Lobby updates system is FULLY FUNCTIONAL and meets all requirements from the Russian review request. The system correctly provides instant updates without manual refresh, proper synchronization between different sections, and maintains data integrity throughout the bet lifecycle."
 
 frontend:
+  - task: "Profit Admin Currency Format Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/ProfitAdmin.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "PROFIT ADMIN CURRENCY FORMAT SUCCESSFULLY FIXED: Updated all monetary displays in the Profit section of admin panel to show proper dollar format (123.12) with cents. Changes applied to: All main statistics blocks (Bet Commission, Gift Commission, Bot Revenue, Frozen Funds, Total Profit, Total Expenses, Net Profit), Periodic statistics (Today, Week, Month profit), Entry amounts in history table (both desktop and mobile views), CSV export format (now shows amounts with 2 decimal places). All formatCurrencyWithSymbol() calls now include showCents=true parameter to display decimal places. This ensures consistent dollar formatting for all virtual balance fields, commissions, and bot revenues as requested."
+
   - task: "Admin Panel Reset Functions Implementation"
     implemented: true
     working: true
