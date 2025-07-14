@@ -1,4 +1,16 @@
 backend:
+  - task: "Dynamic Bot Bet Calculation and Management System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/frontend/src/components/RegularBotsManagement.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED DYNAMIC BOT BET CALCULATION: Successfully implemented comprehensive dynamic bet calculation system for bots based on cycle parameters. Backend implementation: 1) Created POST /api/admin/bots/{bot_id}/recalculate-bets endpoint that generates optimized bet structure based on bot's cycle parameters (win percentage, cycle length, total amount, min/max bet range). 2) Enhanced PUT /api/admin/bots/{bot_id} endpoint to automatically recalculate bets when cycle parameters change. 3) Implemented generate_bot_cycle_bets algorithm that distributes cycle total amount across cycle length with proper min/max constraints, randomly assigns win/lose outcomes according to win percentage, and creates actual game entries with metadata. 4) Added validation and error handling for parameter constraints. Frontend implementation: 1) Added manual recalculate button (🔄) in bot Actions column for immediate bet recalculation. 2) Added recalculate button in bot settings modal for convenient access during parameter editing. 3) Integrated with existing editable parameters: % Выигрыша, Цикл, Сумма за цикл, Мин/Макс ставка. 4) Added real-time feedback showing number of generated bets and success messages. 5) Automatic recalculation occurs when saving parameter changes in modal. System features: Dynamic calculation ensures total bet amount equals cycle amount, proper distribution within min/max bet constraints, realistic win/loss ratio based on target percentage, and immediate reflection in Active Bets column with purple-colored recalculate buttons for clear UI distinction."
+
   - task: "Bot Games Integration in Bot Players Section"
     implemented: true
     working: true
