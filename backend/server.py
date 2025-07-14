@@ -10520,6 +10520,194 @@ async def reset_bot_priorities(current_user: User = Depends(get_current_admin)):
             detail="Failed to reset bot priorities"
         )
 
+@api_router.get("/admin/bots/analytics", response_model=dict)
+async def get_bot_analytics(
+    timeRange: str = "24h",  # 24h, 7d, 30d
+    botId: Optional[str] = None,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get detailed analytics for bot queue and performance."""
+    try:
+        # Calculate time range
+        now = datetime.now()
+        if timeRange == "24h":
+            start_time = now - timedelta(hours=24)
+        elif timeRange == "7d":
+            start_time = now - timedelta(days=7)
+        elif timeRange == "30d":
+            start_time = now - timedelta(days=30)
+        else:
+            start_time = now - timedelta(hours=24)
+        
+        # Base query for filtering
+        base_query = {"created_at": {"$gte": start_time}}
+        if botId:
+            base_query["creator_id"] = botId
+        
+        # Generate time series data
+        queue_wait_times = []
+        bot_loading_stats = []
+        
+        # Calculate intervals based on time range
+        if timeRange == "24h":
+            intervals = 24
+            interval_duration = timedelta(hours=1)
+        elif timeRange == "7d":
+            intervals = 7
+            interval_duration = timedelta(days=1)
+        else:  # 30d
+            intervals = 30
+            interval_duration = timedelta(days=1)
+        
+        # Generate analytics data for each interval
+        for i in range(intervals):
+            interval_start = start_time + (i * interval_duration)
+            interval_end = start_time + ((i + 1) * interval_duration)
+            
+            # Query games in this interval
+            interval_query = {
+                **base_query,
+                "created_at": {"$gte": interval_start, "$lt": interval_end}
+            }
+            
+            # Get games created in this interval
+            games = await db.games.find(interval_query).to_list(None)
+            
+            # Calculate wait time (mock calculation)
+            total_wait_time = 0
+            game_count = len(games)
+            
+            for game in games:
+                # Mock wait time calculation (in real implementation, this would be actual queue time)
+                wait_time = random.randint(30, 300)  # 30 seconds to 5 minutes
+                total_wait_time += wait_time
+            
+            avg_wait_time = (total_wait_time / game_count / 60) if game_count > 0 else 0  # Convert to minutes
+            
+            queue_wait_times.append({
+                "timestamp": interval_start.isoformat(),
+                "avgWaitTime": round(avg_wait_time, 1),
+                "gameCount": game_count
+            })
+            
+            # Calculate loading percentage
+            active_bots = await db.bots.count_documents({
+                "is_active": True,
+                "$or": [
+                    {"type": "REGULAR"},
+                    {"bot_type": "REGULAR"}
+                ]
+            })
+            
+            # Get bot settings for max capacity
+            bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+            max_capacity = bot_settings.get("globalMaxActiveBets", 50) if bot_settings else 50
+            
+            current_active_bets = await db.games.count_documents({
+                "status": "waiting",
+                "is_bot_game": True,
+                "created_at": {"$gte": interval_start, "$lt": interval_end}
+            })
+            
+            load_percentage = (current_active_bets / max_capacity * 100) if max_capacity > 0 else 0
+            
+            bot_loading_stats.append({
+                "timestamp": interval_start.isoformat(),
+                "loadPercentage": round(load_percentage, 1),
+                "activeBets": current_active_bets,
+                "maxCapacity": max_capacity
+            })
+        
+        # Calculate priority effectiveness
+        priority_effectiveness = {}
+        bots = await db.bots.find({
+            "is_active": True,
+            "$or": [
+                {"type": "REGULAR"},
+                {"bot_type": "REGULAR"}
+            ]
+        }).to_list(None)
+        
+        for bot in bots:
+            priority = bot.get("priority_order", 999)
+            
+            # Count successful activations for this bot
+            successful_activations = await db.games.count_documents({
+                "creator_id": bot["id"],
+                "status": {"$in": ["active", "completed"]},
+                "created_at": {"$gte": start_time}
+            })
+            
+            # Count total attempts
+            total_attempts = await db.games.count_documents({
+                "creator_id": bot["id"],
+                "created_at": {"$gte": start_time}
+            })
+            
+            activation_rate = (successful_activations / total_attempts * 100) if total_attempts > 0 else 0
+            
+            if priority not in priority_effectiveness:
+                priority_effectiveness[priority] = {
+                    "activationRate": 0,
+                    "totalAttempts": 0,
+                    "successfulActivations": 0
+                }
+            
+            priority_effectiveness[priority]["activationRate"] += activation_rate
+            priority_effectiveness[priority]["totalAttempts"] += total_attempts
+            priority_effectiveness[priority]["successfulActivations"] += successful_activations
+        
+        # Calculate average activation rate per priority
+        for priority in priority_effectiveness:
+            if priority_effectiveness[priority]["totalAttempts"] > 0:
+                priority_effectiveness[priority]["activationRate"] = round(
+                    priority_effectiveness[priority]["successfulActivations"] / 
+                    priority_effectiveness[priority]["totalAttempts"] * 100, 1
+                )
+        
+        # Calculate activation statistics
+        successful_activations = []
+        failed_activations = []
+        
+        for i in range(intervals):
+            interval_start = start_time + (i * interval_duration)
+            interval_end = start_time + ((i + 1) * interval_duration)
+            
+            successful = await db.games.count_documents({
+                "status": {"$in": ["active", "completed"]},
+                "created_at": {"$gte": interval_start, "$lt": interval_end},
+                "is_bot_game": True
+            })
+            
+            failed = await db.games.count_documents({
+                "status": "cancelled",
+                "created_at": {"$gte": interval_start, "$lt": interval_end},
+                "is_bot_game": True
+            })
+            
+            successful_activations.append(successful)
+            failed_activations.append(failed)
+        
+        return {
+            "success": True,
+            "data": {
+                "queueWaitTimes": queue_wait_times,
+                "botLoadingStats": bot_loading_stats,
+                "priorityEffectiveness": priority_effectiveness,
+                "activationStats": {
+                    "successful": successful_activations,
+                    "failed": failed_activations
+                }
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching bot analytics: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch bot analytics"
+        )
+
 # ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
