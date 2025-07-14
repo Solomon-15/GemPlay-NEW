@@ -224,7 +224,7 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Комиссия от подарков</h3>
-                  <p className="font-russo text-2xl font-bold text-purple-400">{formatCurrencyWithSymbol(stats.gift_commission || 0)}</p>
+                  <p className="font-russo text-2xl font-bold text-purple-400">{formatCurrencyWithSymbol(stats.gift_commission || 0, true)}</p>
                   <p className="text-xs text-text-secondary mt-1">3% за передачу гемов</p>
                 </div>
               </div>
