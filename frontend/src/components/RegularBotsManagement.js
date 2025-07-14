@@ -116,13 +116,36 @@ const RegularBotsManagement = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      showSuccessRU(response.data.message);
-      await fetchStats(); // Refresh stats
+      if (response.data.limit_reached) {
+        showErrorRU(`Лимит активных ставок достигнут: ${response.data.current_active_bets}/${response.data.max_active_bets}`);
+      } else {
+        showSuccessRU(response.data.message);
+      }
+      
+      await fetchStats();
+      await fetchActiveBetsStats();
     } catch (error) {
       console.error('Ошибка запуска ботов:', error);
       showErrorRU('Ошибка при запуске ботов');
     } finally {
       setStartingBots(false);
+    }
+  };
+
+  const updateBotSettings = async (newSettings) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/settings`, newSettings, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setBotSettings(newSettings);
+      setIsGlobalSettingsOpen(false);
+      showSuccessRU(response.data.message);
+      await fetchActiveBetsStats();
+    } catch (error) {
+      console.error('Ошибка обновления настроек:', error);
+      showErrorRU('Ошибка при обновлении настроек');
     }
   };
 
