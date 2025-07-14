@@ -218,6 +218,51 @@ const RegularBotsManagement = () => {
     setIsSettingsModalOpen(true);
   };
 
+  const handleEditModal = async (bot) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bots/${bot.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Set editing bot with all saved parameters
+      setEditingBot({
+        id: bot.id,
+        name: response.data.bot.name || '',
+        pause_timer: response.data.bot.pause_timer || 5,
+        recreate_timer: response.data.bot.recreate_timer || 30,
+        cycle_games: response.data.bot.cycle_games || 12,
+        cycle_total_amount: response.data.bot.cycle_total_amount || 500,
+        win_percentage: response.data.bot.win_percentage || 60,
+        min_bet_amount: response.data.bot.min_bet_amount || 1,
+        max_bet_amount: response.data.bot.max_bet_amount || 100,
+        can_accept_bets: response.data.bot.can_accept_bets || false,
+        can_play_with_bots: response.data.bot.can_play_with_bots || false
+      });
+      setIsEditModalOpen(true);
+    } catch (error) {
+      console.error('Ошибка загрузки данных бота:', error);
+      showErrorRU('Ошибка при загрузке данных бота');
+    }
+  };
+
+  const updateBotSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(`${API}/admin/bots/${editingBot.id}`, editingBot, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      showSuccessRU(response.data.message);
+      setIsEditModalOpen(false);
+      setEditingBot(null);
+      await fetchBotsList();
+    } catch (error) {
+      console.error('Ошибка обновления настроек бота:', error);
+      showErrorRU('Ошибка при обновлении настроек бота');
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU');
   };
