@@ -331,182 +331,258 @@ const ProfitAdmin = ({ user }) => {
       {/* History Tab */}
       {activeTab === 'history' && (
         <div className="space-y-6">
-          {/* Категории транзакций */}
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-            <h3 className="font-rajdhani text-xl font-bold text-white mb-6">Категории транзакций</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.entries(categories).map(([key, category]) => (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setActiveCategory(key);
-                    if (pagination.handlePageChange) {
-                      pagination.handlePageChange(1);
-                    }
-                  }}
-                  className={`p-6 rounded-lg border-2 transition-all duration-200 text-left hover:scale-105 ${
-                    activeCategory === key
-                      ? (category.color === 'green' ? 'border-green-500 bg-green-500/10' :
-                         category.color === 'blue' ? 'border-blue-500 bg-blue-500/10' :
-                         'border-purple-500 bg-purple-500/10')
-                      : 'border-border-primary hover:border-accent-primary'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className={`p-3 rounded-lg ${getCategoryBadgeOpacity(key)}`}>
-                      <span className="text-2xl">{category.icon}</span>
-                    </div>
-                    <div>
-                      <h4 className={`font-rajdhani font-bold text-lg ${
-                        activeCategory === key ? 
-                          (category.color === 'green' ? 'text-green-400' :
-                           category.color === 'blue' ? 'text-blue-400' :
-                           'text-purple-400') : 'text-white'
-                      }`}>
-                        {category.name}
-                      </h4>
-                    </div>
-                  </div>
-                  <p className="text-text-secondary text-sm">{category.description}</p>
-                  
-                  <div className={`mt-3 text-xs font-bold ${
-                    activeCategory === key ? 
-                      (category.color === 'green' ? 'text-green-400' :
-                       category.color === 'blue' ? 'text-blue-400' :
-                       'text-purple-400') : 'text-accent-primary'
-                  }`}>
-                    {activeCategory === key ? `${entries.length} записей` : 'Нажмите для просмотра'}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Фильтры и сортировка */}
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-              <div className="flex items-center space-x-4">
-                <h3 className="font-rajdhani text-lg font-bold text-white">
-                  {categories[activeCategory]?.icon || '📊'} {categories[activeCategory]?.name || 'Неизвестная категория'}
-                </h3>
-                <span className={`px-2 py-1 text-xs rounded-full font-bold ${getCategoryBadgeColor(activeCategory)} text-white`}>
-                  {entries.length} записей
-                </span>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
-                <div className="flex space-x-2">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
-                  >
-                    <option value="date">По дате</option>
-                    <option value="amount">По сумме</option>
-                    <option value="source">По источнику</option>
-                  </select>
-                  
+          {/* Tabbed Interface для категорий */}
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
+            {/* Табы */}
+            <div className="border-b border-border-primary bg-surface-sidebar">
+              <div className="flex">
+                {Object.entries(categories).map(([key, category]) => (
                   <button
-                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    className="px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white hover:bg-surface-card transition-colors"
-                    title={sortOrder === 'asc' ? 'По возрастанию' : 'По убыванию'}
+                    key={key}
+                    onClick={() => {
+                      setActiveCategory(key);
+                      if (pagination.handlePageChange) {
+                        pagination.handlePageChange(1);
+                      }
+                    }}
+                    className={`px-6 py-4 font-rajdhani font-bold text-sm transition-all duration-200 border-b-2 flex items-center space-x-2 ${
+                      activeCategory === key
+                        ? (category.color === 'green' ? 'border-green-500 bg-green-500/10 text-green-400' :
+                           category.color === 'blue' ? 'border-blue-500 bg-blue-500/10 text-blue-400' :
+                           'border-purple-500 bg-purple-500/10 text-purple-400')
+                        : 'border-transparent text-text-secondary hover:text-white hover:bg-surface-card'
+                    }`}
                   >
-                    {sortOrder === 'asc' ? '↑' : '↓'}
+                    <span className="text-lg">{category.icon}</span>
+                    <span>{category.name}</span>
+                    <span className={`px-2 py-1 text-xs rounded-full font-bold ${
+                      activeCategory === key 
+                        ? 'bg-white/20 text-white' 
+                        : 'bg-surface-card text-text-secondary'
+                    }`}>
+                      {activeCategory === key ? entries.length : '•'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Фильтры и управление */}
+            <div className="p-4 bg-surface-sidebar border-b border-border-primary">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
+                <div className="flex items-center space-x-3">
+                  <h3 className="font-rajdhani text-lg font-bold text-white">
+                    {categories[activeCategory]?.name || 'Неизвестная категория'}
+                  </h3>
+                  <span className="text-text-secondary text-sm">
+                    ({entries.length} записей)
+                  </span>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Сортировка */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-text-secondary text-sm">Сортировка:</span>
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="bg-surface-card border border-border-primary rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                    >
+                      <option value="date">По дате</option>
+                      <option value="amount">По сумме</option>
+                      <option value="source">По источнику</option>
+                    </select>
+                    
+                    <button
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                      className="px-2 py-1 bg-surface-card border border-border-primary rounded text-white hover:bg-surface-sidebar transition-colors text-sm"
+                      title={sortOrder === 'asc' ? 'По возрастанию' : 'По убыванию'}
+                    >
+                      {sortOrder === 'asc' ? '↑' : '↓'}
+                    </button>
+                  </div>
+                  
+                  {/* Фильтры по дате */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-text-secondary text-sm">Период:</span>
+                    <input
+                      type="date"
+                      value={dateFilter.from}
+                      onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
+                      className="bg-surface-card border border-border-primary rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                    />
+                    <span className="text-text-secondary">—</span>
+                    <input
+                      type="date"
+                      value={dateFilter.to}
+                      onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
+                      className="bg-surface-card border border-border-primary rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                  
+                  {/* Экспорт */}
+                  <button
+                    onClick={exportToCSV}
+                    className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded text-sm transition-colors"
+                  >
+                    📥 CSV
                   </button>
                 </div>
-                
-                <div className="flex space-x-2">
-                  <input
-                    type="date"
-                    value={dateFilter.from}
-                    onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
-                    className="bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
-                    placeholder="От"
-                  />
-                  <input
-                    type="date"
-                    value={dateFilter.to}
-                    onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
-                    className="bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
-                    placeholder="До"
-                  />
-                </div>
-                
-                <button
-                  onClick={exportToCSV}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-colors text-sm"
-                >
-                  📥 CSV
-                </button>
               </div>
             </div>
-          </div>
 
-          {/* Компактные карточки транзакций */}
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
-            <div className="space-y-2 p-4">
+            {/* Таблица транзакций */}
+            <div className="overflow-hidden">
               {entries.length === 0 ? (
-                <div className="text-center py-12">
+                <div className="text-center py-16">
                   <div className="text-6xl mb-4">{categories[activeCategory]?.icon || '📊'}</div>
                   <h4 className="font-rajdhani text-xl font-bold text-white mb-2">Нет транзакций</h4>
                   <p className="text-text-secondary">В категории "{categories[activeCategory]?.name || 'Неизвестная категория'}" пока нет данных</p>
+                  <p className="text-text-secondary text-sm mt-2">Попробуйте изменить фильтры или период</p>
                 </div>
               ) : (
-                entries.map((entry, index) => {
-                  const { date, time } = formatDateTime(entry.created_at);
-                  const currentCategory = categories[activeCategory] || { color: 'gray' };
-                  return (
-                    <div key={index} className="bg-surface-sidebar rounded-lg p-4 border border-border-primary hover:border-accent-primary transition-all duration-200 hover:shadow-lg">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4 flex-1">
-                          <div className={`w-3 h-12 rounded-full ${getCategoryBadgeColor(activeCategory)}`}></div>
+                <>
+                  {/* Desktop Table */}
+                  <div className="hidden lg:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-surface-sidebar">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">ID</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата и время</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Сумма</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Тип действия</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Игрок</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Описание</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border-primary">
+                        {entries.map((entry, index) => {
+                          const { date, time } = formatDateTime(entry.created_at);
+                          const currentCategory = categories[activeCategory] || { color: 'gray' };
+                          return (
+                            <tr key={index} className="hover:bg-surface-sidebar transition-colors">
+                              <td className="px-4 py-3">
+                                <button
+                                  onClick={() => copyToClipboard(entry.id)}
+                                  onMouseEnter={(e) => showTooltip(e, entry.id)}
+                                  onMouseLeave={hideTooltip}
+                                  className="p-2 bg-surface-card border border-border-primary rounded hover:border-accent-primary transition-colors group"
+                                  title="Нажмите чтобы скопировать ID"
+                                >
+                                  <svg className="w-4 h-4 text-accent-primary group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                </button>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-rajdhani font-bold text-white">{date}</div>
+                                <div className="text-xs text-text-secondary">{time}</div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`text-lg font-bold font-russo ${
+                                  currentCategory.color === 'green' ? 'text-green-400' : 
+                                  currentCategory.color === 'blue' ? 'text-blue-400' : 
+                                  currentCategory.color === 'purple' ? 'text-purple-400' : 'text-gray-400'
+                                }`}>
+                                  {formatCurrencyWithSymbol(entry.amount, true)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                  currentCategory.color === 'green' ? 'bg-green-100 text-green-800' :
+                                  currentCategory.color === 'blue' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-purple-100 text-purple-800'
+                                }`}>
+                                  {getActionType(entry, activeCategory)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm text-white">
+                                  {getPlayerInfo(entry)}
+                                </div>
+                                {entry.source_user_id && (
+                                  <div className="text-xs text-accent-primary font-mono">
+                                    ID: {entry.source_user_id.substring(0, 8)}...
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-sm text-text-secondary max-w-xs">
+                                <div className="truncate" title={entry.description}>
+                                  {entry.description || '—'}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="lg:hidden space-y-3 p-4">
+                    {entries.map((entry, index) => {
+                      const { date, time } = formatDateTime(entry.created_at);
+                      const currentCategory = categories[activeCategory] || { color: 'gray' };
+                      return (
+                        <div key={index} className="bg-surface-sidebar rounded-lg p-4 border border-border-primary">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center space-x-3">
+                              <button
+                                onClick={() => copyToClipboard(entry.id)}
+                                className="p-2 bg-surface-card border border-border-primary rounded hover:border-accent-primary transition-colors"
+                                title="Скопировать ID"
+                              >
+                                <svg className="w-4 h-4 text-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                              <div>
+                                <div className="text-sm font-rajdhani font-bold text-white">{date}</div>
+                                <div className="text-xs text-text-secondary">{time}</div>
+                              </div>
+                            </div>
+                            <div className={`text-lg font-bold font-russo ${
+                              currentCategory.color === 'green' ? 'text-green-400' : 
+                              currentCategory.color === 'blue' ? 'text-blue-400' : 
+                              currentCategory.color === 'purple' ? 'text-purple-400' : 'text-gray-400'
+                            }`}>
+                              {formatCurrencyWithSymbol(entry.amount, true)}
+                            </div>
+                          </div>
                           
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-1">
-                              <div className="text-white font-rajdhani font-bold">
-                                {date} {time}
-                              </div>
-                              <div className="text-xs text-text-secondary font-mono">
-                                #TX-{entry.id?.substring(0, 6) || 'XXXXXX'}
-                              </div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-text-secondary">Тип действия:</span>
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                currentCategory.color === 'green' ? 'bg-green-100 text-green-800' :
+                                currentCategory.color === 'blue' ? 'bg-blue-100 text-blue-800' :
+                                'bg-purple-100 text-purple-800'
+                              }`}>
+                                {getActionType(entry, activeCategory)}
+                              </span>
                             </div>
-                            
-                            <div className="text-sm text-text-secondary">
-                              {entry.description || 'Описание отсутствует'}
+                            <div className="flex justify-between">
+                              <span className="text-text-secondary">Игрок:</span>
+                              <span className="text-white">{getPlayerInfo(entry)}</span>
                             </div>
-                            
-                            {entry.source && (
-                              <div className="text-xs text-accent-primary mt-1">
-                                Источник: {entry.source}
+                            {entry.description && (
+                              <div>
+                                <span className="text-text-secondary">Описание:</span>
+                                <div className="text-white text-xs mt-1">{entry.description}</div>
                               </div>
                             )}
                           </div>
                         </div>
-                        
-                        <div className="text-right">
-                          <div className={`text-2xl font-bold font-russo ${
-                            currentCategory.color === 'green' ? 'text-green-400' : 
-                            currentCategory.color === 'blue' ? 'text-blue-400' : 
-                            currentCategory.color === 'purple' ? 'text-purple-400' : 'text-gray-400'
-                          }`}>
-                            {formatCurrencyWithSymbol(entry.amount, true)}
-                          </div>
-                          {entry.source_user_id && (
-                            <div className="text-xs text-text-secondary font-mono">
-                              ID: {entry.source_user_id.substring(0, 8)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
             
+            {/* Пагинация */}
             {pagination.totalPages > 1 && pagination.handlePageChange && (
-              <div className="border-t border-border-primary p-4">
+              <div className="border-t border-border-primary p-4 bg-surface-sidebar">
                 <Pagination
                   currentPage={pagination.currentPage}
                   totalPages={pagination.totalPages}
