@@ -342,8 +342,8 @@ const ProfitAdmin = ({ user }) => {
           break;
           
         case 'frozen_funds':
-          // Загружаем данные о замороженных средствах (period не применим)
-          const frozenFundsResponse = await axios.get(`${API}/admin/profit/frozen-funds-details`, {
+          // Загружаем данные о замороженных средствах
+          const frozenFundsResponse = await axios.get(`${API}/admin/profit/frozen-funds-details?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setModalData(frozenFundsResponse.data);
