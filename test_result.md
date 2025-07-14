@@ -1,4 +1,16 @@
 backend:
+  - task: "Bot Games Integration in Bot Players Section"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/frontend/src/components/Lobby.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED BOT PLAYERS SECTION INTEGRATION: Successfully implemented display of real active bot games in the Bot Players section of the Game Lobby. Backend implementation: 1) Created new API endpoint GET /api/bots/active-games that fetches all active games created by bots with status WAITING. 2) Enhanced data structure to include bot information (name, type, avatar) and complete game details (bet amount, gems, creation time). 3) Maintained existing GET /api/bots/active endpoint for general bot information. Frontend implementation: 1) Updated Lobby.js to use new /api/bots/active-games endpoint instead of creating fake bot entries. 2) Modified Available Bots section to display real active bot games with correct bet amounts and gem combinations. 3) Maintained existing logic for Ongoing Bot Battles section that shows user's active games with bots. 4) Fixed data flow: Available Bots now shows WAITING bot games that players can join, and when joined they move to Ongoing Bot Battles section. 5) Preserved existing game join functionality and UI components. The system now correctly displays actual bot-created games in the lobby instead of placeholder data, providing authentic gameplay experience."
+
   - task: "Added Target Win Percentage Column and Header Styling"
     implemented: true
     working: true
