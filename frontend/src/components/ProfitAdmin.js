@@ -403,7 +403,7 @@ const ProfitAdmin = ({ user }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             
             {/* Комиссия от ставок */}
-            <div className="bg-surface-card border border-green-500/30 rounded-lg p-6 hover:border-green-500/60 transition-colors duration-200 shadow-lg">
+            <div className="bg-surface-card border border-green-500/30 rounded-lg p-6 hover:border-green-500/60 transition-colors duration-200 shadow-lg cursor-pointer" onClick={() => openModal('bet_commission')}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
@@ -421,7 +421,7 @@ const ProfitAdmin = ({ user }) => {
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Комиссия от ставок</h3>
                   <p className="font-russo text-2xl font-bold text-green-400">{formatCurrencyWithSymbol(stats.bet_commission || 0, true)}</p>
                   <p className="text-xs text-text-secondary mt-1">3% от выигрыша в PvP-играх</p>
-                  <p className="text-xs text-green-300 mt-1">Обновляется при завершении ставок</p>
+                  <p className="text-xs text-green-300 mt-1">Клик для детализации</p>
                 </div>
               </div>
             </div>
