@@ -345,85 +345,273 @@ const ProfitAdmin = ({ user }) => {
         </div>
       )}
 
-      {/* Entries Tab */}
-      {activeTab === 'entries' && (
-        <div className="space-y-4">
-          {/* Filter */}
-          <div className="flex items-center space-x-4">
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="bg-surface-card border border-border-primary rounded-lg px-4 py-2 text-white"
-            >
-              <option value="">Все типы</option>
-              <option value="game_commission">Комиссия с игр</option>
-              <option value="shop_sale">Продажи магазина</option>
-              <option value="penalty">Штрафы</option>
-              <option value="refund">Возвраты</option>
-              <option value="other">Прочее</option>
-            </select>
+      {/* History Tab */}
+      {activeTab === 'history' && (
+        <div className="space-y-6">
+          {/* Filters and Export */}
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+            <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Фильтры и экспорт</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              {/* Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Тип операции
+                </label>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                >
+                  <option value="">Все типы</option>
+                  <option value="bet_commission">💰 Комиссия от ставок</option>
+                  <option value="gift_commission">🎁 Комиссия от подарков</option>
+                  <option value="bot_profit">🤖 Доход от ботов</option>
+                  <option value="human_bot_profit">🤖 Доход от Human ботов</option>
+                  <option value="penalty">🚨 Штрафы и удержания</option>
+                  <option value="refund">🔄 Возвраты средств</option>
+                  <option value="system_credit">⚙️ Системные начисления</option>
+                  <option value="other">📊 Прочее</option>
+                </select>
+              </div>
+
+              {/* Date From */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Дата от
+                </label>
+                <input
+                  type="date"
+                  value={dateFilter.from}
+                  onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
+                  className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+
+              {/* Date To */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Дата до
+                </label>
+                <input
+                  type="date"
+                  value={dateFilter.to}
+                  onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
+                  className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+
+              {/* Export Button */}
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Экспорт данных
+                </label>
+                <button
+                  onClick={exportToCSV}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                >
+                  📥 Экспорт CSV
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Filter Buttons */}
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  const today = new Date().toISOString().split('T')[0];
+                  setDateFilter({ from: today, to: today });
+                }}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+              >
+                Сегодня
+              </button>
+              <button
+                onClick={() => {
+                  const today = new Date();
+                  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                  setDateFilter({ 
+                    from: weekAgo.toISOString().split('T')[0], 
+                    to: today.toISOString().split('T')[0] 
+                  });
+                }}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+              >
+                Неделя
+              </button>
+              <button
+                onClick={() => {
+                  const today = new Date();
+                  const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+                  setDateFilter({ 
+                    from: monthAgo.toISOString().split('T')[0], 
+                    to: today.toISOString().split('T')[0] 
+                  });
+                }}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+              >
+                Месяц
+              </button>
+              <button
+                onClick={() => setDateFilter({ from: '', to: '' })}
+                className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
+              >
+                Сбросить
+              </button>
+            </div>
           </div>
 
-          {/* Entries List */}
+          {/* Profit History Table */}
           <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-surface-sidebar">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Дата
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Тип
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Сумма
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                    Описание
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-primary">
-                {entries.map((entry, index) => (
-                  <tr key={index} className="hover:bg-surface-sidebar">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                      {new Date(entry.created_at).toLocaleDateString('ru-RU')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`text-sm font-medium ${getEntryTypeColor(entry.type)}`}>
-                        {getEntryTypeName(entry.type)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-400">
-                      {formatCurrencyWithSymbol(entry.amount)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-text-secondary">
-                      {entry.description || '—'}
-                    </td>
+            <div className="p-4 border-b border-border-primary">
+              <h3 className="font-rajdhani text-lg font-bold text-white">
+                История прибыли ({entries.length} записей)
+              </h3>
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-surface-sidebar">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                      Дата и время
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                      Тип операции
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                      Сумма
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                      Источник
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                      ID игрока/бота
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                      Описание
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border-primary">
+                  {entries.map((entry, index) => {
+                    const { date, time } = formatDateTime(entry.created_at);
+                    return (
+                      <tr key={index} className="hover:bg-surface-sidebar transition-colors">
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <div className="text-sm text-white font-rajdhani">{date}</div>
+                          <div className="text-xs text-text-secondary">{time}</div>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className={`text-sm font-medium font-rajdhani ${getEntryTypeColor(entry.type)}`}>
+                            {getEntryTypeName(entry.type)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className="text-sm font-bold text-green-400 font-rajdhani">
+                            {formatCurrencyWithSymbol(entry.amount)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-white">
+                          {entry.source || '—'}
+                        </td>
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          <span className="text-sm text-accent-primary font-mono">
+                            {entry.source_user_id || entry.bot_id || '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-text-secondary">
+                          {entry.description || '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-4 p-4">
+              {entries.map((entry, index) => {
+                const { date, time } = formatDateTime(entry.created_at);
+                return (
+                  <div key={index} className="bg-surface-sidebar rounded-lg p-4 border border-border-primary">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className={`text-sm font-medium font-rajdhani ${getEntryTypeColor(entry.type)}`}>
+                          {getEntryTypeName(entry.type)}
+                        </div>
+                        <div className="text-xs text-text-secondary">{date} {time}</div>
+                      </div>
+                      <div className="text-sm font-bold text-green-400 font-rajdhani">
+                        {formatCurrencyWithSymbol(entry.amount)}
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Источник:</span>
+                        <span className="text-white">{entry.source || '—'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">ID:</span>
+                        <span className="text-accent-primary font-mono">
+                          {entry.source_user_id || entry.bot_id || '—'}
+                        </span>
+                      </div>
+                      {entry.description && (
+                        <div className="flex justify-between">
+                          <span className="text-text-secondary">Описание:</span>
+                          <span className="text-white text-right">{entry.description}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Empty State */}
+            {entries.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-text-secondary text-lg mb-2">Записи не найдены</div>
+                <div className="text-text-secondary text-sm">Попробуйте изменить фильтры поиска</div>
+              </div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="bg-surface-sidebar px-6 py-3 flex items-center justify-between">
+              <div className="bg-surface-sidebar px-6 py-4 flex items-center justify-between">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-white disabled:opacity-50"
+                  className="px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-white disabled:opacity-50 hover:bg-surface-sidebar transition-colors"
                 >
-                  Предыдущая
+                  ← Предыдущая
                 </button>
-                <span className="text-text-secondary">
-                  Страница {currentPage} из {totalPages}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-text-secondary text-sm">
+                    Страница {currentPage} из {totalPages}
+                  </span>
+                  <select
+                    value={currentPage}
+                    onChange={(e) => setCurrentPage(parseInt(e.target.value))}
+                    className="bg-surface-card border border-border-primary rounded px-2 py-1 text-white text-sm"
+                  >
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <option key={page} value={page}>
+                        {page}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-white disabled:opacity-50"
+                  className="px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-white disabled:opacity-50 hover:bg-surface-sidebar transition-colors"
                 >
-                  Следующая
+                  Следующая →
                 </button>
               </div>
             )}
