@@ -497,7 +497,7 @@ const ProfitAdmin = ({ user }) => {
                 <Pagination
                   currentPage={pagination.currentPage}
                   totalPages={pagination.totalPages}
-                  onPageChange={pagination.goToPage}
+                  onPageChange={pagination.handlePageChange}
                 />
               </div>
             )}
