@@ -515,30 +515,100 @@ const ProfitAdmin = ({ user }) => {
                     </button>
                   </div>
                   
-                  {/* Фильтры по дате */}
-                  <div className="flex items-center space-x-2">
-                    <span className="text-text-secondary text-sm">Период:</span>
-                    <input
-                      type="date"
-                      value={dateFilter.from}
-                      onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
-                      className="bg-surface-card border border-border-primary rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
-                    />
-                    <span className="text-text-secondary">—</span>
-                    <input
-                      type="date"
-                      value={dateFilter.to}
-                      onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
-                      className="bg-surface-card border border-border-primary rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
-                  
                   {/* Экспорт */}
                   <button
                     onClick={exportToCSV}
                     className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded text-sm transition-colors"
                   >
                     📥 CSV
+                  </button>
+                </div>
+              </div>
+              
+              {/* Расширенные фильтры */}
+              <div className="p-4 bg-surface-card border-b border-border-primary">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Фильтр по периоду */}
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-2">Период</label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="date"
+                        value={dateFilter.from}
+                        onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
+                        className="flex-1 bg-surface-sidebar border border-border-primary rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                        placeholder="От"
+                      />
+                      <input
+                        type="date"
+                        value={dateFilter.to}
+                        onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
+                        className="flex-1 bg-surface-sidebar border border-border-primary rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                        placeholder="До"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Фильтр по игроку/боту */}
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-2">Игрок/Бот</label>
+                    <input
+                      type="text"
+                      value={playerFilter}
+                      onChange={(e) => setPlayerFilter(e.target.value)}
+                      className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                      placeholder="Имя, почта или ID"
+                    />
+                  </div>
+                  
+                  {/* Фильтр по сумме */}
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-2">Сумма ($)</label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="number"
+                        value={amountFilter.min}
+                        onChange={(e) => setAmountFilter(prev => ({ ...prev, min: e.target.value }))}
+                        className="flex-1 bg-surface-sidebar border border-border-primary rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                        placeholder="Мин"
+                        step="0.01"
+                      />
+                      <input
+                        type="number"
+                        value={amountFilter.max}
+                        onChange={(e) => setAmountFilter(prev => ({ ...prev, max: e.target.value }))}
+                        className="flex-1 bg-surface-sidebar border border-border-primary rounded px-2 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                        placeholder="Макс"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Фильтр по ID транзакции */}
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-2">ID транзакции</label>
+                    <input
+                      type="text"
+                      value={transactionIdFilter}
+                      onChange={(e) => setTransactionIdFilter(e.target.value)}
+                      className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                      placeholder="Полный или частичный ID"
+                    />
+                  </div>
+                </div>
+                
+                {/* Кнопка сброса фильтров */}
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setDateFilter({ from: '', to: '' });
+                      setPlayerFilter('');
+                      setAmountFilter({ min: '', max: '' });
+                      setTransactionIdFilter('');
+                    }}
+                    className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-rajdhani rounded text-sm transition-colors"
+                  >
+                    Сбросить фильтры
                   </button>
                 </div>
               </div>
