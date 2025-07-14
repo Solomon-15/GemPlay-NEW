@@ -71,6 +71,11 @@ const RegularBotsManagement = () => {
     fetchActiveBetsStats();
   }, []);
 
+  // Перезагрузка списка ботов при изменении страницы
+  useEffect(() => {
+    fetchBotsList();
+  }, [pagination.currentPage]);
+
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
