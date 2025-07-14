@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGems } from './GemsContext';
 import { useNotifications } from './NotificationContext';
-import { formatCurrencyWithSymbol } from '../utils/economy';
+import { formatCurrencyWithSymbol, formatDollarAmount, formatGemValue } from '../utils/economy';
 import { calculateGemCombination } from '../utils/gemCombinationAlgorithms';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
