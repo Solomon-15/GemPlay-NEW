@@ -324,7 +324,7 @@ const ProfitAdmin = ({ user }) => {
   };
 
   // Функция для загрузки данных для модальных окон
-  const loadModalData = async (type) => {
+  const loadModalData = async (type, period = activePeriod) => {
     setModalLoading(true);
     setModalError(null);
     
@@ -334,14 +334,14 @@ const ProfitAdmin = ({ user }) => {
       switch (type) {
         case 'bot_revenue':
           // Загружаем данные о доходах от ботов
-          const botRevenueResponse = await axios.get(`${API}/admin/profit/bot-revenue-details`, {
+          const botRevenueResponse = await axios.get(`${API}/admin/profit/bot-revenue-details?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setModalData(botRevenueResponse.data);
           break;
           
         case 'frozen_funds':
-          // Загружаем данные о замороженных средствах
+          // Загружаем данные о замороженных средствах (period не применим)
           const frozenFundsResponse = await axios.get(`${API}/admin/profit/frozen-funds-details`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -350,7 +350,7 @@ const ProfitAdmin = ({ user }) => {
           
         case 'total_revenue':
           // Загружаем сводку по всем источникам дохода
-          const totalRevenueResponse = await axios.get(`${API}/admin/profit/total-revenue-breakdown`, {
+          const totalRevenueResponse = await axios.get(`${API}/admin/profit/total-revenue-breakdown?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setModalData(totalRevenueResponse.data);
@@ -358,7 +358,7 @@ const ProfitAdmin = ({ user }) => {
           
         case 'expenses':
           // Загружаем данные о расходах
-          const expensesResponse = await axios.get(`${API}/admin/profit/expenses-details`, {
+          const expensesResponse = await axios.get(`${API}/admin/profit/expenses-details?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setModalData(expensesResponse.data);
@@ -366,7 +366,7 @@ const ProfitAdmin = ({ user }) => {
           
         case 'net_profit':
           // Загружаем данные о чистой прибыли
-          const netProfitResponse = await axios.get(`${API}/admin/profit/net-profit-analysis`, {
+          const netProfitResponse = await axios.get(`${API}/admin/profit/net-profit-analysis?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setModalData(netProfitResponse.data);
@@ -381,6 +381,14 @@ const ProfitAdmin = ({ user }) => {
       setModalData([]);
     } finally {
       setModalLoading(false);
+    }
+  };
+
+  // Функция для смены периода
+  const handlePeriodChange = (period) => {
+    setActivePeriod(period);
+    if (activeModal) {
+      loadModalData(activeModal, period);
     }
   };
 
