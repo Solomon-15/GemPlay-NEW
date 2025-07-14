@@ -352,19 +352,54 @@ const ProfitAdmin = ({ user }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             
             {/* Комиссия от ставок */}
-            <div className="bg-surface-card border border-blue-500/30 rounded-lg p-6 hover:border-blue-500/60 transition-colors duration-200 shadow-lg">
+            <div className="bg-surface-card border border-green-500/30 rounded-lg p-6 hover:border-green-500/60 transition-colors duration-200 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="8" strokeWidth="2"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 9h3m-3 3h3m-3 3h3M9 12l2 2 4-4"/>
+                        <text x="12" y="16" textAnchor="middle" fontSize="8" fill="currentColor">%</text>
                       </svg>
+                    </div>
+                    <div className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded-full">
+                      LIVE
                     </div>
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Комиссия от ставок</h3>
-                  <p className="font-russo text-2xl font-bold text-blue-400">{formatCurrencyWithSymbol(stats.bet_commission || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">3% от выигрышей в PvP</p>
+                  <p className="font-russo text-2xl font-bold text-green-400">{formatCurrencyWithSymbol(stats.bet_commission || 0, true)}</p>
+                  <p className="text-xs text-text-secondary mt-1">3% от выигрыша в PvP-играх</p>
+                  <p className="text-xs text-green-300 mt-1">Обновляется при завершении ставок</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Комиссия от Human-ботов */}
+            <div className="bg-surface-card border border-cyan-500/30 rounded-lg p-6 hover:border-cyan-500/60 transition-colors duration-200 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                        <rect x="14" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                        <rect x="4" y="14" width="16" height="6" strokeWidth="2" rx="1"/>
+                        <circle cx="17" cy="7" r="1" fill="currentColor"/>
+                        <circle cx="7" cy="7" r="1" fill="currentColor"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
+                        <circle cx="18" cy="15" r="2" strokeWidth="1.5"/>
+                        <text x="18" y="16" textAnchor="middle" fontSize="6" fill="currentColor">%</text>
+                      </svg>
+                    </div>
+                    <div className="bg-cyan-500/20 text-cyan-400 text-xs font-bold px-2 py-1 rounded-full">
+                      LIVE
+                    </div>
+                  </div>
+                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Комиссия от Human-ботов</h3>
+                  <p className="font-russo text-2xl font-bold text-cyan-400">{formatCurrencyWithSymbol(stats.human_bot_commission || 0, true)}</p>
+                  <p className="text-xs text-text-secondary mt-1">3% от выигрыша Human-ботов</p>
+                  <p className="text-xs text-cyan-300 mt-1">Обновляется при завершении ставок</p>
                 </div>
               </div>
             </div>
@@ -376,52 +411,143 @@ const ProfitAdmin = ({ user }) => {
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                        <rect x="3" y="8" width="18" height="12" strokeWidth="2" rx="2"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8V20"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                        <circle cx="17" cy="13" r="2" strokeWidth="1.5"/>
+                        <text x="17" y="14" textAnchor="middle" fontSize="6" fill="currentColor">%</text>
                       </svg>
+                    </div>
+                    <div className="bg-purple-500/20 text-purple-400 text-xs font-bold px-2 py-1 rounded-full">
+                      LIVE
                     </div>
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Комиссия от подарков</h3>
                   <p className="font-russo text-2xl font-bold text-purple-400">{formatCurrencyWithSymbol(stats.gift_commission || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">3% за передачу гемов</p>
+                  <p className="text-xs text-text-secondary mt-1">3% от стоимости переданных гемов</p>
+                  <p className="text-xs text-purple-300 mt-1">Обновляется при каждой транзакции</p>
                 </div>
               </div>
             </div>
 
             {/* Доход от ботов */}
-            <div className="bg-surface-card border border-cyan-500/30 rounded-lg p-6 hover:border-cyan-500/60 transition-colors duration-200 shadow-lg">
+            <div className="bg-surface-card border border-blue-500/30 rounded-lg p-6 hover:border-blue-500/60 transition-colors duration-200 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-10 h-10 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                        <rect x="14" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                        <rect x="4" y="14" width="16" height="6" strokeWidth="2" rx="1"/>
+                        <circle cx="17" cy="7" r="1" fill="currentColor"/>
+                        <circle cx="7" cy="7" r="1" fill="currentColor"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
+                        <circle cx="18" cy="15" r="3" strokeWidth="1.5"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 14v2l1 1"/>
                       </svg>
                     </div>
+                    <div className="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">
+                      LIVE
+                    </div>
                   </div>
-                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Доход от ботов</h3>
-                  <p className="font-russo text-2xl font-bold text-cyan-400">{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">Матчи против ботов</p>
+                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Доход от ботов от ставок</h3>
+                  <p className="font-russo text-2xl font-bold text-blue-400">{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</p>
+                  <p className="text-xs text-text-secondary mt-1">Прибыль от циклов обычных ботов</p>
+                  <p className="text-xs text-blue-300 mt-1">Обновляется при завершении циклов</p>
                 </div>
               </div>
             </div>
 
             {/* Общая прибыль */}
-            <div className="bg-surface-card border border-green-500/30 rounded-lg p-6 hover:border-green-500/60 transition-colors duration-200 shadow-lg">
+            <div className="bg-surface-card border border-yellow-500/30 rounded-lg p-6 hover:border-yellow-500/60 transition-colors duration-200 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                       </svg>
                     </div>
+                    <div className="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-1 rounded-full">
+                      LIVE
+                    </div>
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Общая прибыль</h3>
-                  <p className="font-russo text-2xl font-bold text-green-400">{formatCurrencyWithSymbol(stats.total_revenue || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">Сумма всех доходов</p>
+                  <p className="font-russo text-2xl font-bold text-yellow-400">{formatCurrencyWithSymbol(stats.total_revenue || 0, true)}</p>
+                  <p className="text-xs text-text-secondary mt-1">Сумма всех источников дохода</p>
+                  <p className="text-xs text-yellow-300 mt-1">Обновляется в реальном времени</p>
                 </div>
               </div>
             </div>
+
+            {/* Среднедневная прибыль */}
+            <div className="bg-surface-card border border-orange-500/30 rounded-lg p-6 hover:border-orange-500/60 transition-colors duration-200 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div className="bg-orange-500/20 text-orange-400 text-xs font-bold px-2 py-1 rounded-full">
+                      CALC
+                    </div>
+                  </div>
+                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Среднедневная прибыль</h3>
+                  <p className="font-russo text-2xl font-bold text-orange-400">{formatCurrencyWithSymbol(stats.daily_average || 0, true)}</p>
+                  <p className="text-xs text-text-secondary mt-1">Средний доход за последние 30 дней</p>
+                  <p className="text-xs text-orange-300 mt-1">Пересчитывается ежедневно</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Прибыль за сегодня */}
+            <div className="bg-surface-card border border-emerald-500/30 rounded-lg p-6 hover:border-emerald-500/60 transition-colors duration-200 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
+                        <polyline points="12,6 12,12 16,14" strokeWidth="2"/>
+                      </svg>
+                    </div>
+                    <div className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">
+                      TODAY
+                    </div>
+                  </div>
+                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Прибыль за сегодня</h3>
+                  <p className="font-russo text-2xl font-bold text-emerald-400">{formatCurrencyWithSymbol(stats.today_revenue || 0, true)}</p>
+                  <p className="text-xs text-text-secondary mt-1">Доход с начала текущего дня</p>
+                  <p className="text-xs text-emerald-300 mt-1">Обновляется каждую минуту</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Активные транзакции */}
+            <div className="bg-surface-card border border-indigo-500/30 rounded-lg p-6 hover:border-indigo-500/60 transition-colors duration-200 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <div className="bg-indigo-500/20 text-indigo-400 text-xs font-bold px-2 py-1 rounded-full">
+                      ACTIVE
+                    </div>
+                  </div>
+                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Активные транзакции</h3>
+                  <p className="font-russo text-2xl font-bold text-indigo-400">{stats.active_transactions || 0}</p>
+                  <p className="text-xs text-text-secondary mt-1">Ожидающие обработки операции</p>
+                  <p className="text-xs text-indigo-300 mt-1">Обновляется в реальном времени</p>
+                </div>
+              </div>
+            </div>
+            
           </div>
         </div>
       )}
