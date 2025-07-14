@@ -6237,43 +6237,146 @@ async def recalculate_bot_bets(
 
 async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
                                 win_percentage: int, min_bet: float, max_bet: float):
-    """Generate optimized bet amounts for a bot's cycle."""
+    """Generate optimized bet amounts for a bot's cycle using only gem-based values."""
     try:
         # Ensure bot has sufficient gems
         await BotGameLogic.setup_bot_gems(bot_id, db)
+        
+        # Define gem values (must match frontend definitions)
+        gem_values = {
+            'Ruby': 1,
+            'Amber': 2,
+            'Topaz': 5,
+            'Emerald': 10,
+            'Aquamarine': 25,
+            'Sapphire': 50,
+            'Magic': 100
+        }
+        gem_types_list = list(gem_values.keys())
         
         # Calculate number of winning and losing bets
         winning_bets_count = int((win_percentage / 100.0) * cycle_length)
         losing_bets_count = cycle_length - winning_bets_count
         
-        # Generate bet amounts that sum to cycle_total_amount
-        bet_amounts = []
-        remaining_amount = cycle_total_amount
+        def generate_valid_gem_combination(target_min: int, target_max: int):
+            """Generate a gem combination that results in a valid integer bet amount."""
+            attempts = 0
+            max_attempts = 100
+            
+            while attempts < max_attempts:
+                # Randomly select 1-3 gem types
+                num_gem_types = random.randint(1, 3)
+                selected_gem_types = random.sample(gem_types_list, num_gem_types)
+                
+                # Generate quantities for each gem type
+                gem_combination = {}
+                total_value = 0
+                
+                for gem_type in selected_gem_types:
+                    # Start with 1-3 gems of each type
+                    base_quantity = random.randint(1, 3)
+                    gem_combination[gem_type] = base_quantity
+                    total_value += gem_values[gem_type] * base_quantity
+                
+                # Adjust quantities to get closer to target range
+                if total_value < target_min:
+                    # Add more gems to reach minimum
+                    while total_value < target_min and attempts < max_attempts:
+                        # Choose a random gem type to add
+                        gem_to_add = random.choice(selected_gem_types)
+                        # Add gems that don't exceed max_bet too much
+                        if total_value + gem_values[gem_to_add] <= target_max * 1.2:  # Allow 20% overage
+                            gem_combination[gem_to_add] += 1
+                            total_value += gem_values[gem_to_add]
+                        else:
+                            break
+                
+                elif total_value > target_max:
+                    # Remove gems to get under maximum
+                    while total_value > target_max and attempts < max_attempts:
+                        # Find a gem type we can reduce
+                        reducible_gems = [gt for gt in selected_gem_types if gem_combination[gt] > 1]
+                        if not reducible_gems:
+                            break
+                        gem_to_reduce = random.choice(reducible_gems)
+                        gem_combination[gem_to_reduce] -= 1
+                        total_value -= gem_values[gem_to_reduce]
+                        if gem_combination[gem_to_reduce] == 0:
+                            del gem_combination[gem_to_reduce]
+                            selected_gem_types.remove(gem_to_reduce)
+                
+                # Check if the combination is valid
+                if target_min <= total_value <= target_max and total_value == int(total_value):
+                    return gem_combination, int(total_value)
+                
+                attempts += 1
+            
+            # Fallback: generate simple combination with Ruby gems
+            fallback_quantity = max(1, min(int(target_max), int(target_min)))
+            return {'Ruby': fallback_quantity}, fallback_quantity
+        
+        # Generate bet amounts using gem-based logic
+        bet_data = []  # Will store (gem_combination, bet_amount) tuples
+        total_generated = 0
+        
+        # Calculate average bet amount
+        avg_bet = cycle_total_amount / cycle_length
         
         for i in range(cycle_length):
-            if i == cycle_length - 1:  # Last bet gets remaining amount
-                bet_amount = max(min_bet, min(max_bet, remaining_amount))
+            if i == cycle_length - 1:  # Last bet: use remaining amount
+                remaining = int(cycle_total_amount - total_generated)
+                target_min = max(int(min_bet), remaining - 10)  # Small tolerance
+                target_max = max(int(max_bet), remaining + 10)
+                gem_combination, bet_amount = generate_valid_gem_combination(target_min, target_max)
+                # Force exact remaining amount for last bet
+                if bet_amount != remaining and remaining >= int(min_bet):
+                    bet_amount = remaining
+                    # Adjust gem combination to match the amount
+                    if remaining <= 5:
+                        gem_combination = {'Ruby': remaining}
+                    elif remaining <= 10:
+                        gem_combination = {'Amber': remaining // 2, 'Ruby': remaining % 2}
+                    else:
+                        # Try to create a reasonable combination
+                        gem_combination = {'Ruby': remaining}  # Fallback
             else:
-                # Calculate reasonable bet amount within constraints
-                max_possible = min(max_bet, remaining_amount - (cycle_length - i - 1) * min_bet)
-                min_possible = max(min_bet, remaining_amount - (cycle_length - i - 1) * max_bet)
+                # Generate bet within normal range, but aim for average
+                variance = avg_bet * 0.3  # 30% variance from average
+                target_min = max(int(min_bet), int(avg_bet - variance))
+                target_max = min(int(max_bet), int(avg_bet + variance))
+                gem_combination, bet_amount = generate_valid_gem_combination(target_min, target_max)
+            
+            bet_data.append((gem_combination, bet_amount))
+            total_generated += bet_amount
+        
+        # Adjust total if needed by modifying the largest bets
+        if abs(total_generated - cycle_total_amount) > 0:
+            difference = int(cycle_total_amount - total_generated)
+            if difference != 0:
+                # Sort bets by amount to find candidates for adjustment
+                adjustable_bets = [(i, amount) for i, (_, amount) in enumerate(bet_data)]
+                adjustable_bets.sort(key=lambda x: x[1], reverse=True)
                 
-                if max_possible < min_possible:
-                    bet_amount = min_bet
-                else:
-                    bet_amount = random.uniform(min_possible, max_possible)
-                    bet_amount = round(bet_amount, 2)
-            
-            bet_amounts.append(bet_amount)
-            remaining_amount -= bet_amount
-            
-        # Adjust if total doesn't match exactly
-        total_generated = sum(bet_amounts)
-        if abs(total_generated - cycle_total_amount) > 0.01:
-            # Adjust the largest bet to match total
-            largest_idx = bet_amounts.index(max(bet_amounts))
-            adjustment = cycle_total_amount - total_generated
-            bet_amounts[largest_idx] = max(min_bet, min(max_bet, bet_amounts[largest_idx] + adjustment))
+                # Distribute the difference across the largest bets
+                for i, _ in adjustable_bets[:min(3, len(adjustable_bets))]:  # Adjust up to 3 bets
+                    if difference == 0:
+                        break
+                    
+                    gems, current_amount = bet_data[i]
+                    if difference > 0:  # Need to add
+                        add_amount = min(difference, 5)  # Add up to 5
+                        gems['Ruby'] = gems.get('Ruby', 0) + add_amount
+                        bet_data[i] = (gems, current_amount + add_amount)
+                        difference -= add_amount
+                    elif difference < 0 and current_amount > int(min_bet):  # Need to subtract
+                        subtract_amount = min(abs(difference), current_amount - int(min_bet))
+                        # Remove Ruby gems first
+                        if gems.get('Ruby', 0) >= subtract_amount:
+                            gems['Ruby'] -= subtract_amount
+                            if gems['Ruby'] == 0:
+                                del gems['Ruby']
+                            bet_data[i] = (gems, current_amount - subtract_amount)
+                            difference += subtract_amount
         
         # Randomly assign winning/losing outcome (for future reference)
         bet_outcomes = ['win'] * winning_bets_count + ['lose'] * losing_bets_count
@@ -6281,12 +6384,7 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
         
         # Create actual game entries
         created_bets = []
-        for i, (bet_amount, outcome) in enumerate(zip(bet_amounts, bet_outcomes)):
-            # Generate random gems for bet
-            gem_types = list(GemType)
-            selected_gems = random.sample(gem_types, random.randint(1, min(3, len(gem_types))))
-            bet_gems = {gem_type.value: random.randint(1, 5) for gem_type in selected_gems}
-            
+        for i, ((gem_combination, bet_amount), outcome) in enumerate(zip(bet_data, bet_outcomes)):
             # Generate bot's move
             bot = await db.bots.find_one({"id": bot_id})
             bot_move = BotGameLogic.calculate_bot_move(Bot(**bot))
@@ -6298,21 +6396,23 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
                 creator_move=bot_move,
                 creator_move_hash=hashlib.sha256(f"{bot_move.value}{salt}".encode()).hexdigest(),
                 creator_salt=salt,
-                bet_amount=bet_amount,
-                bet_gems=bet_gems,
+                bet_amount=float(bet_amount),  # Convert to float for compatibility
+                bet_gems=gem_combination,
                 is_bot_game=True,
                 bot_id=bot_id,
                 metadata={
                     "cycle_position": i + 1,
                     "intended_outcome": outcome,
-                    "cycle_id": f"{bot_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+                    "cycle_id": f"{bot_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                    "gem_based_bet": True  # Mark as gem-based bet
                 }
             )
             
             await db.games.insert_one(game.dict())
             created_bets.append(game.dict())
         
-        logger.info(f"Generated {len(created_bets)} bets for bot {bot_id} with total ${sum(bet_amounts):.2f}")
+        final_total = sum(bet_amount for _, bet_amount in bet_data)
+        logger.info(f"Generated {len(created_bets)} gem-based bets for bot {bot_id} with total ${final_total}")
         return created_bets
         
     except Exception as e:
