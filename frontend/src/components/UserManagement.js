@@ -1426,7 +1426,7 @@ const UserManagement = ({ user: currentUser }) => {
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="font-rajdhani font-bold text-accent-primary">
-                          ${user.virtual_balance?.toFixed(2) || '0.00'}
+                          {formatDollarAmount(user.virtual_balance || 0)}
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
