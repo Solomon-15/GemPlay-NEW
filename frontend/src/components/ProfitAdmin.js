@@ -113,6 +113,37 @@ const ProfitAdmin = ({ user }) => {
     return colors[type] || 'text-gray-400';
   };
 
+  // Информация о категориях
+  const categories = {
+    'bet_commission': {
+      name: 'Комиссия от ставок',
+      icon: '💰',
+      color: 'green',
+      description: '6% комиссия с PvP-игр'
+    },
+    'bot_profit': {
+      name: 'Доход от ботов',
+      icon: '🤖',
+      color: 'blue',
+      description: 'Прибыль от циклов ботов'
+    },
+    'gift_commission': {
+      name: 'Комиссия от подарков',
+      icon: '🎁',
+      color: 'purple',
+      description: '3% за передачу гемов'
+    }
+  };
+
+  const getCategoryBadgeColor = (categoryKey) => {
+    const colors = {
+      'bet_commission': 'bg-green-600',
+      'bot_profit': 'bg-blue-600',
+      'gift_commission': 'bg-purple-600'
+    };
+    return colors[categoryKey] || 'bg-gray-600';
+  };
+
   const exportToCSV = () => {
     const headers = ['Дата', 'Время', 'Тип операции', 'Сумма', 'Источник', 'ID игрока/бота', 'Описание'];
     const csvContent = [
