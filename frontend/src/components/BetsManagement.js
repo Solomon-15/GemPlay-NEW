@@ -186,15 +186,25 @@ const BetsManagement = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-rajdhani font-bold text-white">Управление Ставками</h2>
         
-        {/* Cleanup stuck bets button */}
-        {stats.stuck_bets > 0 && (
+        <div className="flex space-x-3">
+          {/* Cleanup stuck bets button */}
+          {stats.stuck_bets > 0 && (
+            <button
+              onClick={cleanupStuckBets}
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-rajdhani font-bold transition-colors"
+            >
+              🧹 Очистить зависшие ({stats.stuck_bets})
+            </button>
+          )}
+          
+          {/* Reset all bets button (SUPER_ADMIN only) */}
           <button
-            onClick={cleanupStuckBets}
-            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-rajdhani font-bold transition-colors"
+            onClick={() => setIsResetAllModalOpen(true)}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-rajdhani font-bold transition-colors"
           >
-            🧹 Очистить зависшие ({stats.stuck_bets})
+            🗑️ Сбросить все ставки
           </button>
-        )}
+        </div>
       </div>
 
       {/* Statistics Cards */}
