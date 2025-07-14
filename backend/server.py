@@ -5170,13 +5170,29 @@ async def get_bot_revenue_details(
         )
 
 @api_router.get("/admin/profit/frozen-funds-details", response_model=dict)
-async def get_frozen_funds_details(current_admin: User = Depends(get_current_admin)):
+async def get_frozen_funds_details(
+    period: str = "month",  # day, week, month, all
+    current_admin: User = Depends(get_current_admin)
+):
     """Get detailed information about frozen funds."""
     try:
+        # Calculate date filter based on period
+        now = datetime.now()
+        if period == "day":
+            start_date = now - timedelta(days=1)
+        elif period == "week":
+            start_date = now - timedelta(weeks=1)
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+        else:  # all
+            start_date = None
+            
         # Get all active games (where funds are frozen)
-        active_games = await db.games.find({
-            "status": {"$in": ["waiting_for_opponent", "in_progress", "reveal_phase"]}
-        }).to_list(None)
+        query = {"status": {"$in": ["waiting_for_opponent", "in_progress", "reveal_phase"]}}
+        if start_date:
+            query["created_at"] = {"$gte": start_date}
+            
+        active_games = await db.games.find(query).to_list(None)
         
         frozen_details = []
         total_frozen = 0
