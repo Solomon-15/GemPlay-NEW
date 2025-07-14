@@ -4890,15 +4890,16 @@ async def bot_join_game_automatically(bot: Bot):
             # Standard move calculation
             bot_move = BotGameLogic.calculate_bot_move(bot)
         
-        # Update game with bot as opponent
+        # Update game with bot as opponent and move to REVEAL phase
         await db.games.update_one(
             {"id": game_obj.id},
             {
                 "$set": {
                     "opponent_id": bot.id,
                     "opponent_move": bot_move,
-                    "status": GameStatus.ACTIVE,
-                    "started_at": datetime.utcnow()
+                    "status": GameStatus.REVEAL,  # Changed from ACTIVE to REVEAL
+                    "started_at": datetime.utcnow(),
+                    "reveal_deadline": datetime.utcnow() + timedelta(minutes=1)  # Give 1 minute for reveal
                 }
             }
         )
@@ -4909,13 +4910,42 @@ async def bot_join_game_automatically(bot: Bot):
             {"$set": {"last_game_time": datetime.utcnow()}}
         )
         
-        # Determine winner
-        await determine_game_winner(game_obj.id)
+        # For bot games, automatically trigger reveal and determine winner after a short delay
+        # This simulates the bot "revealing" immediately
+        import asyncio
         
-        logger.info(f"Bot {bot.name} joined game {game_obj.id}")
+        # Wait a short moment to ensure the game is properly updated
+        await asyncio.sleep(0.1)
+        
+        # Automatically complete the reveal phase for bot games
+        await auto_complete_bot_game_reveal(game_obj.id)
+        
+        logger.info(f"Bot {bot.name} joined game {game_obj.id} and moved to REVEAL phase")
         
     except Exception as e:
         logger.error(f"Error in bot auto-join game: {e}")
+
+async def auto_complete_bot_game_reveal(game_id: str):
+    """Automatically complete the reveal phase for bot games."""
+    try:
+        # Update game status to ACTIVE (simulating successful reveal)
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "status": GameStatus.ACTIVE,
+                    "reveal_deadline": None
+                }
+            }
+        )
+        
+        # Determine winner
+        await determine_game_winner(game_id)
+        
+        logger.info(f"Automatically completed reveal for bot game {game_id}")
+        
+    except Exception as e:
+        logger.error(f"Error auto-completing bot game reveal: {e}")
 
 # ==============================================================================
 # ADMIN GAME MANAGEMENT
