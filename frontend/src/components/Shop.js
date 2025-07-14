@@ -193,7 +193,7 @@ const Shop = ({ user, onUpdateUser }) => {
                   <div className="mb-4">
                     <span className="font-roboto text-text-secondary text-sm">Total: </span>
                     <span className={`font-rajdhani text-xl font-bold ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
-                      {formatCurrencyWithSymbol(totalCost)}
+                      {formatDollarAmount(totalCost)}
                     </span>
                   </div>
                   
