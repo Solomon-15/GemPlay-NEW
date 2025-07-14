@@ -4062,20 +4062,20 @@ def test_comprehensive_bet_management_system() -> None:
         print_success("Admin stuck bets cleanup endpoint accessible")
         
         # Check response structure
-        required_fields = ["success", "message", "cleaned_up_count", "total_gems_returned", "total_commission_returned"]
+        required_fields = ["success", "message", "total_processed", "total_gems_returned", "total_commission_returned"]
         missing_fields = [field for field in required_fields if field not in response]
         
         if not missing_fields:
             print_success("Cleanup response contains all required fields")
             print_success(f"Success: {response['success']}")
             print_success(f"Message: {response['message']}")
-            print_success(f"Cleaned up count: {response['cleaned_up_count']}")
+            print_success(f"Total processed: {response['total_processed']}")
             print_success(f"Total gems returned: {response['total_gems_returned']}")
             print_success(f"Total commission returned: ${response['total_commission_returned']}")
             record_test("Admin Stuck Bets Cleanup - Response Structure", True)
             
             # Verify cleanup logic (24-hour threshold)
-            cleanup_count = response.get("cleaned_up_count", 0)
+            cleanup_count = response.get("total_processed", 0)
             if cleanup_count >= 0:  # Should be non-negative
                 print_success(f"Cleanup processed {cleanup_count} stuck bets")
                 record_test("Admin Stuck Bets Cleanup - Processing", True)
