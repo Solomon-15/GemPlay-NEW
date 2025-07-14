@@ -5894,12 +5894,12 @@ async def create_individual_bot(
             min_bet_amount=min_bet,
             max_bet_amount=max_bet,
             win_percentage=win_percentage,
-            cycle_length=cycle_games,
+            cycle_length=cycle_games,  # Важно! Это поле называется cycle_length в модели
+            cycle_total_amount=cycle_total_amount,  # Добавляем это поле
             pause_timer=pause_timer,
             recreate_timer=recreate_interval,
             is_active=True,
             bot_type="REGULAR",
-            cycle_total_amount=cycle_total_amount,
             can_accept_bets=can_accept_bets,
             can_play_with_bots=can_play_with_bots
         )
