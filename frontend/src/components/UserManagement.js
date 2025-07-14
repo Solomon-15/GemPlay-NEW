@@ -23,6 +23,12 @@ const UserManagement = ({ user: currentUser }) => {
   const [isBanModalOpen, setIsBanModalOpen] = useState(false);
   const [isGemsModalOpen, setIsGemsModalOpen] = useState(false);
   const [isBetsModalOpen, setIsBetsModalOpen] = useState(false);
+  const [isResetBalancesModalOpen, setIsResetBalancesModalOpen] = useState(false);
+  const [isResetUserBetsModalOpen, setIsResetUserBetsModalOpen] = useState(false);
+  const [isResetUserBalanceModalOpen, setIsResetUserBalanceModalOpen] = useState(false);
+  const [resettingBalances, setResettingBalances] = useState(false);
+  const [resettingUserBets, setResettingUserBets] = useState(null);
+  const [resettingUserBalance, setResettingUserBalance] = useState(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
