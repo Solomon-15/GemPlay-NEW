@@ -15,9 +15,27 @@ const RegularBotsManagement = () => {
     errors: 0,
     most_active: []
   });
+  const [botsList, setBotsList] = useState([]);
   const [allBotsEnabled, setAllBotsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [startingBots, setStartingBots] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [selectedBot, setSelectedBot] = useState(null);
+
+  // Form states for creating bot
+  const [botForm, setBotForm] = useState({
+    name: '',
+    pause_timer: 5,
+    recreate_interval: 30,
+    cycle_games: 12,
+    cycle_total_amount: 500,
+    win_percentage: 60,
+    min_bet_amount: 1,
+    max_bet_amount: 100,
+    can_accept_bets: false,
+    can_play_with_bots: false
+  });
 
   const { showSuccessRU, showErrorRU } = useNotifications();
 
