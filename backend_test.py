@@ -4169,6 +4169,8 @@ def run_bet_management_tests() -> None:
 
 def test_regular_bot_commission_logic() -> None:
     """Test Regular Bot game commission logic to ensure games are truly commission-free."""
+    import time
+    
     print_header("TESTING REGULAR BOT COMMISSION LOGIC")
     
     # Step 1: Login as admin
