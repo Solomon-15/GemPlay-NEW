@@ -118,7 +118,7 @@ const BalanceDisplay = ({ user, onUpdateBalance }) => {
           <span className="font-rajdhani text-sm text-text-secondary">Total</span>
         </div>
         <div className="font-rajdhani text-lg font-bold text-accent-primary">
-          {formatCurrencyWithSymbol(totalWorth)}
+          {formatDollarAmount(totalWorth)}
         </div>
       </div>
 
