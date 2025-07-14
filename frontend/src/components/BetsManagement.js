@@ -105,22 +105,26 @@ const BetsManagement = () => {
     }
   };
 
-  const cleanupStuckBets = async () => {
+  const resetAllBets = async () => {
     try {
+      setResettingAll(true);
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API}/admin/bets/cleanup-stuck`,
+        `${API}/admin/bets/reset-all`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
       showSuccessRU(`${response.data.message}. Обработано: ${response.data.total_processed} ставок`);
+      setIsResetAllModalOpen(false);
       await fetchStats();
       await fetchBets();
     } catch (error) {
-      console.error('Error cleaning up stuck bets:', error);
-      const errorMessage = error.response?.data?.detail || 'Ошибка при очистке зависших ставок';
+      console.error('Error resetting all bets:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при сбросе всех ставок';
       showErrorRU(errorMessage);
+    } finally {
+      setResettingAll(false);
     }
   };
 
