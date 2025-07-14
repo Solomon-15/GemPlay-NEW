@@ -540,6 +540,114 @@ const RegularBotsManagement = () => {
     }
   };
 
+  // Функции для управления приоритетами ботов
+  const handleMoveBotUp = async (botId) => {
+    if (priorityType !== 'manual') return;
+    
+    const currentBot = botsList.find(bot => bot.id === botId);
+    if (!currentBot || currentBot.priority_order <= 1) return;
+    
+    setUpdatingPriority(botId);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/${botId}/priority/move-up`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        showSuccessRU('Приоритет бота повышен');
+        
+        // Обновляем локальные данные
+        setBotsList(prev => {
+          const newList = [...prev];
+          const currentIndex = newList.findIndex(bot => bot.id === botId);
+          if (currentIndex > 0) {
+            // Меняем местами приоритеты
+            const temp = newList[currentIndex].priority_order;
+            newList[currentIndex].priority_order = newList[currentIndex - 1].priority_order;
+            newList[currentIndex - 1].priority_order = temp;
+            
+            // Сортируем по приоритету
+            newList.sort((a, b) => (a.priority_order || 0) - (b.priority_order || 0));
+          }
+          return newList;
+        });
+      }
+    } catch (error) {
+      console.error('Error moving bot up:', error);
+      showErrorRU('Ошибка при повышении приоритета бота');
+    } finally {
+      setUpdatingPriority(null);
+    }
+  };
+
+  const handleMoveBotDown = async (botId) => {
+    if (priorityType !== 'manual') return;
+    
+    const currentBot = botsList.find(bot => bot.id === botId);
+    const maxPriority = Math.max(...botsList.map(bot => bot.priority_order || 0));
+    
+    if (!currentBot || currentBot.priority_order >= maxPriority) return;
+    
+    setUpdatingPriority(botId);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/${botId}/priority/move-down`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        showSuccessRU('Приоритет бота понижен');
+        
+        // Обновляем локальные данные
+        setBotsList(prev => {
+          const newList = [...prev];
+          const currentIndex = newList.findIndex(bot => bot.id === botId);
+          if (currentIndex < newList.length - 1) {
+            // Меняем местами приоритеты
+            const temp = newList[currentIndex].priority_order;
+            newList[currentIndex].priority_order = newList[currentIndex + 1].priority_order;
+            newList[currentIndex + 1].priority_order = temp;
+            
+            // Сортируем по приоритету
+            newList.sort((a, b) => (a.priority_order || 0) - (b.priority_order || 0));
+          }
+          return newList;
+        });
+      }
+    } catch (error) {
+      console.error('Error moving bot down:', error);
+      showErrorRU('Ошибка при понижении приоритета бота');
+    } finally {
+      setUpdatingPriority(null);
+    }
+  };
+
+  const handleResetPriorities = async () => {
+    if (priorityType !== 'manual') return;
+    
+    if (!window.confirm('Сбросить приоритеты всех ботов? Они будут упорядочены по дате создания.')) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/priority/reset`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        showSuccessRU('Приоритеты ботов сброшены');
+        await fetchBotsList(); // Перезагружаем список ботов
+      }
+    } catch (error) {
+      console.error('Error resetting priorities:', error);
+      showErrorRU('Ошибка при сбросе приоритетов');
+    }
+  };
+
   // Функции для управления прибылью ботов
   const handleOpenProfitAccumulators = async () => {
     try {
