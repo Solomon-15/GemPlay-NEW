@@ -44,6 +44,7 @@ const RegularBotsManagement = () => {
   const [isCycleModalOpen, setIsCycleModalOpen] = useState(false);
   const [cycleBot, setCycleBot] = useState(null);
   const [cycleData, setCycleData] = useState(null);
+  const [resettingBotBets, setResettingBotBets] = useState(null);
 
   // Пагинация для списка ботов
   const pagination = usePagination(1, 10);
