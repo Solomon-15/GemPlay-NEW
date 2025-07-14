@@ -2667,15 +2667,16 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     )
                     await db.transactions.insert_one(commission_transaction.dict())
                 
-                # Record profit entry from bet commission
-                profit_entry = ProfitEntry(
-                    entry_type="BET_COMMISSION",
-                    amount=commission_amount,
-                    source_user_id=winner_id,
-                    reference_id=game.id,
-                    description=f"6% commission from PvP game winner (${game.bet_amount} bet)"
-                )
-                await db.profit_entries.insert_one(profit_entry.dict())
+                # Record profit entry from bet commission (only if commission was charged)
+                if not is_regular_bot_game and commission_amount > 0:
+                    profit_entry = ProfitEntry(
+                        entry_type="BET_COMMISSION",
+                        amount=commission_amount,
+                        source_user_id=winner_id,
+                        reference_id=game.id,
+                        description=f"6% commission from PvP game winner (${game.bet_amount} bet)"
+                    )
+                    await db.profit_entries.insert_one(profit_entry.dict())
             
             # Check if this is a bot game and record bot revenue
             if game.is_bot_game:
