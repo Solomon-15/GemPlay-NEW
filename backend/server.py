@@ -5087,6 +5087,413 @@ async def update_commission_settings(
             detail="Failed to update commission settings"
         )
 
+@api_router.get("/admin/profit/bot-revenue-details", response_model=dict)
+async def get_bot_revenue_details(current_admin: User = Depends(get_current_admin)):
+    """Get detailed information about bot revenue."""
+    try:
+        # Get all regular bots with their accumulated profits
+        bots = await db.bots.find({"is_regular": True}).to_list(None)
+        
+        bot_details = []
+        total_revenue = 0
+        
+        for bot in bots:
+            bot_revenue = 0
+            
+            # Get completed cycles for this bot
+            profit_entries = await db.profit_history.find({
+                "type": "BOT_REVENUE",
+                "bot_id": bot["id"]
+            }).to_list(None)
+            
+            for entry in profit_entries:
+                bot_revenue += entry.get("amount", 0)
+            
+            total_revenue += bot_revenue
+            
+            # Get bot statistics
+            games_played = bot.get("total_games_played", 0)
+            games_won = bot.get("total_games_won", 0)
+            current_cycle_games = bot.get("current_cycle_games", 0)
+            current_cycle_wins = bot.get("current_cycle_wins", 0)
+            
+            bot_details.append({
+                "bot_id": bot["id"],
+                "bot_name": bot.get("username", f"Bot_{bot['id'][:8]}"),
+                "total_revenue": bot_revenue,
+                "games_played": games_played,
+                "games_won": games_won,
+                "win_rate": (games_won / games_played * 100) if games_played > 0 else 0,
+                "current_cycle_games": current_cycle_games,
+                "current_cycle_wins": current_cycle_wins,
+                "cycles_completed": len(profit_entries),
+                "avg_revenue_per_cycle": bot_revenue / len(profit_entries) if len(profit_entries) > 0 else 0,
+                "status": "active" if bot.get("is_active", False) else "inactive"
+            })
+        
+        # Sort by total revenue descending
+        bot_details.sort(key=lambda x: x["total_revenue"], reverse=True)
+        
+        return {
+            "success": True,
+            "total_revenue": total_revenue,
+            "active_bots": len([b for b in bot_details if b["status"] == "active"]),
+            "total_bots": len(bot_details),
+            "avg_revenue_per_bot": total_revenue / len(bot_details) if len(bot_details) > 0 else 0,
+            "entries": bot_details
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching bot revenue details: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bot revenue details"
+        )
+
+@api_router.get("/admin/profit/frozen-funds-details", response_model=dict)
+async def get_frozen_funds_details(current_admin: User = Depends(get_current_admin)):
+    """Get detailed information about frozen funds."""
+    try:
+        # Get all active games (where funds are frozen)
+        active_games = await db.games.find({
+            "status": {"$in": ["waiting_for_opponent", "in_progress", "reveal_phase"]}
+        }).to_list(None)
+        
+        frozen_details = []
+        total_frozen = 0
+        
+        for game in active_games:
+            # Calculate frozen commission for this game
+            bet_amount = game.get("bet_amount", 0)
+            commission_rate = 0.06  # 6% commission
+            frozen_commission = bet_amount * commission_rate
+            
+            total_frozen += frozen_commission
+            
+            # Get player information
+            creator = await db.users.find_one({"id": game.get("player1_id")})
+            opponent = await db.users.find_one({"id": game.get("player2_id")}) if game.get("player2_id") else None
+            
+            frozen_details.append({
+                "game_id": game["id"],
+                "bet_amount": bet_amount,
+                "frozen_commission": frozen_commission,
+                "commission_rate": commission_rate,
+                "status": game["status"],
+                "created_at": game.get("created_at"),
+                "creator": {
+                    "id": creator["id"] if creator else None,
+                    "username": creator.get("username", "Unknown") if creator else "Unknown"
+                },
+                "opponent": {
+                    "id": opponent["id"] if opponent else None,
+                    "username": opponent.get("username", "Waiting") if opponent else "Waiting"
+                } if opponent else None,
+                "estimated_release_time": None  # Could be calculated based on game rules
+            })
+        
+        # Sort by frozen commission descending
+        frozen_details.sort(key=lambda x: x["frozen_commission"], reverse=True)
+        
+        return {
+            "success": True,
+            "total_frozen": total_frozen,
+            "active_games": len(active_games),
+            "avg_frozen_per_game": total_frozen / len(active_games) if len(active_games) > 0 else 0,
+            "entries": frozen_details
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching frozen funds details: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch frozen funds details"
+        )
+
+@api_router.get("/admin/profit/total-revenue-breakdown", response_model=dict)
+async def get_total_revenue_breakdown(current_admin: User = Depends(get_current_admin)):
+    """Get detailed breakdown of total revenue by source."""
+    try:
+        # Get revenue breakdown by type
+        revenue_breakdown = []
+        
+        # Get commission from bets
+        bet_commission_total = 0
+        bet_commission_entries = await db.profit_history.find({"type": "BET_COMMISSION"}).to_list(None)
+        bet_commission_count = len(bet_commission_entries)
+        for entry in bet_commission_entries:
+            bet_commission_total += entry.get("amount", 0)
+        
+        # Get commission from gifts
+        gift_commission_total = 0
+        gift_commission_entries = await db.profit_history.find({"type": "GIFT_COMMISSION"}).to_list(None)
+        gift_commission_count = len(gift_commission_entries)
+        for entry in gift_commission_entries:
+            gift_commission_total += entry.get("amount", 0)
+        
+        # Get bot revenue
+        bot_revenue_total = 0
+        bot_revenue_entries = await db.profit_history.find({"type": "BOT_REVENUE"}).to_list(None)
+        bot_revenue_count = len(bot_revenue_entries)
+        for entry in bot_revenue_entries:
+            bot_revenue_total += entry.get("amount", 0)
+        
+        # Build breakdown
+        revenue_breakdown = [
+            {
+                "source": "bet_commission",
+                "name": "Комиссия от ставок",
+                "amount": bet_commission_total,
+                "percentage": 0,  # Will be calculated below
+                "transactions": bet_commission_count,
+                "avg_per_transaction": bet_commission_total / bet_commission_count if bet_commission_count > 0 else 0,
+                "color": "green",
+                "icon": "percent"
+            },
+            {
+                "source": "gift_commission",
+                "name": "Комиссия от подарков",
+                "amount": gift_commission_total,
+                "percentage": 0,
+                "transactions": gift_commission_count,
+                "avg_per_transaction": gift_commission_total / gift_commission_count if gift_commission_count > 0 else 0,
+                "color": "purple",
+                "icon": "gift"
+            },
+            {
+                "source": "bot_revenue",
+                "name": "Доход от ботов",
+                "amount": bot_revenue_total,
+                "percentage": 0,
+                "transactions": bot_revenue_count,
+                "avg_per_transaction": bot_revenue_total / bot_revenue_count if bot_revenue_count > 0 else 0,
+                "color": "blue",
+                "icon": "bot"
+            }
+        ]
+        
+        # Calculate total and percentages
+        total_revenue = sum(item["amount"] for item in revenue_breakdown)
+        
+        for item in revenue_breakdown:
+            item["percentage"] = (item["amount"] / total_revenue * 100) if total_revenue > 0 else 0
+        
+        return {
+            "success": True,
+            "total_revenue": total_revenue,
+            "breakdown": revenue_breakdown,
+            "summary": {
+                "total_transactions": sum(item["transactions"] for item in revenue_breakdown),
+                "avg_revenue_per_transaction": total_revenue / sum(item["transactions"] for item in revenue_breakdown) if sum(item["transactions"] for item in revenue_breakdown) > 0 else 0,
+                "top_source": max(revenue_breakdown, key=lambda x: x["amount"])["source"] if revenue_breakdown else None
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching total revenue breakdown: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch total revenue breakdown"
+        )
+
+@api_router.get("/admin/profit/expenses-details", response_model=dict)
+async def get_expenses_details(current_admin: User = Depends(get_current_admin)):
+    """Get detailed information about expenses."""
+    try:
+        # Get current expense settings
+        settings_doc = await db.admin_settings.find_one({"type": "expense_settings"})
+        if settings_doc:
+            expense_percentage = settings_doc.get("percentage", 60)
+            manual_expenses = settings_doc.get("manual_amount", 0)
+        else:
+            expense_percentage = 60  # Default 60%
+            manual_expenses = 0
+        
+        # Calculate total revenue
+        total_revenue = 0
+        revenue_entries = await db.profit_history.find({
+            "type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION", "BOT_REVENUE"]}
+        }).to_list(None)
+        
+        for entry in revenue_entries:
+            total_revenue += entry.get("amount", 0)
+        
+        # Calculate expenses
+        percentage_expenses = (total_revenue * expense_percentage) / 100
+        total_expenses = percentage_expenses + manual_expenses
+        
+        # Build expense breakdown
+        expense_breakdown = [
+            {
+                "category": "operational",
+                "name": "Операционные расходы",
+                "amount": percentage_expenses,
+                "percentage": expense_percentage,
+                "calculation": f"{expense_percentage}% от общей прибыли",
+                "type": "percentage",
+                "color": "red"
+            },
+            {
+                "category": "manual",
+                "name": "Дополнительные расходы",
+                "amount": manual_expenses,
+                "percentage": 0,
+                "calculation": "Фиксированная сумма",
+                "type": "fixed",
+                "color": "orange"
+            }
+        ]
+        
+        # Get expense history (if tracked)
+        expense_history = []
+        expense_entries = await db.profit_history.find({"type": "EXPENSE"}).to_list(None)
+        for entry in expense_entries:
+            expense_history.append({
+                "date": entry.get("created_at"),
+                "amount": entry.get("amount", 0),
+                "description": entry.get("description", ""),
+                "category": entry.get("category", "operational")
+            })
+        
+        return {
+            "success": True,
+            "total_expenses": total_expenses,
+            "total_revenue": total_revenue,
+            "expense_percentage": expense_percentage,
+            "breakdown": expense_breakdown,
+            "settings": {
+                "percentage": expense_percentage,
+                "manual_amount": manual_expenses,
+                "can_modify": True
+            },
+            "entries": expense_history[-50:] if expense_history else [],  # Last 50 entries
+            "statistics": {
+                "expense_ratio": (total_expenses / total_revenue * 100) if total_revenue > 0 else 0,
+                "monthly_avg": total_expenses / 12 if total_expenses > 0 else 0,
+                "efficiency_score": max(0, 100 - (total_expenses / total_revenue * 100)) if total_revenue > 0 else 0
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching expenses details: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch expenses details"
+        )
+
+@api_router.get("/admin/profit/net-profit-analysis", response_model=dict)
+async def get_net_profit_analysis(current_admin: User = Depends(get_current_admin)):
+    """Get detailed net profit analysis."""
+    try:
+        # Calculate total revenue
+        total_revenue = 0
+        revenue_by_type = {}
+        
+        revenue_entries = await db.profit_history.find({
+            "type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION", "BOT_REVENUE"]}
+        }).to_list(None)
+        
+        for entry in revenue_entries:
+            amount = entry.get("amount", 0)
+            entry_type = entry.get("type")
+            total_revenue += amount
+            revenue_by_type[entry_type] = revenue_by_type.get(entry_type, 0) + amount
+        
+        # Calculate expenses
+        settings_doc = await db.admin_settings.find_one({"type": "expense_settings"})
+        if settings_doc:
+            expense_percentage = settings_doc.get("percentage", 60)
+            manual_expenses = settings_doc.get("manual_amount", 0)
+        else:
+            expense_percentage = 60
+            manual_expenses = 0
+        
+        total_expenses = (total_revenue * expense_percentage / 100) + manual_expenses
+        net_profit = total_revenue - total_expenses
+        
+        # Build detailed analysis
+        analysis = {
+            "revenue_analysis": {
+                "bet_commission": revenue_by_type.get("BET_COMMISSION", 0),
+                "gift_commission": revenue_by_type.get("GIFT_COMMISSION", 0),
+                "bot_revenue": revenue_by_type.get("BOT_REVENUE", 0),
+                "total": total_revenue
+            },
+            "expense_analysis": {
+                "operational_percentage": expense_percentage,
+                "operational_amount": total_revenue * expense_percentage / 100,
+                "manual_amount": manual_expenses,
+                "total": total_expenses
+            },
+            "profit_analysis": {
+                "gross_profit": total_revenue,
+                "total_expenses": total_expenses,
+                "net_profit": net_profit,
+                "profit_margin": (net_profit / total_revenue * 100) if total_revenue > 0 else 0,
+                "expense_ratio": (total_expenses / total_revenue * 100) if total_revenue > 0 else 0
+            },
+            "trends": {
+                "is_profitable": net_profit > 0,
+                "efficiency_rating": "high" if net_profit > total_expenses else "medium" if net_profit > 0 else "low",
+                "growth_potential": "high" if (net_profit / total_revenue * 100) > 30 else "medium" if (net_profit / total_revenue * 100) > 10 else "low"
+            }
+        }
+        
+        # Calculate step-by-step breakdown
+        calculation_steps = [
+            {
+                "step": 1,
+                "description": "Комиссия от ставок",
+                "amount": revenue_by_type.get("BET_COMMISSION", 0),
+                "running_total": revenue_by_type.get("BET_COMMISSION", 0)
+            },
+            {
+                "step": 2,
+                "description": "Комиссия от подарков",
+                "amount": revenue_by_type.get("GIFT_COMMISSION", 0),
+                "running_total": revenue_by_type.get("BET_COMMISSION", 0) + revenue_by_type.get("GIFT_COMMISSION", 0)
+            },
+            {
+                "step": 3,
+                "description": "Доход от ботов",
+                "amount": revenue_by_type.get("BOT_REVENUE", 0),
+                "running_total": total_revenue
+            },
+            {
+                "step": 4,
+                "description": f"Операционные расходы ({expense_percentage}%)",
+                "amount": -(total_revenue * expense_percentage / 100),
+                "running_total": total_revenue - (total_revenue * expense_percentage / 100)
+            },
+            {
+                "step": 5,
+                "description": "Дополнительные расходы",
+                "amount": -manual_expenses,
+                "running_total": net_profit
+            }
+        ]
+        
+        return {
+            "success": True,
+            "analysis": analysis,
+            "calculation_steps": calculation_steps,
+            "summary": {
+                "total_revenue": total_revenue,
+                "total_expenses": total_expenses,
+                "net_profit": net_profit,
+                "profit_margin": (net_profit / total_revenue * 100) if total_revenue > 0 else 0,
+                "is_profitable": net_profit > 0,
+                "efficiency_score": max(0, 100 - (total_expenses / total_revenue * 100)) if total_revenue > 0 else 0
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching net profit analysis: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch net profit analysis"
+        )
+
 async def update_bot_cycle_tracking(bot_id: str, bot_won: bool):
     """Update bot's cycle tracking after a game."""
     try:
