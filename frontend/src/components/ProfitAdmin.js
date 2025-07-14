@@ -23,6 +23,11 @@ const ProfitAdmin = ({ user }) => {
   // Дополнительные состояния
   const [tooltip, setTooltip] = useState({ show: false, text: '', x: 0, y: 0 });
   const [copySuccess, setCopySuccess] = useState(false);
+  
+  // Дополнительные фильтры
+  const [playerFilter, setPlayerFilter] = useState('');
+  const [amountFilter, setAmountFilter] = useState({ min: '', max: '' });
+  const [transactionIdFilter, setTransactionIdFilter] = useState('');
 
   // Пагинация для истории прибыли
   const pagination = usePagination(1, 10);
