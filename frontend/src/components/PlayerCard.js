@@ -86,8 +86,11 @@ const PlayerCard = ({
       .sort((a, b) => a.price - b.price); // Sort by price ascending
   };
 
-  // Determine avatar based on gender
+  // Determine avatar based on gender or bot type
   const getAvatarIcon = () => {
+    if (isBot) {
+      return '🤖'; // Bot emoji
+    }
     const gender = game.creator?.gender || 'male';
     return gender === 'female' ? '/Women.svg' : '/Men.svg';
   };
