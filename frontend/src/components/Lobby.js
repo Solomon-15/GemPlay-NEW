@@ -612,7 +612,20 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {getPaginatedItems(availableBots, currentPage.availableBots).map((game) => (
-            <GameCard key={game.game_id || game.id} game={game} onJoin={handleJoinGame} isBot={true} />
+            <PlayerCard 
+              key={game.game_id || game.id} 
+              game={game} 
+              user={user}
+              onOpenJoinBattle={handleOpenJoinBattle}
+              onUpdateUser={() => {
+                fetchLobbyData();
+                if (onUpdateUser) {
+                  onUpdateUser();
+                }
+              }}
+              currentTime={new Date()}
+              isBot={true}
+            />
           ))}
           {availableBots.length === 0 && (
             <div className="col-span-full text-text-secondary text-center py-8">
