@@ -227,7 +227,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
             <div className="flex justify-between items-center mb-2">
               <span className="font-roboto text-text-secondary">Used Today:</span>
               <span className="font-rajdhani text-warning font-bold">
-                {formatCurrencyWithSymbol(user.daily_limit_used)}
+                {formatDollarAmount(user.daily_limit_used)}
               </span>
             </div>
             <div className="flex justify-between items-center">
