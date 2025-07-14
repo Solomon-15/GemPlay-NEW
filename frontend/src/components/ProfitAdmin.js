@@ -1426,7 +1426,7 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   ) : (
                     <>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div className="bg-surface-sidebar rounded-lg p-4">
                           <span className="text-sm text-text-secondary">Общий доход:</span>
                           <div className="text-2xl font-bold text-blue-400">
@@ -1449,6 +1449,23 @@ const ProfitAdmin = ({ user }) => {
                             {formatCurrencyWithSymbol(modalData.avg_revenue_per_bot || 0, true)}
                           </div>
                         </div>
+                      </div>
+
+                      {/* График доходов от ботов */}
+                      <div className="bg-surface-sidebar rounded-lg p-4 mb-6">
+                        <h5 className="font-rajdhani text-lg font-bold text-blue-400 mb-4">
+                          📈 Динамика доходов от ботов
+                        </h5>
+                        <ProfitChart
+                          type="line"
+                          data={generateMockChartData(activePeriod, 'blue', modalData.chart_data)}
+                          title={`Доходы от ботов ${
+                            modalData.period === 'day' ? 'за день' :
+                            modalData.period === 'week' ? 'за неделю' :
+                            modalData.period === 'month' ? 'за месяц' :
+                            'за все время'
+                          }`}
+                        />
                       </div>
 
                       <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
