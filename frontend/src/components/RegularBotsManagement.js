@@ -437,6 +437,270 @@ const RegularBotsManagement = () => {
           </table>
         </div>
       </div>
+
+      {/* Модальное окно создания бота */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-white">Создать обычного бота</h3>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Имя бота */}
+              <div>
+                <label className="block text-text-secondary text-sm mb-1">Имя бота:</label>
+                <input
+                  type="text"
+                  value={botForm.name}
+                  onChange={(e) => setBotForm({...botForm, name: e.target.value})}
+                  placeholder="Bot #001"
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                />
+              </div>
+
+              {/* Таймеры */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Таймер паузы (мин):</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={botForm.pause_timer}
+                    onChange={(e) => setBotForm({...botForm, pause_timer: parseInt(e.target.value) || 5})}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Интервал пересоздания (сек):</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={botForm.recreate_interval}
+                    onChange={(e) => setBotForm({...botForm, recreate_interval: parseInt(e.target.value) || 30})}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Настройки цикла */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Настройки цикла</h4>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={botForm.cycle_games}
+                      onChange={(e) => setBotForm({...botForm, cycle_games: parseInt(e.target.value) || 12})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Сумма за цикл ($):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={botForm.cycle_total_amount}
+                      onChange={(e) => setBotForm({...botForm, cycle_total_amount: parseFloat(e.target.value) || 500})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">% выигрыша:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={botForm.win_percentage}
+                      onChange={(e) => setBotForm({...botForm, win_percentage: parseFloat(e.target.value) || 60})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Диапазон ставок */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Диапазон ставок</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Мин. ставка ($):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={botForm.min_bet_amount}
+                      onChange={(e) => setBotForm({...botForm, min_bet_amount: parseFloat(e.target.value) || 1})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Макс. ставка ($):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={botForm.max_bet_amount}
+                      onChange={(e) => setBotForm({...botForm, max_bet_amount: parseFloat(e.target.value) || 100})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Дополнительные настройки */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Поведение</h4>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={botForm.can_accept_bets}
+                      onChange={(e) => setBotForm({...botForm, can_accept_bets: e.target.checked})}
+                      className="mr-2"
+                    />
+                    <span className="text-text-secondary text-sm">Может принимать чужие ставки</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={botForm.can_play_with_bots}
+                      onChange={(e) => setBotForm({...botForm, can_play_with_bots: e.target.checked})}
+                      className="mr-2"
+                    />
+                    <span className="text-text-secondary text-sm">Может играть с другими ботами</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Кнопки */}
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={createIndividualBot}
+                  className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary font-rajdhani font-bold"
+                >
+                  Создать бота
+                </button>
+                <button
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно настроек бота */}
+      {isSettingsModalOpen && selectedBot && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-white">Настройки бота: {selectedBot.name}</h3>
+              <button
+                onClick={() => setIsSettingsModalOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Статус:</label>
+                  <div className={`px-3 py-2 rounded-lg ${selectedBot.is_active ? 'bg-green-600' : 'bg-red-600'}`}>
+                    <span className="text-white font-rajdhani font-bold">{selectedBot.status}</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Win Rate:</label>
+                  <div className="px-3 py-2 bg-surface-sidebar rounded-lg">
+                    <span className="text-accent-primary font-rajdhani font-bold">{selectedBot.win_rate}%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Таймер паузы:</label>
+                  <div className="px-3 py-2 bg-surface-sidebar rounded-lg">
+                    <span className="text-white">{selectedBot.pause_timer} мин</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Интервал пересоздания:</label>
+                  <div className="px-3 py-2 bg-surface-sidebar rounded-lg">
+                    <span className="text-white">{selectedBot.recreate_timer} сек</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
+                  <div className="px-3 py-2 bg-surface-sidebar rounded-lg">
+                    <span className="text-white">{selectedBot.cycle_games}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Статистика игр</h4>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-green-400 text-xl font-rajdhani font-bold">{selectedBot.games_stats.wins}</div>
+                    <div className="text-text-secondary text-xs">Побед</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-red-400 text-xl font-rajdhani font-bold">{selectedBot.games_stats.losses}</div>
+                    <div className="text-text-secondary text-xs">Поражений</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-yellow-400 text-xl font-rajdhani font-bold">{selectedBot.games_stats.draws}</div>
+                    <div className="text-text-secondary text-xs">Ничьих</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-accent-primary text-xl font-rajdhani font-bold">{selectedBot.games_stats.total}</div>
+                    <div className="text-text-secondary text-xs">Всего</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => toggleBotStatus(selectedBot.id)}
+                  className={`px-6 py-3 text-white rounded-lg font-rajdhani font-bold ${
+                    selectedBot.is_active 
+                      ? 'bg-red-600 hover:bg-red-700' 
+                      : 'bg-green-600 hover:bg-green-700'
+                  }`}
+                >
+                  {selectedBot.is_active ? 'Отключить бота' : 'Включить бота'}
+                </button>
+                <button
+                  onClick={() => setIsSettingsModalOpen(false)}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
