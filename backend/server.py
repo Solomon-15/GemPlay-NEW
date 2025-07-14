@@ -2619,44 +2619,53 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
             winner = await db.users.find_one({"id": winner_id})
             if winner:
                 # Winner is a human player
-                commission_to_deduct = commission_amount  # 3% of total pot
-                
-                # ИСПРАВЛЕНИЕ: Просто списываем комиссию из frozen_balance, не трогаем virtual_balance
-                new_winner_frozen = winner["frozen_balance"] - (game.bet_amount * 0.06)  # Unfreeze winner's commission
-                
-                # Deduct actual commission from frozen balance only
-                if new_winner_frozen >= commission_to_deduct:
-                    new_winner_frozen -= commission_to_deduct
+                if is_regular_bot_game:
+                    # For regular bot games, simply unfreeze the original commission without deducting anything
+                    new_winner_frozen = winner["frozen_balance"] - (game.bet_amount * 0.06)  # Unfreeze winner's commission
+                    new_winner_balance = winner["virtual_balance"]  # No commission deducted
+                    
+                    logger.info(f"💰 REGULAR BOT GAME - Winner {winner_id} gets full payout, no commission deducted")
                 else:
-                    # If not enough in frozen, take remaining from virtual balance
-                    remaining = commission_to_deduct - new_winner_frozen
-                    new_winner_balance = winner["virtual_balance"] - remaining
-                    new_winner_frozen = 0
+                    # Normal human vs human game with commission
+                    commission_to_deduct = commission_amount  # 3% of total pot
+                    
+                    # ИСПРАВЛЕНИЕ: Просто списываем комиссию из frozen_balance, не трогаем virtual_balance
+                    new_winner_frozen = winner["frozen_balance"] - (game.bet_amount * 0.06)  # Unfreeze winner's commission
+                    
+                    # Deduct actual commission from frozen balance only
+                    if new_winner_frozen >= commission_to_deduct:
+                        new_winner_frozen -= commission_to_deduct
+                        new_winner_balance = winner["virtual_balance"]
+                    else:
+                        # If not enough in frozen, take remaining from virtual balance
+                        remaining = commission_to_deduct - new_winner_frozen
+                        new_winner_balance = winner["virtual_balance"] - remaining
+                        new_winner_frozen = 0
                 
                 await db.users.update_one(
                     {"id": winner_id},
                     {
                         "$set": {
-                            "virtual_balance": new_winner_balance if 'new_winner_balance' in locals() else winner["virtual_balance"],
+                            "virtual_balance": new_winner_balance,
                             "frozen_balance": new_winner_frozen,
                             "updated_at": datetime.utcnow()
                         }
                     }
                 )
                 
-                # Record commission transaction
-                final_balance = new_winner_balance if 'new_winner_balance' in locals() else winner["virtual_balance"]
-                commission_transaction = Transaction(
-                    user_id=winner_id,
-                    transaction_type=TransactionType.COMMISSION,
-                    amount=commission_amount,
-                    currency="USD",
-                    balance_before=winner["virtual_balance"],
-                    balance_after=final_balance,
-                    description=f"PvP game commission (6% of ${game.bet_amount} bet)",
-                    reference_id=game.id
-                )
-                await db.transactions.insert_one(commission_transaction.dict())
+                # Record commission transaction only if commission was charged
+                if not is_regular_bot_game and commission_amount > 0:
+                    commission_transaction = Transaction(
+                        user_id=winner_id,
+                        transaction_type=TransactionType.COMMISSION,
+                        amount=commission_amount,
+                        currency="USD",
+                        balance_before=winner["virtual_balance"],
+                        balance_after=new_winner_balance,
+                        description=f"PvP game commission (6% of ${game.bet_amount} bet)",
+                        reference_id=game.id
+                    )
+                    await db.transactions.insert_one(commission_transaction.dict())
                 
                 # Record profit entry from bet commission
                 profit_entry = ProfitEntry(
