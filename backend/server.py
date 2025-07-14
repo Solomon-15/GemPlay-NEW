@@ -101,6 +101,46 @@ class UserRole(str, Enum):
     ADMIN = "ADMIN"
     SUPER_ADMIN = "SUPER_ADMIN"
 
+class BotType(str, Enum):
+    REGULAR = "REGULAR"
+    HUMAN = "HUMAN"
+
+class BotMode(str, Enum):
+    SIMPLE = "SIMPLE"      # Простой рандом
+    ALGORITHMIC = "ALGORITHMIC"  # С алгоритмом побед
+
+# Bot model
+class Bot(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: BotType = BotType.REGULAR
+    name: Optional[str] = None  # Только для Human ботов
+    mode: BotMode = BotMode.ALGORITHMIC
+    is_active: bool = True
+    
+    # Настройки поведения
+    min_bet_amount: float = 1.0
+    max_bet_amount: float = 100.0
+    win_percentage: float = 60.0  # % побед за цикл
+    cycle_length: int = 12  # Количество игр в цикле
+    pause_timer: int = 5  # Минуты паузы между играми
+    recreate_timer: int = 30  # Секунды для пересоздания ставки
+    
+    # Статистика
+    games_played: int = 0
+    games_won: int = 0
+    current_cycle_games: int = 0
+    current_cycle_wins: int = 0
+    current_cycle_losses: int = 0
+    total_bet_amount: float = 0.0
+    
+    # Состояние
+    last_game_time: Optional[datetime] = None
+    last_bet_time: Optional[datetime] = None
+    current_bet_id: Optional[str] = None
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 class UserStatus(str, Enum):
     ACTIVE = "ACTIVE"
     BANNED = "BANNED"
