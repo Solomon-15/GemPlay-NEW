@@ -2804,6 +2804,159 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
         logger.error(f"Error distributing game rewards: {e}")
         raise
 
+async def accumulate_bot_profit(game: Game, winner_id: str):
+    """Накопление прибыли от обычных ботов в защищённом контейнере."""
+    try:
+        # Определяем, какой бот участвует в игре
+        bot_id = None
+        bot_won = False
+        
+        # Проверяем создателя игры
+        creator_bot = await db.bots.find_one({"id": game.creator_id})
+        if creator_bot and creator_bot.get("bot_type") == "REGULAR":
+            bot_id = game.creator_id
+            bot_won = (winner_id == game.creator_id)
+        
+        # Проверяем оппонента
+        if game.opponent_id:
+            opponent_bot = await db.bots.find_one({"id": game.opponent_id})
+            if opponent_bot and opponent_bot.get("bot_type") == "REGULAR":
+                bot_id = game.opponent_id
+                bot_won = (winner_id == game.opponent_id)
+        
+        if not bot_id:
+            logger.warning(f"No regular bot found in game {game.id}")
+            return
+        
+        # Получаем или создаём аккумулятор прибыли для текущего цикла
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            logger.error(f"Bot {bot_id} not found")
+            return
+        
+        cycle_length = bot.get("cycle_length", 12)  # По умолчанию 12 игр
+        
+        # Ищем активный аккумулятор прибыли для этого бота
+        accumulator = await db.bot_profit_accumulators.find_one({
+            "bot_id": bot_id,
+            "is_cycle_completed": False
+        })
+        
+        if not accumulator:
+            # Создаём новый аккумулятор для нового цикла
+            cycle_number = 1
+            # Найдём последний цикл для определения номера
+            last_accumulator = await db.bot_profit_accumulators.find_one(
+                {"bot_id": bot_id},
+                sort=[("cycle_number", -1)]
+            )
+            if last_accumulator:
+                cycle_number = last_accumulator["cycle_number"] + 1
+            
+            accumulator = BotProfitAccumulator(
+                bot_id=bot_id,
+                cycle_number=cycle_number,
+                total_spent=0,
+                total_earned=0,
+                games_completed=0,
+                games_won=0,
+                cycle_start_date=datetime.utcnow()
+            )
+            await db.bot_profit_accumulators.insert_one(accumulator.dict())
+        else:
+            accumulator = BotProfitAccumulator(**accumulator)
+        
+        # Обновляем данные аккумулятора
+        bet_amount = game.bet_amount
+        
+        # Бот всегда тратит сумму ставки (независимо от результата)
+        new_total_spent = accumulator.total_spent + bet_amount
+        
+        # Если бот выиграл, добавляем к заработанному
+        new_total_earned = accumulator.total_earned
+        if bot_won:
+            new_total_earned += bet_amount * 2  # Бот получает свою ставку + ставку противника
+            new_games_won = accumulator.games_won + 1
+        else:
+            new_games_won = accumulator.games_won
+        
+        new_games_completed = accumulator.games_completed + 1
+        
+        # Обновляем аккумулятор
+        await db.bot_profit_accumulators.update_one(
+            {"id": accumulator.id},
+            {
+                "$set": {
+                    "total_spent": new_total_spent,
+                    "total_earned": new_total_earned,
+                    "games_completed": new_games_completed,
+                    "games_won": new_games_won,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"🤖 Bot {bot_id} cycle update: {new_games_completed}/{cycle_length} games, "
+                   f"spent: ${new_total_spent}, earned: ${new_total_earned}")
+        
+        # Проверяем, завершён ли цикл
+        if new_games_completed >= cycle_length:
+            await complete_bot_cycle(accumulator.id, new_total_spent, new_total_earned, bot_id)
+        
+    except Exception as e:
+        logger.error(f"Error accumulating bot profit: {e}")
+
+async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earned: float, bot_id: str):
+    """Завершение цикла бота и перевод излишка в прибыль."""
+    try:
+        # Рассчитываем прибыль: заработанное - потраченное
+        profit = total_earned - total_spent
+        
+        # Обновляем аккумулятор как завершённый
+        await db.bot_profit_accumulators.update_one(
+            {"id": accumulator_id},
+            {
+                "$set": {
+                    "is_cycle_completed": True,
+                    "cycle_end_date": datetime.utcnow(),
+                    "profit_transferred": profit,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Если есть прибыль, переводим её в "Доход от ботов"
+        if profit > 0:
+            bot = await db.bots.find_one({"id": bot_id})
+            bot_name = bot.get("name", "Unknown Bot") if bot else "Unknown Bot"
+            
+            profit_entry = ProfitEntry(
+                entry_type="BOT_REVENUE",
+                amount=profit,
+                source_user_id=bot_id,
+                description=f"Прибыль от цикла бота {bot_name}: ${profit:.2f} (заработано: ${total_earned:.2f}, потрачено: ${total_spent:.2f})",
+                reference_id=accumulator_id
+            )
+            await db.profit_entries.insert_one(profit_entry.dict())
+            
+            logger.info(f"🎯 Bot {bot_id} cycle completed: profit ${profit:.2f} transferred to BOT_REVENUE")
+        else:
+            logger.info(f"🎯 Bot {bot_id} cycle completed: no profit (deficit: ${abs(profit):.2f})")
+        
+        # Сбрасываем счётчики бота для нового цикла
+        await db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "current_cycle_games": 0,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error completing bot cycle: {e}")
+
 @api_router.get("/games/available", response_model=List[dict])
 async def get_available_games(current_user: User = Depends(get_current_user)):
     """Get list of available games for joining."""
