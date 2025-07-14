@@ -667,6 +667,73 @@ const RegularBotsManagement = () => {
         </div>
       </div>
 
+      {/* Управление прибылью ботов */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Контейнер просмотра накопленной прибыли */}
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <div className="p-3 bg-green-600 rounded-lg mr-4">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-rajdhani font-bold text-white">📊 Накопители прибыли</h3>
+                <p className="text-text-secondary text-sm">Просмотр накопленной прибыли всех ботов</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="text-text-secondary text-sm">
+              • Отслеживание циклов ботов<br/>
+              • Анализ прибыли по циклам<br/>
+              • История накоплений<br/>
+              • Детализация по ботам
+            </div>
+            
+            <button
+              onClick={handleOpenProfitAccumulators}
+              className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-colors flex items-center justify-center space-x-2"
+            >
+              <span>📊</span>
+              <span>Посмотреть накопители прибыли</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Контейнер принудительного завершения циклов */}
+        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <div className="p-3 bg-orange-600 rounded-lg mr-4">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-rajdhani font-bold text-white">⚡ Завершение циклов</h3>
+                <p className="text-text-secondary text-sm">Принудительное завершение циклов ботов</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="text-text-secondary text-sm">
+              • Завершение незавершённых циклов<br/>
+              • Расчёт и перевод прибыли<br/>
+              • Сброс счётчиков ботов<br/>
+              • Принудительный перезапуск
+            </div>
+            
+            <div className="text-yellow-400 text-xs bg-yellow-900 bg-opacity-30 border border-yellow-600 rounded p-2">
+              <strong>Примечание:</strong> Выберите бота в таблице ниже, затем используйте кнопку "Завершить цикл" в столбце "Действия"
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Таблица ботов */}
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
         <div className="p-4 border-b border-border-primary">
