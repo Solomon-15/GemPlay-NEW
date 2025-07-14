@@ -5822,22 +5822,31 @@ async def create_bot_bet(bot: Bot) -> bool:
             bot_type="REGULAR" if bot.type == BotType.REGULAR else "HUMAN"
         )
         
-        # Сохраняем в базе данных
+        
+        # Save to database
         await db.games.insert_one(game.dict())
         
-        # Обновляем статистику бота
+        # Update bot stats
         await db.bots.update_one(
             {"id": bot.id},
             {
                 "$set": {
                     "current_bet_id": game.id,
-                    "updated_at": datetime.utcnow()
+                    "updated_at": datetime.utcnow(),
+                    "last_game_time": datetime.utcnow()
                 },
                 "$inc": {
                     "total_bet_amount": total_value
                 }
             }
         )
+        
+        logger.info(f"Bot {bot.name} created gem-based bet {game.id} with total ${total_value} (gems: {bet_gems})")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error creating bot bet: {e}")
+        return False
         
         logger.info(f"Bot {bot.id} created bet {game.id} for ${total_value}")
         return True
