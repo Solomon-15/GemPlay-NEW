@@ -5017,6 +5017,64 @@ async def get_commission_settings(current_admin: User = Depends(get_current_admi
             detail="Failed to fetch commission settings"
         )
 
+@api_router.put("/admin/profit/commission-settings", response_model=dict)
+async def update_commission_settings(
+    settings: dict,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Update commission settings."""
+    try:
+        # Validate input
+        bet_commission_rate = settings.get("bet_commission_rate", 3.0)
+        gift_commission_rate = settings.get("gift_commission_rate", 3.0)
+        
+        # Validate ranges
+        if not (0 <= bet_commission_rate <= 100):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Bet commission rate must be between 0 and 100"
+            )
+        
+        if not (0 <= gift_commission_rate <= 100):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Gift commission rate must be between 0 and 100"
+            )
+        
+        # For now, we'll store these in a collection. In a real app, you might want a dedicated settings collection
+        settings_doc = {
+            "type": "commission_settings",
+            "bet_commission_rate": bet_commission_rate,
+            "gift_commission_rate": gift_commission_rate,
+            "updated_at": datetime.now(),
+            "updated_by": current_admin.id
+        }
+        
+        # Update or create settings document
+        await db.admin_settings.update_one(
+            {"type": "commission_settings"},
+            {"$set": settings_doc},
+            upsert=True
+        )
+        
+        logger.info(f"Commission settings updated by {current_admin.email}: bet={bet_commission_rate}%, gift={gift_commission_rate}%")
+        
+        return {
+            "success": True,
+            "message": "Commission settings updated successfully",
+            "bet_commission_rate": bet_commission_rate,
+            "gift_commission_rate": gift_commission_rate
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating commission settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update commission settings"
+        )
+
 async def update_bot_cycle_tracking(bot_id: str, bot_won: bool):
     """Update bot's cycle tracking after a game."""
     try:
