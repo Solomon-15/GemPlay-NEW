@@ -77,7 +77,7 @@ const Notification = ({
         {getIcon()}
         <div className="flex-1 min-w-0">
           <p className="text-text-primary text-sm font-medium leading-5 break-words">
-            {message}
+            {typeof message === 'string' ? message : JSON.stringify(message)}
           </p>
         </div>
         <button
