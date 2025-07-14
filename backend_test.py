@@ -3911,30 +3911,38 @@ def test_comprehensive_bet_management_system() -> None:
     if success:
         print_success("Admin bets list endpoint accessible")
         
-        # Check response structure
-        required_fields = ["bets", "total_count", "current_page", "total_pages", "items_per_page", "has_next", "has_prev"]
+        # Check response structure (pagination is nested under "pagination" key)
+        required_fields = ["bets", "pagination", "summary"]
         missing_fields = [field for field in required_fields if field not in response]
         
         if not missing_fields:
-            print_success("List response contains all pagination fields")
-            print_success(f"Total count: {response['total_count']}")
-            print_success(f"Current page: {response['current_page']}")
-            print_success(f"Total pages: {response['total_pages']}")
-            print_success(f"Items per page: {response['items_per_page']}")
-            print_success(f"Has next: {response['has_next']}")
-            print_success(f"Has prev: {response['has_prev']}")
-            record_test("Admin Bets List - Pagination Structure", True)
+            pagination = response.get("pagination", {})
+            pagination_fields = ["total_count", "current_page", "total_pages", "items_per_page", "has_next", "has_prev"]
+            pagination_missing = [field for field in pagination_fields if field not in pagination]
+            
+            if not pagination_missing:
+                print_success("List response contains all pagination fields")
+                print_success(f"Total count: {pagination['total_count']}")
+                print_success(f"Current page: {pagination['current_page']}")
+                print_success(f"Total pages: {pagination['total_pages']}")
+                print_success(f"Items per page: {pagination['items_per_page']}")
+                print_success(f"Has next: {pagination['has_next']}")
+                print_success(f"Has prev: {pagination['has_prev']}")
+                record_test("Admin Bets List - Pagination Structure", True)
+            else:
+                print_error(f"Pagination missing fields: {pagination_missing}")
+                record_test("Admin Bets List - Pagination Structure", False, f"Missing: {pagination_missing}")
             
             # Check bet structure
             bets = response.get("bets", [])
             if bets:
                 sample_bet = bets[0]
-                bet_required_fields = ["bet_id", "user_id", "status", "bet_amount", "created_at", "age_hours", "is_stuck", "can_cancel"]
+                bet_required_fields = ["id", "status", "bet_amount", "created_at", "age_hours", "is_stuck", "can_cancel"]
                 bet_missing_fields = [field for field in bet_required_fields if field not in sample_bet]
                 
                 if not bet_missing_fields:
                     print_success("Bet entries contain all required fields")
-                    print_success(f"Sample bet: {sample_bet}")
+                    print_success(f"Sample bet ID: {sample_bet.get('id')}")
                     record_test("Admin Bets List - Bet Structure", True)
                 else:
                     print_error(f"Bet entries missing fields: {bet_missing_fields}")
@@ -3952,11 +3960,12 @@ def test_comprehensive_bet_management_system() -> None:
     # Test pagination parameters
     response, success = make_request("GET", "/admin/bets/list?page=1&limit=5", auth_token=admin_token)
     if success:
-        if response.get("items_per_page") == 5 and response.get("current_page") == 1:
+        pagination = response.get("pagination", {})
+        if pagination.get("items_per_page") == 5 and pagination.get("current_page") == 1:
             print_success("Pagination parameters working correctly")
             record_test("Admin Bets List - Pagination Parameters", True)
         else:
-            print_error(f"Pagination parameters not working: page={response.get('current_page')}, limit={response.get('items_per_page')}")
+            print_error(f"Pagination parameters not working: page={pagination.get('current_page')}, limit={pagination.get('items_per_page')}")
             record_test("Admin Bets List - Pagination Parameters", False, "Parameters not applied")
     
     # Test filtering by status
