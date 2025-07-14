@@ -4640,19 +4640,78 @@ async def should_bot_take_action(bot: Bot) -> bool:
     return random.random() < 0.3  # 30% chance to act when conditions are met
 
 async def bot_create_game_automatically(bot: Bot):
-    """Make bot create a game automatically."""
+    """Make bot create a game automatically using gem-based betting."""
     try:
         # Ensure bot has gems
         await BotGameLogic.setup_bot_gems(bot.id, db)
         
-        # Generate random bet amount within bot's limits
-        bet_amount = random.uniform(bot.min_bet, min(bot.max_bet, 100))
-        bet_amount = round(bet_amount, 2)
+        # Define gem values (must match frontend definitions)
+        gem_values = {
+            'Ruby': 1,
+            'Amber': 2,
+            'Topaz': 5,
+            'Emerald': 10,
+            'Aquamarine': 25,
+            'Sapphire': 50,
+            'Magic': 100
+        }
+        gem_types_list = list(gem_values.keys())
         
-        # Select random gems to bet
-        gem_types = list(GemType)
-        selected_gems = random.sample(gem_types, random.randint(1, min(3, len(gem_types))))
-        bet_gems = {gem_type.value: random.randint(1, 5) for gem_type in selected_gems}
+        def generate_gem_based_bet(min_amount: float, max_amount: float):
+            """Generate a valid gem combination within the specified amount range."""
+            target_min = int(min_amount)
+            target_max = int(max_amount)
+            
+            attempts = 0
+            max_attempts = 50
+            
+            while attempts < max_attempts:
+                # Randomly select 1-3 gem types
+                num_gem_types = random.randint(1, 3)
+                selected_gem_types = random.sample(gem_types_list, num_gem_types)
+                
+                # Generate quantities for each gem type
+                gem_combination = {}
+                total_value = 0
+                
+                for gem_type in selected_gem_types:
+                    # Start with 1-2 gems of each type for single bets
+                    quantity = random.randint(1, 2)
+                    gem_combination[gem_type] = quantity
+                    total_value += gem_values[gem_type] * quantity
+                
+                # Adjust to fit target range
+                while total_value < target_min and attempts < max_attempts:
+                    gem_to_add = random.choice(selected_gem_types)
+                    if total_value + gem_values[gem_to_add] <= target_max:
+                        gem_combination[gem_to_add] += 1
+                        total_value += gem_values[gem_to_add]
+                    else:
+                        break
+                
+                while total_value > target_max and attempts < max_attempts:
+                    reducible_gems = [gt for gt in selected_gem_types if gem_combination[gt] > 1]
+                    if not reducible_gems:
+                        break
+                    gem_to_reduce = random.choice(reducible_gems)
+                    gem_combination[gem_to_reduce] -= 1
+                    total_value -= gem_values[gem_to_reduce]
+                    if gem_combination[gem_to_reduce] == 0:
+                        del gem_combination[gem_to_reduce]
+                        selected_gem_types.remove(gem_to_reduce)
+                
+                # Check if valid
+                if target_min <= total_value <= target_max:
+                    return gem_combination, total_value
+                
+                attempts += 1
+            
+            # Fallback: simple Ruby combination
+            fallback_amount = max(target_min, min(target_max, 5))
+            return {'Ruby': fallback_amount}, fallback_amount
+        
+        # Generate gem-based bet within bot's limits
+        bet_gems, bet_amount = generate_gem_based_bet(bot.min_bet, bot.max_bet)
         
         # Generate bot's move
         bot_move = BotGameLogic.calculate_bot_move(bot)
@@ -4664,10 +4723,14 @@ async def bot_create_game_automatically(bot: Bot):
             creator_move=bot_move,
             creator_move_hash=hashlib.sha256(f"{bot_move.value}{salt}".encode()).hexdigest(),
             creator_salt=salt,
-            bet_amount=bet_amount,
+            bet_amount=float(bet_amount),  # Convert to float for compatibility
             bet_gems=bet_gems,
             is_bot_game=True,
-            bot_id=bot.id
+            bot_id=bot.id,
+            metadata={
+                "gem_based_bet": True,  # Mark as gem-based bet
+                "auto_created": True
+            }
         )
         
         await db.games.insert_one(game.dict())
@@ -4678,7 +4741,7 @@ async def bot_create_game_automatically(bot: Bot):
             {"$set": {"last_game_time": datetime.utcnow()}}
         )
         
-        logger.info(f"Bot {bot.name} created game {game.id} with bet ${bet_amount}")
+        logger.info(f"Bot {bot.name} created gem-based game {game.id} with bet ${bet_amount} (gems: {bet_gems})")
         
     except Exception as e:
         logger.error(f"Error in bot auto-create game: {e}")
