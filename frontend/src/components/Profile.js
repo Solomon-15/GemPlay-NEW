@@ -297,7 +297,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
                       : 'bg-gray-700 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  {formatCurrencyWithSymbol(amount > 0 ? amount : 0, false)}
+                  {formatDollarAmount(amount > 0 ? amount : 0)}
                 </button>
               ))}
             </div>
