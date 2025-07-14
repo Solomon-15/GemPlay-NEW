@@ -191,7 +191,7 @@ const GiftConfirmationModal = ({
             
             <div className="flex justify-between">
               <span className="text-text-secondary">Value:</span>
-              <span className="text-white font-medium">${totalValue.toFixed(2)}</span>
+              <span className="text-white font-medium">{formatGemValue(totalValue)}</span>
             </div>
             
             <div className="flex justify-between">
