@@ -74,19 +74,32 @@ const RegularBotsManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Кнопка управления всеми ботами */}
+      {/* Кнопки управления */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-rajdhani font-bold text-white">Обычные Боты</h2>
-        <button
-          onClick={toggleAllBots}
-          className={`px-6 py-3 rounded-lg font-rajdhani font-bold text-white transition-colors ${
-            allBotsEnabled 
-              ? 'bg-red-600 hover:bg-red-700' 
-              : 'bg-green-600 hover:bg-green-700'
-          }`}
-        >
-          {allBotsEnabled ? 'Отключить всех ботов' : 'Включить всех ботов'}
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={startRegularBots}
+            disabled={startingBots}
+            className={`px-6 py-3 rounded-lg font-rajdhani font-bold text-white transition-colors ${
+              startingBots 
+                ? 'bg-gray-600 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {startingBots ? 'Запуск...' : 'Запустить ботов'}
+          </button>
+          <button
+            onClick={toggleAllBots}
+            className={`px-6 py-3 rounded-lg font-rajdhani font-bold text-white transition-colors ${
+              allBotsEnabled 
+                ? 'bg-red-600 hover:bg-red-700' 
+                : 'bg-green-600 hover:bg-green-700'
+            }`}
+          >
+            {allBotsEnabled ? 'Отключить всех ботов' : 'Включить всех ботов'}
+          </button>
+        </div>
       </div>
 
       {/* Информационные блоки */}
