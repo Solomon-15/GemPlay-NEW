@@ -293,9 +293,14 @@ const ProfitAdmin = ({ user }) => {
   const openModal = async (type) => {
     try {
       setActiveModal(type);
-      // Здесь будет загрузка данных для конкретного типа
-      // В реальной реализации это будет API вызов
-      setModalData([]);
+      // Для модальных окон с настройками комиссий загружаем текущие настройки
+      if (type === 'bet_commission' || type === 'gift_commission') {
+        // Настройки уже загружены в commissionSettings
+        setModalData([]);
+      } else {
+        // Для других типов будем загружать соответствующие данные
+        setModalData([]);
+      }
     } catch (error) {
       console.error('Error opening modal:', error);
     }
