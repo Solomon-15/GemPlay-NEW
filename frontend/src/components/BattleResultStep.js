@@ -185,7 +185,7 @@ const BattleResultStep = ({
           <div className="flex justify-between items-center py-2 border-b border-border-primary border-opacity-30">
             <span className="text-text-secondary font-rajdhani">Prize Pool:</span>
             <span className="text-green-400 font-rajdhani font-bold text-lg">
-              {formatCurrency(totalGemValue * 2 - commissionAmount)}
+              {formatGemValue(totalGemValue * 2 - commissionAmount)}
             </span>
           </div>
           
