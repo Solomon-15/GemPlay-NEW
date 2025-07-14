@@ -6269,6 +6269,74 @@ async def toggle_bot_status(
             detail="Failed to toggle bot status"
         )
 
+@api_router.delete("/admin/bots/{bot_id}/delete", response_model=dict)
+async def delete_bot(
+    bot_id: str,
+    delete_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Delete bot completely (admin only)."""
+    try:
+        # Find bot
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        reason = delete_data.get("reason", "No reason provided")
+        
+        # Cancel all bot's active games first
+        active_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        }).to_list(100)
+        
+        for game in active_games:
+            # Cancel the game
+            await db.games.update_one(
+                {"id": game["id"]},
+                {"$set": {"status": "CANCELLED", "cancelled_at": datetime.utcnow()}}
+            )
+        
+        # Delete the bot
+        await db.bots.delete_one({"id": bot_id})
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="DELETE_BOT",
+            target_type="bot",
+            target_id=bot_id,
+            details={
+                "deleted_bot": {
+                    "name": bot.get("name", f"Bot #{bot_id[:8]}"),
+                    "bot_type": bot.get("bot_type", "REGULAR")
+                },
+                "reason": reason,
+                "cancelled_games": len(active_games)
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": "Бот удален успешно",
+            "deleted_bot_id": bot_id,
+            "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
+            "reason": reason,
+            "cancelled_games": len(active_games)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting bot: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete bot"
+        )
+
 @api_router.get("/admin/bots/regular/stats", response_model=dict)
 async def get_regular_bots_stats(current_user: User = Depends(get_current_admin)):
     """Get regular bots statistics."""
