@@ -482,7 +482,7 @@ const ProfitAdmin = ({ user }) => {
             </div>
 
             {/* Доход от ботов */}
-            <div className="bg-surface-card border border-blue-500/30 rounded-lg p-6 hover:border-blue-500/60 transition-colors duration-200 shadow-lg">
+            <div className="bg-surface-card border border-blue-500/30 rounded-lg p-6 hover:border-blue-500/60 transition-colors duration-200 shadow-lg cursor-pointer" onClick={() => openModal('bot_revenue')}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
@@ -505,7 +505,7 @@ const ProfitAdmin = ({ user }) => {
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Доход от Обычных ботов</h3>
                   <p className="font-russo text-2xl font-bold text-blue-400">{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</p>
                   <p className="text-xs text-text-secondary mt-1">Прибыль от циклов обычных ботов</p>
-                  <p className="text-xs text-blue-300 mt-1">Обновляется при завершении циклов</p>
+                  <p className="text-xs text-blue-300 mt-1">Клик для детализации</p>
                 </div>
               </div>
             </div>
