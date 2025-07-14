@@ -347,7 +347,10 @@ const ProfitAdmin = ({ user }) => {
                   <p className="text-text-secondary text-sm">{category.description}</p>
                   
                   <div className={`mt-3 text-xs font-bold ${
-                    activeCategory === key ? `text-${category.color}-400` : 'text-accent-primary'
+                    activeCategory === key ? 
+                      (category.color === 'green' ? 'text-green-400' :
+                       category.color === 'blue' ? 'text-blue-400' :
+                       'text-purple-400') : 'text-accent-primary'
                   }`}>
                     {activeCategory === key ? `${entries.length} записей` : 'Нажмите для просмотра'}
                   </div>
