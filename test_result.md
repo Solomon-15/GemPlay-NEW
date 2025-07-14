@@ -1,4 +1,69 @@
 backend:
+  - task: "Bot Delete API and Frontend Enhancement"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/frontend/src/components/RegularBotsManagement.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED BOT DELETE FUNCTIONALITY: Successfully implemented comprehensive bot deletion system with both backend API and frontend enhancements. Backend implementation: 1) DELETE /api/admin/bots/{bot_id}/delete endpoint with reason validation, active game cancellation, and admin logging. 2) Proper error handling for bot not found, safety measures for active games cancellation. Frontend implementation: 1) Added compact info blocks showing '🟢 Активных ботов: XX' and '🔴 Отключённых ботов: XX' with real-time count calculations. 2) Added '🗑 Удалить' delete button in Actions column with proper styling and icon. 3) Implemented comprehensive delete confirmation modal with bot information display, reason input field (required), and warnings for active bets. 4) Added proper state management for delete modal, reason validation, and integrated with existing notification system. 5) All features use Russian localization and match the existing UI/UX design patterns. The system provides complete bot management functionality with safety measures and comprehensive logging for administrative oversight."
+
+Testing Protocol
+
+### Communication with Testing Sub-Agent ###
+
+When calling `deep_testing_backend_v2` or `auto_frontend_testing_agent`, always provide clear and comprehensive testing instructions:
+
+1. **Current Status**: Brief summary of what has been implemented
+2. **What to Test**: Specific functionality or endpoints to verify
+3. **Expected Behavior**: Clear description of expected results
+4. **User Credentials**: Provide admin@gemplay.com / Admin123! for admin testing
+5. **Test Scenarios**: Specific test cases if needed
+6. **Background Context**: Mention this is part of an ongoing bot management system
+
+### Example Testing Request Format ###
+
+```
+CONTEXT: Implemented bot deletion functionality in the Regular Bots Management section of the Admin Panel.
+
+WHAT TO TEST:
+1. DELETE /api/admin/bots/{bot_id}/delete endpoint - should delete bot with reason
+2. Frontend bot count displays - should show active/disabled bot counts  
+3. Delete button functionality - should open confirmation modal
+4. Complete delete workflow - from button click to bot removal
+
+EXPECTED BEHAVIOR:
+- Backend should accept delete requests with reason and remove bot
+- Frontend should display real-time bot counts
+- Delete modal should require reason input
+- All actions should be logged and show appropriate notifications
+
+CREDENTIALS: admin@gemplay.com / Admin123!
+
+Please test the complete bot deletion workflow and confirm all components work together properly.
+```
+
+### Incorporate User Feedback ###
+
+After testing is complete:
+1. Review testing agent findings carefully
+2. Address any critical issues found by testing agent  
+3. Only make changes for significant functional problems
+4. Do not fix minor cosmetic issues unless specifically requested by user
+5. Update this test_result.md file with final test results
+6. Always ask user if they want to proceed with frontend testing or handle it manually
+
+### Important Notes ###
+
+- Never invoke testing agents without reading this file first
+- Always check current service status before testing
+- Focus testing on new/modified functionality
+- Prioritize functional testing over cosmetic issues
+- Use testing agents for validation, not development
+
   - task: "Asynchronous Commit-Reveal System for PvP Games"
     implemented: true
     working: true
