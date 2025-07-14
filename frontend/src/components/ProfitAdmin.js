@@ -469,7 +469,11 @@ const ProfitAdmin = ({ user }) => {
                         </div>
                         
                         <div className="text-right">
-                          <div className={`text-2xl font-bold font-russo ${categories[activeCategory].color === 'green' ? 'text-green-400' : categories[activeCategory].color === 'blue' ? 'text-blue-400' : 'text-purple-400'}`}>
+                          <div className={`text-2xl font-bold font-russo ${
+                            categories[activeCategory].color === 'green' ? 'text-green-400' : 
+                            categories[activeCategory].color === 'blue' ? 'text-blue-400' : 
+                            'text-purple-400'
+                          }`}>
                             {formatCurrencyWithSymbol(entry.amount, true)}
                           </div>
                           {entry.source_user_id && (
