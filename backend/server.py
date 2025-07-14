@@ -2108,6 +2108,41 @@ async def handle_game_timeout(game_id: str):
     except Exception as e:
         logger.error(f"Error handling game timeout: {e}")
 
+@api_router.get("/debug/user-games/{user_id}")
+async def debug_user_games(user_id: str, current_user: User = Depends(get_current_user)):
+    """Debug endpoint to check user's active games."""
+    try:
+        # Get all games for this user
+        games_as_creator = await db.games.find({"creator_id": user_id}).to_list(100)
+        games_as_opponent = await db.games.find({"opponent_id": user_id}).to_list(100)
+        
+        # Filter active games
+        active_as_creator = [g for g in games_as_creator if g["status"] in ["ACTIVE", "REVEAL"]]
+        active_as_opponent = [g for g in games_as_opponent if g["status"] in ["ACTIVE", "REVEAL"]]
+        
+        # Filter waiting games
+        waiting_as_creator = [g for g in games_as_creator if g["status"] == "WAITING"]
+        
+        can_join = await check_user_concurrent_games(user_id)
+        
+        return {
+            "user_id": user_id,
+            "can_join_games": can_join,
+            "active_as_creator": len(active_as_creator),
+            "active_as_opponent": len(active_as_opponent),
+            "waiting_as_creator": len(waiting_as_creator),
+            "active_games_creator": [{"id": g["id"], "status": g["status"], "created_at": g["created_at"]} for g in active_as_creator],
+            "active_games_opponent": [{"id": g["id"], "status": g["status"], "created_at": g["created_at"]} for g in active_as_opponent],
+            "waiting_games_creator": [{"id": g["id"], "status": g["status"], "created_at": g["created_at"]} for g in waiting_as_creator]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in debug_user_games: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Debug check failed"
+        )
+
 @api_router.post("/games/{game_id}/join", response_model=dict)
 async def join_game(
     request: Request,
