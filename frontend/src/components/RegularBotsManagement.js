@@ -30,7 +30,9 @@ const RegularBotsManagement = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isGlobalSettingsOpen, setIsGlobalSettingsOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedBot, setSelectedBot] = useState(null);
+  const [editingBot, setEditingBot] = useState(null);
 
   // Form states for creating bot
   const [botForm, setBotForm] = useState({
