@@ -150,6 +150,10 @@ class Bot(BaseModel):
     pause_timer: int = 5  # Минуты паузы между играми
     recreate_timer: int = 30  # Секунды для пересоздания ставки
     
+    # Настройки лимитов
+    max_individual_bets: int = 12  # Индивидуальный лимит активных ставок
+    priority_order: int = 0  # Порядок приоритета для очереди
+    
     # Дополнительные настройки
     can_accept_bets: bool = False  # Может ли принимать чужие ставки
     can_play_with_bots: bool = False  # Может ли играть с другими ботами
