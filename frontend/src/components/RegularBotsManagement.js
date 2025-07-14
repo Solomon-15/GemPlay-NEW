@@ -56,6 +56,8 @@ const RegularBotsManagement = () => {
       setStartingBots(false);
     }
   };
+
+  const toggleAllBots = async () => {
     try {
       const token = localStorage.getItem('token');
       const newState = !allBotsEnabled;
