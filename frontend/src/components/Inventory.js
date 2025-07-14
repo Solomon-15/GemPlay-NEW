@@ -88,7 +88,7 @@ const Inventory = ({ user, onUpdateUser }) => {
       });
 
       // 🔔 НОВОЕ УВЕДОМЛЕНИЕ ПРИ ПРОДАЖЕ ГЕМОВ
-      const totalValue = (gem.price * quantity).toFixed(2);
+      const totalValue = formatGemValue(gem.price * quantity);
       const gemDisplayName = gemType === 'Ruby' ? 'Rubies' : 
                             gemType === 'Emerald' ? 'Emeralds' :
                             gemType === 'Sapphire' ? 'Sapphires' :
