@@ -34,6 +34,30 @@ export const formatCurrencyWithSymbol = (amount, showCents = false) => {
 };
 
 /**
+ * Format gem value as integer without decimals
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted integer value with $ symbol
+ */
+export const formatGemValue = (amount) => {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    return '$0';
+  }
+  return `$${Math.floor(amount).toLocaleString('en-US')}`;
+};
+
+/**
+ * Format plain number as integer
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted integer value
+ */
+export const formatInteger = (amount) => {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    return '0';
+  }
+  return Math.floor(amount).toLocaleString('en-US');
+};
+
+/**
  * Calculate commission amount
  * @param {number} amount - Base amount
  * @param {number} percentage - Commission percentage (e.g., 6 for 6%)
