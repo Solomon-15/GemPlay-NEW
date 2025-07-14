@@ -45,6 +45,11 @@ const RegularBotsManagement = () => {
   const [cycleBot, setCycleBot] = useState(null);
   const [cycleData, setCycleData] = useState(null);
   const [resettingBotBets, setResettingBotBets] = useState(null);
+  
+  // Состояния для inline редактирования лимитов
+  const [editingBotLimits, setEditingBotLimits] = useState({}); // {botId: {limit: value, saving: false}}
+  const [botLimitsValidation, setBotLimitsValidation] = useState({});
+  const [globalMaxBets, setGlobalMaxBets] = useState(50);
 
   // Новые состояния для управления прибылью ботов
   const [isProfitAccumulatorsModalOpen, setIsProfitAccumulatorsModalOpen] = useState(false);
