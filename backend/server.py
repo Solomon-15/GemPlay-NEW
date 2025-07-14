@@ -5059,6 +5059,7 @@ async def bot_create_game_automatically(bot: Bot):
             bet_gems=bet_gems,
             is_bot_game=True,
             bot_id=bot.id,
+            is_regular_bot_game=bot.bot_type == "REGULAR",  # Отмечаем игры обычных ботов
             metadata={
                 "gem_based_bet": True,  # Mark as gem-based bet
                 "auto_created": True
