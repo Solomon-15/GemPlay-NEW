@@ -266,6 +266,38 @@ const RegularBotsManagement = () => {
     }
   };
 
+  const handleDeleteModal = (bot) => {
+    setDeletingBot(bot);
+    setDeleteReason('');
+    setIsDeleteModalOpen(true);
+  };
+
+  const deleteBot = async () => {
+    if (!deleteReason.trim()) {
+      showErrorRU('Укажите причину удаления бота');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`${API}/admin/bots/${deletingBot.id}/delete`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { reason: deleteReason }
+      });
+      
+      showSuccessRU(response.data.message);
+      setIsDeleteModalOpen(false);
+      setDeletingBot(null);
+      setDeleteReason('');
+      await fetchStats();
+      await fetchBotsList();
+    } catch (error) {
+      console.error('Ошибка удаления бота:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при удалении бота';
+      showErrorRU(errorMessage);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU');
   };
