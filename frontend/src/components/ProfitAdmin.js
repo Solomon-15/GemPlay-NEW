@@ -1755,50 +1755,103 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Общая прибыль:</span>
-                      <div className="text-xl font-bold text-yellow-400">{formatCurrencyWithSymbol(calculateTotalRevenue(stats), true)}</div>
+                  {modalLoading ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
+                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
                     </div>
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Расходы:</span>
-                      <div className="text-xl font-bold text-red-400">{formatCurrencyWithSymbol(calculateExpenses(stats), true)}</div>
+                  ) : modalError ? (
+                    <div className="text-center py-8">
+                      <div className="text-red-400 mb-2">⚠️</div>
+                      <p className="text-sm text-red-400">{modalError}</p>
+                      <button 
+                        onClick={() => loadModalData('net_profit')}
+                        className="mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-sm"
+                      >
+                        Повторить попытку
+                      </button>
                     </div>
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Чистая прибыль:</span>
-                      <div className="text-xl font-bold text-emerald-400">{formatCurrencyWithSymbol(calculateNetProfit(stats), true)}</div>
-                    </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="text-center mb-6">
+                        <div className="text-4xl font-bold text-emerald-400">
+                          {formatCurrencyWithSymbol(modalData.summary?.net_profit || 0, true)}
+                        </div>
+                        <div className="text-sm text-text-secondary">Чистая прибыль</div>
+                        <div className="text-xs text-emerald-400 mt-1">
+                          {modalData.summary?.profit_margin?.toFixed(1) || 0}% маржа
+                        </div>
+                      </div>
 
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
-                    <h5 className="font-rajdhani text-sm font-bold text-emerald-400 mb-2">Расчет чистой прибыли:</h5>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-emerald-300">Комиссия от ставок:</span>
-                        <span className="text-emerald-300">+{formatCurrencyWithSymbol(stats.bet_commission || 0, true)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-emerald-300">Комиссия от подарков:</span>
-                        <span className="text-emerald-300">+{formatCurrencyWithSymbol(stats.gift_commission || 0, true)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-emerald-300">Доход от ботов:</span>
-                        <span className="text-emerald-300">+{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</span>
-                      </div>
-                      <div className="border-t border-emerald-500/30 pt-2">
-                        <div className="flex justify-between">
-                          <span className="text-emerald-300">Расходы:</span>
-                          <span className="text-red-400">-{formatCurrencyWithSymbol(calculateExpenses(stats), true)}</span>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Общая прибыль:</span>
+                          <div className="text-xl font-bold text-yellow-400">
+                            {formatCurrencyWithSymbol(modalData.summary?.total_revenue || 0, true)}
+                          </div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Расходы:</span>
+                          <div className="text-xl font-bold text-red-400">
+                            {formatCurrencyWithSymbol(modalData.summary?.total_expenses || 0, true)}
+                          </div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Чистая прибыль:</span>
+                          <div className="text-xl font-bold text-emerald-400">
+                            {formatCurrencyWithSymbol(modalData.summary?.net_profit || 0, true)}
+                          </div>
                         </div>
                       </div>
-                      <div className="border-t border-emerald-500/30 pt-2">
-                        <div className="flex justify-between font-bold">
-                          <span className="text-emerald-400">Итого:</span>
-                          <span className="text-emerald-400">{formatCurrencyWithSymbol(calculateNetProfit(stats), true)}</span>
+
+                      {modalData.calculation_steps && modalData.calculation_steps.length > 0 && (
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                          <h5 className="font-rajdhani text-sm font-bold text-emerald-400 mb-2">Пошаговый расчет:</h5>
+                          <div className="space-y-2 text-sm">
+                            {modalData.calculation_steps.map((step, index) => (
+                              <div key={index} className="flex justify-between">
+                                <span className="text-emerald-300">{step.description}:</span>
+                                <span className={`text-emerald-300 ${step.amount < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                                  {step.amount < 0 ? '' : '+'}
+                                  {formatCurrencyWithSymbol(step.amount || 0, true)}
+                                </span>
+                              </div>
+                            ))}
+                            <div className="border-t border-emerald-500/30 pt-2">
+                              <div className="flex justify-between font-bold">
+                                <span className="text-emerald-400">Итоговый результат:</span>
+                                <span className="text-emerald-400">
+                                  {formatCurrencyWithSymbol(modalData.summary?.net_profit || 0, true)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
+                      )}
+
+                      {modalData.analysis?.trends && (
+                        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                          <h5 className="font-rajdhani text-sm font-bold text-emerald-400 mb-2">Анализ трендов:</h5>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-emerald-300">Прибыльность:</span>
+                              <span className={`${modalData.analysis.trends.is_profitable ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {modalData.analysis.trends.is_profitable ? 'Прибыльно' : 'Убыточно'}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-emerald-300">Рейтинг эффективности:</span>
+                              <span className="text-emerald-400">{modalData.analysis.trends.efficiency_rating || 'N/A'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-emerald-300">Потенциал роста:</span>
+                              <span className="text-emerald-400">{modalData.analysis.trends.growth_potential || 'N/A'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
 
