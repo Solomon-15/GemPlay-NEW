@@ -427,6 +427,114 @@ const RegularBotsManagement = () => {
     return new Date(dateString).toLocaleDateString('ru-RU');
   };
 
+  // Функции для inline редактирования лимитов ботов
+  const handleEditBotLimit = (botId, currentLimit) => {
+    setEditingBotLimits(prev => ({
+      ...prev,
+      [botId]: {
+        limit: currentLimit || 12,
+        saving: false
+      }
+    }));
+  };
+
+  const handleCancelEditBotLimit = (botId) => {
+    setEditingBotLimits(prev => {
+      const newState = { ...prev };
+      delete newState[botId];
+      return newState;
+    });
+    setBotLimitsValidation(prev => {
+      const newState = { ...prev };
+      delete newState[botId];
+      return newState;
+    });
+  };
+
+  const handleBotLimitChange = (botId, newLimit) => {
+    const limit = parseInt(newLimit);
+    
+    // Валидация
+    let error = null;
+    if (isNaN(limit) || limit < 1) {
+      error = 'Лимит должен быть больше 0';
+    } else if (limit > 50) {
+      error = 'Лимит не может быть больше 50';
+    } else {
+      // Проверка глобального лимита
+      const otherBotsTotal = botsList
+        .filter(bot => bot.id !== botId)
+        .reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0);
+      
+      if (otherBotsTotal + limit > globalMaxBets) {
+        error = `Превышен глобальный лимит ${globalMaxBets}. Доступно: ${globalMaxBets - otherBotsTotal}`;
+      }
+    }
+    
+    setEditingBotLimits(prev => ({
+      ...prev,
+      [botId]: {
+        ...prev[botId],
+        limit: newLimit
+      }
+    }));
+    
+    setBotLimitsValidation(prev => ({
+      ...prev,
+      [botId]: error
+    }));
+  };
+
+  const handleSaveBotLimit = async (botId) => {
+    const editData = editingBotLimits[botId];
+    if (!editData || botLimitsValidation[botId]) return;
+    
+    setEditingBotLimits(prev => ({
+      ...prev,
+      [botId]: {
+        ...prev[botId],
+        saving: true
+      }
+    }));
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(`${API}/admin/bots/${botId}/limit`, {
+        maxIndividualBets: parseInt(editData.limit)
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        showSuccessRU('Лимит бота успешно обновлен');
+        
+        // Обновляем локальные данные
+        setBotsList(prev => prev.map(bot => 
+          bot.id === botId 
+            ? { ...bot, max_individual_bets: parseInt(editData.limit) }
+            : bot
+        ));
+        
+        // Убираем из редактирования
+        handleCancelEditBotLimit(botId);
+        
+        // Обновляем статистику
+        await fetchActiveBetsStats();
+      }
+    } catch (error) {
+      console.error('Error updating bot limit:', error);
+      showErrorRU('Ошибка при обновлении лимита бота');
+    } finally {
+      setEditingBotLimits(prev => ({
+        ...prev,
+        [botId]: {
+          ...prev[botId],
+          saving: false
+        }
+      }));
+    }
+  };
+
   // Функции для управления прибылью ботов
   const handleOpenProfitAccumulators = async () => {
     try {
