@@ -5699,12 +5699,14 @@ async def get_regular_bots_stats(current_user: User = Depends(get_current_admin)
         yesterday = datetime.utcnow() - timedelta(days=1)
         bets_24h = await db.games.count_documents({
             "creator_type": "bot",
+            "bot_type": "REGULAR",
             "created_at": {"$gte": yesterday}
         })
         
         # Wins in last 24h
         wins_24h = await db.games.count_documents({
-            "creator_type": "bot",
+            "creator_type": "bot", 
+            "bot_type": "REGULAR",
             "status": "COMPLETED",
             "winner_type": "bot",
             "created_at": {"$gte": yesterday}
@@ -5713,10 +5715,12 @@ async def get_regular_bots_stats(current_user: User = Depends(get_current_admin)
         # Win percentage
         total_bot_games = await db.games.count_documents({
             "creator_type": "bot",
+            "bot_type": "REGULAR",
             "status": "COMPLETED"
         })
         bot_wins = await db.games.count_documents({
             "creator_type": "bot",
+            "bot_type": "REGULAR", 
             "status": "COMPLETED",
             "winner_type": "bot"
         })
@@ -5724,7 +5728,7 @@ async def get_regular_bots_stats(current_user: User = Depends(get_current_admin)
         
         # Total bet value
         total_bet_value = await db.games.aggregate([
-            {"$match": {"creator_type": "bot"}},
+            {"$match": {"creator_type": "bot", "bot_type": "REGULAR"}},
             {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
         ]).to_list(1)
         total_value = total_bet_value[0]["total"] if total_bet_value else 0
