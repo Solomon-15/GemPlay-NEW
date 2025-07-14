@@ -1,86 +1,94 @@
 <analysis>
-The previous AI engineer successfully expanded the GemPlay application from its MVP stage, focusing heavily on administrative functionalities and bot systems. Initial work centered on enhancing the Admin Panel's Users section, implementing detailed user management including gem modification, user deletion, and activity flagging, with corresponding backend API updates. This was followed by comprehensive UI refinements based on user feedback, specifically for the Users section (icon removal, text changes, action button styling). A major development involved introducing a two-tiered bot system (Regular and Human bots) with extensive configurable behaviors and dedicated admin panel sections. The engineer implemented the core API structure for bots, created frontend components for their management, and established mechanisms for global and individual bot settings, including the creation of bots with custom parameters and controlling their active bet limits. The trajectory concludes mid-implementation, as the engineer was tasked with displaying these custom bot parameters correctly in the UI and adding a Delete Bot functionality, encountering an indentation error in the backend at the very end.
+The previous AI engineer successfully transitioned the GemPlay application from MVP, primarily enhancing administrative and bot system functionalities. Initial efforts involved expanding the Admin Panel's Users section with comprehensive user management features, including gem modification and deletion, user banning, and activity flagging, supported by backend API updates. UI refinements in this section focused on user feedback (e.g., icon removal, text changes). A significant development was the introduction of a two-tiered bot system (Regular and Human bots), incorporating extensive configurable behaviors and dedicated admin panel sections. The engineer established core API structures for bot management, created frontend components for bot creation, settings, and statistics (active/disabled counts, delete functionality, dynamic bet calculation, active bets/cycle history popups, win percentage column). Key UI updates were made to bot cards in the user lobby for visual unification, consistent naming (Bot), and corrected Accept button functionality. The engineer also refined general currency display to show integer gem amounts and completely overhauled the Profit admin section to include full historical data, filtering, and export. The final task addressed a critical Game already has an opponent error during bot game acceptance, implementing an atomic update in the backend. The trajectory concludes with most explicit requests fulfilled, except for the complete, unified pagination implementation across the application.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting game with a React frontend and FastAPI backend using MongoDB. Initial requirements included a 3-step battle modal, commit-reveal logic, client-side gem selection, accurate balance display (Balance, Frozen, Available), and 6% commission handling. Subsequent phases introduced real-time Lobby updates, UI/UX improvements (sticky header, mobile adaptation, new header design), backend endpoints for admin functions (reset balances, profit stats), full Russian localization for the admin panel, and an enhanced Profit section. A user-to-user gem gifting system with commission and notifications was also implemented. The real-time notification bell was activated and refined with specific UI/UX constraints and English localization. Most recently, the focus expanded the Admin Panel's Users section with new columns for Gems (quantity/value, editable via modal, notification), Bets (active count, list in modal), Games (Win/Loss/Draw ratio), Registration/Last Visit, and enhanced Actions (Suspicious Flag, Infoblock, Delete). Further UI refinements included removing table header icons, renaming columns, and restyling action icons. The latest major feature is a comprehensive bot system with Regular and Human bots, individual custom parameters (name, pause/recreate timers, cycle settings, win percentage, bet range), global settings for max active bets, and corresponding admin panel sections (СТАВКИ, ОБЫЧНЫЕ БОТЫ, HUMAN БОТЫ) with detailed statistics and management capabilities.
+The GemPlay application is an asynchronous PvP gem betting game, built with React, FastAPI, and MongoDB. Initially, it featured a 3-step battle modal, commit-reveal logic, client-side gem selection, detailed balance display, and 6% commission. Subsequent enhancements included real-time Lobby updates, UI/UX improvements (sticky header, mobile adaptation), backend admin functions (balance reset, profit stats), full Russian localization, and a user-to-user gem gifting system with notifications. The Admin Panel's Users section was extensively expanded with new columns (Gems quantity/value, Bets, Games, Registration/Last Visit) and actions (Suspicious Flag, Infoblock, Delete user, with UI refinements). A comprehensive bot system was introduced, supporting Regular and Human bots with individual custom parameters (name, timers, cycle settings, win percentage, bet range) and global settings for max active bets. Dedicated admin sections (СТАВКИ, ОБЫЧНЫЕ БОТЫ, HUMAN БОТЫ) were developed for management, statistics (active/disabled counts, detailed active bets/cycle history, win percentage column), and dynamic bet calculation. Recent tasks also focused on unifying bot card UI/UX in the user lobby to match Live Players (single Bot name, Accept button, SVG gem icons, integer amounts), overhauling the Profit admin section (full history, filters, export), and resolving a Game already has an opponent error during bot game acceptance. A broad requirement for unified pagination (10 items/page) across all app sections was also stated.
 </product_requirements>
 
 <key_technical_concepts>
-- **React Components & Hooks**: , , , , custom hooks ().
+- **React**: Components, hooks (, , , ), custom hooks.
 - **State Management**: React Context API (, ).
-- **API Integration**: FastAPI backend,  for HTTP requests.
-- **Responsive Design**: Tailwind CSS for mobile-first UI.
+- **Backend**: FastAPI for RESTful APIs, Pydantic for data models.
+- **Database**: MongoDB for data persistence, atomic updates for concurrency.
+- **API Integration**:  for HTTP requests.
+- **Styling**: Tailwind CSS for responsive UI.
 - **Localization**: Multi-language support (Russian, English).
-- **MongoDB**: Backend data storage for users, games, bots, and user gems.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a React frontend with a FastAPI backend and MongoDB for data persistence.
+The application uses a React frontend with a FastAPI backend and MongoDB.
 
 
 
-- :
-    *   **Importance**: The core FastAPI backend handling all API endpoints, game logic, user management, and economy.
-    *   **Changes Made**:
-        *   Added new admin endpoints for user management: , , , , , .
-        *   Updated  to fetch  and  from the  collection instead of the deprecated  field in the user document.
-        *   Added  for granular gem quantity changes with notification support.
-        *   Introduced bot management endpoints: , , , .
-        *   Implemented  and  for mass bot creation and activation.
-        *   Added  for creating bots with custom parameters.
-        *   Updated  Pydantic model to include , , , , , , , , , and /.
-        *   Fixed attribute errors and serialization issues in  and  to correctly retrieve custom bot parameters.
-        *   Added global bot settings endpoints: , , .
-        *   Modified bot's  logic to respect  limit.
-        *   Fixed indentation error at the end of the file related to bot creation.
-        *   Currently in the process of adding  endpoint.
-- :
-    *   **Importance**: Root component managing routing, global state, and main layout.
-    *   **Changes Made**: Integrated new layout components.
-- :
-    *   **Importance**: Admin component for managing users, displaying their details, and performing actions.
-    *   **Changes Made**:
-        *   Rewritten to display new columns: Gems (total, value, hover breakdown), Bets (active count, modal list), Games (W/L/D), Registration/Last Visit.
-        *   Expanded Actions column with Suspicious Flag, Infoblock, and Delete user functionality.
-        *   Updated  to use real API calls.
-        *   Implemented , , , , , , .
-        *   Enhanced  to allow freezing, unfreezing, deleting, and modifying gem quantities with notifications.
-        *   Fixed text input issues in ban/delete modals by adding unique  attributes to textareas.
-        *   Implemented Russian UI refinements: removed icons from table headers, renamed ИГРЫ column, shortened Ожидает подтверждения, removed Последний визит label, restyled action icons to SVG.
-        *   Implemented a hover tooltip for the Gems column showing  breakdown, fetching data from API.
-- :
-    *   **Importance**: Main administrative interface component.
-    *   **Changes Made**: Updated sidebar navigation to include new sections: СТАВКИ, ОБЫЧНЫЕ БОТЫ, HUMAN БОТЫ. The  function was expanded to display the corresponding components.
--  (NEW):
-    *   **Importance**: New admin component to manage and display bet statistics and details.
-    *   **Changes Made**: Created with placeholders for info blocks, filtration, and a table for bet IDs, creators, opponents, sums, commissions, statuses, creation dates, and actions.
--  (NEW):
-    *   **Importance**: New admin component to manage and display regular bot statistics and individual bot settings.
-    *   **Changes Made**: Created with placeholders for info blocks, a Запустить ботов button. Expanded to include a Создать Бота button which opens a modal for individual bot creation with detailed parameters. Implemented a table to display individual bots with columns for Name, Status, Active Bets, W/L/D, Win Rate, Cycle, Sum per Cycle, Min/Max Bet, Registration, and Actions (Settings, Toggle). Added global settings () input and display.
--  (NEW):
-    *   **Importance**: New admin component to manage and display human bot statistics.
-    *   **Changes Made**: Created with placeholders for info blocks and a Запустить ботов button, mirroring the structure of .
-- :
+-   :
+    *   **Importance**: Central FastAPI backend for all APIs, game logic, and user/bot management.
+    *   **Changes**: Implemented extensive user admin (gem modify/delete, ban, suspicious flag). Added full bot management endpoints (toggle, create regular/individual, start, retrieve stats/details, global settings, active bets). Implemented bot deletion endpoint. Enhanced bot bet generation logic to ensure gem-based, integer amounts (, , ). Added new endpoints for detailed bot active bets and cycle history (, ).  now triggers dynamic bet recalculation. Fixed a race condition in  with an atomic update.
+
+-   :
+    *   **Importance**: Admin UI for user management.
+    *   **Changes**: Enhanced user detail display (gems, bets, games, dates) and actions (flags, delete). UI adapted for Russian localization and improved gem breakdown tooltip.
+
+-   :
+    *   **Importance**: Admin UI for regular bot configuration and monitoring.
+    *   **Changes**: Added active/disabled bot counters, Delete Bot button with confirmation modal. Implemented Создать Бота modal for custom bot creation. Added detailed Активные ставки and Цикл columns with pop-up modals for bet lists and game history. Integrated % Выигрыша column and a Recalculate button for dynamic bet generation.
+
+-   :
+    *   **Importance**: Displays available games and ongoing battles.
+    *   **Changes**: Updated to fetch real active bot bets via new backend endpoint. Replaced  with  for bot display to unify UI, ensuring consistent design. Corrected  logic for bots and updated  to use grid layout. Ensured integer currency display for bet amounts. Configured bot  to open .
+
+-   :
+    *   **Importance**: Reusable card component for players and bots.
+    *   **Changes**: Added  prop to dynamically display Bot as name, use a default bot avatar, and format gem bet amounts with SVG icons as integers.
+
+-   :
+    *   **Importance**: Admin UI for financial overview.
+    *   **Changes**: Renamed Записи прибыли to История прибыли. Expanded to show all profit types with detailed columns, filters by type/date, and CSV/Excel export.
+
+-   :
+    *   **Importance**: Displays system notifications.
+    *   **Changes**: Improved error message rendering to handle object messages gracefully, preventing React runtime errors.
+
+-   , , :
+    *   **Importance**: UI components for game creation, inventory, and battle moves.
+    *   **Changes**: Applied integer currency formatting across various displays to remove decimal values.
+
+-   :
+    *   **Importance**: Utility for currency formatting.
+    *   **Changes**: Modified default  behavior to suppress decimal places by default.
+
+-   :
+    *   **Importance**: Main navigation for admin sections.
+    *   **Changes**: Updated sidebar to include new bot management sections.
+
+-    (NEW),  (NEW):
+    *   **Importance**: Dedicated admin panels for managing bets and human bots.
+    *   **Changes**: Initial creation with placeholder structures.
+
+-   :
     *   **Importance**: Global CSS styles.
-    *   **Changes Made**: Added custom scrollbar styles and tooltip styles.
-- :
+    *   **Changes**: Added custom scrollbar and tooltip styles.
+
+-   :
     *   **Importance**: Main HTML file.
-    *   **Changes Made**: Removed Made with Emergent badge.
+    *   **Changes**: Removed Made with Emergent badge.
 </code_architecture>
 
 <pending_tasks>
-- **Backend API - Bot Deletion**: Implement the API endpoint for deleting individual bots ().
-- **Frontend - Bot Active/Disabled Count**: Add two compact info fields in  showing 🟢 Активных ботов: XX and 🔴 Отключённых ботов: XX.
-- **Frontend - Bot Delete Button**: Add a 🗑 Удалить icon button in the Действия column of the bot table, with a confirmation modal and reason input.
+- **Unified Pagination**: Implement consistent pagination logic (10 items per page) across all tables and lists in the application, including  and , as specified in Chat Message 198.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was continuing to expand the Regular Bots section of the Admin Panel. The user requested two new compact info fields displaying the count of 🟢 Активных ботов: XX and 🔴 Отключённых ботов: XX at the top of the  component. Simultaneously, a 🗑 Удалить (Delete) icon button was requested for the Действия column in the bot list table, which should trigger a confirmation modal requiring a reason for deletion.
+Immediately before this summary, the AI engineer was addressing a critical  error that occurred when attempting to accept a bot's bet and select a move in the Bot Players section. This error specifically manifested as Game already has an opponent. The problem was diagnosed as a React rendering issue caused by an error object being passed directly to a UI component (specifically ) and a potential backend race condition in the  API endpoint.
 
-The previous action was to begin the implementation of the backend API endpoint for deleting a bot. The very last message in the trajectory shows the AI engineer starting the first step: 1. **Сначала добавим API endpoint для удаления бота в backend:**. This indicates the work is currently focused on the backend logic to support bot deletion, with frontend UI updates for the info fields and delete button to follow. An indentation error was encountered and fixed just prior to this, suggesting the backend  file has been a recent point of continuous modification and debugging.
+The previous actions involved:
+1.  **Frontend ():** Modified the  component to gracefully handle and display error messages, ensuring that if an error object is received, it is converted into a readable string before rendering.
+2.  **Frontend ():** Enhanced error handling in  and  functions to ensure that only string messages are passed to notification display functions, preventing the  error.
+3.  **Backend ():** Implemented an atomic update operation within the  FastAPI endpoint. This change ensures that the  field for a game is updated only if it is still null, effectively preventing the Game already has an opponent race condition when multiple requests try to join the same game simultaneously.
+
+The last completed action was the successful application of the backend fix, and the trajectory ends with the AI engineer updating  to reflect this resolution. All services were confirmed to be running.
 </current_work>
 
 <optional_next_step>
-Complete the implementation of the  API endpoint in .
+The next step is to implement the unified pagination (10 items per page) across all relevant sections of the application, starting with the admin panel tables.
 </optional_next_step>
