@@ -106,7 +106,20 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
 
   // Обработчики для Join Battle модального окна
   const handleOpenJoinBattle = (game) => {
-    setSelectedBetForJoin(game);
+    // Определяем, является ли это игрой с ботом
+    const isBotGame = availableBots.some(botGame => 
+      (botGame.game_id || botGame.id) === (game.game_id || game.id)
+    ) || ongoingBotBattles.some(botGame => 
+      (botGame.game_id || botGame.id) === (game.game_id || game.id)
+    );
+    
+    // Добавляем флаг игры с ботом
+    const gameWithBotFlag = {
+      ...game,
+      is_bot_game: isBotGame
+    };
+    
+    setSelectedBetForJoin(gameWithBotFlag);
     setShowJoinBattleModal(true);
   };
 
