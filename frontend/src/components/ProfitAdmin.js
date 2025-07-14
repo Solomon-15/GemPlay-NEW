@@ -88,6 +88,10 @@ const ProfitAdmin = ({ user }) => {
 
       if (dateFilter.from) params.append('date_from', dateFilter.from);
       if (dateFilter.to) params.append('date_to', dateFilter.to);
+      if (playerFilter) params.append('player_filter', playerFilter);
+      if (amountFilter.min) params.append('amount_min', amountFilter.min);
+      if (amountFilter.max) params.append('amount_max', amountFilter.max);
+      if (transactionIdFilter) params.append('transaction_id', transactionIdFilter);
 
       const response = await axios.get(`${API}/admin/profit/entries?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
