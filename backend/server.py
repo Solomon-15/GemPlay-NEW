@@ -2030,8 +2030,17 @@ async def check_user_concurrent_games(user_id: str) -> bool:
             "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
         })
         
+        # Also check if user has WAITING games as creator (should be able to join others if they just created a game)
+        # This is optional - users can create games and join others until someone accepts their created game
+        
         # User can join if they have no active games
-        return active_as_opponent is None and active_as_creator is None
+        can_join = active_as_opponent is None and active_as_creator is None
+        
+        if not can_join:
+            logger.info(f"User {user_id} cannot join game - has active games: opponent={active_as_opponent is not None}, creator={active_as_creator is not None}")
+        
+        return can_join
+        
     except Exception as e:
         logger.error(f"Error checking concurrent games for user {user_id}: {e}")
         return False
