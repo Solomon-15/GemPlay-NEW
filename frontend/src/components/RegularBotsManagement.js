@@ -304,6 +304,27 @@ const RegularBotsManagement = () => {
     }
   };
 
+  const resetBotBets = async (bot) => {
+    try {
+      setResettingBotBets(bot.id);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/bots/${bot.id}/reset-bets`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showSuccessRU(`${response.data.message}. Обработано: ${response.data.total_processed} ставок`);
+      await fetchBotsList(); // Refresh data
+    } catch (error) {
+      console.error('Error resetting bot bets:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при сбросе ставок бота';
+      showErrorRU(errorMessage);
+    } finally {
+      setResettingBotBets(null);
+    }
+  };
+
   const handleDeleteModal = (bot) => {
     setDeletingBot(bot);
     setDeleteReason('');
