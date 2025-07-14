@@ -323,7 +323,9 @@ const ProfitAdmin = ({ user }) => {
                   }}
                   className={`p-6 rounded-lg border-2 transition-all duration-200 text-left hover:scale-105 ${
                     activeCategory === key
-                      ? `border-${category.color}-500 bg-${category.color}-500/10`
+                      ? (category.color === 'green' ? 'border-green-500 bg-green-500/10' :
+                         category.color === 'blue' ? 'border-blue-500 bg-blue-500/10' :
+                         'border-purple-500 bg-purple-500/10')
                       : 'border-border-primary hover:border-accent-primary'
                   }`}
                 >
