@@ -468,8 +468,15 @@ const ProfitAdmin = ({ user }) => {
             <div className="p-4 bg-surface-sidebar border-b border-border-primary">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
                 <div className="flex items-center space-x-3">
-                  <h3 className="font-rajdhani text-lg font-bold text-white">
-                    {categories[activeCategory]?.name || 'Неизвестная категория'}
+                  <h3 className="font-rajdhani text-lg font-bold text-white flex items-center space-x-2">
+                    <div className={`${
+                      categories[activeCategory]?.color === 'green' ? 'text-green-400' :
+                      categories[activeCategory]?.color === 'blue' ? 'text-blue-400' :
+                      categories[activeCategory]?.color === 'purple' ? 'text-purple-400' : 'text-gray-400'
+                    }`}>
+                      {categories[activeCategory]?.icon}
+                    </div>
+                    <span>{categories[activeCategory]?.name || 'Неизвестная категория'}</span>
                   </h3>
                   <span className="text-text-secondary text-sm">
                     ({entries.length} записей)
