@@ -39,7 +39,23 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const toggleAllBots = async () => {
+  const startRegularBots = async () => {
+    setStartingBots(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/start-regular`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      showSuccessRU(response.data.message);
+      await fetchStats(); // Refresh stats
+    } catch (error) {
+      console.error('Ошибка запуска ботов:', error);
+      showErrorRU('Ошибка при запуске ботов');
+    } finally {
+      setStartingBots(false);
+    }
+  };
     try {
       const token = localStorage.getItem('token');
       const newState = !allBotsEnabled;
