@@ -233,7 +233,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
             <div className="flex justify-between items-center">
               <span className="font-roboto text-text-secondary">Remaining:</span>
               <span className={`font-rajdhani font-bold ${canDeposit ? 'text-green-400' : 'text-red-400'}`}>
-                {formatCurrencyWithSymbol(remainingLimit)}
+                {formatDollarAmount(remainingLimit)}
               </span>
             </div>
             
