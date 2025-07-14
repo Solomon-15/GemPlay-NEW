@@ -116,19 +116,19 @@ const ProfitAdmin = ({ user }) => {
 
   // Информация о категориях
   const categories = {
-    'bet_commission': {
+    'BET_COMMISSION': {
       name: 'Комиссия от ставок',
       icon: '💰',
       color: 'green',
       description: '3% комиссия с PvP-игр'
     },
-    'bot_profit': {
+    'BOT_REVENUE': {
       name: 'Доход от ботов',
       icon: '🤖',
       color: 'blue',
       description: 'Прибыль от циклов ботов'
     },
-    'gift_commission': {
+    'GIFT_COMMISSION': {
       name: 'Комиссия от подарков',
       icon: '🎁',
       color: 'purple',
