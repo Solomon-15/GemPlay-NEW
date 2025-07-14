@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatGemValue } from '../utils/economy';
 
 const MoveSelectionStep = ({
   targetAmount,
@@ -6,18 +7,6 @@ const MoveSelectionStep = ({
   selectedMove,
   onSelectedMoveChange
 }) => {
-  // Безопасное форматирование валюты
-  const formatCurrency = (amount) => {
-    if (typeof amount === 'number' && !isNaN(amount)) {
-      if (amount === 0) {
-        return '$0';
-      }
-      // Round down and format without decimals
-      return `$${Math.floor(amount).toLocaleString('en-US')}`;
-    } else {
-      return '$0';
-    }
-  };
 
   // Конфигурация ходов
   const moves = [
