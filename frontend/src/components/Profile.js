@@ -91,7 +91,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
           </div>
           <h3 className="font-rajdhani font-bold text-lg text-white">Balance</h3>
           <p className="font-roboto text-xl font-bold text-green-400">
-            {formatCurrencyWithSymbol(user.virtual_balance || 0)}
+            {formatDollarAmount(user.virtual_balance || 0)}
           </p>
         </div>
 
