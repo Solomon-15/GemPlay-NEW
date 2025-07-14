@@ -5930,14 +5930,6 @@ async def create_individual_bot(
         created_bot_id = bot_data["id"]
         
         # Log admin action
-            recreate_timer=recreate_interval,
-            is_active=True,
-            bot_type="REGULAR",
-            can_accept_bets=can_accept_bets,
-            can_play_with_bots=can_play_with_bots
-        )
-        
-        await db.bots.insert_one(bot.dict())
         
         # Log admin action
         admin_log = AdminLog(
