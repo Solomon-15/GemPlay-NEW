@@ -1,4 +1,16 @@
 backend:
+  - task: "React Error Fix - Bot Game Joining Error Handling"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Lobby.js, /app/frontend/src/components/Notification.js"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED REACT ERROR FIX: Successfully resolved the React runtime error 'Objects are not valid as a React child' that occurred when joining bot games. The error was caused by attempting to render error objects directly in React components. Frontend implementation: 1) Enhanced error handling in handleJoinGame function with comprehensive error message extraction logic that safely handles different error response formats (string, FastAPI HTTPException, Pydantic validation errors, nested error objects). 2) Added robust error parsing for errorData.detail arrays (Pydantic validation errors) and various error object structures with fallback mechanisms. 3) Updated Notification component to safely render messages by checking if message is string type and converting objects to JSON string representation as fallback. 4) Improved handleCancelBet function with same error handling pattern for consistency across the application. 5) Added detailed error logging and console output for debugging purposes. 6) Implemented proper error message chain handling: errorData.detail → errorData.message → errorData.error → error.message → fallback string. 7) Fixed React rendering issue by ensuring only strings are passed to React child components, preventing 'object with keys {type, loc, msg, input, url}' errors. The bot game joining functionality now works correctly without React runtime errors, providing user-friendly error messages while maintaining application stability."
+
   - task: "Bot Betting Logic Update - Gem-Based Only Betting System"
     implemented: true
     working: true
