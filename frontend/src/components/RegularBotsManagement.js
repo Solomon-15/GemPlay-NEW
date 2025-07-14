@@ -692,6 +692,214 @@ const RegularBotsManagement = () => {
         </div>
       </div>
 
+      {/* Модальное окно накопителей прибыли конкретного бота */}
+      {isBotProfitModalOpen && selectedBotForProfit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-blue-500 border-opacity-50 rounded-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-border-primary">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-rajdhani text-xl font-bold text-white">📊 Накопители прибыли бота</h3>
+                  <p className="text-blue-400 font-rajdhani font-bold">{selectedBotForProfit.name}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsBotProfitModalOpen(false);
+                  setSelectedBotForProfit(null);
+                  setBotProfitAccumulators([]);
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Информация о боте */}
+            <div className="px-6 py-4 bg-surface-sidebar border-b border-border-primary">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-400">{selectedBotForProfit.current_cycle_games || 0}</div>
+                  <div className="text-text-secondary text-sm">Текущий цикл игр</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-400">{selectedBotForProfit.active_bets || 0}</div>
+                  <div className="text-text-secondary text-sm">Активные ставки</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-400">{selectedBotForProfit.win_rate || 0}%</div>
+                  <div className="text-text-secondary text-sm">Win Rate</div>
+                </div>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${selectedBotForProfit.is_active ? 'text-green-400' : 'text-red-400'}`}>
+                    {selectedBotForProfit.is_active ? 'Активен' : 'Неактивен'}
+                  </div>
+                  <div className="text-text-secondary text-sm">Статус бота</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-280px)]">
+              {botProfitAccumulators.length === 0 ? (
+                <div className="text-center text-text-secondary py-12">
+                  <div className="text-8xl mb-4">📊</div>
+                  <h4 className="font-rajdhani text-xl font-bold mb-2">Нет данных о циклах</h4>
+                  <p className="text-lg">У бота <span className="text-blue-400 font-bold">{selectedBotForProfit.name}</span> пока нет завершённых циклов</p>
+                  <div className="mt-4 text-sm text-text-secondary bg-surface-sidebar rounded-lg p-4 max-w-md mx-auto">
+                    <p><strong>Примечание:</strong> Циклы появятся здесь после того, как бот сыграет достаточно игр или цикл будет завершён принудительно</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Сводка по всем циклам */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-3">📈 Сводка по всем циклам</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-blue-400">
+                          {botProfitAccumulators.length}
+                        </div>
+                        <div className="text-text-secondary text-sm">Всего циклов</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-red-400">
+                          ${botProfitAccumulators.reduce((sum, acc) => sum + acc.total_spent, 0).toFixed(2)}
+                        </div>
+                        <div className="text-text-secondary text-sm">Потрачено</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-green-400">
+                          ${botProfitAccumulators.reduce((sum, acc) => sum + acc.total_earned, 0).toFixed(2)}
+                        </div>
+                        <div className="text-text-secondary text-sm">Заработано</div>
+                      </div>
+                      <div className="text-center">
+                        <div className={`text-lg font-bold ${
+                          botProfitAccumulators.reduce((sum, acc) => sum + acc.profit, 0) > 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          ${botProfitAccumulators.reduce((sum, acc) => sum + acc.profit, 0).toFixed(2)}
+                        </div>
+                        <div className="text-text-secondary text-sm">Общая прибыль</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-purple-400">
+                          {botProfitAccumulators.length > 0 ? (
+                            (botProfitAccumulators.reduce((sum, acc) => sum + acc.win_rate, 0) / botProfitAccumulators.length).toFixed(1)
+                          ) : 0}%
+                        </div>
+                        <div className="text-text-secondary text-sm">Средний Win Rate</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Таблица циклов */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-surface-sidebar">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Цикл</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Игры</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Потрачено</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Заработано</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Прибыль</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Win Rate</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Статус</th>
+                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Период</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border-primary">
+                        {botProfitAccumulators.map((accumulator) => (
+                          <tr key={accumulator.id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
+                            <td className="px-4 py-3 text-blue-400 font-bold text-lg">#{accumulator.cycle_number}</td>
+                            <td className="px-4 py-3 text-white">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-bold">{accumulator.games_completed}</span>
+                                <span className="text-text-secondary text-sm">игр</span>
+                                <span className="text-green-400 font-bold">({accumulator.games_won} ★)</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-red-400 font-bold">${accumulator.total_spent.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-green-400 font-bold">${accumulator.total_earned.toFixed(2)}</td>
+                            <td className={`px-4 py-3 font-bold text-lg ${
+                              accumulator.profit > 0 ? 'text-green-400' : 
+                              accumulator.profit < 0 ? 'text-red-400' : 'text-gray-400'
+                            }`}>
+                              {accumulator.profit > 0 ? '+' : ''}${accumulator.profit.toFixed(2)}
+                            </td>
+                            <td className="px-4 py-3 text-white font-bold">{accumulator.win_rate.toFixed(1)}%</td>
+                            <td className="px-4 py-3">
+                              <span className={`px-3 py-1 text-xs rounded-full font-rajdhani font-bold ${
+                                accumulator.is_cycle_completed 
+                                  ? 'bg-green-600 text-white' 
+                                  : 'bg-yellow-600 text-white'
+                              }`}>
+                                {accumulator.is_cycle_completed ? '✓ Завершён' : '⏳ Активный'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-text-secondary text-sm">
+                              <div>{new Date(accumulator.created_at).toLocaleDateString('ru-RU')}</div>
+                              {accumulator.cycle_end_date && (
+                                <div className="text-xs">
+                                  - {new Date(accumulator.cycle_end_date).toLocaleDateString('ru-RU')}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Пагинация */}
+              {botProfitPagination.total_pages > 1 && (
+                <div className="flex justify-center mt-6">
+                  <div className="flex space-x-2">
+                    {Array.from({ length: botProfitPagination.total_pages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => {/* TODO: Implement pagination for bot profit */}}
+                        className={`px-3 py-1 rounded ${
+                          page === botProfitPagination.current_page
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-surface-sidebar text-text-secondary hover:text-white'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center p-6 border-t border-border-primary">
+              <div className="text-text-secondary text-sm">
+                💡 <strong>Совет:</strong> Используйте кнопку "⚡ Завершить цикл" для принудительного завершения текущего цикла
+              </div>
+              <button
+                onClick={() => {
+                  setIsBotProfitModalOpen(false);
+                  setSelectedBotForProfit(null);
+                  setBotProfitAccumulators([]);
+                }}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Управление прибылью ботов */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Контейнер просмотра накопленной прибыли */}
