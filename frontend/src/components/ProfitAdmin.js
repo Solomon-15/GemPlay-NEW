@@ -11,7 +11,6 @@ const ProfitAdmin = ({ user }) => {
   const [stats, setStats] = useState(null);
   const [entries, setEntries] = useState([]);
   const [commissionSettings, setCommissionSettings] = useState(null);
-  const [filterType, setFilterType] = useState('');
   const [dateFilter, setDateFilter] = useState({ from: '', to: '' });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -286,24 +285,6 @@ const ProfitAdmin = ({ user }) => {
               </div>
             </div>
 
-            {/* Замороженные средства */}
-            <div className="bg-surface-card border border-yellow-500/30 rounded-lg p-6 hover:border-yellow-500/60 transition-colors duration-200 shadow-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Замороженные средства</h3>
-                  <p className="font-russo text-2xl font-bold text-yellow-400">{formatCurrencyWithSymbol(stats.frozen_funds || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">Активные ставки</p>
-                </div>
-              </div>
-            </div>
-
             {/* Общая прибыль */}
             <div className="bg-surface-card border border-green-500/30 rounded-lg p-6 hover:border-green-500/60 transition-colors duration-200 shadow-lg">
               <div className="flex items-center justify-between">
@@ -311,75 +292,14 @@ const ProfitAdmin = ({ user }) => {
                   <div className="flex items-center space-x-2 mb-2">
                     <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
                       <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                       </svg>
                     </div>
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Общая прибыль</h3>
-                  <p className="font-russo text-2xl font-bold text-green-400">{formatCurrencyWithSymbol(stats.total_profit || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">Совокупный доход</p>
+                  <p className="font-russo text-2xl font-bold text-green-400">{formatCurrencyWithSymbol(stats.total_revenue || 0, true)}</p>
+                  <p className="text-xs text-text-secondary mt-1">Сумма всех доходов</p>
                 </div>
-              </div>
-            </div>
-
-            {/* Расходы */}
-            <div className="bg-surface-card border border-red-500/30 rounded-lg p-6 hover:border-red-500/60 transition-colors duration-200 shadow-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Расходы</h3>
-                  <p className="font-russo text-2xl font-bold text-red-400">{formatCurrencyWithSymbol(stats.total_expenses || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">Бонусы, возвраты</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Чистая прибыль */}
-            <div className="bg-surface-card border border-accent-primary/50 rounded-lg p-6 hover:border-accent-primary transition-colors duration-200 shadow-lg ring-1 ring-accent-primary/20">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-10 h-10 bg-accent-primary/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-accent-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Чистая прибыль</h3>
-                  <p className="font-russo text-2xl font-bold text-accent-primary">{formatCurrencyWithSymbol((stats.total_profit || 0) - (stats.total_expenses || 0), true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">Прибыль - расходы</p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Дополнительные статистики по периодам */}
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-            <h3 className="font-rajdhani text-xl font-bold text-white mb-6">Статистика по периодам</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-text-secondary text-sm mb-2">Сегодня</div>
-                <div className="font-russo text-3xl font-bold text-blue-400 mb-1">{formatCurrencyWithSymbol(stats.today_profit || 0, true)}</div>
-                <div className="text-xs text-text-secondary">Прибыль за день</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-text-secondary text-sm mb-2">Эта неделя</div>
-                <div className="font-russo text-3xl font-bold text-purple-400 mb-1">{formatCurrencyWithSymbol(stats.week_profit || 0, true)}</div>
-                <div className="text-xs text-text-secondary">Прибыль за неделю</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-text-secondary text-sm mb-2">Этот месяц</div>
-                <div className="font-russo text-3xl font-bold text-orange-400 mb-1">{formatCurrencyWithSymbol(stats.month_profit || 0, true)}</div>
-                <div className="text-xs text-text-secondary">Прибыль за месяц</div>
               </div>
             </div>
           </div>
@@ -389,268 +309,213 @@ const ProfitAdmin = ({ user }) => {
       {/* History Tab */}
       {activeTab === 'history' && (
         <div className="space-y-6">
-          {/* Filters and Export */}
+          {/* Категории транзакций */}
           <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-            <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Фильтры и экспорт</h3>
+            <h3 className="font-rajdhani text-xl font-bold text-white mb-6">Категории транзакций</h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-              {/* Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Тип операции
-                </label>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
-                >
-                  <option value="">Все типы</option>
-                  <option value="bet_commission">💰 Комиссия от ставок</option>
-                  <option value="gift_commission">🎁 Комиссия от подарков</option>
-                  <option value="bot_profit">🤖 Доход от ботов</option>
-                  <option value="human_bot_profit">🤖 Доход от Human ботов</option>
-                  <option value="penalty">🚨 Штрафы и удержания</option>
-                  <option value="refund">🔄 Возвраты средств</option>
-                  <option value="system_credit">⚙️ Системные начисления</option>
-                  <option value="other">📊 Прочее</option>
-                </select>
-              </div>
-
-              {/* Date From */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Дата от
-                </label>
-                <input
-                  type="date"
-                  value={dateFilter.from}
-                  onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
-                  className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
-                />
-              </div>
-
-              {/* Date To */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Дата до
-                </label>
-                <input
-                  type="date"
-                  value={dateFilter.to}
-                  onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
-                  className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
-                />
-              </div>
-
-              {/* Export Button */}
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-2">
-                  Экспорт данных
-                </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {Object.entries(categories).map(([key, category]) => (
                 <button
-                  onClick={exportToCSV}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold py-2 px-4 rounded-lg transition-colors duration-200"
+                  key={key}
+                  onClick={() => {
+                    setActiveCategory(key);
+                    pagination.goToPage(1);
+                  }}
+                  className={`p-6 rounded-lg border-2 transition-all duration-200 text-left hover:scale-105 ${
+                    activeCategory === key
+                      ? `border-${category.color}-500 bg-${category.color}-500/10`
+                      : 'border-border-primary hover:border-accent-primary'
+                  }`}
                 >
-                  📥 Экспорт CSV
+                  <div className="flex items-center space-x-3 mb-3">
+                    <div className={`p-3 rounded-lg ${getCategoryBadgeColor(key)}/20`}>
+                      <span className="text-2xl">{category.icon}</span>
+                    </div>
+                    <div>
+                      <h4 className={`font-rajdhani font-bold text-lg ${
+                        activeCategory === key ? `text-${category.color}-400` : 'text-white'
+                      }`}>
+                        {category.name}
+                      </h4>
+                    </div>
+                  </div>
+                  <p className="text-text-secondary text-sm">{category.description}</p>
+                  
+                  <div className={`mt-3 text-xs font-bold ${
+                    activeCategory === key ? `text-${category.color}-400` : 'text-accent-primary'
+                  }`}>
+                    {activeCategory === key ? `${entries.length} записей` : 'Нажмите для просмотра'}
+                  </div>
                 </button>
-              </div>
-            </div>
-
-            {/* Quick Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => {
-                  const today = new Date().toISOString().split('T')[0];
-                  setDateFilter({ from: today, to: today });
-                }}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-              >
-                Сегодня
-              </button>
-              <button
-                onClick={() => {
-                  const today = new Date();
-                  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                  setDateFilter({ 
-                    from: weekAgo.toISOString().split('T')[0], 
-                    to: today.toISOString().split('T')[0] 
-                  });
-                }}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-              >
-                Неделя
-              </button>
-              <button
-                onClick={() => {
-                  const today = new Date();
-                  const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-                  setDateFilter({ 
-                    from: monthAgo.toISOString().split('T')[0], 
-                    to: today.toISOString().split('T')[0] 
-                  });
-                }}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-              >
-                Месяц
-              </button>
-              <button
-                onClick={() => setDateFilter({ from: '', to: '' })}
-                className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
-              >
-                Сбросить
-              </button>
+              ))}
             </div>
           </div>
 
-          {/* Profit History Table */}
+          {/* Фильтры и сортировка */}
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+              <div className="flex items-center space-x-4">
+                <h3 className="font-rajdhani text-lg font-bold text-white">
+                  {categories[activeCategory].icon} {categories[activeCategory].name}
+                </h3>
+                <span className={`px-2 py-1 text-xs rounded-full font-bold ${getCategoryBadgeColor(activeCategory)} text-white`}>
+                  {entries.length} записей
+                </span>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                <div className="flex space-x-2">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
+                  >
+                    <option value="date">По дате</option>
+                    <option value="amount">По сумме</option>
+                    <option value="source">По источнику</option>
+                  </select>
+                  
+                  <button
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white hover:bg-surface-card transition-colors"
+                    title={sortOrder === 'asc' ? 'По возрастанию' : 'По убыванию'}
+                  >
+                    {sortOrder === 'asc' ? '↑' : '↓'}
+                  </button>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <input
+                    type="date"
+                    value={dateFilter.from}
+                    onChange={(e) => setDateFilter(prev => ({ ...prev, from: e.target.value }))}
+                    className="bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
+                    placeholder="От"
+                  />
+                  <input
+                    type="date"
+                    value={dateFilter.to}
+                    onChange={(e) => setDateFilter(prev => ({ ...prev, to: e.target.value }))}
+                    className="bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
+                    placeholder="До"
+                  />
+                </div>
+                
+                <button
+                  onClick={exportToCSV}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-colors text-sm"
+                >
+                  📥 CSV
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Компактные карточки транзакций */}
           <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
-            <div className="p-4 border-b border-border-primary">
-              <h3 className="font-rajdhani text-lg font-bold text-white">
-                История прибыли ({entries.length} записей)
-              </h3>
-            </div>
-
-            {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-surface-sidebar">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                      Дата и время
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                      Тип операции
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                      Сумма
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                      Источник
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                      ID игрока/бота
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                      Описание
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-primary">
-                  {entries.map((entry, index) => {
-                    const { date, time } = formatDateTime(entry.created_at);
-                    return (
-                      <tr key={index} className="hover:bg-surface-sidebar transition-colors">
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="text-sm text-white font-rajdhani">{date}</div>
-                          <div className="text-xs text-text-secondary">{time}</div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span className={`text-sm font-medium font-rajdhani ${getEntryTypeColor(entry.type)}`}>
-                            {getEntryTypeName(entry.type)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm font-bold text-green-400 font-rajdhani">
+            <div className="space-y-2 p-4">
+              {entries.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">{categories[activeCategory].icon}</div>
+                  <h4 className="font-rajdhani text-xl font-bold text-white mb-2">Нет транзакций</h4>
+                  <p className="text-text-secondary">В категории "{categories[activeCategory].name}" пока нет данных</p>
+                </div>
+              ) : (
+                entries.map((entry, index) => {
+                  const { date, time } = formatDateTime(entry.created_at);
+                  return (
+                    <div key={index} className="bg-surface-sidebar rounded-lg p-4 border border-border-primary hover:border-accent-primary transition-all duration-200 hover:shadow-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4 flex-1">
+                          <div className={`w-3 h-12 rounded-full ${getCategoryBadgeColor(activeCategory)}`}></div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-1">
+                              <div className="text-white font-rajdhani font-bold">
+                                {date} {time}
+                              </div>
+                              <div className="text-xs text-text-secondary font-mono">
+                                #TX-{entry.id?.substring(0, 6) || 'XXXXXX'}
+                              </div>
+                            </div>
+                            
+                            <div className="text-sm text-text-secondary">
+                              {entry.description || 'Описание отсутствует'}
+                            </div>
+                            
+                            {entry.source && (
+                              <div className="text-xs text-accent-primary mt-1">
+                                Источник: {entry.source}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="text-right">
+                          <div className={`text-2xl font-bold font-russo ${categories[activeCategory].color === 'green' ? 'text-green-400' : categories[activeCategory].color === 'blue' ? 'text-blue-400' : 'text-purple-400'}`}>
                             {formatCurrencyWithSymbol(entry.amount, true)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-white">
-                          {entry.source || '—'}
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span className="text-sm text-accent-primary font-mono">
-                            {entry.source_user_id || entry.bot_id || '—'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-text-secondary">
-                          {entry.description || '—'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="lg:hidden space-y-4 p-4">
-              {entries.map((entry, index) => {
-                const { date, time } = formatDateTime(entry.created_at);
-                return (
-                  <div key={index} className="bg-surface-sidebar rounded-lg p-4 border border-border-primary">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className={`text-sm font-medium font-rajdhani ${getEntryTypeColor(entry.type)}`}>
-                          {getEntryTypeName(entry.type)}
+                          </div>
+                          {entry.source_user_id && (
+                            <div className="text-xs text-text-secondary font-mono">
+                              ID: {entry.source_user_id.substring(0, 8)}
+                            </div>
+                          )}
                         </div>
-                        <div className="text-xs text-text-secondary">{date} {time}</div>
-                      </div>
-                      <div className="text-sm font-bold text-green-400 font-rajdhani">
-                        {formatCurrencyWithSymbol(entry.amount, true)}
                       </div>
                     </div>
-                    
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">Источник:</span>
-                        <span className="text-white">{entry.source || '—'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">ID:</span>
-                        <span className="text-accent-primary font-mono">
-                          {entry.source_user_id || entry.bot_id || '—'}
-                        </span>
-                      </div>
-                      {entry.description && (
-                        <div className="flex justify-between">
-                          <span className="text-text-secondary">Описание:</span>
-                          <span className="text-white text-right">{entry.description}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
-
-            {/* Empty State */}
-            {entries.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-text-secondary text-lg mb-2">Записи не найдены</div>
-                <div className="text-text-secondary text-sm">Попробуйте изменить фильтры поиска</div>
+            
+            {pagination.totalPages > 1 && (
+              <div className="border-t border-border-primary p-4">
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={pagination.goToPage}
+                />
               </div>
             )}
-
-            {/* Pagination */}
-            <div className="bg-surface-sidebar px-6 py-4">
-              <Pagination
-                currentPage={pagination.currentPage}
-                totalPages={pagination.totalPages}
-                onPageChange={pagination.handlePageChange}
-                itemsPerPage={pagination.itemsPerPage}
-                totalItems={pagination.totalItems}
-                showPageNumbers={false}
-              />
-            </div>
           </div>
         </div>
       )}
 
       {/* Settings Tab */}
       {activeTab === 'settings' && commissionSettings && (
-        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-          <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Настройки комиссии</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-2">
-                Комиссия с игр (%)
-              </label>
-              <div className="text-2xl font-bold text-green-400">
-                {(commissionSettings.game_commission * 100).toFixed(1)}%
+        <div className="space-y-6">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+            <h3 className="font-rajdhani text-xl font-bold text-white mb-4">Настройки комиссий</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Комиссия за ставки (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  defaultValue={commissionSettings.bet_commission_rate || 6}
+                  className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                />
               </div>
-            </div>
-            <div className="text-sm text-text-secondary">
-              Комиссия взимается с каждой ставки при создании игры.
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Комиссия за подарки (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  defaultValue={commissionSettings.gift_commission_rate || 3}
+                  className="w-full bg-surface-sidebar border border-border-primary rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+              <button className="bg-accent-primary hover:bg-accent-primary/80 text-white font-rajdhani font-bold py-2 px-4 rounded-lg transition-colors">
+                Сохранить настройки
+              </button>
             </div>
           </div>
         </div>
