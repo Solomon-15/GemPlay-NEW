@@ -3798,9 +3798,10 @@ def test_comprehensive_bet_management_system() -> None:
     user2_id = None
     
     for i, user_data in enumerate(TEST_USERS):
-        # Generate unique email to avoid conflicts
+        # Generate unique email and username to avoid conflicts
         random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
         user_data["email"] = f"testuser{i+1}_{random_suffix}@test.com"
+        user_data["username"] = f"player{i+1}_{random_suffix}"
         
         # Register user
         response, success = make_request("POST", "/auth/register", data=user_data)
