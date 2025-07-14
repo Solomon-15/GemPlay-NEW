@@ -5821,7 +5821,7 @@ async def get_regular_bots_list(current_user: User = Depends(get_current_admin))
                     "total": total_games
                 },
                 "win_rate": round(win_rate, 1),
-                "cycle_games": bot.cycle_length,
+                "cycle_games": getattr(bot, 'cycle_length', 12),
                 "cycle_total_amount": getattr(bot, 'cycle_total_amount', 500.0),
                 "min_bet": bot.min_bet_amount,
                 "max_bet": bot.max_bet_amount,
