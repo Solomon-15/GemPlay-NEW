@@ -267,12 +267,12 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     { id: 3, name: 'Battle Result', description: 'Battle result' }
   ];
 
-  // Проверка доступности средств для оплаты комиссии
+  // Проверка доступности средств для оплаты комиссии (только для игр с людьми)
   const totalBalance = user?.virtual_balance || 0;
   const frozenBalance = user?.frozen_balance || 0; 
   const availableForSpending = totalBalance - frozenBalance;
   
-  if (availableForSpending < commissionAmount) {
+  if (!isBotGame && availableForSpending < commissionAmount) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-surface-card border border-border-primary rounded-lg w-full max-w-md p-6">
