@@ -1560,59 +1560,83 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 bg-green-400 rounded-full"></div>
-                          <span className="text-sm text-green-400">Комиссия от ставок</span>
-                        </div>
-                        <div className="text-xl font-bold text-green-400 mt-1">
-                          {formatCurrencyWithSymbol(stats.bet_commission || 0, true)}
-                        </div>
-                      </div>
-                      
-                      <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 bg-purple-400 rounded-full"></div>
-                          <span className="text-sm text-purple-400">Комиссия от подарков</span>
-                        </div>
-                        <div className="text-xl font-bold text-purple-400 mt-1">
-                          {formatCurrencyWithSymbol(stats.gift_commission || 0, true)}
-                        </div>
-                      </div>
+                  {modalLoading ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
+                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
-                          <span className="text-sm text-blue-400">Доход от ботов</span>
-                        </div>
-                        <div className="text-xl font-bold text-blue-400 mt-1">
-                          {formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}
-                        </div>
-                      </div>
-                      
-                      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 bg-yellow-400 rounded-full"></div>
-                          <span className="text-sm text-yellow-400">Общий итог</span>
-                        </div>
-                        <div className="text-xl font-bold text-yellow-400 mt-1">
-                          {formatCurrencyWithSymbol(calculateTotalRevenue(stats), true)}
-                        </div>
-                      </div>
+                  ) : modalError ? (
+                    <div className="text-center py-8">
+                      <div className="text-red-400 mb-2">⚠️</div>
+                      <p className="text-sm text-red-400">{modalError}</p>
+                      <button 
+                        onClick={() => loadModalData('total_revenue')}
+                        className="mt-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm"
+                      >
+                        Повторить попытку
+                      </button>
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <div className="text-center mb-6">
+                        <div className="text-4xl font-bold text-yellow-400">
+                          {formatCurrencyWithSymbol(modalData.total_revenue || 0, true)}
+                        </div>
+                        <div className="text-sm text-text-secondary">Общая прибыль</div>
+                      </div>
 
-                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                    <h5 className="font-rajdhani text-sm font-bold text-yellow-400 mb-2">Структура доходов:</h5>
-                    <p className="text-sm text-yellow-300">
-                      Общая прибыль складывается из комиссий с игр, подарков и доходов от ботов. 
-                      Это валовая прибыль до вычета расходов.
-                    </p>
-                  </div>
+                      {modalData.breakdown && modalData.breakdown.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-3">
+                            {modalData.breakdown.map((item, index) => (
+                              <div key={index} className={`bg-${item.color}-500/10 border border-${item.color}-500/30 rounded-lg p-4`}>
+                                <div className="flex items-center space-x-2">
+                                  <div className={`w-4 h-4 bg-${item.color}-400 rounded-full`}></div>
+                                  <span className={`text-sm text-${item.color}-400`}>{item.name}</span>
+                                </div>
+                                <div className={`text-xl font-bold text-${item.color}-400 mt-1`}>
+                                  {formatCurrencyWithSymbol(item.amount || 0, true)}
+                                </div>
+                                <div className="text-xs text-text-secondary">
+                                  {item.percentage?.toFixed(1)}% • {item.transactions} транзакций
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                              <h5 className="font-rajdhani text-sm font-bold text-yellow-400 mb-2">Статистика:</h5>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-text-secondary">Всего транзакций:</span>
+                                  <span className="text-yellow-400">{modalData.summary?.total_transactions || 0}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-text-secondary">Средняя сумма:</span>
+                                  <span className="text-yellow-400">
+                                    {formatCurrencyWithSymbol(modalData.summary?.avg_revenue_per_transaction || 0, true)}
+                                  </span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-text-secondary">Топ источник:</span>
+                                  <span className="text-yellow-400">
+                                    {modalData.breakdown?.find(b => b.source === modalData.summary?.top_source)?.name || 'N/A'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center text-text-secondary py-8">
+                          <div className="text-lg mb-2">📊</div>
+                          <p className="text-sm">Нет данных о доходах</p>
+                          <p className="text-xs mt-1">Данные появятся после первых транзакций</p>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
 
