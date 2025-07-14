@@ -26,15 +26,6 @@ const BattleResultStep = ({
 
     return () => clearInterval(timer);
   }, [onClose]);
-      if (typeof amount !== 'number' || isNaN(amount)) {
-        return '$0.00';
-      }
-      return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    } catch (error) {
-      console.error('Error formatting currency:', error);
-      return '$0.00';
-    }
-  };
 
   // Конфигурация ходов
   const moves = [
