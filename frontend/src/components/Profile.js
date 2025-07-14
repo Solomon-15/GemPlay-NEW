@@ -175,7 +175,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
             <div className="flex justify-between">
               <span className="font-roboto text-text-secondary">Total Wagered:</span>
               <span className="font-rajdhani text-white">
-                ${user.total_amount_wagered?.toFixed(2) || '0.00'}
+                {formatDollarAmount(user.total_amount_wagered || 0)}
               </span>
             </div>
             <div className="flex justify-between">
