@@ -818,6 +818,95 @@ const RegularBotsManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Модальное окно общих настроек */}
+      {isGlobalSettingsOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-lg w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-white">Общие настройки ботов</h3>
+              <button
+                onClick={() => setIsGlobalSettingsOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Лимиты активных ставок</h4>
+                
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">
+                      Максимальное количество активных ставок обычных ботов:
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="1000"
+                      value={botSettings.max_active_bets_regular}
+                      onChange={(e) => setBotSettings({
+                        ...botSettings, 
+                        max_active_bets_regular: parseInt(e.target.value) || 0
+                      })}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                    <div className="text-text-secondary text-xs mt-1">
+                      Текущее значение: {activeBetsStats.regular_bots.current} из {activeBetsStats.regular_bots.max}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">
+                      Максимальное количество активных ставок Human ботов:
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="1000"
+                      value={botSettings.max_active_bets_human}
+                      onChange={(e) => setBotSettings({
+                        ...botSettings, 
+                        max_active_bets_human: parseInt(e.target.value) || 0
+                      })}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                    <div className="text-text-secondary text-xs mt-1">
+                      Текущее значение: {activeBetsStats.human_bots.current} из {activeBetsStats.human_bots.max}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-3">
+                <div className="text-yellow-200 text-sm">
+                  <strong>Важно:</strong> Если лимит достигнут, новые ставки ботами не создаются до тех пор, 
+                  пока одна из активных ставок не будет принята, отменена или завершена.
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => updateBotSettings(botSettings)}
+                  className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary font-rajdhani font-bold"
+                >
+                  Сохранить настройки
+                </button>
+                <button
+                  onClick={() => setIsGlobalSettingsOpen(false)}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
