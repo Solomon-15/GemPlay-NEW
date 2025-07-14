@@ -1,4 +1,16 @@
 backend:
+  - task: "Enhanced Bot Management - Active Bets and Cycle Details"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/frontend/src/components/RegularBotsManagement.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "COMPLETED ENHANCED BOT MANAGEMENT: Successfully implemented comprehensive enhancements to the Regular Bots section with detailed active bets and cycle history functionality. Backend implementation: 1) Added GET /api/admin/bots/{bot_id}/active-bets endpoint that fetches real-time active bets with detailed information including bet amount, opponent, status, creation time, and auto-cancel timer. 2) Added GET /api/admin/bots/{bot_id}/cycle-history endpoint that provides complete cycle statistics and game history with wins/losses/draws breakdown, financial summary, and individual game details. Frontend implementation: 1) Enhanced 'Активные ставки' column to show clickable count that opens detailed modal with bet information, opponent details, status indicators, and countdown timers. 2) Enhanced 'Цикл' column to display X/12 format (completed non-draw games) as clickable element that opens comprehensive cycle history modal. 3) Implemented detailed Active Bets Modal showing formatted bet list with amounts, gem types, opponent info, status badges, and time until auto-cancel. 4) Implemented comprehensive Cycle History Modal with progress statistics, financial breakdown (total bet, winnings, losses, net profit), win percentage, and complete game log table with individual match details. 5) All modals feature proper Russian localization, responsive design, and consistent UI/UX matching existing admin panel styling. The system provides complete transparency into bot activity and performance metrics for administrative oversight."
+
   - task: "Bot Delete API and Frontend Enhancement"
     implemented: true
     working: true
