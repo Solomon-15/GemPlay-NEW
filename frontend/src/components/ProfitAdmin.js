@@ -511,7 +511,7 @@ const ProfitAdmin = ({ user }) => {
             </div>
 
             {/* Общая прибыль */}
-            <div className="bg-surface-card border border-yellow-500/30 rounded-lg p-6 hover:border-yellow-500/60 transition-colors duration-200 shadow-lg">
+            <div className="bg-surface-card border border-yellow-500/30 rounded-lg p-6 hover:border-yellow-500/60 transition-colors duration-200 shadow-lg cursor-pointer" onClick={() => openModal('total_revenue')}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
@@ -521,13 +521,13 @@ const ProfitAdmin = ({ user }) => {
                       </svg>
                     </div>
                     <div className="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-1 rounded-full">
-                      LIVE
+                      TOTAL
                     </div>
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Общая прибыль</h3>
-                  <p className="font-russo text-2xl font-bold text-yellow-400">{formatCurrencyWithSymbol(stats.total_revenue || 0, true)}</p>
+                  <p className="font-russo text-2xl font-bold text-yellow-400">{formatCurrencyWithSymbol(calculateTotalRevenue(stats), true)}</p>
                   <p className="text-xs text-text-secondary mt-1">Сумма всех источников дохода</p>
-                  <p className="text-xs text-yellow-300 mt-1">Обновляется в реальном времени</p>
+                  <p className="text-xs text-yellow-300 mt-1">Клик для детализации</p>
                 </div>
               </div>
             </div>
