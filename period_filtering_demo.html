@@ -234,74 +234,28 @@
             <p>Интерактивная демонстрация новой функции фильтрации данных по периодам в разделе "Прибыль"</p>
         </div>
 
-        <!-- Демонстрация плиток -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            
-            <!-- Доход от ботов -->
-            <div class="bg-slate-800 border border-blue-500/30 rounded-lg p-6 tile-hover tile-interactive" onclick="openModal('bot_revenue')">
-                <div class="flex items-center space-x-2 mb-2">
-                    <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <rect x="4" y="4" width="6" height="6" stroke-width="2" rx="1"/>
-                            <rect x="14" y="4" width="6" height="6" stroke-width="2" rx="1"/>
-                            <rect x="4" y="14" width="16" height="6" stroke-width="2" rx="1"/>
-                        </svg>
-                    </div>
-                    <div class="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">LIVE</div>
+        <div class="section">
+            <h2>📊 Новая функция: Фильтрация по периодам</h2>
+            <div class="feature-grid">
+                <div>
+                    <h3>✨ Что добавлено:</h3>
+                    <ul class="feature-list">
+                        <li>• Переключатели периодов: День, Неделя, Месяц, Все время</li>
+                        <li>• Динамическое обновление данных</li>
+                        <li>• Интеграция с backend API</li>
+                        <li>• Визуальные индикаторы загрузки</li>
+                    </ul>
                 </div>
-                <h3 class="font-roboto text-gray-400 text-sm mb-1">Доход от ботов</h3>
-                <p class="font-russo text-2xl font-bold text-blue-400">$176.00</p>
-                <p class="text-xs text-gray-400 mt-1">Прибыль от циклов ботов</p>
-                <p class="text-xs text-blue-300 mt-1">С фильтрацией по периодам</p>
-            </div>
-
-            <!-- Общая прибыль -->
-            <div class="bg-slate-800 border border-yellow-500/30 rounded-lg p-6 tile-hover tile-interactive" onclick="openModal('total_revenue')">
-                <div class="flex items-center space-x-2 mb-2">
-                    <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                        </svg>
-                    </div>
-                    <div class="bg-yellow-500/20 text-yellow-400 text-xs font-bold px-2 py-1 rounded-full">TOTAL</div>
+                <div>
+                    <h3>🎯 Применяется к плиткам:</h3>
+                    <ul class="feature-list">
+                        <li>• Доход от ботов</li>
+                        <li>• Замороженные средства</li>
+                        <li>• Общая прибыль</li>
+                        <li>• Расходы</li>
+                        <li>• Чистая прибыль</li>
+                    </ul>
                 </div>
-                <h3 class="font-roboto text-gray-400 text-sm mb-1">Общая прибыль</h3>
-                <p class="font-russo text-2xl font-bold text-yellow-400">$579.92</p>
-                <p class="text-xs text-gray-400 mt-1">Сумма всех источников</p>
-                <p class="text-xs text-yellow-300 mt-1">С фильтрацией по периодам</p>
-            </div>
-
-            <!-- Расходы -->
-            <div class="bg-slate-800 border border-red-500/30 rounded-lg p-6 tile-hover tile-interactive" onclick="openModal('expenses')">
-                <div class="flex items-center space-x-2 mb-2">
-                    <div class="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 rounded-full">CALC</div>
-                </div>
-                <h3 class="font-roboto text-gray-400 text-sm mb-1">Расходы</h3>
-                <p class="font-russo text-2xl font-bold text-red-400">$347.95</p>
-                <p class="text-xs text-gray-400 mt-1">60% от общей прибыли</p>
-                <p class="text-xs text-red-300 mt-1">С фильтрацией по периодам</p>
-            </div>
-
-            <!-- Чистая прибыль -->
-            <div class="bg-slate-800 border border-emerald-500/30 rounded-lg p-6 tile-hover tile-interactive" onclick="openModal('net_profit')">
-                <div class="flex items-center space-x-2 mb-2">
-                    <div class="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">NET</div>
-                </div>
-                <h3 class="font-roboto text-gray-400 text-sm mb-1">Чистая прибыль</h3>
-                <p class="font-russo text-2xl font-bold text-emerald-400">$231.97</p>
-                <p class="text-xs text-gray-400 mt-1">Общая прибыль минус расходы</p>
-                <p class="text-xs text-emerald-300 mt-1">С фильтрацией по периодам</p>
             </div>
         </div>
 
