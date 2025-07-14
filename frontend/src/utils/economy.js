@@ -3,13 +3,16 @@
 /**
  * Format currency with proper separators
  * @param {number} amount - Amount to format
- * @param {boolean} showCents - Whether to show cents (default: true)
+ * @param {boolean} showCents - Whether to show cents (default: false)
  * @returns {string} Formatted currency string
  */
-export const formatCurrency = (amount, showCents = true) => {
+export const formatCurrency = (amount, showCents = false) => {
   if (typeof amount !== 'number' || isNaN(amount)) {
     return showCents ? '0,00' : '0';
   }
+  
+  // Round down (floor) for gem values to ensure integer display
+  const roundedAmount = showCents ? amount : Math.floor(amount);
   
   const options = {
     minimumFractionDigits: showCents ? 2 : 0,
@@ -17,7 +20,7 @@ export const formatCurrency = (amount, showCents = true) => {
     useGrouping: true
   };
   
-  return amount.toLocaleString('en-US', options).replace(/,/g, ' ').replace('.', ',');
+  return roundedAmount.toLocaleString('en-US', options).replace(/,/g, ' ').replace('.', ',');
 };
 
 /**
