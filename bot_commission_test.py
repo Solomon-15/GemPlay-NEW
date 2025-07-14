@@ -227,7 +227,7 @@ def test_bot_games_available():
     record_test("Get Available Bot Games", True, "Successfully retrieved available bot games")
     
     # Check if there are any games available
-    available_games = bot_games_response.get("games", [])
+    available_games = bot_games_response if isinstance(bot_games_response, list) else bot_games_response.get("games", [])
     if not available_games:
         print_warning("No bot games available for testing")
         record_test("Bot Games Available", False, "No bot games available to test")
