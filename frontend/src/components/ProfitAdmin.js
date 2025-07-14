@@ -683,6 +683,23 @@ const ProfitAdmin = ({ user }) => {
           </div>
         </div>
       )}
+      
+      {/* Tooltip */}
+      {tooltip.show && (
+        <div 
+          className="fixed z-50 bg-black text-white text-xs rounded px-2 py-1 pointer-events-none"
+          style={{ left: tooltip.x + 10, top: tooltip.y - 30 }}
+        >
+          {tooltip.text}
+        </div>
+      )}
+
+      {/* Copy Success Notification */}
+      {copySuccess && (
+        <div className="fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-lg z-50 transition-all">
+          ✓ ID скопирован в буфер обмена
+        </div>
+      )}
     </div>
   );
 };
