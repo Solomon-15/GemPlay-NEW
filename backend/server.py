@@ -4559,8 +4559,12 @@ async def get_profit_entries(
         # Get profit entries
         entries = await db.profit_entries.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
         
-        # Get user info for each entry
+        # Get user info for each entry and clean ObjectIds
         for entry in entries:
+            # Convert ObjectId to string if present
+            if "_id" in entry:
+                entry["_id"] = str(entry["_id"])
+            
             user = await db.users.find_one({"id": entry["source_user_id"]})
             entry["source_user"] = {
                 "username": user["username"] if user else "Unknown",
