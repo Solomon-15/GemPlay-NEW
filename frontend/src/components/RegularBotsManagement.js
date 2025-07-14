@@ -154,6 +154,21 @@ const RegularBotsManagement = () => {
     }
   };
 
+  const fetchGlobalBotSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bot-settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        setGlobalMaxBets(response.data.settings.globalMaxActiveBets);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки глобальных настроек ботов:', error);
+    }
+  };
+
   const startRegularBots = async () => {
     setStartingBots(true);
     try {
