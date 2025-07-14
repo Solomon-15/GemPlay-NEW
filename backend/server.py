@@ -6062,14 +6062,14 @@ async def get_bot_details(
                 "is_active": bot_doc.get("is_active", True),
                 "bot_type": bot_doc.get("bot_type", "REGULAR"),
                 
-                # User-defined parameters - return exactly as saved
-                "pause_timer": bot_doc.get("pause_timer"),
-                "recreate_timer": bot_doc.get("recreate_timer"),
-                "cycle_games": bot_doc.get("cycle_length"),
-                "cycle_total_amount": bot_doc.get("cycle_total_amount"),
-                "win_percentage": bot_doc.get("win_percentage"),
-                "min_bet_amount": bot_doc.get("min_bet_amount"),
-                "max_bet_amount": bot_doc.get("max_bet_amount"),
+                # User-defined parameters - return exactly as saved or defaults if not set
+                "pause_timer": bot_doc.get("pause_timer", 5),
+                "recreate_timer": bot_doc.get("recreate_timer", 30),
+                "cycle_games": bot_doc.get("cycle_length", 12),
+                "cycle_total_amount": bot_doc.get("cycle_total_amount", 500.0),
+                "win_percentage": bot_doc.get("win_percentage", 60.0),
+                "min_bet_amount": bot_doc.get("min_bet_amount", 1.0),
+                "max_bet_amount": bot_doc.get("max_bet_amount", 100.0),
                 "can_accept_bets": bot_doc.get("can_accept_bets", False),
                 "can_play_with_bots": bot_doc.get("can_play_with_bots", False),
                 
