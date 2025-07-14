@@ -5449,16 +5449,32 @@ async def get_expenses_details(
         )
 
 @api_router.get("/admin/profit/net-profit-analysis", response_model=dict)
-async def get_net_profit_analysis(current_admin: User = Depends(get_current_admin)):
+async def get_net_profit_analysis(
+    period: str = "month",  # day, week, month, all
+    current_admin: User = Depends(get_current_admin)
+):
     """Get detailed net profit analysis."""
     try:
-        # Calculate total revenue
+        # Calculate date filter based on period
+        now = datetime.now()
+        if period == "day":
+            start_date = now - timedelta(days=1)
+        elif period == "week":
+            start_date = now - timedelta(weeks=1)
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+        else:  # "all"
+            start_date = None
+        
+        # Calculate total revenue for the period
         total_revenue = 0
         revenue_by_type = {}
         
-        revenue_entries = await db.profit_history.find({
-            "type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION", "BOT_REVENUE"]}
-        }).to_list(None)
+        query = {"type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION", "BOT_REVENUE"]}}
+        if start_date:
+            query["created_at"] = {"$gte": start_date}
+        
+        revenue_entries = await db.profit_history.find(query).to_list(None)
         
         for entry in revenue_entries:
             amount = entry.get("amount", 0)
@@ -5546,6 +5562,7 @@ async def get_net_profit_analysis(current_admin: User = Depends(get_current_admi
         
         return {
             "success": True,
+            "period": period,
             "analysis": analysis,
             "calculation_steps": calculation_steps,
             "summary": {
