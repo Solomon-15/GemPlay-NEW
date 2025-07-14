@@ -130,41 +130,122 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const GameCard = ({ game, onJoin, isBot = false }) => {
     const isActiveBotEntry = game.is_bot && game.bot_id;
     
+    // For bots, use unified styling similar to PlayerCard
+    if (isBot || isActiveBotEntry) {
+      // Get total bet amount for bots
+      const getTotalBetAmount = () => {
+        if (typeof game.bet_amount === 'string') {
+          // For range display like "5 - 100", show as is
+          return game.bet_amount;
+        }
+        return `$${game.bet_amount}`;
+      };
+
+      // Get sorted gems
+      const getSortedGems = () => {
+        if (!game.bet_gems || typeof game.bet_gems !== 'object') return [];
+        
+        return Object.entries(game.bet_gems).map(([gemType, quantity]) => ({
+          type: gemType,
+          quantity: quantity,
+          // Simple gem icons mapping - you can expand this
+          icon: `/gems/${gemType}.png`, // Assuming gem icons are in public/gems/
+          name: gemType
+        }));
+      };
+
+      const sortedGems = getSortedGems();
+
+      return (
+        <div className="bg-[#09295e] border border-[#23d364] border-opacity-30 hover:border-opacity-50 rounded-lg p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
+          <div className="flex items-center space-x-4">
+            {/* Bot Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-blue-700 flex items-center justify-center text-white text-lg">
+                🤖
+              </div>
+            </div>
+
+            {/* Bot Info */}
+            <div className="flex-1 min-w-0">
+              {/* Bot Name - Always show "Bot" */}
+              <div className="flex items-center space-x-2 mb-1">
+                <h3 className="text-white font-rajdhani font-bold text-lg">
+                  Bot
+                </h3>
+                <span className="bg-blue-600 text-white text-xs font-rajdhani font-bold px-2 py-1 rounded">
+                  {game.bot_type === 'HUMAN' ? 'Human-like' : 'AI'}
+                </span>
+              </div>
+
+              {/* Gems Row */}
+              {sortedGems.length > 0 && (
+                <div className="flex items-center space-x-1 mb-2 overflow-x-auto">
+                  {sortedGems.map((gem, index) => (
+                    <div key={gem.type} className="flex items-center space-x-1 flex-shrink-0">
+                      <span className="text-text-secondary text-xs font-rajdhani">
+                        {gem.type}: {gem.quantity}
+                      </span>
+                      {index < sortedGems.length - 1 && (
+                        <span className="text-text-secondary text-xs">•</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Bet Amount */}
+              <div className="text-green-400 font-rajdhani font-bold text-xl">
+                {getTotalBetAmount()}
+              </div>
+
+              {/* Bot Status */}
+              <div className="text-text-secondary text-xs font-rajdhani mt-1">
+                Available for challenge
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={() => onJoin(game.game_id || game.id)}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105"
+              >
+                Accept
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Original GameCard for non-bot games (if needed)
     return (
       <div className="bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg p-4 hover:border-accent-primary hover:border-opacity-100 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isBot || isActiveBotEntry ? 'bg-blue-700' : 'bg-green-700'}`}>
-              {isBot || isActiveBotEntry ? '🤖' : '👤'}
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-700">
+              👤
             </div>
             <div>
               <h4 className="font-rajdhani font-bold text-white">
                 {game.creator_username || game.creator?.username || 'Player'}
               </h4>
               <p className="font-roboto text-xs text-text-secondary">
-                {isActiveBotEntry ? 'Available Bot' : new Date(game.created_at).toLocaleTimeString()}
+                {new Date(game.created_at).toLocaleTimeString()}
               </p>
-              {isActiveBotEntry && (
-                <span className="text-xs text-cyan-400 font-rajdhani">
-                  {game.bot_type === 'HUMAN' ? 'Human-like' : 'Regular'} Bot
-                </span>
-              )}
             </div>
           </div>
-          <span className={`px-2 py-1 text-white text-xs rounded-full font-rajdhani ${
-            isActiveBotEntry ? 'bg-blue-700' : 'bg-green-700'
-          }`}>
-            {isActiveBotEntry ? 'CHALLENGE' : 'WAITING'}
+          <span className="px-2 py-1 text-white text-xs rounded-full font-rajdhani bg-green-700">
+            WAITING
           </span>
         </div>
         
         <div className="space-y-2 mb-4">
           <div className="flex justify-between">
-            <span className="font-roboto text-text-secondary">
-              {isActiveBotEntry ? 'Bet Range:' : 'Bet Amount:'}
-            </span>
+            <span className="font-roboto text-text-secondary">Bet Amount:</span>
             <span className="font-rajdhani text-green-400 font-bold">
-              {typeof game.bet_amount === 'string' ? game.bet_amount : `$${game.bet_amount}`}
+              ${game.bet_amount}
             </span>
           </div>
           <div className="flex justify-between">
@@ -179,10 +260,10 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         </div>
         
         <button
-          onClick={() => onJoin(isActiveBotEntry ? game.bot_id : (game.game_id || game.id))}
+          onClick={() => onJoin(game.game_id || game.id)}
           className="w-full py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300"
         >
-          {isActiveBotEntry ? 'CHALLENGE BOT' : 'JOIN BATTLE'}
+          JOIN BATTLE
         </button>
       </div>
     );
