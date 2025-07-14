@@ -370,7 +370,36 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       }
     } catch (error) {
       console.error('Error handling game join:', error);
-      showError(error.response?.data?.detail || 'Failed to join game');
+      
+      // Extract error message safely
+      let errorMessage = 'Failed to join game';
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Handle different error response formats
+        if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.detail) {
+          // FastAPI HTTPException format
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            // Pydantic validation errors
+            errorMessage = errorData.detail.map(err => err.msg || err.message || 'Validation error').join(', ');
+          } else if (typeof errorData.detail === 'object') {
+            errorMessage = errorData.detail.msg || errorData.detail.message || 'Validation error';
+          }
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(errorMessage);
     }
   };
 
