@@ -304,6 +304,7 @@ const ProfitAdmin = ({ user }) => {
     try {
       setActiveModal(type);
       setModalError(null);
+      setActivePeriod('month'); // Сброс периода при открытии модального окна
       
       // Для модальных окон с настройками комиссий загружаем текущие настройки
       if (type === 'bet_commission' || type === 'gift_commission') {
@@ -315,7 +316,7 @@ const ProfitAdmin = ({ user }) => {
         setModalData([]);
       } else {
         // Для других типов загружаем соответствующие данные
-        await loadModalData(type);
+        await loadModalData(type, 'month');
       }
     } catch (error) {
       console.error('Error opening modal:', error);
