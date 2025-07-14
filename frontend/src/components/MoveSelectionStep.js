@@ -29,7 +29,7 @@ const MoveSelectionStep = ({
         <h3 className="text-white font-rajdhani text-xl mb-2">Choose Your Move</h3>
         <p className="text-text-secondary mb-2">Select your strategy for the battle</p>
         <div className="text-green-400 font-rajdhani text-lg">
-          Betting: {formatCurrency(totalGemValue)}
+          Betting: {formatGemValue(totalGemValue)}
         </div>
       </div>
 
