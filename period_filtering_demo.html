@@ -300,49 +300,47 @@
             </div>
         </div>
 
-        <!-- Универсальное модальное окно -->
-        <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
-            <div class="bg-slate-800 border border-accent-primary border-opacity-50 rounded-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
-                <div class="flex justify-between items-center p-6 border-b border-gray-700">
-                    <div class="flex items-center space-x-4">
-                        <h3 id="modal-title" class="font-rajdhani text-xl font-bold text-white">Модальное окно</h3>
-                        
-                        <!-- Переключатель периодов в модальном окне -->
-                        <div class="flex bg-gray-700 rounded-lg p-1">
-                            <button class="modal-period-btn active px-3 py-1 text-xs rounded-md" onclick="setModalPeriod('day')">
-                                День
-                            </button>
-                            <button class="modal-period-btn px-3 py-1 text-xs rounded-md" onclick="setModalPeriod('week')">
-                                Неделя
-                            </button>
-                            <button class="modal-period-btn px-3 py-1 text-xs rounded-md" onclick="setModalPeriod('month')">
-                                Месяц
-                            </button>
-                            <button class="modal-period-btn px-3 py-1 text-xs rounded-md" onclick="setModalPeriod('all')">
-                                Все
-                            </button>
-                        </div>
-                    </div>
-                    <button onclick="closeModal()" class="text-gray-400 hover:text-white">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
+        <div class="section">
+            <h2>🔗 API Endpoints</h2>
+            <div class="api-grid">
+                <div class="api-card">
+                    <div class="api-title">Доход от ботов</div>
+                    <div class="api-endpoint">GET /api/admin/profit/bot-revenue-details?period=month</div>
+                    <div class="api-description">Возвращает детальную информацию о доходах от ботов за выбранный период</div>
                 </div>
-
-                <div id="modal-content" class="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
-                    <div class="text-center text-gray-400 py-8">
-                        <div class="text-4xl mb-4">📊</div>
-                        <h4 class="font-rajdhani text-lg font-bold mb-2">Загрузка данных</h4>
-                        <p>Данные фильтруются по выбранному периоду</p>
-                        <p class="text-sm mt-2">Период: <span id="modal-period-display" class="text-blue-400 font-bold">Месяц</span></p>
-                    </div>
+                
+                <div class="api-card">
+                    <div class="api-title">Общая прибыль</div>
+                    <div class="api-endpoint">GET /api/admin/profit/total-revenue-breakdown?period=month</div>
+                    <div class="api-description">Возвращает сводку по всем источникам дохода за период</div>
                 </div>
-
-                <div class="flex justify-end p-6 border-t border-gray-700">
-                    <button onclick="closeModal()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
-                        Закрыть
-                    </button>
+                
+                <div class="api-card">
+                    <div class="api-title">Расходы</div>
+                    <div class="api-endpoint">GET /api/admin/profit/expenses-details?period=month</div>
+                    <div class="api-description">Возвращает детальную информацию о расходах за период</div>
+                </div>
+                
+                <div class="api-card">
+                    <div class="api-title">Чистая прибыль</div>
+                    <div class="api-endpoint">GET /api/admin/profit/net-profit-analysis?period=month</div>
+                    <div class="api-description">Возвращает анализ чистой прибыли за период</div>
+                </div>
+                
+                <div class="api-card">
+                    <div class="api-title">Замороженные средства</div>
+                    <div class="api-endpoint">GET /api/admin/profit/frozen-funds-details?period=month</div>
+                    <div class="api-description">Возвращает информацию о замороженных средствах за период</div>
+                </div>
+                
+                <div class="api-card">
+                    <div class="api-title">Параметры</div>
+                    <div>
+                        <div style="color: #00ff00;">day</div> - последние 24 часа<br>
+                        <div style="color: #00ff00;">week</div> - последние 7 дней<br>
+                        <div style="color: #00ff00;">month</div> - последние 30 дней<br>
+                        <div style="color: #00ff00;">all</div> - все время
+                    </div>
                 </div>
             </div>
         </div>
