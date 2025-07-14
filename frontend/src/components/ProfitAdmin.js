@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatCurrencyWithSymbol } from '../utils/economy';
+import Pagination from './Pagination';
+import usePagination from '../hooks/usePagination';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -9,12 +11,13 @@ const ProfitAdmin = ({ user }) => {
   const [stats, setStats] = useState(null);
   const [entries, setEntries] = useState([]);
   const [commissionSettings, setCommissionSettings] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [filterType, setFilterType] = useState('');
   const [dateFilter, setDateFilter] = useState({ from: '', to: '' });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+
+  // Пагинация для истории прибыли
+  const pagination = usePagination(1, 10);
 
   useEffect(() => {
     fetchData();
