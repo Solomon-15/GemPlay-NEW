@@ -260,7 +260,7 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Замороженные средства</h3>
-                  <p className="font-russo text-2xl font-bold text-yellow-400">{formatCurrencyWithSymbol(stats.frozen_funds || 0)}</p>
+                  <p className="font-russo text-2xl font-bold text-yellow-400">{formatCurrencyWithSymbol(stats.frozen_funds || 0, true)}</p>
                   <p className="text-xs text-text-secondary mt-1">Активные ставки</p>
                 </div>
               </div>
