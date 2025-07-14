@@ -1330,8 +1330,6 @@ const UserManagement = ({ user: currentUser }) => {
           </div>
         </div>
       </div>
-        </div>
-      </div>
 
       {/* Поиск */}
       <div className="flex space-x-4">
