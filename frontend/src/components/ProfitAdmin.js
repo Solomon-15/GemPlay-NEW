@@ -278,7 +278,7 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Общая прибыль</h3>
-                  <p className="font-russo text-2xl font-bold text-green-400">{formatCurrencyWithSymbol(stats.total_profit || 0)}</p>
+                  <p className="font-russo text-2xl font-bold text-green-400">{formatCurrencyWithSymbol(stats.total_profit || 0, true)}</p>
                   <p className="text-xs text-text-secondary mt-1">Совокупный доход</p>
                 </div>
               </div>
