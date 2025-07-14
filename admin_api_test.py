@@ -8,7 +8,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://b2dffd13-8ad4-42cc-851a-79877595a13f.preview.emergentagent.com/api"
+BASE_URL = "https://f6f5b865-a999-477a-a702-8e36f9f18ab6.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
