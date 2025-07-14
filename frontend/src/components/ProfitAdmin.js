@@ -221,11 +221,11 @@ const ProfitAdmin = ({ user }) => {
   // Функции для определения типа действия и игрока
   const getActionType = (entry, category) => {
     if (category === 'BET_COMMISSION') {
-      return 'Победа в PvP';
+      return 'Комиссия с выигрыша';
     } else if (category === 'BOT_REVENUE') {
-      return 'Бот-победа';
+      return 'Выигрыш бота против игрока';
     } else if (category === 'GIFT_COMMISSION') {
-      return 'Подарок';
+      return 'Комиссия с подарка';
     }
     return 'Неизвестно';
   };
