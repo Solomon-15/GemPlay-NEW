@@ -792,6 +792,67 @@ const BetsManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Reset Single Bet Modal */}
+      {isResetBetModalOpen && resettingBet && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-orange-600 rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-orange-400">🗑️ Сбросить ставку</h3>
+              <button
+                onClick={() => setIsResetBetModalOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-orange-900 border border-orange-600 rounded-lg p-4">
+                <div className="text-orange-400 text-sm mb-2">
+                  ⚠️ <strong>ВНИМАНИЕ!</strong> Это действие нельзя отменить!
+                </div>
+                <div className="text-orange-300 text-sm space-y-1">
+                  <div>• ID ставки: {resettingBet.id?.substring(0, 8)}...</div>
+                  <div>• Сумма: ${resettingBet.bet_amount?.toFixed(2)}</div>
+                  <div>• Создатель: {resettingBet.creator?.username}</div>
+                  {resettingBet.opponent && (
+                    <div>• Противник: {resettingBet.opponent?.username}</div>
+                  )}
+                  <div>• Средства будут разморожены</div>
+                  <div>• Ресурсы вернутся игрокам</div>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <p className="text-white font-rajdhani text-lg mb-2">
+                  Вы уверены, что хотите сбросить эту ставку?
+                </p>
+                <p className="text-text-secondary text-sm">
+                  Ставка будет отменена, а ресурсы возвращены
+                </p>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setIsResetBetModalOpen(false)}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-rajdhani font-bold transition-colors"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={resetSingleBet}
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-rajdhani font-bold transition-colors"
+                >
+                  🗑️ Сбросить
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
