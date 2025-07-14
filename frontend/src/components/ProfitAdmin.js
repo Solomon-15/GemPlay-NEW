@@ -3,6 +3,13 @@ import axios from 'axios';
 import { formatCurrencyWithSymbol } from '../utils/economy';
 import Pagination from './Pagination';
 import usePagination from '../hooks/usePagination';
+import ProfitChart from './ProfitChart';
+import { 
+  generateMockChartData, 
+  generateRevenueBreakdownData, 
+  generateExpensesData, 
+  generateNetProfitData 
+} from '../utils/chartUtils';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
