@@ -246,7 +246,7 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const updateBotSettings = async () => {
+  const updateIndividualBotSettings = async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.put(`${API}/admin/bots/${editingBot.id}`, editingBot, {
