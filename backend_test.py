@@ -4282,14 +4282,29 @@ def test_regular_bot_commission_logic() -> None:
     response, success = make_request("GET", "/bots/active-games", auth_token=user_token)
     
     bot_game_id = None
+    bot_bet_amount = 0
+    bot_bet_gems = {}
+    
     if success and len(response) > 0:
-        # Find a suitable bot game
+        # Find a suitable bot game - look for one with affordable bet amount
         for game in response:
-            if game.get("status") == "waiting" and game.get("bet_amount", 0) <= 20:  # Find affordable game
-                bot_game_id = game["game_id"]
-                bot_bet_amount = game.get("bet_amount", 10)
-                print_success(f"Found suitable bot game: {bot_game_id} with bet ${bot_bet_amount}")
-                break
+            if game.get("status") == "WAITING" and game.get("bet_amount", 0) <= 20:  # Find affordable game
+                # Check if user has the required gems
+                required_gems = game.get("bet_gems", {})
+                can_afford = True
+                
+                for gem_type, quantity in required_gems.items():
+                    if initial_gems.get(gem_type, 0) < quantity:
+                        can_afford = False
+                        break
+                
+                if can_afford:
+                    bot_game_id = game["game_id"]
+                    bot_bet_amount = game.get("bet_amount", 10)
+                    bot_bet_gems = required_gems
+                    print_success(f"Found suitable bot game: {bot_game_id} with bet ${bot_bet_amount}")
+                    print_success(f"Required gems: {bot_bet_gems}")
+                    break
     
     if not bot_game_id:
         print_warning("No suitable bot games found - commission logic test incomplete")
