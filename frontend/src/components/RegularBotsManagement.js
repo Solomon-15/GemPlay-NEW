@@ -88,6 +88,7 @@ const RegularBotsManagement = () => {
     fetchBotsList();
     fetchBotSettings();
     fetchActiveBetsStats();
+    fetchGlobalBotSettings();
   }, []);
 
   // Перезагрузка списка ботов при изменении страницы
