@@ -15,6 +15,11 @@ const ProfitAdmin = ({ user }) => {
   const [dateFilter, setDateFilter] = useState({ from: '', to: '' });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  
+  // Новые состояния для категорий транзакций
+  const [activeCategory, setActiveCategory] = useState('bet_commission');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   // Пагинация для истории прибыли
   const pagination = usePagination(1, 10);
