@@ -140,7 +140,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     const availableForSpending = totalBalance - frozenBalance;
     
     if (availableForSpending < commission) {
-      showError(`Insufficient balance for commission. Required: ${formatCurrencyWithSymbol(commission)}, Available: ${formatCurrencyWithSymbol(availableForSpending)}`);
+      showError(`Insufficient balance for commission. Required: ${formatDollarAmount(commission)}, Available: ${formatDollarAmount(availableForSpending)}`);
       return false;
     }
 
