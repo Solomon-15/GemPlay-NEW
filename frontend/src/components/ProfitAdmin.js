@@ -328,7 +328,7 @@ const ProfitAdmin = ({ user }) => {
           const botRevenueResponse = await axios.get(`${API}/admin/profit/bot-revenue-details`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setModalData(botRevenueResponse.data.entries || []);
+          setModalData(botRevenueResponse.data);
           break;
           
         case 'frozen_funds':
@@ -336,7 +336,7 @@ const ProfitAdmin = ({ user }) => {
           const frozenFundsResponse = await axios.get(`${API}/admin/profit/frozen-funds-details`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setModalData(frozenFundsResponse.data.entries || []);
+          setModalData(frozenFundsResponse.data);
           break;
           
         case 'total_revenue':
@@ -344,7 +344,7 @@ const ProfitAdmin = ({ user }) => {
           const totalRevenueResponse = await axios.get(`${API}/admin/profit/total-revenue-breakdown`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setModalData(totalRevenueResponse.data.breakdown || []);
+          setModalData(totalRevenueResponse.data);
           break;
           
         case 'expenses':
@@ -352,7 +352,7 @@ const ProfitAdmin = ({ user }) => {
           const expensesResponse = await axios.get(`${API}/admin/profit/expenses-details`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setModalData(expensesResponse.data.entries || []);
+          setModalData(expensesResponse.data);
           break;
           
         case 'net_profit':
@@ -360,7 +360,7 @@ const ProfitAdmin = ({ user }) => {
           const netProfitResponse = await axios.get(`${API}/admin/profit/net-profit-analysis`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setModalData(netProfitResponse.data.analysis || []);
+          setModalData(netProfitResponse.data);
           break;
           
         default:
