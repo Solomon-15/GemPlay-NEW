@@ -7,7 +7,7 @@ import json
 import random
 import string
 
-BASE_URL = "https://1d0f5194-c2ea-48bb-8046-de706bbab2f8.preview.emergentagent.com/api"
+BASE_URL = "https://b2dffd13-8ad4-42cc-851a-79877595a13f.preview.emergentagent.com/api"
 
 def create_test_user():
     """Create a test user and return access token."""
