@@ -453,6 +453,25 @@ const RegularBotsManagement = () => {
     }
   };
 
+  // Функция для просмотра накопителей прибыли конкретного бота
+  const handleOpenBotProfitModal = async (bot) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bots/profit-accumulators?page=1&limit=20&bot_id=${bot.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSelectedBotForProfit(bot);
+      setBotProfitAccumulators(response.data.accumulators || []);
+      setBotProfitPagination(response.data.pagination || { current_page: 1, total_pages: 1 });
+      setIsBotProfitModalOpen(true);
+      showSuccessRU(`Загружены накопители прибыли для бота: ${bot.name}`);
+    } catch (error) {
+      console.error('Error fetching bot profit accumulators:', error);
+      showErrorRU('Ошибка при загрузке накопителей прибыли бота');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Кнопки управления */}
