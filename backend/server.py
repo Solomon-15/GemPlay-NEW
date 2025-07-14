@@ -109,6 +109,14 @@ class BotMode(str, Enum):
     SIMPLE = "SIMPLE"      # Простой рандом
     ALGORITHMIC = "ALGORITHMIC"  # С алгоритмом побед
 
+# Bot Settings model
+class BotSettings(BaseModel):
+    id: str = Field(default="bot_settings")
+    max_active_bets_regular: int = 50  # Максимальное количество активных ставок для обычных ботов
+    max_active_bets_human: int = 30    # Максимальное количество активных ставок для Human ботов
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Bot model
 class Bot(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
