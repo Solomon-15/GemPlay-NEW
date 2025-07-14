@@ -41,6 +41,7 @@ const RegularBotsManagement = () => {
 
   useEffect(() => {
     fetchStats();
+    fetchBotsList();
   }, []);
 
   const fetchStats = async () => {
@@ -54,6 +55,18 @@ const RegularBotsManagement = () => {
     } catch (error) {
       console.error('Ошибка загрузки статистики обычных ботов:', error);
       setLoading(false);
+    }
+  };
+
+  const fetchBotsList = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bots/regular/list`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBotsList(response.data.bots || []);
+    } catch (error) {
+      console.error('Ошибка загрузки списка ботов:', error);
     }
   };
 
