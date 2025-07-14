@@ -8,14 +8,14 @@ const MoveSelectionStep = ({
 }) => {
   // Безопасное форматирование валюты
   const formatCurrency = (amount) => {
-    try {
-      if (typeof amount !== 'number' || isNaN(amount)) {
-        return '$0.00';
+    if (typeof amount === 'number' && !isNaN(amount)) {
+      if (amount === 0) {
+        return '$0';
       }
-      return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    } catch (error) {
-      console.error('Error formatting currency:', error);
-      return '$0.00';
+      // Round down and format without decimals
+      return `$${Math.floor(amount).toLocaleString('en-US')}`;
+    } else {
+      return '$0';
     }
   };
 
