@@ -4,6 +4,7 @@ import { formatCurrencyWithSymbol, formatDollarAmount, formatGemValue } from '..
 import { useNotifications } from './NotificationContext';
 import { useGems } from './GemsContext';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
+import GemsHeader from './GemsHeader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
