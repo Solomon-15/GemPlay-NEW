@@ -73,8 +73,8 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Fetch active bots
-      const botsResponse = await axios.get(`${API}/bots/active`, {
+      // Fetch active bot games
+      const botGamesResponse = await axios.get(`${API}/bots/active-games`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -84,26 +84,13 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         total: balanceResponse.data.total_value || 0
       });
       
-      // Filter games
+      // Filter games - exclude bot games from general games list
       const allGames = gamesResponse.data || [];
       setAvailableBets(allGames.filter(game => !game.is_bot_game));
       
-      // Combine bot games and active bots
-      const botGames = allGames.filter(game => game.is_bot_game);
-      const activeBots = botsResponse.data || [];
-      const botEntries = activeBots.map(bot => ({
-        id: `bot-${bot.id}`,
-        creator_username: bot.name,
-        creator: { username: bot.name, gender: bot.avatar_gender },
-        bet_amount: `${bot.min_bet} - ${bot.max_bet}`,
-        bet_gems: { Ruby: '1-5', Emerald: '1-5', Sapphire: '1-5' },
-        created_at: new Date(),
-        is_bot: true,
-        bot_id: bot.id,
-        bot_type: bot.bot_type
-      }));
-      
-      setAvailableBots([...botGames, ...botEntries]);
+      // Set bot games from dedicated endpoint
+      const activeBotGames = botGamesResponse.data || [];
+      setAvailableBots(activeBotGames);
       
       const userGames = myBetsResponse.data || [];
       setMyBets(userGames.filter(game => game.status === 'WAITING'));
