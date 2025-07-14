@@ -197,7 +197,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
             <div className="flex justify-between">
               <span className="font-roboto text-text-secondary">Daily Limit Used:</span>
               <span className="font-rajdhani text-white">
-                {formatCurrencyWithSymbol(user.daily_limit_used || 0)} / {formatCurrencyWithSymbol(user.daily_limit_max || 1000)}
+                {formatDollarAmount(user.daily_limit_used || 0)} / {formatDollarAmount(user.daily_limit_max || 1000)}
               </span>
             </div>
           </div>
