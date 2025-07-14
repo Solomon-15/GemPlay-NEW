@@ -6660,6 +6660,148 @@ async def get_current_super_admin(token: str = Depends(oauth2_scheme)):
     
     return user_obj
 
+@api_router.post("/games/{game_id}/force-complete", response_model=dict)
+async def force_complete_game(
+    game_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Force complete a stuck game (for debugging and recovery)."""
+    try:
+        # Get the game
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Game not found"
+            )
+        
+        game_obj = Game(**game)
+        
+        # Check if user is part of this game
+        if current_user.id != game_obj.creator_id and current_user.id != game_obj.opponent_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You are not part of this game"
+            )
+        
+        # Check if game is in a problematic state
+        if game_obj.status not in [GameStatus.ACTIVE, GameStatus.REVEAL]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Game is not in a state that needs force completion"
+            )
+        
+        # If game is stuck in REVEAL phase, handle timeout
+        if game_obj.status == GameStatus.REVEAL:
+            await handle_game_timeout(game_id)
+            return {"message": "Game timeout handled, bet recreated"}
+        
+        # If game is stuck in ACTIVE phase with missing moves, try to complete it
+        if game_obj.status == GameStatus.ACTIVE:
+            # Check if we have both moves
+            if not game_obj.creator_move or not game_obj.opponent_move:
+                # Cancel the game and return resources
+                await cancel_stuck_game(game_id)
+                return {"message": "Stuck game cancelled, resources returned"}
+            else:
+                # Try to determine winner
+                try:
+                    result = await determine_game_winner(game_id)
+                    return {"message": "Game completed successfully", "result": result}
+                except Exception as e:
+                    logger.error(f"Error force completing game: {e}")
+                    # If winner determination fails, cancel the game
+                    await cancel_stuck_game(game_id)
+                    return {"message": "Game cancelled due to completion error, resources returned"}
+        
+        return {"message": "Game processed"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error force completing game: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to force complete game"
+        )
+
+async def cancel_stuck_game(game_id: str):
+    """Cancel a stuck game and return all resources to players."""
+    try:
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            return
+        
+        game_obj = Game(**game)
+        
+        # Return creator's resources
+        for gem_type, quantity in game_obj.bet_gems.items():
+            await db.user_gems.update_one(
+                {"user_id": game_obj.creator_id, "gem_type": gem_type},
+                {
+                    "$inc": {"frozen_quantity": -quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+        
+        # Return creator's commission
+        commission = game_obj.bet_amount * 0.06
+        await db.users.update_one(
+            {"id": game_obj.creator_id},
+            {
+                "$inc": {
+                    "virtual_balance": commission,
+                    "frozen_balance": -commission
+                },
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        # Return opponent's resources if they exist
+        if game_obj.opponent_id:
+            # Check if opponent is a user (not a bot)
+            opponent_user = await db.users.find_one({"id": game_obj.opponent_id})
+            if opponent_user:
+                # Return opponent's gems
+                opponent_gems = game_obj.opponent_gems or game_obj.bet_gems
+                for gem_type, quantity in opponent_gems.items():
+                    await db.user_gems.update_one(
+                        {"user_id": game_obj.opponent_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                
+                # Return opponent's commission
+                await db.users.update_one(
+                    {"id": game_obj.opponent_id},
+                    {
+                        "$inc": {
+                            "virtual_balance": commission,
+                            "frozen_balance": -commission
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+        
+        # Update game status to cancelled
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "status": "CANCELLED",
+                    "cancelled_at": datetime.utcnow(),
+                    "cancel_reason": "Force cancelled due to stuck state"
+                }
+            }
+        )
+        
+        logger.info(f"Cancelled stuck game {game_id}")
+        
+    except Exception as e:
+        logger.error(f"Error cancelling stuck game {game_id}: {e}")
+
 @api_router.get("/admin/users/{user_id}/stats", response_model=dict)
 async def get_user_stats(
     user_id: str,
