@@ -27,7 +27,7 @@ const ProfitAdmin = ({ user }) => {
     if (activeTab === 'history') {
       fetchEntries();
     }
-  }, [activeTab, currentPage, filterType, dateFilter]);
+  }, [activeTab, pagination.currentPage, filterType, dateFilter]);
 
   const fetchData = async () => {
     setLoading(true);
