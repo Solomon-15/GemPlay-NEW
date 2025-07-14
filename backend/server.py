@@ -5088,9 +5088,23 @@ async def update_commission_settings(
         )
 
 @api_router.get("/admin/profit/bot-revenue-details", response_model=dict)
-async def get_bot_revenue_details(current_admin: User = Depends(get_current_admin)):
+async def get_bot_revenue_details(
+    period: str = "month",  # day, week, month, all
+    current_admin: User = Depends(get_current_admin)
+):
     """Get detailed information about bot revenue."""
     try:
+        # Calculate date filter based on period
+        now = datetime.now()
+        if period == "day":
+            start_date = now - timedelta(days=1)
+        elif period == "week":
+            start_date = now - timedelta(weeks=1)
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+        else:  # "all"
+            start_date = None
+        
         # Get all regular bots with their accumulated profits
         bots = await db.bots.find({"is_regular": True}).to_list(None)
         
@@ -5100,18 +5114,22 @@ async def get_bot_revenue_details(current_admin: User = Depends(get_current_admi
         for bot in bots:
             bot_revenue = 0
             
-            # Get completed cycles for this bot
-            profit_entries = await db.profit_history.find({
+            # Get completed cycles for this bot with period filter
+            query = {
                 "type": "BOT_REVENUE",
                 "bot_id": bot["id"]
-            }).to_list(None)
+            }
+            if start_date:
+                query["created_at"] = {"$gte": start_date}
+            
+            profit_entries = await db.profit_history.find(query).to_list(None)
             
             for entry in profit_entries:
                 bot_revenue += entry.get("amount", 0)
             
             total_revenue += bot_revenue
             
-            # Get bot statistics
+            # Get bot statistics (for all time)
             games_played = bot.get("total_games_played", 0)
             games_won = bot.get("total_games_won", 0)
             current_cycle_games = bot.get("current_cycle_games", 0)
@@ -5136,6 +5154,7 @@ async def get_bot_revenue_details(current_admin: User = Depends(get_current_admi
         
         return {
             "success": True,
+            "period": period,
             "total_revenue": total_revenue,
             "active_bots": len([b for b in bot_details if b["status"] == "active"]),
             "total_bots": len(bot_details),
