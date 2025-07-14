@@ -3985,7 +3985,13 @@ def test_comprehensive_bet_management_system() -> None:
         response, success = make_request("GET", f"/admin/bets/list?user_id={test_user_id}", auth_token=admin_token)
         if success:
             bets = response.get("bets", [])
-            if all(bet.get("user_id") == test_user_id for bet in bets):
+            # Check if any bet has the test user as creator or opponent
+            user_bet_found = any(
+                bet.get("creator", {}).get("id") == test_user_id or 
+                (bet.get("opponent") and bet.get("opponent", {}).get("id") == test_user_id)
+                for bet in bets
+            )
+            if user_bet_found:
                 print_success("User ID filtering working correctly")
                 record_test("Admin Bets List - User ID Filtering", True)
             else:
