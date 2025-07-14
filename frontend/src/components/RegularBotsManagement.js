@@ -93,10 +93,15 @@ const RegularBotsManagement = () => {
   const fetchBotsList = async () => {
     try {
       const token = localStorage.getItem('token');
+      const { page, limit } = pagination.getPaginationParams();
+      
       const response = await axios.get(`${API}/admin/bots/regular/list`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        params: { page, limit }
       });
+      
       setBotsList(response.data.bots || []);
+      pagination.updatePagination(response.data.total_count || 0);
     } catch (error) {
       console.error('Ошибка загрузки списка ботов:', error);
     }
