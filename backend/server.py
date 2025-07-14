@@ -10362,6 +10362,164 @@ async def update_bot_limit(
             detail="Failed to update bot limit"
         )
 
+@api_router.post("/admin/bots/{bot_id}/priority/move-up", response_model=dict)
+async def move_bot_priority_up(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Move bot priority up (decrease priority_order number)."""
+    try:
+        # Get current bot
+        current_bot = await db.bots.find_one({"id": bot_id})
+        if not current_bot:
+            raise HTTPException(status_code=404, detail="Bot not found")
+        
+        current_priority = current_bot.get("priority_order", 0)
+        
+        # Find bot with the next higher priority (lower number)
+        higher_priority_bot = await db.bots.find_one({
+            "priority_order": {"$lt": current_priority},
+            "is_active": True,
+            "$or": [
+                {"type": "REGULAR"},
+                {"bot_type": "REGULAR"}
+            ]
+        }, sort=[("priority_order", -1)])
+        
+        if not higher_priority_bot:
+            return {
+                "success": False,
+                "message": "Bot is already at highest priority"
+            }
+        
+        # Swap priorities
+        higher_priority = higher_priority_bot.get("priority_order", 0)
+        
+        # Update both bots
+        await db.bots.update_one(
+            {"id": bot_id},
+            {"$set": {"priority_order": higher_priority, "updated_at": datetime.utcnow()}}
+        )
+        
+        await db.bots.update_one(
+            {"id": higher_priority_bot["id"]},
+            {"$set": {"priority_order": current_priority, "updated_at": datetime.utcnow()}}
+        )
+        
+        return {
+            "success": True,
+            "message": "Bot priority moved up successfully",
+            "bot_id": bot_id,
+            "new_priority": higher_priority
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error moving bot priority up: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to move bot priority up"
+        )
+
+@api_router.post("/admin/bots/{bot_id}/priority/move-down", response_model=dict)
+async def move_bot_priority_down(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Move bot priority down (increase priority_order number)."""
+    try:
+        # Get current bot
+        current_bot = await db.bots.find_one({"id": bot_id})
+        if not current_bot:
+            raise HTTPException(status_code=404, detail="Bot not found")
+        
+        current_priority = current_bot.get("priority_order", 0)
+        
+        # Find bot with the next lower priority (higher number)
+        lower_priority_bot = await db.bots.find_one({
+            "priority_order": {"$gt": current_priority},
+            "is_active": True,
+            "$or": [
+                {"type": "REGULAR"},
+                {"bot_type": "REGULAR"}
+            ]
+        }, sort=[("priority_order", 1)])
+        
+        if not lower_priority_bot:
+            return {
+                "success": False,
+                "message": "Bot is already at lowest priority"
+            }
+        
+        # Swap priorities
+        lower_priority = lower_priority_bot.get("priority_order", 0)
+        
+        # Update both bots
+        await db.bots.update_one(
+            {"id": bot_id},
+            {"$set": {"priority_order": lower_priority, "updated_at": datetime.utcnow()}}
+        )
+        
+        await db.bots.update_one(
+            {"id": lower_priority_bot["id"]},
+            {"$set": {"priority_order": current_priority, "updated_at": datetime.utcnow()}}
+        )
+        
+        return {
+            "success": True,
+            "message": "Bot priority moved down successfully",
+            "bot_id": bot_id,
+            "new_priority": lower_priority
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error moving bot priority down: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to move bot priority down"
+        )
+
+@api_router.post("/admin/bots/priority/reset", response_model=dict)
+async def reset_bot_priorities(current_user: User = Depends(get_current_admin)):
+    """Reset all bot priorities to default order (by creation date)."""
+    try:
+        # Get all active regular bots sorted by creation date
+        bots = await db.bots.find({
+            "is_active": True,
+            "$or": [
+                {"type": "REGULAR"},
+                {"bot_type": "REGULAR"}
+            ]
+        }).sort("created_at", 1).to_list(None)
+        
+        # Update priorities in order
+        for index, bot in enumerate(bots, 1):
+            await db.bots.update_one(
+                {"id": bot["id"]},
+                {
+                    "$set": {
+                        "priority_order": index,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+        
+        return {
+            "success": True,
+            "message": f"Reset priorities for {len(bots)} bots",
+            "bots_updated": len(bots)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error resetting bot priorities: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to reset bot priorities"
+        )
+
 # ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
