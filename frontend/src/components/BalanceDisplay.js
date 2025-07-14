@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { formatCurrencyWithSymbol, calculateGemValue } from '../utils/economy';
+import { formatCurrencyWithSymbol, formatDollarAmount, formatGemValue, calculateGemValue } from '../utils/economy';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
