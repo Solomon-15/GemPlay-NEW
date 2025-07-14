@@ -577,24 +577,24 @@ const ProfitAdmin = ({ user }) => {
               </div>
             </div>
 
-            {/* Активные транзакции */}
-            <div className="bg-surface-card border border-indigo-500/30 rounded-lg p-6 hover:border-indigo-500/60 transition-colors duration-200 shadow-lg">
+            {/* Чистая прибыль */}
+            <div className="bg-surface-card border border-emerald-500/30 rounded-lg p-6 hover:border-emerald-500/60 transition-colors duration-200 shadow-lg cursor-pointer" onClick={() => openModal('net_profit')}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <div className="bg-indigo-500/20 text-indigo-400 text-xs font-bold px-2 py-1 rounded-full">
-                      ACTIVE
+                    <div className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">
+                      NET
                     </div>
                   </div>
-                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Активные транзакции</h3>
-                  <p className="font-russo text-2xl font-bold text-indigo-400">{stats.active_transactions || 0}</p>
-                  <p className="text-xs text-text-secondary mt-1">Ожидающие обработки операции</p>
-                  <p className="text-xs text-indigo-300 mt-1">Обновляется в реальном времени</p>
+                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Чистая прибыль</h3>
+                  <p className="font-russo text-2xl font-bold text-emerald-400">{formatCurrencyWithSymbol(calculateNetProfit(stats), true)}</p>
+                  <p className="text-xs text-text-secondary mt-1">Общая прибыль минус расходы</p>
+                  <p className="text-xs text-emerald-300 mt-1">Клик для детализации</p>
                 </div>
               </div>
             </div>
