@@ -760,7 +760,8 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
             id: selectedBetForJoin.game_id || selectedBetForJoin.id,
             bet_amount: selectedBetForJoin.bet_amount,
             bet_gems: selectedBetForJoin.bet_gems,
-            creator: selectedBetForJoin.creator
+            creator: selectedBetForJoin.creator,
+            is_bot_game: selectedBetForJoin.is_bot_game || false  // Добавляем флаг игры с ботом
           }}
           user={user}
           onClose={handleCloseJoinBattle}
