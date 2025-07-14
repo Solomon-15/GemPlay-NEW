@@ -5893,6 +5893,724 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
             detail="Failed to cleanup stuck bets"
         )
 
+@api_router.post("/admin/bets/reset-all", response_model=dict)
+async def reset_all_bets(current_user: User = Depends(get_current_super_admin)):
+    """Reset all active bets in the system (SUPER_ADMIN only)."""
+    try:
+        # Find all active games
+        active_games = await db.games.find({
+            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+        }).to_list(10000)  # Limit to prevent memory issues
+        
+        reset_results = {
+            "total_processed": 0,
+            "cancelled_games": [],
+            "total_gems_returned": {},
+            "total_commission_returned": 0,
+            "users_affected": set(),
+            "bots_affected": set()
+        }
+        
+        for game in active_games:
+            game_id = game.get("id")
+            game_status = game.get("status")
+            creator_id = game.get("creator_id")
+            opponent_id = game.get("opponent_id")
+            bet_amount = game.get("bet_amount", 0)
+            bet_gems = game.get("bet_gems", {})
+            opponent_gems = game.get("opponent_gems", {})
+            
+            # Cancel the game
+            await db.games.update_one(
+                {"id": game_id},
+                {
+                    "$set": {
+                        "status": "CANCELLED",
+                        "cancelled_at": datetime.utcnow(),
+                        "cancelled_by": "admin_reset_all",
+                        "cancel_reason": f"Reset all bets by admin {current_user.username}"
+                    }
+                }
+            )
+            
+            commission_returned = 0
+            
+            # Return resources based on game status
+            if game_status == "WAITING":
+                # Only creator has bet, return their resources
+                for gem_type, quantity in bet_gems.items():
+                    await db.user_gems.update_one(
+                        {"user_id": creator_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
+                
+                # Return commission to creator (only if it's a user)
+                commission_amount = bet_amount * 0.06
+                creator_user = await db.users.find_one({"id": creator_id})
+                if creator_user:
+                    await db.users.update_one(
+                        {"id": creator_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+                    reset_results["users_affected"].add(creator_id)
+                else:
+                    reset_results["bots_affected"].add(creator_id)
+                    
+            elif game_status in ["ACTIVE", "REVEAL"]:
+                # Both players have bet, return resources to both
+                
+                # Return creator's resources
+                for gem_type, quantity in bet_gems.items():
+                    await db.user_gems.update_one(
+                        {"user_id": creator_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
+                
+                # Return opponent's resources
+                opponent_bet_gems = opponent_gems if opponent_gems else bet_gems
+                for gem_type, quantity in opponent_bet_gems.items():
+                    await db.user_gems.update_one(
+                        {"user_id": opponent_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
+                
+                # Return commission to both players
+                commission_amount = bet_amount * 0.06
+                
+                # Return to creator
+                creator_user = await db.users.find_one({"id": creator_id})
+                if creator_user:
+                    await db.users.update_one(
+                        {"id": creator_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+                    reset_results["users_affected"].add(creator_id)
+                else:
+                    reset_results["bots_affected"].add(creator_id)
+                
+                # Return to opponent
+                if opponent_id:
+                    opponent_user = await db.users.find_one({"id": opponent_id})
+                    if opponent_user:
+                        await db.users.update_one(
+                            {"id": opponent_id},
+                            {
+                                "$inc": {
+                                    "virtual_balance": commission_amount,
+                                    "frozen_balance": -commission_amount
+                                },
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        commission_returned += commission_amount
+                        reset_results["users_affected"].add(opponent_id)
+                    else:
+                        reset_results["bots_affected"].add(opponent_id)
+            
+            reset_results["cancelled_games"].append({
+                "game_id": game_id,
+                "status": game_status,
+                "bet_amount": bet_amount,
+                "created_at": game.get("created_at")
+            })
+            reset_results["total_commission_returned"] += commission_returned
+            reset_results["total_processed"] += 1
+        
+        # Convert sets to lists for JSON serialization
+        reset_results["users_affected"] = list(reset_results["users_affected"])
+        reset_results["bots_affected"] = list(reset_results["bots_affected"])
+        
+        # Log admin action
+        admin_log = {
+            "admin_id": current_user.id,
+            "admin_username": current_user.username,
+            "action": "reset_all_bets",
+            "details": reset_results,
+            "timestamp": datetime.utcnow()
+        }
+        await db.admin_logs.insert_one(admin_log)
+        
+        return {
+            "success": True,
+            "message": f"Successfully reset {reset_results['total_processed']} active bets",
+            **reset_results
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting all bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset all bets"
+        )
+
+@api_router.post("/admin/users/{user_id}/reset-bets", response_model=dict)
+async def reset_user_bets(
+    user_id: str,
+    current_user: User = Depends(get_current_super_admin)
+):
+    """Reset all bets for a specific user (SUPER_ADMIN only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Find user's active games
+        active_games = await db.games.find({
+            "$or": [
+                {"creator_id": user_id},
+                {"opponent_id": user_id}
+            ],
+            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+        }).to_list(1000)
+        
+        reset_results = {
+            "total_processed": 0,
+            "cancelled_games": [],
+            "total_gems_returned": {},
+            "total_commission_returned": 0
+        }
+        
+        for game in active_games:
+            game_id = game.get("id")
+            game_status = game.get("status")
+            creator_id = game.get("creator_id")
+            opponent_id = game.get("opponent_id")
+            bet_amount = game.get("bet_amount", 0)
+            bet_gems = game.get("bet_gems", {})
+            opponent_gems = game.get("opponent_gems", {})
+            
+            # Cancel the game
+            await db.games.update_one(
+                {"id": game_id},
+                {
+                    "$set": {
+                        "status": "CANCELLED",
+                        "cancelled_at": datetime.utcnow(),
+                        "cancelled_by": "admin_user_reset",
+                        "cancel_reason": f"Reset user {user.get('username')} bets by admin {current_user.username}"
+                    }
+                }
+            )
+            
+            commission_returned = 0
+            
+            # Return resources based on game status and user role
+            if game_status == "WAITING":
+                if creator_id == user_id:
+                    # User created the game, return their resources
+                    for gem_type, quantity in bet_gems.items():
+                        await db.user_gems.update_one(
+                            {"user_id": user_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
+                    
+                    # Return commission
+                    commission_amount = bet_amount * 0.06
+                    await db.users.update_one(
+                        {"id": user_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+                    
+            elif game_status in ["ACTIVE", "REVEAL"]:
+                # Return user's resources regardless of their role
+                if creator_id == user_id:
+                    # User is creator
+                    for gem_type, quantity in bet_gems.items():
+                        await db.user_gems.update_one(
+                            {"user_id": user_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
+                    
+                    commission_amount = bet_amount * 0.06
+                    await db.users.update_one(
+                        {"id": user_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+                    
+                elif opponent_id == user_id:
+                    # User is opponent
+                    opponent_bet_gems = opponent_gems if opponent_gems else bet_gems
+                    for gem_type, quantity in opponent_bet_gems.items():
+                        await db.user_gems.update_one(
+                            {"user_id": user_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
+                    
+                    commission_amount = bet_amount * 0.06
+                    await db.users.update_one(
+                        {"id": user_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+            
+            reset_results["cancelled_games"].append({
+                "game_id": game_id,
+                "status": game_status,
+                "bet_amount": bet_amount,
+                "user_role": "creator" if creator_id == user_id else "opponent"
+            })
+            reset_results["total_commission_returned"] += commission_returned
+            reset_results["total_processed"] += 1
+        
+        # Log admin action
+        admin_log = {
+            "admin_id": current_user.id,
+            "admin_username": current_user.username,
+            "action": "reset_user_bets",
+            "target_user_id": user_id,
+            "target_username": user.get("username"),
+            "details": reset_results,
+            "timestamp": datetime.utcnow()
+        }
+        await db.admin_logs.insert_one(admin_log)
+        
+        return {
+            "success": True,
+            "message": f"Successfully reset {reset_results['total_processed']} bets for user {user.get('username')}",
+            **reset_results
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting user bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset user bets"
+        )
+
+@api_router.post("/admin/bots/{bot_id}/reset-bets", response_model=dict)
+async def reset_bot_bets(
+    bot_id: str,
+    current_user: User = Depends(get_current_super_admin)
+):
+    """Reset all bets for a specific bot (SUPER_ADMIN only)."""
+    try:
+        # Find bot
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Find bot's active games
+        active_games = await db.games.find({
+            "$or": [
+                {"creator_id": bot_id},
+                {"opponent_id": bot_id}
+            ],
+            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+        }).to_list(1000)
+        
+        reset_results = {
+            "total_processed": 0,
+            "cancelled_games": []
+        }
+        
+        for game in active_games:
+            game_id = game.get("id")
+            game_status = game.get("status")
+            creator_id = game.get("creator_id")
+            opponent_id = game.get("opponent_id")
+            bet_amount = game.get("bet_amount", 0)
+            bet_gems = game.get("bet_gems", {})
+            opponent_gems = game.get("opponent_gems", {})
+            
+            # Cancel the game
+            await db.games.update_one(
+                {"id": game_id},
+                {
+                    "$set": {
+                        "status": "CANCELLED",
+                        "cancelled_at": datetime.utcnow(),
+                        "cancelled_by": "admin_bot_reset",
+                        "cancel_reason": f"Reset bot {bot.get('name')} bets by admin {current_user.username}"
+                    }
+                }
+            )
+            
+            # Return resources to users (if any involved)
+            if game_status == "WAITING":
+                if creator_id != bot_id:  # Creator is a user
+                    for gem_type, quantity in bet_gems.items():
+                        await db.user_gems.update_one(
+                            {"user_id": creator_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                    
+                    commission_amount = bet_amount * 0.06
+                    await db.users.update_one(
+                        {"id": creator_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    
+            elif game_status in ["ACTIVE", "REVEAL"]:
+                # Return resources to users involved
+                if creator_id != bot_id:  # Creator is a user
+                    for gem_type, quantity in bet_gems.items():
+                        await db.user_gems.update_one(
+                            {"user_id": creator_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                    
+                    commission_amount = bet_amount * 0.06
+                    await db.users.update_one(
+                        {"id": creator_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                
+                if opponent_id != bot_id and opponent_id:  # Opponent is a user
+                    opponent_bet_gems = opponent_gems if opponent_gems else bet_gems
+                    for gem_type, quantity in opponent_bet_gems.items():
+                        await db.user_gems.update_one(
+                            {"user_id": opponent_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                    
+                    commission_amount = bet_amount * 0.06
+                    await db.users.update_one(
+                        {"id": opponent_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+            
+            reset_results["cancelled_games"].append({
+                "game_id": game_id,
+                "status": game_status,
+                "bet_amount": bet_amount,
+                "bot_role": "creator" if creator_id == bot_id else "opponent"
+            })
+            reset_results["total_processed"] += 1
+        
+        # Log admin action
+        admin_log = {
+            "admin_id": current_user.id,
+            "admin_username": current_user.username,
+            "action": "reset_bot_bets",
+            "target_bot_id": bot_id,
+            "target_bot_name": bot.get("name"),
+            "details": reset_results,
+            "timestamp": datetime.utcnow()
+        }
+        await db.admin_logs.insert_one(admin_log)
+        
+        return {
+            "success": True,
+            "message": f"Successfully reset {reset_results['total_processed']} bets for bot {bot.get('name')}",
+            **reset_results
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting bot bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset bot bets"
+        )
+
+@api_router.post("/admin/users/reset-all-balances", response_model=dict)
+async def reset_all_user_balances(current_user: User = Depends(get_current_super_admin)):
+    """Reset all user balances and inventories to default values (SUPER_ADMIN only)."""
+    try:
+        # Default starting values
+        default_balance = 1000.0
+        default_gems = {
+            "Ruby": 20,      # $100 worth
+            "Emerald": 15,   # $150 worth  
+            "Sapphire": 10,  # $200 worth
+            "Diamond": 8,    # $240 worth
+            "Amber": 35,     # $105 worth
+            "Topaz": 25,     # $125 worth
+            "Onyx": 16       # $80 worth
+        }  # Total: ~$1000 worth of gems
+        
+        # Find all users
+        users = await db.users.find({}).to_list(10000)
+        
+        reset_results = {
+            "total_users_processed": 0,
+            "users_reset": [],
+            "default_balance": default_balance,
+            "default_gems": default_gems
+        }
+        
+        for user in users:
+            user_id = user.get("id")
+            username = user.get("username")
+            
+            # Reset user balance
+            await db.users.update_one(
+                {"id": user_id},
+                {
+                    "$set": {
+                        "virtual_balance": default_balance,
+                        "frozen_balance": 0.0,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            # Clear existing gems
+            await db.user_gems.delete_many({"user_id": user_id})
+            
+            # Add default gems
+            for gem_type, quantity in default_gems.items():
+                await db.user_gems.insert_one({
+                    "user_id": user_id,
+                    "gem_type": gem_type,
+                    "quantity": quantity,
+                    "frozen_quantity": 0,
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                })
+            
+            reset_results["users_reset"].append({
+                "user_id": user_id,
+                "username": username,
+                "new_balance": default_balance,
+                "new_gems": default_gems
+            })
+            reset_results["total_users_processed"] += 1
+        
+        # Log admin action
+        admin_log = {
+            "admin_id": current_user.id,
+            "admin_username": current_user.username,
+            "action": "reset_all_user_balances",
+            "details": reset_results,
+            "timestamp": datetime.utcnow()
+        }
+        await db.admin_logs.insert_one(admin_log)
+        
+        return {
+            "success": True,
+            "message": f"Successfully reset balances and inventories for {reset_results['total_users_processed']} users",
+            **reset_results
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting all user balances: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset all user balances"
+        )
+
+@api_router.post("/admin/users/{user_id}/reset-balance", response_model=dict)
+async def reset_user_balance(
+    user_id: str,
+    current_user: User = Depends(get_current_super_admin)
+):
+    """Reset specific user balance and inventory to default values (SUPER_ADMIN only)."""
+    try:
+        # Find user
+        user = await db.users.find_one({"id": user_id})
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Default starting values
+        default_balance = 1000.0
+        default_gems = {
+            "Ruby": 20,      # $100 worth
+            "Emerald": 15,   # $150 worth  
+            "Sapphire": 10,  # $200 worth
+            "Diamond": 8,    # $240 worth
+            "Amber": 35,     # $105 worth
+            "Topaz": 25,     # $125 worth
+            "Onyx": 16       # $80 worth
+        }  # Total: ~$1000 worth of gems
+        
+        # Reset user balance
+        await db.users.update_one(
+            {"id": user_id},
+            {
+                "$set": {
+                    "virtual_balance": default_balance,
+                    "frozen_balance": 0.0,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Clear existing gems
+        await db.user_gems.delete_many({"user_id": user_id})
+        
+        # Add default gems
+        for gem_type, quantity in default_gems.items():
+            await db.user_gems.insert_one({
+                "user_id": user_id,
+                "gem_type": gem_type,
+                "quantity": quantity,
+                "frozen_quantity": 0,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            })
+        
+        # Log admin action
+        admin_log = {
+            "admin_id": current_user.id,
+            "admin_username": current_user.username,
+            "action": "reset_user_balance",
+            "target_user_id": user_id,
+            "target_username": user.get("username"),
+            "details": {
+                "new_balance": default_balance,
+                "new_gems": default_gems
+            },
+            "timestamp": datetime.utcnow()
+        }
+        await db.admin_logs.insert_one(admin_log)
+        
+        return {
+            "success": True,
+            "message": f"Successfully reset balance and inventory for user {user.get('username')}",
+            "new_balance": default_balance,
+            "new_gems": default_gems
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting user balance: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset user balance"
+        )
+
+# Add SUPER_ADMIN dependency function
+async def get_current_super_admin(token: str = Depends(oauth2_scheme)):
+    """Get current user and verify SUPER_ADMIN role."""
+    try:
+        # Decode token to get user ID
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Get user from database
+    user = await db.users.find_one({"id": user_id})
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+    
+    # Convert to User object and check SUPER_ADMIN role
+    user_obj = User(**user)
+    if user_obj.role != "SUPER_ADMIN":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="SUPER_ADMIN access required"
+        )
+    
+    return user_obj
+
 @api_router.get("/admin/users/{user_id}/stats", response_model=dict)
 async def get_user_stats(
     user_id: str,
