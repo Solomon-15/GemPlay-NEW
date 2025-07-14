@@ -584,40 +584,16 @@ const ProfitAdmin = ({ user }) => {
             )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="bg-surface-sidebar px-6 py-4 flex items-center justify-between">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-white disabled:opacity-50 hover:bg-surface-sidebar transition-colors"
-                >
-                  ← Предыдущая
-                </button>
-                <div className="flex items-center space-x-2">
-                  <span className="text-text-secondary text-sm">
-                    Страница {currentPage} из {totalPages}
-                  </span>
-                  <select
-                    value={currentPage}
-                    onChange={(e) => setCurrentPage(parseInt(e.target.value))}
-                    className="bg-surface-card border border-border-primary rounded px-2 py-1 text-white text-sm"
-                  >
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                      <option key={page} value={page}>
-                        {page}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-white disabled:opacity-50 hover:bg-surface-sidebar transition-colors"
-                >
-                  Следующая →
-                </button>
-              </div>
-            )}
+            <div className="bg-surface-sidebar px-6 py-4">
+              <Pagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                onPageChange={pagination.handlePageChange}
+                itemsPerPage={pagination.itemsPerPage}
+                totalItems={pagination.totalItems}
+                showPageNumbers={false}
+              />
+            </div>
           </div>
         </div>
       )}
