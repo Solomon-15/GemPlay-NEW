@@ -74,7 +74,7 @@ const MoveSelectionStep = ({
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-text-secondary">Target Amount:</span>
-            <span className="text-white font-rajdhani font-bold">{formatCurrency(targetAmount)}</span>
+            <span className="text-white font-rajdhani font-bold">{formatGemValue(targetAmount)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">Your Bet:</span>
