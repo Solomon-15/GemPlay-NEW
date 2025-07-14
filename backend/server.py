@@ -123,8 +123,13 @@ class Bot(BaseModel):
     max_bet_amount: float = 100.0
     win_percentage: float = 60.0  # % побед за цикл
     cycle_length: int = 12  # Количество игр в цикле
+    cycle_total_amount: float = 500.0  # Общая сумма за цикл
     pause_timer: int = 5  # Минуты паузы между играми
     recreate_timer: int = 30  # Секунды для пересоздания ставки
+    
+    # Дополнительные настройки
+    can_accept_bets: bool = False  # Может ли принимать чужие ставки
+    can_play_with_bots: bool = False  # Может ли играть с другими ботами
     
     # Статистика
     games_played: int = 0
