@@ -1177,6 +1177,63 @@ const RegularBotsManagement = () => {
                       </button>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
+                      {editingBotLimits[bot.id] ? (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            min="1"
+                            max="50"
+                            value={editingBotLimits[bot.id].limit}
+                            onChange={(e) => handleBotLimitChange(bot.id, e.target.value)}
+                            className={`w-16 px-2 py-1 text-xs bg-surface-sidebar border rounded text-white focus:outline-none focus:border-accent-primary ${
+                              botLimitsValidation[bot.id] ? 'border-red-500' : 'border-border-primary'
+                            }`}
+                            disabled={editingBotLimits[bot.id].saving}
+                          />
+                          <div className="flex space-x-1">
+                            <button
+                              onClick={() => handleSaveBotLimit(bot.id)}
+                              disabled={editingBotLimits[bot.id].saving || botLimitsValidation[bot.id]}
+                              className={`px-2 py-1 text-xs rounded transition-colors ${
+                                editingBotLimits[bot.id].saving || botLimitsValidation[bot.id]
+                                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                                  : 'bg-green-600 text-white hover:bg-green-700'
+                              }`}
+                              title="Сохранить"
+                            >
+                              {editingBotLimits[bot.id].saving ? '...' : '✓'}
+                            </button>
+                            <button
+                              onClick={() => handleCancelEditBotLimit(bot.id)}
+                              disabled={editingBotLimits[bot.id].saving}
+                              className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                              title="Отменить"
+                            >
+                              ✗
+                            </button>
+                          </div>
+                          {botLimitsValidation[bot.id] && (
+                            <div className="absolute z-10 mt-1 p-2 bg-red-600 text-white text-xs rounded shadow-lg">
+                              {botLimitsValidation[bot.id]}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <span className="text-yellow-400 font-rajdhani font-bold">
+                            {bot.max_individual_bets || 12}
+                          </span>
+                          <button
+                            onClick={() => handleEditBotLimit(bot.id, bot.max_individual_bets)}
+                            className="text-blue-400 hover:text-blue-300 transition-colors"
+                            title="Редактировать лимит"
+                          >
+                            ✏️
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-white font-roboto text-sm">
                         {bot.games_stats.wins}/{bot.games_stats.losses}/{bot.games_stats.draws}
                       </div>
