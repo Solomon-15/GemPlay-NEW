@@ -6,6 +6,7 @@ const PlayerCard = ({
   game, 
   isMyBet = false, 
   isOngoing = false,
+  isBot = false,
   onAccept, 
   onCancel,
   onOpenJoinBattle,  // Новый пропс для открытия модального окна
