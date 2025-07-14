@@ -6123,12 +6123,31 @@ async def create_individual_bot(
         )
 
 @api_router.get("/admin/bots/regular/list", response_model=dict)
-async def get_regular_bots_list(current_user: User = Depends(get_current_admin)):
-    """Get detailed list of regular bots."""
+async def get_regular_bots_list(
+    page: int = 1,
+    limit: int = 10,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get detailed list of regular bots with pagination."""
     try:
+        # Validate pagination parameters
+        if page < 1:
+            page = 1
+        if limit < 1 or limit > 100:
+            limit = 10
+        
+        # Calculate offset
+        offset = (page - 1) * limit
+        
+        # Get total count
+        total_count = await db.bots.count_documents({
+            "bot_type": "REGULAR"
+        })
+        
+        # Get bots with pagination
         bots = await db.bots.find({
             "bot_type": "REGULAR"
-        }).to_list(100)
+        }).skip(offset).limit(limit).to_list(limit)
         
         bot_details = []
         
@@ -6189,9 +6208,19 @@ async def get_regular_bots_list(current_user: User = Depends(get_current_admin))
                 "last_game_time": bot.last_game_time
             })
         
+        # Calculate pagination info
+        total_pages = (total_count + limit - 1) // limit
+        has_next = page < total_pages
+        has_prev = page > 1
+        
         return {
             "bots": bot_details,
-            "total_count": len(bot_details)
+            "total_count": total_count,
+            "current_page": page,
+            "total_pages": total_pages,
+            "items_per_page": limit,
+            "has_next": has_next,
+            "has_prev": has_prev
         }
         
     except Exception as e:
