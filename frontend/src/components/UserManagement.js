@@ -1304,20 +1304,32 @@ const UserManagement = ({ user: currentUser }) => {
             Всего пользователей: {users.length} из многих
           </p>
         </div>
-        <div className="flex space-x-2">
-          {['', 'ACTIVE', 'BANNED', 'EMAIL_PENDING'].map((status) => (
-            <button
-              key={status}
-              onClick={() => handleStatusFilter(status)}
-              className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
-                statusFilter === status
-                  ? 'bg-accent-primary text-white'
-                  : 'bg-surface-card text-text-secondary hover:text-white'
-              }`}
-            >
-              {status || 'Все'}
-            </button>
-          ))}
+        <div className="flex space-x-3">
+          {/* Reset all balances button (SUPER_ADMIN only) */}
+          <button
+            onClick={() => setIsResetBalancesModalOpen(true)}
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-rajdhani font-bold transition-colors"
+          >
+            💰 Обнулить балансы
+          </button>
+          
+          <div className="flex space-x-2">
+            {['', 'ACTIVE', 'BANNED', 'EMAIL_PENDING'].map((status) => (
+              <button
+                key={status}
+                onClick={() => handleStatusFilter(status)}
+                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-colors ${
+                  statusFilter === status
+                    ? 'bg-accent-primary text-white'
+                    : 'bg-surface-card text-text-secondary hover:text-white'
+                }`}
+              >
+                {status || 'Все'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
         </div>
       </div>
 
