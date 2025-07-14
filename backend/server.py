@@ -5343,9 +5343,23 @@ async def get_total_revenue_breakdown(
         )
 
 @api_router.get("/admin/profit/expenses-details", response_model=dict)
-async def get_expenses_details(current_admin: User = Depends(get_current_admin)):
+async def get_expenses_details(
+    period: str = "month",  # day, week, month, all
+    current_admin: User = Depends(get_current_admin)
+):
     """Get detailed information about expenses."""
     try:
+        # Calculate date filter based on period
+        now = datetime.now()
+        if period == "day":
+            start_date = now - timedelta(days=1)
+        elif period == "week":
+            start_date = now - timedelta(weeks=1)
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+        else:  # "all"
+            start_date = None
+        
         # Get current expense settings
         settings_doc = await db.admin_settings.find_one({"type": "expense_settings"})
         if settings_doc:
@@ -5355,11 +5369,13 @@ async def get_expenses_details(current_admin: User = Depends(get_current_admin))
             expense_percentage = 60  # Default 60%
             manual_expenses = 0
         
-        # Calculate total revenue
+        # Calculate total revenue for the period
         total_revenue = 0
-        revenue_entries = await db.profit_history.find({
-            "type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION", "BOT_REVENUE"]}
-        }).to_list(None)
+        query = {"type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION", "BOT_REVENUE"]}}
+        if start_date:
+            query["created_at"] = {"$gte": start_date}
+        
+        revenue_entries = await db.profit_history.find(query).to_list(None)
         
         for entry in revenue_entries:
             total_revenue += entry.get("amount", 0)
@@ -5390,9 +5406,13 @@ async def get_expenses_details(current_admin: User = Depends(get_current_admin))
             }
         ]
         
-        # Get expense history (if tracked)
+        # Get expense history (if tracked) for the period
         expense_history = []
-        expense_entries = await db.profit_history.find({"type": "EXPENSE"}).to_list(None)
+        query = {"type": "EXPENSE"}
+        if start_date:
+            query["created_at"] = {"$gte": start_date}
+        
+        expense_entries = await db.profit_history.find(query).to_list(None)
         for entry in expense_entries:
             expense_history.append({
                 "date": entry.get("created_at"),
@@ -5403,6 +5423,7 @@ async def get_expenses_details(current_admin: User = Depends(get_current_admin))
         
         return {
             "success": True,
+            "period": period,
             "total_expenses": total_expenses,
             "total_revenue": total_revenue,
             "expense_percentage": expense_percentage,
