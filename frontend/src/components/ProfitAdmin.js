@@ -1498,15 +1498,39 @@ const ProfitAdmin = ({ user }) => {
               {/* Модальное окно для замороженных средств */}
               {activeModal === 'frozen_funds' && (
                 <div className="space-y-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                      </svg>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-rajdhani text-lg font-bold text-white">Замороженные средства</h4>
+                        <p className="text-sm text-text-secondary">Комиссия в активных играх и незавершенных транзакциях</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-rajdhani text-lg font-bold text-white">Замороженные средства</h4>
-                      <p className="text-sm text-text-secondary">Комиссия в активных играх и незавершенных транзакциях</p>
+                    
+                    {/* Переключатель периодов */}
+                    <div className="flex bg-surface-sidebar rounded-lg p-1">
+                      {[
+                        { key: 'day', label: 'День' },
+                        { key: 'week', label: 'Неделя' },
+                        { key: 'month', label: 'Месяц' },
+                        { key: 'all', label: 'Все' }
+                      ].map((period) => (
+                        <button
+                          key={period.key}
+                          onClick={() => handlePeriodChange(period.key)}
+                          className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                            activePeriod === period.key
+                              ? 'bg-orange-500 text-white'
+                              : 'text-text-secondary hover:text-white'
+                          }`}
+                        >
+                          {period.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
