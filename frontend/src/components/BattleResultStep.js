@@ -194,7 +194,7 @@ const BattleResultStep = ({
               <span className="text-white font-rajdhani font-bold text-lg">Your Result:</span>
               <span className={`font-rajdhani font-bold text-xl ${resultConfig.color}`}>
                 {result === 'win' ? 
-                  `+${formatCurrency(totalGemValue * 2 - commissionAmount)}` : 
+                  `+${formatGemValue(totalGemValue * 2 - commissionAmount)}` : 
                  result === 'lose' ? 
                   `-${formatCurrency(totalGemValue)}` : 
                   `±${formatCurrency(0)}`}
