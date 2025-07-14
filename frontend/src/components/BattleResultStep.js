@@ -178,7 +178,7 @@ const BattleResultStep = ({
           <div className="flex justify-between items-center py-2 border-b border-border-primary border-opacity-30">
             <span className="text-text-secondary font-rajdhani">Platform Commission (6%):</span>
             <span className="text-orange-400 font-rajdhani font-bold">
-              -{formatCurrency(commissionAmount)}
+              -{formatDollarAmount(commissionAmount)}
             </span>
           </div>
           
