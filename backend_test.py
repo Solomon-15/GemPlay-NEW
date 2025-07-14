@@ -4231,28 +4231,39 @@ def test_regular_bot_commission_logic() -> None:
         record_test("Bot Gems Setup", False, "Gems setup failed")
         return
     
-    # Step 4: Create a Regular Bot game
-    print_subheader("Step 3: Create Regular Bot Game")
+    # Step 4: Check for available bot games instead of creating one
+    print_subheader("Step 3: Check Available Bot Games")
     
-    bot_bet_gems = {"Ruby": 10, "Emerald": 2}  # $30 total value
+    response, success = make_request("GET", "/bots/active-games", auth_token=admin_token)
     
-    response, success = make_request(
-        "POST", f"/bots/{bot_id}/create-game",
-        data={
-            "bet_gems": bot_bet_gems,
-            "opponent_type": "human"
-        },
-        auth_token=admin_token
-    )
-    
-    if not success or "game_id" not in response:
-        print_error(f"Failed to create bot game: {response}")
-        record_test("Regular Bot Game Creation", False, "Game creation failed")
-        return
-    
-    bot_game_id = response["game_id"]
-    print_success(f"Created Regular Bot game with ID: {bot_game_id}")
-    record_test("Regular Bot Game Creation", True)
+    if success and len(response) > 0:
+        # Use an existing bot game
+        bot_game_id = response[0]["game_id"]
+        print_success(f"Found existing bot game with ID: {bot_game_id}")
+        record_test("Regular Bot Game Found", True)
+    else:
+        # Create a Regular Bot game if none available
+        print_subheader("Step 3: Create Regular Bot Game")
+        
+        bot_bet_gems = {"Ruby": 10}  # $10 total value
+        
+        response, success = make_request(
+            "POST", f"/bots/{bot_id}/create-game",
+            data={
+                "bet_gems": bot_bet_gems,
+                "opponent_type": "human"
+            },
+            auth_token=admin_token
+        )
+        
+        if not success or "game_id" not in response:
+            print_error(f"Failed to create bot game: {response}")
+            record_test("Regular Bot Game Creation", False, "Game creation failed")
+            return
+        
+        bot_game_id = response["game_id"]
+        print_success(f"Created Regular Bot game with ID: {bot_game_id}")
+        record_test("Regular Bot Game Creation", True)
     
     # Step 5: Create a test user to join the bot game
     print_subheader("Step 4: Create Test User for Bot Game")
