@@ -5136,20 +5136,27 @@ async def bot_join_game_automatically(bot: Bot):
         if bot.bot_type == "REGULAR":
             commission_amount = game_obj.bet_amount * 0.06
             
-            # Return commission from frozen balance to virtual balance
-            await db.users.update_one(
-                {"id": game_obj.creator_id},
-                {
-                    "$inc": {
-                        "virtual_balance": commission_amount,
-                        "frozen_balance": -commission_amount
-                    },
-                    "$set": {"updated_at": datetime.utcnow()}
-                }
-            )
-            commission_returned = commission_amount
+            # Проверяем, была ли игра создана обычным ботом (тогда комиссия не была заморожена)
+            creator_bot = await db.bots.find_one({"id": game_obj.creator_id})
+            creator_is_regular_bot = creator_bot and creator_bot.get("bot_type") == "REGULAR"
             
-            logger.info(f"💰 REGULAR BOT GAME - Returned commission ${commission_amount} to creator {game_obj.creator_id}")
+            if not creator_is_regular_bot:
+                # Игра была создана человеком или Human-ботом, возвращаем комиссию
+                await db.users.update_one(
+                    {"id": game_obj.creator_id},
+                    {
+                        "$inc": {
+                            "virtual_balance": commission_amount,
+                            "frozen_balance": -commission_amount
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                commission_returned = commission_amount
+                logger.info(f"💰 REGULAR BOT GAME - Returned commission ${commission_amount} to creator {game_obj.creator_id}")
+            else:
+                # Игра была создана обычным ботом, комиссия не была заморожена
+                logger.info(f"💰 REGULAR BOT vs REGULAR BOT - No commission was frozen, nothing to return")
         
         # Update game with bot as opponent and move to REVEAL phase
         await db.games.update_one(
