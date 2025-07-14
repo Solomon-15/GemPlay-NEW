@@ -114,7 +114,7 @@ const ProfitAdmin = ({ user }) => {
         new Date(entry.created_at).toLocaleDateString('ru-RU'),
         new Date(entry.created_at).toLocaleTimeString('ru-RU'),
         `"${getEntryTypeName(entry.type)}"`,
-        entry.amount,
+        entry.amount.toFixed(2),
         `"${entry.source || '—'}"`,
         entry.source_user_id || entry.bot_id || '—',
         `"${entry.description || '—'}"`
