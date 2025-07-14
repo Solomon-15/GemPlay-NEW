@@ -1656,44 +1656,87 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Общие расходы:</span>
-                      <div className="text-2xl font-bold text-red-400">{formatCurrencyWithSymbol(calculateExpenses(stats), true)}</div>
+                  {modalLoading ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-400"></div>
+                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
                     </div>
-                    <div className="bg-surface-sidebar rounded-lg p-4">
-                      <span className="text-sm text-text-secondary">Процент от прибыли:</span>
-                      <div className="text-2xl font-bold text-red-400">{expensesSettings.percentage}%</div>
+                  ) : modalError ? (
+                    <div className="text-center py-8">
+                      <div className="text-red-400 mb-2">⚠️</div>
+                      <p className="text-sm text-red-400">{modalError}</p>
+                      <button 
+                        onClick={() => loadModalData('expenses')}
+                        className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                      >
+                        Повторить попытку
+                      </button>
                     </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-red-400">Процентные расходы ({expensesSettings.percentage}%):</span>
-                        <span className="text-lg font-bold text-red-400">
-                          {formatCurrencyWithSymbol((calculateTotalRevenue(stats) * expensesSettings.percentage) / 100, true)}
-                        </span>
+                  ) : (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Общие расходы:</span>
+                          <div className="text-2xl font-bold text-red-400">
+                            {formatCurrencyWithSymbol(modalData.total_expenses || 0, true)}
+                          </div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Процент от прибыли:</span>
+                          <div className="text-2xl font-bold text-red-400">{modalData.expense_percentage || 60}%</div>
+                        </div>
                       </div>
-                    </div>
-                    
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-red-400">Дополнительные расходы:</span>
-                        <span className="text-lg font-bold text-red-400">
-                          {formatCurrencyWithSymbol(expensesSettings.manual_amount || 0, true)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-                    <h5 className="font-rajdhani text-sm font-bold text-red-400 mb-2">Настройка расходов:</h5>
-                    <p className="text-sm text-red-300">
-                      Расходы рассчитываются автоматически как процент от общей прибыли плюс дополнительные фиксированные расходы. 
-                      Настройки можно изменить в плитке "Расходы".
-                    </p>
-                  </div>
+                      {modalData.breakdown && modalData.breakdown.length > 0 && (
+                        <div className="space-y-3">
+                          <h5 className="font-rajdhani text-sm font-bold text-red-400 mb-2">Структура расходов:</h5>
+                          {modalData.breakdown.map((expense, index) => (
+                            <div key={index} className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <span className="text-sm text-red-400">{expense.name}</span>
+                                  <div className="text-xs text-text-secondary">{expense.calculation}</div>
+                                </div>
+                                <div className="text-lg font-bold text-red-400">
+                                  {formatCurrencyWithSymbol(expense.amount || 0, true)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {modalData.statistics && (
+                        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                          <h5 className="font-rajdhani text-sm font-bold text-red-400 mb-2">Статистика:</h5>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-text-secondary">Соотношение расходов:</span>
+                              <span className="text-red-400">{modalData.statistics.expense_ratio?.toFixed(1) || 0}%</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-text-secondary">Среднемесячные расходы:</span>
+                              <span className="text-red-400">
+                                {formatCurrencyWithSymbol(modalData.statistics.monthly_avg || 0, true)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-text-secondary">Оценка эффективности:</span>
+                              <span className="text-red-400">{modalData.statistics.efficiency_score?.toFixed(1) || 0}/100</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                        <h5 className="font-rajdhani text-sm font-bold text-red-400 mb-2">Настройка расходов:</h5>
+                        <p className="text-sm text-red-300">
+                          Расходы рассчитываются автоматически как процент от общей прибыли плюс дополнительные фиксированные расходы. 
+                          Настройки можно изменить в плитке "Расходы".
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
