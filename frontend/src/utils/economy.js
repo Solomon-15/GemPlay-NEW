@@ -34,6 +34,15 @@ export const formatCurrencyWithSymbol = (amount, showCents = false) => {
 };
 
 /**
+ * Format dollar amounts with cents (for virtual balance, commissions, etc.)
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted currency string with $ symbol and cents
+ */
+export const formatDollarAmount = (amount) => {
+  return `$${formatCurrency(amount, true)}`;
+};
+
+/**
  * Format gem value as integer without decimals
  * @param {number} amount - Amount to format
  * @returns {string} Formatted integer value with $ symbol
