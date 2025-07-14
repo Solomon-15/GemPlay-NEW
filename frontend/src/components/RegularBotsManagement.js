@@ -1200,6 +1200,121 @@ const RegularBotsManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Модальное окно удаления бота */}
+      {isDeleteModalOpen && deletingBot && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-red-500 border-opacity-50 rounded-lg p-6 max-w-lg w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-red-400">🗑 Удалить бота</h3>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Предупреждение */}
+              <div className="bg-red-900 border border-red-600 rounded-lg p-4">
+                <div className="flex items-center">
+                  <svg className="w-6 h-6 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <div>
+                    <h4 className="text-red-300 font-rajdhani font-bold">Внимание!</h4>
+                    <p className="text-red-200 text-sm">
+                      Вы собираетесь удалить бота <strong>"{deletingBot.name || `Bot #${deletingBot.id.substring(0, 6)}`}"</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Информация о боте */}
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-2">Информация о боте:</h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-text-secondary">Статус:</span>
+                    <span className={`ml-2 ${deletingBot.is_active ? 'text-green-400' : 'text-red-400'}`}>
+                      {deletingBot.is_active ? 'Активен' : 'Отключен'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-text-secondary">Активные ставки:</span>
+                    <span className="text-white ml-2">{deletingBot.active_bets || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-text-secondary">Win Rate:</span>
+                    <span className="text-accent-primary ml-2">{deletingBot.win_rate}%</span>
+                  </div>
+                  <div>
+                    <span className="text-text-secondary">Регистрация:</span>
+                    <span className="text-white ml-2">{formatDate(deletingBot.created_at)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Поле для причины удаления */}
+              <div>
+                <label className="block text-text-secondary text-sm mb-2">
+                  <span className="text-red-400">*</span> Причина удаления:
+                </label>
+                <textarea
+                  key={`delete-reason-${deletingBot.id}`}
+                  value={deleteReason}
+                  onChange={(e) => setDeleteReason(e.target.value)}
+                  placeholder="Укажите причину удаления бота (например: неисправность, нарушение правил, плановая замена...)"
+                  rows={3}
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white resize-none"
+                  required
+                />
+                <div className="text-text-secondary text-xs mt-1">
+                  Причина будет записана в логи администратора
+                </div>
+              </div>
+
+              {/* Предупреждение об активных играх */}
+              {deletingBot.active_bets > 0 && (
+                <div className="bg-yellow-900 border border-yellow-600 rounded-lg p-3">
+                  <div className="text-yellow-200 text-sm">
+                    <strong>Важно:</strong> У бота есть {deletingBot.active_bets} активные ставки. 
+                    Они будут отменены при удалении.
+                  </div>
+                </div>
+              )}
+
+              {/* Кнопки */}
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={deleteBot}
+                  disabled={!deleteReason.trim()}
+                  className={`px-6 py-3 text-white rounded-lg font-rajdhani font-bold transition-colors ${
+                    deleteReason.trim()
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  🗑 Удалить бота
+                </button>
+                <button
+                  onClick={() => {
+                    setIsDeleteModalOpen(false);
+                    setDeletingBot(null);
+                    setDeleteReason('');
+                  }}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
