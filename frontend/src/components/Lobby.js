@@ -432,7 +432,31 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     } catch (error) {
       console.error('Error cancelling bet:', error);
       console.error('Error response:', error.response?.data);
-      showError(error.response?.data?.detail || error.message || 'Failed to cancel bet');
+      
+      // Extract error message safely
+      let errorMessage = 'Failed to cancel bet';
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.detail) {
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail.map(err => err.msg || err.message || 'Validation error').join(', ');
+          }
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(errorMessage);
       // Even if the API call fails, we can still refresh the data
       await fetchLobbyData();
     }
