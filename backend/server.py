@@ -6269,6 +6269,197 @@ async def toggle_bot_status(
             detail="Failed to toggle bot status"
         )
 
+@api_router.get("/admin/bots/{bot_id}/active-bets", response_model=dict)
+async def get_bot_active_bets(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get detailed list of bot's active bets."""
+    try:
+        # Find the bot first
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Get active games created by this bot
+        active_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        }).sort("created_at", -1).to_list(100)
+        
+        bets_details = []
+        for game in active_games:
+            game_obj = Game(**game)
+            
+            # Get opponent info if exists
+            opponent_info = None
+            if game_obj.opponent_id:
+                opponent = await db.users.find_one({"id": game_obj.opponent_id})
+                if opponent:
+                    opponent_info = {
+                        "id": opponent["id"],
+                        "username": opponent["username"]
+                    }
+            
+            # Calculate time until auto-cancel (if applicable)
+            # Assuming 24 hours auto-cancel for waiting games
+            time_until_cancel = None
+            if game_obj.status == GameStatus.WAITING:
+                created_time = game_obj.created_at
+                cancel_time = created_time + timedelta(hours=24)
+                remaining = cancel_time - datetime.utcnow()
+                if remaining.total_seconds() > 0:
+                    hours = int(remaining.total_seconds() // 3600)
+                    minutes = int((remaining.total_seconds() % 3600) // 60)
+                    time_until_cancel = f"{hours}ч {minutes}м"
+            
+            bet_detail = {
+                "game_id": game_obj.id,
+                "bet_amount": game_obj.bet_amount,
+                "bet_gems": game_obj.bet_gems,
+                "status": "Ожидает" if game_obj.status == GameStatus.WAITING else "В процессе",
+                "created_at": game_obj.created_at,
+                "opponent": opponent_info,
+                "time_until_cancel": time_until_cancel
+            }
+            bets_details.append(bet_detail)
+        
+        return {
+            "bot_id": bot_id,
+            "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
+            "active_bets_count": len(bets_details),
+            "bets": bets_details
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching bot active bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bot active bets"
+        )
+
+@api_router.get("/admin/bots/{bot_id}/cycle-history", response_model=dict)
+async def get_bot_cycle_history(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get detailed cycle history for a bot."""
+    try:
+        # Find the bot first
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Get bot's current cycle settings
+        cycle_length = bot.get("cycle_length", 12)
+        current_cycle_games = bot.get("current_cycle_games", 0)
+        current_cycle_wins = bot.get("current_cycle_wins", 0)
+        
+        # Get recent completed games for current cycle
+        # We'll fetch more games and then filter for current cycle
+        completed_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": "COMPLETED"
+        }).sort("completed_at", -1).limit(cycle_length * 2).to_list(cycle_length * 2)
+        
+        cycle_games = []
+        total_bet_amount = 0.0
+        total_winnings = 0.0
+        total_losses = 0.0
+        wins_count = 0
+        losses_count = 0
+        draws_count = 0
+        
+        # Take only the most recent games up to cycle_length
+        recent_games = completed_games[:cycle_length] if len(completed_games) >= cycle_length else completed_games
+        
+        for i, game in enumerate(recent_games):
+            game_obj = Game(**game)
+            
+            # Get opponent info
+            opponent_info = "Не найден"
+            if game_obj.opponent_id:
+                opponent = await db.users.find_one({"id": game_obj.opponent_id})
+                if opponent:
+                    opponent_info = opponent["username"]
+            
+            # Determine result and calculate winnings/losses
+            result = "Ничья"
+            winnings = 0.0
+            
+            if game_obj.winner_id == bot_id:
+                result = "Победа"
+                winnings = game_obj.bet_amount * 1.94  # After commission
+                total_winnings += winnings
+                wins_count += 1
+            elif game_obj.winner_id and game_obj.winner_id != bot_id:
+                result = "Поражение"
+                winnings = -game_obj.bet_amount
+                total_losses += game_obj.bet_amount
+                losses_count += 1
+            else:
+                draws_count += 1
+                # Draws don't count towards cycle progress
+            
+            total_bet_amount += game_obj.bet_amount
+            
+            game_detail = {
+                "game_number": i + 1,
+                "game_id": game_obj.id,
+                "bet_amount": game_obj.bet_amount,
+                "bet_gems": game_obj.bet_gems,
+                "opponent": opponent_info,
+                "result": result,
+                "winnings": winnings,
+                "completed_at": game_obj.completed_at or game_obj.created_at
+            }
+            cycle_games.append(game_detail)
+        
+        # Calculate statistics
+        win_percentage = (wins_count / (wins_count + losses_count) * 100) if (wins_count + losses_count) > 0 else 0
+        net_profit = total_winnings - total_losses
+        
+        # Current cycle progress (excluding draws)
+        completed_cycle_games = wins_count + losses_count
+        
+        return {
+            "bot_id": bot_id,
+            "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
+            "cycle_info": {
+                "cycle_length": cycle_length,
+                "completed_games": completed_cycle_games,
+                "current_wins": wins_count,
+                "current_losses": losses_count,
+                "draws": draws_count,
+                "progress": f"{completed_cycle_games}/{cycle_length}"
+            },
+            "cycle_stats": {
+                "total_bet_amount": round(total_bet_amount, 2),
+                "total_winnings": round(total_winnings, 2),
+                "total_losses": round(total_losses, 2),
+                "net_profit": round(net_profit, 2),
+                "win_percentage": round(win_percentage, 1)
+            },
+            "games": cycle_games
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching bot cycle history: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bot cycle history"
+        )
+
 @api_router.delete("/admin/bots/{bot_id}/delete", response_model=dict)
 async def delete_bot(
     bot_id: str,
