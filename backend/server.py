@@ -6386,6 +6386,29 @@ async def update_bot_settings(
             {"$set": update_fields}
         )
         
+        # Check if cycle parameters were changed - if so, recalculate bets
+        cycle_params_changed = any(field in update_fields for field in [
+            "cycle_length", "cycle_total_amount", "win_percentage", 
+            "min_bet_amount", "max_bet_amount"
+        ])
+        
+        generated_bets = 0
+        if cycle_params_changed and bot.get("is_active", False):
+            try:
+                # Get updated bot data
+                updated_bot = await db.bots.find_one({"id": bot_id})
+                new_bets = await generate_bot_cycle_bets(
+                    bot_id,
+                    updated_bot.get("cycle_length", 12),
+                    updated_bot.get("cycle_total_amount", 500.0),
+                    updated_bot.get("win_percentage", 60),
+                    updated_bot.get("min_bet_amount", 5.0),
+                    updated_bot.get("max_bet_amount", 100.0)
+                )
+                generated_bets = len(new_bets)
+            except Exception as e:
+                logger.warning(f"Failed to auto-recalculate bets for bot {bot_id}: {e}")
+        
         # Log admin action
         admin_log = AdminLog(
             admin_id=current_user.id,
@@ -6394,16 +6417,23 @@ async def update_bot_settings(
             target_id=bot_id,
             details={
                 "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
-                "updated_fields": update_fields
+                "updated_fields": update_fields,
+                "auto_recalculated_bets": generated_bets if cycle_params_changed else None
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        return {
+        response_data = {
             "message": f"Настройки бота обновлены",
             "bot_id": bot_id,
             "updated_fields": list(update_fields.keys())
         }
+        
+        if cycle_params_changed:
+            response_data["recalculated_bets"] = generated_bets
+            response_data["message"] += f" и пересчитано {generated_bets} ставок"
+        
+        return response_data
         
     except HTTPException:
         raise
