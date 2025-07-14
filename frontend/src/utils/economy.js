@@ -26,10 +26,10 @@ export const formatCurrency = (amount, showCents = false) => {
 /**
  * Format currency with $ symbol
  * @param {number} amount - Amount to format
- * @param {boolean} showCents - Whether to show cents (default: true)
+ * @param {boolean} showCents - Whether to show cents (default: false)
  * @returns {string} Formatted currency string with $ symbol
  */
-export const formatCurrencyWithSymbol = (amount, showCents = true) => {
+export const formatCurrencyWithSymbol = (amount, showCents = false) => {
   return `$${formatCurrency(amount, showCents)}`;
 };
 
