@@ -1180,6 +1180,12 @@ const RegularBotsManagement = () => {
                   Сохранить изменения
                 </button>
                 <button
+                  onClick={() => recalculateBotBets(editingBot.id)}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-rajdhani font-bold"
+                >
+                  🔄 Пересчитать ставки
+                </button>
+                <button
                   onClick={() => setIsEditModalOpen(false)}
                   className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
                 >
