@@ -1358,22 +1358,46 @@ const ProfitAdmin = ({ user }) => {
               {/* Модальное окно для дохода от ботов */}
               {activeModal === 'bot_revenue' && (
                 <div className="space-y-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <rect x="4" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
-                        <rect x="14" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
-                        <rect x="4" y="14" width="16" height="6" strokeWidth="2" rx="1"/>
-                        <circle cx="17" cy="7" r="1" fill="currentColor"/>
-                        <circle cx="7" cy="7" r="1" fill="currentColor"/>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
-                        <circle cx="18" cy="15" r="3" strokeWidth="1.5"/>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 14v2l1 1"/>
-                      </svg>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <rect x="4" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                          <rect x="14" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                          <rect x="4" y="14" width="16" height="6" strokeWidth="2" rx="1"/>
+                          <circle cx="17" cy="7" r="1" fill="currentColor"/>
+                          <circle cx="7" cy="7" r="1" fill="currentColor"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
+                          <circle cx="18" cy="15" r="3" strokeWidth="1.5"/>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 14v2l1 1"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-rajdhani text-lg font-bold text-white">Доход от Обычных ботов</h4>
+                        <p className="text-sm text-text-secondary">Прибыль от завершенных циклов обычных ботов</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-rajdhani text-lg font-bold text-white">Доход от Обычных ботов</h4>
-                      <p className="text-sm text-text-secondary">Прибыль от завершенных циклов обычных ботов</p>
+                    
+                    {/* Переключатель периодов */}
+                    <div className="flex bg-surface-sidebar rounded-lg p-1">
+                      {[
+                        { key: 'day', label: 'День' },
+                        { key: 'week', label: 'Неделя' },
+                        { key: 'month', label: 'Месяц' },
+                        { key: 'all', label: 'Все' }
+                      ].map((period) => (
+                        <button
+                          key={period.key}
+                          onClick={() => handlePeriodChange(period.key)}
+                          className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                            activePeriod === period.key
+                              ? 'bg-blue-500 text-white'
+                              : 'text-text-secondary hover:text-white'
+                          }`}
+                        >
+                          {period.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -1400,6 +1424,12 @@ const ProfitAdmin = ({ user }) => {
                           <span className="text-sm text-text-secondary">Общий доход:</span>
                           <div className="text-2xl font-bold text-blue-400">
                             {formatCurrencyWithSymbol(modalData.total_revenue || 0, true)}
+                          </div>
+                          <div className="text-xs text-blue-300 mt-1">
+                            {modalData.period === 'day' && 'за день'}
+                            {modalData.period === 'week' && 'за неделю'}
+                            {modalData.period === 'month' && 'за месяц'}
+                            {modalData.period === 'all' && 'за все время'}
                           </div>
                         </div>
                         <div className="bg-surface-sidebar rounded-lg p-4">
@@ -1452,7 +1482,12 @@ const ProfitAdmin = ({ user }) => {
                         <div className="text-center text-text-secondary py-8">
                           <div className="text-lg mb-2">📊</div>
                           <p className="text-sm">Нет данных о доходах от ботов</p>
-                          <p className="text-xs mt-1">Данные появятся после завершения первых циклов</p>
+                          <p className="text-xs mt-1">
+                            {modalData.period === 'day' && 'за выбранный день'}
+                            {modalData.period === 'week' && 'за выбранную неделю'}
+                            {modalData.period === 'month' && 'за выбранный месяц'}
+                            {modalData.period === 'all' && 'за все время'}
+                          </p>
                         </div>
                       )}
                     </>
