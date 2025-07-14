@@ -345,52 +345,26 @@
             </div>
         </div>
 
-        <!-- Особенности реализации -->
-        <div class="bg-slate-800 border border-slate-600 rounded-lg p-6">
-            <h2 class="font-russo text-xl text-white mb-4">Особенности реализации фильтрации</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="section">
+            <h2>🚀 Технические детали</h2>
+            <div class="feature-grid">
                 <div>
-                    <h3 class="font-rajdhani text-lg font-bold text-green-400 mb-2">✅ Backend изменения</h3>
-                    <ul class="text-sm text-gray-300 space-y-1">
-                        <li>• Добавлен параметр <code>period</code> в API endpoints</li>
-                        <li>• Логика фильтрации по датам (day, week, month, all)</li>
-                        <li>• Возвращение периода в response для frontend</li>
-                        <li>• Обновлены все 4 основных endpoints</li>
-                        <li>• Исключение замороженных средств (не зависят от времени)</li>
+                    <h3>Frontend изменения:</h3>
+                    <ul class="feature-list">
+                        <li>• Добавлено состояние activePeriod</li>
+                        <li>• Реализована функция handlePeriodChange</li>
+                        <li>• Обновлена функция loadModalData</li>
+                        <li>• Добавлены переключатели периодов в каждое модальное окно</li>
                     </ul>
                 </div>
                 <div>
-                    <h3 class="font-rajdhani text-lg font-bold text-blue-400 mb-2">📋 Frontend изменения</h3>
-                    <ul class="text-sm text-gray-300 space-y-1">
-                        <li>• Состояние <code>activePeriod</code> для управления периодом</li>
-                        <li>• Функция <code>handlePeriodChange()</code> для смены периода</li>
-                        <li>• Переключатель периодов в модальных окнах</li>
-                        <li>• Обновление <code>loadModalData()</code> с параметром период</li>
-                        <li>• Индикаторы выбранного периода в UI</li>
+                    <h3>Backend изменения:</h3>
+                    <ul class="feature-list">
+                        <li>• Добавлен параметр period ко всем API endpoints</li>
+                        <li>• Реализована фильтрация по датам</li>
+                        <li>• Обновлены response модели</li>
+                        <li>• Добавлена валидация параметров</li>
                     </ul>
-                </div>
-            </div>
-            
-            <div class="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-                <h3 class="font-rajdhani text-lg font-bold text-blue-400 mb-2">🔧 Техническая реализация</h3>
-                <div class="text-sm text-blue-300">
-                    <p class="mb-2"><strong>Backend фильтрация:</strong></p>
-                    <div class="bg-slate-900 rounded p-2 mb-2">
-                        <code>
-                            if period == "day": start_date = now - timedelta(days=1)<br>
-                            elif period == "week": start_date = now - timedelta(weeks=1)<br>
-                            elif period == "month": start_date = now - timedelta(days=30)<br>
-                            else: start_date = None  # "all"
-                        </code>
-                    </div>
-                    <p class="mb-2"><strong>Frontend интеграция:</strong></p>
-                    <div class="bg-slate-900 rounded p-2">
-                        <code>
-                            const loadModalData = async (type, period = activePeriod) => {<br>
-                            &nbsp;&nbsp;const response = await axios.get(`${API}/endpoint?period=${period}`)<br>
-                            }
-                        </code>
-                    </div>
                 </div>
             </div>
         </div>
