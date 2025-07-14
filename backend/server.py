@@ -5002,14 +5002,26 @@ async def get_profit_entries(
 async def get_commission_settings(current_admin: User = Depends(get_current_admin)):
     """Get current commission settings."""
     try:
-        # These could be stored in database in the future
-        return {
-            "bet_commission": 6.0,  # 6% commission on bets
-            "gift_commission": 3.0,  # 3% commission on gifts
-            "min_bet": 1.0,
-            "max_bet": 3000.0,
-            "daily_deposit_limit": 1000.0
-        }
+        # Try to get settings from database
+        settings_doc = await db.admin_settings.find_one({"type": "commission_settings"})
+        
+        if settings_doc:
+            return {
+                "bet_commission_rate": settings_doc.get("bet_commission_rate", 3.0),
+                "gift_commission_rate": settings_doc.get("gift_commission_rate", 3.0),
+                "min_bet": 1.0,
+                "max_bet": 3000.0,
+                "daily_deposit_limit": 1000.0
+            }
+        else:
+            # Return default values if no settings found
+            return {
+                "bet_commission_rate": 3.0,
+                "gift_commission_rate": 3.0,
+                "min_bet": 1.0,
+                "max_bet": 3000.0,
+                "daily_deposit_limit": 1000.0
+            }
     except Exception as e:
         logger.error(f"Error fetching commission settings: {e}")
         raise HTTPException(
