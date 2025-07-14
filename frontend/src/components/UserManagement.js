@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNotifications } from './NotificationContext';
+import Pagination from './Pagination';
+import usePagination from '../hooks/usePagination';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -9,11 +11,12 @@ const UserManagement = ({ user: currentUser }) => {
   const { showSuccessRU, showErrorRU, showWarningRU } = useNotifications();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
+  
+  // Пагинация
+  const pagination = usePagination(1, 10);
   
   // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
