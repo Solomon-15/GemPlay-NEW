@@ -38,14 +38,14 @@ const ProfitAdmin = ({ user }) => {
 
   useEffect(() => {
     if (activeTab === 'history') {
-      // Сброс на первую страницу при смене категории
+      // Сброс на первую страницу при смене категории или фильтров
       if (pagination.currentPage > 1) {
         pagination.handlePageChange(1);
       } else {
         fetchEntries();
       }
     }
-  }, [activeTab, activeCategory, sortBy, sortOrder, dateFilter]);
+  }, [activeTab, activeCategory, sortBy, sortOrder, dateFilter, playerFilter, amountFilter, transactionIdFilter]);
 
   useEffect(() => {
     if (activeTab === 'history') {
