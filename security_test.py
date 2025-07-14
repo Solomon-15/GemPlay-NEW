@@ -10,7 +10,7 @@ import concurrent.futures
 import uuid
 
 # Configuration
-BASE_URL = "https://aff4b1ff-7f79-4677-a5d5-8d01ffe376a0.preview.emergentagent.com/api"
+BASE_URL = "https://1d0f5194-c2ea-48bb-8046-de706bbab2f8.preview.emergentagent.com/api"
 TEST_USER = {
     "username": "securitytester",
     "email": "securitytest@example.com",
