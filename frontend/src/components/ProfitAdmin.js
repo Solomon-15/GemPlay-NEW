@@ -554,25 +554,25 @@ const ProfitAdmin = ({ user }) => {
               </div>
             </div>
 
-            {/* Прибыль за сегодня */}
-            <div className="bg-surface-card border border-emerald-500/30 rounded-lg p-6 hover:border-emerald-500/60 transition-colors duration-200 shadow-lg">
+            {/* Расходы */}
+            <div className="bg-surface-card border border-red-500/30 rounded-lg p-6 hover:border-red-500/60 transition-colors duration-200 shadow-lg cursor-pointer" onClick={() => setShowExpensesModal(true)}>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-2 mb-2">
-                    <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" strokeWidth="2"/>
-                        <polyline points="12,6 12,12 16,14" strokeWidth="2"/>
+                    <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <div className="bg-emerald-500/20 text-emerald-400 text-xs font-bold px-2 py-1 rounded-full">
-                      TODAY
+                    <div className="bg-red-500/20 text-red-400 text-xs font-bold px-2 py-1 rounded-full">
+                      CALC
                     </div>
                   </div>
-                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Прибыль за сегодня</h3>
-                  <p className="font-russo text-2xl font-bold text-emerald-400">{formatCurrencyWithSymbol(stats.today_revenue || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">Доход с начала текущего дня</p>
-                  <p className="text-xs text-emerald-300 mt-1">Обновляется каждую минуту</p>
+                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Расходы</h3>
+                  <p className="font-russo text-2xl font-bold text-red-400">{formatCurrencyWithSymbol(calculateExpenses(stats), true)}</p>
+                  <p className="text-xs text-text-secondary mt-1">{expensesSettings.percentage}% от общей прибыли + дополнительные</p>
+                  <p className="text-xs text-red-300 mt-1">Клик для настройки</p>
                 </div>
               </div>
             </div>
