@@ -2975,6 +2975,109 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
     except Exception as e:
         logger.error(f"Error completing bot cycle: {e}")
 
+@api_router.get("/admin/bots/profit-accumulators", response_model=List[dict])
+async def get_bot_profit_accumulators(
+    page: int = 1,
+    limit: int = 20,
+    bot_id: Optional[str] = None,
+    is_completed: Optional[bool] = None,
+    current_user: User = Depends(get_current_admin)
+):
+    """Получить накопители прибыли ботов (только для админа)."""
+    try:
+        # Построение фильтра
+        filter_query = {}
+        
+        if bot_id:
+            filter_query["bot_id"] = bot_id
+        
+        if is_completed is not None:
+            filter_query["is_cycle_completed"] = is_completed
+        
+        # Подсчёт общего количества
+        total_count = await db.bot_profit_accumulators.count_documents(filter_query)
+        
+        # Получение данных с пагинацией
+        skip = (page - 1) * limit
+        accumulators = await db.bot_profit_accumulators.find(filter_query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        # Обогащение данных информацией о ботах
+        result = []
+        for acc in accumulators:
+            bot = await db.bots.find_one({"id": acc["bot_id"]})
+            bot_name = bot.get("name", "Unknown Bot") if bot else "Unknown Bot"
+            
+            acc_dict = dict(acc)
+            acc_dict["bot_name"] = bot_name
+            acc_dict["profit"] = acc["total_earned"] - acc["total_spent"]
+            acc_dict["win_rate"] = (acc["games_won"] / acc["games_completed"]) * 100 if acc["games_completed"] > 0 else 0
+            
+            result.append(acc_dict)
+        
+        return {
+            "accumulators": result,
+            "pagination": {
+                "total_count": total_count,
+                "current_page": page,
+                "total_pages": (total_count + limit - 1) // limit,
+                "items_per_page": limit,
+                "has_next": skip + limit < total_count,
+                "has_prev": page > 1
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting bot profit accumulators: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get bot profit accumulators"
+        )
+
+@api_router.post("/admin/bots/{bot_id}/force-complete-cycle", response_model=dict)
+async def force_complete_bot_cycle(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Принудительно завершить текущий цикл бота (только для админа)."""
+    try:
+        # Найти активный аккумулятор
+        accumulator = await db.bot_profit_accumulators.find_one({
+            "bot_id": bot_id,
+            "is_cycle_completed": False
+        })
+        
+        if not accumulator:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No active cycle found for this bot"
+            )
+        
+        # Завершить цикл
+        await complete_bot_cycle(
+            accumulator["id"],
+            accumulator["total_spent"],
+            accumulator["total_earned"],
+            bot_id
+        )
+        
+        return {
+            "message": f"Bot cycle completed successfully",
+            "bot_id": bot_id,
+            "cycle_number": accumulator["cycle_number"],
+            "total_spent": accumulator["total_spent"],
+            "total_earned": accumulator["total_earned"],
+            "profit": accumulator["total_earned"] - accumulator["total_spent"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error force completing bot cycle: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to complete bot cycle"
+        )
+
 @api_router.get("/games/available", response_model=List[dict])
 async def get_available_games(current_user: User = Depends(get_current_user)):
     """Get list of available games for joining."""
