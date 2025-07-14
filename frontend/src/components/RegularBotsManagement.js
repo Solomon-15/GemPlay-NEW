@@ -53,6 +53,12 @@ const RegularBotsManagement = () => {
   const [isForceCompleteModalOpen, setIsForceCompleteModalOpen] = useState(false);
   const [selectedBotForForceComplete, setSelectedBotForForceComplete] = useState(null);
 
+  // Состояния для индивидуального просмотра накопителей бота
+  const [isBotProfitModalOpen, setIsBotProfitModalOpen] = useState(false);
+  const [selectedBotForProfit, setSelectedBotForProfit] = useState(null);
+  const [botProfitAccumulators, setBotProfitAccumulators] = useState([]);
+  const [botProfitPagination, setBotProfitPagination] = useState({ current_page: 1, total_pages: 1 });
+
   // Пагинация для списка ботов
   const pagination = usePagination(1, 10);
 
