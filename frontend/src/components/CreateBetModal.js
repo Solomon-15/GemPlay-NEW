@@ -198,7 +198,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       const data = await response.json();
       
       if (response.ok) {
-        showSuccess(`Bet created! ${formatCurrencyWithSymbol(totalGemValue * COMMISSION_RATE)} (6%) frozen until game completion.`);
+        showSuccess(`Bet created! ${formatDollarAmount(totalGemValue * COMMISSION_RATE)} (6%) frozen until game completion.`);
         await refreshInventory();
         onUpdateUser?.();
         
