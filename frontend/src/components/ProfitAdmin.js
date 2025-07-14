@@ -1334,8 +1334,298 @@ const ProfitAdmin = ({ user }) => {
                 </div>
               )}
 
+              {/* Модальное окно для дохода от ботов */}
+              {activeModal === 'bot_revenue' && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                        <rect x="14" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                        <rect x="4" y="14" width="16" height="6" strokeWidth="2" rx="1"/>
+                        <circle cx="17" cy="7" r="1" fill="currentColor"/>
+                        <circle cx="7" cy="7" r="1" fill="currentColor"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
+                        <circle cx="18" cy="15" r="3" strokeWidth="1.5"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 14v2l1 1"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-rajdhani text-lg font-bold text-white">Доход от Обычных ботов</h4>
+                      <p className="text-sm text-text-secondary">Прибыль от завершенных циклов обычных ботов</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Общий доход:</span>
+                      <div className="text-2xl font-bold text-blue-400">{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</div>
+                    </div>
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Активных ботов:</span>
+                      <div className="text-2xl font-bold text-blue-400">{modalData.length || 0}</div>
+                    </div>
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Средний доход:</span>
+                      <div className="text-2xl font-bold text-blue-400">
+                        {formatCurrencyWithSymbol(modalData.length ? (stats.bot_revenue || 0) / modalData.length : 0, true)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                    <h5 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Как работает доход от ботов:</h5>
+                    <p className="text-sm text-blue-300">
+                      Обычные боты накапливают выигрыши в защищенном контейнере. После завершения полного цикла (обычно 12 игр) 
+                      прибыль переводится в общий фонд платформы.
+                    </p>
+                  </div>
+
+                  <div className="text-center text-text-secondary">
+                    <div className="text-lg mb-2">📊</div>
+                    <p className="text-sm">Детальная история доходов от каждого бота</p>
+                    <p className="text-xs mt-1">Будет добавлена в следующей версии</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Модальное окно для замороженных средств */}
+              {activeModal === 'frozen_funds' && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-rajdhani text-lg font-bold text-white">Замороженные средства</h4>
+                      <p className="text-sm text-text-secondary">Комиссия в активных играх и незавершенных транзакциях</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Замороженная комиссия:</span>
+                      <div className="text-2xl font-bold text-orange-400">{formatCurrencyWithSymbol(stats.frozen_funds || 0, true)}</div>
+                    </div>
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Активных игр:</span>
+                      <div className="text-2xl font-bold text-orange-400">{modalData.length || 0}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
+                    <h5 className="font-rajdhani text-sm font-bold text-orange-400 mb-2">Что такое замороженные средства:</h5>
+                    <p className="text-sm text-orange-300">
+                      Когда игрок создает ставку, комиссия (6%) замораживается и будет разморожена только после завершения игры. 
+                      Это обеспечивает справедливость и предотвращает злоупотребления.
+                    </p>
+                  </div>
+
+                  <div className="text-center text-text-secondary">
+                    <div className="text-lg mb-2">🔒</div>
+                    <p className="text-sm">Список активных игр с замороженной комиссией</p>
+                    <p className="text-xs mt-1">Будет добавлен в следующей версии</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Модальное окно для общей прибыли */}
+              {activeModal === 'total_revenue' && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-rajdhani text-lg font-bold text-white">Общая прибыль</h4>
+                      <p className="text-sm text-text-secondary">Сводка по всем источникам дохода платформы</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 bg-green-400 rounded-full"></div>
+                          <span className="text-sm text-green-400">Комиссия от ставок</span>
+                        </div>
+                        <div className="text-xl font-bold text-green-400 mt-1">
+                          {formatCurrencyWithSymbol(stats.bet_commission || 0, true)}
+                        </div>
+                      </div>
+                      
+                      <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 bg-purple-400 rounded-full"></div>
+                          <span className="text-sm text-purple-400">Комиссия от подарков</span>
+                        </div>
+                        <div className="text-xl font-bold text-purple-400 mt-1">
+                          {formatCurrencyWithSymbol(stats.gift_commission || 0, true)}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
+                          <span className="text-sm text-blue-400">Доход от ботов</span>
+                        </div>
+                        <div className="text-xl font-bold text-blue-400 mt-1">
+                          {formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}
+                        </div>
+                      </div>
+                      
+                      <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 bg-yellow-400 rounded-full"></div>
+                          <span className="text-sm text-yellow-400">Общий итог</span>
+                        </div>
+                        <div className="text-xl font-bold text-yellow-400 mt-1">
+                          {formatCurrencyWithSymbol(calculateTotalRevenue(stats), true)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                    <h5 className="font-rajdhani text-sm font-bold text-yellow-400 mb-2">Структура доходов:</h5>
+                    <p className="text-sm text-yellow-300">
+                      Общая прибыль складывается из комиссий с игр, подарков и доходов от ботов. 
+                      Это валовая прибыль до вычета расходов.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Модальное окно для расходов */}
+              {activeModal === 'expenses' && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-rajdhani text-lg font-bold text-white">Расходы</h4>
+                      <p className="text-sm text-text-secondary">Операционные расходы и затраты платформы</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Общие расходы:</span>
+                      <div className="text-2xl font-bold text-red-400">{formatCurrencyWithSymbol(calculateExpenses(stats), true)}</div>
+                    </div>
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Процент от прибыли:</span>
+                      <div className="text-2xl font-bold text-red-400">{expensesSettings.percentage}%</div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-red-400">Процентные расходы ({expensesSettings.percentage}%):</span>
+                        <span className="text-lg font-bold text-red-400">
+                          {formatCurrencyWithSymbol((calculateTotalRevenue(stats) * expensesSettings.percentage) / 100, true)}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-red-400">Дополнительные расходы:</span>
+                        <span className="text-lg font-bold text-red-400">
+                          {formatCurrencyWithSymbol(expensesSettings.manual_amount || 0, true)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                    <h5 className="font-rajdhani text-sm font-bold text-red-400 mb-2">Настройка расходов:</h5>
+                    <p className="text-sm text-red-300">
+                      Расходы рассчитываются автоматически как процент от общей прибыли плюс дополнительные фиксированные расходы. 
+                      Настройки можно изменить в плитке "Расходы".
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Модальное окно для чистой прибыли */}
+              {activeModal === 'net_profit' && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-rajdhani text-lg font-bold text-white">Чистая прибыль</h4>
+                      <p className="text-sm text-text-secondary">Итоговая прибыль после вычета всех расходов</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Общая прибыль:</span>
+                      <div className="text-xl font-bold text-yellow-400">{formatCurrencyWithSymbol(calculateTotalRevenue(stats), true)}</div>
+                    </div>
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Расходы:</span>
+                      <div className="text-xl font-bold text-red-400">{formatCurrencyWithSymbol(calculateExpenses(stats), true)}</div>
+                    </div>
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <span className="text-sm text-text-secondary">Чистая прибыль:</span>
+                      <div className="text-xl font-bold text-emerald-400">{formatCurrencyWithSymbol(calculateNetProfit(stats), true)}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">
+                    <h5 className="font-rajdhani text-sm font-bold text-emerald-400 mb-2">Расчет чистой прибыли:</h5>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-emerald-300">Комиссия от ставок:</span>
+                        <span className="text-emerald-300">+{formatCurrencyWithSymbol(stats.bet_commission || 0, true)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-emerald-300">Комиссия от подарков:</span>
+                        <span className="text-emerald-300">+{formatCurrencyWithSymbol(stats.gift_commission || 0, true)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-emerald-300">Доход от ботов:</span>
+                        <span className="text-emerald-300">+{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</span>
+                      </div>
+                      <div className="border-t border-emerald-500/30 pt-2">
+                        <div className="flex justify-between">
+                          <span className="text-emerald-300">Расходы:</span>
+                          <span className="text-red-400">-{formatCurrencyWithSymbol(calculateExpenses(stats), true)}</span>
+                        </div>
+                      </div>
+                      <div className="border-t border-emerald-500/30 pt-2">
+                        <div className="flex justify-between font-bold">
+                          <span className="text-emerald-400">Итого:</span>
+                          <span className="text-emerald-400">{formatCurrencyWithSymbol(calculateNetProfit(stats), true)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Заглушка для других модальных окон */}
-              {activeModal !== 'bet_commission' && activeModal !== 'gift_commission' && (
+              {activeModal !== 'bet_commission' && activeModal !== 'gift_commission' && 
+               activeModal !== 'bot_revenue' && activeModal !== 'frozen_funds' && 
+               activeModal !== 'total_revenue' && activeModal !== 'expenses' && 
+               activeModal !== 'net_profit' && (
                 <div className="text-center text-text-secondary py-8">
                   <div className="text-4xl mb-4">📊</div>
                   <h4 className="font-rajdhani text-lg font-bold mb-2">Детализация в разработке</h4>
