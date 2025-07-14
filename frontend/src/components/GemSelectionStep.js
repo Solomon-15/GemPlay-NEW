@@ -88,9 +88,11 @@ const GemSelectionStep = ({
         <div className="text-blue-400 font-rajdhani text-lg">
           Your Bet: {formatCurrency(totalGemValue)}
         </div>
-        <div className="text-orange-400 font-rajdhani text-sm">
-          Commission: {formatCurrency(commissionAmount)}
-        </div>
+        {commissionAmount > 0 && (
+          <div className="text-orange-400 font-rajdhani text-sm">
+            Commission: {formatCurrency(commissionAmount)}
+          </div>
+        )}
         
         {Math.abs(totalGemValue - targetAmount) > 0.01 && (
           <div className="text-red-400 text-sm mt-1">
