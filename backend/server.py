@@ -5230,29 +5230,55 @@ async def get_frozen_funds_details(current_admin: User = Depends(get_current_adm
         )
 
 @api_router.get("/admin/profit/total-revenue-breakdown", response_model=dict)
-async def get_total_revenue_breakdown(current_admin: User = Depends(get_current_admin)):
+async def get_total_revenue_breakdown(
+    period: str = "month",  # day, week, month, all
+    current_admin: User = Depends(get_current_admin)
+):
     """Get detailed breakdown of total revenue by source."""
     try:
-        # Get revenue breakdown by type
+        # Calculate date filter based on period
+        now = datetime.now()
+        if period == "day":
+            start_date = now - timedelta(days=1)
+        elif period == "week":
+            start_date = now - timedelta(weeks=1)
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+        else:  # "all"
+            start_date = None
+        
+        # Get revenue breakdown by type with period filter
         revenue_breakdown = []
         
         # Get commission from bets
+        query = {"type": "BET_COMMISSION"}
+        if start_date:
+            query["created_at"] = {"$gte": start_date}
+        
         bet_commission_total = 0
-        bet_commission_entries = await db.profit_history.find({"type": "BET_COMMISSION"}).to_list(None)
+        bet_commission_entries = await db.profit_history.find(query).to_list(None)
         bet_commission_count = len(bet_commission_entries)
         for entry in bet_commission_entries:
             bet_commission_total += entry.get("amount", 0)
         
         # Get commission from gifts
+        query = {"type": "GIFT_COMMISSION"}
+        if start_date:
+            query["created_at"] = {"$gte": start_date}
+        
         gift_commission_total = 0
-        gift_commission_entries = await db.profit_history.find({"type": "GIFT_COMMISSION"}).to_list(None)
+        gift_commission_entries = await db.profit_history.find(query).to_list(None)
         gift_commission_count = len(gift_commission_entries)
         for entry in gift_commission_entries:
             gift_commission_total += entry.get("amount", 0)
         
         # Get bot revenue
+        query = {"type": "BOT_REVENUE"}
+        if start_date:
+            query["created_at"] = {"$gte": start_date}
+        
         bot_revenue_total = 0
-        bot_revenue_entries = await db.profit_history.find({"type": "BOT_REVENUE"}).to_list(None)
+        bot_revenue_entries = await db.profit_history.find(query).to_list(None)
         bot_revenue_count = len(bot_revenue_entries)
         for entry in bot_revenue_entries:
             bot_revenue_total += entry.get("amount", 0)
@@ -5299,6 +5325,7 @@ async def get_total_revenue_breakdown(current_admin: User = Depends(get_current_
         
         return {
             "success": True,
+            "period": period,
             "total_revenue": total_revenue,
             "breakdown": revenue_breakdown,
             "summary": {
