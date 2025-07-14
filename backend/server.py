@@ -2563,6 +2563,14 @@ async def determine_game_winner(game_id: str) -> dict:
 async def distribute_game_rewards(game: Game, winner_id: str, commission_amount: float):
     """Distribute gems and handle commissions after game completion."""
     try:
+        # Check if this is a regular bot game (no commission)
+        is_regular_bot_game = getattr(game, 'is_regular_bot_game', False)
+        
+        if is_regular_bot_game:
+            logger.info(f"💰 REGULAR BOT GAME - No commission will be charged for game {game.id}")
+            # Override commission amount to 0 for regular bot games
+            commission_amount = 0
+        
         # Unfreeze gems for both players using their respective gem combinations
         
         # Unfreeze creator's gems
