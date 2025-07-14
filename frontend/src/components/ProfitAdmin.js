@@ -548,7 +548,7 @@ const ProfitAdmin = ({ user }) => {
                         <div className="text-xs text-text-secondary">{date} {time}</div>
                       </div>
                       <div className="text-sm font-bold text-green-400 font-rajdhani">
-                        {formatCurrencyWithSymbol(entry.amount)}
+                        {formatCurrencyWithSymbol(entry.amount, true)}
                       </div>
                     </div>
                     
