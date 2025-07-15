@@ -4551,27 +4551,92 @@ class BotGameLogic:
     
     @staticmethod
     def should_bot_win(bot: Bot) -> bool:
-        """Determine if bot should win based on win rate and cycle management."""
+        """Determine if bot should win based on win rate and advanced cycle management."""
         import random
+        
+        # Get bot data from database for additional fields
+        bot_data = getattr(bot, '_bot_data', {})
+        bot_behavior = bot_data.get('bot_behavior', 'balanced')
+        profit_strategy = bot_data.get('profit_strategy', 'balanced')
         
         # Check if we're in a cycle management mode
         if bot.cycle_games > 0:
-            # Calculate current win rate in cycle
-            if bot.current_cycle_games > 0:
-                current_win_rate = bot.current_cycle_wins / bot.current_cycle_games
-                target_win_rate = bot.win_rate
+            current_games = bot.current_cycle_games
+            current_wins = bot.current_cycle_wins
+            target_win_rate = bot.win_rate
+            remaining_games = bot.cycle_games - current_games
+            
+            if current_games > 0:
+                current_win_rate = current_wins / current_games
                 
-                # If we're behind target, increase win probability
-                if current_win_rate < target_win_rate:
-                    adjusted_win_rate = min(0.9, target_win_rate + 0.1)
-                    return random.random() < adjusted_win_rate
-                # If we're ahead, decrease win probability
-                elif current_win_rate > target_win_rate:
-                    adjusted_win_rate = max(0.1, target_win_rate - 0.1)
-                    return random.random() < adjusted_win_rate
+                # Advanced win rate logic with behavior consideration
+                if remaining_games > 0:
+                    # Calculate required wins to achieve target
+                    total_target_wins = int(target_win_rate * bot.cycle_games)
+                    required_wins = total_target_wins - current_wins
+                    
+                    # Behavioral adjustments
+                    behavior_multiplier = {
+                        'aggressive': 1.15,  # More aggressive win seeking
+                        'balanced': 1.0,     # Standard logic
+                        'cautious': 0.85     # More conservative
+                    }.get(bot_behavior, 1.0)
+                    
+                    # Strategy-based win probability adjustment
+                    if profit_strategy == 'start_profit':
+                        # Try to win early in cycle
+                        early_game_bonus = max(0, (bot.cycle_games - current_games) / bot.cycle_games * 0.2)
+                        behavior_multiplier += early_game_bonus
+                    elif profit_strategy == 'balanced':
+                        # Even distribution throughout cycle
+                        pass  # No adjustment
+                    elif profit_strategy == 'end_loss':
+                        # Accept losses early, win later
+                        late_game_bonus = max(0, current_games / bot.cycle_games * 0.2)
+                        behavior_multiplier += late_game_bonus
+                    
+                    # Calculate win probability based on remaining games
+                    if remaining_games <= 3:
+                        # End of cycle - force exact win rate
+                        win_probability = required_wins / remaining_games if remaining_games > 0 else 0
+                        win_probability = max(0, min(1, win_probability))
+                    else:
+                        # Normal cycle progression with behavioral adjustments
+                        if current_wins < (current_games * target_win_rate):
+                            # Behind target - increase probability
+                            win_probability = min(0.95, target_win_rate + (0.3 * behavior_multiplier))
+                        elif current_wins > (current_games * target_win_rate):
+                            # Ahead of target - decrease probability
+                            win_probability = max(0.05, target_win_rate - (0.3 * behavior_multiplier))
+                        else:
+                            # On target - maintain rate with behavioral adjustment
+                            win_probability = target_win_rate * behavior_multiplier
+                    
+                    # Apply behavioral variance
+                    if bot_behavior == 'aggressive':
+                        # More volatile - bigger swings
+                        variance = random.uniform(-0.1, 0.1)
+                        win_probability += variance
+                    elif bot_behavior == 'cautious':
+                        # More stable - smaller swings
+                        variance = random.uniform(-0.05, 0.05)
+                        win_probability += variance
+                    
+                    # Ensure probability stays within bounds
+                    win_probability = max(0.05, min(0.95, win_probability))
+                    
+                    return random.random() < win_probability
         
-        # Standard win rate check
-        return random.random() < bot.win_rate
+        # Standard win rate check with behavioral adjustment
+        base_win_rate = bot.win_rate
+        behavior_adjustment = {
+            'aggressive': 0.05,   # Slightly higher base win rate
+            'balanced': 0.0,      # No adjustment
+            'cautious': -0.05     # Slightly lower base win rate
+        }.get(bot_behavior, 0.0)
+        
+        adjusted_win_rate = max(0.1, min(0.9, base_win_rate + behavior_adjustment))
+        return random.random() < adjusted_win_rate
     
     @staticmethod
     def get_bot_move_against_player(bot: Bot, player_move: GameMove) -> GameMove:
