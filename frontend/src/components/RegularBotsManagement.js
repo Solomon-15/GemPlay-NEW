@@ -603,6 +603,11 @@ const RegularBotsManagement = () => {
     }
   };
 
+  const handleActiveBetsModal = (bot) => {
+    setSelectedBotForActiveBets(bot);
+    setIsActiveBetsModalOpen(true);
+  };
+
   const handleCycleModal = async (bot) => {
     try {
       const token = localStorage.getItem('token');
