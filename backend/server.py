@@ -9252,6 +9252,85 @@ async def get_bot_settings(current_user: User = Depends(get_current_admin)):
             detail="Failed to fetch bot settings"
         )
 
+@api_router.get("/admin/bots/queue-status", response_model=dict)
+async def get_bots_queue_status(current_user: User = Depends(get_current_admin)):
+    """Get detailed bot queue status with creation modes."""
+    try:
+        # Получаем общую информацию о ставках
+        total_active_bets = await db.games.count_documents({
+            "creator_type": "bot",
+            "bot_type": "REGULAR",
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Получаем настройки
+        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        max_active_bets = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
+        
+        # Получаем всех активных ботов
+        all_bots = await db.bots.find({
+            "type": "REGULAR",
+            "is_active": True
+        }).to_list(100)
+        
+        # Группируем ботов по режимам создания ставок
+        modes_info = {
+            "always-first": {"bots": [], "active_bets": 0},
+            "queue-based": {"bots": [], "active_bets": 0},
+            "after-all": {"bots": [], "active_bets": 0}
+        }
+        
+        for bot in all_bots:
+            creation_mode = bot.get("creation_mode", "queue-based")
+            
+            # Подсчитываем активные ставки для каждого бота
+            bot_active_bets = await db.games.count_documents({
+                "creator_id": bot["id"],
+                "creator_type": "bot",
+                "status": {"$in": ["WAITING", "ACTIVE"]}
+            })
+            
+            bot_info = {
+                "id": bot["id"],
+                "name": bot["name"],
+                "priority_order": bot.get("priority_order", 999),
+                "active_bets": bot_active_bets,
+                "max_individual_bets": bot.get("max_individual_bets", 12),
+                "last_bet_time": bot.get("last_bet_time"),
+                "recreate_timer": bot.get("recreate_timer", 30)
+            }
+            
+            modes_info[creation_mode]["bots"].append(bot_info)
+            modes_info[creation_mode]["active_bets"] += bot_active_bets
+        
+        # Сортируем ботов по приоритету в каждом режиме
+        for mode in modes_info:
+            modes_info[mode]["bots"].sort(key=lambda x: x["priority_order"])
+        
+        # Получаем информацию о следующем боте в очереди
+        next_bot_info = await get_next_bot_in_queue()
+        
+        return {
+            "total_active_bets": total_active_bets,
+            "max_active_bets": max_active_bets,
+            "available_slots": max(0, max_active_bets - total_active_bets),
+            "modes": modes_info,
+            "next_bot": next_bot_info,
+            "queue_summary": {
+                "always_first_count": len(modes_info["always-first"]["bots"]),
+                "queue_based_count": len(modes_info["queue-based"]["bots"]),
+                "after_all_count": len(modes_info["after-all"]["bots"]),
+                "total_bots": len(all_bots)
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting bot queue status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get bot queue status"
+        )
+
 @api_router.post("/admin/bots/settings", response_model=dict)
 async def update_bot_settings(
     settings_data: dict,
