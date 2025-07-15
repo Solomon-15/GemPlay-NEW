@@ -184,47 +184,80 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
       {/* Menu Items */}
       <nav className="flex-1 py-4">
         <ul className={`space-y-1 ${isCollapsed ? 'px-1' : 'px-2'}`}>
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <button
-                onClick={() => setCurrentView(item.id)}
-                className={`w-full flex items-center transition-all duration-300 group relative overflow-hidden ${
-                  isCollapsed 
-                    ? 'justify-center p-2 mx-1 rounded-lg' 
-                    : 'px-3 py-3 rounded-lg'
-                } ${
-                  currentView === item.id 
-                    ? isCollapsed
-                      ? 'bg-accent-primary/5 text-accent-primary' 
-                      : 'bg-accent-primary/5 text-accent-primary'
-                    : 'hover:bg-surface-card text-gray-400 hover:text-white'
-                }`}
-                title={isCollapsed ? item.label : ''}
-              >
-                {/* Very thin green frame for active state */}
-                {currentView === item.id && (
-                  <div className={`absolute inset-0 border border-accent-primary border-opacity-40 rounded-lg bg-accent-primary/3 ${
-                    isCollapsed ? 'border-opacity-50' : 'border-l-2 border-accent-primary border-opacity-100 border-t-0 border-r-0 border-b-0 bg-accent-primary/8'
-                  }`}></div>
-                )}
-                
-                <div className={`relative z-10 transition-all duration-300 ${
-                  currentView === item.id ? 'text-accent-primary' : 'text-gray-400 group-hover:text-white'
-                } ${
-                  isCollapsed 
-                    ? 'flex items-center justify-center group-hover:scale-110 group-hover:translate-x-1' 
-                    : ''
-                }`}>
-                  {item.icon}
-                </div>
-                {!isCollapsed && (
-                  <span className="ml-3 font-rajdhani font-semibold tracking-wide relative z-10">
-                    {item.label}
-                  </span>
-                )}
-              </button>
-            </li>
-          ))}
+          {menuItems.map((item) => {
+            // Показать элементы только для админов, если это админ-элемент
+            if (item.adminOnly && (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN'))) {
+              return null;
+            }
+            
+            return (
+              <li key={item.id}>
+                <button
+                  onClick={() => {
+                    if (item.id === 'admin-panel') {
+                      onOpenAdminPanel();
+                    } else {
+                      setCurrentView(item.id);
+                    }
+                  }}
+                  className={`w-full flex items-center transition-all duration-300 group relative overflow-hidden ${
+                    isCollapsed 
+                      ? 'justify-center p-2 mx-1 rounded-lg' 
+                      : 'px-3 py-3 rounded-lg'
+                  } ${
+                    currentView === item.id 
+                      ? isCollapsed
+                        ? `bg-${item.id === 'monitoring' ? 'red' : item.id === 'admin-panel' ? 'purple' : 'accent'}-500/5 ${item.color}` 
+                        : `bg-${item.id === 'monitoring' ? 'red' : item.id === 'admin-panel' ? 'purple' : 'accent'}-500/5 ${item.color}`
+                      : `hover:bg-surface-card ${item.color} hover:text-white`
+                  }`}
+                  title={isCollapsed ? item.label : ''}
+                >
+                  {/* Цветная рамка для активного состояния */}
+                  {currentView === item.id && (
+                    <div className={`absolute inset-0 border ${
+                      item.id === 'monitoring' 
+                        ? 'border-red-500 bg-red-500/3' 
+                        : item.id === 'admin-panel' 
+                        ? 'border-purple-500 bg-purple-500/3' 
+                        : 'border-accent-primary bg-accent-primary/3'
+                    } border-opacity-40 rounded-lg ${
+                      isCollapsed ? 'border-opacity-50' : `border-l-2 ${
+                        item.id === 'monitoring' 
+                          ? 'border-red-500' 
+                          : item.id === 'admin-panel' 
+                          ? 'border-purple-500' 
+                          : 'border-accent-primary'
+                      } border-opacity-100 border-t-0 border-r-0 border-b-0 ${
+                        item.id === 'monitoring' 
+                          ? 'bg-red-500/8' 
+                          : item.id === 'admin-panel' 
+                          ? 'bg-purple-500/8' 
+                          : 'bg-accent-primary/8'
+                      }`
+                    }`}></div>
+                  )}
+                  
+                  <div className={`relative z-10 transition-all duration-300 ${
+                    currentView === item.id 
+                      ? item.color 
+                      : `${item.color} group-hover:text-white`
+                  } ${
+                    isCollapsed 
+                      ? 'flex items-center justify-center group-hover:scale-110 group-hover:translate-x-1' 
+                      : ''
+                  }`}>
+                    {item.icon}
+                  </div>
+                  {!isCollapsed && (
+                    <span className="ml-3 font-rajdhani font-semibold tracking-wide relative z-10">
+                      {item.label}
+                    </span>
+                  )}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
