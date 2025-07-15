@@ -71,24 +71,92 @@ const RegularBotsManagement = () => {
   // Пагинация для списка ботов
   const pagination = usePagination(1, 10);
 
-  // Form states for creating bot
+  // Form states for creating bot with new extended system
   const [botForm, setBotForm] = useState({
     name: '',
-    pause_timer: 5, // теперь в секундах
-    recreate_interval: 30,
+    creation_mode: 'queue-based', // 'always-first', 'queue-based', 'after-all'
     cycle_games: 12,
-    cycle_total_amount: 500,
-    win_percentage: 60,
-    min_bet_amount: 1,
-    avg_bet_amount: 50, // заменено с max_bet_amount на avg_bet_amount
+    bot_behavior: 'balanced', // 'aggressive', 'balanced', 'cautious'
+    bot_type: 'type-1', // 'type-1' to 'type-11' or custom
+    custom_min_bet: 1,
+    custom_max_bet: 10,
+    cycle_total_amount: 0, // calculated automatically
+    win_rate_percent: 60,
+    profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
     can_accept_bets: false,
-    can_play_with_bots: false,
-    // Новые поля для распределения ставок
-    bet_distribution: 'medium' // 'large', 'medium', 'small'
+    can_play_with_bots: true
   });
 
-  // Состояние для валидации математики
-  const [mathValidation, setMathValidation] = useState({
+  // Predefined bot types
+  const botTypes = [
+    { id: 'type-1', name: 'Type 1: 1–2 $', min: 1, max: 2 },
+    { id: 'type-2', name: 'Type 2: 1–5 $', min: 1, max: 5 },
+    { id: 'type-3', name: 'Type 3: 1–10 $', min: 1, max: 10 },
+    { id: 'type-4', name: 'Type 4: 5–20 $', min: 5, max: 20 },
+    { id: 'type-5', name: 'Type 5: 10–50 $', min: 10, max: 50 },
+    { id: 'type-6', name: 'Type 6: 10–100 $', min: 10, max: 100 },
+    { id: 'type-7', name: 'Type 7: 25–200 $', min: 25, max: 200 },
+    { id: 'type-8', name: 'Type 8: 50–500 $', min: 50, max: 500 },
+    { id: 'type-9', name: 'Type 9: 100–1000 $', min: 100, max: 1000 },
+    { id: 'type-10', name: 'Type 10: 100–2000 $', min: 100, max: 2000 },
+    { id: 'type-11', name: 'Type 11: 100–3000 $', min: 100, max: 3000 },
+    { id: 'custom', name: 'Кастомный диапазон', min: 0, max: 0 }
+  ];
+
+  // Custom bot types state
+  const [customBotTypes, setCustomBotTypes] = useState([]);
+  const [isCustomTypeModalOpen, setIsCustomTypeModalOpen] = useState(false);
+  const [customTypeForm, setCustomTypeForm] = useState({
+    name: '',
+    min_bet: 1,
+    max_bet: 10
+  });
+
+  // Calculate cycle total amount automatically
+  const calculateCycleTotalAmount = () => {
+    let selectedType = botTypes.find(type => type.id === botForm.bot_type);
+    if (!selectedType && botForm.bot_type === 'custom') {
+      selectedType = { min: botForm.custom_min_bet, max: botForm.custom_max_bet };
+    }
+    
+    if (!selectedType) return 0;
+    
+    const averageValue = (selectedType.min + selectedType.max) / 2;
+    
+    // Behavior multipliers
+    const behaviorMultipliers = {
+      'cautious': 0.5,
+      'balanced': 0.75,
+      'aggressive': 1.0
+    };
+    
+    const multiplier = behaviorMultipliers[botForm.bot_behavior] || 0.75;
+    const totalAmount = Math.round(averageValue * botForm.cycle_games * multiplier);
+    
+    return totalAmount;
+  };
+
+  // Update cycle total amount when relevant fields change
+  useEffect(() => {
+    const newAmount = calculateCycleTotalAmount();
+    setBotForm(prev => ({ ...prev, cycle_total_amount: newAmount }));
+  }, [botForm.bot_type, botForm.cycle_games, botForm.bot_behavior, botForm.custom_min_bet, botForm.custom_max_bet]);
+
+  // Generate automatic bot name
+  const generateBotName = () => {
+    const randomNum = Math.floor(Math.random() * 999) + 1;
+    return `Bot #${randomNum.toString().padStart(3, '0')}`;
+  };
+
+  // Set automatic name on form initialization
+  useEffect(() => {
+    if (!botForm.name) {
+      setBotForm(prev => ({ ...prev, name: generateBotName() }));
+    }
+  }, []);
+
+  // Состояние для валидации расширенной системы
+  const [extendedValidation, setExtendedValidation] = useState({
     isValid: true,
     errors: []
   });
