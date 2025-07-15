@@ -1702,7 +1702,7 @@ const RegularBotsManagement = () => {
                           </span>
                         ) : (
                           <>
-                            {bot.win_rate}%
+                            {bot.win_rate_percent || 60}%
                             {winRateAnalysisData[bot.id] && (
                               <span className={`ml-1 text-xs ${
                                 Math.abs(winRateAnalysisData[bot.id].win_rate_difference) <= 5
