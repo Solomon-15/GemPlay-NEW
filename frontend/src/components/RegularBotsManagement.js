@@ -1568,7 +1568,7 @@ const RegularBotsManagement = () => {
                 botsList.map((bot) => (
                   <tr key={bot.id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-white font-rajdhani font-bold">
+                      <div className="text-white font-roboto text-sm">
                         {bot.name || `Bot #${bot.id.substring(0, 3)}`}
                       </div>
                     </td>
