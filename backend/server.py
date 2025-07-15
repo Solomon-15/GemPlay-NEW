@@ -8974,17 +8974,41 @@ async def start_regular_bots(
         started_bots = 0
         available_slots = max_active_bets - current_active_bets
         
-        for bot_doc in active_bots:
+        # Обрабатываем ботов в отсортированном порядке
+        for bot_doc in sorted_bots:
             if started_bots >= available_slots:
                 break  # Достигнут лимит активных ставок
                 
             bot = Bot(**bot_doc)
+            creation_mode = bot_doc.get("creation_mode", "queue-based")
             
             # Проверяем, не создавал ли бот ставку недавно
             now = datetime.utcnow()
             if bot.last_bet_time:
                 time_since_last_bet = (now - bot.last_bet_time).total_seconds()
                 if time_since_last_bet < bot.recreate_timer:
+                    continue
+            
+            # Специальная логика для режима "after-all"
+            if creation_mode == "after-all":
+                # Проверяем, что все always-first и queue-based боты уже активны
+                other_bots_active = await db.games.count_documents({
+                    "creator_type": "bot",
+                    "bot_type": "REGULAR",
+                    "status": {"$in": ["WAITING", "ACTIVE"]},
+                    "creator_id": {"$ne": bot.id}
+                })
+                
+                # Получаем количество always-first и queue-based ботов
+                priority_bots_count = await db.bots.count_documents({
+                    "type": "REGULAR",
+                    "is_active": True,
+                    "creation_mode": {"$in": ["always-first", "queue-based"]},
+                    "id": {"$ne": bot.id}
+                })
+                
+                # Если есть приоритетные боты, но они еще не создали ставки, пропускаем
+                if priority_bots_count > 0 and other_bots_active < priority_bots_count:
                     continue
             
             # Создаем ставку для бота
