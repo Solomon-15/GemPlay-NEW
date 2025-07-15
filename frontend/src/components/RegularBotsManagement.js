@@ -1640,7 +1640,8 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-white font-roboto text-sm">
-                        {bot.recreation_interval || 60}s
+                        {bot.creation_mode === 'always-first' ? 'Always First' : 
+                         bot.creation_mode === 'after-all' ? 'After All' : 'Queue-Based'}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
