@@ -1742,8 +1742,8 @@ const RegularBotsManagement = () => {
                          bot.bot_behavior === 'cautious' ? 'Осторожный' : 'Сбалансированный'}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex space-x-2">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
+                      <div className="flex space-x-2 justify-center">
                         <button
                           onClick={() => handleEditModal(bot)}
                           className="p-1 bg-blue-600 text-white rounded hover:bg-blue-700"
