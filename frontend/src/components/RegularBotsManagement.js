@@ -1736,7 +1736,7 @@ const RegularBotsManagement = () => {
                          bot.creation_mode === 'after-all' ? 'After All' : 'Queue-Based'}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {bot.bot_behavior === 'aggressive' ? 'Агрессивный' : 
                          bot.bot_behavior === 'cautious' ? 'Осторожный' : 'Сбалансированный'}
