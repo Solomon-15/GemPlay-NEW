@@ -635,6 +635,32 @@ const RegularBotsManagement = () => {
     setIsActiveBetsModalOpen(true);
   };
 
+  const handleWinRateAnalysis = async (bot) => {
+    try {
+      setLoadingStates(prev => ({ ...prev, [bot.id]: true }));
+      
+      const analysisData = await fetchBotWinRateAnalysis(bot.id);
+      if (analysisData) {
+        setWinRateAnalysisData(prev => ({ ...prev, [bot.id]: analysisData }));
+        
+        // Показываем уведомление с кратким анализом
+        const { target_win_rate, actual_win_rate, win_rate_difference } = analysisData;
+        const status = Math.abs(win_rate_difference) <= 5 ? '✅ В норме' : '⚠️ Отклонение';
+        
+        showSuccessRU(`Win Rate анализ для ${bot.name}:
+        📊 Целевой: ${target_win_rate}%
+        📈 Фактический: ${actual_win_rate}%
+        📉 Отклонение: ${win_rate_difference > 0 ? '+' : ''}${win_rate_difference}%
+        ${status}`);
+      }
+    } catch (error) {
+      console.error('Error analyzing win rate:', error);
+      showErrorRU('Ошибка при анализе win rate');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [bot.id]: false }));
+    }
+  };
+
   const handleCycleModal = async (bot) => {
     try {
       const token = localStorage.getItem('token');
