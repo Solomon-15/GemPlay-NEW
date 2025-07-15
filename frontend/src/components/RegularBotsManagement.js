@@ -379,7 +379,52 @@ const RegularBotsManagement = () => {
     showSuccessRU('Кастомный тип бота создан');
   };
 
-  const createExtendedBot = async () => {
+  // Обработчики для новых действий расширенной системы
+  const handleToggleBotStatus = async (bot) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/${bot.id}/toggle-status`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        showSuccessRU(`Бот ${bot.name} ${bot.is_active ? 'отключен' : 'включен'}`);
+        await fetchBotsList();
+      }
+    } catch (error) {
+      console.error('Ошибка переключения статуса бота:', error);
+      showErrorRU('Ошибка при изменении статуса бота');
+    }
+  };
+
+  const handleForceCompleteModal = (bot) => {
+    setSelectedBotForForceComplete(bot);
+    setIsForceCompleteModalOpen(true);
+  };
+
+  const [selectedBotForForceComplete, setSelectedBotForForceComplete] = useState(null);
+  const [isForceCompleteModalOpen, setIsForceCompleteModalOpen] = useState(false);
+
+  const handleForceCompleteCycle = async () => {
+    if (!selectedBotForForceComplete) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/${selectedBotForForceComplete.id}/force-complete-cycle`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        showSuccessRU(`Цикл бота ${selectedBotForForceComplete.name} принудительно завершен`);
+        setIsForceCompleteModalOpen(false);
+        setSelectedBotForForceComplete(null);
+        await fetchBotsList();
+      }
+    } catch (error) {
+      console.error('Ошибка принудительного завершения цикла:', error);
+      showErrorRU('Ошибка при завершении цикла');
+    }
+  };
     // Валидация перед созданием
     const validation = validateExtendedBotForm(botForm);
     if (!validation.isValid) {
