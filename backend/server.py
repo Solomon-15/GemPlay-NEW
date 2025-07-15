@@ -2904,11 +2904,25 @@ async def join_game(
         # Check if user has enough balance for commission
         commission_required = game_obj.bet_amount * 0.06
         user = await db.users.find_one({"id": current_user.id})
-        if user["virtual_balance"] < commission_required:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Insufficient balance for commission. Required: ${commission_required:.2f}"
-            )
+        
+        # Check if the game creator is a regular bot
+        is_regular_bot_game = False
+        if game_obj.creator_type == "bot":
+            creator_bot = await db.bots.find_one({"id": game_obj.creator_id})
+            if creator_bot and creator_bot.get("bot_type") == "REGULAR":
+                is_regular_bot_game = True
+        
+        # For regular bot games, no commission is required
+        if not is_regular_bot_game:
+            if user["virtual_balance"] < commission_required:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Insufficient balance for commission. Required: ${commission_required:.2f}"
+                )
+        else:
+            # For regular bot games, commission is set to 0
+            commission_required = 0.0
+            logger.info(f"🤖 Playing against regular bot - no commission required for user {current_user.id}")
         
         # Freeze user's own selected gems (not creator's gems)
         for gem_type, quantity in join_data.gems.items():
@@ -2921,18 +2935,22 @@ async def join_game(
                     }
                 )
         
-        # Freeze commission balance
-        new_balance = user["virtual_balance"] - commission_required
-        await db.users.update_one(
-            {"id": current_user.id},
-            {
-                "$set": {
-                    "virtual_balance": new_balance,
-                    "frozen_balance": user["frozen_balance"] + commission_required,
-                    "updated_at": datetime.utcnow()
+        # Freeze commission balance only if not playing against regular bot
+        if not is_regular_bot_game and commission_required > 0:
+            new_balance = user["virtual_balance"] - commission_required
+            await db.users.update_one(
+                {"id": current_user.id},
+                {
+                    "$set": {
+                        "virtual_balance": new_balance,
+                        "frozen_balance": user["frozen_balance"] + commission_required,
+                        "updated_at": datetime.utcnow()
+                    }
                 }
-            }
-        )
+            )
+            logger.info(f"💰 Commission ${commission_required} frozen for user {current_user.id}")
+        else:
+            logger.info(f"🤖 No commission frozen for regular bot game - user {current_user.id}")
         
         # ATOMIC UPDATE: Try to update game with opponent only if it still has no opponent
         # This prevents race conditions where multiple users try to join the same game
@@ -2948,7 +2966,8 @@ async def join_game(
                     "opponent_move": join_data.move,
                     "opponent_gems": join_data.gems,  # Save opponent's gem combination
                     "started_at": datetime.utcnow(),
-                    "status": "ACTIVE"  # Mark as active immediately
+                    "status": "ACTIVE",  # Mark as active immediately
+                    "is_regular_bot_game": is_regular_bot_game  # Mark if this is a regular bot game
                 }
             }
         )
@@ -2967,17 +2986,18 @@ async def join_game(
                         }
                     )
             
-            # Refund balance
-            await db.users.update_one(
-                {"id": current_user.id},
-                {
-                    "$set": {
-                        "virtual_balance": user["virtual_balance"],  # Restore original balance
-                        "frozen_balance": user["frozen_balance"],     # Restore original frozen balance
-                        "updated_at": datetime.utcnow()
+            # Refund balance only if commission was actually charged
+            if not is_regular_bot_game and commission_required > 0:
+                await db.users.update_one(
+                    {"id": current_user.id},
+                    {
+                        "$set": {
+                            "virtual_balance": user["virtual_balance"],  # Restore original balance
+                            "frozen_balance": user["frozen_balance"],     # Restore original frozen balance
+                            "updated_at": datetime.utcnow()
+                        }
                     }
-                }
-            )
+                )
             
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
