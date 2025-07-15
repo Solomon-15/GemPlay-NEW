@@ -760,7 +760,7 @@ const ProfitAdmin = ({ user }) => {
                         pagination.handlePageChange(1);
                       }
                     }}
-                    className={`px-6 py-4 font-rajdhani font-bold text-sm transition-all duration-200 border-b-2 flex items-center space-x-2 ${
+                    className={`px-6 py-4 font-roboto font-bold text-sm transition-all duration-200 border-b-2 flex items-center space-x-2 ${
                       activeCategory === key
                         ? (category.color === 'green' ? 'border-green-500 bg-green-500/10 text-green-400' :
                            category.color === 'blue' ? 'border-blue-500 bg-blue-500/10 text-blue-400' :
