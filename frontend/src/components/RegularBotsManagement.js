@@ -690,6 +690,7 @@ const RegularBotsManagement = () => {
       
       // Fallback: пробуем оригинальный эндпоинт
       try {
+        const token = localStorage.getItem('token');
         const response = await axios.get(`${API}/admin/bots/${bot.id}/active-bets`, {
           headers: { Authorization: `Bearer ${token}` }
         });
