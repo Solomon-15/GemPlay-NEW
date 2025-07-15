@@ -2819,6 +2819,84 @@ async def reveal_game(
             detail="Failed to reveal game"
         )
 
+@api_router.post("/admin/bots/{bot_id}/reset-bets", response_model=dict)
+async def reset_bot_bets(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Сбросить все ставки бота и пересоздать цикл."""
+    try:
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Бот не найден"
+            )
+        
+        # Отменяем все активные ставки бота
+        cancelled_result = await db.games.update_many(
+            {"creator_id": bot_id, "status": {"$in": ["WAITING", "ACTIVE"]}},
+            {"$set": {
+                "status": "CANCELLED",
+                "updated_at": datetime.utcnow(),
+                "cancel_reason": "Bot bets reset by admin"
+            }}
+        )
+        
+        # Сбрасываем статистику текущего цикла
+        await db.bots.update_one(
+            {"id": bot_id},
+            {"$set": {
+                "current_cycle_games": 0,
+                "current_cycle_wins": 0,
+                "current_cycle_losses": 0,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        # Пересоздаем ставки для бота
+        try:
+            await generate_bot_cycle_bets(
+                bot_id=bot_id,
+                cycle_length=bot.get("cycle_games", 12),
+                cycle_total_amount=bot.get("cycle_total_amount", 500.0),
+                win_percentage=bot.get("win_rate_percent", 60),
+                min_bet=bot.get("min_bet_amount", 1.0),
+                avg_bet=bot.get("max_bet_amount", 100.0),
+                bet_distribution=bot.get("bet_distribution", "medium")
+            )
+        except Exception as e:
+            logger.error(f"Error regenerating bets for bot {bot_id}: {e}")
+            # Не блокируем операцию из-за ошибки генерации
+        
+        # Логирование действия
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="RESET_BOT_BETS",
+            target_type="bot",
+            target_id=bot_id,
+            details={
+                "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
+                "cancelled_bets": cancelled_result.modified_count
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "success": True,
+            "message": f"Ставки бота сброшены и пересозданы",
+            "cancelled_bets": cancelled_result.modified_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting bot bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ошибка при сбросе ставок бота"
+        )
+
 async def timeout_checker_task():
     """Background task to check for game timeouts."""
     while True:
