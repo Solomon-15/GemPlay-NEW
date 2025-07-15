@@ -2963,6 +2963,57 @@ const RegularBotsManagement = () => {
           </div>
         </div>
       )}
+      
+      {/* Модальное окно принудительного завершения цикла */}
+      {isForceCompleteModalOpen && selectedBotForForceComplete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="font-russo text-xl text-white mb-4">⏹️ Принудительное завершение цикла</h3>
+            
+            <div className="space-y-4">
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-2">Информация о боте</h4>
+                <div className="space-y-2 text-sm">
+                  <div><strong>Имя:</strong> {selectedBotForForceComplete.name}</div>
+                  <div><strong>Текущий цикл:</strong> {selectedBotForForceComplete.current_cycle_games || 0}/{selectedBotForForceComplete.cycle_games || 12} игр</div>
+                  <div><strong>Активные ставки:</strong> {selectedBotForForceComplete.active_bets || 0}</div>
+                  <div><strong>Сумма цикла:</strong> ${selectedBotForForceComplete.cycle_total_amount || 0}</div>
+                </div>
+              </div>
+
+              <div className="bg-yellow-900 bg-opacity-20 border border-yellow-500 rounded-lg p-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-yellow-400 text-xl">⚠️</span>
+                  <div>
+                    <h4 className="font-rajdhani font-bold text-yellow-400">Внимание!</h4>
+                    <p className="text-yellow-300 text-sm">
+                      Все активные ставки бота будут отменены, и цикл будет завершен принудительно.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={handleForceCompleteCycle}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-rajdhani font-bold"
+                >
+                  Завершить цикл
+                </button>
+                <button
+                  onClick={() => {
+                    setIsForceCompleteModalOpen(false);
+                    setSelectedBotForForceComplete(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-rajdhani font-bold"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Модальное окно принудительного завершения цикла */}
       {isForceCompleteModalOpen && selectedBotForForceComplete && (
