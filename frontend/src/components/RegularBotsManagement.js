@@ -2093,7 +2093,7 @@ const RegularBotsManagement = () => {
                       : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                   }`}
                 >
-                  Создать бота
+                  {editingBot ? 'Сохранить изменения' : 'Создать бота'}
                 </button>
                 <button
                   onClick={() => {
