@@ -671,19 +671,25 @@ const RegularBotsManagement = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Преобразуем данные для отображения
-      const betsData = response.data.games?.map(game => ({
-        id: game.id,
-        created_at: game.created_at,
-        bet_amount: game.bet_amount,
-        amount: game.bet_amount, // Дубликат для совместимости
-        move: game.move || game.creator_move || '—',
-        selected_gem: game.selected_gem || '—',
-        status: game.status?.toLowerCase() || 'waiting',
-        opponent_name: game.opponent_name || '—',
-        opponent_id: game.opponent_id || '—'
-      })) || [];
+      console.log('API Response:', response.data);
       
+      // Преобразуем данные для отображения
+      const betsData = response.data.games?.map(game => {
+        console.log('Game data:', game);
+        return {
+          id: game.id,
+          created_at: game.created_at,
+          bet_amount: game.bet_amount,
+          amount: game.bet_amount, // Дубликат для совместимости
+          move: game.move || game.creator_move || '—',
+          selected_gem: game.selected_gem || '—',
+          status: game.status?.toLowerCase() || 'waiting',
+          opponent_name: game.opponent_name || '—',
+          opponent_id: game.opponent_id || '—'
+        };
+      }) || [];
+      
+      console.log('Processed bets data:', betsData);
       setActiveBetsData(betsData);
     } catch (error) {
       console.error('Ошибка загрузки активных ставок:', error);
@@ -694,6 +700,7 @@ const RegularBotsManagement = () => {
         const response = await axios.get(`${API}/admin/bots/${bot.id}/active-bets`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('Fallback API Response:', response.data);
         setActiveBetsData(response.data.bets || []);
       } catch (fallbackError) {
         console.error('Ошибка fallback загрузки:', fallbackError);
