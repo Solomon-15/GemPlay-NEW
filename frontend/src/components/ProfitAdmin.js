@@ -18,6 +18,7 @@ const ProfitAdmin = ({ user }) => {
   const [stats, setStats] = useState(null);
   const [entries, setEntries] = useState([]);
   const [commissionSettings, setCommissionSettings] = useState(null);
+  const [botIntegrationData, setBotIntegrationData] = useState(null);
   const [dateFilter, setDateFilter] = useState({ from: '', to: '' });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
