@@ -9121,6 +9121,10 @@ async def create_bot_bet(bot: Bot) -> bool:
         bot_doc = await db.bots.find_one({"id": bot.id})
         creation_mode = bot_doc.get("creation_mode", "queue-based") if bot_doc else "queue-based"
         
+        # Передаем данные поведения бота в объект для should_bot_win
+        if bot_doc:
+            bot._bot_data = bot_doc
+        
         # Проверяем индивидуальные лимиты бота
         max_individual_bets = bot_doc.get("max_individual_bets", 12) if bot_doc else 12
         
