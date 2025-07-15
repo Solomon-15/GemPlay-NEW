@@ -1754,7 +1754,10 @@ const RegularBotsManagement = () => {
                 {editingBot ? 'Редактировать бота' : 'Создать обычного бота'}
               </h3>
               <button
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  setEditingBot(null);
+                }}
                 className="text-gray-400 hover:text-white"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
