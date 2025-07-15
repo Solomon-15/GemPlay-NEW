@@ -1737,7 +1737,7 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-white font-roboto text-sm">
-                        ${bot.min_bet} / ${bot.max_bet}
+                        {bot.bot_type || 'Стандартный'}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
