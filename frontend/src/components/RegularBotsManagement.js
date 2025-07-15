@@ -431,9 +431,6 @@ const RegularBotsManagement = () => {
     setIsActiveBetsModalOpen(true);
   };
 
-  const [selectedBotForActiveBets, setSelectedBotForActiveBets] = useState(null);
-  const [isActiveBetsModalOpen, setIsActiveBetsModalOpen] = useState(false);
-
   const handleForceCompleteModal = (bot) => {
     setSelectedBotForForceComplete(bot);
     setIsForceCompleteModalOpen(true);
