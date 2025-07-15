@@ -2623,6 +2623,7 @@ async def create_game(
         # Create the game
         game = Game(
             creator_id=current_user.id,
+            creator_type="user",  # User created game
             creator_move=game_data.move,
             creator_move_hash=move_hash,
             creator_salt=salt,
