@@ -1795,6 +1795,122 @@ async def gift_gems(
         "new_balance": new_sender_balance
     }
 
+@api_router.get("/admin/bots/{bot_id}/win-rate-analysis", response_model=dict)
+async def get_bot_win_rate_analysis(bot_id: str, current_user: User = Depends(get_current_admin)):
+    """Get detailed win rate analysis for a bot."""
+    try:
+        # Получаем бота
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        # Получаем игры бота
+        bot_games = await db.games.find({
+            "creator_id": bot_id,
+            "creator_type": "bot",
+            "status": "COMPLETED"
+        }).sort("created_at", -1).limit(100).to_list(100)
+        
+        # Анализируем win rate
+        total_games = len(bot_games)
+        total_wins = sum(1 for game in bot_games if game.get("result") == "WIN")
+        actual_win_rate = (total_wins / total_games * 100) if total_games > 0 else 0
+        
+        # Получаем настройки бота
+        target_win_rate = bot.get("win_rate_percent", 60)
+        bot_behavior = bot.get("bot_behavior", "balanced")
+        profit_strategy = bot.get("profit_strategy", "balanced")
+        
+        # Анализируем цикл
+        cycle_games = bot.get("cycle_games", 12)
+        current_cycle_games = bot.get("current_cycle_games", 0)
+        current_cycle_wins = bot.get("current_cycle_wins", 0)
+        current_cycle_win_rate = (current_cycle_wins / current_cycle_games * 100) if current_cycle_games > 0 else 0
+        
+        # Прогнозируем оставшиеся игры
+        remaining_games = cycle_games - current_cycle_games
+        needed_wins = int(target_win_rate / 100 * cycle_games) - current_cycle_wins
+        needed_win_rate = (needed_wins / remaining_games * 100) if remaining_games > 0 else 0
+        
+        # Анализируем поведение
+        behavior_stats = {
+            "aggressive": {
+                "description": "Более агрессивная игра с большим разбросом результатов",
+                "win_rate_variance": "±15%",
+                "bet_pattern": "Непредсказуемые суммы ставок"
+            },
+            "balanced": {
+                "description": "Сбалансированная игра со стабильными результатами",
+                "win_rate_variance": "±10%",
+                "bet_pattern": "Равномерные суммы ставок"
+            },
+            "cautious": {
+                "description": "Осторожная игра с минимальными рисками",
+                "win_rate_variance": "±5%",
+                "bet_pattern": "Консервативные суммы ставок"
+            }
+        }.get(bot_behavior, {})
+        
+        # Стратегия прибыли
+        strategy_stats = {
+            "start_profit": {
+                "description": "Старт с прибыли - выигрыши в начале цикла",
+                "pattern": "Фронт-лоадинг выигрышей"
+            },
+            "balanced": {
+                "description": "Сбалансированная стратегия - равномерные выигрыши",
+                "pattern": "Случайное распределение выигрышей"
+            },
+            "end_loss": {
+                "description": "Принятие поражений в конце цикла",
+                "pattern": "Бэк-лоадинг проигрышей"
+            }
+        }.get(profit_strategy, {})
+        
+        return {
+            "bot_id": bot_id,
+            "bot_name": bot.get("name", "Unknown"),
+            "target_win_rate": target_win_rate,
+            "actual_win_rate": round(actual_win_rate, 2),
+            "win_rate_difference": round(actual_win_rate - target_win_rate, 2),
+            "total_games": total_games,
+            "total_wins": total_wins,
+            "current_cycle": {
+                "games_played": current_cycle_games,
+                "games_won": current_cycle_wins,
+                "win_rate": round(current_cycle_win_rate, 2),
+                "total_games": cycle_games,
+                "remaining_games": remaining_games,
+                "needed_wins": max(0, needed_wins),
+                "needed_win_rate": round(needed_win_rate, 2)
+            },
+            "behavior": {
+                "type": bot_behavior,
+                "stats": behavior_stats
+            },
+            "strategy": {
+                "type": profit_strategy,
+                "stats": strategy_stats
+            },
+            "performance": {
+                "is_on_target": abs(actual_win_rate - target_win_rate) <= 5,
+                "cycle_progress": round(current_cycle_games / cycle_games * 100, 2),
+                "predicted_final_win_rate": round(
+                    (current_cycle_wins + needed_wins) / cycle_games * 100, 2
+                ) if cycle_games > 0 else 0
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting bot win rate analysis: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get bot win rate analysis"
+        )
+
 # Endpoint removed - Frontend now handles gem combination logic
 
 @api_router.post("/admin/bots/{bot_id}/toggle-status", response_model=dict)
