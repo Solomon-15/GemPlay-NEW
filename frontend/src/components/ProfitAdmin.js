@@ -983,7 +983,7 @@ const ProfitAdmin = ({ user }) => {
                                 </button>
                               </td>
                               <td className="px-4 py-3">
-                                <div className="text-sm font-rajdhani font-bold text-white">{date}</div>
+                                <div className="text-sm font-roboto font-bold text-white">{date}</div>
                                 <div className="text-xs text-text-secondary">{time}</div>
                               </td>
                               <td className="px-4 py-3">
