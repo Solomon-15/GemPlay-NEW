@@ -315,45 +315,38 @@ const RegularBotsManagement = () => {
     }
   };
 
-  // Функция валидации математики для создания бота
-  const validateBotMath = (formData) => {
+  // Функция валидации для расширенной системы ботов
+  const validateExtendedBotForm = (formData) => {
     const errors = [];
     
-    // Проверка: (Сумма за цикл) / (Игр в цикле) <= Сред. ставка ($)
-    const avgBetFromCycle = formData.cycle_total_amount / formData.cycle_games;
-    if (avgBetFromCycle > formData.avg_bet_amount) {
-      errors.push(`Средняя ставка ($${formData.avg_bet_amount}) должна быть >= ${avgBetFromCycle.toFixed(2)} (Сумма за цикл / Игр в цикле)`);
+    // Проверка имени бота
+    if (!formData.name || formData.name.trim().length < 3) {
+      errors.push('Имя бота должно содержать минимум 3 символа');
     }
     
-    // Проверка: Мин. ставка <= Сред. ставка
-    if (formData.min_bet_amount > formData.avg_bet_amount) {
-      errors.push(`Минимальная ставка ($${formData.min_bet_amount}) должна быть <= средней ставки ($${formData.avg_bet_amount})`);
+    // Проверка количества игр в цикле
+    if (formData.cycle_games < 1 || formData.cycle_games > 100) {
+      errors.push('Количество игр в цикле должно быть от 1 до 100');
     }
     
-    // Проверка: Процент выигрыша должен быть реалистичным
-    if (formData.win_percentage < 0 || formData.win_percentage > 100) {
-      errors.push(`Процент выигрыша должен быть от 0% до 100%`);
+    // Проверка процента выигрыша
+    if (formData.win_rate_percent < 0 || formData.win_rate_percent > 100) {
+      errors.push('Процент выигрыша должен быть от 0% до 100%');
     }
     
-    // Проверка: Количество игр в цикле должно быть больше 0
-    if (formData.cycle_games <= 0) {
-      errors.push(`Количество игр в цикле должно быть больше 0`);
+    // Проверка кастомного диапазона
+    if (formData.bot_type === 'custom') {
+      if (formData.custom_min_bet <= 0) {
+        errors.push('Минимальная ставка должна быть больше 0');
+      }
+      if (formData.custom_max_bet <= formData.custom_min_bet) {
+        errors.push('Максимальная ставка должна быть больше минимальной');
+      }
     }
     
-    // Проверка: Сумма за цикл должна быть больше 0
+    // Проверка суммы за цикл
     if (formData.cycle_total_amount <= 0) {
-      errors.push(`Сумма за цикл должна быть больше 0`);
-    }
-    
-    // Проверка: Можно ли создать валидный набор ставок
-    const maxPossibleSum = formData.cycle_games * formData.avg_bet_amount;
-    if (formData.cycle_total_amount > maxPossibleSum) {
-      errors.push(`Сумма за цикл ($${formData.cycle_total_amount}) не может быть больше максимально возможной суммы ($${maxPossibleSum})`);
-    }
-    
-    const minPossibleSum = formData.cycle_games * formData.min_bet_amount;
-    if (formData.cycle_total_amount < minPossibleSum) {
-      errors.push(`Сумма за цикл ($${formData.cycle_total_amount}) не может быть меньше минимально возможной суммы ($${minPossibleSum})`);
+      errors.push('Сумма за цикл должна быть больше 0');
     }
     
     return {
@@ -362,48 +355,65 @@ const RegularBotsManagement = () => {
     };
   };
 
-  // Функция для валидации в реальном времени
-  const validateFormInRealTime = (formData) => {
-    const validation = validateBotMath(formData);
-    setMathValidation(validation);
+  // Валидация в реальном времени
+  const validateExtendedFormInRealTime = (formData) => {
+    const validation = validateExtendedBotForm(formData);
+    setExtendedValidation(validation);
     return validation.isValid;
   };
 
-  const createIndividualBot = async () => {
-    // Валидация математики перед созданием
-    const validation = validateBotMath(botForm);
+  // Создание кастомного типа бота
+  const createCustomBotType = () => {
+    const newType = {
+      id: `custom-${Date.now()}`,
+      name: `${customTypeForm.name}: ${customTypeForm.min_bet}–${customTypeForm.max_bet} $`,
+      min: customTypeForm.min_bet,
+      max: customTypeForm.max_bet
+    };
+    
+    setCustomBotTypes(prev => [...prev, newType]);
+    setIsCustomTypeModalOpen(false);
+    setCustomTypeForm({ name: '', min_bet: 1, max_bet: 10 });
+    setBotForm(prev => ({ ...prev, bot_type: newType.id }));
+    showSuccessRU('Кастомный тип бота создан');
+  };
+
+  const createExtendedBot = async () => {
+    // Валидация перед созданием
+    const validation = validateExtendedBotForm(botForm);
     if (!validation.isValid) {
-      setMathValidation(validation);
+      setExtendedValidation(validation);
       showErrorRU(`Ошибка валидации: ${validation.errors.join(', ')}`);
       return;
     }
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/admin/bots/create-individual`, botForm, {
+      const response = await axios.post(`${API}/admin/bots/create-extended`, botForm, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       showSuccessRU(response.data.message);
       setIsCreateModalOpen(false);
       setBotForm({
-        name: '',
-        pause_timer: 5,
-        recreate_interval: 30,
+        name: generateBotName(),
+        creation_mode: 'queue-based',
         cycle_games: 12,
-        cycle_total_amount: 500,
-        win_percentage: 60,
-        min_bet_amount: 1,
-        avg_bet_amount: 50,
+        bot_behavior: 'balanced',
+        bot_type: 'type-1',
+        custom_min_bet: 1,
+        custom_max_bet: 10,
+        cycle_total_amount: 0,
+        win_rate_percent: 60,
+        profit_strategy: 'balanced',
         can_accept_bets: false,
-        can_play_with_bots: false,
-        bet_distribution: 'medium'
+        can_play_with_bots: true
       });
-      setMathValidation({ isValid: true, errors: [] });
+      setExtendedValidation({ isValid: true, errors: [] });
       await fetchStats();
       await fetchBotsList();
     } catch (error) {
-      console.error('Ошибка создания бота:', error);
+      console.error('Ошибка создания расширенного бота:', error);
       showErrorRU('Ошибка при создании бота');
     }
   };
