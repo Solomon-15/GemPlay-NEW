@@ -1795,6 +1795,151 @@ async def gift_gems(
         "new_balance": new_sender_balance
     }
 
+@api_router.get("/admin/profit/bot-integration", response_model=dict)
+async def get_bot_profit_integration(current_admin: User = Depends(get_current_admin)):
+    """Get detailed bot profit integration data for main profit dashboard."""
+    try:
+        current_time = datetime.utcnow()
+        day_ago = current_time - timedelta(days=1)
+        week_ago = current_time - timedelta(weeks=1)
+        month_ago = current_time - timedelta(days=30)
+        
+        # Get bot revenue by time periods
+        bot_revenue_today = await db.profit_entries.aggregate([
+            {"$match": {"entry_type": "BOT_REVENUE", "created_at": {"$gte": day_ago}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        bot_revenue_today = bot_revenue_today[0]["total"] if bot_revenue_today else 0
+        
+        bot_revenue_week = await db.profit_entries.aggregate([
+            {"$match": {"entry_type": "BOT_REVENUE", "created_at": {"$gte": week_ago}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        bot_revenue_week = bot_revenue_week[0]["total"] if bot_revenue_week else 0
+        
+        bot_revenue_month = await db.profit_entries.aggregate([
+            {"$match": {"entry_type": "BOT_REVENUE", "created_at": {"$gte": month_ago}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        bot_revenue_month = bot_revenue_month[0]["total"] if bot_revenue_month else 0
+        
+        # Get total bot revenue
+        bot_revenue_total = await db.profit_entries.aggregate([
+            {"$match": {"entry_type": "BOT_REVENUE"}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        bot_revenue_total = bot_revenue_total[0]["total"] if bot_revenue_total else 0
+        
+        # Get bot revenue by creation mode
+        bot_revenue_by_mode = await db.profit_entries.aggregate([
+            {"$match": {"entry_type": "BOT_REVENUE"}},
+            {"$lookup": {"from": "bots", "localField": "source_id", "foreignField": "id", "as": "bot"}},
+            {"$unwind": {"path": "$bot", "preserveNullAndEmptyArrays": True}},
+            {"$group": {
+                "_id": "$bot.creation_mode",
+                "total": {"$sum": "$amount"},
+                "count": {"$sum": 1}
+            }}
+        ]).to_list(10)
+        
+        # Get bot revenue by behavior
+        bot_revenue_by_behavior = await db.profit_entries.aggregate([
+            {"$match": {"entry_type": "BOT_REVENUE"}},
+            {"$lookup": {"from": "bots", "localField": "source_id", "foreignField": "id", "as": "bot"}},
+            {"$unwind": {"path": "$bot", "preserveNullAndEmptyArrays": True}},
+            {"$group": {
+                "_id": "$bot.bot_behavior",
+                "total": {"$sum": "$amount"},
+                "count": {"$sum": 1}
+            }}
+        ]).to_list(10)
+        
+        # Get active bots count
+        active_bots = await db.bots.count_documents({"type": "REGULAR", "is_active": True})
+        
+        # Get bot win rate statistics
+        bot_win_stats = await db.bots.aggregate([
+            {"$match": {"type": "REGULAR"}},
+            {"$group": {
+                "_id": None,
+                "avg_win_rate": {"$avg": "$win_rate_percent"},
+                "total_bots": {"$sum": 1},
+                "active_bots": {"$sum": {"$cond": ["$is_active", 1, 0]}}
+            }}
+        ]).to_list(1)
+        bot_win_stats = bot_win_stats[0] if bot_win_stats else {}
+        
+        # Get recent bot transactions
+        recent_bot_transactions = await db.profit_entries.find({
+            "entry_type": "BOT_REVENUE"
+        }).sort("created_at", -1).limit(10).to_list(10)
+        
+        # Calculate bot efficiency
+        total_games = await db.games.count_documents({
+            "creator_type": "bot",
+            "bot_type": "REGULAR",
+            "status": "COMPLETED"
+        })
+        
+        bot_efficiency = {
+            "revenue_per_game": bot_revenue_total / total_games if total_games > 0 else 0,
+            "revenue_per_bot": bot_revenue_total / active_bots if active_bots > 0 else 0,
+            "games_per_bot": total_games / active_bots if active_bots > 0 else 0
+        }
+        
+        # Format creation mode data
+        creation_mode_data = {}
+        for item in bot_revenue_by_mode:
+            mode = item["_id"] or "queue-based"
+            creation_mode_data[mode] = {
+                "revenue": item["total"],
+                "transactions": item["count"]
+            }
+        
+        # Format behavior data
+        behavior_data = {}
+        for item in bot_revenue_by_behavior:
+            behavior = item["_id"] or "balanced"
+            behavior_data[behavior] = {
+                "revenue": item["total"],
+                "transactions": item["count"]
+            }
+        
+        return {
+            "bot_revenue": {
+                "today": bot_revenue_today,
+                "week": bot_revenue_week,
+                "month": bot_revenue_month,
+                "total": bot_revenue_total
+            },
+            "bot_stats": {
+                "active_bots": active_bots,
+                "total_bots": bot_win_stats.get("total_bots", 0),
+                "avg_win_rate": bot_win_stats.get("avg_win_rate", 0),
+                "total_games": total_games
+            },
+            "creation_modes": creation_mode_data,
+            "behaviors": behavior_data,
+            "efficiency": bot_efficiency,
+            "recent_transactions": [
+                {
+                    "id": str(tx["_id"]),
+                    "amount": tx["amount"],
+                    "created_at": tx["created_at"],
+                    "description": tx.get("description", ""),
+                    "source_id": tx.get("source_id", "")
+                }
+                for tx in recent_bot_transactions
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching bot profit integration data: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bot profit integration data"
+        )
+
 @api_router.get("/admin/bots/{bot_id}/win-rate-analysis", response_model=dict)
 async def get_bot_win_rate_analysis(bot_id: str, current_user: User = Depends(get_current_admin)):
     """Get detailed win rate analysis for a bot."""
