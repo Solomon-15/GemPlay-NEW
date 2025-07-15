@@ -1593,11 +1593,6 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-white font-roboto text-sm">
-                        {bot.games_stats.wins}/{bot.games_stats.losses}/{bot.games_stats.draws}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleWinRateAnalysis(bot)}
                         disabled={loadingStates[bot.id]}
@@ -1614,7 +1609,7 @@ const RegularBotsManagement = () => {
                           </span>
                         ) : (
                           <>
-                            {bot.win_rate_percent || 60}%
+                            {bot.actual_win_rate || 0}%
                             {winRateAnalysisData[bot.id] && (
                               <span className={`ml-1 text-xs ${
                                 Math.abs(winRateAnalysisData[bot.id].win_rate_difference) <= 5
@@ -1627,11 +1622,6 @@ const RegularBotsManagement = () => {
                           </>
                         )}
                       </button>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-orange-400 font-rajdhani font-bold">
-                        {bot.actual_win_rate || 0}%
-                      </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <button
