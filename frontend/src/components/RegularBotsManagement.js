@@ -1727,7 +1727,7 @@ const RegularBotsManagement = () => {
                         className="text-green-400 hover:text-green-300 underline font-roboto cursor-pointer"
                         title="Показать историю цикла"
                       >
-                        {(bot.games_stats.wins + bot.games_stats.losses)}/{bot.cycle_games || 12}
+                        {(bot.current_cycle_games || 0)}/{bot.cycle_games || 12}
                       </button>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
