@@ -1152,7 +1152,8 @@ const RegularBotsManagement = () => {
       </div>
 
       {/* Информационные блоки */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">{/* Активные и отключенные боты */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+        {/* Активные и отключенные боты */}
         <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
           <div className="flex items-center">
             <div className="p-2 bg-green-600 rounded-lg">
