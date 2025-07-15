@@ -10286,9 +10286,23 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
         bet_data = []  # Will store (gem_combination, bet_amount) tuples
         total_generated = 0
         
-        # Get bias range based on distribution type
-        bias_min, bias_max = get_bet_range_for_distribution(bet_distribution, min_bet, avg_bet)
+        # Get bias range based on distribution type and bot behavior
+        bias_min, bias_max, variance_multiplier = get_bet_range_for_distribution(bet_distribution, min_bet, avg_bet, bot_behavior)
         
+        # Apply profit strategy to win/loss pattern
+        outcomes = []
+        if profit_strategy == "start_profit":
+            # Front-load wins for early profit
+            outcomes = ['win'] * winning_bets_count + ['loss'] * losing_bets_count
+        elif profit_strategy == "end_loss":
+            # Back-load losses for late deficit
+            outcomes = ['loss'] * losing_bets_count + ['win'] * winning_bets_count
+        else:  # balanced
+            # Mix wins and losses throughout cycle
+            outcomes = ['win'] * winning_bets_count + ['loss'] * losing_bets_count
+            random.shuffle(outcomes)
+        
+        # Generate bet amounts with behavioral variance
         for i in range(cycle_length):
             if i == cycle_length - 1:  # Last bet: use remaining amount
                 remaining = int(cycle_total_amount - total_generated)
@@ -10307,14 +10321,14 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
                         # Try to create a reasonable combination
                         gem_combination = {'Ruby': remaining}  # Fallback
             else:
-                # Generate bet within bias range based on distribution
+                # Generate bet within bias range based on distribution and behavior
                 if bet_distribution == "small":
                     # Концентрация на малых ставках
-                    variance = (bias_max - bias_min) * 0.3
+                    variance = (bias_max - bias_min) * 0.3 * variance_multiplier
                     target_center = bias_min + (bias_max - bias_min) * 0.3
                 elif bet_distribution == "large":
                     # Концентрация на крупных ставках
-                    variance = (bias_max - bias_min) * 0.3
+                    variance = (bias_max - bias_min) * 0.3 * variance_multiplier
                     target_center = bias_min + (bias_max - bias_min) * 0.7
                 else:  # medium
                     # Равномерное распределение
