@@ -2121,6 +2121,28 @@ async def create_extended_bot(
         
         created_bot_id = bot_data["id"]
         
+        # Генерируем начальные ставки для бота используя расширенную систему
+        try:
+            if creation_mode == 'queue-based':
+                # Создаем ставки сразу для queue-based ботов
+                await generate_extended_bot_cycle_bets(
+                    bot_id=created_bot_id,
+                    cycle_length=cycle_games,
+                    cycle_total_amount=cycle_total_amount,
+                    win_rate_percent=win_rate_percent,
+                    min_bet=min_bet,
+                    max_bet=max_bet,
+                    bot_behavior=bot_behavior,
+                    profit_strategy=profit_strategy
+                )
+                logger.info(f"Generated initial bets for extended bot {created_bot_id}")
+            else:
+                # Для always-first и after-all режимов создаем ставки по расписанию
+                logger.info(f"Extended bot {created_bot_id} created with {creation_mode} mode, bets will be generated according to schedule")
+        except Exception as e:
+            logger.error(f"Error generating initial bets for extended bot {created_bot_id}: {e}")
+            # Не блокируем создание бота из-за ошибки генерации ставок
+        
         # Логирование действия администратора
         admin_log = AdminLog(
             admin_id=current_user.id,
