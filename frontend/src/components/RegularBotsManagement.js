@@ -566,16 +566,18 @@ const RegularBotsManagement = () => {
   const recalculateBotBets = async (botId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/admin/bots/${botId}/recalculate-bets`, {}, {
+      const response = await axios.post(`${API}/admin/bots/${botId}/reset-bets`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      showSuccessRU(`Пересчитано ${response.data.generated_bets} ставок для бота`);
-      await fetchBotsList();
+      if (response.data.success) {
+        showSuccessRU(`Ставки бота сброшены и пересозданы. Отменено ставок: ${response.data.cancelled_bets}`);
+        await fetchBotsList();
+        await fetchStats();
+      }
     } catch (error) {
-      console.error('Ошибка пересчета ставок:', error);
-      const errorMessage = error.response?.data?.detail || 'Ошибка при пересчете ставок';
-      showErrorRU(errorMessage);
+      console.error('Ошибка сброса ставок:', error);
+      showErrorRU('Ошибка при сбросе ставок бота');
     }
   };
 
