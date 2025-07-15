@@ -73,7 +73,26 @@ const UserManagement = ({ user: currentUser }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setUsers(response.data.users || []);
+      // Сортировка пользователей: админы и супер-админы первыми
+      const sortedUsers = (response.data.users || []).sort((a, b) => {
+        const roleOrder = {
+          'SUPER_ADMIN': 1,
+          'ADMIN': 2,
+          'USER': 3
+        };
+        
+        const aOrder = roleOrder[a.role] || 3;
+        const bOrder = roleOrder[b.role] || 3;
+        
+        // Если роли одинаковые, сортируем по username
+        if (aOrder === bOrder) {
+          return a.username.localeCompare(b.username);
+        }
+        
+        return aOrder - bOrder;
+      });
+      
+      setUsers(sortedUsers);
       pagination.updatePagination(response.data.total || 0);
       setLoading(false);
     } catch (error) {
