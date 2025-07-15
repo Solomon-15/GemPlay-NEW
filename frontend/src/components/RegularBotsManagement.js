@@ -632,20 +632,9 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const handleActiveBetsModal = async (bot) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/${bot.id}/active-bets`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setActiveBetsBot(bot);
-      setActiveBetsData(response.data);
-      setIsActiveBetsModalOpen(true);
-    } catch (error) {
-      console.error('Ошибка загрузки активных ставок:', error);
-      showErrorRU('Ошибка при загрузке активных ставок');
-    }
+  const handleActiveBetsModal = (bot) => {
+    setSelectedBotForActiveBets(bot);
+    setIsActiveBetsModalOpen(true);
   };
 
   const handleCycleModal = async (bot) => {
