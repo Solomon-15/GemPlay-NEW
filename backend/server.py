@@ -9048,9 +9048,42 @@ async def start_regular_bots(
         )
 
 async def create_bot_bet(bot: Bot) -> bool:
-    """Create a bet for a bot."""
+    """Create a bet for a bot with creation mode support."""
     try:
         import random
+        
+        # Получаем информацию о боте из базы данных для режима создания ставок
+        bot_doc = await db.bots.find_one({"id": bot.id})
+        creation_mode = bot_doc.get("creation_mode", "queue-based") if bot_doc else "queue-based"
+        
+        # Проверяем индивидуальные лимиты бота
+        max_individual_bets = bot_doc.get("max_individual_bets", 12) if bot_doc else 12
+        
+        # Подсчитываем текущие активные ставки бота
+        current_bot_bets = await db.games.count_documents({
+            "creator_id": bot.id,
+            "creator_type": "bot",
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Проверяем, не превышает ли бот свой индивидуальный лимит
+        if current_bot_bets >= max_individual_bets:
+            logger.info(f"Bot {bot.id} has reached individual bet limit ({current_bot_bets}/{max_individual_bets})")
+            return False
+        
+        # Для режима "always-first" проверяем дополнительные условия
+        if creation_mode == "always-first":
+            # Всегда создаем ставку для always-first ботов (в рамках лимитов)
+            logger.info(f"Creating bet for always-first bot {bot.id}")
+        
+        # Для режима "queue-based" используем стандартную логику
+        elif creation_mode == "queue-based":
+            # Проверяем приоритет в очереди
+            logger.info(f"Creating bet for queue-based bot {bot.id} with priority {bot_doc.get('priority_order', 999)}")
+        
+        # Для режима "after-all" дополнительных проверок уже было выше
+        elif creation_mode == "after-all":
+            logger.info(f"Creating bet for after-all bot {bot.id}")
         
         # Генерируем размер ставки
         bet_amount = round(random.uniform(bot.min_bet_amount, bot.max_bet_amount), 2)
