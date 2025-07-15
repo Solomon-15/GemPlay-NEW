@@ -8,6 +8,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const BotAnalytics = () => {
+  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' or 'reports'
   const [analyticsData, setAnalyticsData] = useState({
     queueWaitTimes: [],
     botLoadingStats: [],
@@ -219,204 +220,236 @@ const BotAnalytics = () => {
       <div>
         <h2 className="font-russo text-2xl text-white mb-6">📊 Расширенная аналитика ботов</h2>
         
-        {/* Контролы фильтрации */}
+        {/* Переключатель вкладок */}
         <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center space-x-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Временной период
-                </label>
-                <select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value)}
-                  className="px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                >
-                  <option value="24h">Последние 24 часа</option>
-                  <option value="7d">Последние 7 дней</option>
-                  <option value="30d">Последние 30 дней</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Фильтр по боту
-                </label>
-                <select
-                  value={selectedBot}
-                  onChange={(e) => setSelectedBot(e.target.value)}
-                  className="px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                >
-                  <option value="all">Все боты</option>
-                  {botsList.map(bot => (
-                    <option key={bot.id} value={bot.id}>
-                      {bot.name || `Bot #${bot.id.substring(0, 8)}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
             <div className="flex items-center space-x-2">
               <button
-                onClick={handleRefresh}
-                className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-rajdhani font-bold"
+                onClick={() => setActiveTab('analytics')}
+                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-all duration-200 ${
+                  activeTab === 'analytics' 
+                    ? 'bg-accent-primary text-white shadow-lg' 
+                    : 'bg-surface-sidebar text-text-secondary hover:text-white hover:bg-surface-card'
+                }`}
               >
-                🔄 Обновить
+                📈 Аналитика
               </button>
-              <div className="text-sm text-text-secondary">
-                Обновляется каждые 30 сек
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Ключевые метрики */}
-        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 mb-6">
-          <h3 className="font-rajdhani text-xl font-bold text-white mb-4">🎯 Ключевые метрики</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-surface-sidebar rounded-lg p-4">
-              <div className="text-text-secondary text-sm">Среднее время ожидания</div>
-              <div className="text-2xl font-bold text-yellow-400">
-                {analyticsData.queueWaitTimes.length > 0 
-                  ? `${(analyticsData.queueWaitTimes.reduce((sum, item) => sum + (item.avgWaitTime || 0), 0) / analyticsData.queueWaitTimes.length).toFixed(1)}м`
-                  : '0м'
-                }
-              </div>
-              <div className="text-xs text-yellow-300 mt-1">в очереди</div>
+              <button
+                onClick={() => setActiveTab('reports')}
+                className={`px-4 py-2 rounded-lg font-rajdhani font-bold transition-all duration-200 ${
+                  activeTab === 'reports' 
+                    ? 'bg-accent-primary text-white shadow-lg' 
+                    : 'bg-surface-sidebar text-text-secondary hover:text-white hover:bg-surface-card'
+                }`}
+              >
+                📋 Отчеты
+              </button>
             </div>
             
-            <div className="bg-surface-sidebar rounded-lg p-4">
-              <div className="text-text-secondary text-sm">Загрузка системы</div>
-              <div className="text-2xl font-bold text-green-400">
-                {analyticsData.botLoadingStats.length > 0 
-                  ? `${(analyticsData.botLoadingStats.reduce((sum, item) => sum + (item.loadPercentage || 0), 0) / analyticsData.botLoadingStats.length).toFixed(1)}%`
-                  : '0%'
-                }
+            {activeTab === 'analytics' && (
+              <div className="flex items-center space-x-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Временной период
+                  </label>
+                  <select
+                    value={timeRange}
+                    onChange={(e) => setTimeRange(e.target.value)}
+                    className="px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                  >
+                    <option value="24h">Последние 24 часа</option>
+                    <option value="7d">Последние 7 дней</option>
+                    <option value="30d">Последние 30 дней</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Фильтр по боту
+                  </label>
+                  <select
+                    value={selectedBot}
+                    onChange={(e) => setSelectedBot(e.target.value)}
+                    className="px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                  >
+                    <option value="all">Все боты</option>
+                    {botsList.map(bot => (
+                      <option key={bot.id} value={bot.id}>
+                        {bot.name || `Bot #${bot.id.substring(0, 8)}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleRefresh}
+                    className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-blue-600 transition-colors font-rajdhani font-bold"
+                  >
+                    🔄 Обновить
+                  </button>
+                  <div className="text-sm text-text-secondary">
+                    Обновляется каждые 30 сек
+                  </div>
+                </div>
               </div>
-              <div className="text-xs text-green-300 mt-1">средняя</div>
-            </div>
-            
-            <div className="bg-surface-sidebar rounded-lg p-4">
-              <div className="text-text-secondary text-sm">Успешность активации</div>
-              <div className="text-2xl font-bold text-blue-400">
-                {analyticsData.activationStats.successful && analyticsData.activationStats.failed
-                  ? `${((analyticsData.activationStats.successful.reduce((a, b) => a + b, 0) / 
-                      (analyticsData.activationStats.successful.reduce((a, b) => a + b, 0) + 
-                       analyticsData.activationStats.failed.reduce((a, b) => a + b, 0))) * 100).toFixed(1)}%`
-                  : '0%'
-                }
-              </div>
-              <div className="text-xs text-blue-300 mt-1">активаций</div>
-            </div>
-            
-            <div className="bg-surface-sidebar rounded-lg p-4">
-              <div className="text-text-secondary text-sm">Эффективность приоритетов</div>
-              <div className="text-2xl font-bold text-purple-400">
-                {Object.keys(analyticsData.priorityEffectiveness).length > 0 
-                  ? `${(Object.values(analyticsData.priorityEffectiveness).reduce((sum, item) => sum + (item.activationRate || 0), 0) / Object.keys(analyticsData.priorityEffectiveness).length).toFixed(1)}%`
-                  : '0%'
-                }
-              </div>
-              <div className="text-xs text-purple-300 mt-1">средняя</div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Графики аналитики */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* График времени ожидания */}
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-            <h3 className="font-rajdhani text-xl font-bold text-white mb-4">⏱️ Время ожидания в очереди</h3>
-            <ProfitChart
-              type="line"
-              data={getWaitTimeChartData()}
-              title="Среднее время ожидания активации ставок"
-            />
-          </div>
+        {/* Отображение контента в зависимости от выбранной вкладки */}
+        {activeTab === 'analytics' ? (
+          <div className="space-y-6">
+            {/* Ключевые метрики */}
+            <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+              <h3 className="font-rajdhani text-xl font-bold text-white mb-4">🎯 Ключевые метрики</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-surface-sidebar rounded-lg p-4">
+                  <div className="text-text-secondary text-sm">Среднее время ожидания</div>
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {analyticsData.queueWaitTimes.length > 0 
+                      ? `${(analyticsData.queueWaitTimes.reduce((sum, item) => sum + (item.avgWaitTime || 0), 0) / analyticsData.queueWaitTimes.length).toFixed(1)}м`
+                      : '0м'
+                    }
+                  </div>
+                  <div className="text-xs text-yellow-300 mt-1">в очереди</div>
+                </div>
+                
+                <div className="bg-surface-sidebar rounded-lg p-4">
+                  <div className="text-text-secondary text-sm">Загрузка системы</div>
+                  <div className="text-2xl font-bold text-green-400">
+                    {analyticsData.botLoadingStats.length > 0 
+                      ? `${(analyticsData.botLoadingStats.reduce((sum, item) => sum + (item.loadPercentage || 0), 0) / analyticsData.botLoadingStats.length).toFixed(1)}%`
+                      : '0%'
+                    }
+                  </div>
+                  <div className="text-xs text-green-300 mt-1">средняя</div>
+                </div>
+                
+                <div className="bg-surface-sidebar rounded-lg p-4">
+                  <div className="text-text-secondary text-sm">Успешность активации</div>
+                  <div className="text-2xl font-bold text-blue-400">
+                    {analyticsData.activationStats.successful && analyticsData.activationStats.failed
+                      ? `${((analyticsData.activationStats.successful.reduce((a, b) => a + b, 0) / 
+                          (analyticsData.activationStats.successful.reduce((a, b) => a + b, 0) + 
+                           analyticsData.activationStats.failed.reduce((a, b) => a + b, 0))) * 100).toFixed(1)}%`
+                      : '0%'
+                    }
+                  </div>
+                  <div className="text-xs text-blue-300 mt-1">активаций</div>
+                </div>
+                
+                <div className="bg-surface-sidebar rounded-lg p-4">
+                  <div className="text-text-secondary text-sm">Эффективность приоритетов</div>
+                  <div className="text-2xl font-bold text-purple-400">
+                    {Object.keys(analyticsData.priorityEffectiveness).length > 0 
+                      ? `${(Object.values(analyticsData.priorityEffectiveness).reduce((sum, item) => sum + (item.activationRate || 0), 0) / Object.keys(analyticsData.priorityEffectiveness).length).toFixed(1)}%`
+                      : '0%'
+                    }
+                  </div>
+                  <div className="text-xs text-purple-300 mt-1">средняя</div>
+                </div>
+              </div>
+            </div>
 
-          {/* График загрузки системы */}
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-            <h3 className="font-rajdhani text-xl font-bold text-white mb-4">📈 Загрузка системы</h3>
-            <ProfitChart
-              type="line"
-              data={getBotLoadingChartData()}
-              title="Процент загрузки системы ботов"
-            />
-          </div>
+            {/* Графики аналитики */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              {/* График времени ожидания */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+                <h3 className="font-rajdhani text-xl font-bold text-white mb-4">⏱️ Время ожидания в очереди</h3>
+                <ProfitChart
+                  type="line"
+                  data={getWaitTimeChartData()}
+                  title="Среднее время ожидания активации ставок"
+                />
+              </div>
 
-          {/* График статистики активации */}
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-            <h3 className="font-rajdhani text-xl font-bold text-white mb-4">🎯 Статистика активации</h3>
-            <ProfitChart
-              type="bar"
-              data={getActivationRateChartData()}
-              title="Успешность активации ставок из очереди"
-            />
-          </div>
+              {/* График загрузки системы */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+                <h3 className="font-rajdhani text-xl font-bold text-white mb-4">📈 Загрузка системы</h3>
+                <ProfitChart
+                  type="line"
+                  data={getBotLoadingChartData()}
+                  title="Процент загрузки системы ботов"
+                />
+              </div>
 
-          {/* График эффективности приоритетов */}
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
-            <h3 className="font-rajdhani text-xl font-bold text-white mb-4">🏆 Эффективность приоритетов</h3>
-            <ProfitChart
-              type="doughnut"
-              data={getPriorityEffectivenessData()}
-              title="Распределение активаций по приоритетам"
-            />
-          </div>
-        </div>
+              {/* График статистики активации */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+                <h3 className="font-rajdhani text-xl font-bold text-white mb-4">🎯 Статистика активации</h3>
+                <ProfitChart
+                  type="bar"
+                  data={getActivationRateChartData()}
+                  title="Успешность активации ставок из очереди"
+                />
+              </div>
 
-        {/* Детальная таблица статистики */}
-        <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 mt-6">
-          <h3 className="font-rajdhani text-xl font-bold text-white mb-4">📋 Детальная статистика по ботам</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-text-secondary">
-              <thead className="text-xs text-text-secondary uppercase bg-surface-sidebar">
-                <tr>
-                  <th scope="col" className="px-4 py-3">Бот</th>
-                  <th scope="col" className="px-4 py-3">Приоритет</th>
-                  <th scope="col" className="px-4 py-3">Ср. время ожидания</th>
-                  <th scope="col" className="px-4 py-3">Активаций</th>
-                  <th scope="col" className="px-4 py-3">Успешность</th>
-                  <th scope="col" className="px-4 py-3">Загрузка</th>
-                </tr>
-              </thead>
-              <tbody>
-                {botsList.map(bot => (
-                  <tr key={bot.id} className="bg-surface-card border-b border-border-primary hover:bg-surface-sidebar">
-                    <td className="px-4 py-4 font-medium text-white whitespace-nowrap">
-                      {bot.name || `Bot #${bot.id.substring(0, 8)}`}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="bg-accent-primary text-white px-2 py-1 rounded-full text-xs">
-                        {bot.priority_order || 'Не установлен'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-yellow-400">
-                      {Math.floor(Math.random() * 5) + 1}м {Math.floor(Math.random() * 60)}с
-                    </td>
-                    <td className="px-4 py-4 text-blue-400">
-                      {Math.floor(Math.random() * 100) + 20}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="text-green-400 font-bold">
-                        {(Math.random() * 20 + 80).toFixed(1)}%
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                        <div 
-                          className="bg-green-600 h-2.5 rounded-full" 
-                          style={{ width: `${Math.floor(Math.random() * 100)}%` }}
-                        ></div>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              {/* График эффективности приоритетов */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+                <h3 className="font-rajdhani text-xl font-bold text-white mb-4">🏆 Эффективность приоритетов</h3>
+                <ProfitChart
+                  type="doughnut"
+                  data={getPriorityEffectivenessData()}
+                  title="Распределение активаций по приоритетам"
+                />
+              </div>
+            </div>
+
+            {/* Детальная таблица статистики */}
+            <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+              <h3 className="font-rajdhani text-xl font-bold text-white mb-4">📋 Детальная статистика по ботам</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-text-secondary">
+                  <thead className="text-xs text-text-secondary uppercase bg-surface-sidebar">
+                    <tr>
+                      <th scope="col" className="px-4 py-3">Бот</th>
+                      <th scope="col" className="px-4 py-3">Приоритет</th>
+                      <th scope="col" className="px-4 py-3">Ср. время ожидания</th>
+                      <th scope="col" className="px-4 py-3">Активаций</th>
+                      <th scope="col" className="px-4 py-3">Успешность</th>
+                      <th scope="col" className="px-4 py-3">Загрузка</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {botsList.map(bot => (
+                      <tr key={bot.id} className="bg-surface-card border-b border-border-primary hover:bg-surface-sidebar">
+                        <td className="px-4 py-4 font-medium text-white whitespace-nowrap">
+                          {bot.name || `Bot #${bot.id.substring(0, 8)}`}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="bg-accent-primary text-white px-2 py-1 rounded-full text-xs">
+                            {bot.priority_order || 'Не установлен'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-yellow-400">
+                          {Math.floor(Math.random() * 5) + 1}м {Math.floor(Math.random() * 60)}с
+                        </td>
+                        <td className="px-4 py-4 text-blue-400">
+                          {Math.floor(Math.random() * 100) + 20}
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className="text-green-400 font-bold">
+                            {(Math.random() * 20 + 80).toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                            <div 
+                              className="bg-green-600 h-2.5 rounded-full" 
+                              style={{ width: `${Math.floor(Math.random() * 100)}%` }}
+                            ></div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <BotReports />
+        )}
       </div>
     </div>
   );
