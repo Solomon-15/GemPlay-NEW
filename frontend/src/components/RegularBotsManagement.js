@@ -397,23 +397,6 @@ const RegularBotsManagement = () => {
     }
   };
 
-  // Обработчики для новых действий расширенной системы
-  const handleToggleBotStatus = async (bot) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/admin/bots/${bot.id}/toggle-status`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.success) {
-        showSuccessRU(`Бот ${bot.name} ${bot.is_active ? 'отключен' : 'включен'}`);
-        await fetchBotsList();
-      }
-    } catch (error) {
-      console.error('Ошибка переключения статуса бота:', error);
-      showErrorRU('Ошибка при изменении статуса бота');
-    }
-  };
     // Валидация перед созданием
     const validation = validateExtendedBotForm(botForm);
     if (!validation.isValid) {
