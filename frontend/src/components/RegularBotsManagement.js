@@ -1580,7 +1580,7 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleActiveBetsModal(bot)}
-                        className="text-blue-400 hover:text-blue-300 underline font-roboto cursor-pointer"
+                        className="text-blue-400 hover:text-blue-300 underline font-roboto text-sm cursor-pointer"
                         title="Показать активные ставки"
                       >
                         {bot.active_bets || 0}
