@@ -268,6 +268,7 @@ class UserGem(BaseModel):
 class Game(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     creator_id: str
+    creator_type: str = "user"  # "user", "bot", "human_bot"
     opponent_id: Optional[str] = None
     creator_move: Optional[GameMove] = None
     opponent_move: Optional[GameMove] = None
@@ -286,6 +287,7 @@ class Game(BaseModel):
     reveal_deadline: Optional[datetime] = None  # Крайний срок для reveal
     is_bot_game: bool = False
     bot_id: Optional[str] = None
+    bot_type: Optional[str] = None  # "REGULAR", "HUMAN"
     is_regular_bot_game: bool = False  # Флаг для игр против обычных ботов (без комиссии)
 
 class Transaction(BaseModel):
