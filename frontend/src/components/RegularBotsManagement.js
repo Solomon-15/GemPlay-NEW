@@ -858,34 +858,7 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const handleForceCompleteModal = (bot) => {
-    setSelectedBotForForceComplete(bot);
-    setIsForceCompleteModalOpen(true);
-  };
 
-  const handleForceCompleteCycle = async () => {
-    if (!selectedBotForForceComplete) return;
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/admin/bots/${selectedBotForForceComplete.id}/force-complete-cycle`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      showSuccessRU(`Цикл бота завершён принудительно. Прибыль: $${response.data.profit.toFixed(2)}`);
-      setIsForceCompleteModalOpen(false);
-      setSelectedBotForForceComplete(null);
-      
-      // Обновляем данные
-      await fetchStats();
-      await fetchBotsList();
-      await fetchActiveBetsStats();
-    } catch (error) {
-      console.error('Error force completing cycle:', error);
-      const errorMessage = error.response?.data?.detail || 'Ошибка при принудительном завершении цикла';
-      showErrorRU(errorMessage);
-    }
-  };
 
   // Функция для просмотра накопителей прибыли конкретного бота
   const handleOpenBotProfitModal = async (bot) => {
