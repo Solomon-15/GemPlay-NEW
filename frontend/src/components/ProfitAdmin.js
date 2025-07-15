@@ -1045,7 +1045,7 @@ const ProfitAdmin = ({ user }) => {
                                 </svg>
                               </button>
                               <div>
-                                <div className="text-sm font-rajdhani font-bold text-white">{date}</div>
+                                <div className="text-sm font-roboto font-bold text-white">{date}</div>
                                 <div className="text-xs text-text-secondary">{time}</div>
                               </div>
                             </div>
