@@ -227,6 +227,22 @@ const RegularBotsManagement = () => {
     }
   };
 
+  // Новая функция для получения детального анализа win rate
+  const fetchBotWinRateAnalysis = async (botId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bots/${botId}/win-rate-analysis`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching bot win rate analysis:', error);
+      showErrorRU('Ошибка при загрузке анализа win rate');
+      return null;
+    }
+  };
+
   const fetchBotSettings = async () => {
     try {
       const token = localStorage.getItem('token');
