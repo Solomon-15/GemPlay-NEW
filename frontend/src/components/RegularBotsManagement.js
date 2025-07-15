@@ -1730,7 +1730,7 @@ const RegularBotsManagement = () => {
                         {getBotTypeName(bot.bot_type)}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {bot.creation_mode === 'always-first' ? 'Always First' : 
                          bot.creation_mode === 'after-all' ? 'After All' : 'Queue-Based'}
