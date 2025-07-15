@@ -1750,7 +1750,9 @@ const RegularBotsManagement = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-rajdhani text-xl font-bold text-white">Создать обычного бота</h3>
+              <h3 className="font-rajdhani text-xl font-bold text-white">
+                {editingBot ? 'Редактировать бота' : 'Создать обычного бота'}
+              </h3>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
                 className="text-gray-400 hover:text-white"
