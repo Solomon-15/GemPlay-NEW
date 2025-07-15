@@ -9148,13 +9148,84 @@ async def create_bot_bet(bot: Bot) -> bool:
     except Exception as e:
         logger.error(f"Error creating bot bet: {e}")
         return False
+
+async def get_next_bot_in_queue() -> dict:
+    """Get the next bot in queue based on creation mode and priority."""
+    try:
+        # Получаем глобальные настройки
+        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        max_active_bets = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
         
-        logger.info(f"Bot {bot.id} created bet {game.id} for ${total_value}")
-        return True
+        # Проверяем текущие активные ставки
+        current_active_bets = await db.games.count_documents({
+            "creator_type": "bot",
+            "bot_type": "REGULAR",
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
         
+        if current_active_bets >= max_active_bets:
+            return {"message": "Global bet limit reached", "bot": None}
+        
+        # Получаем всех активных ботов
+        all_bots = await db.bots.find({
+            "type": "REGULAR",
+            "is_active": True
+        }).to_list(100)
+        
+        # Фильтруем ботов по режимам создания ставок
+        always_first_bots = []
+        queue_based_bots = []
+        after_all_bots = []
+        
+        for bot in all_bots:
+            # Проверяем индивидуальные лимиты бота
+            max_individual_bets = bot.get("max_individual_bets", 12)
+            current_bot_bets = await db.games.count_documents({
+                "creator_id": bot["id"],
+                "creator_type": "bot",
+                "status": {"$in": ["WAITING", "ACTIVE"]}
+            })
+            
+            if current_bot_bets >= max_individual_bets:
+                continue  # Бот достиг своего лимита
+            
+            # Проверяем время последней ставки
+            if bot.get("last_bet_time"):
+                time_since_last_bet = (datetime.utcnow() - bot["last_bet_time"]).total_seconds()
+                if time_since_last_bet < bot.get("recreate_timer", 30):
+                    continue  # Бот еще не готов к новой ставке
+            
+            creation_mode = bot.get("creation_mode", "queue-based")
+            if creation_mode == "always-first":
+                always_first_bots.append(bot)
+            elif creation_mode == "after-all":
+                after_all_bots.append(bot)
+            else:
+                queue_based_bots.append(bot)
+        
+        # Сортируем по приоритету
+        always_first_bots.sort(key=lambda x: x.get("priority_order", 999))
+        queue_based_bots.sort(key=lambda x: x.get("priority_order", 999))
+        after_all_bots.sort(key=lambda x: x.get("priority_order", 999))
+        
+        # Выбираем следующего бота
+        if always_first_bots:
+            return {"message": "Always-first bot selected", "bot": always_first_bots[0]}
+        elif queue_based_bots:
+            return {"message": "Queue-based bot selected", "bot": queue_based_bots[0]}
+        elif after_all_bots:
+            # Проверяем, что все приоритетные боты уже создали ставки
+            priority_bots_count = len(always_first_bots) + len(queue_based_bots)
+            if priority_bots_count == 0:
+                return {"message": "After-all bot selected", "bot": after_all_bots[0]}
+            else:
+                return {"message": "Waiting for priority bots", "bot": None}
+        else:
+            return {"message": "No bots available", "bot": None}
+            
     except Exception as e:
-        logger.error(f"Error creating bot bet: {e}")
-        return False
+        logger.error(f"Error getting next bot in queue: {e}")
+        return {"message": "Error occurred", "bot": None}
 
 @api_router.get("/admin/bots/settings", response_model=dict)
 async def get_bot_settings(current_user: User = Depends(get_current_admin)):
