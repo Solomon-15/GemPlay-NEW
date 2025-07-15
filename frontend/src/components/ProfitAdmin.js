@@ -1005,7 +1005,7 @@ const ProfitAdmin = ({ user }) => {
                                 </span>
                               </td>
                               <td className="px-4 py-3">
-                                <div className="text-sm text-white">
+                                <div className="text-sm font-roboto text-white">
                                   {getPlayerInfo(entry)}
                                 </div>
                                 {entry.source_user_id && (
