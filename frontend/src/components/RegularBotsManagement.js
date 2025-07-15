@@ -1764,9 +1764,35 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-accent-primary font-rajdhani font-bold">
-                        {bot.win_rate}%
-                      </div>
+                      <button
+                        onClick={() => handleWinRateAnalysis(bot)}
+                        disabled={loadingStates[bot.id]}
+                        className="text-accent-primary font-rajdhani font-bold hover:text-accent-secondary transition-colors underline cursor-pointer"
+                        title="Анализ win rate"
+                      >
+                        {loadingStates[bot.id] ? (
+                          <span className="flex items-center space-x-1">
+                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>...</span>
+                          </span>
+                        ) : (
+                          <>
+                            {bot.win_rate}%
+                            {winRateAnalysisData[bot.id] && (
+                              <span className={`ml-1 text-xs ${
+                                Math.abs(winRateAnalysisData[bot.id].win_rate_difference) <= 5
+                                  ? 'text-green-400'
+                                  : 'text-yellow-400'
+                              }`}>
+                                {Math.abs(winRateAnalysisData[bot.id].win_rate_difference) <= 5 ? '✓' : '⚠'}
+                              </span>
+                            )}
+                          </>
+                        )}
+                      </button>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-orange-400 font-rajdhani font-bold">
