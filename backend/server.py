@@ -9142,8 +9142,8 @@ async def recalculate_bot_bets(
         )
 
 async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
-                                win_percentage: int, min_bet: float, max_bet: float):
-    """Generate optimized bet amounts for a bot's cycle using only gem-based values."""
+                                win_percentage: int, min_bet: float, avg_bet: float, bet_distribution: str = "medium"):
+    """Generate optimized bet amounts for a bot's cycle using new distribution logic."""
     try:
         # Ensure bot has sufficient gems
         await BotGameLogic.setup_bot_gems(bot_id, db)
@@ -9190,7 +9190,7 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
                     while total_value < target_min and attempts < max_attempts:
                         # Choose a random gem type to add
                         gem_to_add = random.choice(selected_gem_types)
-                        # Add gems that don't exceed max_bet too much
+                        # Add gems that don't exceed target_max too much
                         if total_value + gem_values[gem_to_add] <= target_max * 1.2:  # Allow 20% overage
                             gem_combination[gem_to_add] += 1
                             total_value += gem_values[gem_to_add]
@@ -9221,18 +9221,35 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
             fallback_quantity = max(1, min(int(target_max), int(target_min)))
             return {'Ruby': fallback_quantity}, fallback_quantity
         
-        # Generate bet amounts using gem-based logic
+        def get_bet_range_for_distribution(bet_distribution: str, min_bet: float, avg_bet: float):
+            """Определяет диапазон ставок на основе типа распределения."""
+            if bet_distribution == "small":
+                # Больше маленьких ставок - ближе к минимальной
+                bias_min = min_bet
+                bias_max = min_bet + (avg_bet - min_bet) * 0.6  # 60% от диапазона
+            elif bet_distribution == "large":
+                # Больше крупных ставок - ближе к средней
+                bias_min = min_bet + (avg_bet - min_bet) * 0.4  # 40% от диапазона
+                bias_max = avg_bet
+            else:  # medium
+                # Равномерное распределение
+                bias_min = min_bet + (avg_bet - min_bet) * 0.2  # 20% от диапазона
+                bias_max = min_bet + (avg_bet - min_bet) * 0.8  # 80% от диапазона
+            
+            return bias_min, bias_max
+        
+        # Generate bet amounts using new distribution logic
         bet_data = []  # Will store (gem_combination, bet_amount) tuples
         total_generated = 0
         
-        # Calculate average bet amount
-        avg_bet = cycle_total_amount / cycle_length
+        # Get bias range based on distribution type
+        bias_min, bias_max = get_bet_range_for_distribution(bet_distribution, min_bet, avg_bet)
         
         for i in range(cycle_length):
             if i == cycle_length - 1:  # Last bet: use remaining amount
                 remaining = int(cycle_total_amount - total_generated)
                 target_min = max(int(min_bet), remaining - 10)  # Small tolerance
-                target_max = max(int(max_bet), remaining + 10)
+                target_max = max(int(avg_bet), remaining + 10)
                 gem_combination, bet_amount = generate_valid_gem_combination(target_min, target_max)
                 # Force exact remaining amount for last bet
                 if bet_amount != remaining and remaining >= int(min_bet):
@@ -9246,10 +9263,22 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
                         # Try to create a reasonable combination
                         gem_combination = {'Ruby': remaining}  # Fallback
             else:
-                # Generate bet within normal range, but aim for average
-                variance = avg_bet * 0.3  # 30% variance from average
-                target_min = max(int(min_bet), int(avg_bet - variance))
-                target_max = min(int(max_bet), int(avg_bet + variance))
+                # Generate bet within bias range based on distribution
+                if bet_distribution == "small":
+                    # Концентрация на малых ставках
+                    variance = (bias_max - bias_min) * 0.3
+                    target_center = bias_min + (bias_max - bias_min) * 0.3
+                elif bet_distribution == "large":
+                    # Концентрация на крупных ставках
+                    variance = (bias_max - bias_min) * 0.3
+                    target_center = bias_min + (bias_max - bias_min) * 0.7
+                else:  # medium
+                    # Равномерное распределение
+                    variance = (bias_max - bias_min) * 0.4
+                    target_center = (bias_min + bias_max) / 2
+                
+                target_min = max(int(min_bet), int(target_center - variance))
+                target_max = min(int(avg_bet), int(target_center + variance))
                 gem_combination, bet_amount = generate_valid_gem_combination(target_min, target_max)
             
             bet_data.append((gem_combination, bet_amount))
@@ -9284,7 +9313,7 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
                             bet_data[i] = (gems, current_amount - subtract_amount)
                             difference += subtract_amount
         
-        # Randomly assign winning/losing outcome (for future reference)
+        # Randomly assign winning/losing outcome respecting win_percentage
         bet_outcomes = ['win'] * winning_bets_count + ['lose'] * losing_bets_count
         random.shuffle(bet_outcomes)
         
@@ -9310,7 +9339,9 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
                     "cycle_position": i + 1,
                     "intended_outcome": outcome,
                     "cycle_id": f"{bot_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
-                    "gem_based_bet": True  # Mark as gem-based bet
+                    "gem_based_bet": True,  # Mark as gem-based bet
+                    "bet_distribution": bet_distribution,  # Store distribution type
+                    "win_percentage": win_percentage  # Store target win percentage
                 }
             )
             
@@ -9318,7 +9349,7 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
             created_bets.append(game.dict())
         
         final_total = sum(bet_amount for _, bet_amount in bet_data)
-        logger.info(f"Generated {len(created_bets)} gem-based bets for bot {bot_id} with total ${final_total}")
+        logger.info(f"Generated {len(created_bets)} gem-based bets for bot {bot_id} with total ${final_total} using {bet_distribution} distribution")
         return created_bets
         
     except Exception as e:
