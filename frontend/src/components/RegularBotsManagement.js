@@ -1658,12 +1658,12 @@ const RegularBotsManagement = () => {
                         {bot.games_stats.wins}/{bot.games_stats.losses}/{bot.games_stats.draws}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-orange-400 font-roboto text-sm">
                         {bot.win_percentage || 60}%
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <button
                         onClick={() => handleWinRateAnalysis(bot)}
                         disabled={loadingStates[bot.id]}
