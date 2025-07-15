@@ -82,17 +82,21 @@ const ProfitAdmin = ({ user }) => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const [statsResponse, settingsResponse] = await Promise.all([
+      const [statsResponse, settingsResponse, botIntegrationResponse] = await Promise.all([
         axios.get(`${API}/admin/profit/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/admin/profit/commission-settings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/admin/profit/bot-integration`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
 
       setStats(statsResponse.data);
       setCommissionSettings(settingsResponse.data);
+      setBotIntegrationData(botIntegrationResponse.data);
     } catch (error) {
       console.error('Ошибка загрузки данных о прибыли:', error);
     } finally {
