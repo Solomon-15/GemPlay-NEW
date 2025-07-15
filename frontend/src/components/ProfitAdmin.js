@@ -955,12 +955,12 @@ const ProfitAdmin = ({ user }) => {
                     <table className="w-full">
                       <thead className="bg-surface-sidebar">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">ID</th>
-                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата и время</th>
-                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Сумма</th>
-                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Тип действия</th>
-                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Игрок</th>
-                          <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Описание</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">ID</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Дата и время</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Сумма</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Тип действия</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Игрок</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Описание</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border-primary">
