@@ -10244,22 +10244,43 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
             fallback_quantity = max(1, min(int(target_max), int(target_min)))
             return {'Ruby': fallback_quantity}, fallback_quantity
         
-        def get_bet_range_for_distribution(bet_distribution: str, min_bet: float, avg_bet: float):
-            """Определяет диапазон ставок на основе типа распределения."""
+        def get_bet_range_for_distribution(bet_distribution: str, min_bet: float, avg_bet: float, bot_behavior: str = "balanced"):
+            """Определяет диапазон ставок на основе типа распределения и поведения бота."""
+            base_range = avg_bet - min_bet
+            
+            # Базовые настройки распределения
             if bet_distribution == "small":
                 # Больше маленьких ставок - ближе к минимальной
                 bias_min = min_bet
-                bias_max = min_bet + (avg_bet - min_bet) * 0.6  # 60% от диапазона
+                bias_max = min_bet + base_range * 0.6  # 60% от диапазона
             elif bet_distribution == "large":
                 # Больше крупных ставок - ближе к средней
-                bias_min = min_bet + (avg_bet - min_bet) * 0.4  # 40% от диапазона
+                bias_min = min_bet + base_range * 0.4  # 40% от диапазона
                 bias_max = avg_bet
             else:  # medium
                 # Равномерное распределение
-                bias_min = min_bet + (avg_bet - min_bet) * 0.2  # 20% от диапазона
-                bias_max = min_bet + (avg_bet - min_bet) * 0.8  # 80% от диапазона
+                bias_min = min_bet + base_range * 0.2  # 20% от диапазона
+                bias_max = min_bet + base_range * 0.8  # 80% от диапазона
             
-            return bias_min, bias_max
+            # Поведенческие корректировки
+            if bot_behavior == 'aggressive':
+                # Агрессивные боты делают более разнообразные ставки
+                variance_multiplier = 1.2
+                bias_min *= 0.9  # Немного снижаем минимум
+                bias_max *= 1.1  # Немного повышаем максимум
+            elif bot_behavior == 'cautious':
+                # Осторожные боты более консервативны
+                variance_multiplier = 0.8
+                bias_min *= 1.1  # Немного повышаем минимум
+                bias_max *= 0.9  # Немного снижаем максимум
+            else:  # balanced
+                variance_multiplier = 1.0
+            
+            # Убеждаемся, что диапазон разумный
+            bias_min = max(min_bet, bias_min)
+            bias_max = min(avg_bet, bias_max)
+            
+            return bias_min, bias_max, variance_multiplier
         
         # Generate bet amounts using new distribution logic
         bet_data = []  # Will store (gem_combination, bet_amount) tuples
