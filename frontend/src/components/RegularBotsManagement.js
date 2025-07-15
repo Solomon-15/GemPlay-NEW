@@ -117,6 +117,24 @@ const RegularBotsManagement = () => {
     max_bet: 10
   });
 
+  // Get bot type name by ID
+  const getBotTypeName = (botTypeId) => {
+    // Поиск в стандартных типах
+    const standardType = botTypes.find(type => type.id === botTypeId);
+    if (standardType) {
+      return standardType.name;
+    }
+    
+    // Поиск в кастомных типах
+    const customType = customBotTypes.find(type => type.id === botTypeId);
+    if (customType) {
+      return customType.name;
+    }
+    
+    // Fallback для неизвестных типов
+    return botTypeId || 'Стандартный';
+  };
+
   // Calculate cycle total amount automatically
   const calculateCycleTotalAmount = () => {
     let selectedType = botTypes.find(type => type.id === botForm.bot_type);
