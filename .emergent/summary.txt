@@ -1,94 +1,79 @@
 <analysis>
-The previous AI engineer successfully transitioned the GemPlay application from MVP, primarily enhancing administrative and bot system functionalities. Initial efforts involved expanding the Admin Panel's Users section with comprehensive user management features, including gem modification and deletion, user banning, and activity flagging, supported by backend API updates. UI refinements in this section focused on user feedback (e.g., icon removal, text changes). A significant development was the introduction of a two-tiered bot system (Regular and Human bots), incorporating extensive configurable behaviors and dedicated admin panel sections. The engineer established core API structures for bot management, created frontend components for bot creation, settings, and statistics (active/disabled counts, delete functionality, dynamic bet calculation, active bets/cycle history popups, win percentage column). Key UI updates were made to bot cards in the user lobby for visual unification, consistent naming (Bot), and corrected Accept button functionality. The engineer also refined general currency display to show integer gem amounts and completely overhauled the Profit admin section to include full historical data, filtering, and export. The final task addressed a critical Game already has an opponent error during bot game acceptance, implementing an atomic update in the backend. The trajectory concludes with most explicit requests fulfilled, except for the complete, unified pagination implementation across the application.
+The previous AI engineer demonstrated a highly structured and iterative development approach, initially focusing on enhancing the GemPlay application's Profit Admin section. This involved completing and refining eight profit overview tiles, implementing interactive modal windows for detailed insights, and integrating period filtering (day/week/month) across these views, including backend API adjustments and frontend UI updates. Following this, the engineer successfully introduced charting capabilities using Chart.js to visualize profit data. The work then transitioned to a complex multi-phase development of a comprehensive bot management system. This system includes global and individual active bet limits, a queuing mechanism for bot bets, bot priority management with UI controls, and an advanced analytics and monitoring dashboard. The engineer meticulously addressed user requirements, breaking down large features into manageable phases, and systematically implemented changes across both frontend (React) and backend (FastAPI, MongoDB) components. The trajectory concludes with the initiation of the Advanced Analytics and Monitoring phase for bots.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting game, built with React, FastAPI, and MongoDB. Initially, it featured a 3-step battle modal, commit-reveal logic, client-side gem selection, detailed balance display, and 6% commission. Subsequent enhancements included real-time Lobby updates, UI/UX improvements (sticky header, mobile adaptation), backend admin functions (balance reset, profit stats), full Russian localization, and a user-to-user gem gifting system with notifications. The Admin Panel's Users section was extensively expanded with new columns (Gems quantity/value, Bets, Games, Registration/Last Visit) and actions (Suspicious Flag, Infoblock, Delete user, with UI refinements). A comprehensive bot system was introduced, supporting Regular and Human bots with individual custom parameters (name, timers, cycle settings, win percentage, bet range) and global settings for max active bets. Dedicated admin sections (СТАВКИ, ОБЫЧНЫЕ БОТЫ, HUMAN БОТЫ) were developed for management, statistics (active/disabled counts, detailed active bets/cycle history, win percentage column), and dynamic bet calculation. Recent tasks also focused on unifying bot card UI/UX in the user lobby to match Live Players (single Bot name, Accept button, SVG gem icons, integer amounts), overhauling the Profit admin section (full history, filters, export), and resolving a Game already has an opponent error during bot game acceptance. A broad requirement for unified pagination (10 items/page) across all app sections was also stated.
+The GemPlay application is an asynchronous PvP gem betting game with React frontend, FastAPI backend, and MongoDB. Core functionalities include a 3-step battle modal, commit-reveal logic, balance display, and commission handling. Recent enhancements focused on Admin Panel improvements, pagination, bet management, global and per-user/bot reset functions, standardized currency formatting, and Shop UI integration. A key requirement was disabling commission for Player vs. Regular Bot and Bot vs. Bot matches, accumulating bot profit in a protected container, and updating UI to hide commission details for bot games. The Profit History section gained a tabbed interface with compact transaction cards and filtering. The Profit Overview Tiles (8 distinct ones: Commission from Bets, Commission from Human-bots, Commission from Gifts, Bot Revenue, Frozen Funds, Total Profit, Expenses, Net Profit) required interactive, detailed modals, supporting pagination and period filtering (day/week/month), and displaying values in virtual dollars.
+
+The most recent overarching requirement is a robust **Bot Management System**. This includes:
+1.  **Global Limit:** A maximum of 50 active WAITING bets from all regular bots combined, adjustable via a new Bot Settings admin tab.
+2.  **Individual Bot Limits:** Each bot to have a configurable active bet limit (default 12 games per cycle), with the sum of individual limits not exceeding the global limit. This should be inline editable in the Regular Bots Management table.
+3.  **Bet Queueing:** Bets exceeding the global or individual limits should wait in a queue.
+4.  **Priority Management:** Bots should have a priority order, manageable via Up/Down buttons in the Regular Bots Management table, determining which bot's queued bets are activated first.
+5.  **Automatic Activation:** When a slot opens (e.g., a WAITING bet is accepted), the next bet from the queue (based on priority) should activate.
+6.  **UI Display:** The Available Bots section should reflect the global limit (default 50), with pagination of 10 items. A new Monitoring section within Regular Bots Management should display queue status and analytics.
 </product_requirements>
 
 <key_technical_concepts>
-- **React**: Components, hooks (, , , ), custom hooks.
-- **State Management**: React Context API (, ).
-- **Backend**: FastAPI for RESTful APIs, Pydantic for data models.
-- **Database**: MongoDB for data persistence, atomic updates for concurrency.
-- **API Integration**:  for HTTP requests.
-- **Styling**: Tailwind CSS for responsive UI.
-- **Localization**: Multi-language support (Russian, English).
+-   **React**: Frontend development with functional components, hooks (, ), and custom hooks ().
+-   **FastAPI**: Backend RESTful API, Pydantic, MongoDB for persistence.
+-   **API Integration**:  for HTTP requests.
+-   **UI/UX**: Tailwind CSS, Russian localization, tabbed interfaces, modal windows.
+-   **Data Visualization**:  and  for interactive charts.
+-   **Concurrency**: Asynchronous operations for game logic and bot actions.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a React frontend with a FastAPI backend and MongoDB.
+The application follows a standard MERN-stack architecture (React, FastAPI, MongoDB).
 
 
 
 -   :
-    *   **Importance**: Central FastAPI backend for all APIs, game logic, and user/bot management.
-    *   **Changes**: Implemented extensive user admin (gem modify/delete, ban, suspicious flag). Added full bot management endpoints (toggle, create regular/individual, start, retrieve stats/details, global settings, active bets). Implemented bot deletion endpoint. Enhanced bot bet generation logic to ensure gem-based, integer amounts (, , ). Added new endpoints for detailed bot active bets and cycle history (, ).  now triggers dynamic bet recalculation. Fixed a race condition in  with an atomic update.
-
+    *   **Importance**: Central FastAPI backend.
+    *   **Changes**: Extended with pagination, game logic fixes, commission refinements. Crucially, new API endpoints were added for profit details (, , , , ) all updated to support  query parameters. New models and API endpoints were added for global bot settings (), individual bot settings (), bot priority management (, ), and preliminary bot analytics (, , ).
 -   :
-    *   **Importance**: Admin UI for user management.
-    *   **Changes**: Enhanced user detail display (gems, bets, games, dates) and actions (flags, delete). UI adapted for Russian localization and improved gem breakdown tooltip.
-
+    *   **Importance**: Admin interface for profit.
+    *   **Changes**: Refactored for tabbed interface (Profit History, Overview). Completed 8 informational tiles with correct data. Added interactive modals for all tiles, initially for commission config, then detailed data display. Implemented period filtering (day/week/month) toggles and logic for modals. Integrated  for data visualization within profit modals.
 -   :
-    *   **Importance**: Admin UI for regular bot configuration and monitoring.
-    *   **Changes**: Added active/disabled bot counters, Delete Bot button with confirmation modal. Implemented Создать Бота modal for custom bot creation. Added detailed Активные ставки and Цикл columns with pop-up modals for bet lists and game history. Integrated % Выигрыша column and a Recalculate button for dynamic bet generation.
-
+    *   **Importance**: Main admin panel navigation.
+    *   **Changes**: Added new navigation tabs for Настройки ботов (Bot Settings) and Аналитика ботов (Bot Analytics), integrating respective new components.
 -   :
-    *   **Importance**: Displays available games and ongoing battles.
-    *   **Changes**: Updated to fetch real active bot bets via new backend endpoint. Replaced  with  for bot display to unify UI, ensuring consistent design. Corrected  logic for bots and updated  to use grid layout. Ensured integer currency display for bet amounts. Configured bot  to open .
-
--   :
-    *   **Importance**: Reusable card component for players and bots.
-    *   **Changes**: Added  prop to dynamically display Bot as name, use a default bot avatar, and format gem bet amounts with SVG icons as integers.
-
--   :
-    *   **Importance**: Admin UI for financial overview.
-    *   **Changes**: Renamed Записи прибыли to История прибыли. Expanded to show all profit types with detailed columns, filters by type/date, and CSV/Excel export.
-
--   :
-    *   **Importance**: Displays system notifications.
-    *   **Changes**: Improved error message rendering to handle object messages gracefully, preventing React runtime errors.
-
--   , , :
-    *   **Importance**: UI components for game creation, inventory, and battle moves.
-    *   **Changes**: Applied integer currency formatting across various displays to remove decimal values.
-
--   :
-    *   **Importance**: Utility for currency formatting.
-    *   **Changes**: Modified default  behavior to suppress decimal places by default.
-
--   :
-    *   **Importance**: Main navigation for admin sections.
-    *   **Changes**: Updated sidebar to include new bot management sections.
-
--    (NEW),  (NEW):
-    *   **Importance**: Dedicated admin panels for managing bets and human bots.
-    *   **Changes**: Initial creation with placeholder structures.
-
--   :
-    *   **Importance**: Global CSS styles.
-    *   **Changes**: Added custom scrollbar and tooltip styles.
-
--   :
-    *   **Importance**: Main HTML file.
-    *   **Changes**: Removed Made with Emergent badge.
+    *   **Importance**: Manages regular bots.
+    *   **Changes**: Enhanced to include inline editing for individual bot active bet limits. A new Monitoring section was added to display queue status and related analytics. New columns for Лимит ставок (Bet Limit) and Приоритет (Priority) were added, with Вверх/Вниз buttons for priority adjustments.  was updated to sort by priority.
+-   : Reusable React component for pagination.
+-   : Custom React hook for pagination state.
+-   : Utility for currency/gem formatting.
+-    (NEW): Component for displaying various types of charts using Chart.js.
+-    (NEW): Utility functions for preparing data for charts.
+-    (NEW): Component for managing global bot settings (e.g., maximum active bets).
+-    (NEW): Component to host various bot analytics charts and reports.
+-    (NEW): Component for detailed bot reports, intended to be integrated into .
+-   Temporary HTML Demo Files: , , , , , , , , , . These files served for testing and demonstration.
 </code_architecture>
 
 <pending_tasks>
-- **Unified Pagination**: Implement consistent pagination logic (10 items per page) across all tables and lists in the application, including  and , as specified in Chat Message 198.
+-   **Complete Bot Analytics & Monitoring Implementation:** Finish integrating detailed analytics and monitoring for bots, populating  and  with actual data and visualizations. This includes fetching data from newly created backend analytics endpoints and displaying it.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was addressing a critical  error that occurred when attempting to accept a bot's bet and select a move in the Bot Players section. This error specifically manifested as Game already has an opponent. The problem was diagnosed as a React rendering issue caused by an error object being passed directly to a UI component (specifically ) and a potential backend race condition in the  API endpoint.
+Immediately before this summary request, the AI engineer was actively working on **Фаза 4: Расширенная аналитика и мониторинг** for the bot management system. This phase aims to provide detailed analytics on bot activity, queue wait times, and performance.
 
-The previous actions involved:
-1.  **Frontend ():** Modified the  component to gracefully handle and display error messages, ensuring that if an error object is received, it is converted into a readable string before rendering.
-2.  **Frontend ():** Enhanced error handling in  and  functions to ensure that only string messages are passed to notification display functions, preventing the  error.
-3.  **Backend ():** Implemented an atomic update operation within the  FastAPI endpoint. This change ensures that the  field for a game is updated only if it is still null, effectively preventing the Game already has an opponent race condition when multiple requests try to join the same game simultaneously.
+The following specific actions have been taken:
+1.  **Frontend ():** A new component  was created to serve as the main container for bot analytics.
+2.  **Frontend ():** A new component  was created, intended to display detailed reports within .
+3.  **Frontend ():** A new navigation tab named Аналитика ботов (Bot Analytics) was added to the main Admin Panel, pointing to the  component.
+4.  **Backend ():** New API endpoints were added for fetching bot analytics data:
+    *   
+    *   
+    *   
+    These endpoints are prepared to deliver relevant data for the analytics views.
+5.  **Service Restart:** Both frontend and backend services were restarted to apply the new changes.
 
-The last completed action was the successful application of the backend fix, and the trajectory ends with the AI engineer updating  to reflect this resolution. All services were confirmed to be running.
+The work is currently in progress, with the main components and API endpoints for analytics set up. The next step is to integrate the  into  and populate them with the actual analytics logic and UI.
 </current_work>
 
 <optional_next_step>
-The next step is to implement the unified pagination (10 items per page) across all relevant sections of the application, starting with the admin panel tables.
+Integrate  into  and begin populating it with data fetched from the new backend analytics endpoints to display charts and detailed reports.
+
+Direct quote: Теперь добавлю компонент отчетов в BotAnalytics: (Chat Message 309).
 </optional_next_step>

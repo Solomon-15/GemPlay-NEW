@@ -9,7 +9,7 @@ import string
 import hashlib
 
 # Configuration
-BASE_URL = "https://f6f5b865-a999-477a-a702-8e36f9f18ab6.preview.emergentagent.com/api"
+BASE_URL = "https://cc691930-a6c0-47a7-8521-266c2a4eb979.preview.emergentagent.com/api"
 TEST_USER = {
     "username": "refresh_test_user",
     "email": "refresh_test@test.com",
