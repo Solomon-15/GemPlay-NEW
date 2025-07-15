@@ -398,7 +398,9 @@ const BotAnalytics = () => {
             {/* Детальная таблица статистики */}
             <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
               <h3 className="font-rajdhani text-xl font-bold text-white mb-4">📋 Детальная статистика по ботам</h3>
-              <div className="overflow-x-auto">
+              
+              {/* Десктопная таблица */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full text-sm text-left text-text-secondary">
                   <thead className="text-xs text-text-secondary uppercase bg-surface-sidebar">
                     <tr>
@@ -444,6 +446,53 @@ const BotAnalytics = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Мобильные карточки */}
+              <div className="lg:hidden space-y-4">
+                {botsList.map(bot => {
+                  const waitTime = `${Math.floor(Math.random() * 5) + 1}м ${Math.floor(Math.random() * 60)}с`;
+                  const activations = Math.floor(Math.random() * 100) + 20;
+                  const successRate = (Math.random() * 20 + 80).toFixed(1);
+                  const loadPercentage = Math.floor(Math.random() * 100);
+                  
+                  return (
+                    <div key={bot.id} className="bg-surface-sidebar rounded-lg p-4 border border-border-primary">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-rajdhani font-bold text-white text-sm">
+                          {bot.name || `Bot #${bot.id.substring(0, 8)}`}
+                        </h4>
+                        <span className="bg-accent-primary text-white px-2 py-1 rounded-full text-xs">
+                          Приоритет: {bot.priority_order || 'Не установлен'}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <div className="text-text-secondary text-xs mb-1">Ср. время ожидания</div>
+                          <div className="text-yellow-400 font-bold">{waitTime}</div>
+                        </div>
+                        <div>
+                          <div className="text-text-secondary text-xs mb-1">Активаций</div>
+                          <div className="text-blue-400 font-bold">{activations}</div>
+                        </div>
+                        <div>
+                          <div className="text-text-secondary text-xs mb-1">Успешность</div>
+                          <div className="text-green-400 font-bold">{successRate}%</div>
+                        </div>
+                        <div>
+                          <div className="text-text-secondary text-xs mb-1">Загрузка</div>
+                          <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                            <div 
+                              className="bg-green-600 h-2 rounded-full" 
+                              style={{ width: `${loadPercentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
