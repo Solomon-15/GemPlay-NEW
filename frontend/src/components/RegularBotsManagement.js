@@ -1814,238 +1814,288 @@ const RegularBotsManagement = () => {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Имя бота */}
               <div>
-                <label className="block text-text-secondary text-sm mb-1">Имя бота:</label>
+                <label className="block text-text-secondary text-sm mb-2">Имя бота:</label>
                 <input
                   type="text"
                   value={botForm.name}
                   onChange={(e) => {
                     setBotForm({...botForm, name: e.target.value});
-                    validateFormInRealTime({...botForm, name: e.target.value});
+                    validateExtendedFormInRealTime({...botForm, name: e.target.value});
                   }}
                   placeholder="Bot #001"
-                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                 />
-              </div>
-
-              {/* Таймеры */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-text-secondary text-sm mb-1">Таймер паузы (сек):</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="3600"
-                    value={botForm.pause_timer}
-                    onChange={(e) => {
-                      const newForm = {...botForm, pause_timer: parseInt(e.target.value) || 5};
-                      setBotForm(newForm);
-                      validateFormInRealTime(newForm);
-                    }}
-                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-text-secondary text-sm mb-1">Интервал пересоздания (сек):</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={botForm.recreate_interval}
-                    onChange={(e) => {
-                      const newForm = {...botForm, recreate_interval: parseInt(e.target.value) || 30};
-                      setBotForm(newForm);
-                      validateFormInRealTime(newForm);
-                    }}
-                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                  />
+                <div className="text-xs text-text-secondary mt-1">
+                  Отображается только в админке, игрокам показывается просто "Bot"
                 </div>
               </div>
 
-              {/* Настройки цикла */}
+              {/* Режим создания ставок */}
               <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Настройки цикла</h4>
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
+                <h4 className="font-rajdhani font-bold text-white mb-3">Интервал пересоздания ставок</h4>
+                <div className="space-y-2">
+                  <label className="flex items-center">
                     <input
-                      type="number"
-                      min="1"
-                      value={botForm.cycle_games}
+                      type="radio"
+                      name="creation_mode"
+                      value="always-first"
+                      checked={botForm.creation_mode === 'always-first'}
                       onChange={(e) => {
-                        const newForm = {...botForm, cycle_games: parseInt(e.target.value) || 12};
+                        const newForm = {...botForm, creation_mode: e.target.value};
                         setBotForm(newForm);
-                        validateFormInRealTime(newForm);
+                        validateExtendedFormInRealTime(newForm);
                       }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                      className="mr-3"
                     />
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Сумма за цикл ($):</label>
+                    <div>
+                      <span className="text-white font-medium">Always First</span>
+                      <div className="text-xs text-text-secondary">Всегда создаёт новую ставку вне очереди</div>
+                    </div>
+                  </label>
+                  <label className="flex items-center">
                     <input
-                      type="number"
-                      min="1"
-                      value={botForm.cycle_total_amount}
+                      type="radio"
+                      name="creation_mode"
+                      value="queue-based"
+                      checked={botForm.creation_mode === 'queue-based'}
                       onChange={(e) => {
-                        const newForm = {...botForm, cycle_total_amount: parseFloat(e.target.value) || 500};
+                        const newForm = {...botForm, creation_mode: e.target.value};
                         setBotForm(newForm);
-                        validateFormInRealTime(newForm);
+                        validateExtendedFormInRealTime(newForm);
                       }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                      className="mr-3"
                     />
+                    <div>
+                      <span className="text-white font-medium">Queue-Based</span>
+                      <div className="text-xs text-text-secondary">Ждёт свою очередь по циклу</div>
+                    </div>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="creation_mode"
+                      value="after-all"
+                      checked={botForm.creation_mode === 'after-all'}
+                      onChange={(e) => {
+                        const newForm = {...botForm, creation_mode: e.target.value};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="mr-3"
+                    />
+                    <div>
+                      <span className="text-white font-medium">After All</span>
+                      <div className="text-xs text-text-secondary">Создаёт ставку после завершения всех циклов других ботов</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Количество игр в цикле */}
+              <div>
+                <label className="block text-text-secondary text-sm mb-2">Игр в цикле:</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={botForm.cycle_games}
+                  onChange={(e) => {
+                    const newForm = {...botForm, cycle_games: parseInt(e.target.value) || 12};
+                    setBotForm(newForm);
+                    validateExtendedFormInRealTime(newForm);
+                  }}
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                />
+                <div className="text-xs text-text-secondary mt-1">
+                  Количество игр в одном цикле (по умолчанию 12)
+                </div>
+              </div>
+
+              {/* Поведение бота */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Поведение бота (Bot Behavior)</h4>
+                <div className="space-y-2">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="bot_behavior"
+                      value="aggressive"
+                      checked={botForm.bot_behavior === 'aggressive'}
+                      onChange={(e) => {
+                        const newForm = {...botForm, bot_behavior: e.target.value};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="mr-3"
+                    />
+                    <div>
+                      <span className="text-red-400 font-medium">Aggressive</span>
+                      <div className="text-xs text-text-secondary">Дорогие гемы, высокие ставки (множитель 1.0)</div>
+                    </div>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="bot_behavior"
+                      value="balanced"
+                      checked={botForm.bot_behavior === 'balanced'}
+                      onChange={(e) => {
+                        const newForm = {...botForm, bot_behavior: e.target.value};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="mr-3"
+                    />
+                    <div>
+                      <span className="text-yellow-400 font-medium">Balanced</span>
+                      <div className="text-xs text-text-secondary">Средние гемы, умеренные ставки (множитель 0.75)</div>
+                    </div>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="bot_behavior"
+                      value="cautious"
+                      checked={botForm.bot_behavior === 'cautious'}
+                      onChange={(e) => {
+                        const newForm = {...botForm, bot_behavior: e.target.value};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="mr-3"
+                    />
+                    <div>
+                      <span className="text-green-400 font-medium">Cautious</span>
+                      <div className="text-xs text-text-secondary">Дешёвые гемы, минимальные ставки (множитель 0.5)</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Тип бота */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Тип бота (Bot Type)</h4>
+                <div className="flex items-center space-x-3">
+                  <div className="flex-1">
+                    <select
+                      value={botForm.bot_type}
+                      onChange={(e) => {
+                        const newForm = {...botForm, bot_type: e.target.value};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    >
+                      {botTypes.map(type => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                      {customBotTypes.map(type => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+                  <button
+                    onClick={() => setIsCustomTypeModalOpen(true)}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-rajdhani font-bold text-sm"
+                  >
+                    Создать тип
+                  </button>
+                </div>
+                
+                {/* Кастомные поля для custom типа */}
+                {botForm.bot_type === 'custom' && (
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-text-secondary text-xs mb-1">Мин. ставка:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={botForm.custom_min_bet}
+                        onChange={(e) => {
+                          const newForm = {...botForm, custom_min_bet: parseInt(e.target.value) || 1};
+                          setBotForm(newForm);
+                          validateExtendedFormInRealTime(newForm);
+                        }}
+                        className="w-full px-2 py-1 bg-surface-sidebar border border-border-primary rounded text-white text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-text-secondary text-xs mb-1">Макс. ставка:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={botForm.custom_max_bet}
+                        onChange={(e) => {
+                          const newForm = {...botForm, custom_max_bet: parseInt(e.target.value) || 10};
+                          setBotForm(newForm);
+                          validateExtendedFormInRealTime(newForm);
+                        }}
+                        className="w-full px-2 py-1 bg-surface-sidebar border border-border-primary rounded text-white text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Автоматически рассчитанная сумма за цикл */}
+              <div className="border border-blue-500 bg-blue-900 bg-opacity-20 rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-blue-400 mb-2">Автоматический расчёт</h4>
+                <div className="text-lg font-bold text-white">
+                  Сумма за цикл: ${botForm.cycle_total_amount}
+                </div>
+                <div className="text-sm text-blue-300 mt-1">
+                  Рассчитывается по формуле: Среднее значение диапазона × Игр в цикле × Множитель поведения
+                </div>
+              </div>
+
+              {/* Настройки выигрыша */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Параметры выигрыша</h4>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">% выигрыша:</label>
+                    <label className="block text-text-secondary text-sm mb-1">Win Rate % (цель):</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
-                      value={botForm.win_percentage}
+                      value={botForm.win_rate_percent}
                       onChange={(e) => {
-                        const newForm = {...botForm, win_percentage: parseFloat(e.target.value) || 60};
+                        const newForm = {...botForm, win_rate_percent: parseInt(e.target.value) || 60};
                         setBotForm(newForm);
-                        validateFormInRealTime(newForm);
+                        validateExtendedFormInRealTime(newForm);
                       }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Стратегия прибыли:</label>
+                    <select
+                      value={botForm.profit_strategy}
+                      onChange={(e) => {
+                        const newForm = {...botForm, profit_strategy: e.target.value};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    >
+                      <option value="start-positive">В начале в плюсе</option>
+                      <option value="balanced">Баланс</option>
+                      <option value="start-negative">В минусе</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              {/* Диапазон ставок */}
+              {/* Поведение */}
               <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Диапазон ставок</h4>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Мин. ставка ($):</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={botForm.min_bet_amount}
-                      onChange={(e) => {
-                        const newForm = {...botForm, min_bet_amount: parseFloat(e.target.value) || 1};
-                        setBotForm(newForm);
-                        validateFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Сред. ставка ($):</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={botForm.avg_bet_amount}
-                      onChange={(e) => {
-                        const newForm = {...botForm, avg_bet_amount: parseFloat(e.target.value) || 50};
-                        setBotForm(newForm);
-                        validateFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                    />
-                  </div>
-                </div>
-                
-                {/* Алгоритм распределения ставок */}
-                <div className="mb-4">
-                  <label className="block text-text-secondary text-sm mb-2">Характер распределения ставок:</label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="bet_distribution"
-                        value="large"
-                        checked={botForm.bet_distribution === 'large'}
-                        onChange={(e) => {
-                          const newForm = {...botForm, bet_distribution: e.target.value};
-                          setBotForm(newForm);
-                          validateFormInRealTime(newForm);
-                        }}
-                        className="mr-2"
-                      />
-                      <span className="text-text-secondary text-sm">Больше крупных ставок (ближе к средней ставке)</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="bet_distribution"
-                        value="medium"
-                        checked={botForm.bet_distribution === 'medium'}
-                        onChange={(e) => {
-                          const newForm = {...botForm, bet_distribution: e.target.value};
-                          setBotForm(newForm);
-                          validateFormInRealTime(newForm);
-                        }}
-                        className="mr-2"
-                      />
-                      <span className="text-text-secondary text-sm">Больше средних ставок (равномерное распределение)</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="bet_distribution"
-                        value="small"
-                        checked={botForm.bet_distribution === 'small'}
-                        onChange={(e) => {
-                          const newForm = {...botForm, bet_distribution: e.target.value};
-                          setBotForm(newForm);
-                          validateFormInRealTime(newForm);
-                        }}
-                        className="mr-2"
-                      />
-                      <span className="text-text-secondary text-sm">Больше маленьких ставок (ближе к минимальной ставке)</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Отображение ошибок валидации */}
-              {!mathValidation.isValid && (
-                <div className="border border-red-500 bg-red-900 bg-opacity-20 rounded-lg p-4">
-                  <h4 className="font-rajdhani font-bold text-red-400 mb-2">Ошибки валидации:</h4>
-                  <ul className="space-y-1">
-                    {mathValidation.errors.map((error, index) => (
-                      <li key={index} className="text-red-300 text-sm">• {error}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Информация о математике */}
-              <div className="border border-blue-500 bg-blue-900 bg-opacity-20 rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-blue-400 mb-2">Расчетная информация:</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-text-secondary">Средняя ставка из цикла:</span>
-                    <span className="text-blue-300 ml-2">
-                      ${botForm.cycle_games > 0 ? (botForm.cycle_total_amount / botForm.cycle_games).toFixed(2) : '0.00'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-text-secondary">Макс. возможная сумма:</span>
-                    <span className="text-blue-300 ml-2">
-                      ${(botForm.cycle_games * botForm.avg_bet_amount).toFixed(2)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-text-secondary">Мин. возможная сумма:</span>
-                    <span className="text-blue-300 ml-2">
-                      ${(botForm.cycle_games * botForm.min_bet_amount).toFixed(2)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-text-secondary">Ожидаемых побед:</span>
-                    <span className="text-blue-300 ml-2">
-                      {Math.round(botForm.cycle_games * botForm.win_percentage / 100)} из {botForm.cycle_games}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Дополнительные настройки */}
-              <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Поведение</h4>
+                <h4 className="font-rajdhani font-bold text-white mb-3">Дополнительные настройки</h4>
                 <div className="space-y-2">
                   <label className="flex items-center">
                     <input
@@ -2068,13 +2118,25 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
+              {/* Отображение ошибок валидации */}
+              {!extendedValidation.isValid && (
+                <div className="border border-red-500 bg-red-900 bg-opacity-20 rounded-lg p-4">
+                  <h4 className="font-rajdhani font-bold text-red-400 mb-2">Ошибки валидации:</h4>
+                  <ul className="space-y-1">
+                    {extendedValidation.errors.map((error, index) => (
+                      <li key={index} className="text-red-300 text-sm">• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {/* Кнопки */}
               <div className="flex space-x-3 pt-4">
                 <button
-                  onClick={createIndividualBot}
-                  disabled={!mathValidation.isValid}
+                  onClick={createExtendedBot}
+                  disabled={!extendedValidation.isValid}
                   className={`px-6 py-3 rounded-lg font-rajdhani font-bold transition-colors ${
-                    mathValidation.isValid 
+                    extendedValidation.isValid 
                       ? 'bg-accent-primary text-white hover:bg-accent-secondary' 
                       : 'bg-gray-600 text-gray-400 cursor-not-allowed'
                   }`}
@@ -2084,9 +2146,9 @@ const RegularBotsManagement = () => {
                 <button
                   onClick={() => {
                     setIsCreateModalOpen(false);
-                    setMathValidation({ isValid: true, errors: [] });
+                    setExtendedValidation({ isValid: true, errors: [] });
                   }}
-                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-rajdhani font-bold"
                 >
                   Отмена
                 </button>
