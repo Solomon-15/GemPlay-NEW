@@ -74,15 +74,23 @@ const RegularBotsManagement = () => {
   // Form states for creating bot
   const [botForm, setBotForm] = useState({
     name: '',
-    pause_timer: 5,
+    pause_timer: 5, // теперь в секундах
     recreate_interval: 30,
     cycle_games: 12,
     cycle_total_amount: 500,
     win_percentage: 60,
     min_bet_amount: 1,
-    max_bet_amount: 100,
+    avg_bet_amount: 50, // заменено с max_bet_amount на avg_bet_amount
     can_accept_bets: false,
-    can_play_with_bots: false
+    can_play_with_bots: false,
+    // Новые поля для распределения ставок
+    bet_distribution: 'medium' // 'large', 'medium', 'small'
+  });
+
+  // Состояние для валидации математики
+  const [mathValidation, setMathValidation] = useState({
+    isValid: true,
+    errors: []
   });
 
   const { showSuccessRU, showErrorRU } = useNotifications();
