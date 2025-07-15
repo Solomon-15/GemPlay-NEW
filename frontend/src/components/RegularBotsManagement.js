@@ -2190,7 +2190,7 @@ const RegularBotsManagement = () => {
                   <div className="bg-surface-sidebar rounded-lg p-3">
                     <div className="text-text-secondary text-sm">Общая сумма</div>
                     <div className="text-lg font-bold text-accent-primary">
-                      ${activeBetsData?.reduce((sum, bet) => sum + (bet.amount || 0), 0) || 0}
+                      ${activeBetsData?.reduce((sum, bet) => sum + (bet.bet_amount || bet.amount || 0), 0) || 0}
                     </div>
                   </div>
                 </div>
