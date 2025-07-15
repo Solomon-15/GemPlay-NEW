@@ -2214,15 +2214,16 @@ const RegularBotsManagement = () => {
       {/* Модальное окно просмотра активных ставок */}
       {isActiveBetsModalOpen && selectedBotForActiveBets && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-russo text-xl text-white">
-                Активные ставки - {selectedBotForActiveBets.name}
+                Активные ставки — Bot {selectedBotForActiveBets.name}
               </h3>
               <button
                 onClick={() => {
                   setIsActiveBetsModalOpen(false);
                   setSelectedBotForActiveBets(null);
+                  setActiveBetsData(null);
                 }}
                 className="text-text-secondary hover:text-white transition-colors"
               >
@@ -2230,48 +2231,126 @@ const RegularBotsManagement = () => {
               </button>
             </div>
             
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="bg-surface-sidebar rounded-lg p-3">
-                  <div className="text-text-secondary text-sm">Активных ставок</div>
-                  <div className="text-lg font-bold text-blue-400">
-                    {selectedBotForActiveBets.active_bets || 0}
-                  </div>
-                </div>
-                <div className="bg-surface-sidebar rounded-lg p-3">
-                  <div className="text-text-secondary text-sm">Статус бота</div>
-                  <div className={`text-lg font-bold ${selectedBotForActiveBets.is_active ? 'text-green-400' : 'text-red-400'}`}>
-                    {selectedBotForActiveBets.is_active ? 'Активен' : 'Отключен'}
-                  </div>
-                </div>
+            {loadingActiveBets ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
+                <span className="ml-3 text-text-secondary">Загрузка активных ставок...</span>
               </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-surface-sidebar rounded-lg p-3">
+                    <div className="text-text-secondary text-sm">Активных ставок</div>
+                    <div className="text-lg font-bold text-blue-400">
+                      {activeBetsData?.length || 0}
+                    </div>
+                  </div>
+                  <div className="bg-surface-sidebar rounded-lg p-3">
+                    <div className="text-text-secondary text-sm">Статус бота</div>
+                    <div className={`text-lg font-bold ${selectedBotForActiveBets.is_active ? 'text-green-400' : 'text-red-400'}`}>
+                      {selectedBotForActiveBets.is_active ? 'Активен' : 'Отключен'}
+                    </div>
+                  </div>
+                  <div className="bg-surface-sidebar rounded-lg p-3">
+                    <div className="text-text-secondary text-sm">Общая сумма</div>
+                    <div className="text-lg font-bold text-accent-primary">
+                      ${activeBetsData?.reduce((sum, bet) => sum + (bet.amount || 0), 0) || 0}
+                    </div>
+                  </div>
+                </div>
 
-              <div className="bg-blue-900 bg-opacity-20 border border-blue-500 rounded-lg p-4">
-                <div className="flex items-center space-x-2">
-                  <span className="text-blue-400 text-xl">ℹ️</span>
-                  <div>
-                    <h4 className="font-rajdhani font-bold text-blue-400">Информация</h4>
-                    <p className="text-blue-300 text-sm">
-                      {selectedBotForActiveBets.active_bets > 0 
-                        ? `Бот имеет ${selectedBotForActiveBets.active_bets} активных ставок, ожидающих соперников.`
-                        : 'У бота нет активных ставок в данный момент.'
-                      }
-                    </p>
+                {!activeBetsData || activeBetsData.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-text-secondary text-lg">
+                      У бота нет активных ставок в данный момент
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-surface-sidebar">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">ID</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Дата</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Время</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Сумма</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Ход</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Статус</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Соперник</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border-primary">
+                        {activeBetsData.map((bet, index) => {
+                          const betDate = new Date(bet.created_at);
+                          const dateStr = betDate.toLocaleDateString('ru-RU');
+                          const timeStr = betDate.toLocaleTimeString('ru-RU');
+                          
+                          return (
+                            <tr key={bet.id || index} className="hover:bg-surface-sidebar transition-colors">
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-roboto text-white font-mono">
+                                  {bet.id ? bet.id.substring(0, 8) : `#${index + 1}`}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-roboto text-white">
+                                  {dateStr}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-roboto text-white">
+                                  {timeStr}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-roboto font-bold text-accent-primary">
+                                  ${bet.amount || 0}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-roboto text-white">
+                                  {bet.move || bet.selected_gem || '—'}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-roboto font-medium ${
+                                  bet.status === 'active' ? 'bg-green-100 text-green-800' :
+                                  bet.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
+                                  bet.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {bet.status === 'active' ? 'Активна' :
+                                   bet.status === 'waiting' ? 'Ожидает' :
+                                   bet.status === 'completed' ? 'Завершена' :
+                                   bet.status || 'Неизвестно'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-roboto text-white">
+                                  {bet.opponent_name || bet.opponent_id || '—'}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  onClick={() => {
-                    setIsActiveBetsModalOpen(false);
-                    setSelectedBotForActiveBets(null);
-                  }}
-                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-rajdhani font-bold"
-                >
-                  Закрыть
-                </button>
-              </div>
+            )}
+            
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => {
+                  setIsActiveBetsModalOpen(false);
+                  setSelectedBotForActiveBets(null);
+                  setActiveBetsData(null);
+                }}
+                className="px-4 py-2 bg-surface-sidebar text-white rounded-lg hover:bg-opacity-80 transition-colors font-roboto"
+              >
+                Закрыть
+              </button>
             </div>
           </div>
         </div>
