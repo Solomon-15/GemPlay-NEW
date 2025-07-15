@@ -1695,13 +1695,30 @@ const RegularBotsManagement = () => {
                       </button>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleCycleModal(bot)}
-                        className="text-green-400 hover:text-green-300 underline font-roboto text-sm cursor-pointer"
-                        title="Показать историю цикла"
-                      >
-                        {(bot.current_cycle_games || 0)}/{bot.cycle_games || 12}
-                      </button>
+                      <div className="w-full">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-green-400 font-roboto text-sm font-medium">
+                            {(bot.current_cycle_games || 0)}/{bot.cycle_games || 12}
+                          </span>
+                          <button
+                            onClick={() => handleCycleModal(bot)}
+                            className="text-green-400 hover:text-green-300 cursor-pointer p-1"
+                            title="Показать историю цикла"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="w-full bg-surface-sidebar rounded-full h-2">
+                          <div
+                            className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${Math.min(((bot.current_cycle_games || 0) / (bot.cycle_games || 12)) * 100, 100)}%`
+                            }}
+                          ></div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-accent-primary font-roboto text-sm">
