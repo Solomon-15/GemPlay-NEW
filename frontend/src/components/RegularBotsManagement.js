@@ -1654,7 +1654,7 @@ const RegularBotsManagement = () => {
                         className="text-blue-400 hover:text-blue-300 underline font-roboto text-sm cursor-pointer"
                         title="Показать активные ставки"
                       >
-                        {bot.active_bets || 0}
+                        {bot.cycle_games || 0}
                       </button>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
