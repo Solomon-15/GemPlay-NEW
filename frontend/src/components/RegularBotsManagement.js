@@ -1588,44 +1588,8 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-2">
-                        <div className="flex flex-col items-center">
-                          <span className="text-white font-rajdhani font-bold text-lg">
-                            {bot.priority_order || (botsList.indexOf(bot) + 1)}
-                          </span>
-                          <span className="text-text-secondary text-xs">
-                            {priorityType === 'order' ? 'авто' : 'ручной'}
-                          </span>
-                        </div>
-                        
-                        {priorityType === 'manual' && (
-                          <div className="flex flex-col space-y-1">
-                            <button
-                              onClick={() => handleMoveBotUp(bot.id)}
-                              disabled={updatingPriority === bot.id || (bot.priority_order || (botsList.indexOf(bot) + 1)) <= 1}
-                              className={`px-2 py-1 text-xs rounded transition-colors ${
-                                updatingPriority === bot.id || (bot.priority_order || (botsList.indexOf(bot) + 1)) <= 1
-                                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                  : 'bg-blue-600 text-white hover:bg-blue-700'
-                              }`}
-                              title="Повысить приоритет"
-                            >
-                              {updatingPriority === bot.id ? '...' : '↑'}
-                            </button>
-                            <button
-                              onClick={() => handleMoveBotDown(bot.id)}
-                              disabled={updatingPriority === bot.id || (bot.priority_order || (botsList.indexOf(bot) + 1)) >= botsList.length}
-                              className={`px-2 py-1 text-xs rounded transition-colors ${
-                                updatingPriority === bot.id || (bot.priority_order || (botsList.indexOf(bot) + 1)) >= botsList.length
-                                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                  : 'bg-blue-600 text-white hover:bg-blue-700'
-                              }`}
-                              title="Понизить приоритет"
-                            >
-                              {updatingPriority === bot.id ? '...' : '↓'}
-                            </button>
-                          </div>
-                        )}
+                      <div className="text-orange-400 font-rajdhani font-bold">
+                        {bot.win_percentage || 60}%
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
