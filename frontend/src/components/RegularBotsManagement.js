@@ -3040,6 +3040,173 @@ const RegularBotsManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Модальное окно создания кастомного типа бота */}
+      {isCustomTypeModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="font-russo text-xl text-white mb-4">Создать кастомный тип бота</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-text-secondary text-sm mb-1">Название типа:</label>
+                <input
+                  type="text"
+                  value={customTypeForm.name}
+                  onChange={(e) => setCustomTypeForm({...customTypeForm, name: e.target.value})}
+                  placeholder="Custom Type"
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Мин. ставка ($):</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={customTypeForm.min_bet}
+                    onChange={(e) => setCustomTypeForm({...customTypeForm, min_bet: parseInt(e.target.value) || 1})}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Макс. ставка ($):</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={customTypeForm.max_bet}
+                    onChange={(e) => setCustomTypeForm({...customTypeForm, max_bet: parseInt(e.target.value) || 10})}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={createCustomBotType}
+                  disabled={!customTypeForm.name || customTypeForm.min_bet >= customTypeForm.max_bet}
+                  className={`px-6 py-3 rounded-lg font-rajdhani font-bold transition-colors ${
+                    customTypeForm.name && customTypeForm.min_bet < customTypeForm.max_bet
+                      ? 'bg-purple-600 text-white hover:bg-purple-700' 
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Создать тип
+                </button>
+                <button
+                  onClick={() => {
+                    setIsCustomTypeModalOpen(false);
+                    setCustomTypeForm({ name: '', min_bet: 1, max_bet: 10 });
+                  }}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-rajdhani font-bold"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Модальное окно просмотра ставок цикла */}
+      {selectedBotCycle && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-russo text-xl text-white">
+                Ставки цикла - {selectedBotCycle.name}
+              </h3>
+              <button
+                onClick={() => setSelectedBotCycle(null)}
+                className="text-text-secondary hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="bg-surface-sidebar rounded-lg p-3">
+                  <div className="text-text-secondary text-sm">Текущий цикл</div>
+                  <div className="text-lg font-bold text-white">
+                    {selectedBotCycle.current_cycle || 0}/12
+                  </div>
+                </div>
+                <div className="bg-surface-sidebar rounded-lg p-3">
+                  <div className="text-text-secondary text-sm">Сумма цикла</div>
+                  <div className="text-lg font-bold text-blue-400">
+                    ${selectedBotCycle.cycle_total_amount || 0}
+                  </div>
+                </div>
+                <div className="bg-surface-sidebar rounded-lg p-3">
+                  <div className="text-text-secondary text-sm">Win Rate</div>
+                  <div className="text-lg font-bold text-green-400">
+                    {selectedBotCycle.win_rate_percent || 60}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Таблица ставок */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-text-secondary">
+                  <thead className="text-xs text-text-secondary uppercase bg-surface-sidebar">
+                    <tr>
+                      <th className="px-4 py-3">#</th>
+                      <th className="px-4 py-3">Сумма</th>
+                      <th className="px-4 py-3">Гемы</th>
+                      <th className="px-4 py-3">Статус</th>
+                      <th className="px-4 py-3">Результат</th>
+                      <th className="px-4 py-3">Время</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[...Array(12)].map((_, index) => (
+                      <tr key={index} className="bg-surface-card border-b border-border-primary">
+                        <td className="px-4 py-3 font-bold text-white">{index + 1}</td>
+                        <td className="px-4 py-3 text-blue-400">${Math.floor(Math.random() * 100) + 10}</td>
+                        <td className="px-4 py-3">
+                          <span className="text-purple-400">Ruby: {Math.floor(Math.random() * 5) + 1}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            index < 8 ? 'bg-green-600 text-white' : 
+                            index < 10 ? 'bg-yellow-600 text-white' : 
+                            'bg-gray-600 text-gray-300'
+                          }`}>
+                            {index < 8 ? 'Завершено' : index < 10 ? 'Активно' : 'Ожидание'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          {index < 8 ? (
+                            <span className={`font-bold ${Math.random() > 0.4 ? 'text-green-400' : 'text-red-400'}`}>
+                              {Math.random() > 0.4 ? 'Победа' : 'Поражение'}
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-text-secondary">
+                          {index < 8 ? '12:34' : index < 10 ? 'Сейчас' : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  onClick={() => setSelectedBotCycle(null)}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-rajdhani font-bold"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
