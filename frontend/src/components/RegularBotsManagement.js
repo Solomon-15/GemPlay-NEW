@@ -247,7 +247,69 @@ const RegularBotsManagement = () => {
     }
   };
 
+  // Функция валидации математики для создания бота
+  const validateBotMath = (formData) => {
+    const errors = [];
+    
+    // Проверка: (Сумма за цикл) / (Игр в цикле) <= Сред. ставка ($)
+    const avgBetFromCycle = formData.cycle_total_amount / formData.cycle_games;
+    if (avgBetFromCycle > formData.avg_bet_amount) {
+      errors.push(`Средняя ставка ($${formData.avg_bet_amount}) должна быть >= ${avgBetFromCycle.toFixed(2)} (Сумма за цикл / Игр в цикле)`);
+    }
+    
+    // Проверка: Мин. ставка <= Сред. ставка
+    if (formData.min_bet_amount > formData.avg_bet_amount) {
+      errors.push(`Минимальная ставка ($${formData.min_bet_amount}) должна быть <= средней ставки ($${formData.avg_bet_amount})`);
+    }
+    
+    // Проверка: Процент выигрыша должен быть реалистичным
+    if (formData.win_percentage < 0 || formData.win_percentage > 100) {
+      errors.push(`Процент выигрыша должен быть от 0% до 100%`);
+    }
+    
+    // Проверка: Количество игр в цикле должно быть больше 0
+    if (formData.cycle_games <= 0) {
+      errors.push(`Количество игр в цикле должно быть больше 0`);
+    }
+    
+    // Проверка: Сумма за цикл должна быть больше 0
+    if (formData.cycle_total_amount <= 0) {
+      errors.push(`Сумма за цикл должна быть больше 0`);
+    }
+    
+    // Проверка: Можно ли создать валидный набор ставок
+    const maxPossibleSum = formData.cycle_games * formData.avg_bet_amount;
+    if (formData.cycle_total_amount > maxPossibleSum) {
+      errors.push(`Сумма за цикл ($${formData.cycle_total_amount}) не может быть больше максимально возможной суммы ($${maxPossibleSum})`);
+    }
+    
+    const minPossibleSum = formData.cycle_games * formData.min_bet_amount;
+    if (formData.cycle_total_amount < minPossibleSum) {
+      errors.push(`Сумма за цикл ($${formData.cycle_total_amount}) не может быть меньше минимально возможной суммы ($${minPossibleSum})`);
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  };
+
+  // Функция для валидации в реальном времени
+  const validateFormInRealTime = (formData) => {
+    const validation = validateBotMath(formData);
+    setMathValidation(validation);
+    return validation.isValid;
+  };
+
   const createIndividualBot = async () => {
+    // Валидация математики перед созданием
+    const validation = validateBotMath(botForm);
+    if (!validation.isValid) {
+      setMathValidation(validation);
+      showErrorRU(`Ошибка валидации: ${validation.errors.join(', ')}`);
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(`${API}/admin/bots/create-individual`, botForm, {
@@ -264,10 +326,12 @@ const RegularBotsManagement = () => {
         cycle_total_amount: 500,
         win_percentage: 60,
         min_bet_amount: 1,
-        max_bet_amount: 100,
+        avg_bet_amount: 50,
         can_accept_bets: false,
-        can_play_with_bots: false
+        can_play_with_bots: false,
+        bet_distribution: 'medium'
       });
+      setMathValidation({ isValid: true, errors: [] });
       await fetchStats();
       await fetchBotsList();
     } catch (error) {
