@@ -196,24 +196,34 @@ const RegularBotsManagement = () => {
   const fetchBotsList = async () => {
     try {
       const token = localStorage.getItem('token');
-      const { page, limit } = pagination.getPaginationParams();
-      
       const response = await axios.get(`${API}/admin/bots/regular/list`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { page, limit }
+        headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Сортируем ботов по приоритету
-      const sortedBots = (response.data.bots || []).sort((a, b) => {
-        const priorityA = a.priority_order || 999;
-        const priorityB = b.priority_order || 999;
-        return priorityA - priorityB;
+      const sortedBots = response.data.bots.sort((a, b) => {
+        return a.priority_order - b.priority_order;
       });
-      
       setBotsList(sortedBots);
       pagination.updatePagination(response.data.total || 0);
     } catch (error) {
-      console.error('Ошибка загрузки списка ботов:', error);
+      console.error('Error fetching bots:', error);
+      showErrorRU('Ошибка при загрузке ботов');
+    }
+  };
+
+  // Новая функция для получения статуса очереди ботов
+  const fetchBotQueueStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bots/queue-status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching bot queue status:', error);
+      showErrorRU('Ошибка при загрузке статуса очереди');
+      return null;
     }
   };
 
