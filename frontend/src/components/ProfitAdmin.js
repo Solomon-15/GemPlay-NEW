@@ -628,17 +628,23 @@ const ProfitAdmin = ({ user }) => {
                         <circle cx="17" cy="7" r="1" fill="currentColor"/>
                         <circle cx="7" cy="7" r="1" fill="currentColor"/>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
-                        <circle cx="18" cy="15" r="3" strokeWidth="1.5"/>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 14v2l1 1"/>
                       </svg>
                     </div>
                     <div className="bg-blue-500/20 text-blue-400 text-xs font-bold px-2 py-1 rounded-full">
-                      LIVE
+                      AI
                     </div>
                   </div>
-                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Доход от Обычных ботов</h3>
+                  <h3 className="font-roboto text-text-secondary text-sm mb-1">Доход от ботов</h3>
                   <p className="font-russo text-2xl font-bold text-blue-400">{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">Прибыль от циклов обычных ботов</p>
+                  <div className="text-xs text-text-secondary mt-1">
+                    {botIntegrationData && (
+                      <div className="space-y-1">
+                        <p>Активных ботов: {botIntegrationData.bot_stats.active_bots}</p>
+                        <p>Avg Win Rate: {botIntegrationData.bot_stats.avg_win_rate?.toFixed(1) || 0}%</p>
+                        <p>Сегодня: {formatCurrencyWithSymbol(botIntegrationData.bot_revenue.today || 0, true)}</p>
+                      </div>
+                    )}
+                  </div>
                   <p className="text-xs text-blue-300 mt-1">Клик для детализации</p>
                 </div>
               </div>
