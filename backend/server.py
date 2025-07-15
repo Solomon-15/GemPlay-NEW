@@ -9325,6 +9325,29 @@ async def get_regular_bots_list(
             
             win_rate = (wins / total_games * 100) if total_games > 0 else 0
             
+            # Рассчитываем прибыль бота
+            total_bet_amount = await db.games.aggregate([
+                {"$match": {"creator_id": bot.id, "status": "COMPLETED"}},
+                {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+            ]).to_list(1)
+            
+            total_winnings = await db.games.aggregate([
+                {"$match": {"creator_id": bot.id, "status": "COMPLETED", "winner_id": bot.id}},
+                {"$group": {"_id": None, "total": {"$sum": {"$multiply": ["$bet_amount", 2]}}}}
+            ]).to_list(1)
+            
+            total_bet_sum = total_bet_amount[0]['total'] if total_bet_amount else 0
+            total_win_sum = total_winnings[0]['total'] if total_winnings else 0
+            bot_profit_amount = total_win_sum - total_bet_sum
+            bot_profit_percent = (bot_profit_amount / total_bet_sum * 100) if total_bet_sum > 0 else 0
+            
+            # Текущий цикл
+            current_cycle_games = await db.games.count_documents({
+                "creator_id": bot.id,
+                "status": "COMPLETED",
+                "metadata.cycle_id": {"$exists": True}
+            }) % bot_doc.get('cycle_games', 12)
+            
             bot_details.append({
                 "id": bot.id,
                 "name": bot.name or f"Bot #{bot.id[:8]}",
@@ -9338,8 +9361,17 @@ async def get_regular_bots_list(
                     "total": total_games
                 },
                 "win_rate": round(win_rate, 1),
-                "cycle_games": bot_doc.get('cycle_length', 12),  # Используем реальные сохраненные значения
+                "bot_profit_amount": round(bot_profit_amount, 2),
+                "bot_profit_percent": round(bot_profit_percent, 1),
+                "current_cycle_games": current_cycle_games,
+                "cycle_games": bot_doc.get('cycle_games', 12),
                 "cycle_total_amount": bot_doc.get('cycle_total_amount', 500.0),
+                "bot_type_name": bot_doc.get('bot_type_name', 'Type 1'),
+                "bot_type_id": bot_doc.get('bot_type_id', 'type-1'),
+                "creation_mode": bot_doc.get('creation_mode', 'queue-based'),
+                "bot_behavior": bot_doc.get('bot_behavior', 'balanced'),
+                "win_rate_percent": bot_doc.get('win_rate_percent', 60),
+                "profit_strategy": bot_doc.get('profit_strategy', 'balanced'),
                 "min_bet": bot_doc.get('min_bet_amount', 1.0),
                 "max_bet": bot_doc.get('max_bet_amount', 100.0),
                 "pause_timer": bot_doc.get('pause_timer', 5),
