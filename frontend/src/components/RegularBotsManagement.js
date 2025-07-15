@@ -1118,37 +1118,6 @@ const RegularBotsManagement = () => {
             </div>
           </div>
         </div>
-          <div className="bg-surface-sidebar rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-text-secondary text-sm">Сумма лимитов</div>
-                <div className={`font-rajdhani font-bold ${
-                  botsList.reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0) <= globalMaxBets 
-                    ? 'text-green-400' : 'text-red-400'
-                }`}>
-                  {botsList.reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0)}/{globalMaxBets}
-                </div>
-              </div>
-              <div className={`w-3 h-3 rounded-full ${
-                botsList.reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0) <= globalMaxBets 
-                  ? 'bg-green-500' : 'bg-red-500'
-              }`}></div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Кнопка сброса приоритетов */}
-        {priorityType === 'manual' && (
-          <div className="mt-4 flex justify-center">
-            <button
-              onClick={handleResetPriorities}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-rajdhani font-bold"
-              title="Сбросить приоритеты всех ботов"
-            >
-              🔄 Сбросить приоритеты
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Информационные блоки */}
