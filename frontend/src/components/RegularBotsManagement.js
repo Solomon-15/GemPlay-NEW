@@ -1661,7 +1661,7 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-white font-roboto text-sm">
-                        {bot.bot_type || 'Стандартный'}
+                        {getBotTypeName(bot.bot_type)}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
