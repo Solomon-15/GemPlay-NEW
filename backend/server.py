@@ -9440,12 +9440,13 @@ async def update_bot_settings(
                 # Get updated bot data
                 updated_bot = await db.bots.find_one({"id": bot_id})
                 new_bets = await generate_bot_cycle_bets(
-                    bot_id,
-                    updated_bot.get("cycle_length", 12),
-                    updated_bot.get("cycle_total_amount", 500.0),
-                    updated_bot.get("win_percentage", 60),
-                    updated_bot.get("min_bet_amount", 5.0),
-                    updated_bot.get("max_bet_amount", 100.0)
+                    bot_id=bot_id,
+                    cycle_length=updated_bot.get("cycle_length", 12),
+                    cycle_total_amount=updated_bot.get("cycle_total_amount", 500.0),
+                    win_percentage=updated_bot.get("win_percentage", 60),
+                    min_bet=updated_bot.get("min_bet_amount", 5.0),
+                    avg_bet=updated_bot.get("avg_bet_amount", 50.0),
+                    bet_distribution=updated_bot.get("bet_distribution", "medium")
                 )
                 generated_bets = len(new_bets)
             except Exception as e:
