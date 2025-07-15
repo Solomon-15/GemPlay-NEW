@@ -522,21 +522,29 @@ const RegularBotsManagement = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Set editing bot with all saved parameters
-      setEditingBot({
-        id: bot.id,
+      // Загружаем все параметры бота в форму создания
+      setBotForm({
         name: response.data.bot.name || '',
         pause_timer: response.data.bot.pause_timer || 5,
-        recreate_timer: response.data.bot.recreate_timer || 30,
-        cycle_games: response.data.bot.cycle_games || 12,
-        cycle_total_amount: response.data.bot.cycle_total_amount || 500,
+        recreation_interval: response.data.bot.recreation_interval || 30,
+        games_per_cycle: response.data.bot.games_per_cycle || 12,
+        cycle_amount: response.data.bot.cycle_total_amount || 500,
         win_percentage: response.data.bot.win_percentage || 60,
         min_bet_amount: response.data.bot.min_bet_amount || 1,
-        max_bet_amount: response.data.bot.max_bet_amount || 100,
-        can_accept_bets: response.data.bot.can_accept_bets || false,
-        can_play_with_bots: response.data.bot.can_play_with_bots || false
+        avg_bet_amount: response.data.bot.avg_bet_amount || 50,
+        bet_distribution: response.data.bot.bet_distribution || {
+          small: false,
+          medium: false,
+          large: false
+        },
+        bot_behavior: response.data.bot.bot_behavior || 'balanced',
+        bot_type: response.data.bot.bot_type || 'Стандартный',
+        creation_mode: response.data.bot.creation_mode || 'queue-based'
       });
-      setIsEditModalOpen(true);
+      
+      // Устанавливаем режим редактирования
+      setEditingBot(response.data.bot);
+      setIsCreateModalOpen(true);
     } catch (error) {
       console.error('Ошибка загрузки данных бота:', error);
       showErrorRU('Ошибка при загрузке данных бота');
