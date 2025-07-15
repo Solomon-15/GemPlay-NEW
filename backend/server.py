@@ -1797,6 +1797,169 @@ async def gift_gems(
 
 # Endpoint removed - Frontend now handles gem combination logic
 
+@api_router.post("/admin/bots/create-extended", response_model=dict)
+async def create_extended_bot(
+    bot_config: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """Create extended bot with new system (admin only)."""
+    try:
+        name = bot_config.get("name", "")
+        creation_mode = bot_config.get("creation_mode", "queue-based")
+        cycle_games = bot_config.get("cycle_games", 12)
+        bot_behavior = bot_config.get("bot_behavior", "balanced")
+        bot_type = bot_config.get("bot_type", "type-1")
+        custom_min_bet = bot_config.get("custom_min_bet", 1)
+        custom_max_bet = bot_config.get("custom_max_bet", 10)
+        cycle_total_amount = bot_config.get("cycle_total_amount", 0)
+        win_rate_percent = bot_config.get("win_rate_percent", 60)
+        profit_strategy = bot_config.get("profit_strategy", "balanced")
+        can_accept_bets = bot_config.get("can_accept_bets", False)
+        can_play_with_bots = bot_config.get("can_play_with_bots", True)
+        
+        # Определение диапазона ставок из bot_type
+        bot_types_map = {
+            'type-1': {'min': 1, 'max': 2, 'name': 'Type 1: 1–2 $'},
+            'type-2': {'min': 1, 'max': 5, 'name': 'Type 2: 1–5 $'},
+            'type-3': {'min': 1, 'max': 10, 'name': 'Type 3: 1–10 $'},
+            'type-4': {'min': 5, 'max': 20, 'name': 'Type 4: 5–20 $'},
+            'type-5': {'min': 10, 'max': 50, 'name': 'Type 5: 10–50 $'},
+            'type-6': {'min': 10, 'max': 100, 'name': 'Type 6: 10–100 $'},
+            'type-7': {'min': 25, 'max': 200, 'name': 'Type 7: 25–200 $'},
+            'type-8': {'min': 50, 'max': 500, 'name': 'Type 8: 50–500 $'},
+            'type-9': {'min': 100, 'max': 1000, 'name': 'Type 9: 100–1000 $'},
+            'type-10': {'min': 100, 'max': 2000, 'name': 'Type 10: 100–2000 $'},
+            'type-11': {'min': 100, 'max': 3000, 'name': 'Type 11: 100–3000 $'},
+            'custom': {'min': custom_min_bet, 'max': custom_max_bet, 'name': 'Custom'}
+        }
+        
+        if bot_type not in bot_types_map:
+            raise HTTPException(status_code=400, detail="Invalid bot type")
+            
+        bot_type_info = bot_types_map[bot_type]
+        min_bet = bot_type_info['min']
+        max_bet = bot_type_info['max']
+        
+        # Валидация расширенной системы
+        validation_errors = []
+        
+        if not name or len(name.strip()) < 3:
+            validation_errors.append("Имя бота должно содержать минимум 3 символа")
+        
+        if cycle_games < 1 or cycle_games > 100:
+            validation_errors.append("Количество игр в цикле должно быть от 1 до 100")
+        
+        if win_rate_percent < 0 or win_rate_percent > 100:
+            validation_errors.append("Процент выигрыша должен быть от 0% до 100%")
+        
+        if creation_mode not in ['always-first', 'queue-based', 'after-all']:
+            validation_errors.append("Неверный режим создания ставок")
+        
+        if bot_behavior not in ['aggressive', 'balanced', 'cautious']:
+            validation_errors.append("Неверное поведение бота")
+        
+        if profit_strategy not in ['start-positive', 'balanced', 'start-negative']:
+            validation_errors.append("Неверная стратегия прибыли")
+        
+        if cycle_total_amount <= 0:
+            validation_errors.append("Сумма за цикл должна быть больше 0")
+        
+        if bot_type == 'custom':
+            if custom_min_bet <= 0:
+                validation_errors.append("Минимальная ставка должна быть больше 0")
+            if custom_max_bet <= custom_min_bet:
+                validation_errors.append("Максимальная ставка должна быть больше минимальной")
+        
+        if validation_errors:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Ошибки валидации: {'; '.join(validation_errors)}"
+            )
+        
+        # Создание расширенного бота
+        bot_data = {
+            "id": str(uuid.uuid4()),
+            "type": "REGULAR",
+            "name": name.strip(),
+            "mode": "ALGORITHMIC", 
+            "is_active": True,
+            "bot_type": "REGULAR",
+            
+            # Параметры расширенной системы
+            "creation_mode": creation_mode,
+            "cycle_games": cycle_games,
+            "bot_behavior": bot_behavior,
+            "bot_type_id": bot_type,
+            "bot_type_name": bot_type_info['name'],
+            "custom_min_bet": custom_min_bet if bot_type == 'custom' else None,
+            "custom_max_bet": custom_max_bet if bot_type == 'custom' else None,
+            "cycle_total_amount": cycle_total_amount,
+            "win_rate_percent": win_rate_percent,
+            "profit_strategy": profit_strategy,
+            
+            # Диапазон ставок
+            "min_bet_amount": min_bet,
+            "max_bet_amount": max_bet,
+            
+            # Дополнительные настройки
+            "can_accept_bets": can_accept_bets,
+            "can_play_with_bots": can_play_with_bots,
+            
+            # Статистика
+            "games_played": 0,
+            "games_won": 0,
+            "games_lost": 0,
+            "games_draw": 0,
+            "current_cycle_games": 0,
+            "current_cycle_wins": 0,
+            "current_cycle_losses": 0,
+            "total_bet_amount": 0.0,
+            "bot_profit_amount": 0.0,
+            "bot_profit_percent": 0.0,
+            
+            # Состояние
+            "last_game_time": None,
+            "last_bet_time": None,
+            "current_bet_id": None,
+            "active_bets": 0,
+            
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.bots.insert_one(bot_data)
+        
+        created_bot_id = bot_data["id"]
+        
+        # Логирование действия администратора
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="CREATE_EXTENDED_BOT",
+            target_type="bot",
+            target_id=created_bot_id,
+            details={
+                "bot_name": name,
+                "config": bot_config,
+                "validation_passed": True
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": f"Расширенный бот {name} создан успешно",
+            "bot_id": created_bot_id,
+            "bot_name": name
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating extended bot: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create extended bot"
+        )
+
 @api_router.get("/economy/balance", response_model=dict)
 async def get_economy_balance(current_user: User = Depends(get_current_user)):
     """Get user's complete economic status."""
