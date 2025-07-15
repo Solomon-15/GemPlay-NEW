@@ -1484,7 +1484,7 @@ const RegularBotsManagement = () => {
             <thead className="bg-surface-sidebar">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                  Имя
+                  Имя бота
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                   Статус
@@ -1493,19 +1493,13 @@ const RegularBotsManagement = () => {
                   Активные ставки
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                  Лимит ставок
+                  Победы/Поражения/Ничьи
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                  Приоритет
+                  % Win
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                  Поб/Пр/Нч
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                  Win Rate
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                  % Выигрыша
+                  % ВЫИГРЫША
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                   Цикл
@@ -1514,10 +1508,13 @@ const RegularBotsManagement = () => {
                   Сумма за цикл
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                  Мин/Макс ставка
+                  Bot Type
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                  Регистрация
+                  Интервал
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                  Поведение
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                   Действия
