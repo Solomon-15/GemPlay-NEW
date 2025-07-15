@@ -1014,7 +1014,7 @@ const ProfitAdmin = ({ user }) => {
                                   </div>
                                 )}
                               </td>
-                              <td className="px-4 py-3 text-sm text-text-secondary max-w-xs">
+                              <td className="px-4 py-3 text-sm font-roboto text-text-secondary max-w-xs">
                                 <div className="truncate" title={entry.description}>
                                   {entry.description || '—'}
                                 </div>
