@@ -1644,7 +1644,7 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <div className="text-white font-roboto text-sm">
-                        {formatDate(bot.created_at)}
+                        {bot.recreation_interval || 60}s
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
