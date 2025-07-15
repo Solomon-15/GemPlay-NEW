@@ -1640,9 +1640,13 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <div className="text-white font-roboto text-sm">
-                        {formatDate(bot.created_at)}
-                      </div>
+                      <span className={`px-2 py-1 text-xs rounded-full font-roboto font-medium ${
+                        bot.is_active 
+                          ? 'bg-green-600 text-white' 
+                          : 'bg-red-600 text-white'
+                      }`}>
+                        {bot.is_active ? 'Активен' : 'Отключен'}
+                      </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <button
