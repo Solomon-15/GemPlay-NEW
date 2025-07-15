@@ -8928,7 +8928,7 @@ async def start_regular_bots(
                 "limit_reached": True
             }
         
-        # Получаем всех активных обычных ботов
+        # Получаем всех активных обычных ботов с учетом режимов создания ставок
         active_bots = await db.bots.find({
             "type": "REGULAR",
             "is_active": True
@@ -8944,6 +8944,32 @@ async def start_regular_bots(
                 "type": "REGULAR",
                 "is_active": True
             }).to_list(100)
+        
+        # Сортируем ботов по режимам создания ставок и приоритетам
+        def sort_bots_by_creation_mode(bots):
+            """Сортировка ботов по режимам создания ставок и приоритету."""
+            always_first_bots = []
+            queue_based_bots = []
+            after_all_bots = []
+            
+            for bot in bots:
+                creation_mode = bot.get("creation_mode", "queue-based")
+                if creation_mode == "always-first":
+                    always_first_bots.append(bot)
+                elif creation_mode == "after-all":
+                    after_all_bots.append(bot)
+                else:  # queue-based
+                    queue_based_bots.append(bot)
+            
+            # Сортируем каждую группу по приоритету
+            always_first_bots.sort(key=lambda x: x.get("priority_order", 999))
+            queue_based_bots.sort(key=lambda x: x.get("priority_order", 999))
+            after_all_bots.sort(key=lambda x: x.get("priority_order", 999))
+            
+            # Возвращаем отсортированный список: Always-first -> Queue-based -> After-all
+            return always_first_bots + queue_based_bots + after_all_bots
+        
+        sorted_bots = sort_bots_by_creation_mode(active_bots)
         
         started_bots = 0
         available_slots = max_active_bets - current_active_bets
