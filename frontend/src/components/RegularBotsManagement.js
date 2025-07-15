@@ -1720,7 +1720,7 @@ const RegularBotsManagement = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-accent-primary font-roboto text-sm">
                         ${bot.cycle_total_amount}
                       </div>
