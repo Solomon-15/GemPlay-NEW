@@ -1630,7 +1630,7 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleCycleModal(bot)}
-                        className="text-green-400 hover:text-green-300 underline font-roboto cursor-pointer"
+                        className="text-green-400 hover:text-green-300 underline font-roboto text-sm cursor-pointer"
                         title="Показать историю цикла"
                       >
                         {(bot.current_cycle_games || 0)}/{bot.cycle_games || 12}
