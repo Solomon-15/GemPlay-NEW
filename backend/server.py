@@ -9383,20 +9383,31 @@ async def update_bot_settings(
         cycle_total_amount = update_data.get("cycle_total_amount")
         win_percentage = update_data.get("win_percentage")
         min_bet_amount = update_data.get("min_bet_amount")
-        max_bet_amount = update_data.get("max_bet_amount")
+        avg_bet_amount = update_data.get("avg_bet_amount")  # новое поле
+        bet_distribution = update_data.get("bet_distribution")  # новое поле
         
-        # Validation
-        if pause_timer is not None and (pause_timer < 1 or pause_timer > 1000):
-            raise HTTPException(status_code=400, detail="Pause timer must be between 1 and 1000 minutes")
+        # Validation with new math
+        if pause_timer is not None and (pause_timer < 1 or pause_timer > 3600):
+            raise HTTPException(status_code=400, detail="Pause timer must be between 1 and 3600 seconds")
         
         if recreate_timer is not None and recreate_timer < 1:
             raise HTTPException(status_code=400, detail="Recreate timer must be at least 1 second")
             
         if cycle_games is not None and cycle_games < 1:
             raise HTTPException(status_code=400, detail="Cycle games must be at least 1")
-            
-        if min_bet_amount is not None and max_bet_amount is not None and min_bet_amount >= max_bet_amount:
-            raise HTTPException(status_code=400, detail="Min bet must be less than max bet")
+        
+        # Новая валидация математики
+        if min_bet_amount is not None and avg_bet_amount is not None:
+            if min_bet_amount > avg_bet_amount:
+                raise HTTPException(status_code=400, detail="Min bet must be less than or equal to avg bet")
+        
+        if cycle_total_amount is not None and cycle_games is not None and avg_bet_amount is not None:
+            avg_bet_from_cycle = cycle_total_amount / cycle_games
+            if avg_bet_from_cycle > avg_bet_amount:
+                raise HTTPException(status_code=400, detail=f"Average bet ({avg_bet_amount}) must be >= {avg_bet_from_cycle:.2f} (cycle total / cycle games)")
+        
+        if bet_distribution is not None and bet_distribution not in ["small", "medium", "large"]:
+            raise HTTPException(status_code=400, detail="Bet distribution must be 'small', 'medium', or 'large'")
         
         # Prepare update data - only update provided fields
         update_fields = {"updated_at": datetime.utcnow()}
@@ -9415,8 +9426,10 @@ async def update_bot_settings(
             update_fields["win_percentage"] = win_percentage
         if min_bet_amount is not None:
             update_fields["min_bet_amount"] = min_bet_amount
-        if max_bet_amount is not None:
-            update_fields["max_bet_amount"] = max_bet_amount
+        if avg_bet_amount is not None:
+            update_fields["avg_bet_amount"] = avg_bet_amount  # новое поле
+        if bet_distribution is not None:
+            update_fields["bet_distribution"] = bet_distribution  # новое поле
         if "can_accept_bets" in update_data:
             update_fields["can_accept_bets"] = update_data["can_accept_bets"]
         if "can_play_with_bots" in update_data:
@@ -9431,7 +9444,7 @@ async def update_bot_settings(
         # Check if cycle parameters were changed - if so, recalculate bets
         cycle_params_changed = any(field in update_fields for field in [
             "cycle_length", "cycle_total_amount", "win_percentage", 
-            "min_bet_amount", "max_bet_amount"
+            "min_bet_amount", "avg_bet_amount", "bet_distribution"  # обновленные поля
         ])
         
         generated_bets = 0
