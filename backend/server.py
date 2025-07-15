@@ -9112,8 +9112,13 @@ async def recalculate_bot_bets(
         
         # Generate new bet structure
         new_bets = await generate_bot_cycle_bets(
-            bot_id, cycle_length, cycle_total_amount, 
-            win_percentage, min_bet_amount, max_bet_amount
+            bot_id=bot_id,
+            cycle_length=cycle_length,
+            cycle_total_amount=cycle_total_amount,
+            win_percentage=win_percentage,
+            min_bet=min_bet_amount,
+            avg_bet=bot.get("avg_bet_amount", 50.0),
+            bet_distribution=bot.get("bet_distribution", "medium")
         )
         
         # Count active bets after generation
