@@ -1053,6 +1053,74 @@ const RegularBotsManagement = () => {
           <div className="bg-surface-sidebar rounded-lg p-3">
             <div className="flex items-center justify-between">
               <div>
+                <div className="text-text-secondary text-sm">Синхронизация</div>
+                <div className="text-green-400 font-rajdhani font-bold">Активна</div>
+              </div>
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Новая секция: Режимы создания ставок */}
+        <div className="mt-6 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
+          <h4 className="text-lg font-rajdhani font-bold text-white mb-4">📋 Режимы создания ставок</h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Always First */}
+            <div className="bg-surface-sidebar rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span className="text-white font-rajdhani font-bold">Always First</span>
+                </div>
+                <span className="text-red-400 text-sm">Приоритет</span>
+              </div>
+              <div className="text-text-secondary text-sm mb-2">
+                Боты создают ставки в первую очередь
+              </div>
+              <div className="text-white font-rajdhani font-bold">
+                {botsList.filter(bot => bot.creation_mode === 'always-first').length} ботов
+              </div>
+            </div>
+            
+            {/* Queue Based */}
+            <div className="bg-surface-sidebar rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span className="text-white font-rajdhani font-bold">Queue Based</span>
+                </div>
+                <span className="text-blue-400 text-sm">Очередь</span>
+              </div>
+              <div className="text-text-secondary text-sm mb-2">
+                Боты создают ставки по очереди приоритетов
+              </div>
+              <div className="text-white font-rajdhani font-bold">
+                {botsList.filter(bot => bot.creation_mode === 'queue-based' || !bot.creation_mode).length} ботов
+              </div>
+            </div>
+            
+            {/* After All */}
+            <div className="bg-surface-sidebar rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-white font-rajdhani font-bold">After All</span>
+                </div>
+                <span className="text-green-400 text-sm">Последние</span>
+              </div>
+              <div className="text-text-secondary text-sm mb-2">
+                Боты создают ставки после всех остальных
+              </div>
+              <div className="text-white font-rajdhani font-bold">
+                {botsList.filter(bot => bot.creation_mode === 'after-all').length} ботов
+              </div>
+            </div>
+          </div>
+        </div>
+          <div className="bg-surface-sidebar rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div>
                 <div className="text-text-secondary text-sm">Сумма лимитов</div>
                 <div className={`font-rajdhani font-bold ${
                   botsList.reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0) <= globalMaxBets 
