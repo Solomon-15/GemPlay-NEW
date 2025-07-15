@@ -1797,6 +1797,196 @@ async def gift_gems(
 
 # Endpoint removed - Frontend now handles gem combination logic
 
+@api_router.post("/admin/bots/{bot_id}/toggle-status", response_model=dict)
+async def toggle_extended_bot_status(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Переключить статус расширенного бота."""
+    try:
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Бот не найден"
+            )
+        
+        new_status = not bot.get("is_active", False)
+        
+        await db.bots.update_one(
+            {"id": bot_id},
+            {"$set": {
+                "is_active": new_status,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        # Логирование действия
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="TOGGLE_BOT_STATUS",
+            target_type="bot",
+            target_id=bot_id,
+            details={
+                "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
+                "new_status": new_status
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "success": True,
+            "message": f"Бот {'включен' if new_status else 'отключен'}",
+            "is_active": new_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error toggling bot status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ошибка при изменении статуса бота"
+        )
+
+@api_router.post("/admin/bots/{bot_id}/force-complete-cycle", response_model=dict)
+async def force_complete_bot_cycle(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Принудительно завершить цикл бота."""
+    try:
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Бот не найден"
+            )
+        
+        # Отменяем все активные ставки бота
+        cancelled_bets = await db.games.update_many(
+            {"creator_id": bot_id, "status": "waiting"},
+            {"$set": {
+                "status": "cancelled",
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        # Подсчитываем прибыль/убыток за текущий цикл
+        completed_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": "completed"
+        }).to_list(None)
+        
+        total_bet_amount = sum(game.get("bet_amount", 0) for game in completed_games)
+        total_winnings = sum(game.get("winnings", 0) for game in completed_games if game.get("winner_id") == bot_id)
+        cycle_profit = total_winnings - total_bet_amount
+        
+        # Обновляем статистику бота
+        await db.bots.update_one(
+            {"id": bot_id},
+            {"$set": {
+                "current_cycle_games": 0,
+                "current_cycle_wins": 0,
+                "current_cycle_losses": 0,
+                "bot_profit_amount": bot.get("bot_profit_amount", 0) + cycle_profit,
+                "bot_profit_percent": ((bot.get("bot_profit_amount", 0) + cycle_profit) / max(total_bet_amount, 1)) * 100,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        # Логирование действия
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="FORCE_COMPLETE_CYCLE",
+            target_type="bot",
+            target_id=bot_id,
+            details={
+                "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
+                "cancelled_bets": cancelled_bets.modified_count,
+                "cycle_profit": cycle_profit
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "success": True,
+            "message": f"Цикл бота завершен принудительно. Прибыль: ${cycle_profit:.2f}",
+            "profit": cycle_profit,
+            "cancelled_bets": cancelled_bets.modified_count
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error force completing cycle: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ошибка при принудительном завершении цикла"
+        )
+
+@api_router.get("/admin/bots/{bot_id}/cycle-bets", response_model=dict)
+async def get_bot_cycle_bets(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Получить ставки текущего цикла бота."""
+    try:
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Бот не найден"
+            )
+        
+        # Получаем все игры бота за текущий цикл
+        cycle_games = await db.games.find({
+            "creator_id": bot_id,
+            "is_bot_game": True
+        }).sort("created_at", -1).limit(bot.get("cycle_games", 12)).to_list(None)
+        
+        # Форматируем данные для отображения
+        formatted_bets = []
+        for i, game in enumerate(cycle_games):
+            bet_info = {
+                "position": i + 1,
+                "amount": game.get("bet_amount", 0),
+                "gems": game.get("bet_gems", {}),
+                "status": game.get("status", "waiting"),
+                "result": None,
+                "created_at": game.get("created_at"),
+                "opponent": game.get("opponent_name", "Ожидание")
+            }
+            
+            if game.get("status") == "completed":
+                if game.get("winner_id") == bot_id:
+                    bet_info["result"] = "win"
+                elif game.get("winner_id"):
+                    bet_info["result"] = "loss"
+                else:
+                    bet_info["result"] = "draw"
+            
+            formatted_bets.append(bet_info)
+        
+        return {
+            "success": True,
+            "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
+            "current_cycle": len([b for b in formatted_bets if b["status"] == "completed"]),
+            "cycle_total": bot.get("cycle_games", 12),
+            "cycle_total_amount": bot.get("cycle_total_amount", 0),
+            "win_rate_percent": bot.get("win_rate_percent", 60),
+            "bets": formatted_bets
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting cycle bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ошибка при получении ставок цикла"
+        )
+
 @api_router.post("/admin/bots/create-extended", response_model=dict)
 async def create_extended_bot(
     bot_config: dict,
