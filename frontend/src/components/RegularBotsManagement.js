@@ -1600,7 +1600,7 @@ const RegularBotsManagement = () => {
                       <button
                         onClick={() => handleWinRateAnalysis(bot)}
                         disabled={loadingStates[bot.id]}
-                        className="text-accent-primary font-rajdhani font-bold hover:text-accent-secondary transition-colors underline cursor-pointer"
+                        className="text-accent-primary font-roboto text-sm hover:text-accent-secondary transition-colors underline cursor-pointer"
                         title="Анализ win rate"
                       >
                         {loadingStates[bot.id] ? (
