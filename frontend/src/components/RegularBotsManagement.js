@@ -956,17 +956,6 @@ const RegularBotsManagement = () => {
             Создать Бота
           </button>
           <button
-            onClick={startRegularBots}
-            disabled={startingBots}
-            className={`px-6 py-3 rounded-lg font-rajdhani font-bold text-white transition-colors ${
-              startingBots 
-                ? 'bg-gray-600 cursor-not-allowed' 
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
-          >
-            {startingBots ? 'Запуск...' : 'Запустить ботов'}
-          </button>
-          <button
             onClick={toggleAllBots}
             className={`px-6 py-3 rounded-lg font-rajdhani font-bold text-white transition-colors ${
               allBotsEnabled 
