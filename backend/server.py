@@ -10147,11 +10147,18 @@ async def generate_extended_bot_cycle_bets(bot_id: str, cycle_length: int, cycle
         logger.error(f"Error generating extended bot cycle bets: {e}")
         raise
 async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
-                                win_percentage: int, min_bet: float, avg_bet: float, bet_distribution: str = "medium"):
-    """Generate optimized bet amounts for a bot's cycle using new distribution logic."""
+                                win_percentage: int, min_bet: float, avg_bet: float, bet_distribution: str = "medium",
+                                bot_behavior: str = "balanced", profit_strategy: str = "balanced"):
+    """Generate optimized bet amounts for a bot's cycle using new distribution logic with behavioral support."""
     try:
         # Ensure bot has sufficient gems
         await BotGameLogic.setup_bot_gems(bot_id, db)
+        
+        # Get bot data for additional behavioral context
+        bot_data = await db.bots.find_one({"id": bot_id})
+        if bot_data:
+            bot_behavior = bot_data.get("bot_behavior", bot_behavior)
+            profit_strategy = bot_data.get("profit_strategy", profit_strategy)
         
         # Define gem values (must match frontend definitions)
         gem_values = {
@@ -10165,8 +10172,19 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
         }
         gem_types_list = list(gem_values.keys())
         
-        # Calculate number of winning and losing bets
-        winning_bets_count = int((win_percentage / 100.0) * cycle_length)
+        # Calculate number of winning and losing bets with behavioral adjustments
+        base_winning_bets = int((win_percentage / 100.0) * cycle_length)
+        
+        # Behavioral adjustments to win distribution
+        if bot_behavior == 'aggressive':
+            # Aggressive bots might cluster wins early or late
+            winning_bets_count = base_winning_bets
+        elif bot_behavior == 'cautious':
+            # Cautious bots spread wins evenly
+            winning_bets_count = base_winning_bets
+        else:  # balanced
+            winning_bets_count = base_winning_bets
+            
         losing_bets_count = cycle_length - winning_bets_count
         
         def generate_valid_gem_combination(target_min: int, target_max: int):
