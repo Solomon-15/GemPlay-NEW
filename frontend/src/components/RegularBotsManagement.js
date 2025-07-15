@@ -1645,16 +1645,10 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full font-rajdhani font-bold ${
-                        bot.bot_behavior === 'aggressive' 
-                          ? 'bg-red-600 text-white' 
-                          : bot.bot_behavior === 'cautious'
-                          ? 'bg-green-600 text-white'
-                          : 'bg-yellow-600 text-white'
-                      }`}>
+                      <div className="text-white font-roboto text-sm">
                         {bot.bot_behavior === 'aggressive' ? 'Агрессивный' : 
                          bot.bot_behavior === 'cautious' ? 'Осторожный' : 'Сбалансированный'}
-                      </span>
+                      </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs rounded-full font-rajdhani font-bold ${
