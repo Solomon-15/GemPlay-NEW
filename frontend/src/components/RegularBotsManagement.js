@@ -398,6 +398,33 @@ const RegularBotsManagement = () => {
     }
   };
 
+  const handleForceCompleteModal = (bot) => {
+    setSelectedBotForForceComplete(bot);
+    setIsForceCompleteModalOpen(true);
+  };
+
+  const handleForceCompleteCycle = async () => {
+    if (!selectedBotForForceComplete) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/admin/bots/${selectedBotForForceComplete.id}/force-complete-cycle`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        showSuccessRU(`Цикл бота ${selectedBotForForceComplete.name} принудительно завершен. Прибыль: $${response.data.profit.toFixed(2)}`);
+        setIsForceCompleteModalOpen(false);
+        setSelectedBotForForceComplete(null);
+        await fetchBotsList();
+        await fetchStats();
+      }
+    } catch (error) {
+      console.error('Ошибка принудительного завершения цикла:', error);
+      showErrorRU('Ошибка при завершении цикла');
+    }
+  };
+
   const handleActiveBetsModal = (bot) => {
     // Показываем модальное окно с активными ставками
     setSelectedBotForActiveBets(bot);
