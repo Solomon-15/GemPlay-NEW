@@ -211,7 +211,7 @@ const RegularBotsManagement = () => {
       });
       
       setBotsList(sortedBots);
-      pagination.setTotalItems(response.data.total || 0);
+      pagination.updatePagination(response.data.total || 0);
     } catch (error) {
       console.error('Ошибка загрузки списка ботов:', error);
     }
