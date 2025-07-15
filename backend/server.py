@@ -8757,30 +8757,69 @@ async def create_individual_bot(
     """Create individual bot with custom settings (admin only)."""
     try:
         name = bot_config.get("name", "Bot #001")
-        pause_timer = bot_config.get("pause_timer", 5)  # minutes
-        recreate_interval = bot_config.get("recreate_interval", 30)  # seconds
+        pause_timer = bot_config.get("pause_timer", 5)  # теперь секунды
+        recreate_interval = bot_config.get("recreate_interval", 30)  # секунды
         cycle_games = bot_config.get("cycle_games", 12)
         cycle_total_amount = bot_config.get("cycle_total_amount", 500.0)
         win_percentage = bot_config.get("win_percentage", 60.0)
         min_bet = bot_config.get("min_bet_amount", 1.0)
-        max_bet = bot_config.get("max_bet_amount", 100.0)
+        avg_bet = bot_config.get("avg_bet_amount", 50.0)  # новое поле
         can_accept_bets = bot_config.get("can_accept_bets", False)
         can_play_with_bots = bot_config.get("can_play_with_bots", False)
+        bet_distribution = bot_config.get("bet_distribution", "medium")  # новое поле
         
-        # Validation
-        if pause_timer < 1 or pause_timer > 1000:
-            raise HTTPException(status_code=400, detail="Pause timer must be between 1 and 1000 minutes")
+        # Валидация математики
+        validation_errors = []
+        
+        # Проверка: (Сумма за цикл) / (Игр в цикле) <= Сред. ставка ($)
+        avg_bet_from_cycle = cycle_total_amount / cycle_games
+        if avg_bet_from_cycle > avg_bet:
+            validation_errors.append(f"Средняя ставка (${avg_bet}) должна быть >= {avg_bet_from_cycle:.2f} (Сумма за цикл / Игр в цикле)")
+        
+        # Проверка: Мин. ставка <= Сред. ставка
+        if min_bet > avg_bet:
+            validation_errors.append(f"Минимальная ставка (${min_bet}) должна быть <= средней ставки (${avg_bet})")
+        
+        # Проверка: Процент выигрыша должен быть реалистичным
+        if win_percentage < 0 or win_percentage > 100:
+            validation_errors.append("Процент выигрыша должен быть от 0% до 100%")
+        
+        # Проверка: Количество игр в цикле должно быть больше 0
+        if cycle_games <= 0:
+            validation_errors.append("Количество игр в цикле должно быть больше 0")
+        
+        # Проверка: Сумма за цикл должна быть больше 0
+        if cycle_total_amount <= 0:
+            validation_errors.append("Сумма за цикл должна быть больше 0")
+        
+        # Проверка: Можно ли создать валидный набор ставок
+        max_possible_sum = cycle_games * avg_bet
+        if cycle_total_amount > max_possible_sum:
+            validation_errors.append(f"Сумма за цикл (${cycle_total_amount}) не может быть больше максимально возможной суммы (${max_possible_sum})")
+        
+        min_possible_sum = cycle_games * min_bet
+        if cycle_total_amount < min_possible_sum:
+            validation_errors.append(f"Сумма за цикл (${cycle_total_amount}) не может быть меньше минимально возможной суммы (${min_possible_sum})")
+        
+        # Проверка таймеров
+        if pause_timer < 1 or pause_timer > 3600:
+            validation_errors.append("Таймер паузы должен быть от 1 до 3600 секунд")
         
         if recreate_interval < 1:
-            raise HTTPException(status_code=400, detail="Recreate interval must be at least 1 second")
-            
-        if cycle_games < 1:
-            raise HTTPException(status_code=400, detail="Cycle games must be at least 1")
-            
-        if min_bet >= max_bet:
-            raise HTTPException(status_code=400, detail="Min bet must be less than max bet")
+            validation_errors.append("Интервал пересоздания должен быть минимум 1 секунда")
         
-        # Create bot dictionary manually to ensure all fields are saved
+        # Проверка распределения ставок
+        if bet_distribution not in ["small", "medium", "large"]:
+            validation_errors.append("Характер распределения ставок должен быть 'small', 'medium' или 'large'")
+        
+        # Если есть ошибки валидации, вернуть их
+        if validation_errors:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Ошибки валидации: {'; '.join(validation_errors)}"
+            )
+        
+        # Создаем бота с новыми полями
         bot_data = {
             "id": str(uuid.uuid4()),
             "type": "REGULAR",
@@ -8789,16 +8828,17 @@ async def create_individual_bot(
             "is_active": True,
             "bot_type": "REGULAR",
             
-            # User-defined parameters
+            # User-defined parameters (обновленные)
             "min_bet_amount": min_bet,
-            "max_bet_amount": max_bet,
+            "avg_bet_amount": avg_bet,  # новое поле вместо max_bet_amount
             "win_percentage": win_percentage,
             "cycle_length": cycle_games,
             "cycle_total_amount": cycle_total_amount,
-            "pause_timer": pause_timer,
+            "pause_timer": pause_timer,  # теперь в секундах
             "recreate_timer": recreate_interval,
             "can_accept_bets": can_accept_bets,
             "can_play_with_bots": can_play_with_bots,
+            "bet_distribution": bet_distribution,  # новое поле
             
             # Statistics
             "games_played": 0,
@@ -8822,8 +8862,6 @@ async def create_individual_bot(
         created_bot_id = bot_data["id"]
         
         # Log admin action
-        
-        # Log admin action
         admin_log = AdminLog(
             admin_id=current_user.id,
             action="CREATE_INDIVIDUAL_BOT",
@@ -8831,7 +8869,8 @@ async def create_individual_bot(
             target_id=created_bot_id,
             details={
                 "bot_name": name,
-                "config": bot_config
+                "config": bot_config,
+                "validation_passed": True
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
