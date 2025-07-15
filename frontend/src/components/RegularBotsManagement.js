@@ -1634,17 +1634,17 @@ const RegularBotsManagement = () => {
               ) : (
                 botsList.map((bot) => (
                   <tr key={bot.id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {bot.name || `Bot #${bot.id.substring(0, 3)}`}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {formatDate(bot.created_at)}
                       </div>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <button
                         onClick={() => handleActiveBetsModal(bot)}
                         className="text-blue-400 hover:text-blue-300 underline font-roboto text-sm cursor-pointer"
@@ -1653,7 +1653,7 @@ const RegularBotsManagement = () => {
                         {bot.active_bets || 0}
                       </button>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {bot.games_stats.wins}/{bot.games_stats.losses}/{bot.games_stats.draws}
                       </div>
