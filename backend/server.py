@@ -9499,6 +9499,224 @@ async def recalculate_bot_bets(
             detail="Failed to recalculate bot bets"
         )
 
+
+async def generate_extended_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
+                                          win_rate_percent: int, min_bet: float, max_bet: float, 
+                                          bot_behavior: str = "balanced", profit_strategy: str = "balanced"):
+    """Generate optimized bet amounts for extended bot system with advanced behavior logic."""
+    try:
+        # Ensure bot has sufficient gems
+        await BotGameLogic.setup_bot_gems(bot_id, db)
+        
+        # Define gem values (must match frontend definitions)
+        gem_values = {
+            'Ruby': 1,
+            'Amber': 2,
+            'Topaz': 5,
+            'Emerald': 10,
+            'Aquamarine': 25,
+            'Sapphire': 50,
+            'Magic': 100
+        }
+        gem_types_list = list(gem_values.keys())
+        
+        # Calculate number of winning and losing bets
+        winning_bets_count = int((win_rate_percent / 100.0) * cycle_length)
+        losing_bets_count = cycle_length - winning_bets_count
+        
+        # Behavior-based gem selection preferences
+        behavior_gem_preferences = {
+            'aggressive': {
+                'preferred_gems': ['Magic', 'Sapphire', 'Aquamarine', 'Emerald'],
+                'avoid_gems': ['Ruby', 'Amber'],
+                'risk_factor': 1.3,
+                'bet_variance': 0.4
+            },
+            'balanced': {
+                'preferred_gems': ['Emerald', 'Aquamarine', 'Topaz', 'Sapphire'],
+                'avoid_gems': [],
+                'risk_factor': 1.0,
+                'bet_variance': 0.3
+            },
+            'cautious': {
+                'preferred_gems': ['Ruby', 'Amber', 'Topaz', 'Emerald'],
+                'avoid_gems': ['Magic', 'Sapphire'],
+                'risk_factor': 0.7,
+                'bet_variance': 0.2
+            }
+        }
+        
+        behavior_config = behavior_gem_preferences.get(bot_behavior, behavior_gem_preferences['balanced'])
+        
+        def generate_behavior_based_gem_combination(target_min: int, target_max: int, behavior_config):
+            """Generate gem combination based on bot behavior."""
+            attempts = 0
+            max_attempts = 50
+            
+            while attempts < max_attempts:
+                gem_combination = {}
+                total_value = 0
+                
+                # Start with preferred gems based on behavior
+                if behavior_config['preferred_gems']:
+                    primary_gem = random.choice(behavior_config['preferred_gems'])
+                    if primary_gem not in behavior_config['avoid_gems']:
+                        base_quantity = random.randint(1, 2)
+                        gem_combination[primary_gem] = base_quantity
+                        total_value += gem_values[primary_gem] * base_quantity
+                
+                # Add secondary gems if needed
+                remaining_value = target_max - total_value
+                if remaining_value > 0:
+                    available_gems = [g for g in gem_types_list if g not in behavior_config['avoid_gems']]
+                    
+                    while remaining_value > 0 and len(available_gems) > 0:
+                        gem = random.choice(available_gems)
+                        gem_value = gem_values[gem]
+                        
+                        if gem_value <= remaining_value:
+                            quantity = random.randint(1, max(1, remaining_value // gem_value))
+                            if gem in gem_combination:
+                                gem_combination[gem] += quantity
+                            else:
+                                gem_combination[gem] = quantity
+                            total_value += gem_value * quantity
+                            remaining_value = target_max - total_value
+                        else:
+                            available_gems.remove(gem)
+                
+                # Check if valid
+                if target_min <= total_value <= target_max:
+                    return gem_combination, int(total_value)
+                
+                attempts += 1
+            
+            # Fallback
+            fallback_quantity = max(1, min(int(target_max), int(target_min)))
+            return {'Ruby': fallback_quantity}, fallback_quantity
+        
+        # Generate bet amounts using behavior-based logic
+        bet_data = []
+        total_generated = 0
+        
+        # Calculate target range with behavior modifications
+        avg_bet = cycle_total_amount / cycle_length
+        risk_factor = behavior_config['risk_factor']
+        bet_variance = behavior_config['bet_variance']
+        
+        # Profit strategy affects bet order
+        bet_outcomes = ['win'] * winning_bets_count + ['lose'] * losing_bets_count
+        
+        if profit_strategy == 'start-positive':
+            # Front-load wins
+            bet_outcomes = ['win'] * min(winning_bets_count, cycle_length // 2) + \
+                          ['lose'] * losing_bets_count + \
+                          ['win'] * (winning_bets_count - min(winning_bets_count, cycle_length // 2))
+        elif profit_strategy == 'start-negative':
+            # Front-load losses
+            bet_outcomes = ['lose'] * min(losing_bets_count, cycle_length // 2) + \
+                          ['win'] * winning_bets_count + \
+                          ['lose'] * (losing_bets_count - min(losing_bets_count, cycle_length // 2))
+        else:
+            # Balanced distribution
+            random.shuffle(bet_outcomes)
+        
+        for i in range(cycle_length):
+            if i == cycle_length - 1:  # Last bet: use remaining amount
+                remaining = int(cycle_total_amount - total_generated)
+                target_min = max(int(min_bet), remaining - 10)
+                target_max = max(int(max_bet), remaining + 10)
+                gem_combination, bet_amount = generate_behavior_based_gem_combination(
+                    target_min, target_max, behavior_config
+                )
+                
+                # Force exact remaining amount
+                if bet_amount != remaining and remaining >= int(min_bet):
+                    bet_amount = remaining
+                    if remaining <= 10:
+                        gem_combination = {'Ruby': remaining}
+                    else:
+                        gem_combination = {'Ruby': remaining}
+            else:
+                # Calculate bet range with behavior modifications
+                base_variance = avg_bet * bet_variance
+                behavior_modifier = random.uniform(0.8, 1.2) * risk_factor
+                
+                target_center = avg_bet * behavior_modifier
+                target_min = max(int(min_bet), int(target_center - base_variance))
+                target_max = min(int(max_bet), int(target_center + base_variance))
+                
+                gem_combination, bet_amount = generate_behavior_based_gem_combination(
+                    target_min, target_max, behavior_config
+                )
+            
+            bet_data.append((gem_combination, bet_amount))
+            total_generated += bet_amount
+        
+        # Fine-tune total to match cycle_total_amount
+        difference = int(cycle_total_amount - total_generated)
+        if abs(difference) > 0:
+            # Adjust largest bets
+            adjustable_bets = [(i, amount) for i, (_, amount) in enumerate(bet_data)]
+            adjustable_bets.sort(key=lambda x: x[1], reverse=True)
+            
+            for i, _ in adjustable_bets[:min(3, len(adjustable_bets))]:
+                if difference == 0:
+                    break
+                
+                gems, current_amount = bet_data[i]
+                if difference > 0:
+                    add_amount = min(difference, 5)
+                    gems['Ruby'] = gems.get('Ruby', 0) + add_amount
+                    bet_data[i] = (gems, current_amount + add_amount)
+                    difference -= add_amount
+                elif difference < 0 and current_amount > int(min_bet):
+                    subtract_amount = min(abs(difference), current_amount - int(min_bet))
+                    if gems.get('Ruby', 0) >= subtract_amount:
+                        gems['Ruby'] -= subtract_amount
+                        if gems['Ruby'] == 0:
+                            del gems['Ruby']
+                        bet_data[i] = (gems, current_amount - subtract_amount)
+                        difference += subtract_amount
+        
+        # Create game entries with extended metadata
+        created_bets = []
+        for i, ((gem_combination, bet_amount), outcome) in enumerate(zip(bet_data, bet_outcomes)):
+            bot = await db.bots.find_one({"id": bot_id})
+            bot_move = BotGameLogic.calculate_bot_move(Bot(**bot))
+            salt = secrets.token_hex(32)
+            
+            game = Game(
+                creator_id=bot_id,
+                creator_move=bot_move,
+                creator_move_hash=hashlib.sha256(f"{bot_move.value}{salt}".encode()).hexdigest(),
+                creator_salt=salt,
+                bet_amount=float(bet_amount),
+                bet_gems=gem_combination,
+                is_bot_game=True,
+                bot_id=bot_id,
+                metadata={
+                    "cycle_position": i + 1,
+                    "intended_outcome": outcome,
+                    "cycle_id": f"{bot_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}",
+                    "gem_based_bet": True,
+                    "bot_behavior": bot_behavior,
+                    "profit_strategy": profit_strategy,
+                    "win_rate_percent": win_rate_percent,
+                    "extended_system": True
+                }
+            )
+            
+            await db.games.insert_one(game.dict())
+            created_bets.append(game.dict())
+        
+        final_total = sum(bet_amount for _, bet_amount in bet_data)
+        logger.info(f"Generated {len(created_bets)} extended bot bets for {bot_id} with total ${final_total} using {bot_behavior} behavior")
+        return created_bets
+        
+    except Exception as e:
+        logger.error(f"Error generating extended bot cycle bets: {e}")
+        raise
 async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
                                 win_percentage: int, min_bet: float, avg_bet: float, bet_distribution: str = "medium"):
     """Generate optimized bet amounts for a bot's cycle using new distribution logic."""
