@@ -1386,13 +1386,11 @@ const ProfitAdmin = ({ user }) => {
                           <circle cx="17" cy="7" r="1" fill="currentColor"/>
                           <circle cx="7" cy="7" r="1" fill="currentColor"/>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
-                          <circle cx="18" cy="15" r="3" strokeWidth="1.5"/>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 14v2l1 1"/>
                         </svg>
                       </div>
                       <div>
-                        <h4 className="font-rajdhani text-lg font-bold text-white">Доход от Обычных ботов</h4>
-                        <p className="text-sm text-text-secondary">Прибыль от завершенных циклов обычных ботов</p>
+                        <h4 className="font-rajdhani text-lg font-bold text-white">Доход от ботов</h4>
+                        <p className="text-sm text-text-secondary">Интегрированная аналитика прибыли от AI-ботов</p>
                       </div>
                     </div>
                     
@@ -1418,6 +1416,86 @@ const ProfitAdmin = ({ user }) => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Интегрированная статистика ботов */}
+                  {botIntegrationData && (
+                    <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+                      <h5 className="font-rajdhani text-lg font-bold text-blue-400 mb-4">
+                        🤖 Статистика ботов
+                      </h5>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <div className="bg-surface-sidebar rounded-lg p-3">
+                          <div className="text-xs text-text-secondary mb-1">Активных ботов</div>
+                          <div className="text-lg font-bold text-blue-400">{botIntegrationData.bot_stats.active_bots}</div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-3">
+                          <div className="text-xs text-text-secondary mb-1">Всего ботов</div>
+                          <div className="text-lg font-bold text-blue-400">{botIntegrationData.bot_stats.total_bots}</div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-3">
+                          <div className="text-xs text-text-secondary mb-1">Avg Win Rate</div>
+                          <div className="text-lg font-bold text-blue-400">{botIntegrationData.bot_stats.avg_win_rate?.toFixed(1) || 0}%</div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-3">
+                          <div className="text-xs text-text-secondary mb-1">Всего игр</div>
+                          <div className="text-lg font-bold text-blue-400">{botIntegrationData.bot_stats.total_games}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Режимы создания ставок */}
+                      <div className="mb-4">
+                        <h6 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Доход по режимам создания ставок:</h6>
+                        <div className="space-y-2">
+                          {Object.entries(botIntegrationData.creation_modes).map(([mode, data]) => (
+                            <div key={mode} className="flex justify-between items-center bg-surface-card rounded-lg p-2">
+                              <span className="text-sm text-text-secondary">
+                                {mode === 'always-first' ? 'Always First' : 
+                                 mode === 'queue-based' ? 'Queue-Based' : 
+                                 mode === 'after-all' ? 'After All' : mode}
+                              </span>
+                              <span className="text-blue-400 font-bold">{formatCurrencyWithSymbol(data.revenue || 0, true)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Поведение ботов */}
+                      <div className="mb-4">
+                        <h6 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Доход по поведению ботов:</h6>
+                        <div className="space-y-2">
+                          {Object.entries(botIntegrationData.behaviors).map(([behavior, data]) => (
+                            <div key={behavior} className="flex justify-between items-center bg-surface-card rounded-lg p-2">
+                              <span className="text-sm text-text-secondary">
+                                {behavior === 'aggressive' ? 'Агрессивный' : 
+                                 behavior === 'balanced' ? 'Сбалансированный' : 
+                                 behavior === 'cautious' ? 'Осторожный' : behavior}
+                              </span>
+                              <span className="text-blue-400 font-bold">{formatCurrencyWithSymbol(data.revenue || 0, true)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Эффективность */}
+                      <div>
+                        <h6 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Эффективность:</h6>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="bg-surface-card rounded-lg p-3">
+                            <div className="text-xs text-text-secondary mb-1">Доход за игру</div>
+                            <div className="text-lg font-bold text-blue-400">{formatCurrencyWithSymbol(botIntegrationData.efficiency.revenue_per_game || 0, true)}</div>
+                          </div>
+                          <div className="bg-surface-card rounded-lg p-3">
+                            <div className="text-xs text-text-secondary mb-1">Доход за бота</div>
+                            <div className="text-lg font-bold text-blue-400">{formatCurrencyWithSymbol(botIntegrationData.efficiency.revenue_per_bot || 0, true)}</div>
+                          </div>
+                          <div className="bg-surface-card rounded-lg p-3">
+                            <div className="text-xs text-text-secondary mb-1">Игр на бота</div>
+                            <div className="text-lg font-bold text-blue-400">{botIntegrationData.efficiency.games_per_bot?.toFixed(1) || 0}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {modalLoading ? (
                     <div className="text-center py-8">
