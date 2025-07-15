@@ -426,11 +426,6 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const handleActiveBetsModal = (bot) => {
-    setSelectedBotForActiveBets(bot);
-    setIsActiveBetsModalOpen(true);
-  };
-
   const createExtendedBot = async () => {
     // Валидация перед созданием
     const validation = validateExtendedBotForm(botForm);
