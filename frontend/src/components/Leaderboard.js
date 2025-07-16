@@ -28,9 +28,9 @@ const Leaderboard = ({ user }) => {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
-      // Mock data for demonstration
-      setLeaderboard(generateMockLeaderboard());
-      setUserRank(Math.floor(Math.random() * 50) + 1);
+      // Show empty state instead of mock data
+      setLeaderboard([]);
+      setUserRank(null);
       setLoading(false);
     }
   };
