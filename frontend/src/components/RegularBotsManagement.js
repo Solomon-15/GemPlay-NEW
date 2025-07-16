@@ -1590,10 +1590,10 @@ const RegularBotsManagement = () => {
                   Статус
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Активные ставки
+                  Акт ставки
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Победы/Поражения/Ничьи
+                  Пбд/Прж/Нчя
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   % Win
