@@ -125,6 +125,20 @@ class BotSettingsRequest(BaseModel):
     autoActivateFromQueue: bool = True
     priorityType: str = Field(default="order")  # 'order' or 'manual'
 
+# Interface Settings model
+class InterfaceSettings(BaseModel):
+    live_players: dict = Field(default={
+        "my_bets": 10,
+        "available_bets": 10,
+        "ongoing_battles": 10
+    })
+    bot_players: dict = Field(default={
+        "available_bots": 10,
+        "ongoing_bot_battles": 10
+    })
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 # Bot Queue Stats model
 class BotQueueStats(BaseModel):
     totalActiveRegularBets: int = 0
