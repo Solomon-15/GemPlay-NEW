@@ -38,13 +38,8 @@ const GameLobby = ({ user, onUpdateUser }) => {
     }
   };
 
-  const canJoinGame = (game) => {
-    // Проверяем, может ли пользователь присоединиться к игре
-    return (
-      game.status === 'WAITING' &&
-      game.creator_id !== user.id &&
-      !game.opponent_id
-    );
+  const canJoinGameLocal = (game) => {
+    return canJoinGame(game, user.id);
   };
 
   const handleJoinGame = async (gameId) => {
