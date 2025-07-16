@@ -6726,7 +6726,44 @@ async def should_bot_take_action(bot: Bot) -> bool:
 async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
     """Поддерживает количество активных ставок равным target_count."""
     try:
-        # Получаем текущее количество активных ставок
+        # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
+        # Получаем глобальные настройки
+        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
+        max_active_bets_human = bot_settings.get("max_active_bets_human", 30) if bot_settings else 30
+        
+        # Получаем информацию о боте
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            return
+            
+        bot_type = bot.get("bot_type", "REGULAR")
+        
+        # Подсчитываем текущие активные ставки по типу бота
+        if bot_type == "REGULAR":
+            current_global_bets = await db.games.count_documents({
+                "creator_type": "bot",
+                "is_bot_game": True,
+                "status": "WAITING",
+                "$or": [
+                    {"bot_type": "REGULAR"},
+                    {"metadata.bot_type": "REGULAR"}
+                ]
+            })
+            max_limit = max_active_bets_regular
+        else:  # HUMAN
+            current_global_bets = await db.games.count_documents({
+                "creator_type": "bot",
+                "is_bot_game": True,
+                "status": "WAITING",
+                "$or": [
+                    {"bot_type": "HUMAN"},
+                    {"metadata.bot_type": "HUMAN"}
+                ]
+            })
+            max_limit = max_active_bets_human
+        
+        # Получаем текущее количество активных ставок конкретного бота
         current_active_bets = await db.games.count_documents({
             "creator_id": bot_id,
             "status": "WAITING"
@@ -6736,18 +6773,40 @@ async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
         if current_active_bets < target_count:
             needed_bets = target_count - current_active_bets
             
-            # Получаем бота
-            bot = await db.bots.find_one({"id": bot_id})
-            if bot:
+            # Проверяем, сколько ставок можно создать с учетом глобального лимита
+            available_global_slots = max_limit - current_global_bets
+            actual_needed_bets = min(needed_bets, available_global_slots)
+            
+            if actual_needed_bets > 0:
                 bot_obj = Bot(**bot)
                 
-                for _ in range(needed_bets):
+                for i in range(actual_needed_bets):
                     try:
-                        await bot_create_game_automatically(bot_obj)
+                        # Проверяем глобальный лимит перед каждой попыткой создания
+                        current_check = await db.games.count_documents({
+                            "creator_type": "bot",
+                            "is_bot_game": True,
+                            "status": "WAITING",
+                            "$or": [
+                                {"bot_type": bot_type},
+                                {"metadata.bot_type": bot_type}
+                            ]
+                        })
+                        
+                        if current_check >= max_limit:
+                            logger.info(f"🚫 Global limit reached during creation, stopping at {i+1}/{actual_needed_bets}")
+                            break
+                        
+                        success = await bot_create_game_automatically(bot_obj)
+                        if not success:
+                            logger.info(f"🚫 Failed to create bet for bot {bot_id} due to limits")
+                            break
                     except Exception as e:
                         logger.error(f"Failed to create bet for bot {bot_id}: {e}")
                         
-                logger.info(f"🎯 Created {needed_bets} additional bets for bot {bot_id}")
+                logger.info(f"🎯 Created {actual_needed_bets} additional bets for bot {bot_id} (requested: {needed_bets})")
+            else:
+                logger.info(f"🚫 Cannot create bets for bot {bot_id}: global limit reached {current_global_bets}/{max_limit}")
         
         # Если активных ставок больше целевого количества, удаляем лишние
         elif current_active_bets > target_count:
