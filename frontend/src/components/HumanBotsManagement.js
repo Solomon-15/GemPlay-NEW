@@ -32,12 +32,11 @@ const HumanBotsManagement = () => {
 
   const toggleAllBots = async () => {
     try {
-      const token = localStorage.getItem('token');
       const newState = !allBotsEnabled;
       
       await axios.post(`${API}/admin/bots/toggle-all`, 
         { enabled: newState },
-        { headers: { Authorization: `Bearer ${token}` } }
+        getApiConfig()
       );
       
       setAllBotsEnabled(newState);
