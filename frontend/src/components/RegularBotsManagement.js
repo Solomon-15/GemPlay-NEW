@@ -1826,6 +1826,21 @@ const RegularBotsManagement = () => {
         totalItems={pagination.totalItems}
         className="mt-6"
       />
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              {/* Контент настроек - пока пустой */}
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">⚙️</div>
+                <h3 className="text-xl font-rajdhani font-bold text-white mb-2">Настройки ботов</h3>
+                <p className="text-text-secondary">Раздел находится в разработке</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Модальное окно создания бота */}
       {isCreateModalOpen && (
