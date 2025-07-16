@@ -6056,6 +6056,17 @@ async def get_interface_settings(current_admin: User = Depends(get_current_admin
                 "bot_players": settings_doc.get("bot_players", {
                     "available_bots": 10,
                     "ongoing_bot_battles": 10
+                }),
+                "display_limits": settings_doc.get("display_limits", {
+                    "live_players": {
+                        "max_my_bets": 50,
+                        "max_available_bets": 50,
+                        "max_ongoing_battles": 50
+                    },
+                    "bot_players": {
+                        "max_available_bots": 100,
+                        "max_ongoing_bot_battles": 100
+                    }
                 })
             }
         else:
@@ -6069,6 +6080,17 @@ async def get_interface_settings(current_admin: User = Depends(get_current_admin
                 "bot_players": {
                     "available_bots": 10,
                     "ongoing_bot_battles": 10
+                },
+                "display_limits": {
+                    "live_players": {
+                        "max_my_bets": 50,
+                        "max_available_bets": 50,
+                        "max_ongoing_battles": 50
+                    },
+                    "bot_players": {
+                        "max_available_bots": 100,
+                        "max_ongoing_bot_battles": 100
+                    }
                 }
             }
     except Exception as e:
