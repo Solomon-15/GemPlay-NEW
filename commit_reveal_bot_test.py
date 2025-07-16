@@ -113,37 +113,26 @@ class BotGameLogicTester:
                         game = await response.json()
                         game_id = game["game_id"]
                         
-                        # Test gem value calculation by checking if the game was created with correct bet amount
-                        async with self.session.get(f"{BACKEND_URL}/games/{game_id}", headers=headers) as get_response:
-                            if get_response.status == 200:
-                                game_details = await get_response.json()
-                                
-                                # The bet_amount should match our expected value
-                                actual_bet_amount = game_details.get("bet_amount", 0)
-                                expected_bet_amount = test_case["expected_value"]
-                                
-                                if abs(actual_bet_amount - expected_bet_amount) < 0.01:
-                                    self.log_test_result(
-                                        f"Gem value calculation: {test_case['name']}", 
-                                        True,
-                                        f"Expected: ${expected_bet_amount}, Got: ${actual_bet_amount} ({test_case['category']} value)"
-                                    )
-                                    success_count += 1
-                                else:
-                                    self.log_test_result(
-                                        f"Gem value calculation: {test_case['name']}", 
-                                        False,
-                                        f"Expected: ${expected_bet_amount}, Got: ${actual_bet_amount}"
-                                    )
-                                
-                                # Clean up - cancel the test game
-                                await self.session.post(f"{BACKEND_URL}/games/{game_id}/cancel", headers=headers)
-                            else:
-                                self.log_test_result(
-                                    f"Gem value calculation: {test_case['name']}", 
-                                    False,
-                                    f"Failed to get game details: {get_response.status}"
-                                )
+                        # Test gem value calculation by checking the bet_amount in the creation response
+                        actual_bet_amount = game.get("bet_amount", 0)
+                        expected_bet_amount = test_case["expected_value"]
+                        
+                        if abs(actual_bet_amount - expected_bet_amount) < 0.01:
+                            self.log_test_result(
+                                f"Gem value calculation: {test_case['name']}", 
+                                True,
+                                f"Expected: ${expected_bet_amount}, Got: ${actual_bet_amount} ({test_case['category']} value)"
+                            )
+                            success_count += 1
+                        else:
+                            self.log_test_result(
+                                f"Gem value calculation: {test_case['name']}", 
+                                False,
+                                f"Expected: ${expected_bet_amount}, Got: ${actual_bet_amount}"
+                            )
+                        
+                        # Clean up - cancel the test game
+                        await self.session.delete(f"{BACKEND_URL}/games/{game_id}/cancel", headers=headers)
                     else:
                         self.log_test_result(
                             f"Gem value calculation: {test_case['name']}", 
