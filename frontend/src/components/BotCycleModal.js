@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNotifications } from './NotificationContext';
-import API, { getApiConfig } from '../utils/api';
+import { useApi } from '../hooks/useApi';
 
 const BotCycleModal = ({ bot, onClose }) => {
   const [cycleData, setCycleData] = useState(null);
