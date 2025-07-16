@@ -3,9 +3,7 @@ import axios from 'axios';
 import { useNotifications } from './NotificationContext';
 import ProfitChart from './ProfitChart';
 import BotReports from './BotReports';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import API, { getApiConfig } from '../utils/api';
 
 const BotAnalytics = () => {
   const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' or 'reports'
