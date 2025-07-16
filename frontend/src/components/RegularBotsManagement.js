@@ -1605,10 +1605,10 @@ const RegularBotsManagement = () => {
                   Цикл
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Сумма за цикл
+                  Сумма
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Bot Type
+                  БОТ ТИП
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Интервал
@@ -1617,7 +1617,7 @@ const RegularBotsManagement = () => {
                   Поведение
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Дата регистрации
+                  Регистрация
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Действия

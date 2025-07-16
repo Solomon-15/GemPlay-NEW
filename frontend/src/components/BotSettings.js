@@ -60,33 +60,6 @@ const BotSettings = ({ user }) => {
     }
   };
 
-  const handleSaveSettings = async () => {
-    setSaving(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put(`${API}/admin/bot-settings`, settings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.success) {
-        showSuccessRU('Настройки ботов успешно сохранены');
-        fetchQueueStats(); // Обновляем статистику
-      }
-    } catch (error) {
-      console.error('Error saving bot settings:', error);
-      showErrorRU('Ошибка сохранения настроек ботов');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSettingChange = (key, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
