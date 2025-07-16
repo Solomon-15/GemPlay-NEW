@@ -21,10 +21,7 @@ const HumanBotsManagement = () => {
 
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/human/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/admin/bots/human/stats`, getApiConfig());
       setStats(response.data);
       setLoading(false);
     } catch (error) {
