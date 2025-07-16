@@ -3260,27 +3260,6 @@ const RegularBotsManagement = () => {
           </div>
         </div>
       )}
-      
-      {/* Модальное окно просмотра ставок цикла */}
-      {selectedBotCycle && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-russo text-xl text-white">
-                Ставки цикла - {selectedBotCycle.name}
-              </h3>
-              <button
-                onClick={() => setSelectedBotCycle(null)}
-                className="text-text-secondary hover:text-white transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-            
-            <BotCycleModal bot={selectedBotCycle} onClose={() => setSelectedBotCycle(null)} />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
