@@ -71,16 +71,34 @@ const RegularBotsManagement = () => {
 
   // Form states for creating bot with new extended system
   const [botForm, setBotForm] = useState({
+    // Основные параметры
     name: '',
+    count: 1, // Количество ботов для создания (1-100)
+    
+    // Настройки ставок (обновлены согласно спецификации)
+    min_bet_amount: 1.0, // 1-10000
+    max_bet_amount: 50.0, // 1-10000
+    win_percentage: 55.0, // 0-100% (по умолчанию 55%)
+    
+    // Циклы и лимиты (обновлены согласно спецификации)
+    cycle_games: 12, // 1-66 (по умолчанию 12)
+    individual_limit: 12, // 1-66 (по умолчанию = cycle_games)
+    
+    // Поведенческие настройки
     creation_mode: 'queue-based', // 'always-first', 'queue-based', 'after-all'
-    cycle_games: 12,
+    priority_order: 50, // 1-100
+    pause_between_games: 5, // 1-300 секунд (по умолчанию 5)
+    
+    // Стратегии прибыли (обновлены согласно спецификации)
+    profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
+    
+    // Старые поля для совместимости
     bot_behavior: 'balanced', // 'aggressive', 'balanced', 'cautious'
     bot_type: 'type-1', // 'type-1' to 'type-11' or custom
     custom_min_bet: 1,
     custom_max_bet: 10,
     cycle_total_amount: 0, // calculated automatically
-    win_rate_percent: 60,
-    profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
+    win_rate_percent: 55,
     can_accept_bets: false,
     can_play_with_bots: true
   });
