@@ -501,31 +501,57 @@ const RegularBotsManagement = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/admin/bots/create-extended`, botForm, {
+      
+      // Подготавливаем данные для новой системы
+      const botData = {
+        count: botForm.count,
+        min_bet_amount: botForm.min_bet_amount,
+        max_bet_amount: botForm.max_bet_amount,
+        win_percentage: botForm.win_percentage,
+        cycle_games: botForm.cycle_games,
+        individual_limit: botForm.individual_limit,
+        creation_mode: botForm.creation_mode,
+        priority_order: botForm.priority_order,
+        pause_between_games: botForm.pause_between_games,
+        profit_strategy: botForm.profit_strategy
+      };
+      
+      // Используем новый endpoint для создания regular ботов
+      const response = await axios.post(`${API}/admin/bots/create-regular`, botData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       showSuccessRU(response.data.message);
       setIsCreateModalOpen(false);
+      
+      // Сбрасываем форму
       setBotForm({
-        name: generateBotName(),
-        creation_mode: 'queue-based',
+        name: '',
+        count: 1,
+        min_bet_amount: 1.0,
+        max_bet_amount: 50.0,
+        win_percentage: 55.0,
         cycle_games: 12,
+        individual_limit: 12,
+        creation_mode: 'queue-based',
+        priority_order: 50,
+        pause_between_games: 5,
+        profit_strategy: 'balanced',
         bot_behavior: 'balanced',
         bot_type: 'type-1',
         custom_min_bet: 1,
         custom_max_bet: 10,
         cycle_total_amount: 0,
-        win_rate_percent: 60,
-        profit_strategy: 'balanced',
+        win_rate_percent: 55,
         can_accept_bets: false,
         can_play_with_bots: true
       });
-      setExtendedValidation({ isValid: true, errors: [] });
+      
       await fetchStats();
       await fetchBotsList();
+      
     } catch (error) {
-      console.error('Ошибка создания расширенного бота:', error);
+      console.error('Ошибка создания бота:', error);
       showErrorRU('Ошибка при создании бота');
     }
   };
