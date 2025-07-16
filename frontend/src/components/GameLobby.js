@@ -92,7 +92,7 @@ const GameLobby = ({ user, onUpdateUser }) => {
     );
   }
 
-  const availableGames = games.filter(game => canJoinGame(game));
+  const availableGames = games.filter(game => canJoinGameLocal(game));
 
   return (
     <div className="min-h-screen bg-gradient-primary p-8">
