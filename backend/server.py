@@ -5680,9 +5680,53 @@ class BotGameLogic:
         return random.random() < adjusted_win_rate
     
     @staticmethod
-    def get_bot_move_against_player(bot: Bot, player_move: GameMove) -> GameMove:
-        """Get bot move specifically to beat or lose to player move."""
-        should_win = BotGameLogic.should_bot_win(bot)
+    def calculate_game_gems_value(game: Game) -> dict:
+        """Calculate total gem value for both players in a game."""
+        # Gem price mapping
+        gem_prices = {
+            GemType.RUBY.value: 1.0,
+            GemType.AMBER.value: 2.0,
+            GemType.TOPAZ.value: 5.0,
+            GemType.EMERALD.value: 10.0,
+            GemType.AQUAMARINE.value: 25.0,
+            GemType.SAPPHIRE.value: 50.0,
+            GemType.MAGIC.value: 100.0
+        }
+        
+        # Calculate creator's gems value
+        creator_gems_value = 0
+        if game.bet_gems:
+            for gem_type, quantity in game.bet_gems.items():
+                price = gem_prices.get(gem_type, 0)
+                creator_gems_value += price * quantity
+        
+        # Calculate opponent's gems value (if available)
+        opponent_gems_value = 0
+        if game.opponent_gems:
+            for gem_type, quantity in game.opponent_gems.items():
+                price = gem_prices.get(gem_type, 0)
+                opponent_gems_value += price * quantity
+        
+        total_gems_value = creator_gems_value + opponent_gems_value
+        
+        return {
+            "creator_gems_value": creator_gems_value,
+            "opponent_gems_value": opponent_gems_value,
+            "total_gems_value": total_gems_value,
+            "bet_amount": game.bet_amount
+        }
+    
+    @staticmethod
+    def get_bot_move_against_player(bot: Bot, player_move: GameMove, game: Game = None) -> GameMove:
+        """Get bot move specifically to beat or lose to player move with gem value consideration."""
+        
+        # Calculate game context for decision making
+        game_context = {}
+        if game:
+            game_context = BotGameLogic.calculate_game_gems_value(game)
+        
+        # Enhanced decision making with gem value consideration
+        should_win = BotGameLogic.should_bot_win(bot, game_context)
         
         if should_win:
             # Bot should win
