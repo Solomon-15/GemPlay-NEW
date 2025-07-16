@@ -3452,11 +3452,11 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
             if winner:
                 # Winner is a human player
                 if is_regular_bot_game:
-                    # For regular bot games, simply unfreeze the original commission without deducting anything
-                    new_winner_frozen = winner["frozen_balance"] - (game.bet_amount * 0.06)  # Unfreeze winner's commission
+                    # For regular bot games, no commission was frozen, so no need to unfreeze
+                    new_winner_frozen = winner["frozen_balance"]  # No commission changes
                     new_winner_balance = winner["virtual_balance"]  # No commission deducted
                     
-                    logger.info(f"💰 REGULAR BOT GAME - Winner {winner_id} gets full payout, no commission deducted")
+                    logger.info(f"💰 REGULAR BOT GAME - Winner {winner_id} gets full payout, no commission involved")
                 else:
                     # Normal human vs human game with commission
                     commission_to_deduct = commission_amount  # 3% of total pot
