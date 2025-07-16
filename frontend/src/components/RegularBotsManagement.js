@@ -1794,24 +1794,24 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-accent-primary font-roboto text-sm">
-                        ${bot.cycle_total_amount}
+                        ${bot.cycle_total_amount || 0}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <div className="text-white font-roboto text-sm">
-                        {getBotTypeName(bot.bot_type)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <div className="text-white font-roboto text-sm">
-                        {bot.creation_mode === 'always-first' ? 'Always First' : 
-                         bot.creation_mode === 'after-all' ? 'After All' : 'Queue-Based'}
+                      <div className="text-purple-400 font-roboto text-sm">
+                        {bot.profit_strategy === 'start_profit' ? 'Ранняя прибыль' :
+                         bot.profit_strategy === 'end_loss' ? 'Поздние потери' : 'Сбалансированная'}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {bot.bot_behavior === 'aggressive' ? 'Агрессивный' : 
                          bot.bot_behavior === 'cautious' ? 'Осторожный' : 'Сбалансированный'}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
+                      <div className="text-cyan-400 font-roboto text-sm">
+                        {bot.pause_between_games ? `${bot.pause_between_games}с` : '0с'}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
