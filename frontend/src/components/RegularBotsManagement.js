@@ -525,17 +525,9 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const handleSettingsModal = (bot) => {
-    setSelectedBot(bot);
-    setIsSettingsModalOpen(true);
-  };
-
   const handleEditModal = async (bot) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/${bot.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/admin/bots/${bot.id}`, getApiConfig());
       
       // Загружаем все параметры бота в форму создания
       setBotForm({
