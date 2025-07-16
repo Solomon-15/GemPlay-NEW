@@ -5567,24 +5567,59 @@ class BotGameLogic:
     
     @staticmethod
     def calculate_bot_move(bot: Bot, game_context: dict = None) -> GameMove:
-        """Calculate bot's move based on its type and settings."""
+        """Calculate bot's move based on its type and settings with gem value consideration."""
         import random
         
         if bot.bot_type == BotType.REGULAR:
-            # Regular bot: Simple random selection
-            return random.choice([GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS])
+            # Regular bot: Enhanced random selection with gem value consideration
+            moves = [GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
+            
+            # If we have game context, consider gem value for decision making
+            if game_context and game_context.get('total_gems_value', 0) > 0:
+                total_value = game_context['total_gems_value']
+                
+                # For high-value games, apply slight patterns
+                if total_value >= 100:  # High-value game
+                    # Slightly favor rock for stability in high-value games
+                    weighted_moves = [GameMove.ROCK, GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
+                    return random.choice(weighted_moves)
+                elif total_value >= 50:  # Medium-value game
+                    # Slightly favor paper for medium-value games
+                    weighted_moves = [GameMove.ROCK, GameMove.PAPER, GameMove.PAPER, GameMove.SCISSORS]
+                    return random.choice(weighted_moves)
+            
+            # Default random selection
+            return random.choice(moves)
         
         elif bot.bot_type == BotType.HUMAN:
-            # Human bot: More sophisticated decision making
+            # Human bot: More sophisticated decision making with gem value consideration
             if bot.simple_mode:
-                # Simple human mode: slight bias towards rock
-                choices = [GameMove.ROCK, GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
+                # Simple human mode: slight bias towards rock, influenced by gem value
+                if game_context and game_context.get('total_gems_value', 0) >= 100:
+                    # High-value games: more conservative (favor rock)
+                    choices = [GameMove.ROCK, GameMove.ROCK, GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
+                else:
+                    # Standard simple mode
+                    choices = [GameMove.ROCK, GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
                 return random.choice(choices)
             else:
-                # Complex human mode: pattern-based decisions
-                # In a real implementation, this could analyze opponent patterns
-                # For now, we'll use weighted random selection
-                weights = [0.35, 0.35, 0.30]  # Rock, Paper, Scissors
+                # Complex human mode: pattern-based decisions with gem value consideration
+                if game_context and game_context.get('total_gems_value', 0) > 0:
+                    total_value = game_context['total_gems_value']
+                    
+                    if total_value >= 100:  # High-value game
+                        # More conservative weights for high-value games
+                        weights = [0.45, 0.30, 0.25]  # Rock, Paper, Scissors (favor rock)
+                    elif total_value >= 50:  # Medium-value game
+                        # Balanced but slightly favor paper
+                        weights = [0.30, 0.40, 0.30]  # Rock, Paper, Scissors
+                    else:
+                        # Low-value game: standard weights
+                        weights = [0.35, 0.35, 0.30]  # Rock, Paper, Scissors
+                else:
+                    # Default weights
+                    weights = [0.35, 0.35, 0.30]  # Rock, Paper, Scissors
+                
                 moves = [GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
                 return random.choices(moves, weights=weights)[0]
         
