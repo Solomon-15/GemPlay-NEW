@@ -6695,7 +6695,10 @@ async def bot_automation_task():
                 if await should_bot_take_action(bot_obj):
                     # Randomly decide between creating a game or joining one
                     if random.choice([True, False]):
-                        await bot_create_game_automatically(bot_obj)
+                        # Check global limits before creating a game
+                        success = await bot_create_game_automatically(bot_obj)
+                        if not success:
+                            logger.info(f"Bot {bot_obj.id} skipped due to global limits")
                     else:
                         await bot_join_game_automatically(bot_obj)
             
