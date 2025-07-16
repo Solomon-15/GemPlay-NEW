@@ -2777,9 +2777,7 @@ const RegularBotsManagement = () => {
               <div className="flex items-center space-x-3">
                 {/* Иконка приложения */}
                 <div className="p-2 bg-blue-600 rounded-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                  </svg>
+                  <img src="/Bot.svg" alt="Bot" className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-russo text-xl text-white">
                   Активные ставки — Bot
