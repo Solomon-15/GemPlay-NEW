@@ -360,19 +360,38 @@ class Bot(BaseModel):
     name: str
     bot_type: BotType
     is_active: bool = True
-    min_bet: float = 1.0
-    max_bet: float = 1000.0
-    win_rate: float = 0.6  # 60% by default
-    cycle_games: int = 12  # количество игр в цикле
+    
+    # Настройки ставок (обновлены согласно спецификации)
+    min_bet_amount: float = 1.0  # 1-10000
+    max_bet_amount: float = 100.0  # 1-10000
+    win_rate: float = 0.55  # 0-100% (по умолчанию 55%)
+    
+    # Циклы и лимиты (обновлены согласно спецификации)
+    cycle_games: int = 12  # 1-66 (по умолчанию 12)
     current_cycle_games: int = 0
     current_cycle_wins: int = 0
-    pause_between_games: int = 60  # секунд
+    current_cycle_gem_value_won: float = 0.0  # Новое поле для стоимости выигранных гемов
+    current_cycle_gem_value_total: float = 0.0  # Новое поле для общей стоимости ставок
+    current_limit: Optional[int] = None  # 1-66 (по умолчанию = cycle_games)
+    
+    # Поведенческие настройки (новые поля)
+    creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
+    priority_order: int = 50  # 1-100
+    pause_between_games: int = 5  # 1-300 секунд (по умолчанию 5)
+    
+    # Стратегии прибыли (новое поле)
+    profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
+    
+    # Временные метки
     last_game_time: Optional[datetime] = None
+    last_bet_time: Optional[datetime] = None  # Новое поле
+    
+    # Старые поля (совместимость)
     can_accept_bets: bool = False
     can_play_with_bots: bool = False
     avatar_gender: str = "male"
     simple_mode: bool = False  # Для Human ботов - простой режим
-    current_limit: Optional[int] = None  # Индивидуальный лимит активных ставок
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
