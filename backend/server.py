@@ -12682,10 +12682,10 @@ async def reset_all_bets(current_user: User = Depends(get_current_admin)):
             detail="Failed to reset all bets"
         )
 
-# Start bot automation background task
+# Start NEW bot automation background task
 async def start_bot_automation():
-    """Start the bot automation background task."""
-    asyncio.create_task(bot_automation_task())
+    """Start the NEW bot automation background task."""
+    asyncio.create_task(new_bot_automation_task())
 
 # Include routers
 app.include_router(auth_router)
