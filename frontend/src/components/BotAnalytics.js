@@ -19,39 +19,6 @@ const BotAnalytics = () => {
   const [botsList, setBotsList] = useState([]);
   const { showErrorRU } = useNotifications();
   const { botsApi, analyticsApi, loading: apiLoading } = useApi();
-  
-  const [botsList, setBotsList] = useState([]);
-  const [selectedBot, setSelectedBot] = useState('all');
-  const [timeRange, setTimeRange] = useState('24h');
-  const [analyticsData, setAnalyticsData] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  const fetchBotsList = async () => {
-    try {
-      const response = await botsApi.getList({ page: 1, limit: 100 });
-      setBotsList(response.bots || []);
-    } catch (error) {
-      console.error('Error fetching bots list:', error);
-    }
-  };
-
-  const fetchAnalyticsData = async () => {
-    try {
-      const response = await analyticsApi.getData({ 
-        timeRange, 
-        botId: selectedBot === 'all' ? null : selectedBot 
-      });
-      
-      if (response.success) {
-        setAnalyticsData(response.data);
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching analytics data:', error);
-      showErrorRU('Ошибка загрузки аналитики');
-      setLoading(false);
-    }
-  };
 
   const handleRefresh = () => {
     setLoading(true);
