@@ -2,142 +2,28 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications as useNotificationBell, useDropdownPosition } from '../hooks/useNotificationBell';
 
 const NotificationBell = ({ isCollapsed }) => {
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ right: 0, top: '100%' });
   const bellRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Fetch notifications
-  const fetchNotifications = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) return;
+  // Use custom hooks
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    getNotificationIcon,
+    timeAgo
+  } = useNotificationBell();
 
-      const response = await axios.get(`${API}/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setNotifications(response.data);
-      setUnreadCount(response.data.filter(n => !n.read).length);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  };
-
-  // Calculate optimal dropdown position
-  const calculateDropdownPosition = () => {
-    if (!bellRef.current) return;
-
-    const bellRect = bellRef.current.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    const dropdownWidth = 320;
-    const dropdownMaxHeight = 400;
-    
-    let position = {
-      right: 0,
-      top: '100%',
-      left: 'auto',
-      bottom: 'auto',
-      maxHeight: `${dropdownMaxHeight}px`
-    };
-
-    // Check if dropdown would go off right edge of screen
-    if (bellRect.right - dropdownWidth < 0) {
-      // Position to the left of bell
-      position.left = 0;
-      position.right = 'auto';
-    }
-
-    // Check if dropdown would go off bottom of screen
-    const spaceBelow = viewportHeight - bellRect.bottom - 8; // 8px margin
-    const spaceAbove = bellRect.top - 8;
-    
-    if (spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow) {
-      // Position above the bell
-      position.bottom = '100%';
-      position.top = 'auto';
-      position.maxHeight = `${Math.min(spaceAbove, dropdownMaxHeight)}px`;
-    } else {
-      // Position below the bell (default)
-      position.maxHeight = `${Math.min(spaceBelow, dropdownMaxHeight)}px`;
-    }
-
-    setDropdownPosition(position);
-  };
-
-  // Mark notification as read
-  const markAsRead = async (notificationId) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/notifications/${notificationId}/mark-read`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      // Update local state
-      setNotifications(prev => 
-        prev.map(n => 
-          n.id === notificationId ? { ...n, read: true } : n
-        )
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-
-  // Mark all as read
-  const markAllAsRead = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(`${API}/notifications/mark-all-read`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      // Update local state
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-    }
-  };
-
-  // Get notification icon and color
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'GIFT_RECEIVED':
-        return { icon: '🎁', color: 'text-green-400' };
-      case 'GAME_WON':
-        return { icon: '🏆', color: 'text-yellow-400' };
-      case 'GAME_LOST':
-        return { icon: '😞', color: 'text-red-400' };
-      case 'BALANCE_LOW':
-        return { icon: '💰', color: 'text-orange-400' };
-      default:
-        return { icon: 'ℹ️', color: 'text-blue-400' };
-    }
-  };
-
-  // Format time ago
-  const timeAgo = (dateString) => {
-    const now = new Date();
-    const notificationDate = new Date(dateString);
-    const diffInMinutes = Math.floor((now - notificationDate) / (1000 * 60));
-
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-    return `${Math.floor(diffInMinutes / 1440)}d ago`;
-  };
+  const { position, calculatePosition } = useDropdownPosition(bellRef);
 
   // Handle bell click
   const handleBellClick = () => {
     if (!isOpen) {
-      calculateDropdownPosition();
+      calculatePosition();
       fetchNotifications();
     }
     setIsOpen(!isOpen);
@@ -152,24 +38,15 @@ const NotificationBell = ({ isCollapsed }) => {
   };
 
   useEffect(() => {
-    fetchNotifications();
-    
-    // Refresh notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      window.addEventListener('resize', calculateDropdownPosition);
+      window.addEventListener('resize', calculatePosition);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
-        window.removeEventListener('resize', calculateDropdownPosition);
+        window.removeEventListener('resize', calculatePosition);
       };
     }
-  }, [isOpen]);
+  }, [isOpen, calculatePosition]);
 
   return (
     <div className="relative">
@@ -196,23 +73,23 @@ const NotificationBell = ({ isCollapsed }) => {
       {/* Notifications Dropdown */}
       {isOpen && (
         <>
-          {/* Enhanced Backdrop with higher z-index */}
+          {/* Enhanced Backdrop */}
           <div 
             className="fixed inset-0 z-[9998]" 
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Dropdown Panel with enhanced positioning */}
+          {/* Dropdown Panel */}
           <div 
             ref={dropdownRef}
             className="fixed z-[9999] w-80 bg-surface-card border border-border-primary rounded-lg shadow-2xl overflow-hidden"
             style={{
-              ...dropdownPosition,
-              right: dropdownPosition.right !== 'auto' ? `${bellRef.current?.getBoundingClientRect().right - (bellRef.current?.getBoundingClientRect().width || 0) - 320 + (bellRef.current?.getBoundingClientRect().width || 0)}px` : dropdownPosition.right,
-              left: dropdownPosition.left !== 'auto' ? `${bellRef.current?.getBoundingClientRect().left}px` : dropdownPosition.left,
-              top: dropdownPosition.top !== 'auto' ? `${(bellRef.current?.getBoundingClientRect().bottom || 0) + 8}px` : dropdownPosition.top,
-              bottom: dropdownPosition.bottom !== 'auto' ? `${window.innerHeight - (bellRef.current?.getBoundingClientRect().top || 0) + 8}px` : dropdownPosition.bottom,
-              maxHeight: dropdownPosition.maxHeight,
+              ...position,
+              right: position.right !== 'auto' ? `${bellRef.current?.getBoundingClientRect().right - (bellRef.current?.getBoundingClientRect().width || 0) - 320 + (bellRef.current?.getBoundingClientRect().width || 0)}px` : position.right,
+              left: position.left !== 'auto' ? `${bellRef.current?.getBoundingClientRect().left}px` : position.left,
+              top: position.top !== 'auto' ? `${(bellRef.current?.getBoundingClientRect().bottom || 0) + 8}px` : position.top,
+              bottom: position.bottom !== 'auto' ? `${window.innerHeight - (bellRef.current?.getBoundingClientRect().top || 0) + 8}px` : position.bottom,
+              maxHeight: position.maxHeight,
               minWidth: '320px',
               maxWidth: '320px'
             }}
