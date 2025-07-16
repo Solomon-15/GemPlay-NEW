@@ -10018,12 +10018,17 @@ async def get_bot_settings(current_user: User = Depends(get_current_admin)):
         
         if not settings:
             # Create default settings if not exists
-            default_settings = BotSettings()
-            await db.bot_settings.insert_one(default_settings.dict())
-            settings = default_settings.dict()
+            default_settings = {
+                "id": "bot_settings",
+                "max_active_bets_regular": 50,
+                "max_active_bets_human": 30,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            await db.bot_settings.insert_one(default_settings)
+            settings = default_settings
         
         return {
-            "settings": settings,
             "max_active_bets_regular": settings.get("max_active_bets_regular", 50),
             "max_active_bets_human": settings.get("max_active_bets_human", 30)
         }
