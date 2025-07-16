@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import API, { getApiConfig } from '../utils/api';
+import { useApi } from '../hooks/useApi';
+import { useBotOperations } from '../hooks/useBotOperations';
 
 const HumanBotsManagement = () => {
   const [stats, setStats] = useState({
