@@ -2246,21 +2246,39 @@ const RegularBotsManagement = () => {
       {/* Модальное окно просмотра активных ставок */}
       {isActiveBetsModalOpen && selectedBotForActiveBets && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-russo text-xl text-white">
-                Активные ставки —  {selectedBotForActiveBets.name}
-              </h3>
-              <button
-                onClick={() => {
-                  setIsActiveBetsModalOpen(false);
-                  setSelectedBotForActiveBets(null);
-                  setActiveBetsData(null);
-                }}
-                className="text-text-secondary hover:text-white transition-colors"
-              >
-                ✕
-              </button>
+              <div className="flex items-center space-x-3">
+                {/* Иконка приложения */}
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
+                <h3 className="font-russo text-xl text-white">
+                  Активные ставки — Bot
+                </h3>
+              </div>
+              
+              {/* Общая сумма в правом верхнем углу */}
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <div className="text-text-secondary text-sm">Общая сумма</div>
+                  <div className="text-accent-primary text-2xl font-rajdhani font-bold">
+                    ${activeBetsData?.totalBetAmount || 0}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setIsActiveBetsModalOpen(false);
+                    setSelectedBotForActiveBets(null);
+                    setActiveBetsData(null);
+                  }}
+                  className="text-text-secondary hover:text-white transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
             
             {loadingActiveBets ? (
@@ -2270,28 +2288,35 @@ const RegularBotsManagement = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="bg-surface-sidebar rounded-lg p-3">
-                    <div className="text-text-secondary text-sm">Активных ставок</div>
-                    <div className="text-lg font-bold text-blue-400">
-                      {activeBetsData?.length || 0}
+                {/* Детальная статистика */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <div className="text-text-secondary text-sm">Всего ставок</div>
+                    <div className="text-blue-400 text-2xl font-rajdhani font-bold">
+                      {activeBetsData?.totalBets || 0}
                     </div>
                   </div>
-                  <div className="bg-surface-sidebar rounded-lg p-3">
-                    <div className="text-text-secondary text-sm">Статус бота</div>
-                    <div className={`text-lg font-bold ${selectedBotForActiveBets.is_active ? 'text-green-400' : 'text-red-400'}`}>
-                      {selectedBotForActiveBets.is_active ? 'Активен' : 'Отключен'}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <div className="text-text-secondary text-sm">Сыгранных игр</div>
+                    <div className="text-white text-2xl font-rajdhani font-bold">
+                      {activeBetsData?.gamesPlayed || 0}
                     </div>
                   </div>
-                  <div className="bg-surface-sidebar rounded-lg p-3">
-                    <div className="text-text-secondary text-sm">Общая сумма</div>
-                    <div className="text-lg font-bold text-accent-primary">
-                      ${activeBetsData?.reduce((sum, bet) => sum + (bet.bet_amount || bet.amount || 0), 0) || 0}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <div className="text-text-secondary text-sm">Выигрыши бота</div>
+                    <div className="text-green-400 text-2xl font-rajdhani font-bold">
+                      {activeBetsData?.botWins || 0}
+                    </div>
+                  </div>
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <div className="text-text-secondary text-sm">Выигрыши игроков</div>
+                    <div className="text-orange-400 text-2xl font-rajdhani font-bold">
+                      {activeBetsData?.playerWins || 0}
                     </div>
                   </div>
                 </div>
 
-                {!activeBetsData || activeBetsData.length === 0 ? (
+                {!activeBetsData?.bets || activeBetsData.bets.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="text-text-secondary text-lg">
                       У бота нет активных ставок в данный момент
@@ -2309,16 +2334,17 @@ const RegularBotsManagement = () => {
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Ход</th>
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Статус</th>
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Соперник</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Результат</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border-primary">
-                        {activeBetsData.map((bet, index) => {
+                        {activeBetsData.bets.map((bet, index) => {
                           const betDate = new Date(bet.created_at);
                           const dateStr = betDate.toLocaleDateString('ru-RU');
                           const timeStr = betDate.toLocaleTimeString('ru-RU');
                           
                           return (
-                            <tr key={bet.id || index} className="hover:bg-surface-sidebar transition-colors">
+                            <tr key={bet.id || index} className="hover:bg-surface-sidebar transition-colors hover:border-l-4 hover:border-green-400">
                               <td className="px-4 py-3">
                                 <div className="text-sm font-roboto text-white font-mono">
                                   {bet.id ? bet.id.substring(0, 8) : `#${index + 1}`}
@@ -2346,13 +2372,15 @@ const RegularBotsManagement = () => {
                               </td>
                               <td className="px-4 py-3">
                                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-roboto font-medium ${
-                                  bet.status === 'active' ? 'bg-green-100 text-green-800' :
-                                  bet.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
-                                  bet.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                                  'bg-gray-100 text-gray-800'
+                                  bet.status === 'active' ? 'bg-green-600 text-white' :
+                                  bet.status === 'waiting' ? 'bg-yellow-600 text-white' :
+                                  bet.status === 'reveal' ? 'bg-blue-600 text-white' :
+                                  bet.status === 'completed' ? 'bg-purple-600 text-white' :
+                                  'bg-gray-600 text-white'
                                 }`}>
                                   {bet.status === 'active' ? 'Активна' :
                                    bet.status === 'waiting' ? 'Ожидает' :
+                                   bet.status === 'reveal' ? 'Раскрытие' :
                                    bet.status === 'completed' ? 'Завершена' :
                                    bet.status || 'Неизвестно'}
                                 </span>
@@ -2360,6 +2388,21 @@ const RegularBotsManagement = () => {
                               <td className="px-4 py-3">
                                 <div className="text-sm font-roboto text-white">
                                   {bet.opponent_name || bet.opponent_id || '—'}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-sm font-roboto">
+                                  {bet.status === 'completed' ? (
+                                    <span className={`font-bold ${
+                                      bet.winner === selectedBotForActiveBets.id ? 'text-green-400' : 
+                                      bet.winner ? 'text-red-400' : 'text-gray-400'
+                                    }`}>
+                                      {bet.winner === selectedBotForActiveBets.id ? 'Победа' : 
+                                       bet.winner ? 'Поражение' : 'Ничья'}
+                                    </span>
+                                  ) : (
+                                    <span className="text-text-secondary">—</span>
+                                  )}
                                 </div>
                               </td>
                             </tr>
