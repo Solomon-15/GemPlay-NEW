@@ -1831,11 +1831,340 @@ const RegularBotsManagement = () => {
 
           {activeTab === 'settings' && (
             <div className="space-y-6">
-              {/* Контент настроек - пока пустой */}
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">⚙️</div>
-                <h3 className="text-xl font-rajdhani font-bold text-white mb-2">Настройки ботов</h3>
-                <p className="text-text-secondary">Раздел находится в разработке</p>
+              {/* Система приоритетов */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-purple-600 rounded-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-rajdhani text-xl font-bold text-white">🎯 Система приоритетов</h3>
+                      <p className="text-text-secondary text-sm">Управление очередностью создания ставок</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-text-secondary text-sm">Режим:</span>
+                      <select
+                        value={priorityType}
+                        onChange={(e) => setPriorityType(e.target.value)}
+                        className="bg-surface-sidebar border border-border-primary rounded px-3 py-1 text-white text-sm"
+                      >
+                        <option value="order">По порядку</option>
+                        <option value="manual">Ручное управление</option>
+                      </select>
+                    </div>
+                    <button
+                      onClick={handleResetPriorities}
+                      className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm font-rajdhani font-bold"
+                    >
+                      Сбросить приоритеты
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Статистика приоритетов */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-4">📊 Статистика приоритетов</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Always First:</span>
+                        <span className="text-red-400 font-bold">{botsList.filter(bot => bot.creation_mode === 'always-first').length}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Queue Based:</span>
+                        <span className="text-blue-400 font-bold">{botsList.filter(bot => bot.creation_mode === 'queue-based' || !bot.creation_mode).length}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">After All:</span>
+                        <span className="text-green-400 font-bold">{botsList.filter(bot => bot.creation_mode === 'after-all').length}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Управление приоритетами */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-4">🎮 Управление приоритетами</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span className="text-text-secondary text-sm">Высокий приоритет</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-text-secondary text-sm">Средний приоритет</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="text-text-secondary text-sm">Низкий приоритет</span>
+                      </div>
+                      <div className="mt-4 p-3 bg-gray-800 rounded-lg">
+                        <p className="text-xs text-text-secondary">
+                          {priorityType === 'manual' ? 
+                            'Ручное управление: используйте кнопки ↑/↓ в таблице ботов' : 
+                            'Автоматическое управление: боты активируются по порядку создания'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Индивидуальные лимиты */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-rajdhani text-xl font-bold text-white">📊 Индивидуальные лимиты</h3>
+                      <p className="text-text-secondary text-sm">Настройка лимитов активных ставок</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Глобальные лимиты */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-4">🌐 Глобальные лимиты</h4>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-text-secondary text-sm mb-2">Максимум Regular ботов:</label>
+                        <input
+                          type="number"
+                          value={globalMaxBets}
+                          onChange={(e) => setGlobalMaxBets(parseInt(e.target.value))}
+                          className="w-full bg-surface-card border border-border-primary rounded px-3 py-2 text-white"
+                          min="1"
+                          max="200"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-text-secondary text-sm mb-2">Максимум Human ботов:</label>
+                        <input
+                          type="number"
+                          value={botSettings.max_active_bets_human}
+                          onChange={(e) => setBotSettings(prev => ({...prev, max_active_bets_human: parseInt(e.target.value)}))}
+                          className="w-full bg-surface-card border border-border-primary rounded px-3 py-2 text-white"
+                          min="1"
+                          max="100"
+                        />
+                      </div>
+                      <button
+                        onClick={() => updateBotSettings({
+                          max_active_bets_regular: globalMaxBets,
+                          max_active_bets_human: botSettings.max_active_bets_human
+                        })}
+                        className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 font-rajdhani font-bold"
+                      >
+                        Сохранить лимиты
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Статистика лимитов */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-4">📈 Статистика лимитов</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Использовано Regular:</span>
+                        <span className="text-blue-400 font-bold">{activeBetsStats.regular_bots.current}/{activeBetsStats.regular_bots.max}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Использовано Human:</span>
+                        <span className="text-orange-400 font-bold">{activeBetsStats.human_bots.current}/{activeBetsStats.human_bots.max}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Доступно слотов:</span>
+                        <span className="text-green-400 font-bold">{activeBetsStats.regular_bots.available}</span>
+                      </div>
+                      <div className="mt-4">
+                        <div className="w-full bg-gray-700 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              activeBetsStats.regular_bots.percentage >= 90 ? 'bg-red-500' :
+                              activeBetsStats.regular_bots.percentage >= 70 ? 'bg-yellow-500' : 'bg-green-500'
+                            }`}
+                            style={{ width: `${Math.min(100, activeBetsStats.regular_bots.percentage)}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-text-secondary mt-1">Заполненность: {activeBetsStats.regular_bots.percentage}%</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Управление лимитами */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-4">⚙️ Управление лимитами</h4>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-gray-800 rounded-lg">
+                        <h5 className="text-sm font-bold text-white mb-2">Индивидуальные лимиты:</h5>
+                        <p className="text-xs text-text-secondary">
+                          Каждый бот может иметь собственный лимит активных ставок от 1 до 50.
+                          Редактируйте лимиты в таблице ботов.
+                        </p>
+                      </div>
+                      <div className="p-3 bg-gray-800 rounded-lg">
+                        <h5 className="text-sm font-bold text-white mb-2">Автоматическая балансировка:</h5>
+                        <p className="text-xs text-text-secondary">
+                          Система автоматически поддерживает количество активных ставок в пределах лимитов.
+                        </p>
+                      </div>
+                      <div className="p-3 bg-gray-800 rounded-lg">
+                        <h5 className="text-sm font-bold text-white mb-2">Валидация:</h5>
+                        <p className="text-xs text-text-secondary">
+                          Сумма всех индивидуальных лимитов не может превышать глобальный лимит.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Система циклов */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-green-600 rounded-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-rajdhani text-xl font-bold text-white">🔄 Система циклов</h3>
+                      <p className="text-text-secondary text-sm">Управление циклами ставок и накопителями прибыли</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => setIsProfitAccumulatorsModalOpen(true)}
+                      className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm font-rajdhani font-bold"
+                    >
+                      Накопители прибыли
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Статистика циклов */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-4">📊 Статистика циклов</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Активных циклов:</span>
+                        <span className="text-green-400 font-bold">{botsList.filter(bot => bot.current_cycle_games > 0).length}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Завершенных:</span>
+                        <span className="text-blue-400 font-bold">{botsList.filter(bot => bot.current_cycle_games === 0).length}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-text-secondary">Средняя длина:</span>
+                        <span className="text-white font-bold">{botsList.length > 0 ? Math.round(botsList.reduce((sum, bot) => sum + (bot.cycle_games || 12), 0) / botsList.length) : 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Автоматическое управление */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-4">🤖 Автоматическое управление</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-secondary text-sm">Автосоздание:</span>
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-secondary text-sm">Автозавершение:</span>
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-text-secondary text-sm">Мониторинг:</span>
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      </div>
+                      <div className="mt-4 p-3 bg-gray-800 rounded-lg">
+                        <p className="text-xs text-text-secondary">
+                          Система автоматически создает новые ставки при завершении предыдущих
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Принудительные действия */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-4">⚡ Принудительные действия</h4>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => {
+                          if (confirm('Завершить все активные циклы?')) {
+                            botsList.forEach(bot => {
+                              if (bot.current_cycle_games > 0) {
+                                handleForceCompleteCycle(bot);
+                              }
+                            });
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm font-rajdhani font-bold"
+                      >
+                        Завершить все циклы
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Сбросить все ставки ботов?')) {
+                            botsList.forEach(bot => {
+                              recalculateBotBets(bot.id);
+                            });
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm font-rajdhani font-bold"
+                      >
+                        Пересчитать все ставки
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Сбросить все накопители прибыли?')) {
+                            showErrorRU('Функция пока не реализована');
+                          }
+                        }}
+                        className="w-full px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm font-rajdhani font-bold"
+                      >
+                        Сбросить накопители
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Настройки циклов */}
+                  <div className="bg-surface-sidebar rounded-lg p-4">
+                    <h4 className="font-rajdhani text-lg font-bold text-white mb-4">⚙️ Настройки циклов</h4>
+                    <div className="space-y-3">
+                      <div className="p-3 bg-gray-800 rounded-lg">
+                        <h5 className="text-sm font-bold text-white mb-2">Длина цикла:</h5>
+                        <p className="text-xs text-text-secondary">
+                          От 1 до 100 игр на цикл
+                        </p>
+                      </div>
+                      <div className="p-3 bg-gray-800 rounded-lg">
+                        <h5 className="text-sm font-bold text-white mb-2">Стратегии прибыли:</h5>
+                        <p className="text-xs text-text-secondary">
+                          start-positive, balanced, start-negative
+                        </p>
+                      </div>
+                      <div className="p-3 bg-gray-800 rounded-lg">
+                        <h5 className="text-sm font-bold text-white mb-2">Поведение ботов:</h5>
+                        <p className="text-xs text-text-secondary">
+                          aggressive, balanced, cautious
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
