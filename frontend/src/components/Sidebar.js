@@ -206,9 +206,7 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
                       : 'px-3 py-3 rounded-lg'
                   } ${
                     currentView === item.id 
-                      ? isCollapsed
-                        ? `bg-${item.id === 'monitoring' ? 'red' : item.id === 'admin-panel' ? 'purple' : 'accent'}-500/5 ${item.color}` 
-                        : `bg-${item.id === 'monitoring' ? 'red' : item.id === 'admin-panel' ? 'purple' : 'accent'}-500/5 ${item.color}`
+                      ? 'bg-accent-primary bg-opacity-20 text-accent-primary'
                       : `hover:bg-surface-card ${item.color} hover:text-white`
                   }`}
                   title={isCollapsed ? item.label : ''}
