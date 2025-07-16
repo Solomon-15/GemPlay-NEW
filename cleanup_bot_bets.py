@@ -11,9 +11,10 @@ async def cleanup_excess_bot_bets():
     """Очистка избыточных ставок ботов"""
     
     # Подключение к MongoDB
-    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/gemplay')
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     client = MongoClient(mongo_url)
-    db = client.gemplay
+    db_name = os.environ.get('DB_NAME', 'gemplay_db')
+    db = client[db_name]
     
     print("=== ОЧИСТКА ИЗБЫТОЧНЫХ СТАВОК БОТОВ ===")
     
