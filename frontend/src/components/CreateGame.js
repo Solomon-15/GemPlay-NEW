@@ -85,19 +85,14 @@ const CreateGame = ({ user, onUpdateUser }) => {
       return;
     }
 
-    const validationError = validateBet();
+    const validationError = validateBetForm();
     if (validationError) {
       showError(validationError);
       return;
     }
 
     // Filter out gems with 0 quantity
-    const betGems = {};
-    for (const [gemType, quantity] of Object.entries(selectedGems)) {
-      if (quantity > 0) {
-        betGems[gemType] = quantity;
-      }
-    }
+    const betGems = filterValidGems(selectedGems);
 
     if (Object.keys(betGems).length === 0) {
       showWarning('Please select at least one gem for betting');
