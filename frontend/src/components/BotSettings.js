@@ -26,24 +26,6 @@ const BotSettings = ({ user }) => {
     fetchQueueStats();
   }, []);
 
-  const fetchBotSettings = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bot-settings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.data.success) {
-        setSettings(response.data.settings);
-      }
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching bot settings:', error);
-      showErrorRU('Ошибка загрузки настроек ботов');
-      setLoading(false);
-    }
-  };
-
   const fetchQueueStats = async () => {
     try {
       const token = localStorage.getItem('token');
