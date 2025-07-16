@@ -3586,10 +3586,83 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     reference_id=game.id
                 )
                 await db.transactions.insert_one(transaction.dict())
+        
+        # Автоматическое создание новой ставки для бота при принятии существующей
+        await maintain_bot_active_bets(game)
             
     except Exception as e:
         logger.error(f"Error distributing game rewards: {e}")
         raise
+
+async def maintain_bot_active_bets(game: Game):
+    """Поддерживает количество активных ставок бота равным параметру cycle_games."""
+    try:
+        # Определяем, какой бот участвует в игре
+        bot_id = None
+        
+        # Проверяем создателя игры
+        creator_bot = await db.bots.find_one({"id": game.creator_id})
+        if creator_bot and creator_bot.get("bot_type") == "REGULAR":
+            bot_id = game.creator_id
+        
+        # Проверяем оппонента
+        if not bot_id and game.opponent_id:
+            opponent_bot = await db.bots.find_one({"id": game.opponent_id})
+            if opponent_bot and opponent_bot.get("bot_type") == "REGULAR":
+                bot_id = game.opponent_id
+        
+        if not bot_id:
+            return  # Не бот или Human бот, ничего не делаем
+        
+        # Получаем бота
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            return
+        
+        bot_obj = Bot(**bot)
+        
+        # Получаем текущее количество активных ставок
+        current_active_bets = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "WAITING"
+        })
+        
+        # Получаем целевое количество активных ставок (cycle_games)
+        target_active_bets = bot_obj.cycle_games
+        
+        # Если активных ставок меньше целевого количества, создаём новые
+        needed_bets = target_active_bets - current_active_bets
+        
+        if needed_bets > 0:
+            logger.info(f"🎯 Bot {bot_id} needs {needed_bets} new bets to maintain {target_active_bets} active bets")
+            
+            for _ in range(needed_bets):
+                try:
+                    await bot_create_game_automatically(bot_obj)
+                    logger.info(f"✅ Created new bet for bot {bot_id}")
+                except Exception as e:
+                    logger.error(f"Failed to create new bet for bot {bot_id}: {e}")
+            
+            # Обновляем количество активных ставок в базе данных
+            new_active_count = await db.games.count_documents({
+                "creator_id": bot_id,
+                "status": "WAITING"
+            })
+            
+            await db.bots.update_one(
+                {"id": bot_id},
+                {
+                    "$set": {
+                        "active_bets": new_active_count,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            logger.info(f"🎯 Bot {bot_id} now has {new_active_count} active bets")
+        
+    except Exception as e:
+        logger.error(f"Error maintaining bot active bets: {e}")
 
 async def accumulate_bot_profit(game: Game, winner_id: str):
     """Накопление прибыли от обычных ботов в защищённом контейнере."""
