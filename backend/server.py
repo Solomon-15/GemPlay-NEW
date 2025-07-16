@@ -3605,6 +3605,67 @@ class RegularBotSystem:
     def __init__(self):
         self.db = db
         self.logger = logger
+    
+    # ==========================================================================
+    # МОДЕЛЬ ДАННЫХ ОБЫЧНОГО БОТА
+    # ==========================================================================
+    
+    class RegularBotData(BaseModel):
+        """Модель данных для обычного бота."""
+        id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+        name: Optional[str] = None
+        bot_type: str = "REGULAR"
+        is_active: bool = True
+        
+        # Настройки ставок
+        min_bet_amount: float = 1.0
+        max_bet_amount: float = 100.0
+        win_rate: float = 0.55  # 55%
+        
+        # Циклы и лимиты
+        cycle_games: int = 12
+        current_cycle_games: int = 0
+        current_cycle_wins: int = 0
+        current_cycle_gem_value_won: float = 0.0
+        current_cycle_gem_value_total: float = 0.0
+        current_limit: int = 12  # Индивидуальный лимит активных ставок
+        
+        # Поведенческие настройки
+        creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
+        priority_order: int = 50  # 1-100
+        pause_between_games: int = 5  # секунды
+        
+        # Стратегии прибыли
+        profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
+        
+        # Временные метки
+        last_game_time: Optional[datetime] = None
+        last_bet_time: Optional[datetime] = None
+        created_at: datetime = Field(default_factory=datetime.utcnow)
+        updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # ==========================================================================
+    # ГЛОБАЛЬНЫЕ НАСТРОЙКИ
+    # ==========================================================================
+    
+    async def get_global_settings(self):
+        """Получение глобальных настроек системы ботов."""
+        settings = await self.db.bot_settings.find_one({"id": "bot_settings"})
+        if not settings:
+            # Создаем дефолтные настройки если их нет
+            default_settings = {
+                "id": "bot_settings",
+                "max_active_bets_regular": 50,
+                "max_active_bets_human": 30,
+                "auto_queue_activation": True,
+                "priority_system_enabled": True,
+                "default_pause_between_games": 5,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            await self.db.bot_settings.insert_one(default_settings)
+            return default_settings
+        return settings
 
 async def maintain_bot_active_bets(game: Game):
     """Поддерживает количество активных ставок бота равным параметру cycle_games."""
