@@ -5921,6 +5921,110 @@ async def update_commission_settings(
             detail="Failed to update commission settings"
         )
 
+@api_router.get("/admin/interface-settings", response_model=dict)
+async def get_interface_settings(current_admin: User = Depends(get_current_admin)):
+    """Get current interface settings."""
+    try:
+        # Try to get settings from database
+        settings_doc = await db.admin_settings.find_one({"type": "interface_settings"})
+        
+        if settings_doc:
+            return {
+                "live_players": settings_doc.get("live_players", {
+                    "my_bets": 10,
+                    "available_bets": 10,
+                    "ongoing_battles": 10
+                }),
+                "bot_players": settings_doc.get("bot_players", {
+                    "available_bots": 10,
+                    "ongoing_bot_battles": 10
+                })
+            }
+        else:
+            # Return default values if no settings found
+            return {
+                "live_players": {
+                    "my_bets": 10,
+                    "available_bets": 10,
+                    "ongoing_battles": 10
+                },
+                "bot_players": {
+                    "available_bots": 10,
+                    "ongoing_bot_battles": 10
+                }
+            }
+    except Exception as e:
+        logger.error(f"Error fetching interface settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch interface settings"
+        )
+
+@api_router.put("/admin/interface-settings", response_model=dict)
+async def update_interface_settings(
+    settings: dict,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Update interface settings."""
+    try:
+        # Validate the settings structure
+        live_players = settings.get("live_players", {})
+        bot_players = settings.get("bot_players", {})
+        
+        # Validate live_players settings
+        for key in ["my_bets", "available_bets", "ongoing_battles"]:
+            value = live_players.get(key, 10)
+            if not isinstance(value, int) or value < 5 or value > 100:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid value for live_players.{key}. Must be between 5 and 100."
+                )
+        
+        # Validate bot_players settings
+        for key in ["available_bots", "ongoing_bot_battles"]:
+            value = bot_players.get(key, 10)
+            if not isinstance(value, int) or value < 5 or value > 100:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid value for bot_players.{key}. Must be between 5 and 100."
+                )
+        
+        # Prepare settings document
+        settings_doc = {
+            "type": "interface_settings",
+            "live_players": live_players,
+            "bot_players": bot_players,
+            "updated_at": datetime.utcnow(),
+            "updated_by": current_admin.id
+        }
+        
+        # Update or create settings document
+        await db.admin_settings.update_one(
+            {"type": "interface_settings"},
+            {"$set": settings_doc},
+            upsert=True
+        )
+        
+        logger.info(f"Interface settings updated by {current_admin.email}: {settings}")
+        
+        return {
+            "success": True,
+            "message": "Interface settings updated successfully",
+            "settings": {
+                "live_players": live_players,
+                "bot_players": bot_players
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating interface settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update interface settings"
+        )
+
 @api_router.get("/admin/profit/bot-revenue-details", response_model=dict)
 async def get_bot_revenue_details(
     period: str = "month",  # day, week, month, all
