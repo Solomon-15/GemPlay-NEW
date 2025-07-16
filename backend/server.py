@@ -3697,7 +3697,7 @@ async def maintain_bot_active_bets(game: Game):
                 }
             )
             
-            logger.info(f"🎯 Bot {bot_id} now has {new_active_count} active bets")
+            logger.info(f"🎯 Bot {bot_id} now has {new_active_count} active bets (target: {target_active_bets})")
         
     except Exception as e:
         logger.error(f"Error maintaining bot active bets: {e}")
