@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNotifications } from './NotificationContext';
+import { 
+  GAME_MOVES, 
+  GAME_CONSTANTS, 
+  calculateTotalBetAmount, 
+  calculateCommission, 
+  validateBet, 
+  filterValidGems 
+} from '../utils/gameUtils';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
