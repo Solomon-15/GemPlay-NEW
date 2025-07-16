@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import API, { getApiConfig } from '../utils/api';
+import { useApi } from '../hooks/useApi';
 
 const BotSettings = ({ user }) => {
   const [loading, setLoading] = useState(true);
