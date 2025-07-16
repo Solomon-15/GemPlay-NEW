@@ -10090,6 +10090,36 @@ async def create_individual_bot(
         
         created_bot_id = bot_data["id"]
         
+        # Создаём активные ставки для нового бота
+        try:
+            bot_obj = Bot(**bot_data)
+            for _ in range(cycle_games):
+                try:
+                    await bot_create_game_automatically(bot_obj)
+                except Exception as e:
+                    logger.error(f"Failed to create initial bet for bot {created_bot_id}: {e}")
+            
+            # Обновляем количество активных ставок
+            active_count = await db.games.count_documents({
+                "creator_id": created_bot_id,
+                "status": "WAITING"
+            })
+            
+            await db.bots.update_one(
+                {"id": created_bot_id},
+                {
+                    "$set": {
+                        "active_bets": active_count,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            logger.info(f"🎯 Created {active_count} initial bets for bot {created_bot_id}")
+            
+        except Exception as e:
+            logger.error(f"Error creating initial bets for bot {created_bot_id}: {e}")
+        
         # Log admin action
         admin_log = AdminLog(
             admin_id=current_user.id,
