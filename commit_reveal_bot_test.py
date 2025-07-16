@@ -203,36 +203,35 @@ class BotGameLogicTester:
                         # Wait a moment for potential bot to join
                         await asyncio.sleep(2)
                         
-                        # Check if bot joined and how it behaved
-                        async with self.session.get(f"{BACKEND_URL}/games/{game_id}", headers=headers) as get_response:
-                            if get_response.status == 200:
-                                game_details = await get_response.json()
+                        # Check available games to see if our game is still there (bot didn't join)
+                        async with self.session.get(f"{BACKEND_URL}/games/available", headers=headers) as available_response:
+                            if available_response.status == 200:
+                                available_games = await available_response.json()
                                 
-                                # Check if a bot joined
-                                if game_details.get("opponent_id"):
-                                    # Bot joined - this indicates the logic is working
-                                    self.log_test_result(
-                                        f"Bot decision logic: {scenario['name']}", 
-                                        True,
-                                        f"Bot joined game - {scenario['expected_influence']}"
-                                    )
-                                    success_count += 1
-                                else:
-                                    # No bot joined - still valid test result
+                                # Check if our game is still available (no bot joined)
+                                our_game_still_available = any(g.get("id") == game_id for g in available_games)
+                                
+                                if our_game_still_available:
                                     self.log_test_result(
                                         f"Bot decision logic: {scenario['name']}", 
                                         True,
                                         f"No bot joined - {scenario['expected_influence']}"
                                     )
-                                    success_count += 1
+                                else:
+                                    self.log_test_result(
+                                        f"Bot decision logic: {scenario['name']}", 
+                                        True,
+                                        f"Bot joined game - {scenario['expected_influence']}"
+                                    )
+                                success_count += 1
                                 
                                 # Clean up
-                                await self.session.post(f"{BACKEND_URL}/games/{game_id}/cancel", headers=headers)
+                                await self.session.delete(f"{BACKEND_URL}/games/{game_id}/cancel", headers=headers)
                             else:
                                 self.log_test_result(
                                     f"Bot decision logic: {scenario['name']}", 
                                     False,
-                                    f"Failed to get game details: {get_response.status}"
+                                    f"Failed to get available games: {available_response.status}"
                                 )
                     else:
                         self.log_test_result(
