@@ -3755,6 +3755,9 @@ class RegularBotSystem:
         last_bet_time = bot.get("last_bet_time")
         if last_bet_time:
             pause_between_games = bot.get("pause_between_games", 5)
+            if pause_between_games is None:
+                pause_between_games = 5  # fallback для старых ботов
+            
             time_since_last = (datetime.utcnow() - last_bet_time).total_seconds()
             
             if time_since_last < pause_between_games:
