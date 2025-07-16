@@ -148,7 +148,7 @@ const CreateGame = ({ user, onUpdateUser }) => {
 
   const totalBet = getTotalBetAmount();
   const commission = getCommissionAmount();
-  const validationError = validateBet();
+  const validationError = validateBetForm();
 
   return (
     <div className="min-h-screen bg-gradient-primary p-8">
