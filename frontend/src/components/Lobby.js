@@ -34,6 +34,19 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     ongoingBotBattles: 1
   });
 
+  // Настройки интерфейса для пагинации
+  const [interfaceSettings, setInterfaceSettings] = useState({
+    live_players: {
+      my_bets: 10,
+      available_bets: 10,
+      ongoing_battles: 10
+    },
+    bot_players: {
+      available_bots: 10,
+      ongoing_bot_battles: 10
+    }
+  });
+
   const itemsPerPage = 10;
 
   useEffect(() => {
