@@ -5258,6 +5258,13 @@ async def get_active_bots(current_user: User = Depends(get_current_user)):
 async def get_active_bot_games(current_user: User = Depends(get_current_user)):
     """Get all active games created by bots."""
     try:
+        # Get display limits from interface settings
+        settings_doc = await db.admin_settings.find_one({"type": "interface_settings"})
+        max_bots_limit = 100  # Default limit
+        
+        if settings_doc and settings_doc.get("display_limits"):
+            max_bots_limit = settings_doc["display_limits"].get("bot_players", {}).get("max_available_bots", 100)
+        
         # Find active bots to get their IDs
         active_bots = await db.bots.find({"is_active": True}).to_list(100)
         bot_ids = [bot["id"] for bot in active_bots]
@@ -5266,10 +5273,11 @@ async def get_active_bot_games(current_user: User = Depends(get_current_user)):
             return []
         
         # Find games created by active bots with status WAITING
+        # Use the dynamic limit from settings
         bot_games = await db.games.find({
             "creator_id": {"$in": bot_ids},
             "status": "WAITING"
-        }).sort("created_at", -1).to_list(100)
+        }).sort("created_at", -1).to_list(max_bots_limit)
         
         result = []
         for game in bot_games:
