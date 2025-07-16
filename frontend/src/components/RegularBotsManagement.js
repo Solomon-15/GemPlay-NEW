@@ -2211,9 +2211,170 @@ const RegularBotsManagement = () => {
             </div>
 
             <div className="space-y-6">
+              {/* Количество ботов */}
+              <div>
+                <label className="block text-text-secondary text-sm mb-2">Количество ботов:</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={botForm.count}
+                  onChange={(e) => {
+                    const newForm = {...botForm, count: parseInt(e.target.value) || 1};
+                    setBotForm(newForm);
+                    validateExtendedFormInRealTime(newForm);
+                  }}
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                />
+                <div className="text-xs text-text-secondary mt-1">
+                  Сколько ботов создать одновременно (1-100)
+                </div>
+              </div>
+
+              {/* Диапазон ставок */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Диапазон ставок</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Минимальная ставка:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10000"
+                      value={botForm.min_bet_amount}
+                      onChange={(e) => {
+                        const newForm = {...botForm, min_bet_amount: parseFloat(e.target.value) || 1.0};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Максимальная ставка:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10000"
+                      value={botForm.max_bet_amount}
+                      onChange={(e) => {
+                        const newForm = {...botForm, max_bet_amount: parseFloat(e.target.value) || 50.0};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                </div>
+                <div className="text-xs text-text-secondary mt-1">
+                  Диапазон сумм ставок (1-10000)
+                </div>
+              </div>
+
+              {/* Процент побед */}
+              <div>
+                <label className="block text-text-secondary text-sm mb-2">Процент побед:</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={botForm.win_percentage}
+                  onChange={(e) => {
+                    const newForm = {...botForm, win_percentage: parseFloat(e.target.value) || 55.0};
+                    setBotForm(newForm);
+                    validateExtendedFormInRealTime(newForm);
+                  }}
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                />
+                <div className="text-xs text-text-secondary mt-1">
+                  Целевой процент побед (0-100%, по умолчанию 55%)
+                </div>
+              </div>
+
+              {/* Игр в цикле и индивидуальный лимит */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Циклы и лимиты</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="66"
+                      value={botForm.cycle_games}
+                      onChange={(e) => {
+                        const newValue = parseInt(e.target.value) || 12;
+                        const newForm = {...botForm, cycle_games: newValue, individual_limit: newValue};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Индивидуальный лимит:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="66"
+                      value={botForm.individual_limit}
+                      onChange={(e) => {
+                        const newForm = {...botForm, individual_limit: parseInt(e.target.value) || 12};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                </div>
+                <div className="text-xs text-text-secondary mt-1">
+                  Количество игр в цикле (1-66) и максимум активных ставок на бота
+                </div>
+              </div>
+
+              {/* Приоритет и пауза */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Поведенческие настройки</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Приоритет в очереди:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={botForm.priority_order}
+                      onChange={(e) => {
+                        const newForm = {...botForm, priority_order: parseInt(e.target.value) || 50};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Пауза между играми (сек):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="300"
+                      value={botForm.pause_between_games}
+                      onChange={(e) => {
+                        const newForm = {...botForm, pause_between_games: parseInt(e.target.value) || 5};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                </div>
+                <div className="text-xs text-text-secondary mt-1">
+                  Приоритет для queue-based режима (1-100) и пауза между играми (1-300 сек)
+                </div>
+              </div>
+
               {/* Имя бота */}
               <div>
-                <label className="block text-text-secondary text-sm mb-2">Имя бота:</label>
+                <label className="block text-text-secondary text-sm mb-2">Имя бота (опционально):</label>
                 <input
                   type="text"
                   value={botForm.name}
@@ -2221,7 +2382,7 @@ const RegularBotsManagement = () => {
                     setBotForm({...botForm, name: e.target.value});
                     validateExtendedFormInRealTime({...botForm, name: e.target.value});
                   }}
-                  placeholder="Bot #001"
+                  placeholder="Оставьте пустым для автоматической генерации"
                   className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                 />
                 <div className="text-xs text-text-secondary mt-1">
