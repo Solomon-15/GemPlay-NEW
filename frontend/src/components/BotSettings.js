@@ -13,7 +13,6 @@ const BotSettings = ({ user }) => {
     totalRegularBots: 0,
     totalHumanBots: 0
   });
-  const { showErrorRU } = useNotifications();
 
   useEffect(() => {
     fetchQueueStats();
