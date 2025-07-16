@@ -14,7 +14,6 @@ const BotSettings = ({ user }) => {
     priorityType: 'order' // 'order' or 'manual'
   });
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [queueStats, setQueueStats] = useState({
     totalActiveRegularBets: 0,
     totalQueuedBets: 0,
