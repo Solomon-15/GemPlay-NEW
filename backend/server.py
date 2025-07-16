@@ -4010,6 +4010,167 @@ class RegularBotSystem:
             total_value += gem_values.get(gem_type, 0) * quantity
         
         return total_value
+    
+    # ==========================================================================
+    # ОБНОВЛЕНИЕ СТАТИСТИКИ И ЛОГИРОВАНИЕ
+    # ==========================================================================
+    
+    async def update_bot_after_bet_creation(self, bot_id: str, bet_amount: float):
+        """Обновление статистики бота после создания ставки."""
+        current_time = datetime.utcnow()
+        
+        await self.db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "last_bet_time": current_time,
+                    "updated_at": current_time
+                },
+                "$inc": {
+                    "current_cycle_games": 1,
+                    "current_cycle_gem_value_total": bet_amount
+                }
+            }
+        )
+    
+    async def update_bot_after_game_result(self, bot_id: str, won: bool, bet_amount: float):
+        """Обновление статистики бота после результата игры."""
+        current_time = datetime.utcnow()
+        
+        update_data = {
+            "$set": {
+                "last_game_time": current_time,
+                "updated_at": current_time
+            }
+        }
+        
+        if won:
+            update_data["$inc"] = {
+                "current_cycle_wins": 1,
+                "current_cycle_gem_value_won": bet_amount
+            }
+        
+        await self.db.bots.update_one({"id": bot_id}, update_data)
+        
+        # Проверяем завершение цикла
+        await self.check_cycle_completion(bot_id)
+    
+    async def check_cycle_completion(self, bot_id: str):
+        """Проверка и обработка завершения цикла."""
+        bot = await self.db.bots.find_one({"id": bot_id})
+        if not bot:
+            return
+        
+        current_games = bot.get("current_cycle_games", 0)
+        cycle_games = bot.get("cycle_games", 12)
+        
+        if current_games >= cycle_games:
+            # Цикл завершен
+            cycle_stats = {
+                "total_games": current_games,
+                "wins": bot.get("current_cycle_wins", 0),
+                "total_value": bot.get("current_cycle_gem_value_total", 0.0),
+                "won_value": bot.get("current_cycle_gem_value_won", 0.0),
+                "profit": bot.get("current_cycle_gem_value_won", 0.0) - bot.get("current_cycle_gem_value_total", 0.0),
+                "completed_at": datetime.utcnow()
+            }
+            
+            # Логируем завершение цикла
+            await self.log_bot_action(bot_id, "CYCLE_COMPLETED", cycle_stats)
+            
+            # Сбрасываем статистику цикла
+            await self.db.bots.update_one(
+                {"id": bot_id},
+                {
+                    "$set": {
+                        "current_cycle_games": 0,
+                        "current_cycle_wins": 0,
+                        "current_cycle_gem_value_won": 0.0,
+                        "current_cycle_gem_value_total": 0.0,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            
+            self.logger.info(f"🔄 Bot {bot_id} completed cycle: {cycle_stats}")
+    
+    async def log_bot_action(self, bot_id: str, action: str, details: dict):
+        """Логирование действий бота."""
+        log_entry = {
+            "bot_id": bot_id,
+            "action": action,
+            "details": details,
+            "timestamp": datetime.utcnow()
+        }
+        
+        await self.db.bot_action_logs.insert_one(log_entry)
+    
+    async def log_bot_decision(self, bot_id: str, decision_data: dict):
+        """Специальное логирование решений бота для админов."""
+        log_entry = {
+            "bot_id": bot_id,
+            "action": "DECISION_MADE",
+            "details": decision_data,
+            "timestamp": datetime.utcnow()
+        }
+        
+        await self.db.bot_decision_logs.insert_one(log_entry)
+    
+    # ==========================================================================
+    # ФОНОВЫЕ ЗАДАЧИ
+    # ==========================================================================
+    
+    async def process_bots_automation(self):
+        """Основная функция фоновой автоматизации ботов."""
+        try:
+            # Получаем всех активных ботов
+            active_bots = await self.db.bots.find({"is_active": True, "bot_type": "REGULAR"}).to_list(1000)
+            
+            if not active_bots:
+                return
+            
+            # Сортируем по приоритету
+            sorted_bots = await self.sort_bots_by_priority(active_bots)
+            
+            # Обрабатываем каждого бота
+            for bot in sorted_bots:
+                try:
+                    result = await self.create_bot_bet_with_validation(bot["id"])
+                    if result["success"]:
+                        self.logger.info(f"✅ Bot {bot['id']} created bet successfully")
+                    else:
+                        self.logger.debug(f"⏭️ Bot {bot['id']} skipped: {result['reason']}")
+                except Exception as e:
+                    self.logger.error(f"❌ Error processing bot {bot['id']}: {e}")
+                    
+        except Exception as e:
+            self.logger.error(f"❌ Error in bots automation: {e}")
+    
+    async def sort_bots_by_priority(self, bots: list):
+        """Сортировка ботов по приоритету и режиму создания."""
+        always_first = []
+        queue_based = []
+        after_all = []
+        
+        for bot in bots:
+            creation_mode = bot.get("creation_mode", "queue-based")
+            
+            if creation_mode == "always-first":
+                always_first.append(bot)
+            elif creation_mode == "after-all":
+                after_all.append(bot)
+            else:  # queue-based
+                queue_based.append(bot)
+        
+        # Сортировка queue-based по приоритету
+        queue_based.sort(key=lambda x: x.get("priority_order", 50))
+        
+        # Финальный порядок
+        return always_first + queue_based + after_all
+
+
+# Создаем глобальный экземпляр системы
+regular_bot_system = RegularBotSystem()
 
 async def maintain_bot_active_bets(game: Game):
     """Поддерживает количество активных ставок бота равным параметру cycle_games."""
