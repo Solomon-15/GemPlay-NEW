@@ -3,6 +3,8 @@ import { useApi } from '../hooks/useApi';
 import { useBotOperations } from '../hooks/useBotOperations';
 
 const HumanBotsManagement = () => {
+  const { botsApi } = useApi();
+  const { bulkOperations } = useBotOperations();
   const [stats, setStats] = useState({
     active_bots: 0,
     bets_24h: 0,
