@@ -3666,6 +3666,101 @@ class RegularBotSystem:
             await self.db.bot_settings.insert_one(default_settings)
             return default_settings
         return settings
+    
+    # ==========================================================================
+    # ПРОВЕРКА ЛИМИТОВ
+    # ==========================================================================
+    
+    async def check_global_limits(self, bot_type: str = "REGULAR"):
+        """Проверка глобальных лимитов системы."""
+        settings = await self.get_global_settings()
+        
+        if bot_type == "REGULAR":
+            max_limit = settings.get("max_active_bets_regular", 50)
+            current_bets = await self.db.games.count_documents({
+                "creator_type": "bot",
+                "is_bot_game": True,
+                "status": "WAITING",
+                "$or": [
+                    {"bot_type": "REGULAR"},
+                    {"metadata.bot_type": "REGULAR"}
+                ]
+            })
+        else:  # HUMAN
+            max_limit = settings.get("max_active_bets_human", 30)
+            current_bets = await self.db.games.count_documents({
+                "creator_type": "bot",
+                "is_bot_game": True,
+                "status": "WAITING",
+                "$or": [
+                    {"bot_type": "HUMAN"},
+                    {"metadata.bot_type": "HUMAN"}
+                ]
+            })
+        
+        return {
+            "passed": current_bets < max_limit,
+            "current": current_bets,
+            "max": max_limit,
+            "reason": f"Global limit reached: {current_bets}/{max_limit}" if current_bets >= max_limit else None
+        }
+    
+    async def check_individual_limits(self, bot_id: str):
+        """Проверка индивидуальных лимитов бота."""
+        bot = await self.db.bots.find_one({"id": bot_id})
+        if not bot:
+            return {"passed": False, "reason": "Bot not found"}
+        
+        individual_limit = bot.get("current_limit", bot.get("cycle_games", 12))
+        current_bets = await self.db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "WAITING"
+        })
+        
+        return {
+            "passed": current_bets < individual_limit,
+            "current": current_bets,
+            "max": individual_limit,
+            "reason": f"Individual limit reached: {current_bets}/{individual_limit}" if current_bets >= individual_limit else None
+        }
+    
+    async def check_timing_constraints(self, bot_id: str):
+        """Проверка временных ограничений."""
+        bot = await self.db.bots.find_one({"id": bot_id})
+        if not bot:
+            return {"passed": False, "reason": "Bot not found"}
+        
+        last_bet_time = bot.get("last_bet_time")
+        if last_bet_time:
+            pause_between_games = bot.get("pause_between_games", 5)
+            time_since_last = (datetime.utcnow() - last_bet_time).total_seconds()
+            
+            if time_since_last < pause_between_games:
+                return {
+                    "passed": False, 
+                    "reason": f"Timing constraint: {time_since_last:.1f}s < {pause_between_games}s"
+                }
+        
+        return {"passed": True, "reason": None}
+    
+    async def validate_bet_creation(self, bot_id: str):
+        """Полная валидация перед созданием ставки."""
+        # Проверка глобальных лимитов
+        global_check = await self.check_global_limits("REGULAR")
+        if not global_check["passed"]:
+            return global_check
+        
+        # Проверка индивидуальных лимитов
+        individual_check = await self.check_individual_limits(bot_id)
+        if not individual_check["passed"]:
+            return individual_check
+        
+        # Проверка временных ограничений
+        timing_check = await self.check_timing_constraints(bot_id)
+        if not timing_check["passed"]:
+            return timing_check
+        
+        return {"passed": True, "reason": None}
 
 async def maintain_bot_active_bets(game: Game):
     """Поддерживает количество активных ставок бота равным параметру cycle_games."""
