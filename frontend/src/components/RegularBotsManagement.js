@@ -666,15 +666,23 @@ const RegularBotsManagement = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // Получаем активные игры, созданные ботом
-      const response = await axios.get(`${API}/admin/games?creator_id=${bot.id}&status=WAITING,ACTIVE`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Получаем все игры бота (включая завершенные для статистики)
+      const [activeBetsResponse, botStatsResponse] = await Promise.all([
+        // Активные ставки
+        axios.get(`${API}/admin/games?creator_id=${bot.id}&status=WAITING,ACTIVE,REVEAL,COMPLETED`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        // Статистика бота
+        axios.get(`${API}/admin/bots/${bot.id}/stats`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => null) // Если статистика недоступна, продолжаем без неё
+      ]);
       
-      console.log('API Response:', response.data);
+      console.log('API Response:', activeBetsResponse.data);
+      console.log('Bot Stats Response:', botStatsResponse?.data);
       
       // Преобразуем данные для отображения
-      const betsData = response.data.games?.map(game => {
+      const betsData = activeBetsResponse.data.games?.map(game => {
         console.log('Game data:', game);
         return {
           id: game.id,
@@ -685,12 +693,30 @@ const RegularBotsManagement = () => {
           selected_gem: game.selected_gem || '—',
           status: game.status?.toLowerCase() || 'waiting',
           opponent_name: game.opponent_name || '—',
-          opponent_id: game.opponent_id || '—'
+          opponent_id: game.opponent_id || '—',
+          winner: game.winner,
+          creator_id: game.creator_id,
+          result: game.result
         };
       }) || [];
       
+      // Вычисляем статистику для модального окна
+      const totalBets = betsData.length;
+      const totalBetAmount = betsData.reduce((sum, bet) => sum + (bet.bet_amount || 0), 0);
+      const gamesPlayed = betsData.filter(bet => bet.status === 'completed').length;
+      const botWins = betsData.filter(bet => bet.status === 'completed' && bet.winner === bot.id).length;
+      const playerWins = betsData.filter(bet => bet.status === 'completed' && bet.winner !== bot.id && bet.winner).length;
+      
       console.log('Processed bets data:', betsData);
-      setActiveBetsData(betsData);
+      setActiveBetsData({
+        bets: betsData,
+        totalBets,
+        totalBetAmount,
+        gamesPlayed,
+        botWins,
+        playerWins,
+        botStats: botStatsResponse?.data || {}
+      });
     } catch (error) {
       console.error('Ошибка загрузки активных ставок:', error);
       
@@ -701,10 +727,26 @@ const RegularBotsManagement = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         console.log('Fallback API Response:', response.data);
-        setActiveBetsData(response.data.bets || []);
+        setActiveBetsData({
+          bets: response.data.bets || [],
+          totalBets: response.data.bets?.length || 0,
+          totalBetAmount: response.data.bets?.reduce((sum, bet) => sum + (bet.bet_amount || bet.amount || 0), 0) || 0,
+          gamesPlayed: 0,
+          botWins: 0,
+          playerWins: 0,
+          botStats: {}
+        });
       } catch (fallbackError) {
         console.error('Ошибка fallback загрузки:', fallbackError);
-        setActiveBetsData([]);
+        setActiveBetsData({
+          bets: [],
+          totalBets: 0,
+          totalBetAmount: 0,
+          gamesPlayed: 0,
+          botWins: 0,
+          playerWins: 0,
+          botStats: {}
+        });
       }
     } finally {
       setLoadingActiveBets(false);
