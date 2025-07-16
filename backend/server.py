@@ -6776,7 +6776,13 @@ async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
             
             # Проверяем, сколько ставок можно создать с учетом глобального лимита
             available_global_slots = max_limit - current_global_bets
-            actual_needed_bets = min(needed_bets, available_global_slots)
+            
+            # Также проверяем индивидуальный лимит бота
+            individual_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
+            available_individual_slots = individual_limit - current_active_bets
+            
+            # Берем минимум между всеми лимитами
+            actual_needed_bets = min(needed_bets, available_global_slots, available_individual_slots)
             
             if actual_needed_bets > 0:
                 bot_obj = Bot(**bot)
