@@ -47,8 +47,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     }
   });
 
-  const itemsPerPage = 10;
-
   useEffect(() => {
     fetchInterfaceSettings();
     fetchLobbyData();
