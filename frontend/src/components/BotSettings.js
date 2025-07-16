@@ -18,10 +18,10 @@ const BotSettings = ({ user }) => {
 
   const fetchQueueStats = async () => {
     try {
-      const response = await axios.get(`${API}/admin/bot-queue-stats`, getApiConfig());
+      const response = await analyticsApi.getQueueStats();
       
-      if (response.data.success) {
-        setQueueStats(response.data.stats);
+      if (response.success) {
+        setQueueStats(response.stats);
       }
     } catch (error) {
       console.error('Error fetching queue stats:', error);
