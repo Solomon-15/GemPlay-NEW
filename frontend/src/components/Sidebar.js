@@ -220,7 +220,7 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
                   
                   <div className={`relative z-10 transition-all duration-300 ${
                     currentView === item.id 
-                      ? item.color 
+                      ? 'text-accent-primary' 
                       : `${item.color} group-hover:text-white`
                   } ${
                     isCollapsed 
