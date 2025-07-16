@@ -530,7 +530,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         }
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {getPaginatedItems(myBets, currentPage.myBets).map((game) => (
+          {getPaginatedItems(myBets, currentPage.myBets, interfaceSettings.live_players.my_bets).map((game) => (
             <PlayerCard 
               key={game.game_id || game.id} 
               game={game} 
@@ -557,6 +557,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           totalItems={myBets.length}
           onPageChange={handlePageChange}
           section="myBets"
+          itemsPerPage={interfaceSettings.live_players.my_bets}
         />
       </SectionBlock>
 
