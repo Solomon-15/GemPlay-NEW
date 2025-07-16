@@ -17,10 +17,7 @@ const BotSettings = ({ user }) => {
 
   const fetchQueueStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bot-queue-stats`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/admin/bot-queue-stats`, getApiConfig());
       
       if (response.data.success) {
         setQueueStats(response.data.stats);
