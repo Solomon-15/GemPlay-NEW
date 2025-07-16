@@ -3669,8 +3669,14 @@ async def maintain_bot_active_bets(game: Game):
         # Получаем целевое количество активных ставок (cycle_games)
         target_active_bets = bot_obj.cycle_games
         
+        # Проверяем индивидуальный лимит бота
+        individual_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
+        if current_active_bets >= individual_limit:
+            logger.info(f"🚫 Individual limit reached for bot {bot_id}: {current_active_bets}/{individual_limit}")
+            return
+        
         # Если активных ставок меньше целевого количества, создаём новые
-        needed_bets = target_active_bets - current_active_bets
+        needed_bets = min(target_active_bets - current_active_bets, individual_limit - current_active_bets)
         
         if needed_bets > 0:
             logger.info(f"🎯 Bot {bot_id} needs {needed_bets} new bets to maintain {target_active_bets} active bets")
