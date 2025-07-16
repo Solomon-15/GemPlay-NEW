@@ -1760,8 +1760,10 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <div className="text-accent-primary font-roboto text-sm">
-                        {bot.win_percentage || 60}% win rate
+                      <div className="text-accent-primary font-roboto text-xs">
+                        <div>Min: ${bot.min_bet_amount || 1}</div>
+                        <div>Max: ${bot.max_bet_amount || 100}</div>
+                        <div className="text-yellow-400">Лимит: {bot.current_limit || bot.cycle_games || 12}</div>
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
