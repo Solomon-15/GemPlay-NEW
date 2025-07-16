@@ -11088,8 +11088,19 @@ async def update_bot_settings(
                     bet_distribution=updated_bot.get("bet_distribution", "medium")
                 )
                 generated_bets = len(new_bets)
+                
+                # Поддерживаем правильное количество активных ставок
+                await maintain_bot_active_bets_count(bot_id, updated_bot.get("cycle_length", 12))
+                
             except Exception as e:
                 logger.warning(f"Failed to auto-recalculate bets for bot {bot_id}: {e}")
+        
+        # Если изменился cycle_length, но не другие параметры, все равно поддерживаем активные ставки
+        elif "cycle_length" in update_fields and bot.get("is_active", False):
+            try:
+                await maintain_bot_active_bets_count(bot_id, update_fields["cycle_length"])
+            except Exception as e:
+                logger.warning(f"Failed to maintain active bets count for bot {bot_id}: {e}")
         
         # Log admin action
         admin_log = AdminLog(
