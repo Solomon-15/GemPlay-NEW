@@ -372,6 +372,7 @@ class Bot(BaseModel):
     can_play_with_bots: bool = False
     avatar_gender: str = "male"
     simple_mode: bool = False  # Для Human ботов - простой режим
+    current_limit: Optional[int] = None  # Индивидуальный лимит активных ставок
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
