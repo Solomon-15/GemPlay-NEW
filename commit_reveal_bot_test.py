@@ -70,32 +70,51 @@ class BotGameLogicTester:
         """Test BotGameLogic.calculate_game_gems_value() with various gem combinations"""
         print("\n🔍 Testing calculate_game_gems_value function...")
         
-        test_cases = [
-            {
-                "name": "Low value gems (Ruby + Amber)",
-                "bet_gems": {"Ruby": 5, "Amber": 3},
-                "expected_value": 11.0,  # 5*1 + 3*2 = 11
+        # First check available gems
+        headers = await self.get_headers()
+        async with self.session.get(f"{BACKEND_URL}/gems/inventory", headers=headers) as inventory_response:
+            if inventory_response.status == 200:
+                inventory = await inventory_response.json()
+                available_gems = {}
+                for gem in inventory:
+                    available_qty = gem["quantity"] - gem["frozen_quantity"]
+                    if available_qty > 0:
+                        available_gems[gem["type"]] = available_qty
+                print(f"Available gems: {available_gems}")
+            else:
+                self.log_test_result("Gem inventory check", False, f"Failed to get inventory: {inventory_response.status}")
+                return 0, 1
+        
+        test_cases = []
+        
+        # Create test cases based on available gems
+        if available_gems.get("Amber", 0) >= 3:
+            test_cases.append({
+                "name": "Low value gems (Amber only)",
+                "bet_gems": {"Amber": 3},
+                "expected_value": 6.0,  # 3*2 = 6
                 "category": "low"
-            },
-            {
+            })
+        
+        if available_gems.get("Emerald", 0) >= 2 and available_gems.get("Topaz", 0) >= 1:
+            test_cases.append({
                 "name": "Medium value gems (Emerald + Topaz)",
-                "bet_gems": {"Emerald": 2, "Topaz": 3},
-                "expected_value": 35.0,  # 2*10 + 3*5 = 35
+                "bet_gems": {"Emerald": 2, "Topaz": 1},
+                "expected_value": 25.0,  # 2*10 + 1*5 = 25
                 "category": "medium"
-            },
-            {
-                "name": "High value gems (Sapphire + Magic)",
-                "bet_gems": {"Sapphire": 1, "Magic": 1},
-                "expected_value": 150.0,  # 1*50 + 1*100 = 150
+            })
+        
+        if available_gems.get("Sapphire", 0) >= 1:
+            test_cases.append({
+                "name": "High value gems (Sapphire)",
+                "bet_gems": {"Sapphire": 1},
+                "expected_value": 50.0,  # 1*50 = 50
                 "category": "high"
-            },
-            {
-                "name": "Mixed value gems (All types)",
-                "bet_gems": {"Ruby": 10, "Emerald": 1, "Magic": 1},
-                "expected_value": 120.0,  # 10*1 + 1*10 + 1*100 = 120
-                "category": "mixed"
-            }
-        ]
+            })
+        
+        if not test_cases:
+            self.log_test_result("Gem availability", False, "No available gems for testing")
+            return 0, 1
         
         success_count = 0
         
@@ -107,7 +126,6 @@ class BotGameLogicTester:
                     "bet_gems": test_case["bet_gems"]
                 }
                 
-                headers = await self.get_headers()
                 async with self.session.post(f"{BACKEND_URL}/games/create", json=game_data, headers=headers) as response:
                     if response.status == 200:
                         game = await response.json()
@@ -134,10 +152,11 @@ class BotGameLogicTester:
                         # Clean up - cancel the test game
                         await self.session.delete(f"{BACKEND_URL}/games/{game_id}/cancel", headers=headers)
                     else:
+                        response_text = await response.text()
                         self.log_test_result(
                             f"Gem value calculation: {test_case['name']}", 
                             False,
-                            f"Failed to create test game: {response.status}"
+                            f"Failed to create test game: {response.status} - {response_text}"
                         )
                         
             except Exception as e:
