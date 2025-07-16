@@ -2546,6 +2546,299 @@ def test_gems_calculate_combination() -> None:
         print_error("Not all strategies worked correctly")
         record_test("Gem Combination - All Strategies Working", False, "Some strategies failed")
 
+def test_active_bets_modal_functionality() -> None:
+    """Test the Active Bets Modal backend functionality as requested in the review."""
+    print_header("TESTING ACTIVE BETS MODAL FUNCTIONALITY")
+    
+    # Step 1: Login as admin
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with Active Bets Modal tests - admin login failed")
+        return
+    
+    # Step 2: Test GET /api/admin/bots/regular/list endpoint
+    print_subheader("Step 2: Testing GET /api/admin/bots/regular/list endpoint")
+    
+    response, success = make_request(
+        "GET", 
+        "/admin/bots/regular/list",
+        auth_token=admin_token
+    )
+    
+    if success:
+        print_success("Successfully retrieved regular bots list")
+        
+        # Verify response structure
+        if isinstance(response, list):
+            print_success(f"Response is a list with {len(response)} bots")
+            record_test("Regular Bots List - Response Format", True)
+            
+            # Check if bots have active_bets field for modal button
+            if response:
+                bot = response[0]
+                required_fields = ["id", "name", "is_active", "active_bets"]
+                missing_fields = [field for field in required_fields if field not in bot]
+                
+                if not missing_fields:
+                    print_success("Bot objects contain all required fields including active_bets")
+                    record_test("Regular Bots List - Required Fields", True)
+                else:
+                    print_error(f"Bot objects missing required fields: {missing_fields}")
+                    record_test("Regular Bots List - Required Fields", False, f"Missing: {missing_fields}")
+            else:
+                print_warning("No bots found in the list")
+                record_test("Regular Bots List - Bot Availability", False, "No bots available")
+                return
+        else:
+            print_error(f"Response is not a list: {type(response)}")
+            record_test("Regular Bots List - Response Format", False, "Not a list")
+            return
+    else:
+        print_error(f"Failed to retrieve regular bots list: {response}")
+        record_test("Regular Bots List - API Call", False, "Request failed")
+        return
+    
+    # Get a bot ID for further testing
+    bot_id = None
+    if response:
+        bot_id = response[0]["id"]
+        print_success(f"Using bot ID for testing: {bot_id}")
+    
+    if not bot_id:
+        print_error("No bot ID available for further testing")
+        return
+    
+    # Step 3: Test GET /api/admin/games?creator_id={bot_id}&status=WAITING,ACTIVE,REVEAL,COMPLETED endpoint
+    print_subheader("Step 3: Testing GET /api/admin/games with bot creator_id and multiple statuses")
+    
+    # Test with multiple statuses as requested
+    statuses = "WAITING,ACTIVE,REVEAL,COMPLETED"
+    response, success = make_request(
+        "GET", 
+        f"/admin/games?creator_id={bot_id}&status={statuses}",
+        auth_token=admin_token
+    )
+    
+    if success:
+        print_success("Successfully retrieved bot games with multiple statuses")
+        
+        # Verify response structure for modal display
+        if isinstance(response, list):
+            print_success(f"Response is a list with {len(response)} games")
+            record_test("Bot Games List - Response Format", True)
+            
+            # Check if games have all necessary fields for modal window
+            if response:
+                game = response[0]
+                required_fields = ["id", "created_at", "bet_amount", "status", "winner_id", "opponent_id"]
+                missing_fields = [field for field in required_fields if field not in game]
+                
+                if not missing_fields:
+                    print_success("Game objects contain all required fields for modal display")
+                    record_test("Bot Games - Required Fields", True)
+                    
+                    # Verify opponent_name can be derived (check if opponent_id exists)
+                    if game.get("opponent_id"):
+                        print_success("Game has opponent_id for opponent_name lookup")
+                        record_test("Bot Games - Opponent Info", True)
+                    else:
+                        print_warning("Game has no opponent (WAITING status expected)")
+                        record_test("Bot Games - Opponent Info", True, "WAITING game without opponent")
+                else:
+                    print_error(f"Game objects missing required fields: {missing_fields}")
+                    record_test("Bot Games - Required Fields", False, f"Missing: {missing_fields}")
+                
+                # Verify status filtering works
+                game_statuses = [g.get("status") for g in response]
+                valid_statuses = ["WAITING", "ACTIVE", "REVEAL", "COMPLETED"]
+                invalid_statuses = [s for s in game_statuses if s not in valid_statuses]
+                
+                if not invalid_statuses:
+                    print_success(f"All game statuses are valid: {set(game_statuses)}")
+                    record_test("Bot Games - Status Filtering", True)
+                else:
+                    print_error(f"Found invalid game statuses: {invalid_statuses}")
+                    record_test("Bot Games - Status Filtering", False, f"Invalid: {invalid_statuses}")
+            else:
+                print_warning("No games found for this bot")
+                record_test("Bot Games - Game Availability", True, "No games found (acceptable)")
+        else:
+            print_error(f"Response is not a list: {type(response)}")
+            record_test("Bot Games List - Response Format", False, "Not a list")
+    else:
+        print_error(f"Failed to retrieve bot games: {response}")
+        record_test("Bot Games - API Call", False, "Request failed")
+    
+    # Step 4: Test GET /api/admin/bots/{bot_id}/stats endpoint
+    print_subheader("Step 4: Testing GET /api/admin/bots/{bot_id}/stats endpoint")
+    
+    response, success = make_request(
+        "GET", 
+        f"/admin/bots/{bot_id}/stats",
+        auth_token=admin_token
+    )
+    
+    if success:
+        print_success("Successfully retrieved bot statistics")
+        
+        # Verify response structure for modal display
+        required_fields = ["total_games", "won_games", "actual_win_rate"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if not missing_fields:
+            print_success("Bot stats contain all required fields for modal display")
+            record_test("Bot Stats - Required Fields", True)
+            
+            # Verify data types and values
+            total_games = response.get("total_games", 0)
+            won_games = response.get("won_games", 0)
+            actual_win_rate = response.get("actual_win_rate", 0)
+            
+            if isinstance(total_games, int) and total_games >= 0:
+                print_success(f"total_games is valid integer: {total_games}")
+                record_test("Bot Stats - Total Games Type", True)
+            else:
+                print_error(f"total_games is invalid: {total_games} (type: {type(total_games)})")
+                record_test("Bot Stats - Total Games Type", False, f"Invalid: {total_games}")
+            
+            if isinstance(won_games, int) and won_games >= 0:
+                print_success(f"won_games is valid integer: {won_games}")
+                record_test("Bot Stats - Won Games Type", True)
+            else:
+                print_error(f"won_games is invalid: {won_games} (type: {type(won_games)})")
+                record_test("Bot Stats - Won Games Type", False, f"Invalid: {won_games}")
+            
+            if isinstance(actual_win_rate, (int, float)) and 0 <= actual_win_rate <= 100:
+                print_success(f"actual_win_rate is valid percentage: {actual_win_rate}%")
+                record_test("Bot Stats - Win Rate Type", True)
+            else:
+                print_error(f"actual_win_rate is invalid: {actual_win_rate} (type: {type(actual_win_rate)})")
+                record_test("Bot Stats - Win Rate Type", False, f"Invalid: {actual_win_rate}")
+            
+            # Verify win rate calculation logic
+            if total_games > 0:
+                expected_win_rate = (won_games / total_games) * 100
+                if abs(actual_win_rate - expected_win_rate) < 0.01:
+                    print_success(f"Win rate calculation is correct: {actual_win_rate}%")
+                    record_test("Bot Stats - Win Rate Calculation", True)
+                else:
+                    print_error(f"Win rate calculation incorrect. Expected: {expected_win_rate}%, Got: {actual_win_rate}%")
+                    record_test("Bot Stats - Win Rate Calculation", False, f"Calculation error")
+            else:
+                if actual_win_rate == 0:
+                    print_success("Win rate is correctly 0 for bot with no games")
+                    record_test("Bot Stats - Win Rate Calculation", True)
+                else:
+                    print_error(f"Win rate should be 0 for bot with no games, got: {actual_win_rate}%")
+                    record_test("Bot Stats - Win Rate Calculation", False, f"Should be 0")
+        else:
+            print_error(f"Bot stats missing required fields: {missing_fields}")
+            record_test("Bot Stats - Required Fields", False, f"Missing: {missing_fields}")
+    else:
+        print_error(f"Failed to retrieve bot statistics: {response}")
+        record_test("Bot Stats - API Call", False, "Request failed")
+    
+    # Step 5: Test game status variety (WAITING, ACTIVE, REVEAL, COMPLETED)
+    print_subheader("Step 5: Testing support for different game statuses")
+    
+    status_tests = ["WAITING", "ACTIVE", "REVEAL", "COMPLETED"]
+    
+    for status in status_tests:
+        response, success = make_request(
+            "GET", 
+            f"/admin/games?creator_id={bot_id}&status={status}",
+            auth_token=admin_token
+        )
+        
+        if success:
+            print_success(f"Successfully retrieved games with status: {status}")
+            
+            # Verify all returned games have the correct status
+            if isinstance(response, list):
+                if response:
+                    all_correct_status = all(game.get("status") == status for game in response)
+                    if all_correct_status:
+                        print_success(f"All {len(response)} games have correct status: {status}")
+                        record_test(f"Game Status Filter - {status}", True)
+                    else:
+                        wrong_statuses = [game.get("status") for game in response if game.get("status") != status]
+                        print_error(f"Some games have wrong status. Expected: {status}, Found: {wrong_statuses}")
+                        record_test(f"Game Status Filter - {status}", False, f"Wrong statuses: {wrong_statuses}")
+                else:
+                    print_success(f"No games found with status: {status} (acceptable)")
+                    record_test(f"Game Status Filter - {status}", True, "No games found")
+            else:
+                print_error(f"Response for status {status} is not a list")
+                record_test(f"Game Status Filter - {status}", False, "Not a list")
+        else:
+            print_error(f"Failed to retrieve games with status {status}: {response}")
+            record_test(f"Game Status Filter - {status}", False, "Request failed")
+    
+    # Step 6: Test winner determination for completed games
+    print_subheader("Step 6: Testing winner determination for statistics")
+    
+    response, success = make_request(
+        "GET", 
+        f"/admin/games?creator_id={bot_id}&status=COMPLETED",
+        auth_token=admin_token
+    )
+    
+    if success and isinstance(response, list) and response:
+        print_success(f"Found {len(response)} completed games for winner analysis")
+        
+        games_with_winner = 0
+        games_without_winner = 0
+        
+        for game in response:
+            if game.get("winner_id"):
+                games_with_winner += 1
+            else:
+                games_without_winner += 1
+        
+        print_success(f"Games with winner: {games_with_winner}")
+        print_success(f"Games without winner (draws): {games_without_winner}")
+        
+        if games_with_winner > 0:
+            print_success("Winner determination is working for completed games")
+            record_test("Winner Determination - Completed Games", True)
+        else:
+            print_warning("No completed games with winners found (might be all draws)")
+            record_test("Winner Determination - Completed Games", True, "No winners found (acceptable)")
+    else:
+        print_warning("No completed games found for winner analysis")
+        record_test("Winner Determination - Completed Games", True, "No completed games")
+    
+    # Step 7: Test pagination support (if implemented)
+    print_subheader("Step 7: Testing pagination support for large datasets")
+    
+    response, success = make_request(
+        "GET", 
+        f"/admin/games?creator_id={bot_id}&status=WAITING,ACTIVE,REVEAL,COMPLETED&page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if success:
+        print_success("Pagination parameters accepted by API")
+        
+        # Check if response includes pagination metadata
+        if isinstance(response, dict) and "pagination" in response:
+            pagination = response["pagination"]
+            required_pagination_fields = ["total_count", "current_page", "total_pages", "items_per_page"]
+            missing_pagination_fields = [field for field in required_pagination_fields if field not in pagination]
+            
+            if not missing_pagination_fields:
+                print_success("Pagination metadata is complete")
+                record_test("Pagination Support - Metadata", True)
+            else:
+                print_error(f"Pagination metadata missing fields: {missing_pagination_fields}")
+                record_test("Pagination Support - Metadata", False, f"Missing: {missing_pagination_fields}")
+        else:
+            print_warning("No pagination metadata found (might be simple list response)")
+            record_test("Pagination Support - Metadata", True, "Simple list response")
+    else:
+        print_error(f"Pagination parameters caused error: {response}")
+        record_test("Pagination Support - Parameters", False, "Parameters rejected")
+
 def test_asynchronous_commit_reveal_system() -> None:
     """Test асинхронную commit-reveal систему для PvP игр (asynchronous commit-reveal system for PvP games)."""
     print_header("TESTING ASYNCHRONOUS COMMIT-REVEAL SYSTEM FOR PVP GAMES")
