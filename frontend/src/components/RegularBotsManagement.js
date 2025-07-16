@@ -2410,11 +2410,11 @@ const RegularBotsManagement = () => {
                                 <div className="text-sm font-roboto">
                                   {bet.status === 'completed' ? (
                                     <span className={`font-bold ${
-                                      bet.winner === selectedBotForActiveBets.id ? 'text-green-400' : 
-                                      bet.winner ? 'text-red-400' : 'text-gray-400'
+                                      bet.winner_id === selectedBotForActiveBets.id ? 'text-green-400' : 
+                                      bet.winner_id ? 'text-red-400' : 'text-gray-400'
                                     }`}>
-                                      {bet.winner === selectedBotForActiveBets.id ? 'Победа' : 
-                                       bet.winner ? 'Поражение' : 'Ничья'}
+                                      {bet.winner_id === selectedBotForActiveBets.id ? 'Победа' : 
+                                       bet.winner_id ? 'Поражение' : 'Ничья'}
                                     </span>
                                   ) : (
                                     <span className="text-text-secondary">—</span>
