@@ -38,6 +38,8 @@ const BotSettings = ({ user }) => {
       }
     } catch (error) {
       console.error('Error fetching queue stats:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
