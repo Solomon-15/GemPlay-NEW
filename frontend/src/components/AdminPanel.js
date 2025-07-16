@@ -107,7 +107,15 @@ const AdminPanel = ({ user, onClose }) => {
       
       setLoading(false);
     } catch (error) {
-      console.error('Error loading statistics:', error);
+      console.error('❌ AdminPanel: Error loading statistics:', error);
+      
+      // Если получили 401 ошибку, токен истек
+      if (error.response?.status === 401) {
+        console.log('🔒 AdminPanel: Token expired (401), handling logout');
+        handleTokenExpired();
+        return;
+      }
+      
       setLoading(false);
     }
   };
