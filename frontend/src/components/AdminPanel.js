@@ -59,6 +59,23 @@ const AdminPanel = ({ user, onClose }) => {
 
   useEffect(() => {
     fetchDashboardStats();
+    
+    // Настраиваем перехватчик axios для обработки ошибок 401
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          console.log('🔒 AdminPanel: Global axios interceptor caught 401 error');
+          handleTokenExpired();
+        }
+        return Promise.reject(error);
+      }
+    );
+    
+    // Очищаем перехватчик при размонтировании компонента
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
   }, []);
 
   const handleTokenExpired = () => {
