@@ -7815,8 +7815,9 @@ async def bot_join_game_automatically(bot: Bot):
             # Bot knows creator's move (for testing/balancing) - Enhanced with gem value consideration
             bot_move = BotGameLogic.get_bot_move_against_player(bot, creator_move, game_obj)
         else:
-            # Standard move calculation
-            bot_move = BotGameLogic.calculate_bot_move(bot)
+            # Standard move calculation with game context
+            game_context = BotGameLogic.calculate_game_gems_value(game_obj)
+            bot_move = BotGameLogic.calculate_bot_move(bot, game_context)
         
         # For REGULAR bots, return commission to creator (no commission charged)
         commission_returned = 0
