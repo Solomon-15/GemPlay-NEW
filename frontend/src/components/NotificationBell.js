@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-
-const API = process.env.REACT_APP_BACKEND_URL + '/api';
+import { useNotifications, useDropdownPosition } from '../hooks/useNotificationBell';
 
 const NotificationBell = ({ isCollapsed }) => {
   const [notifications, setNotifications] = useState([]);
