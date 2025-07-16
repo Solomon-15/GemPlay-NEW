@@ -2207,7 +2207,7 @@ const RegularBotsManagement = () => {
           <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-russo text-xl text-white">
-                Активные ставки — Bot {selectedBotForActiveBets.name}
+                Активные ставки —  {selectedBotForActiveBets.name}
               </h3>
               <button
                 onClick={() => {
