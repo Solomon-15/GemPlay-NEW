@@ -47,9 +47,8 @@ const BotAnalytics = () => {
 
   const fetchAnalyticsData = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/admin/bots/analytics`, {
-        headers: { Authorization: `Bearer ${token}` },
+        ...getApiConfig(),
         params: { 
           timeRange, 
           botId: selectedBot === 'all' ? null : selectedBot 
