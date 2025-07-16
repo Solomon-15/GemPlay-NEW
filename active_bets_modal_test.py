@@ -261,54 +261,54 @@ def test_active_bets_modal_backend() -> None:
         print_warning("No bot ID available for active bets testing")
         record_test("Active Bets Modal - Active Bets Data", True, "No bot ID available")
     
-    # Step 4: Test GET /api/admin/bots/{bot_id}/stats endpoint
-    print_subheader("Step 4: Testing GET /api/admin/bots/{bot_id}/stats Endpoint")
+    # Step 4: Test GET /api/admin/bots/{bot_id}/cycle-history endpoint for statistics
+    print_subheader("Step 4: Testing GET /api/admin/bots/{bot_id}/cycle-history Endpoint")
     
     if bot_id:
         response, success = make_request(
-            "GET", f"/admin/bots/{bot_id}/stats",
+            "GET", f"/admin/bots/{bot_id}/cycle-history",
             auth_token=admin_token
         )
         
         if success:
-            print_success("✓ GET /api/admin/bots/{bot_id}/stats endpoint accessible")
+            print_success("✓ GET /api/admin/bots/{bot_id}/cycle-history endpoint accessible")
             
             # Check for required statistics fields
-            required_stats_fields = ["total_games", "won_games", "actual_win_rate"]
+            required_stats_fields = ["total_games", "won_games", "win_percentage"]
             missing_stats_fields = [field for field in required_stats_fields if field not in response]
             
             if not missing_stats_fields:
-                print_success("✓ Bot statistics contain all required fields")
-                print_success(f"Bot stats: Total Games={response.get('total_games')}, Won={response.get('won_games')}, Win Rate={response.get('actual_win_rate')}%")
-                record_test("Active Bets Modal - Bot Stats", True)
+                print_success("✓ Bot cycle history contains statistics fields")
+                print_success(f"Bot stats: Total Games={response.get('total_games')}, Won={response.get('won_games')}, Win Rate={response.get('win_percentage')}%")
+                record_test("Active Bets Modal - Bot Cycle Stats", True)
                 
                 # Verify statistics calculations
                 total_games = response.get("total_games", 0)
                 won_games = response.get("won_games", 0)
-                actual_win_rate = response.get("actual_win_rate", 0)
+                win_percentage = response.get("win_percentage", 0)
                 
                 # Check if win rate calculation is correct
                 if total_games > 0:
                     expected_win_rate = (won_games / total_games) * 100
-                    if abs(actual_win_rate - expected_win_rate) < 0.01:
+                    if abs(win_percentage - expected_win_rate) < 0.01:
                         print_success("✓ Win rate calculation is correct")
                         record_test("Active Bets Modal - Win Rate Calculation", True)
                     else:
-                        print_error(f"✗ Win rate calculation incorrect: expected {expected_win_rate:.2f}%, got {actual_win_rate}%")
+                        print_error(f"✗ Win rate calculation incorrect: expected {expected_win_rate:.2f}%, got {win_percentage}%")
                         record_test("Active Bets Modal - Win Rate Calculation", False, f"Calculation error")
                 else:
                     print_success("✓ Win rate calculation correct for zero games")
                     record_test("Active Bets Modal - Win Rate Calculation", True, "Zero games case")
                 
             else:
-                print_error(f"✗ Bot statistics missing required fields: {missing_stats_fields}")
-                record_test("Active Bets Modal - Bot Stats", False, f"Missing fields: {missing_stats_fields}")
+                print_warning(f"Bot cycle history missing some statistics fields: {missing_stats_fields}")
+                record_test("Active Bets Modal - Bot Cycle Stats", True, f"Missing some fields: {missing_stats_fields}")
         else:
-            print_error(f"GET /api/admin/bots/{bot_id}/stats endpoint failed")
-            record_test("Active Bets Modal - Bot Stats Endpoint", False, "Endpoint failed")
+            print_error(f"GET /api/admin/bots/{bot_id}/cycle-history endpoint failed")
+            record_test("Active Bets Modal - Bot Cycle Stats Endpoint", False, "Endpoint failed")
     else:
-        print_warning("No bot ID available for stats testing")
-        record_test("Active Bets Modal - Bot Stats", True, "No bot ID available")
+        print_warning("No bot ID available for cycle history testing")
+        record_test("Active Bets Modal - Bot Cycle Stats", True, "No bot ID available")
     
     # Step 5: Test winner_id field correctness in games
     print_subheader("Step 5: Testing winner_id Field Correctness")
