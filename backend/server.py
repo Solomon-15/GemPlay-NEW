@@ -3761,6 +3761,113 @@ class RegularBotSystem:
             return timing_check
         
         return {"passed": True, "reason": None}
+    
+    # ==========================================================================
+    # СТРАТЕГИИ ПРИБЫЛИ И ПРИНЯТИЕ РЕШЕНИЙ
+    # ==========================================================================
+    
+    async def calculate_win_need(self, bot_id: str):
+        """Расчет необходимости победы на основе стратегии прибыли."""
+        bot = await self.db.bots.find_one({"id": bot_id})
+        if not bot:
+            return {"should_win": False, "reason": "Bot not found"}
+        
+        # Получаем статистику текущего цикла
+        cycle_stats = {
+            "current_games": bot.get("current_cycle_games", 0),
+            "total_games": bot.get("cycle_games", 12),
+            "won_value": bot.get("current_cycle_gem_value_won", 0.0),
+            "total_value": bot.get("current_cycle_gem_value_total", 0.0),
+            "target_win_rate": bot.get("win_rate", 0.55)
+        }
+        
+        # Текущий процент по стоимости
+        current_win_rate = cycle_stats["won_value"] / max(cycle_stats["total_value"], 1) if cycle_stats["total_value"] > 0 else 0
+        
+        # Позиция в цикле (от 0 до 1)
+        cycle_position = cycle_stats["current_games"] / cycle_stats["total_games"]
+        
+        # Расчет целевого процента на основе стратегии
+        target_rate = await self.get_target_rate_by_strategy(
+            bot.get("profit_strategy", "balanced"),
+            cycle_position,
+            cycle_stats["target_win_rate"]
+        )
+        
+        # Принятие решения
+        should_win = current_win_rate < target_rate
+        
+        self.logger.info(f"Bot {bot_id} win decision: current={current_win_rate:.2f}, target={target_rate:.2f}, decision={'WIN' if should_win else 'LOSE'}")
+        
+        return {
+            "should_win": should_win,
+            "current_win_rate": current_win_rate,
+            "target_rate": target_rate,
+            "cycle_position": cycle_position,
+            "strategy": bot.get("profit_strategy", "balanced")
+        }
+    
+    async def get_target_rate_by_strategy(self, strategy: str, cycle_position: float, base_rate: float):
+        """Получение целевого процента на основе стратегии прибыли."""
+        if strategy == "start-positive":
+            # В начале цикла высокий процент, к концу - низкий
+            if cycle_position < 0.33:  # Первая треть
+                return base_rate + 0.15  # +15%
+            elif cycle_position < 0.66:  # Вторая треть
+                return base_rate
+            else:  # Последняя треть
+                return base_rate - 0.15  # -15%
+        
+        elif strategy == "start-negative":
+            # В начале цикла низкий процент, к концу - высокий
+            if cycle_position < 0.33:  # Первая треть
+                return base_rate - 0.15  # -15%
+            elif cycle_position < 0.66:  # Вторая треть
+                return base_rate
+            else:  # Последняя треть
+                return base_rate + 0.15  # +15%
+        
+        else:  # balanced
+            # Равномерное распределение
+            return base_rate
+    
+    async def determine_bot_move(self, bot_id: str, player_move: str, bet_amount: float):
+        """Определение хода бота с учетом логики подстройки."""
+        win_decision = await self.calculate_win_need(bot_id)
+        
+        if win_decision["should_win"]:
+            # Выбираем выигрышный ход
+            if player_move == "ROCK":
+                bot_move = "PAPER"
+            elif player_move == "PAPER":
+                bot_move = "SCISSORS"
+            else:  # SCISSORS
+                bot_move = "ROCK"
+            result = "WIN"
+        else:
+            # Выбираем проигрышный ход
+            if player_move == "ROCK":
+                bot_move = "SCISSORS"
+            elif player_move == "PAPER":
+                bot_move = "ROCK"
+            else:  # SCISSORS
+                bot_move = "PAPER"
+            result = "LOSE"
+        
+        # Логируем решение для админов
+        await self.log_bot_decision(bot_id, {
+            "player_move": player_move,
+            "bot_move": bot_move,
+            "decision": result,
+            "bet_amount": bet_amount,
+            "win_decision_data": win_decision
+        })
+        
+        return {
+            "move": bot_move,
+            "expected_result": result,
+            "decision_data": win_decision
+        }
 
 async def maintain_bot_active_bets(game: Game):
     """Поддерживает количество активных ставок бота равным параметру cycle_games."""
