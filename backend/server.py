@@ -3589,11 +3589,22 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 await db.transactions.insert_one(transaction.dict())
         
         # Автоматическое создание новой ставки для бота при принятии существующей
-        await maintain_bot_active_bets(game)
+        # await maintain_bot_active_bets(game)  # УДАЛЕНО - заменено на новую систему
             
     except Exception as e:
         logger.error(f"Error distributing game rewards: {e}")
         raise
+
+# ==============================================================================
+# НОВАЯ СИСТЕМА ОБЫЧНЫХ БОТОВ
+# ==============================================================================
+
+class RegularBotSystem:
+    """Единая система управления обычными ботами с централизованными проверками лимитов."""
+    
+    def __init__(self):
+        self.db = db
+        self.logger = logger
 
 async def maintain_bot_active_bets(game: Game):
     """Поддерживает количество активных ставок бота равным параметру cycle_games."""
