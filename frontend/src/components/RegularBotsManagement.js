@@ -382,38 +382,63 @@ const RegularBotsManagement = () => {
     }
   };
 
-  // Функция валидации для расширенной системы ботов
+  // Функция валидации для новой системы ботов
   const validateExtendedBotForm = (formData) => {
     const errors = [];
     
-    // Проверка имени бота
-    if (!formData.name || formData.name.trim().length < 3) {
-      errors.push('Имя бота должно содержать минимум 3 символа');
+    // Проверка количества ботов
+    if (formData.count < 1 || formData.count > 100) {
+      errors.push('Количество ботов должно быть от 1 до 100');
+    }
+    
+    // Проверка диапазона ставок
+    if (formData.min_bet_amount < 1 || formData.min_bet_amount > 10000) {
+      errors.push('Минимальная ставка должна быть от 1 до 10000');
+    }
+    
+    if (formData.max_bet_amount < 1 || formData.max_bet_amount > 10000) {
+      errors.push('Максимальная ставка должна быть от 1 до 10000');
+    }
+    
+    if (formData.min_bet_amount >= formData.max_bet_amount) {
+      errors.push('Минимальная ставка должна быть меньше максимальной');
+    }
+    
+    // Проверка процента побед
+    if (formData.win_percentage < 0 || formData.win_percentage > 100) {
+      errors.push('Процент побед должен быть от 0 до 100');
     }
     
     // Проверка количества игр в цикле
-    if (formData.cycle_games < 1 || formData.cycle_games > 100) {
-      errors.push('Количество игр в цикле должно быть от 1 до 100');
+    if (formData.cycle_games < 1 || formData.cycle_games > 66) {
+      errors.push('Количество игр в цикле должно быть от 1 до 66');
     }
     
-    // Проверка процента выигрыша
-    if (formData.win_rate_percent < 0 || formData.win_rate_percent > 100) {
-      errors.push('Процент выигрыша должен быть от 0% до 100%');
+    // Проверка индивидуального лимита
+    if (formData.individual_limit < 1 || formData.individual_limit > 66) {
+      errors.push('Индивидуальный лимит должен быть от 1 до 66');
     }
     
-    // Проверка кастомного диапазона
-    if (formData.bot_type === 'custom') {
-      if (formData.custom_min_bet <= 0) {
-        errors.push('Минимальная ставка должна быть больше 0');
-      }
-      if (formData.custom_max_bet <= formData.custom_min_bet) {
-        errors.push('Максимальная ставка должна быть больше минимальной');
-      }
+    // Проверка приоритета
+    if (formData.priority_order < 1 || formData.priority_order > 100) {
+      errors.push('Приоритет должен быть от 1 до 100');
     }
     
-    // Проверка суммы за цикл
-    if (formData.cycle_total_amount <= 0) {
-      errors.push('Сумма за цикл должна быть больше 0');
+    // Проверка паузы между играми
+    if (formData.pause_between_games < 1 || formData.pause_between_games > 300) {
+      errors.push('Пауза между играми должна быть от 1 до 300 секунд');
+    }
+    
+    // Проверка режима создания
+    const validModes = ['always-first', 'queue-based', 'after-all'];
+    if (!validModes.includes(formData.creation_mode)) {
+      errors.push('Неверный режим создания ставок');
+    }
+    
+    // Проверка стратегии прибыли
+    const validStrategies = ['start-positive', 'balanced', 'start-negative'];
+    if (!validStrategies.includes(formData.profit_strategy)) {
+      errors.push('Неверная стратегия прибыли');
     }
     
     return {
