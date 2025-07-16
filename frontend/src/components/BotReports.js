@@ -58,12 +58,9 @@ const BotReports = () => {
     if (!selectedReport) return;
     
     try {
-      const response = await axios.post(`${API}/admin/bots/reports/export`, {
-        reportId: selectedReport.id,
-        format: format
-      }, getApiConfig());
+      const response = await reportsApi.export(selectedReport.id, format);
       
-      if (response.data.success) {
+      if (response.success) {
         showSuccessRU(`Отчет экспортирован в ${format.toUpperCase()}`);
       }
     } catch (error) {
