@@ -76,13 +76,7 @@ const GameLobby = ({ user, onUpdateUser }) => {
     }
   };
 
-  const formatGemsBet = (betGems) => {
-    return formatGemsBet(betGems);
-  };
-
-  const getTimeAgo = (dateString) => {
-    return getTimeAgo(dateString);
-  };
+  // Remove duplicate function definitions - use imported ones directly
 
   if (loading) {
     return (
