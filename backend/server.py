@@ -3868,6 +3868,148 @@ class RegularBotSystem:
             "expected_result": result,
             "decision_data": win_decision
         }
+    
+    # ==========================================================================
+    # СОЗДАНИЕ СТАВОК И УПРАВЛЕНИЕ ЦИКЛАМИ
+    # ==========================================================================
+    
+    async def create_bot_bet_with_validation(self, bot_id: str):
+        """Единственная функция для создания ставки бота с полной валидацией."""
+        try:
+            # 1. Полная валидация
+            validation = await self.validate_bet_creation(bot_id)
+            if not validation["passed"]:
+                self.logger.info(f"🚫 Bot {bot_id} bet creation blocked: {validation['reason']}")
+                return {"success": False, "reason": validation["reason"]}
+            
+            # 2. Получение данных бота
+            bot = await self.db.bots.find_one({"id": bot_id})
+            if not bot:
+                return {"success": False, "reason": "Bot not found"}
+            
+            # 3. Генерация параметров ставки
+            bet_params = await self.generate_bet_parameters(bot)
+            
+            # 4. Создание Commit-Reveal данных
+            initial_move = random.choice(["ROCK", "PAPER", "SCISSORS"])
+            salt = secrets.token_hex(32)
+            move_hash = hashlib.sha256(f"{initial_move}{salt}".encode()).hexdigest()
+            
+            # 5. Создание игры
+            game = Game(
+                id=str(uuid.uuid4()),
+                creator_id=bot_id,
+                creator_type="bot",
+                creator_move_hash=move_hash,
+                creator_salt=salt,
+                bet_amount=bet_params["total_value"],
+                bet_gems=bet_params["bet_gems"],
+                status=GameStatus.WAITING,
+                is_bot_game=True,
+                bot_type="REGULAR",
+                metadata={
+                    "initial_move": initial_move,
+                    "gem_based_bet": True,
+                    "auto_created": True,
+                    "bot_strategy": bot.get("profit_strategy", "balanced")
+                }
+            )
+            
+            # 6. Сохранение в базу данных
+            await self.db.games.insert_one(game.dict())
+            
+            # 7. Обновление статистики бота
+            await self.update_bot_after_bet_creation(bot_id, bet_params["total_value"])
+            
+            # 8. Логирование
+            await self.log_bot_action(bot_id, "BET_CREATED", {
+                "game_id": game.id,
+                "bet_amount": bet_params["total_value"],
+                "gems": bet_params["bet_gems"],
+                "initial_move": initial_move
+            })
+            
+            self.logger.info(f"✅ Bot {bot_id} created bet {game.id} for ${bet_params['total_value']}")
+            
+            return {
+                "success": True,
+                "game_id": game.id,
+                "bet_amount": bet_params["total_value"],
+                "gems": bet_params["bet_gems"]
+            }
+            
+        except Exception as e:
+            self.logger.error(f"❌ Error creating bot bet: {e}")
+            return {"success": False, "reason": str(e)}
+    
+    async def generate_bet_parameters(self, bot: dict):
+        """Генерация параметров ставки на основе настроек бота."""
+        # Базовая сумма ставки
+        min_bet = bot.get("min_bet_amount", 1.0)
+        max_bet = bot.get("max_bet_amount", 100.0)
+        bet_amount = random.uniform(min_bet, max_bet)
+        
+        # Корректировка на основе стратегии прибыли
+        profit_strategy = bot.get("profit_strategy", "balanced")
+        if profit_strategy == "start-positive":
+            bet_amount *= random.uniform(0.8, 1.2)
+        elif profit_strategy == "start-negative":
+            bet_amount *= random.uniform(0.9, 1.1)
+        else:  # balanced
+            bet_amount *= random.uniform(0.85, 1.15)
+        
+        # Генерация комбинации гемов
+        gem_combination = await self.generate_gem_combination(bet_amount)
+        
+        return {
+            "bet_amount": round(bet_amount, 2),
+            "bet_gems": gem_combination,
+            "total_value": self.calculate_total_gem_value(gem_combination)
+        }
+    
+    async def generate_gem_combination(self, target_amount: float):
+        """Генерация комбинации гемов для заданной суммы."""
+        gem_values = {
+            'Ruby': 1, 'Amber': 2, 'Topaz': 5, 'Emerald': 10,
+            'Aquamarine': 25, 'Sapphire': 50, 'Magic': 100
+        }
+        
+        gem_types = list(gem_values.keys())
+        bet_gems = {}
+        remaining_amount = target_amount
+        
+        # Распределяем ставку по гемам
+        for i, gem_type in enumerate(gem_types):
+            if remaining_amount <= 0:
+                break
+                
+            gem_price = gem_values[gem_type]
+            max_quantity = int(remaining_amount / gem_price)
+            
+            if max_quantity > 0:
+                if i == len(gem_types) - 1:  # Последний гем
+                    quantity = max_quantity
+                else:
+                    quantity = random.randint(0, min(max_quantity, 3))
+                
+                if quantity > 0:
+                    bet_gems[gem_type] = quantity
+                    remaining_amount -= quantity * gem_price
+        
+        return bet_gems
+    
+    def calculate_total_gem_value(self, gem_combination: dict):
+        """Расчет общей стоимости комбинации гемов."""
+        gem_values = {
+            'Ruby': 1, 'Amber': 2, 'Topaz': 5, 'Emerald': 10,
+            'Aquamarine': 25, 'Sapphire': 50, 'Magic': 100
+        }
+        
+        total_value = 0
+        for gem_type, quantity in gem_combination.items():
+            total_value += gem_values.get(gem_type, 0) * quantity
+        
+        return total_value
 
 async def maintain_bot_active_bets(game: Game):
     """Поддерживает количество активных ставок бота равным параметру cycle_games."""
