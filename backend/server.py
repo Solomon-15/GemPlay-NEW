@@ -7812,8 +7812,8 @@ async def bot_join_game_automatically(bot: Bot):
         # Calculate bot's move using strategy
         creator_move = game_obj.creator_move
         if creator_move:
-            # Bot knows creator's move (for testing/balancing)
-            bot_move = BotGameLogic.get_bot_move_against_player(bot, creator_move)
+            # Bot knows creator's move (for testing/balancing) - Enhanced with gem value consideration
+            bot_move = BotGameLogic.get_bot_move_against_player(bot, creator_move, game_obj)
         else:
             # Standard move calculation
             bot_move = BotGameLogic.calculate_bot_move(bot)
