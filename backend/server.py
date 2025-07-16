@@ -6682,6 +6682,70 @@ async def should_bot_take_action(bot: Bot) -> bool:
     # Add randomness to bot behavior
     return random.random() < 0.3  # 30% chance to act when conditions are met
 
+async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
+    """Поддерживает количество активных ставок равным target_count."""
+    try:
+        # Получаем текущее количество активных ставок
+        current_active_bets = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "WAITING"
+        })
+        
+        # Если активных ставок меньше целевого количества, создаём новые
+        if current_active_bets < target_count:
+            needed_bets = target_count - current_active_bets
+            
+            # Получаем бота
+            bot = await db.bots.find_one({"id": bot_id})
+            if bot:
+                bot_obj = Bot(**bot)
+                
+                for _ in range(needed_bets):
+                    try:
+                        await bot_create_game_automatically(bot_obj)
+                    except Exception as e:
+                        logger.error(f"Failed to create bet for bot {bot_id}: {e}")
+                        
+                logger.info(f"🎯 Created {needed_bets} additional bets for bot {bot_id}")
+        
+        # Если активных ставок больше целевого количества, удаляем лишние
+        elif current_active_bets > target_count:
+            excess_bets = current_active_bets - target_count
+            
+            # Получаем лишние ставки
+            excess_games = await db.games.find({
+                "creator_id": bot_id,
+                "status": "WAITING"
+            }).limit(excess_bets).to_list(excess_bets)
+            
+            for game in excess_games:
+                try:
+                    await db.games.delete_one({"id": game["id"]})
+                    logger.info(f"🗑️ Deleted excess bet {game['id']} for bot {bot_id}")
+                except Exception as e:
+                    logger.error(f"Failed to delete excess bet {game['id']}: {e}")
+        
+        # Обновляем количество активных ставок в базе данных
+        final_active_count = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "WAITING"
+        })
+        
+        await db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "active_bets": final_active_count,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"🎯 Bot {bot_id} now has {final_active_count} active bets (target: {target_count})")
+        
+    except Exception as e:
+        logger.error(f"Error maintaining active bets count: {e}")
+
 async def bot_create_game_automatically(bot: Bot):
     """Make bot create a game automatically using gem-based betting."""
     try:
