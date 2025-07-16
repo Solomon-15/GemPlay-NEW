@@ -16,7 +16,7 @@ async def cleanup_excess_bot_bets():
     db_name = os.environ.get('DB_NAME', 'gemplay_db')
     db = client[db_name]
     
-    print("=== ОЧИСТКА ИЗБЫТОЧНЫХ СТАВОК БОТОВ ===")
+    print(f"=== ОЧИСТКА ИЗБЫТОЧНЫХ СТАВОК БОТОВ в {db_name} ===")
     
     # Получаем настройки глобальных лимитов
     bot_settings = db.bot_settings.find_one({"id": "bot_settings"})
