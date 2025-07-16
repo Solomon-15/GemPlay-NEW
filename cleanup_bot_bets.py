@@ -30,8 +30,16 @@ async def cleanup_excess_bot_bets():
         return
     
     # Получаем всех ботов
-    bots = list(db.bots.find({}))
-    print(f"👥 Найдено ботов: {len(bots)}")
+    bots = list(db.bots.find({"is_active": True}))
+    print(f"👥 Найдено активных ботов: {len(bots)}")
+    
+    if not bots:
+        print("❌ Боты не найдены, проверим все боты...")
+        all_bots = list(db.bots.find({}))
+        print(f"👥 Всего ботов в базе: {len(all_bots)}")
+        for bot in all_bots:
+            print(f"  - {bot.get('name', bot['id'])} (active: {bot.get('is_active', False)})")
+        return
     
     total_deleted = 0
     
