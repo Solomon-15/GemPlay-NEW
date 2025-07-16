@@ -9852,7 +9852,7 @@ async def create_bot_bet(bot: Bot) -> bool:
         # Получаем текущие активные ставки этого конкретного бота
         bot_active_bets = await db.games.count_documents({
             "creator_id": bot.id,
-            "status": {"$in": ["WAITING", "ACTIVE"]}
+            "status": "WAITING"
         })
         
         # Проверяем индивидуальный лимит бота
@@ -9864,21 +9864,6 @@ async def create_bot_bet(bot: Bot) -> bool:
         # Передаем данные поведения бота в объект для should_bot_win
         if bot_doc:
             bot._bot_data = bot_doc
-        
-        # Проверяем индивидуальные лимиты бота
-        max_individual_bets = bot_doc.get("max_individual_bets", 12) if bot_doc else 12
-        
-        # Подсчитываем текущие активные ставки бота
-        current_bot_bets = await db.games.count_documents({
-            "creator_id": bot.id,
-            "creator_type": "bot",
-            "status": {"$in": ["WAITING", "ACTIVE"]}
-        })
-        
-        # Проверяем, не превышает ли бот свой индивидуальный лимит
-        if current_bot_bets >= max_individual_bets:
-            logger.info(f"Bot {bot.id} has reached individual bet limit ({current_bot_bets}/{max_individual_bets})")
-            return False
         
         # Для режима "always-first" проверяем дополнительные условия
         if creation_mode == "always-first":
