@@ -6877,7 +6877,7 @@ async def bot_create_game_automatically(bot: Bot):
             current_active_bets = await db.games.count_documents({
                 "creator_type": "bot",
                 "is_bot_game": True,
-                "status": {"$in": ["WAITING", "ACTIVE"]},
+                "status": "WAITING",
                 "$or": [
                     {"bot_type": "REGULAR"},
                     {"metadata.bot_type": "REGULAR"}
@@ -6888,7 +6888,7 @@ async def bot_create_game_automatically(bot: Bot):
             current_active_bets = await db.games.count_documents({
                 "creator_type": "bot", 
                 "is_bot_game": True,
-                "status": {"$in": ["WAITING", "ACTIVE"]},
+                "status": "WAITING",
                 "$or": [
                     {"bot_type": "HUMAN"},
                     {"metadata.bot_type": "HUMAN"}
