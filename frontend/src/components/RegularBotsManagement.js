@@ -2777,7 +2777,7 @@ const RegularBotsManagement = () => {
               <div className="flex items-center space-x-3">
                 {/* Иконка приложения */}
                 <div className="p-2 bg-blue-600 rounded-lg">
-                  <img src="/Bot.svg" alt="Bot" className="w-8 h-8 text-white" />
+                  <img src="/Bot.svg" alt="Bot" className="w-8 h-8 filter brightness-0 invert" />
                 </div>
                 <h3 className="font-russo text-xl text-white">
                   Активные ставки — Bot
