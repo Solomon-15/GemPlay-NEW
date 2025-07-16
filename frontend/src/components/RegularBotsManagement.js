@@ -1006,7 +1006,7 @@ const RegularBotsManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Кнопки управления */}
+      {/* Заголовок и кнопки управления */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-rajdhani font-bold text-white">Обычные Боты</h2>
         <div className="flex space-x-3">
@@ -1034,6 +1034,37 @@ const RegularBotsManagement = () => {
           </button>
         </div>
       </div>
+
+      {/* Табы */}
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
+        <div className="flex border-b border-border-primary">
+          <button
+            onClick={() => setActiveTab('bots')}
+            className={`flex-1 px-6 py-4 text-center font-rajdhani font-bold transition-colors ${
+              activeTab === 'bots'
+                ? 'bg-accent-primary text-white border-b-2 border-accent-primary'
+                : 'text-text-secondary hover:text-white hover:bg-surface-sidebar'
+            }`}
+          >
+            📋 Список ботов
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex-1 px-6 py-4 text-center font-rajdhani font-bold transition-colors ${
+              activeTab === 'settings'
+                ? 'bg-accent-primary text-white border-b-2 border-accent-primary'
+                : 'text-text-secondary hover:text-white hover:bg-surface-sidebar'
+            }`}
+          >
+            ⚙️ Настройки
+          </button>
+        </div>
+
+        {/* Содержимое табов */}
+        <div className="p-6">
+          {activeTab === 'bots' && (
+            <div className="space-y-6">
+              {/* Весь существующий контент со статистикой и списком ботов */}
 
       {/* Статистика активных ставок */}
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
