@@ -6,6 +6,7 @@ const BotCycleModal = ({ bot, onClose }) => {
   const [cycleData, setCycleData] = useState(null);
   const [loading, setLoading] = useState(true);
   const { showErrorRU } = useNotifications();
+  const { botsApi } = useApi();
 
   useEffect(() => {
     if (bot && bot.id) {
@@ -15,10 +16,10 @@ const BotCycleModal = ({ bot, onClose }) => {
 
   const fetchCycleData = async () => {
     try {
-      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-bets`, getApiConfig());
+      const response = await botsApi.getCycleHistory(bot.id);
       
-      if (response.data.success) {
-        setCycleData(response.data);
+      if (response.success) {
+        setCycleData(response);
       }
       setLoading(false);
     } catch (error) {
