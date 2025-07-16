@@ -9,7 +9,7 @@ import string
 import uuid
 
 # Configuration
-BASE_URL = "https://9edda72d-d3b7-4912-8870-21b90607f642.preview.emergentagent.com/api"
+BASE_URL = "https://5180b019-ebba-48a6-8053-fd6d5c87721a.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
