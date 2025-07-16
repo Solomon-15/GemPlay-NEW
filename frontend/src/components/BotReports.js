@@ -39,13 +39,10 @@ const BotReports = () => {
   const generateReport = async (reportType) => {
     setGenerating(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.post(`${API}/admin/bots/reports/generate`, {
         type: reportType,
         timeRange: '7d'
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      }, getApiConfig());
       
       if (response.data.success) {
         showSuccessRU('Отчет успешно сгенерирован');
