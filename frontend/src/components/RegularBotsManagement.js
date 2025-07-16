@@ -4,9 +4,7 @@ import { useNotifications } from './NotificationContext';
 import Pagination from './Pagination';
 import usePagination from '../hooks/usePagination';
 import BotCycleModal from './BotCycleModal';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import API, { getApiConfig } from '../utils/api';
 
 const RegularBotsManagement = () => {
   const [stats, setStats] = useState({
