@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 /**
- * Компонент отображения статистических карточек ботов
+ * Мемоизированный компонент отображения статистических карточек ботов
  * Отображает общую статистику активных ботов, ставок и доходов
+ * Оптимизирован для предотвращения лишних ререндеров при неизменных данных
  */
-const BotStatsCards = ({ activeBetsStats, stats }) => {
+const BotStatsCards = memo(({ activeBetsStats, stats }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
       {/* Активные ставки */}
