@@ -12,6 +12,7 @@ import History from "./components/History";
 import CreateGame from "./components/CreateGame";
 import GameLobby from "./components/GameLobby";
 import SecurityMonitoring from "./components/SecurityMonitoring";
+const LazySecurityMonitoring = React.lazy(() => import("./components/SecurityMonitoring"));
 import AdminPanel from "./components/AdminPanel";
 import HeaderPortfolio from "./components/HeaderPortfolio";
 import NotificationProvider from "./components/NotificationContext";
