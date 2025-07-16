@@ -213,26 +213,8 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
                 >
                   {/* Цветная рамка для активного состояния */}
                   {currentView === item.id && (
-                    <div className={`absolute inset-0 border ${
-                      item.id === 'monitoring' 
-                        ? 'border-red-500 bg-red-500/3' 
-                        : item.id === 'admin-panel' 
-                        ? 'border-purple-500 bg-purple-500/3' 
-                        : 'border-accent-primary bg-accent-primary/3'
-                    } border-opacity-40 rounded-lg ${
-                      isCollapsed ? 'border-opacity-50' : `border-l-2 ${
-                        item.id === 'monitoring' 
-                          ? 'border-red-500' 
-                          : item.id === 'admin-panel' 
-                          ? 'border-purple-500' 
-                          : 'border-accent-primary'
-                      } border-opacity-100 border-t-0 border-r-0 border-b-0 ${
-                        item.id === 'monitoring' 
-                          ? 'bg-red-500/8' 
-                          : item.id === 'admin-panel' 
-                          ? 'bg-purple-500/8' 
-                          : 'bg-accent-primary/8'
-                      }`
+                    <div className={`absolute inset-0 border border-accent-primary bg-accent-primary/10 border-opacity-40 rounded-lg ${
+                      isCollapsed ? 'border-opacity-50' : 'border-l-4 border-accent-primary border-opacity-100 border-t-0 border-r-0 border-b-0 bg-accent-primary/15'
                     }`}></div>
                   )}
                   
