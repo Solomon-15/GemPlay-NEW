@@ -9671,8 +9671,12 @@ async def start_regular_bots(
         # Проверяем текущее количество активных ставок обычных ботов
         current_active_bets = await db.games.count_documents({
             "creator_type": "bot",
-            "bot_type": "REGULAR",
-            "status": {"$in": ["WAITING", "ACTIVE"]}
+            "is_bot_game": True,
+            "status": "WAITING",
+            "$or": [
+                {"bot_type": "REGULAR"},
+                {"metadata.bot_type": "REGULAR"}
+            ]
         })
         
         if current_active_bets >= max_active_bets:
