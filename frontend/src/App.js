@@ -360,7 +360,13 @@ function App() {
                   <NotificationDemo />
                 )}
                 {currentView === 'monitoring' && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
-                  <SecurityMonitoring user={user} />
+                  <React.Suspense fallback={
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-white text-xl font-roboto">Загружается мониторинг безопасности...</div>
+                    </div>
+                  }>
+                    <LazySecurityMonitoring user={user} />
+                  </React.Suspense>
                 )}
                 </div>
               </div>
