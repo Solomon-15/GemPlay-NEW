@@ -674,10 +674,14 @@ const RegularBotsManagement = () => {
       const token = localStorage.getItem('token');
       
       // Получаем все игры бота (включая завершенные для статистики)
-      const [activeBetsResponse, botStatsResponse] = await Promise.all([
-        // Активные ставки
-        axios.get(`${API}/admin/games?creator_id=${bot.id}&status=WAITING,ACTIVE,REVEAL,COMPLETED`, {
-          headers: { Authorization: `Bearer ${token}` }
+      const [gamesResponse, botStatsResponse] = await Promise.all([
+        // Активные и завершенные игры для полного цикла
+        axios.get(`${API}/admin/games`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            creator_id: bot.id,
+            status: 'WAITING,ACTIVE,REVEAL,COMPLETED'
+          }
         }),
         // Статистика бота
         axios.get(`${API}/admin/bots/${bot.id}/stats`, {
@@ -685,11 +689,14 @@ const RegularBotsManagement = () => {
         }).catch(() => null) // Если статистика недоступна, продолжаем без неё
       ]);
       
-      console.log('API Response:', activeBetsResponse.data);
+      console.log('Games API Response:', gamesResponse.data);
       console.log('Bot Stats Response:', botStatsResponse?.data);
       
+      // Обработка данных игр
+      const games = gamesResponse.data.games || gamesResponse.data || [];
+      
       // Преобразуем данные для отображения
-      const betsData = activeBetsResponse.data.games?.map(game => {
+      const betsData = games.map(game => {
         console.log('Game data:', game);
         return {
           id: game.id,
@@ -701,20 +708,21 @@ const RegularBotsManagement = () => {
           status: game.status?.toLowerCase() || 'waiting',
           opponent_name: game.opponent_name || '—',
           opponent_id: game.opponent_id || '—',
-          winner: game.winner,
+          winner_id: game.winner_id || game.winner,
           creator_id: game.creator_id,
           result: game.result
         };
-      }) || [];
+      });
       
       // Вычисляем статистику для модального окна
       const totalBets = betsData.length;
       const totalBetAmount = betsData.reduce((sum, bet) => sum + (bet.bet_amount || 0), 0);
       const gamesPlayed = betsData.filter(bet => bet.status === 'completed').length;
-      const botWins = betsData.filter(bet => bet.status === 'completed' && bet.winner === bot.id).length;
-      const playerWins = betsData.filter(bet => bet.status === 'completed' && bet.winner !== bot.id && bet.winner).length;
+      const botWins = betsData.filter(bet => bet.status === 'completed' && bet.winner_id === bot.id).length;
+      const playerWins = betsData.filter(bet => bet.status === 'completed' && bet.winner_id && bet.winner_id !== bot.id).length;
       
-      console.log('Processed bets data:', betsData);
+      console.log('Statistics:', { totalBets, totalBetAmount, gamesPlayed, botWins, playerWins });
+      
       setActiveBetsData({
         bets: betsData,
         totalBets,
@@ -734,13 +742,14 @@ const RegularBotsManagement = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         console.log('Fallback API Response:', response.data);
+        const fallbackBets = response.data.bets || [];
         setActiveBetsData({
-          bets: response.data.bets || [],
-          totalBets: response.data.bets?.length || 0,
-          totalBetAmount: response.data.bets?.reduce((sum, bet) => sum + (bet.bet_amount || bet.amount || 0), 0) || 0,
-          gamesPlayed: 0,
-          botWins: 0,
-          playerWins: 0,
+          bets: fallbackBets,
+          totalBets: fallbackBets.length,
+          totalBetAmount: fallbackBets.reduce((sum, bet) => sum + (bet.bet_amount || bet.amount || 0), 0),
+          gamesPlayed: fallbackBets.filter(bet => bet.status === 'completed').length,
+          botWins: fallbackBets.filter(bet => bet.status === 'completed' && bet.winner_id === bot.id).length,
+          playerWins: fallbackBets.filter(bet => bet.status === 'completed' && bet.winner_id && bet.winner_id !== bot.id).length,
           botStats: {}
         });
       } catch (fallbackError) {
