@@ -23,7 +23,6 @@ const BotSettings = ({ user }) => {
   const { showSuccessRU, showErrorRU } = useNotifications();
 
   useEffect(() => {
-    fetchBotSettings();
     fetchQueueStats();
   }, []);
 
