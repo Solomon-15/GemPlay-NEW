@@ -555,6 +555,8 @@ const AdminPanel = ({ user, onClose }) => {
         return <div className="text-white">Управление гемами (в разработке)</div>;
       case 'profit':
         return <ProfitAdmin user={user} />;
+      case 'settings':
+        return <InterfaceSettings />;
       default:
         return <DashboardContent />;
     }
