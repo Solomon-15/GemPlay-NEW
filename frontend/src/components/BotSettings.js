@@ -6,13 +6,6 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const BotSettings = ({ user }) => {
-  const [settings, setSettings] = useState({
-    globalMaxActiveBets: 50,
-    globalMaxHumanBots: 30,
-    paginationSize: 10,
-    autoActivateFromQueue: true,
-    priorityType: 'order' // 'order' or 'manual'
-  });
   const [loading, setLoading] = useState(true);
   const [queueStats, setQueueStats] = useState({
     totalActiveRegularBets: 0,
