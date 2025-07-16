@@ -77,23 +77,11 @@ const GameLobby = ({ user, onUpdateUser }) => {
   };
 
   const formatGemsBet = (betGems) => {
-    if (!betGems || typeof betGems !== 'object') return 'Нет ставок';
-    
-    return Object.entries(betGems)
-      .filter(([_, quantity]) => quantity > 0)
-      .map(([type, quantity]) => `${type}: ${quantity}`)
-      .join(', ');
+    return formatGemsBet(betGems);
   };
 
   const getTimeAgo = (dateString) => {
-    const now = new Date();
-    const gameTime = new Date(dateString);
-    const diffInMinutes = Math.floor((now - gameTime) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return 'Только что';
-    if (diffInMinutes < 60) return `${diffInMinutes} мин назад`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} ч назад`;
-    return `${Math.floor(diffInMinutes / 1440)} дн назад`;
+    return getTimeAgo(dateString);
   };
 
   if (loading) {
