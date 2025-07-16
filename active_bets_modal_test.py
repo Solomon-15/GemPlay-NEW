@@ -310,46 +310,85 @@ def test_active_bets_modal_backend() -> None:
         print_warning("No bot ID available for cycle history testing")
         record_test("Active Bets Modal - Bot Cycle Stats", True, "No bot ID available")
     
-    # Step 5: Test winner_id field correctness in games
-    print_subheader("Step 5: Testing winner_id Field Correctness")
+    # Step 5: Test available games endpoints for game data
+    print_subheader("Step 5: Testing Available Games Endpoints")
     
-    # Get completed games to check winner_id
+    # Test GET /api/games/available endpoint to see game structure
     response, success = make_request(
-        "GET", "/admin/games?status=COMPLETED&limit=5",
+        "GET", "/games/available",
         auth_token=admin_token
     )
     
     if success:
-        games = response.get("games", response) if isinstance(response, dict) else response
-        completed_games = [game for game in games if game.get("status") == "COMPLETED"]
-        
-        if completed_games:
-            print_success(f"Found {len(completed_games)} completed games to check winner_id")
+        if isinstance(response, list):
+            print_success(f"Found {len(response)} available games")
             
-            winner_id_correct = True
-            for game in completed_games[:3]:  # Check first 3 games
-                winner_id = game.get("winner_id")
-                creator_id = game.get("creator_id")
-                opponent_id = game.get("opponent_id")
+            if response:
+                first_game = response[0]
+                required_game_fields = ["game_id", "creator", "bet_amount", "created_at"]
+                missing_game_fields = [field for field in required_game_fields if field not in first_game]
                 
-                if winner_id and winner_id in [creator_id, opponent_id]:
-                    print_success(f"✓ Game {game.get('id')}: winner_id {winner_id} is valid")
-                elif winner_id is None:
-                    print_success(f"✓ Game {game.get('id')}: winner_id is None (draw)")
+                if not missing_game_fields:
+                    print_success("✓ Available game objects contain required fields")
+                    print_success(f"Sample game: ID={first_game.get('game_id')}, Creator={first_game.get('creator', {}).get('username')}, Bet=${first_game.get('bet_amount')}")
+                    record_test("Active Bets Modal - Available Games Structure", True)
                 else:
-                    print_error(f"✗ Game {game.get('id')}: winner_id {winner_id} not in [creator: {creator_id}, opponent: {opponent_id}]")
-                    winner_id_correct = False
-            
-            if winner_id_correct:
-                record_test("Active Bets Modal - Winner ID Correctness", True)
+                    print_error(f"✗ Available game objects missing required fields: {missing_game_fields}")
+                    record_test("Active Bets Modal - Available Games Structure", False, f"Missing fields: {missing_game_fields}")
             else:
-                record_test("Active Bets Modal - Winner ID Correctness", False, "Invalid winner_id found")
+                print_warning("No available games found")
+                record_test("Active Bets Modal - Available Games Structure", True, "No games available")
         else:
-            print_warning("No completed games found to check winner_id")
-            record_test("Active Bets Modal - Winner ID Correctness", True, "No completed games")
+            print_error("✗ Available games response is not a list")
+            record_test("Active Bets Modal - Available Games Structure", False, "Not a list")
     else:
-        print_error("Failed to get completed games for winner_id check")
-        record_test("Active Bets Modal - Winner ID Correctness", False, "Failed to get games")
+        print_error("GET /api/games/available endpoint failed")
+        record_test("Active Bets Modal - Available Games Endpoint", False, "Endpoint failed")
+    
+    # Test GET /api/games/history endpoint for completed games
+    response, success = make_request(
+        "GET", "/games/history",
+        auth_token=admin_token
+    )
+    
+    if success:
+        if "games" in response:
+            games = response.get("games", [])
+            print_success(f"Found {len(games)} games in history")
+            
+            # Look for completed games to check winner_id
+            completed_games = [game for game in games if game.get("status") == "COMPLETED"]
+            
+            if completed_games:
+                print_success(f"Found {len(completed_games)} completed games to check winner_id")
+                
+                winner_id_correct = True
+                for game in completed_games[:3]:  # Check first 3 games
+                    winner_id = game.get("winner_id")
+                    creator_id = game.get("creator_id")
+                    opponent_id = game.get("opponent_id")
+                    
+                    if winner_id and winner_id in [creator_id, opponent_id]:
+                        print_success(f"✓ Game {game.get('id')}: winner_id {winner_id} is valid")
+                    elif winner_id is None:
+                        print_success(f"✓ Game {game.get('id')}: winner_id is None (draw)")
+                    else:
+                        print_error(f"✗ Game {game.get('id')}: winner_id {winner_id} not in [creator: {creator_id}, opponent: {opponent_id}]")
+                        winner_id_correct = False
+                
+                if winner_id_correct:
+                    record_test("Active Bets Modal - Winner ID Correctness", True)
+                else:
+                    record_test("Active Bets Modal - Winner ID Correctness", False, "Invalid winner_id found")
+            else:
+                print_warning("No completed games found to check winner_id")
+                record_test("Active Bets Modal - Winner ID Correctness", True, "No completed games")
+        else:
+            print_error("✗ Games history response missing 'games' array")
+            record_test("Active Bets Modal - Winner ID Correctness", False, "Missing games array")
+    else:
+        print_error("GET /api/games/history endpoint failed")
+        record_test("Active Bets Modal - Winner ID Correctness", False, "Endpoint failed")
     
     # Step 6: Test authentication and authorization
     print_subheader("Step 6: Testing Authentication and Authorization")
