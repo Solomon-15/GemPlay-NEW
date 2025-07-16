@@ -15,6 +15,17 @@ const InterfaceSettings = () => {
     bot_players: {
       available_bots: 10,
       ongoing_bot_battles: 10
+    },
+    display_limits: {
+      live_players: {
+        max_my_bets: 50,
+        max_available_bets: 50,
+        max_ongoing_battles: 50
+      },
+      bot_players: {
+        max_available_bots: 100,
+        max_ongoing_bot_battles: 100
+      }
     }
   });
   const [loading, setLoading] = useState(true);
