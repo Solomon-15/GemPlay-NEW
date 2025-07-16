@@ -50,6 +50,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const itemsPerPage = 10;
 
   useEffect(() => {
+    fetchInterfaceSettings();
     fetchLobbyData();
     
     // Обновляем данные каждые 10 секунд
@@ -67,6 +68,19 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       unregister();
     };
   }, []);
+
+  const fetchInterfaceSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/interface-settings`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInterfaceSettings(response.data);
+    } catch (error) {
+      console.error('Error fetching interface settings:', error);
+      // Используем дефолтные значения при ошибке
+    }
+  };
 
   const fetchLobbyData = async () => {
     try {
