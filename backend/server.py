@@ -5695,6 +5695,9 @@ class BotGameLogic:
                         variance = random.uniform(-0.05, 0.05)
                         win_probability += variance
                     
+                    # Apply gem value modifier to win probability
+                    win_probability += gem_value_modifier
+                    
                     # Ensure probability stays within bounds
                     win_probability = max(0.05, min(0.95, win_probability))
                     
@@ -5708,7 +5711,8 @@ class BotGameLogic:
             'cautious': -0.05     # Slightly lower base win rate
         }.get(bot_behavior, 0.0)
         
-        adjusted_win_rate = max(0.1, min(0.9, base_win_rate + behavior_adjustment))
+        # Apply gem value modifier to base win rate
+        adjusted_win_rate = max(0.1, min(0.9, base_win_rate + behavior_adjustment + gem_value_modifier))
         return random.random() < adjusted_win_rate
     
     @staticmethod
