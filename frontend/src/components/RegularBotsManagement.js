@@ -220,11 +220,19 @@ const RegularBotsManagement = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      const sortedBots = response.data.bots.sort((a, b) => {
+      // Обработка пагинированного ответа
+      const botsData = response.data.bots || response.data;
+      const sortedBots = botsData.sort((a, b) => {
         return a.priority_order - b.priority_order;
       });
       setBotsList(sortedBots);
-      pagination.updatePagination(response.data.total || 0);
+      
+      // Обновление пагинации
+      if (response.data.total_count !== undefined) {
+        pagination.updatePagination(response.data.total_count);
+      } else {
+        pagination.updatePagination(botsData.length);
+      }
     } catch (error) {
       console.error('Error fetching bots:', error);
       showErrorRU('Ошибка при загрузке ботов');
