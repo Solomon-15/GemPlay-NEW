@@ -324,7 +324,7 @@ const RegularBotsManagement = () => {
       console.error('Ошибка запуска ботов:', error);
       showErrorRU('Ошибка при запуске ботов');
     } finally {
-      setStartingBots(false);
+      setLoading(false);
     }
   };
 
