@@ -105,7 +105,20 @@ const Leaderboard = ({ user }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Loading Leaderboard...</div>
+        <div className="text-white text-xl font-roboto">Загрузка рейтинга...</div>
+      </div>
+    );
+  }
+
+  // Show empty state if no data
+  if (leaderboard.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🏆</div>
+          <h2 className="font-russo text-2xl text-white mb-2">Рейтинг пока пуст</h2>
+          <p className="font-roboto text-text-secondary">Начните играть, чтобы попасть в рейтинг!</p>
+        </div>
       </div>
     );
   }
