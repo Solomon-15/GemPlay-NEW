@@ -3730,7 +3730,10 @@ class RegularBotSystem:
         if not bot:
             return {"passed": False, "reason": "Bot not found"}
         
-        individual_limit = bot.get("current_limit", bot.get("cycle_games", 12))
+        individual_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
+        if individual_limit is None:
+            individual_limit = 12  # fallback для старых ботов
+        
         current_bets = await self.db.games.count_documents({
             "creator_id": bot_id,
             "status": "WAITING"
