@@ -308,12 +308,9 @@ const RegularBotsManagement = () => {
   };
 
   const startRegularBots = async () => {
-    setStartingBots(true);
+    setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/admin/bots/start-regular`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.post(`${API}/admin/bots/start-regular`, {}, getApiConfig());
       
       if (response.data.limit_reached) {
         showErrorRU(`Лимит активных ставок достигнут: ${response.data.current_active_bets}/${response.data.max_active_bets}`);
