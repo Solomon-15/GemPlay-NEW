@@ -502,7 +502,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     }
   };
 
-  const getPaginatedItems = (items, page) => {
+  const getPaginatedItems = (items, page, itemsPerPage) => {
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return items.slice(startIndex, endIndex);
