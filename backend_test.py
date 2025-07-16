@@ -4772,6 +4772,9 @@ def run_regular_bot_commission_tests() -> None:
         "tests": []
     }
     
+    # Test Active Bets Modal functionality as requested in the review
+    test_active_bets_modal_functionality()
+    
     # Test Regular Bot commission logic
     test_regular_bot_commission_logic()
     
