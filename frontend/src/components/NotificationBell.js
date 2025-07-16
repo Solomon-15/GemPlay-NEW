@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNotifications, useDropdownPosition } from '../hooks/useNotificationBell';
+import { useNotifications as useNotificationBell, useDropdownPosition } from '../hooks/useNotificationBell';
 
 const NotificationBell = ({ isCollapsed }) => {
   const [notifications, setNotifications] = useState([]);
