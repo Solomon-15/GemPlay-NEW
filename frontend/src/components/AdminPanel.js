@@ -64,6 +64,13 @@ const AdminPanel = ({ user, onClose }) => {
   const fetchDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
+      console.log('🔍 AdminPanel: Fetching dashboard stats. Token exists:', !!token);
+      
+      if (!token) {
+        console.log('❌ AdminPanel: No token found, redirecting to login');
+        handleTokenExpired();
+        return;
+      }
       
       // Получаем статистику для дашборда
       const [usersResponse, botsResponse, gamesResponse] = await Promise.allSettled([
@@ -77,6 +84,12 @@ const AdminPanel = ({ user, onClose }) => {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
+
+      console.log('✅ AdminPanel: Dashboard stats responses:', {
+        users: usersResponse.status,
+        bots: botsResponse.status,
+        games: gamesResponse.status
+      });
 
       setStats({
         users: usersResponse.status === 'fulfilled' ? usersResponse.value.data : { total: '—', active: '—', banned: '—' },
