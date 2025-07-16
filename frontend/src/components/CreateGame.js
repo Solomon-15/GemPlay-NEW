@@ -22,11 +22,8 @@ const CreateGame = ({ user, onUpdateUser }) => {
   const [creating, setCreating] = useState(false);
   const [balance, setBalance] = useState(null);
 
-  const moves = [
-    { value: 'rock', label: 'Камень', icon: '🪨' },
-    { value: 'paper', label: 'Бумага', icon: '📄' },
-    { value: 'scissors', label: 'Ножницы', icon: '✂️' }
-  ];
+  // Use shared moves constant
+  const moves = GAME_MOVES;
 
   useEffect(() => {
     fetchUserGems();
