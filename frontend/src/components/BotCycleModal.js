@@ -16,10 +16,7 @@ const BotCycleModal = ({ bot, onClose }) => {
 
   const fetchCycleData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-bets`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-bets`, getApiConfig());
       
       if (response.data.success) {
         setCycleData(response.data);
