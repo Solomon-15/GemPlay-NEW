@@ -35,9 +35,8 @@ const BotAnalytics = () => {
 
   const fetchBotsList = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/admin/bots/regular/list`, {
-        headers: { Authorization: `Bearer ${token}` },
+        ...getApiConfig(),
         params: { page: 1, limit: 100 }
       });
       setBotsList(response.data.bots || []);
