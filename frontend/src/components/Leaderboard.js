@@ -35,28 +35,6 @@ const Leaderboard = ({ user }) => {
     }
   };
 
-  const generateMockLeaderboard = () => {
-    const mockUsers = [
-      'GemMaster2024', 'DiamondKing', 'CrystalQueen', 'RubyHunter', 'EmeraldWin',
-      'SapphireStorm', 'TopazTitan', 'GemCollector', 'JewelJuggernaut', 'PreciousPlayer',
-      'StoneSeeker', 'GemGuru', 'CrystalCrusher', 'DiamondDealer', 'RockRoyal',
-      'GemGenius', 'JewelJedi', 'CrystalChamp', 'DiamondDynamo', 'EmeraldExpert'
-    ];
-
-    return mockUsers.map((username, index) => ({
-      rank: index + 1,
-      user_id: `user_${index + 1}`,
-      username: username,
-      total_winnings: Math.floor(Math.random() * 50000) + 5000,
-      games_won: Math.floor(Math.random() * 200) + 10,
-      games_played: Math.floor(Math.random() * 300) + 50,
-      win_rate: Math.floor(Math.random() * 40) + 40, // 40-80% win rate
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}`,
-      level: Math.floor(Math.random() * 20) + 1,
-      favorite_gem: ['Ruby', 'Emerald', 'Sapphire', 'Diamond', 'Topaz'][Math.floor(Math.random() * 5)]
-    }));
-  };
-
   const getPaginatedData = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
