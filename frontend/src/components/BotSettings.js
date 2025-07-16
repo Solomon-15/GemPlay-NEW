@@ -66,7 +66,7 @@ const BotSettings = ({ user }) => {
             <div className="bg-blue-900 bg-opacity-20 border border-blue-500 border-opacity-30 rounded-lg p-4">
               <div className="text-2xl font-bold text-blue-400">{queueStats.totalActiveRegularBets || 0}</div>
               <div className="text-sm text-text-secondary">Активные ставки обычных ботов</div>
-              <div className="text-xs text-blue-300 mt-1">из {settings.globalMaxActiveBets} максимум</div>
+              <div className="text-xs text-blue-300 mt-1">из 50 максимум</div>
             </div>
             <div className="bg-green-900 bg-opacity-20 border border-green-500 border-opacity-30 rounded-lg p-4">
               <div className="text-2xl font-bold text-green-400">{queueStats.totalQueuedBets || 0}</div>
