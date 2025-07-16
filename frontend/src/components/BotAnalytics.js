@@ -17,28 +17,19 @@ const BotAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(null);
   const [botsList, setBotsList] = useState([]);
-  const { showSuccessRU, showErrorRU } = useNotifications();
-
-  useEffect(() => {
-    fetchAnalyticsData();
-    fetchBotsList();
-    
-    // Автоматическое обновление каждые 30 секунд
-    const interval = setInterval(fetchAnalyticsData, 30000);
-    setRefreshInterval(interval);
-    
-    return () => {
-      if (refreshInterval) clearInterval(refreshInterval);
-    };
-  }, [timeRange, selectedBot]);
+  const { showErrorRU } = useNotifications();
+  const { botsApi, analyticsApi, loading: apiLoading } = useApi();
+  
+  const [botsList, setBotsList] = useState([]);
+  const [selectedBot, setSelectedBot] = useState('all');
+  const [timeRange, setTimeRange] = useState('24h');
+  const [analyticsData, setAnalyticsData] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const fetchBotsList = async () => {
     try {
-      const response = await axios.get(`${API}/admin/bots/regular/list`, {
-        ...getApiConfig(),
-        params: { page: 1, limit: 100 }
-      });
-      setBotsList(response.data.bots || []);
+      const response = await botsApi.getList({ page: 1, limit: 100 });
+      setBotsList(response.bots || []);
     } catch (error) {
       console.error('Error fetching bots list:', error);
     }
@@ -46,16 +37,13 @@ const BotAnalytics = () => {
 
   const fetchAnalyticsData = async () => {
     try {
-      const response = await axios.get(`${API}/admin/bots/analytics`, {
-        ...getApiConfig(),
-        params: { 
-          timeRange, 
-          botId: selectedBot === 'all' ? null : selectedBot 
-        }
+      const response = await analyticsApi.getData({ 
+        timeRange, 
+        botId: selectedBot === 'all' ? null : selectedBot 
       });
       
-      if (response.data.success) {
-        setAnalyticsData(response.data.data);
+      if (response.success) {
+        setAnalyticsData(response.data);
       }
       setLoading(false);
     } catch (error) {
