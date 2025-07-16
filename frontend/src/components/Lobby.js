@@ -697,7 +697,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         }
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {getPaginatedItems(ongoingBotBattles, currentPage.ongoingBotBattles).map((game) => (
+          {getPaginatedItems(ongoingBotBattles, currentPage.ongoingBotBattles, interfaceSettings.bot_players.ongoing_bot_battles).map((game) => (
             <PlayerCard 
               key={game.game_id || game.id} 
               game={game} 
@@ -724,6 +724,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           totalItems={ongoingBotBattles.length}
           onPageChange={handlePageChange}
           section="ongoingBotBattles"
+          itemsPerPage={interfaceSettings.bot_players.ongoing_bot_battles}
         />
       </SectionBlock>
     </div>
