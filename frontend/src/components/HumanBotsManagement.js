@@ -21,8 +21,8 @@ const HumanBotsManagement = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`${API}/admin/bots/human/stats`, getApiConfig());
-      setStats(response.data);
+      const response = await botsApi.getStats();
+      setStats(response || {});
       setLoading(false);
     } catch (error) {
       console.error('Ошибка загрузки статистики Human ботов:', error);
@@ -34,10 +34,7 @@ const HumanBotsManagement = () => {
     try {
       const newState = !allBotsEnabled;
       
-      await axios.post(`${API}/admin/bots/toggle-all`, 
-        { enabled: newState },
-        getApiConfig()
-      );
+      await bulkOperations.toggleAllBots(newState);
       
       setAllBotsEnabled(newState);
       await fetchStats(); // Refresh stats
