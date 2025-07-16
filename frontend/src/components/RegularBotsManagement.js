@@ -177,6 +177,9 @@ const RegularBotsManagement = () => {
     errors: []
   });
 
+  // Состояние для табов
+  const [activeTab, setActiveTab] = useState('bots'); // 'bots' или 'settings'
+
   const { showSuccessRU, showErrorRU } = useNotifications();
 
   useEffect(() => {
