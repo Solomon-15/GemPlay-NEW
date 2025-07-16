@@ -356,7 +356,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     </div>
   );
 
-  const PaginationControls = ({ currentPage, totalItems, onPageChange, section }) => {
+  const PaginationControls = ({ currentPage, totalItems, onPageChange, section, itemsPerPage }) => {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     if (totalPages <= 1) return null;
 
