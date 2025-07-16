@@ -3621,7 +3621,45 @@ async def maintain_bot_active_bets(game: Game):
         
         bot_obj = Bot(**bot)
         
-        # Получаем текущее количество активных ставок
+        # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
+        # Получаем глобальные настройки
+        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
+        max_active_bets_human = bot_settings.get("max_active_bets_human", 30) if bot_settings else 30
+        
+        # Определяем тип бота
+        bot_type = bot.get("bot_type", "REGULAR")
+        
+        # Подсчитываем текущие активные ставки по типу бота
+        if bot_type == "REGULAR":
+            current_global_bets = await db.games.count_documents({
+                "creator_type": "bot",
+                "is_bot_game": True,
+                "status": "WAITING",
+                "$or": [
+                    {"bot_type": "REGULAR"},
+                    {"metadata.bot_type": "REGULAR"}
+                ]
+            })
+            max_limit = max_active_bets_regular
+        else:  # HUMAN
+            current_global_bets = await db.games.count_documents({
+                "creator_type": "bot",
+                "is_bot_game": True,
+                "status": "WAITING",
+                "$or": [
+                    {"bot_type": "HUMAN"},
+                    {"metadata.bot_type": "HUMAN"}
+                ]
+            })
+            max_limit = max_active_bets_human
+        
+        # Проверяем глобальный лимит
+        if current_global_bets >= max_limit:
+            logger.info(f"🚫 Global limit reached, skipping bet creation for {bot_type} bot {bot_id}: {current_global_bets}/{max_limit}")
+            return
+        
+        # Получаем текущее количество активных ставок конкретного бота
         current_active_bets = await db.games.count_documents({
             "creator_id": bot_id,
             "status": "WAITING"
