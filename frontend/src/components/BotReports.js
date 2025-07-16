@@ -60,13 +60,10 @@ const BotReports = () => {
     if (!selectedReport) return;
     
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.post(`${API}/admin/bots/reports/export`, {
         reportId: selectedReport.id,
         format: format
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      }, getApiConfig());
       
       if (response.data.success) {
         showSuccessRU(`Отчет экспортирован в ${format.toUpperCase()}`);
