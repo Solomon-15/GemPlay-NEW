@@ -3,10 +3,12 @@ import { useNotifications } from './NotificationContext';
 import { useApi } from '../hooks/useApi';
 
 const BotReports = () => {
+  const { showSuccessRU, showErrorRU } = useNotifications();
+  const { reportsApi } = useApi();
+  
   const [reports, setReports] = useState([]);
   const [generating, setGenerating] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
-  const { showSuccessRU, showErrorRU } = useNotifications();
 
   const reportTypes = [
     {
