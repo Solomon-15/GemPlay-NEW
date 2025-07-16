@@ -3080,7 +3080,57 @@ const RegularBotsManagement = () => {
 
               {/* Дополнительные настройки */}
               <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Поведение</h4>
+                <h4 className="font-rajdhani font-bold text-white mb-3">Поведение и стратегия</h4>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Стратегия прибыли:</label>
+                    <select
+                      value={editingBot.profit_strategy || 'balanced'}
+                      onChange={(e) => setEditingBot({...editingBot, profit_strategy: e.target.value})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    >
+                      <option value="balanced">Сбалансированная</option>
+                      <option value="start_profit">Ранняя прибыль</option>
+                      <option value="end_loss">Поздние потери</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Поведение бота:</label>
+                    <select
+                      value={editingBot.bot_behavior || 'balanced'}
+                      onChange={(e) => setEditingBot({...editingBot, bot_behavior: e.target.value})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    >
+                      <option value="balanced">Сбалансированное</option>
+                      <option value="aggressive">Агрессивное</option>
+                      <option value="cautious">Осторожное</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Индивидуальный лимит:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={editingBot.current_limit || editingBot.cycle_games || 12}
+                      onChange={(e) => setEditingBot({...editingBot, current_limit: parseInt(e.target.value) || 12})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Пауза между играми (сек):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="300"
+                      value={editingBot.pause_between_games || 0}
+                      onChange={(e) => setEditingBot({...editingBot, pause_between_games: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <label className="flex items-center">
                     <input
