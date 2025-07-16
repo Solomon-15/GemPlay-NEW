@@ -11,11 +11,12 @@ async def check_database_collections():
     """Проверка коллекций в базе данных"""
     
     # Подключение к MongoDB
-    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017/gemplay')
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
     client = MongoClient(mongo_url)
-    db = client.gemplay
+    db_name = os.environ.get('DB_NAME', 'gemplay_db')
+    db = client[db_name]
     
-    print("=== ПРОВЕРКА КОЛЛЕКЦИЙ В БАЗЕ ДАННЫХ ===")
+    print(f"=== ПРОВЕРКА КОЛЛЕКЦИЙ В БАЗЕ ДАННЫХ {db_name} ===")
     
     # Получаем все коллекции
     collections = db.list_collection_names()
