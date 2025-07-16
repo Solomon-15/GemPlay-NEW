@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNotifications } from './NotificationContext';
+import { useApi } from '../hooks/useApi';
 import ProfitChart from './ProfitChart';
 import BotReports from './BotReports';
-import API, { getApiConfig } from '../utils/api';
 
 const BotAnalytics = () => {
   const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' or 'reports'
