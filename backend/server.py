@@ -9836,6 +9836,19 @@ async def create_bot_bet(bot: Bot) -> bool:
             logger.info(f"🚫 Global limit reached for {bot_type} bots: {current_active_bets}/{max_limit}")
             return False
         
+        # ============ ПРОВЕРКА ИНДИВИДУАЛЬНЫХ ЛИМИТОВ ============
+        # Получаем текущие активные ставки этого конкретного бота
+        bot_active_bets = await db.games.count_documents({
+            "creator_id": bot.id,
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Проверяем индивидуальный лимит бота
+        individual_limit = bot_doc.get("current_limit") or bot_doc.get("cycle_games", 12)
+        if bot_active_bets >= individual_limit:
+            logger.info(f"🚫 Individual limit reached for bot {bot.id}: {bot_active_bets}/{individual_limit}")
+            return False
+        
         # Передаем данные поведения бота в объект для should_bot_win
         if bot_doc:
             bot._bot_data = bot_doc
