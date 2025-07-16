@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
 
 const BotSettings = ({ user }) => {
+  const { analyticsApi } = useApi();
+  
   const [loading, setLoading] = useState(true);
   const [queueStats, setQueueStats] = useState({
     totalActiveRegularBets: 0,
