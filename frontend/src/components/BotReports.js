@@ -38,14 +38,11 @@ const BotReports = () => {
   const generateReport = async (reportType) => {
     setGenerating(true);
     try {
-      const response = await axios.post(`${API}/admin/bots/reports/generate`, {
-        type: reportType,
-        timeRange: '7d'
-      }, getApiConfig());
+      const response = await reportsApi.generate(reportType, { timeRange: '7d' });
       
-      if (response.data.success) {
+      if (response.success) {
         showSuccessRU('Отчет успешно сгенерирован');
-        setSelectedReport(response.data.report);
+        setSelectedReport(response.report);
       }
     } catch (error) {
       console.error('Error generating report:', error);
