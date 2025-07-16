@@ -61,6 +61,14 @@ const AdminPanel = ({ user, onClose }) => {
     fetchDashboardStats();
   }, []);
 
+  const handleTokenExpired = () => {
+    console.log('🔒 AdminPanel: Token expired, cleaning up and closing');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+    showErrorRU('Сессия истекла. Пожалуйста, войдите снова.');
+    onClose();
+  };
+
   const fetchDashboardStats = async () => {
     try {
       const token = localStorage.getItem('token');
