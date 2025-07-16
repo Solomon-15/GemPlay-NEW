@@ -10282,28 +10282,46 @@ async def create_regular_bots(
     bot_config: dict,
     current_user: User = Depends(get_current_admin)
 ):
-    """Create regular bots (admin only)."""
+    """Create regular bots (admin only) - ОБНОВЛЕНО для новой системы."""
     try:
-        count = bot_config.get("count", 5)
-        min_bet = bot_config.get("min_bet_amount", 1.0)
-        max_bet = bot_config.get("max_bet_amount", 50.0)
-        win_rate = bot_config.get("win_percentage", 60.0)
+        # Параметры согласно новой спецификации
+        count = min(bot_config.get("count", 5), 100)  # 1-100
+        min_bet = bot_config.get("min_bet_amount", 1.0)  # 1-10000
+        max_bet = bot_config.get("max_bet_amount", 50.0)  # 1-10000
+        win_rate = bot_config.get("win_percentage", 55.0) / 100.0  # 0-100% -> 0.0-1.0
+        cycle_games = bot_config.get("cycle_games", 12)  # 1-66
+        individual_limit = bot_config.get("individual_limit", cycle_games)  # 1-66
+        creation_mode = bot_config.get("creation_mode", "queue-based")
+        priority_order = bot_config.get("priority_order", 50)  # 1-100
+        pause_between_games = bot_config.get("pause_between_games", 5)  # 1-300
+        profit_strategy = bot_config.get("profit_strategy", "balanced")
         
         created_bots = []
         
         for i in range(count):
             bot = Bot(
-                type=BotType.REGULAR,
-                name="",  # Пустая строка вместо None для обычных ботов
+                name=f"Regular Bot #{i+1}",
+                bot_type=BotType.REGULAR,
                 min_bet_amount=min_bet,
                 max_bet_amount=max_bet,
-                win_percentage=win_rate,
-                is_active=True,
-                bot_type="REGULAR"
+                win_rate=win_rate,
+                cycle_games=cycle_games,
+                current_limit=individual_limit,
+                creation_mode=creation_mode,
+                priority_order=priority_order,
+                pause_between_games=pause_between_games,
+                profit_strategy=profit_strategy,
+                is_active=True
             )
             
             await db.bots.insert_one(bot.dict())
             created_bots.append(bot.id)
+            
+            # Логируем создание через новую систему
+            await regular_bot_system.log_bot_action(bot.id, "BOT_CREATED", {
+                "config": bot_config,
+                "admin_id": current_user.id
+            })
         
         # Log admin action
         admin_log = AdminLog(
@@ -10318,6 +10336,8 @@ async def create_regular_bots(
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"✅ Created {count} regular bots with new system")
         
         return {
             "message": f"Создано {count} обычных ботов",
