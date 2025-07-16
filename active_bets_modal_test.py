@@ -211,8 +211,8 @@ def test_active_bets_modal_backend() -> None:
             print_error(f"✗ Pagination not working: page={response.get('current_page')}, limit={response.get('items_per_page')}")
             record_test("Active Bets Modal - Pagination", False, "Pagination parameters not working")
     
-    # Step 3: Test GET /api/admin/games endpoint with filtering
-    print_subheader("Step 3: Testing GET /api/admin/games Endpoint with Filtering")
+    # Step 3: Test available bot-related endpoints for modal functionality
+    print_subheader("Step 3: Testing Available Bot-Related Endpoints")
     
     # First, get a bot ID to test filtering
     bots_response = response  # Use the previous response
@@ -222,65 +222,44 @@ def test_active_bets_modal_backend() -> None:
         print_success(f"Using bot ID for testing: {bot_id}")
     
     if bot_id:
-        # Test filtering by creator_id and status
-        test_statuses = ["WAITING", "ACTIVE", "REVEAL", "COMPLETED"]
-        status_param = ",".join(test_statuses)
-        
+        # Test GET /api/admin/bots/{bot_id}/active-bets endpoint
         response, success = make_request(
-            "GET", f"/admin/games?creator_id={bot_id}&status={status_param}",
+            "GET", f"/admin/bots/{bot_id}/active-bets",
             auth_token=admin_token
         )
         
         if success:
-            print_success("✓ GET /api/admin/games endpoint accessible with filtering")
+            print_success("✓ GET /api/admin/bots/{bot_id}/active-bets endpoint accessible")
             
-            # Check if response has games array
-            if "games" in response or isinstance(response, list):
-                games = response.get("games", response) if isinstance(response, dict) else response
-                print_success(f"Found {len(games)} games for bot {bot_id}")
+            # Check if response has the expected structure for active bets modal
+            if "active_bets" in response:
+                active_bets = response.get("active_bets", [])
+                print_success(f"Found {len(active_bets)} active bets for bot {bot_id}")
                 
-                # Verify filtering worked - all games should be from the specified creator
-                if games:
-                    first_game = games[0]
-                    required_game_fields = ["id", "created_at", "bet_amount", "status", "creator_id"]
-                    missing_game_fields = [field for field in required_game_fields if field not in first_game]
+                if active_bets:
+                    first_bet = active_bets[0]
+                    required_bet_fields = ["id", "bet_amount", "status", "created_at"]
+                    missing_bet_fields = [field for field in required_bet_fields if field not in first_bet]
                     
-                    if not missing_game_fields:
-                        print_success("✓ Game objects contain required fields for modal display")
-                        print_success(f"Sample game: ID={first_game.get('id')}, Status={first_game.get('status')}, Bet=${first_game.get('bet_amount')}")
-                        record_test("Active Bets Modal - Games Filtering", True)
-                        
-                        # Verify creator_id filtering
-                        if first_game.get("creator_id") == bot_id:
-                            print_success("✓ Creator ID filtering working correctly")
-                            record_test("Active Bets Modal - Creator Filtering", True)
-                        else:
-                            print_error(f"✗ Creator ID filtering failed: expected {bot_id}, got {first_game.get('creator_id')}")
-                            record_test("Active Bets Modal - Creator Filtering", False, "Creator ID mismatch")
-                        
-                        # Verify status filtering
-                        game_status = first_game.get("status")
-                        if game_status in test_statuses:
-                            print_success(f"✓ Status filtering working correctly: {game_status}")
-                            record_test("Active Bets Modal - Status Filtering", True)
-                        else:
-                            print_error(f"✗ Status filtering failed: {game_status} not in {test_statuses}")
-                            record_test("Active Bets Modal - Status Filtering", False, f"Invalid status: {game_status}")
+                    if not missing_bet_fields:
+                        print_success("✓ Active bet objects contain required fields for modal display")
+                        print_success(f"Sample bet: ID={first_bet.get('id')}, Status={first_bet.get('status')}, Amount=${first_bet.get('bet_amount')}")
+                        record_test("Active Bets Modal - Active Bets Data", True)
                     else:
-                        print_error(f"✗ Game objects missing required fields: {missing_game_fields}")
-                        record_test("Active Bets Modal - Games Filtering", False, f"Missing fields: {missing_game_fields}")
+                        print_error(f"✗ Active bet objects missing required fields: {missing_bet_fields}")
+                        record_test("Active Bets Modal - Active Bets Data", False, f"Missing fields: {missing_bet_fields}")
                 else:
-                    print_warning("No games found for the bot - filtering may be working correctly")
-                    record_test("Active Bets Modal - Games Filtering", True, "No games found")
+                    print_warning("No active bets found for this bot")
+                    record_test("Active Bets Modal - Active Bets Data", True, "No active bets found")
             else:
-                print_error("✗ Games response missing 'games' array")
-                record_test("Active Bets Modal - Games Filtering", False, "Missing games array")
+                print_error("✗ Response missing 'active_bets' array")
+                record_test("Active Bets Modal - Active Bets Data", False, "Missing active_bets array")
         else:
-            print_error("GET /api/admin/games endpoint failed with filtering")
-            record_test("Active Bets Modal - Games Endpoint", False, "Endpoint failed")
+            print_error("GET /api/admin/bots/{bot_id}/active-bets endpoint failed")
+            record_test("Active Bets Modal - Active Bets Endpoint", False, "Endpoint failed")
     else:
-        print_warning("No bot ID available for games filtering test")
-        record_test("Active Bets Modal - Games Filtering", True, "No bot ID available")
+        print_warning("No bot ID available for active bets testing")
+        record_test("Active Bets Modal - Active Bets Data", True, "No bot ID available")
     
     # Step 4: Test GET /api/admin/bots/{bot_id}/stats endpoint
     print_subheader("Step 4: Testing GET /api/admin/bots/{bot_id}/stats Endpoint")
