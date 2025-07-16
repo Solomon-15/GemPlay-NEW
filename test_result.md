@@ -1368,10 +1368,12 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Regular Bots Management New Parameters Testing"
     - "Shop Component"
     - "Inventory Component"
     - "Profile Component"
   stuck_tasks:
+    - "Regular Bots Management New Parameters Testing"
     - "Shop Component"
     - "Inventory Component"
     - "Profile Component"
