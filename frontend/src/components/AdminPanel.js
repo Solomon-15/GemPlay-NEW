@@ -23,7 +23,19 @@ const AdminPanel = ({ user, onClose }) => {
   const { showSuccessRU, showErrorRU } = useNotifications();
 
   // Проверка прав доступа
+  useEffect(() => {
+    console.log('🔍 AdminPanel: Checking user access. User:', user);
+    console.log('🔍 AdminPanel: Token in localStorage:', localStorage.getItem('token') ? 'EXISTS' : 'MISSING');
+    
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
+      console.log('❌ AdminPanel: Access denied. User role:', user?.role);
+    } else {
+      console.log('✅ AdminPanel: Access granted. User role:', user.role);
+    }
+  }, [user]);
+
   if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
+    console.log('❌ AdminPanel: Rendering access denied component');
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
         <div className="bg-surface-card border border-red-500 rounded-lg p-8 text-center">
@@ -31,6 +43,15 @@ const AdminPanel = ({ user, onClose }) => {
           <p className="font-roboto text-text-secondary">
             У вас нет разрешения для доступа к админ-панели
           </p>
+          <p className="font-roboto text-text-secondary mt-2">
+            Текущая роль: {user?.role || 'НЕ ОПРЕДЕЛЕНА'}
+          </p>
+          <button
+            onClick={onClose}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          >
+            Закрыть
+          </button>
         </div>
       </div>
     );
