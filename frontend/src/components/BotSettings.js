@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import API, { getApiConfig } from '../utils/api';
 
 const BotSettings = ({ user }) => {
   const [loading, setLoading] = useState(true);
