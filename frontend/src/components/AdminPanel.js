@@ -7,6 +7,7 @@ import RegularBotsManagement from './RegularBotsManagement';
 import HumanBotsManagement from './HumanBotsManagement';
 import BotSettings from './BotSettings';
 import BotAnalytics from './BotAnalytics';
+import InterfaceSettings from './InterfaceSettings';
 import NotificationContainer from './NotificationContainer';
 import { useNotifications } from './NotificationContext';
 
