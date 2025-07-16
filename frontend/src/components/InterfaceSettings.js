@@ -69,13 +69,40 @@ const InterfaceSettings = () => {
 
   const handleChange = (section, field, value) => {
     const numValue = parseInt(value);
-    if (numValue < 5 || numValue > 100) return; // Ограничения
+    
+    // Определяем лимиты в зависимости от типа поля
+    let minVal, maxVal;
+    if (field.startsWith('max_')) {
+      minVal = 10;
+      maxVal = 500;
+    } else {
+      minVal = 5;
+      maxVal = 100;
+    }
+    
+    if (numValue < minVal || numValue > maxVal) return;
 
     setSettings(prev => ({
       ...prev,
       [section]: {
         ...prev[section],
         [field]: numValue
+      }
+    }));
+  };
+
+  const handleDisplayLimitChange = (section, field, value) => {
+    const numValue = parseInt(value);
+    if (numValue < 10 || numValue > 500) return;
+
+    setSettings(prev => ({
+      ...prev,
+      display_limits: {
+        ...prev.display_limits,
+        [section]: {
+          ...prev.display_limits[section],
+          [field]: numValue
+        }
       }
     }));
   };
