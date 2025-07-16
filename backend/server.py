@@ -6749,6 +6749,45 @@ async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
 async def bot_create_game_automatically(bot: Bot):
     """Make bot create a game automatically using gem-based betting."""
     try:
+        # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
+        # Получаем глобальные настройки
+        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
+        max_active_bets_human = bot_settings.get("max_active_bets_human", 30) if bot_settings else 30
+        
+        # Определяем тип бота
+        bot_doc = await db.bots.find_one({"id": bot.id})
+        bot_type = bot_doc.get("bot_type", "REGULAR") if bot_doc else "REGULAR"
+        
+        # Подсчитываем текущие активные ставки по типу бота
+        if bot_type == "REGULAR":
+            current_active_bets = await db.games.count_documents({
+                "creator_type": "bot",
+                "is_bot_game": True,
+                "status": {"$in": ["WAITING", "ACTIVE"]},
+                "$or": [
+                    {"bot_type": "REGULAR"},
+                    {"metadata.bot_type": "REGULAR"}
+                ]
+            })
+            max_limit = max_active_bets_regular
+        else:  # HUMAN
+            current_active_bets = await db.games.count_documents({
+                "creator_type": "bot", 
+                "is_bot_game": True,
+                "status": {"$in": ["WAITING", "ACTIVE"]},
+                "$or": [
+                    {"bot_type": "HUMAN"},
+                    {"metadata.bot_type": "HUMAN"}
+                ]
+            })
+            max_limit = max_active_bets_human
+        
+        # Проверяем глобальный лимит
+        if current_active_bets >= max_limit:
+            logger.info(f"🚫 Global limit reached for {bot_type} bots: {current_active_bets}/{max_limit}")
+            return False
+        
         # Ensure bot has gems
         await BotGameLogic.setup_bot_gems(bot.id, db)
         
