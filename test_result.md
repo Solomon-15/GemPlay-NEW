@@ -1348,6 +1348,18 @@ frontend:
         agent: "main"
         comment: "FIXED: Admin panel login error resolved. The issue was that NotificationProvider was not wrapping the AdminPanel component. Moved NotificationProvider to wrap the entire App component, including AdminPanel. Now admin panel opens without 'useNotifications must be used within a NotificationProvider' errors. All notification functionality in admin panel now works correctly with Russian notifications."
 
+  - task: "Regular Bots Management New Parameters Testing"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/RegularBotsManagement.js, /app/frontend/src/components/AdminPanel.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "ADMIN PANEL ACCESS ISSUE PREVENTS TESTING: Attempted comprehensive testing of Regular Bots Management with new bot parameters (Лимиты, Стратегия, Пауза columns) as requested in review, but encountered critical session management issue. LOGIN SUCCESSFUL: Admin credentials work and main application loads correctly. ADMIN PANEL ACCESS BLOCKED: 'Админ панель' button visible in sidebar but clicking causes immediate session expiration and redirect to login page. MULTIPLE ATTEMPTS FAILED: Tried various approaches including session clearing, different selectors, and extended wait times - all result in session timeout. TESTING IMPACT: Unable to verify new table columns (Лимиты, Стратегия, Пауза), test create/edit bot modals with new parameters (profit_strategy, pause_between_games, individual_limit, bot_behavior), validate backend integration with new bot parameters, or test responsive design of updated admin panel. TECHNICAL ANALYSIS: Frontend loads correctly, admin button renders properly, but admin panel route appears to have authentication/session issues. RECOMMENDATION: Main agent must fix admin panel session management before new bot parameters can be tested."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
