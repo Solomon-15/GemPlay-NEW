@@ -6088,6 +6088,7 @@ async def update_interface_settings(
         # Validate the settings structure
         live_players = settings.get("live_players", {})
         bot_players = settings.get("bot_players", {})
+        display_limits = settings.get("display_limits", {})
         
         # Validate live_players settings
         for key in ["my_bets", "available_bets", "ongoing_battles"]:
@@ -6107,11 +6108,35 @@ async def update_interface_settings(
                     detail=f"Invalid value for bot_players.{key}. Must be between 5 and 100."
                 )
         
+        # Validate display_limits settings
+        if display_limits:
+            live_limits = display_limits.get("live_players", {})
+            bot_limits = display_limits.get("bot_players", {})
+            
+            # Validate live_players display limits
+            for key in ["max_my_bets", "max_available_bets", "max_ongoing_battles"]:
+                value = live_limits.get(key, 50)
+                if not isinstance(value, int) or value < 10 or value > 500:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Invalid value for display_limits.live_players.{key}. Must be between 10 and 500."
+                    )
+            
+            # Validate bot_players display limits
+            for key in ["max_available_bots", "max_ongoing_bot_battles"]:
+                value = bot_limits.get(key, 100)
+                if not isinstance(value, int) or value < 10 or value > 500:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Invalid value for display_limits.bot_players.{key}. Must be between 10 and 500."
+                    )
+        
         # Prepare settings document
         settings_doc = {
             "type": "interface_settings",
             "live_players": live_players,
             "bot_players": bot_players,
+            "display_limits": display_limits,
             "updated_at": datetime.utcnow(),
             "updated_by": current_admin.id
         }
