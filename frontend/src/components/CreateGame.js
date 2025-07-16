@@ -68,42 +68,15 @@ const CreateGame = ({ user, onUpdateUser }) => {
   };
 
   const getTotalBetAmount = () => {
-    let total = 0;
-    for (const [gemType, quantity] of Object.entries(selectedGems)) {
-      const gem = gems.find(g => g.type === gemType);
-      if (gem && quantity > 0) {
-        total += gem.price * quantity;
-      }
-    }
-    return total;
+    return calculateTotalBetAmount(selectedGems, gems);
   };
 
   const getCommissionAmount = () => {
-    return getTotalBetAmount() * 0.06; // 6% commission
+    return calculateCommission(getTotalBetAmount());
   };
 
-  const validateBet = () => {
-    const totalBet = getTotalBetAmount();
-    const commission = getCommissionAmount();
-    
-    if (totalBet < 1) {
-      return 'Минимальная ставка $1';
-    }
-    
-    if (totalBet > 3000) {
-      return 'Максимальная ставка $3000';
-    }
-    
-    if (balance && balance.virtual_balance < commission) {
-      return `Недостаточно средств для комиссии: $${commission.toFixed(2)}`;
-    }
-    
-    const hasValidGems = Object.values(selectedGems).some(qty => qty > 0);
-    if (!hasValidGems) {
-      return 'Выберите хотя бы один гем для ставки';
-    }
-    
-    return null;
+  const validateBetForm = () => {
+    return validateBet(selectedGems, gems, balance);
   };
 
   const handleCreateGame = async () => {
