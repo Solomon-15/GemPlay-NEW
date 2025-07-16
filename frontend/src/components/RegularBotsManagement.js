@@ -1688,25 +1688,25 @@ const RegularBotsManagement = () => {
                   Пбд/Прж/Нчи
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  % ВИН
+                  Win Rate
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  %
+                  Лимиты
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Цикл
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Сумма
+                  Сумма цикла
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  БОТ ТИП
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Интервал
+                  Стратегия
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Поведение
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                  Пауза
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Регистрация
