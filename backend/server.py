@@ -5591,14 +5591,46 @@ class BotGameLogic:
         return GameMove.ROCK  # Default fallback
     
     @staticmethod
-    def should_bot_win(bot: Bot) -> bool:
-        """Determine if bot should win based on win rate and advanced cycle management."""
+    def should_bot_win(bot: Bot, game_context: dict = None) -> bool:
+        """Determine if bot should win based on win rate, cycle management, and gem value consideration."""
         import random
         
         # Get bot data from database for additional fields
         bot_data = getattr(bot, '_bot_data', {})
         bot_behavior = bot_data.get('bot_behavior', 'balanced')
         profit_strategy = bot_data.get('profit_strategy', 'balanced')
+        
+        # Base win probability calculation
+        base_win_probability = 0.5  # Default 50/50
+        
+        # Gem value consideration - higher value games may influence decision
+        gem_value_modifier = 0.0
+        if game_context and game_context.get('total_gems_value', 0) > 0:
+            total_value = game_context['total_gems_value']
+            bet_amount = game_context.get('bet_amount', total_value)
+            
+            # For high-value games, bot may be more strategic
+            if total_value >= 100:  # High-value game (Magic gem or equivalent)
+                # More careful consideration for high-value games
+                if profit_strategy == 'start_profit':
+                    gem_value_modifier = 0.1  # Slightly more likely to win high-value games early
+                elif profit_strategy == 'end_loss':
+                    gem_value_modifier = -0.05  # Slightly more likely to lose high-value games early
+                    
+            elif total_value >= 50:  # Medium-value game (Sapphire or equivalent)
+                # Moderate consideration
+                if profit_strategy == 'start_profit':
+                    gem_value_modifier = 0.05
+                elif profit_strategy == 'end_loss':
+                    gem_value_modifier = -0.025
+                    
+            # Behavioral adjustments based on gem value
+            if bot_behavior == 'aggressive':
+                # Aggressive bots more likely to go for high-value wins
+                gem_value_modifier += min(0.1, total_value / 1000)
+            elif bot_behavior == 'cautious':
+                # Cautious bots more conservative with high-value games
+                gem_value_modifier -= min(0.05, total_value / 2000)
         
         # Check if we're in a cycle management mode
         if bot.cycle_games > 0:
