@@ -27,14 +27,11 @@ const RegularBotsManagement = () => {
   });
   const [allBotsEnabled, setAllBotsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [startingBots, setStartingBots] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isGlobalSettingsOpen, setIsGlobalSettingsOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedBot, setSelectedBot] = useState(null);
   const [editingBot, setEditingBot] = useState(null);
-  const [selectedBotCycle, setSelectedBotCycle] = useState(null); // Новое состояние для просмотра ставок цикла
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingBot, setDeletingBot] = useState(null);
   const [deleteReason, setDeleteReason] = useState('');
@@ -42,12 +39,10 @@ const RegularBotsManagement = () => {
   const [selectedBotForActiveBets, setSelectedBotForActiveBets] = useState(null);
   const [activeBetsData, setActiveBetsData] = useState(null);
   const [loadingActiveBets, setLoadingActiveBets] = useState(false);
-  const [winRateAnalysisData, setWinRateAnalysisData] = useState({});
   const [loadingStates, setLoadingStates] = useState({});
   const [isCycleModalOpen, setIsCycleModalOpen] = useState(false);
   const [cycleBot, setCycleBot] = useState(null);
   const [cycleData, setCycleData] = useState(null);
-  const [resettingBotBets, setResettingBotBets] = useState(null);
   
   // Состояния для inline редактирования лимитов
   const [editingBotLimits, setEditingBotLimits] = useState({}); // {botId: {limit: value, saving: false}}
