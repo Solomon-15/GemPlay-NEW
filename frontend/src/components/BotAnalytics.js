@@ -20,6 +20,46 @@ const BotAnalytics = () => {
   const { showErrorRU } = useNotifications();
   const { botsApi, analyticsApi, loading: apiLoading } = useApi();
 
+  const fetchBotsList = async () => {
+    try {
+      const response = await botsApi.getList({ page: 1, limit: 100 });
+      setBotsList(response.bots || []);
+    } catch (error) {
+      console.error('Error fetching bots list:', error);
+    }
+  };
+
+  const fetchAnalyticsData = async () => {
+    try {
+      const response = await analyticsApi.getData({ 
+        timeRange, 
+        botId: selectedBot === 'all' ? null : selectedBot 
+      });
+      
+      if (response.success) {
+        setAnalyticsData(response.data);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+      showErrorRU('Ошибка загрузки аналитики');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalyticsData();
+    fetchBotsList();
+    
+    // Автоматическое обновление каждые 30 секунд
+    const interval = setInterval(fetchAnalyticsData, 30000);
+    setRefreshInterval(interval);
+    
+    return () => {
+      if (refreshInterval) clearInterval(refreshInterval);
+    };
+  }, [timeRange, selectedBot]);
+
   const handleRefresh = () => {
     setLoading(true);
     fetchAnalyticsData();
