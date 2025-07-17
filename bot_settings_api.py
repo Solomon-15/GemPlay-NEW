@@ -61,6 +61,46 @@ async def get_current_admin(current_user: dict = Depends(get_current_user)):
         )
     return current_user
 
+@app.get("/api/admin/bot-settings-simple")
+async def get_bot_settings_simple():
+    """Get bot settings without authentication."""
+    try:
+        # Get bot settings from database
+        settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        
+        if not settings:
+            # Create default settings if not exists
+            default_settings = {
+                "id": "bot_settings",
+                "globalMaxActiveBets": 50,
+                "globalMaxHumanBots": 30,
+                "paginationSize": 10,
+                "autoActivateFromQueue": True,
+                "priorityType": "order",
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            await db.bot_settings.insert_one(default_settings)
+            settings = default_settings
+        
+        return {
+            "success": True,
+            "settings": {
+                "globalMaxActiveBets": settings.get("globalMaxActiveBets", settings.get("max_active_bets_regular", 50)),
+                "globalMaxHumanBots": settings.get("globalMaxHumanBots", settings.get("max_active_bets_human", 30)),
+                "paginationSize": settings.get("paginationSize", 10),
+                "autoActivateFromQueue": settings.get("autoActivateFromQueue", True),
+                "priorityType": settings.get("priorityType", "order")
+            }
+        }
+        
+    except Exception as e:
+        print(f"Error fetching bot settings: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch bot settings: {str(e)}"
+        )
+
 @app.get("/api/admin/bot-settings")
 async def get_bot_settings(current_user: dict = Depends(get_current_admin)):
     """Get bot settings."""
