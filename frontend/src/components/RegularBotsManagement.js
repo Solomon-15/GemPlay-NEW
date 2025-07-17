@@ -205,6 +205,39 @@ const RegularBotsManagement = () => {
 
   const { showSuccessRU, showErrorRU } = useNotifications();
 
+  // Функции для массового выбора ботов
+  const handleSelectBot = (botId) => {
+    const newSelected = new Set(selectedBots);
+    if (newSelected.has(botId)) {
+      newSelected.delete(botId);
+    } else {
+      newSelected.add(botId);
+    }
+    setSelectedBots(newSelected);
+    setShowBulkActions(newSelected.size > 0);
+    
+    // Обновляем состояние "выбрать все"
+    setSelectAll(newSelected.size === botsList.length && botsList.length > 0);
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedBots(new Set());
+      setShowBulkActions(false);
+    } else {
+      const allBotIds = new Set(botsList.map(bot => bot.id));
+      setSelectedBots(allBotIds);
+      setShowBulkActions(true);
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const clearSelection = () => {
+    setSelectedBots(new Set());
+    setSelectAll(false);
+    setShowBulkActions(false);
+  };
+
   useEffect(() => {
     fetchStats();
     fetchBotsList();
