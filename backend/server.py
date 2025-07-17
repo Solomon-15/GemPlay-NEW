@@ -12877,10 +12877,10 @@ async def startup_event():
 # BOT SETTINGS API
 # ==============================================================================
 
-@api_router.get("/admin/test-bot-settings", response_model=dict)
-async def test_bot_settings():
-    """Test endpoint for bot settings."""
-    return {"message": "Test successful", "status": "ok"}
+@api_router.get("/admin/simple-test")
+async def simple_test():
+    """Simple test endpoint."""
+    return {"message": "Simple test successful"}
 
 @api_router.put("/admin/bot-settings", response_model=dict)
 async def update_bot_global_settings(
