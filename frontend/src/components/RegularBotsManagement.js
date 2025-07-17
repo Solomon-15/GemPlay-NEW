@@ -93,7 +93,6 @@ const RegularBotsManagement = () => {
     profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
     
     // Старые поля для совместимости
-    bot_behavior: 'balanced', // 'aggressive', 'balanced', 'cautious'
     bot_type: 'type-1', // 'type-1' to 'type-11' or custom
     custom_min_bet: 1,
     custom_max_bet: 10,
