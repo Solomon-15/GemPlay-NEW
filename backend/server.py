@@ -9268,7 +9268,7 @@ async def reset_user_bets(
         )
 
 @api_router.post("/admin/bots/{bot_id}/reset-bets", response_model=dict)
-async def reset_bot_bets(
+async def reset_bot_bets_super_admin(
     bot_id: str,
     current_user: User = Depends(get_current_super_admin)
 ):
