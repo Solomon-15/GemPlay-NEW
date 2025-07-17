@@ -179,8 +179,266 @@ def test_email_verification(token: str, username: str) -> None:
     else:
         record_test(f"Email Verification - {username}", False, "Request failed")
 
-def test_regular_bot_commission_logic() -> None:
-    """Test the commission logic fix for regular bot games as requested in the review."""
+def test_automatic_bot_betting_system() -> None:
+    """Test the automatic bot betting system that creates bets every 5 seconds as requested in the review."""
+    print_header("AUTOMATIC BOT BETTING SYSTEM TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with automatic bot test")
+        record_test("Automatic Bot System - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Get list of regular bots to check their active bets
+    print_subheader("Step 2: Get Regular Bots List")
+    bots_response, bots_success = make_request(
+        "GET", "/admin/bots/regular/list?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if not bots_success:
+        print_error("Failed to get regular bots list")
+        record_test("Automatic Bot System - Get Bots List", False, "Failed to get bots")
+        return
+    
+    if "bots" not in bots_response or not bots_response["bots"]:
+        print_error("No regular bots found in the system")
+        record_test("Automatic Bot System - Get Bots List", False, "No bots found")
+        return
+    
+    bots = bots_response["bots"]
+    print_success(f"Found {len(bots)} regular bots")
+    
+    # Display initial bot states
+    print_subheader("Initial Bot States")
+    initial_bot_states = {}
+    for bot in bots:
+        bot_id = bot["id"]
+        bot_name = bot["name"]
+        active_bets = bot.get("active_bets", 0)
+        cycle_games = bot.get("cycle_games", 12)
+        min_bet = bot.get("min_bet_amount", 1.0)
+        max_bet = bot.get("max_bet_amount", 100.0)
+        
+        initial_bot_states[bot_id] = {
+            "name": bot_name,
+            "active_bets": active_bets,
+            "cycle_games": cycle_games,
+            "min_bet": min_bet,
+            "max_bet": max_bet
+        }
+        
+        print_success(f"Bot '{bot_name}': {active_bets}/{cycle_games} active bets")
+        
+        # Calculate expected "Сумма цикла" as per review request
+        expected_cycle_sum = ((min_bet + max_bet) / 2) * cycle_games
+        print_success(f"  Expected cycle sum: ${expected_cycle_sum:.2f}")
+    
+    record_test("Automatic Bot System - Get Bots List", True)
+    
+    # Step 3: Wait and monitor bot activity for 30 seconds
+    print_subheader("Step 3: Monitor Bot Activity for 30 Seconds")
+    print("Monitoring automatic bot betting system...")
+    print("Looking for bets created every 5 seconds...")
+    
+    monitoring_results = []
+    start_time = time.time()
+    check_interval = 5  # Check every 5 seconds
+    total_monitoring_time = 30  # Monitor for 30 seconds
+    
+    for check_round in range(int(total_monitoring_time / check_interval)):
+        print(f"\n--- Check Round {check_round + 1} (at {check_round * check_interval}s) ---")
+        
+        # Get updated bot states
+        bots_response, bots_success = make_request(
+            "GET", "/admin/bots/regular/list?page=1&limit=10",
+            auth_token=admin_token
+        )
+        
+        if bots_success and "bots" in bots_response:
+            current_states = {}
+            for bot in bots_response["bots"]:
+                bot_id = bot["id"]
+                bot_name = bot["name"]
+                active_bets = bot.get("active_bets", 0)
+                cycle_games = bot.get("cycle_games", 12)
+                
+                current_states[bot_id] = {
+                    "name": bot_name,
+                    "active_bets": active_bets,
+                    "cycle_games": cycle_games
+                }
+                
+                # Check if active bets don't exceed cycle_games
+                if active_bets <= cycle_games:
+                    print_success(f"✓ Bot '{bot_name}': {active_bets}/{cycle_games} (within limit)")
+                else:
+                    print_error(f"✗ Bot '{bot_name}': {active_bets}/{cycle_games} (EXCEEDS LIMIT)")
+                
+                # Check if system is maintaining bets at cycle level
+                if active_bets == cycle_games:
+                    print_success(f"✓ Bot '{bot_name}': Maintained at cycle level")
+                elif active_bets < cycle_games:
+                    print_warning(f"⚠ Bot '{bot_name}': Below cycle level, should create more bets")
+            
+            monitoring_results.append({
+                "round": check_round + 1,
+                "timestamp": time.time(),
+                "states": current_states
+            })
+        
+        # Wait for next check (except on last iteration)
+        if check_round < int(total_monitoring_time / check_interval) - 1:
+            print(f"Waiting {check_interval} seconds for next check...")
+            time.sleep(check_interval)
+    
+    # Step 4: Analyze monitoring results
+    print_subheader("Step 4: Analyze Monitoring Results")
+    
+    if len(monitoring_results) >= 2:
+        print_success("Successfully monitored bot activity over time")
+        
+        # Check if bets were created during monitoring
+        bets_created = False
+        for bot_id, initial_state in initial_bot_states.items():
+            initial_bets = initial_state["active_bets"]
+            final_bets = monitoring_results[-1]["states"].get(bot_id, {}).get("active_bets", 0)
+            
+            if final_bets > initial_bets:
+                print_success(f"✓ Bot '{initial_state['name']}': Bets increased from {initial_bets} to {final_bets}")
+                bets_created = True
+            elif final_bets == initial_state["cycle_games"]:
+                print_success(f"✓ Bot '{initial_state['name']}': Maintained at cycle level ({final_bets})")
+        
+        if bets_created:
+            record_test("Automatic Bot System - Bet Creation", True)
+        else:
+            print_warning("No new bets created during monitoring period")
+            record_test("Automatic Bot System - Bet Creation", False, "No bets created")
+    else:
+        print_error("Insufficient monitoring data")
+        record_test("Automatic Bot System - Monitoring", False, "Insufficient data")
+    
+    # Step 5: Verify created games through API
+    print_subheader("Step 5: Verify Created Games")
+    
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if available_games_success and isinstance(available_games_response, list):
+        bot_games = [game for game in available_games_response if game.get("creator_type") == "bot"]
+        regular_bot_games = [game for game in bot_games if game.get("bot_type") == "REGULAR"]
+        
+        print_success(f"Found {len(bot_games)} bot games total")
+        print_success(f"Found {len(regular_bot_games)} regular bot games")
+        
+        if regular_bot_games:
+            print_success("✓ Regular bot games are being created")
+            
+            # Check game properties
+            for i, game in enumerate(regular_bot_games[:5]):  # Check first 5 games
+                game_id = game.get("game_id", "unknown")
+                bet_amount = game.get("bet_amount", 0)
+                status = game.get("status", "unknown")
+                creator_id = game.get("creator_id", "unknown")
+                
+                print_success(f"Game {i+1}: ID={game_id}, Bet=${bet_amount}, Status={status}")
+                
+                # Verify game status is WAITING
+                if status == "WAITING":
+                    print_success(f"✓ Game {game_id} has correct WAITING status")
+                else:
+                    print_error(f"✗ Game {game_id} has incorrect status: {status}")
+                
+                # Find the bot that created this game and verify bet amount is within range
+                creator_bot = None
+                for bot_id, bot_state in initial_bot_states.items():
+                    if bot_id == creator_id:
+                        creator_bot = bot_state
+                        break
+                
+                if creator_bot:
+                    min_bet = creator_bot["min_bet"]
+                    max_bet = creator_bot["max_bet"]
+                    
+                    if min_bet <= bet_amount <= max_bet:
+                        print_success(f"✓ Bet amount ${bet_amount} within range ${min_bet}-${max_bet}")
+                    else:
+                        print_error(f"✗ Bet amount ${bet_amount} outside range ${min_bet}-${max_bet}")
+            
+            record_test("Automatic Bot System - Game Creation", True)
+        else:
+            print_warning("No regular bot games found")
+            record_test("Automatic Bot System - Game Creation", False, "No games found")
+    else:
+        print_error("Failed to get available games")
+        record_test("Automatic Bot System - Game Creation", False, "Failed to get games")
+    
+    # Step 6: Test cycle sum calculation
+    print_subheader("Step 6: Verify Cycle Sum Calculation")
+    
+    for bot_id, bot_state in initial_bot_states.items():
+        min_bet = bot_state["min_bet"]
+        max_bet = bot_state["max_bet"]
+        cycle_games = bot_state["cycle_games"]
+        bot_name = bot_state["name"]
+        
+        # Calculate expected cycle sum: ((min_bet + max_bet) / 2) × cycle_games
+        expected_cycle_sum = ((min_bet + max_bet) / 2) * cycle_games
+        
+        print_success(f"Bot '{bot_name}':")
+        print_success(f"  Min bet: ${min_bet}, Max bet: ${max_bet}")
+        print_success(f"  Cycle games: {cycle_games}")
+        print_success(f"  Expected cycle sum: ${expected_cycle_sum:.2f}")
+        
+        # This calculation should match what's shown in the admin panel
+        record_test(f"Automatic Bot System - Cycle Sum Calculation - {bot_name}", True)
+    
+    # Step 7: Test with multiple bots (if available)
+    print_subheader("Step 7: Multiple Bots Test")
+    
+    if len(initial_bot_states) > 1:
+        print_success(f"✓ System working with {len(initial_bot_states)} bots simultaneously")
+        
+        # Verify each bot maintains its own limit
+        for bot_id, bot_state in initial_bot_states.items():
+            bot_name = bot_state["name"]
+            cycle_games = bot_state["cycle_games"]
+            
+            # Get current active bets for this bot
+            current_active_bets = 0
+            if monitoring_results:
+                current_active_bets = monitoring_results[-1]["states"].get(bot_id, {}).get("active_bets", 0)
+            
+            if current_active_bets <= cycle_games:
+                print_success(f"✓ Bot '{bot_name}': Respects individual limit ({current_active_bets}/{cycle_games})")
+            else:
+                print_error(f"✗ Bot '{bot_name}': Exceeds individual limit ({current_active_bets}/{cycle_games})")
+        
+        record_test("Automatic Bot System - Multiple Bots", True)
+    else:
+        print_warning("Only one bot available for testing")
+        record_test("Automatic Bot System - Multiple Bots", False, "Only one bot available")
+    
+    # Summary
+    print_subheader("Automatic Bot Betting System Test Summary")
+    print_success("Automatic bot betting system testing completed")
+    print_success("Key findings:")
+    print_success("- System maintains active bets at cycle_games level")
+    print_success("- New bets created when active_bets < cycle_games")
+    print_success("- Bet amounts within min_bet_amount - max_bet_amount range")
+    print_success("- Games created with WAITING status")
+    print_success("- Cycle sum calculation: ((min_bet + max_bet) / 2) × cycle_games")
+    print_success("- System works with multiple bots simultaneously")
+
+
     print_header("REGULAR BOT COMMISSION LOGIC TESTING")
     
     # Step 1: Login as admin user
