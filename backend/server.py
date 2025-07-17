@@ -12878,9 +12878,9 @@ async def startup_event():
 # ==============================================================================
 
 @api_router.get("/admin/test-bot-settings", response_model=dict)
-async def test_bot_settings(current_user: User = Depends(get_current_admin)):
+async def test_bot_settings():
     """Test endpoint for bot settings."""
-    return {"message": "Test successful", "user": current_user.email}
+    return {"message": "Test successful", "status": "ok"}
 
 @api_router.put("/admin/bot-settings", response_model=dict)
 async def update_bot_global_settings(
