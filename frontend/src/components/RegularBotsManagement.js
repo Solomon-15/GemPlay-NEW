@@ -306,8 +306,24 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const handleBulkUpdateLimits = async (newLimit) => {
-    if (selectedBots.size === 0 || !newLimit) return;
+  const handleBulkUpdateLimits = async () => {
+    if (selectedBots.size === 0) return;
+    
+    const newLimit = prompt('Введите новый лимит активных ставок (1-66):');
+    if (!newLimit || parseInt(newLimit) < 1 || parseInt(newLimit) > 66) {
+      showErrorRU('Неверный лимит. Введите число от 1 до 66.');
+      return;
+    }
+    
+    const confirmed = await confirm({
+      title: "Изменение лимитов",
+      message: `Вы уверены, что хотите изменить лимит активных ставок на ${newLimit} для ${selectedBots.size} ботов?`,
+      confirmText: "Изменить",
+      cancelText: "Отмена",
+      type: "warning"
+    });
+    
+    if (!confirmed) return;
     
     setBulkActionLoading(true);
     
