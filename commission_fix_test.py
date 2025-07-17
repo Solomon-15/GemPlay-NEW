@@ -89,6 +89,10 @@ def test_commission_fix_verification():
     expected_virtual_after = initial_virtual - expected_commission
     expected_frozen_after = initial_frozen + expected_commission
     
+    # Calculate actual changes
+    virtual_change = initial_virtual - virtual_after_create
+    frozen_change = frozen_after_create - initial_frozen
+    
     virtual_correct = abs(virtual_after_create - expected_virtual_after) < 0.01
     frozen_correct = abs(frozen_after_create - expected_frozen_after) < 0.01
     
