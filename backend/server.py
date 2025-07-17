@@ -3567,12 +3567,13 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     if player:  # Only process human players
                         commission_to_return = game.bet_amount * 0.06
                         
+                        # ПРАВИЛЬНАЯ ЛОГИКА: При ничьей возвращаем комиссию из frozen_balance в virtual_balance
                         await db.users.update_one(
                             {"id": player_id},
                             {
                                 "$inc": {
-                                    "virtual_balance": commission_to_return,  # Return to balance
-                                    "frozen_balance": -commission_to_return   # Remove from frozen
+                                    "virtual_balance": commission_to_return,    # Возвращаем в virtual_balance
+                                    "frozen_balance": -commission_to_return     # Убираем из frozen_balance
                                 },
                                 "$set": {"updated_at": datetime.utcnow()}
                             }
