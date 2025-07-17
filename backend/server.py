@@ -3481,20 +3481,11 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     logger.info(f"💰 REGULAR BOT GAME - Winner {winner_id} gets full payout, no commission involved")
                 else:
                     # Normal human vs human game with commission
-                    commission_to_deduct = commission_amount  # 3% of total pot
+                    # ПРАВИЛЬНАЯ ЛОГИКА: Просто списываем комиссию из frozen_balance как плату за игру
+                    commission_to_deduct = game.bet_amount * 0.06  # 6% от ставки победителя
                     
-                    # ИСПРАВЛЕНИЕ: Просто списываем комиссию из frozen_balance, не трогаем virtual_balance
-                    new_winner_frozen = winner["frozen_balance"] - (game.bet_amount * 0.06)  # Unfreeze winner's commission
-                    
-                    # Deduct actual commission from frozen balance only
-                    if new_winner_frozen >= commission_to_deduct:
-                        new_winner_frozen -= commission_to_deduct
-                        new_winner_balance = winner["virtual_balance"]
-                    else:
-                        # If not enough in frozen, take remaining from virtual balance
-                        remaining = commission_to_deduct - new_winner_frozen
-                        new_winner_balance = winner["virtual_balance"] - remaining
-                        new_winner_frozen = 0
+                    new_winner_frozen = winner["frozen_balance"] - commission_to_deduct
+                    new_winner_balance = winner["virtual_balance"]  # virtual_balance не изменяется
                 
                 await db.users.update_one(
                     {"id": winner_id},
