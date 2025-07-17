@@ -1927,7 +1927,7 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
-                        {bot.games_stats.wins}/{bot.games_stats.losses}/{bot.games_stats.draws}
+                        {(bot.games_stats?.wins || 0)}/{(bot.games_stats?.losses || 0)}/{(bot.games_stats?.draws || 0)}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
