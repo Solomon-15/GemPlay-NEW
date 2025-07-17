@@ -14,6 +14,9 @@ import { useNotifications } from './NotificationContext';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Temporary proxy for bot-settings API
+const BOT_SETTINGS_API = "http://localhost:8002/api";
+
 const AdminPanel = ({ user, onClose }) => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [stats, setStats] = useState({});
