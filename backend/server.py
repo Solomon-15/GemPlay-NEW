@@ -7946,7 +7946,7 @@ async def auto_complete_bot_game_reveal(game_id: str):
 # ==============================================================================
 
 @api_router.post("/admin/users/reset-all-balances", response_model=dict)
-async def reset_all_user_balances(current_user: User = Depends(get_current_admin)):
+async def reset_all_user_balances_admin(current_user: User = Depends(get_current_admin)):
     """Reset all user balances and gems to zero (admin only)."""
     try:
         # Reset all user balances and frozen balances to 0
