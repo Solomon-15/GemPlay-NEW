@@ -2705,15 +2705,15 @@ async def create_game(
             "game_id": game.id,
             "bet_amount": total_bet_amount,
             "commission_reserved": commission_required,
-            "new_balance": user["virtual_balance"],  # ИСПРАВЛЕНО: virtual_balance остается прежним
+            "new_balance": user["virtual_balance"] - commission_required,  # ИСПРАВЛЕНО: virtual_balance изменяется
             "debug_info": {
                 "original_balance": user["virtual_balance"],
                 "original_frozen": user["frozen_balance"],
                 "commission_calculated": commission_required,
-                "balance_after_commission": user["virtual_balance"],  # ИСПРАВЛЕНО: не изменяется
+                "balance_after_commission": user["virtual_balance"] - commission_required,  # ИСПРАВЛЕНО: изменяется
                 "frozen_after_commission": user["frozen_balance"] + commission_required,
-                "expected_difference": 0,  # ИСПРАВЛЕНО: нет разницы в virtual_balance
-                "actual_difference": 0     # ИСПРАВЛЕНО: нет разницы в virtual_balance
+                "expected_difference": -commission_required,  # ИСПРАВЛЕНО: есть разница в virtual_balance
+                "actual_difference": -commission_required     # ИСПРАВЛЕНО: есть разница в virtual_balance
             }
         }
         
