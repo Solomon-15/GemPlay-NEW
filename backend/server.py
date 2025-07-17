@@ -2691,7 +2691,7 @@ async def create_game(
             amount=-commission_required,
             currency="USD",
             balance_before=user["virtual_balance"],
-            balance_after=user["virtual_balance"],  # ИСПРАВЛЕНО: virtual_balance не изменяется
+            balance_after=user["virtual_balance"] - commission_required,  # ИСПРАВЛЕНО: virtual_balance изменяется
             description=f"Commission frozen for PvP game creation (${commission_required})",
             reference_id=game.id
         )
