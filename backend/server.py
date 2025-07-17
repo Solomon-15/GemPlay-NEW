@@ -12909,14 +12909,14 @@ async def get_bot_settings_v2(current_user: User = Depends(get_current_admin)):
             detail=f"Failed to fetch bot settings: {str(e)}"
         )
 
-@api_router.put("/admin/bot-settings", response_model=dict)
-async def update_bot_global_settings_fixed(
+@api_router.put("/admin/bot-settings-v2", response_model=dict)
+async def update_bot_settings_v2(
     settings: BotSettingsRequest,
     current_user: User = Depends(get_current_admin)
 ):
-    """Update bot settings - fixed version."""
+    """Update bot settings - version 2 with unique name."""
     try:
-        # Update or create settings
+        # Update settings in database
         await db.bot_settings.update_one(
             {"id": "bot_settings"},
             {
