@@ -10845,7 +10845,7 @@ async def get_next_bot_in_queue() -> dict:
         return {"message": "Error occurred", "bot": None}
 
 @api_router.get("/admin/bots/settings", response_model=dict)
-async def get_bot_settings(current_user: User = Depends(get_current_admin)):
+async def get_bot_global_settings_old(current_user: User = Depends(get_current_admin)):
     """Get bot settings."""
     try:
         settings = await db.bot_settings.find_one({"id": "bot_settings"})
