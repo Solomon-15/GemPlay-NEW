@@ -211,6 +211,9 @@ const RegularBotsManagement = () => {
   
   // Хук для модального окна подтверждения
   const { confirm, confirmationModal } = useConfirmation();
+  
+  // Хук для модального окна ввода
+  const { prompt, inputModal } = useInput();
 
   // Функции для массового выбора ботов
   const handleSelectBot = (botId) => {
