@@ -10485,8 +10485,7 @@ async def create_regular_bots(
 ):
     """Create regular bots (admin only) - ОБНОВЛЕНО для новой системы."""
     try:
-        # Параметры согласно новой спецификации
-        count = min(bot_config.get("count", 1), 100)  # 1-100
+        # Параметры согласно новой спецификации (убрано поле count)
         min_bet = bot_config.get("min_bet_amount", 1.0)  # 1-10000
         max_bet = bot_config.get("max_bet_amount", 50.0)  # 1-10000
         win_rate = bot_config.get("win_percentage", 55.0) / 100.0  # 0-100% -> 0.0-1.0
@@ -10497,62 +10496,74 @@ async def create_regular_bots(
         pause_between_games = bot_config.get("pause_between_games", 5)  # 1-300
         profit_strategy = bot_config.get("profit_strategy", "balanced")
         
+        # Генерация уникального имени бота
+        bot_name = bot_config.get("name", "").strip()
+        if not bot_name:
+            # Автоматически генерируем уникальное имя Bot#
+            bot_name = await generate_unique_bot_name()
+        else:
+            # Проверяем, что имя не дублируется
+            existing_bot = await db.bots.find_one({"name": bot_name})
+            if existing_bot:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Бот с именем '{bot_name}' уже существует"
+                )
+        
         created_bots = []
         
-        for i in range(count):
-            bot_name = bot_config.get("name", f"Regular Bot #{i+1}")
-            bot = Bot(
-                name=bot_name,
-                bot_type=BotType.REGULAR,
-                min_bet_amount=min_bet,
-                max_bet_amount=max_bet,
-                win_rate=win_rate,
-                cycle_games=cycle_games,
-                current_limit=individual_limit,
-                individual_limit=individual_limit,
-                creation_mode=creation_mode,
-                priority_order=priority_order,
-                pause_between_games=pause_between_games,
-                profit_strategy=profit_strategy,
-                is_active=True
-            )
-            
-            await db.bots.insert_one(bot.dict())
-            created_bots.append(bot.id)
-            
-            # Логируем создание через новую систему
-            await regular_bot_system.log_bot_action(bot.id, "BOT_CREATED", {
-                "config": bot_config,
-                "admin_id": current_user.id
-            })
+        # Создаем только одного бота (убрано поле count)
+        bot = Bot(
+            name=bot_name,
+            bot_type=BotType.REGULAR,
+            min_bet_amount=min_bet,
+            max_bet_amount=max_bet,
+            win_rate=win_rate,
+            cycle_games=cycle_games,
+            current_limit=individual_limit,
+            individual_limit=individual_limit,
+            creation_mode=creation_mode,
+            priority_order=priority_order,
+            pause_between_games=pause_between_games,
+            profit_strategy=profit_strategy,
+            is_active=True
+        )
+        
+        await db.bots.insert_one(bot.dict())
+        created_bots.append(bot.id)
+        
+        # Логируем создание через новую систему
+        await regular_bot_system.log_bot_action(bot.id, "BOT_CREATED", {
+            "config": bot_config,
+            "admin_id": current_user.id
+        })
         
         # Log admin action
         admin_log = AdminLog(
             admin_id=current_user.id,
-            action="CREATE_REGULAR_BOTS",
+            action="CREATE_REGULAR_BOT",
             target_type="bots",
-            target_id="bulk",
+            target_id=bot.id,
             details={
-                "count": count,
-                "bot_ids": created_bots,
+                "bot_name": bot_name,
                 "config": bot_config
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        logger.info(f"✅ Created {count} regular bots with new system")
+        logger.info(f"✅ Created regular bot '{bot_name}' with new system")
         
         return {
-            "message": f"Создано {count} обычных ботов",
+            "message": f"Создан обычный бот '{bot_name}'",
             "created_bots": created_bots,
-            "count": count
+            "bot_name": bot_name
         }
         
     except Exception as e:
-        logger.error(f"Error creating regular bots: {e}")
+        logger.error(f"Error creating regular bot: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create regular bots"
+            detail="Failed to create regular bot"
         )
 
 @api_router.post("/admin/bots/start-regular", response_model=dict)
