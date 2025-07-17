@@ -11251,10 +11251,10 @@ async def get_regular_bots_list(
             "bot_type": "REGULAR"
         })
         
-        # Get bots with pagination
+        # Get bots with pagination and sorting
         bots = await db.bots.find({
             "bot_type": "REGULAR"
-        }).skip(offset).limit(limit).to_list(limit)
+        }).sort("created_at", -1).skip(offset).limit(limit).to_list(limit)
         
         bot_details = []
         
