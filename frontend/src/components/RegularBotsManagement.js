@@ -1326,7 +1326,7 @@ const RegularBotsManagement = () => {
             <div className="space-y-2">
               {botsList
                 .filter(bot => bot.is_active)
-                .sort((a, b) => (b.max_individual_bets || 12) - (a.max_individual_bets || 12))
+                .sort((a, b) => (b.individual_limit || b.cycle_games || 12) - (a.individual_limit || a.cycle_games || 12))
                 .slice(0, 3)
                 .map((bot, index) => (
                   <div key={bot.id} className="flex items-center justify-between bg-surface-sidebar rounded-lg p-2">
