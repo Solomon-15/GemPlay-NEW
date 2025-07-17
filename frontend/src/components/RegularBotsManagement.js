@@ -1341,7 +1341,7 @@ const RegularBotsManagement = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-accent-primary font-rajdhani font-bold">
-                        {bot.max_individual_bets || 12}
+                        {bot.individual_limit || bot.cycle_games || 12}
                       </span>
                       <span className="text-text-secondary text-xs">лимит</span>
                     </div>
