@@ -7893,6 +7893,11 @@ async def bot_join_game_automatically(bot: Bot):
     try:
         if not bot.can_accept_bets:
             return
+            
+        # НОВОЕ ПРАВИЛО: Обычные боты не могут присоединяться к играм живых игроков
+        if bot.bot_type == BotType.REGULAR:
+            logger.info(f"🚫 Regular bot {bot.name} cannot join live player games")
+            return
         
         # Find available games that bot can join
         available_games = await db.games.find({
