@@ -12908,7 +12908,7 @@ async def get_bot_global_settings(current_user: User = Depends(get_current_admin
             logger.info("Default settings created successfully")
         
         logger.info("Preparing response")
-        response = {
+        response_data = {
             "success": True,
             "settings": {
                 "globalMaxActiveBets": settings.get("globalMaxActiveBets", 50),
@@ -12918,8 +12918,8 @@ async def get_bot_global_settings(current_user: User = Depends(get_current_admin
                 "priorityType": settings.get("priorityType", "order")
             }
         }
-        logger.info(f"Response prepared: {response}")
-        return response
+        logger.info(f"Response prepared: {response_data}")
+        return response_data
         
     except Exception as e:
         logger.error(f"Error fetching bot settings: {e}")
