@@ -5462,6 +5462,9 @@ if __name__ == "__main__":
     print("Testing commission logic as requested in the review")
     
     try:
+        # Test regular bot commission logic (main focus of review request)
+        test_regular_bot_commission_logic()
+        
         # Test commission logic comprehensively
         test_commission_logic_comprehensive()
         
