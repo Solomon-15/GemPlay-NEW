@@ -4968,7 +4968,7 @@ async def reset_all_games(current_admin: User = Depends(get_current_admin)):
         users_with_frozen = await db.users.find({"frozen_balance": {"$gt": 0}}).to_list(1000)
         for user in users_with_frozen:
             if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                await db.users.update_one(
                 {"id": user["id"]},
                 {
                     "$inc": {"virtual_balance": user["frozen_balance"]},
