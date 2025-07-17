@@ -8614,6 +8614,8 @@ async def get_all_bets(
             })
         
         # Calculate pagination info
+        if limit <= 0:
+            limit = 10  # Безопасное значение по умолчанию
         total_pages = (total_count + limit - 1) // limit
         has_next = page < total_pages
         has_prev = page > 1
