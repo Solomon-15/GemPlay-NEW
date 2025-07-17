@@ -3,7 +3,9 @@ import axios from 'axios';
 import { useNotifications } from './NotificationContext';
 import Pagination from './Pagination';
 import usePagination from '../hooks/usePagination';
+import useConfirmation from '../hooks/useConfirmation';
 import BotCycleModal from './BotCycleModal';
+import ConfirmationModal from './ConfirmationModal';
 import API, { getApiConfig } from '../utils/api';
 
 const RegularBotsManagement = () => {
