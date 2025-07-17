@@ -2640,12 +2640,13 @@ async def create_game(
                 }
             )
         
-        # Freeze commission balance - ПРАВИЛЬНАЯ ЛОГИКА: НЕ списываем с virtual_balance
+        # Freeze commission balance - ПРАВИЛЬНАЯ ЛОГИКА: списываем с virtual_balance и добавляем к frozen_balance
         await db.users.update_one(
             {"id": current_user.id},
             {
                 "$inc": {
-                    "frozen_balance": commission_required  # Только увеличиваем frozen_balance
+                    "virtual_balance": -commission_required,  # Списываем с virtual_balance
+                    "frozen_balance": commission_required     # Добавляем к frozen_balance
                 },
                 "$set": {"updated_at": datetime.utcnow()}
             }
