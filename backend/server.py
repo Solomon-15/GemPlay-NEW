@@ -3573,16 +3573,16 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         
                         # ПРАВИЛЬНАЯ ЛОГИКА: При ничьей возвращаем комиссию из frozen_balance в virtual_balance
                         if not (game_obj.is_bot_game):
-    await db.users.update_one(
-                            {"id": player_id},
-                            {
-                                "$inc": {
-                                    "virtual_balance": commission_to_return,    # Возвращаем в virtual_balance
-                                    "frozen_balance": -commission_to_return     # Убираем из frozen_balance
-                                },
-                                "$set": {"updated_at": datetime.utcnow()}
-                            }
-                        )
+                            await db.users.update_one(
+                                {"id": player_id},
+                                {
+                                    "$inc": {
+                                        "virtual_balance": commission_to_return,    # Возвращаем в virtual_balance
+                                        "frozen_balance": -commission_to_return     # Убираем из frozen_balance
+                                    },
+                                    "$set": {"updated_at": datetime.utcnow()}
+                                }
+                            )
         
         # Record game result transactions (only for human players)
         result_description = "Draw - gems returned" if not winner_id else f"{'Won' if winner_id == game.creator_id else 'Lost'} PvP game"
