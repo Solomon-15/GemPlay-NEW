@@ -10954,7 +10954,7 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
         )
 
 @api_router.post("/admin/bots/settings", response_model=dict)
-async def update_bot_settings(
+async def update_bot_global_settings_old(
     settings_data: dict,
     current_user: User = Depends(get_current_admin)
 ):
