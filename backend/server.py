@@ -2641,17 +2641,16 @@ async def create_game(
             )
         
         # Freeze commission balance - ПРАВИЛЬНАЯ ЛОГИКА: списываем с virtual_balance и добавляем к frozen_balance
-        if not (game_obj.is_bot_game):
-            await db.users.update_one(
-                {"id": current_user.id},
-                {
-                    "$inc": {
-                        "virtual_balance": -commission_required,  # Списываем с virtual_balance
-                        "frozen_balance": commission_required     # Добавляем к frozen_balance
-                    },
-                    "$set": {"updated_at": datetime.utcnow()}
-                }
-            )
+        await db.users.update_one(
+            {"id": current_user.id},
+            {
+                "$inc": {
+                    "virtual_balance": -commission_required,  # Списываем с virtual_balance
+                    "frozen_balance": commission_required     # Добавляем к frozen_balance
+                },
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
         
         logger.info(f"💰 User virtual_balance after: ${user['virtual_balance'] - commission_required}")
         logger.info(f"💰 User frozen_balance after: ${user['frozen_balance'] + commission_required}")
@@ -2789,17 +2788,16 @@ async def handle_game_timeout(game_id: str):
             
         # Return commission to opponent
         commission = game_obj.bet_amount * 0.06
-        if not (game_obj.is_bot_game):
-            await db.users.update_one(
-                {"id": game_obj.opponent_id},
-                {
-                    "$inc": {
-                        "virtual_balance": commission,
-                        "frozen_balance": -commission
-                    },
-                    "$set": {"updated_at": datetime.utcnow()}
-                }
-            )
+        await db.users.update_one(
+            {"id": game_obj.opponent_id},
+            {
+                "$inc": {
+                    "virtual_balance": commission,
+                    "frozen_balance": -commission
+                },
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
         
         # Recreate bet for creator - change status back to WAITING
         await db.games.update_one(
@@ -3552,16 +3550,15 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 if loser:
                     # Loser is a human player - комиссия просто списывается как плата за игру
                     commission_to_deduct = game.bet_amount * 0.06
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
-                            {"id": loser_id},
-                            {
-                                "$inc": {
-                                    "frozen_balance": -commission_to_deduct   # Просто убираем комиссию из frozen_balance
-                                },
-                                "$set": {"updated_at": datetime.utcnow()}
-                            }
-                        )
+                    await db.users.update_one(
+                        {"id": loser_id},
+                        {
+                            "$inc": {
+                                "frozen_balance": -commission_to_deduct   # Просто убираем комиссию из frozen_balance
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
             
         else:
             # Draw - return frozen commissions to both players (only if commission was charged)
@@ -3572,17 +3569,16 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         commission_to_return = game.bet_amount * 0.06
                         
                         # ПРАВИЛЬНАЯ ЛОГИКА: При ничьей возвращаем комиссию из frozen_balance в virtual_balance
-                        if not (game_obj.is_bot_game):
-                                                    await db.users.update_one(
-                                {"id": player_id},
-                                {
-                                    "$inc": {
-                                        "virtual_balance": commission_to_return,    # Возвращаем в virtual_balance
-                                        "frozen_balance": -commission_to_return     # Убираем из frozen_balance
-                                    },
-                                    "$set": {"updated_at": datetime.utcnow()}
-                                }
-                            )
+                        await db.users.update_one(
+                            {"id": player_id},
+                            {
+                                "$inc": {
+                                    "virtual_balance": commission_to_return,    # Возвращаем в virtual_balance
+                                    "frozen_balance": -commission_to_return     # Убираем из frozen_balance
+                                },
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
         
         # Record game result transactions (only for human players)
         result_description = "Draw - gems returned" if not winner_id else f"{'Won' if winner_id == game.creator_id else 'Lost'} PvP game"
@@ -4742,8 +4738,7 @@ async def cancel_game(game_id: str, current_user: User = Depends(get_current_use
         commission_to_return = game_obj.bet_amount * 0.06
         
         # ПРАВИЛЬНАЯ ЛОГИКА: При отмене игры комиссия возвращается из frozen_balance в virtual_balance
-        if not (game_obj.is_bot_game):
-            await db.users.update_one(
+        await db.users.update_one(
             {"id": current_user.id},
             {
                 "$inc": {
@@ -4919,8 +4914,7 @@ async def reset_all_games(current_admin: User = Depends(get_current_admin)):
             
             # Unfreeze creator's commission
             creator_commission = game_obj.bet_amount * 0.06
-            if not (game_obj.is_bot_game):
-                await db.users.update_one(
+            await db.users.update_one(
                 {"id": game_obj.creator_id},
                 {
                     "$inc": {
@@ -4934,8 +4928,7 @@ async def reset_all_games(current_admin: User = Depends(get_current_admin)):
             # If game has opponent, unfreeze their funds too
             if game_obj.opponent_id:
                 opponent_commission = game_obj.bet_amount * 0.06
-                if not (game_obj.is_bot_game):
-                    await db.users.update_one(
+                await db.users.update_one(
                     {"id": game_obj.opponent_id},
                     {
                         "$inc": {
@@ -4967,8 +4960,7 @@ async def reset_all_games(current_admin: User = Depends(get_current_admin)):
         # Reset all users' frozen balance to 0 (safety measure)
         users_with_frozen = await db.users.find({"frozen_balance": {"$gt": 0}}).to_list(1000)
         for user in users_with_frozen:
-            if not (game_obj.is_bot_game):
-                await db.users.update_one(
+            await db.users.update_one(
                 {"id": user["id"]},
                 {
                     "$inc": {"virtual_balance": user["frozen_balance"]},
@@ -7865,8 +7857,7 @@ async def bot_join_game_automatically(bot: Bot):
             
             if not creator_is_regular_bot:
                 # Игра была создана человеком или Human-ботом, возвращаем комиссию
-                if not (game_obj.is_bot_game):
-                    await db.users.update_one(
+                await db.users.update_one(
                     {"id": game_obj.creator_id},
                     {
                         "$inc": {
@@ -8230,8 +8221,7 @@ async def cancel_user_bet(
         commission_amount = game.get("bet_amount", 0) * 0.06
         creator_user = await db.users.find_one({"id": creator_id})
         if creator_user:
-            if not (game_obj.is_bot_game):
-                await db.users.update_one(
+            await db.users.update_one(
                 {"id": creator_id},
                 {
                     "$inc": {
@@ -8352,8 +8342,7 @@ async def cleanup_stuck_bets(
                 commission_amount = bet_amount * 0.06
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -8397,8 +8386,7 @@ async def cleanup_stuck_bets(
                 # Return to creator
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -8414,8 +8402,7 @@ async def cleanup_stuck_bets(
                 if opponent_id:
                     opponent_user = await db.users.find_one({"id": opponent_id})
                     if opponent_user:
-                        if not (game_obj.is_bot_game):
-                            await db.users.update_one(
+                        await db.users.update_one(
                             {"id": opponent_id},
                             {
                                 "$inc": {
@@ -8709,8 +8696,7 @@ async def cancel_any_bet(
         commission_amount = game.get("bet_amount", 0) * 0.06
         creator_user = await db.users.find_one({"id": creator_id})
         if creator_user:
-            if not (game_obj.is_bot_game):
-                await db.users.update_one(
+            await db.users.update_one(
                 {"id": creator_id},
                 {
                     "$inc": {
@@ -8817,8 +8803,7 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
                 commission_amount = bet_amount * 0.06
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -8862,8 +8847,7 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
                 # Return to creator
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -8879,8 +8863,7 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
                 if opponent_id:
                     opponent_user = await db.users.find_one({"id": opponent_id})
                     if opponent_user:
-                        if not (game_obj.is_bot_game):
-                            await db.users.update_one(
+                        await db.users.update_one(
                             {"id": opponent_id},
                             {
                                 "$inc": {
@@ -8986,8 +8969,7 @@ async def reset_all_bets(current_user: User = Depends(get_current_super_admin)):
                 commission_amount = bet_amount * 0.06
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -9034,8 +9016,7 @@ async def reset_all_bets(current_user: User = Depends(get_current_super_admin)):
                 # Return to creator
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -9054,8 +9035,7 @@ async def reset_all_bets(current_user: User = Depends(get_current_super_admin)):
                 if opponent_id:
                     opponent_user = await db.users.find_one({"id": opponent_id})
                     if opponent_user:
-                        if not (game_obj.is_bot_game):
-                            await db.users.update_one(
+                        await db.users.update_one(
                             {"id": opponent_id},
                             {
                                 "$inc": {
@@ -9179,8 +9159,7 @@ async def reset_user_bets(
                     
                     # Return commission
                     commission_amount = bet_amount * 0.06
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": user_id},
                         {
                             "$inc": {
@@ -9207,8 +9186,7 @@ async def reset_user_bets(
                         reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
                     
                     commission_amount = bet_amount * 0.06
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": user_id},
                         {
                             "$inc": {
@@ -9234,8 +9212,7 @@ async def reset_user_bets(
                         reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
                     
                     commission_amount = bet_amount * 0.06
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": user_id},
                         {
                             "$inc": {
@@ -9347,8 +9324,7 @@ async def reset_bot_bets_super_admin(
                         )
                     
                     commission_amount = bet_amount * 0.06
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -9372,8 +9348,7 @@ async def reset_bot_bets_super_admin(
                         )
                     
                     commission_amount = bet_amount * 0.06
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -9396,8 +9371,7 @@ async def reset_bot_bets_super_admin(
                         )
                     
                     commission_amount = bet_amount * 0.06
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": opponent_id},
                         {
                             "$inc": {
@@ -9740,8 +9714,7 @@ async def cancel_stuck_game(game_id: str):
         
         # Return creator's commission
         commission = game_obj.bet_amount * 0.06
-        if not (game_obj.is_bot_game):
-            await db.users.update_one(
+        await db.users.update_one(
             {"id": game_obj.creator_id},
             {
                 "$inc": {
@@ -9769,8 +9742,7 @@ async def cancel_stuck_game(game_id: str):
                     )
                 
                 # Return opponent's commission
-                if not (game_obj.is_bot_game):
-                    await db.users.update_one(
+                await db.users.update_one(
                     {"id": game_obj.opponent_id},
                     {
                         "$inc": {
@@ -12765,8 +12737,7 @@ async def reset_all_bets_admin(current_user: User = Depends(get_current_admin)):
             creator = await db.users.find_one({"id": game_obj.creator_id})
             if creator:
                 commission_to_return = game_obj.bet_amount * 0.06
-                if not (game_obj.is_bot_game):
-                    await db.users.update_one(
+                await db.users.update_one(
                     {"id": game_obj.creator_id},
                     {
                         "$inc": {
@@ -12795,8 +12766,7 @@ async def reset_all_bets_admin(current_user: User = Depends(get_current_admin)):
                 opponent = await db.users.find_one({"id": game_obj.opponent_id})
                 if opponent:
                     commission_to_return = game_obj.bet_amount * 0.06
-                    if not (game_obj.is_bot_game):
-                        await db.users.update_one(
+                    await db.users.update_one(
                         {"id": game_obj.opponent_id},
                         {
                             "$inc": {
