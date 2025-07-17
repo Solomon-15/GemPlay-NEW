@@ -1916,13 +1916,13 @@ const RegularBotsManagement = () => {
                           <div
                             className="bg-green-500 h-2 rounded-full transition-all duration-300"
                             style={{
-                              width: `${Math.min(((bot.current_cycle_games || 0) / (bot.cycle_games || 12)) * 100, 100)}%`
+                              width: `${Math.min(((bot.active_bets || 0) / (bot.cycle_games || 12)) * 100, 100)}%`
                             }}
                           ></div>
                         </div>
                         <div className="flex items-center justify-center space-x-2">
                           <span className="text-green-400 font-roboto text-sm font-medium">
-                            {(bot.current_cycle_games || 0)}/{bot.cycle_games || 12}
+                            {(bot.active_bets || 0)}/{bot.cycle_games || 12}
                           </span>
                           <button
                             onClick={() => handleCycleModal(bot)}
