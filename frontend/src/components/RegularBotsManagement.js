@@ -230,7 +230,11 @@ const RegularBotsManagement = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/admin/bots/regular/list`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        params: {
+          page: pagination.currentPage,
+          limit: pagination.itemsPerPage
+        }
       });
       
       // Обработка пагинированного ответа
