@@ -122,18 +122,21 @@ def test_commission_fix_verification():
     
     print(f"✅ After cancellation - Virtual: ${virtual_after_cancel}, Frozen: ${frozen_after_cancel}")
     
-    # Verify balance restored
-    virtual_restored = abs(virtual_after_cancel - initial_virtual) < 0.01
-    frozen_restored = abs(frozen_after_cancel - initial_frozen) < 0.01
+    # Verify balance changes (not absolute values)
+    virtual_change_cancel = virtual_after_cancel - virtual_after_create
+    frozen_change_cancel = frozen_after_cancel - frozen_after_create
+    
+    virtual_restored = abs(virtual_change_cancel - expected_commission) < 0.01
+    frozen_restored = abs(frozen_change_cancel + expected_commission) < 0.01
     
     if virtual_restored and frozen_restored:
         print("✅ COMMISSION LOGIC FIXED: Symmetric return working correctly")
-        print(f"   - Virtual balance restored to ${initial_virtual}")
-        print(f"   - Frozen balance restored to ${initial_frozen}")
+        print(f"   - Virtual balance increased by ${virtual_change_cancel:.2f} (expected: ${expected_commission:.2f})")
+        print(f"   - Frozen balance decreased by ${-frozen_change_cancel:.2f} (expected: ${expected_commission:.2f})")
     else:
         print("❌ COMMISSION LOGIC STILL BROKEN:")
-        print(f"   - Expected virtual: ${initial_virtual}, got: ${virtual_after_cancel}")
-        print(f"   - Expected frozen: ${initial_frozen}, got: ${frozen_after_cancel}")
+        print(f"   - Virtual balance change: ${virtual_change_cancel:.2f}, expected: ${expected_commission:.2f}")
+        print(f"   - Frozen balance change: ${frozen_change_cancel:.2f}, expected: ${-expected_commission:.2f}")
         return False
     
     # Step 6: Final verification
