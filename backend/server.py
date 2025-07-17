@@ -11304,11 +11304,15 @@ async def get_regular_bots_list(
             bot_profit_percent = (bot_profit_amount / total_bet_sum * 100) if total_bet_sum > 0 else 0
             
             # Текущий цикл
+            cycle_games = bot_doc.get('cycle_games', 12)
+            if cycle_games <= 0:
+                cycle_games = 12  # Значение по умолчанию
+            
             current_cycle_games = await db.games.count_documents({
                 "creator_id": bot.id,
                 "status": "COMPLETED",
                 "metadata.cycle_id": {"$exists": True}
-            }) % bot_doc.get('cycle_games', 12)
+            }) % cycle_games
             
             bot_details.append({
                 "id": bot.id,
