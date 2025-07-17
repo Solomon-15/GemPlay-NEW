@@ -7862,9 +7862,11 @@ async def bot_create_game_automatically(bot: Bot):
         )
         
         logger.info(f"Bot {bot.name} created gem-based game {game.id} with bet ${bet_amount} (gems: {bet_gems})")
+        return True
         
     except Exception as e:
         logger.error(f"Error in bot auto-create game: {e}")
+        return False
 
 async def bot_join_game_automatically(bot: Bot):
     """Make bot join an available game automatically."""
