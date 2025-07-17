@@ -13697,6 +13697,15 @@ async def generate_system_health_report(start_time: datetime, end_time: datetime
         raise e
 
 # ==============================================================================
+# SIMPLE TEST ENDPOINT
+# ==============================================================================
+
+@api_router.get("/test-new-endpoint")
+async def test_new_endpoint():
+    """Test new endpoint to verify duplicates are fixed."""
+    return {"message": "New endpoint working", "status": "success"}
+
+# ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
 
