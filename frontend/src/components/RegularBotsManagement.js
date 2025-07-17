@@ -1799,6 +1799,61 @@ const RegularBotsManagement = () => {
         <div className="p-4 border-b border-border-primary">
           <h3 className="text-lg font-rajdhani font-bold text-white">Список обычных ботов</h3>
         </div>
+
+        {/* Панель массовых действий */}
+        {showBulkActions && (
+          <div className="p-4 bg-accent-primary bg-opacity-10 border-b border-border-primary">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-white font-roboto text-sm">
+                  Выбрано ботов: <span className="font-bold">{selectedBots.size}</span>
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleBulkToggleStatus(true)}
+                  disabled={bulkActionLoading}
+                  className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+                >
+                  {bulkActionLoading ? 'Загрузка...' : 'Включить всех'}
+                </button>
+                <button
+                  onClick={() => handleBulkToggleStatus(false)}
+                  disabled={bulkActionLoading}
+                  className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 disabled:opacity-50 transition-colors"
+                >
+                  {bulkActionLoading ? 'Загрузка...' : 'Выключить всех'}
+                </button>
+                <button
+                  onClick={() => {
+                    const newLimit = prompt('Введите новый лимит активных ставок (1-66):');
+                    if (newLimit && parseInt(newLimit) >= 1 && parseInt(newLimit) <= 66) {
+                      handleBulkUpdateLimits(newLimit);
+                    }
+                  }}
+                  disabled={bulkActionLoading}
+                  className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                >
+                  {bulkActionLoading ? 'Загрузка...' : 'Изменить лимиты'}
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={bulkActionLoading}
+                  className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
+                >
+                  {bulkActionLoading ? 'Загрузка...' : 'Удалить всех'}
+                </button>
+                <button
+                  onClick={clearSelection}
+                  className="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors"
+                >
+                  Отменить выбор
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-surface-sidebar">
