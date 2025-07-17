@@ -560,7 +560,7 @@ const RegularBotsManagement = () => {
         creation_mode: 'queue-based',
         priority_order: 50,
         pause_between_games: 5,
-        profit_strategy: 'balanced'
+        profit_strategy: 'balanced',
         bot_type: 'type-1',
         custom_min_bet: 1,
         custom_max_bet: 10,
