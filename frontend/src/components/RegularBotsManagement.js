@@ -1181,9 +1181,15 @@ const RegularBotsManagement = () => {
   const handleResetPriorities = async () => {
     if (priorityType !== 'manual') return;
     
-    if (!window.confirm('Сбросить приоритеты всех ботов? Они будут упорядочены по дате создания.')) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "Сброс приоритетов",
+      message: "Сбросить приоритеты всех ботов? Они будут упорядочены по дате создания.",
+      confirmText: "Сбросить",
+      cancelText: "Отмена",
+      type: "warning"
+    });
+    
+    if (!confirmed) return;
     
     try {
       const token = localStorage.getItem('token');
