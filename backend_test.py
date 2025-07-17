@@ -179,6 +179,331 @@ def test_email_verification(token: str, username: str) -> None:
     else:
         record_test(f"Email Verification - {username}", False, "Request failed")
 
+def test_commission_logic_comprehensive() -> None:
+    """Test the commission logic comprehensively as requested in the review."""
+    print_header("COMPREHENSIVE COMMISSION LOGIC TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with commission test")
+        record_test("Commission Test - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Get initial balance state
+    print_subheader("Step 2: Get Initial Balance State")
+    initial_balance_response, balance_success = make_request(
+        "GET", "/economy/balance", 
+        auth_token=admin_token
+    )
+    
+    if not balance_success:
+        print_error("Failed to get initial balance")
+        record_test("Commission Test - Get Initial Balance", False, "Failed to get balance")
+        return
+    
+    initial_virtual_balance = initial_balance_response.get("virtual_balance", 0)
+    initial_frozen_balance = initial_balance_response.get("frozen_balance", 0)
+    
+    print_success(f"Initial virtual balance: ${initial_virtual_balance}")
+    print_success(f"Initial frozen balance: ${initial_frozen_balance}")
+    
+    # Step 3: Buy gems for testing if needed
+    print_subheader("Step 3: Ensure Sufficient Gems for Testing")
+    inventory_response, inventory_success = make_request(
+        "GET", "/gems/inventory", 
+        auth_token=admin_token
+    )
+    
+    if inventory_success:
+        # Check if we have enough gems, if not buy some
+        ruby_gems = 0
+        emerald_gems = 0
+        
+        for gem in inventory_response:
+            if gem["type"] == "Ruby":
+                ruby_gems = gem["quantity"] - gem["frozen_quantity"]
+            elif gem["type"] == "Emerald":
+                emerald_gems = gem["quantity"] - gem["frozen_quantity"]
+        
+        if ruby_gems < 20:
+            buy_response, buy_success = make_request(
+                "POST", "/gems/buy?gem_type=Ruby&quantity=30",
+                auth_token=admin_token
+            )
+            if buy_success:
+                print_success("Bought 30 Ruby gems for testing")
+        
+        if emerald_gems < 5:
+            buy_response, buy_success = make_request(
+                "POST", "/gems/buy?gem_type=Emerald&quantity=10",
+                auth_token=admin_token
+            )
+            if buy_success:
+                print_success("Bought 10 Emerald gems for testing")
+    
+    # TEST 1: Create game and verify commission freezing
+    print_subheader("TEST 1: Create Game and Verify Commission Freezing")
+    
+    # Use gems worth approximately $20 (20 Ruby gems = $20)
+    bet_gems = {"Ruby": 20}  # $20 bet
+    expected_commission = 20 * 0.06  # 6% commission = $1.20
+    
+    create_game_data = {
+        "move": "rock",
+        "bet_gems": bet_gems
+    }
+    
+    game_response, game_success = make_request(
+        "POST", "/games/create",
+        data=create_game_data,
+        auth_token=admin_token
+    )
+    
+    if not game_success:
+        print_error("Failed to create game for commission test")
+        record_test("Commission Test - Create Game", False, "Game creation failed")
+        return
+    
+    game_id = game_response.get("game_id")
+    if not game_id:
+        print_error("Game creation response missing game_id")
+        record_test("Commission Test - Create Game", False, "Missing game_id")
+        return
+    
+    print_success(f"Game created with ID: {game_id}")
+    
+    # Check balance after game creation
+    balance_after_create_response, balance_after_create_success = make_request(
+        "GET", "/economy/balance", 
+        auth_token=admin_token
+    )
+    
+    if balance_after_create_success:
+        virtual_after_create = balance_after_create_response.get("virtual_balance", 0)
+        frozen_after_create = balance_after_create_response.get("frozen_balance", 0)
+        
+        print_success(f"After game creation - Virtual: ${virtual_after_create}, Frozen: ${frozen_after_create}")
+        
+        # Verify commission was frozen
+        expected_virtual_after_create = initial_virtual_balance - expected_commission
+        expected_frozen_after_create = initial_frozen_balance + expected_commission
+        
+        virtual_balance_correct = abs(virtual_after_create - expected_virtual_after_create) < 0.01
+        frozen_balance_correct = abs(frozen_after_create - expected_frozen_after_create) < 0.01
+        
+        if virtual_balance_correct and frozen_balance_correct:
+            print_success(f"✓ Commission correctly frozen: ${expected_commission}")
+            print_success(f"✓ Virtual balance decreased by ${expected_commission}")
+            print_success(f"✓ Frozen balance increased by ${expected_commission}")
+            record_test("Commission Test - Commission Freezing", True)
+        else:
+            print_error(f"✗ Commission freezing incorrect")
+            print_error(f"Expected virtual: ${expected_virtual_after_create}, got: ${virtual_after_create}")
+            print_error(f"Expected frozen: ${expected_frozen_after_create}, got: ${frozen_after_create}")
+            record_test("Commission Test - Commission Freezing", False, "Balance changes incorrect")
+    else:
+        print_error("Failed to get balance after game creation")
+        record_test("Commission Test - Commission Freezing", False, "Failed to get balance")
+    
+    # TEST 2: Cancel game and verify commission return
+    print_subheader("TEST 2: Cancel Game and Verify Commission Return")
+    
+    cancel_response, cancel_success = make_request(
+        "DELETE", f"/games/{game_id}/cancel",
+        auth_token=admin_token
+    )
+    
+    if cancel_success:
+        print_success("Game cancelled successfully")
+        
+        # Check commission returned in response
+        commission_returned = cancel_response.get("commission_returned", 0)
+        if abs(commission_returned - expected_commission) < 0.01:
+            print_success(f"✓ Commission returned in response: ${commission_returned}")
+            record_test("Commission Test - Cancel Response Commission", True)
+        else:
+            print_error(f"✗ Commission returned incorrect: ${commission_returned}, expected: ${expected_commission}")
+            record_test("Commission Test - Cancel Response Commission", False, f"Wrong amount: ${commission_returned}")
+        
+        # Check balance after cancellation
+        balance_after_cancel_response, balance_after_cancel_success = make_request(
+            "GET", "/economy/balance", 
+            auth_token=admin_token
+        )
+        
+        if balance_after_cancel_success:
+            virtual_after_cancel = balance_after_cancel_response.get("virtual_balance", 0)
+            frozen_after_cancel = balance_after_cancel_response.get("frozen_balance", 0)
+            
+            print_success(f"After cancellation - Virtual: ${virtual_after_cancel}, Frozen: ${frozen_after_cancel}")
+            
+            # Verify balance restored to initial state
+            virtual_restored = abs(virtual_after_cancel - initial_virtual_balance) < 0.01
+            frozen_restored = abs(frozen_after_cancel - initial_frozen_balance) < 0.01
+            
+            if virtual_restored and frozen_restored:
+                print_success("✓ Balance correctly restored to initial state")
+                print_success("✓ Commission returned to virtual balance")
+                print_success("✓ Commission removed from frozen balance")
+                record_test("Commission Test - Cancel Balance Restoration", True)
+            else:
+                print_error("✗ Balance not correctly restored")
+                print_error(f"Expected virtual: ${initial_virtual_balance}, got: ${virtual_after_cancel}")
+                print_error(f"Expected frozen: ${initial_frozen_balance}, got: ${frozen_after_cancel}")
+                record_test("Commission Test - Cancel Balance Restoration", False, "Balance not restored")
+        else:
+            print_error("Failed to get balance after cancellation")
+            record_test("Commission Test - Cancel Balance Restoration", False, "Failed to get balance")
+    else:
+        print_error("Failed to cancel game")
+        record_test("Commission Test - Game Cancellation", False, "Cancellation failed")
+        return
+    
+    # TEST 3: Create and complete game (simulate game completion)
+    print_subheader("TEST 3: Create and Complete Game")
+    
+    # Create another game
+    create_game_data2 = {
+        "move": "paper",
+        "bet_gems": {"Ruby": 10}  # $10 bet, $0.60 commission
+    }
+    expected_commission2 = 10 * 0.06  # $0.60
+    
+    game_response2, game_success2 = make_request(
+        "POST", "/games/create",
+        data=create_game_data2,
+        auth_token=admin_token
+    )
+    
+    if game_success2:
+        game_id2 = game_response2.get("game_id")
+        print_success(f"Second game created with ID: {game_id2}")
+        
+        # Get balance after second game creation
+        balance_after_create2_response, _ = make_request(
+            "GET", "/economy/balance", 
+            auth_token=admin_token
+        )
+        
+        if balance_after_create2_response:
+            virtual_after_create2 = balance_after_create2_response.get("virtual_balance", 0)
+            frozen_after_create2 = balance_after_create2_response.get("frozen_balance", 0)
+            
+            print_success(f"After second game creation - Virtual: ${virtual_after_create2}, Frozen: ${frozen_after_create2}")
+            
+            # Verify commission frozen for second game
+            expected_virtual_after_create2 = initial_virtual_balance - expected_commission2
+            expected_frozen_after_create2 = initial_frozen_balance + expected_commission2
+            
+            if (abs(virtual_after_create2 - expected_virtual_after_create2) < 0.01 and 
+                abs(frozen_after_create2 - expected_frozen_after_create2) < 0.01):
+                print_success("✓ Second game commission correctly frozen")
+                record_test("Commission Test - Second Game Commission Freezing", True)
+            else:
+                print_error("✗ Second game commission freezing incorrect")
+                record_test("Commission Test - Second Game Commission Freezing", False, "Incorrect freezing")
+        
+        # Try to force complete the game (if endpoint exists)
+        force_complete_response, force_complete_success = make_request(
+            "POST", f"/games/{game_id2}/force-complete",
+            auth_token=admin_token,
+            expected_status=200
+        )
+        
+        if force_complete_success:
+            print_success("Game force completed successfully")
+            
+            # Check balance after completion
+            balance_after_complete_response, balance_after_complete_success = make_request(
+                "GET", "/economy/balance", 
+                auth_token=admin_token
+            )
+            
+            if balance_after_complete_success:
+                virtual_after_complete = balance_after_complete_response.get("virtual_balance", 0)
+                frozen_after_complete = balance_after_complete_response.get("frozen_balance", 0)
+                
+                print_success(f"After completion - Virtual: ${virtual_after_complete}, Frozen: ${frozen_after_complete}")
+                
+                # For completed games, commission should be deducted (not returned)
+                # So frozen balance should decrease but virtual balance should not increase
+                expected_frozen_after_complete = initial_frozen_balance  # Commission removed from frozen
+                expected_virtual_after_complete = initial_virtual_balance - expected_commission2  # Commission deducted
+                
+                frozen_correct = abs(frozen_after_complete - expected_frozen_after_complete) < 0.01
+                virtual_correct = abs(virtual_after_complete - expected_virtual_after_complete) < 0.01
+                
+                if frozen_correct and virtual_correct:
+                    print_success("✓ Commission correctly deducted on game completion")
+                    print_success("✓ Commission removed from frozen balance")
+                    print_success("✓ Commission not returned to virtual balance")
+                    record_test("Commission Test - Game Completion Commission", True)
+                else:
+                    print_error("✗ Commission handling on completion incorrect")
+                    print_error(f"Expected virtual: ${expected_virtual_after_complete}, got: ${virtual_after_complete}")
+                    print_error(f"Expected frozen: ${expected_frozen_after_complete}, got: ${frozen_after_complete}")
+                    record_test("Commission Test - Game Completion Commission", False, "Incorrect handling")
+            else:
+                print_error("Failed to get balance after completion")
+                record_test("Commission Test - Game Completion Commission", False, "Failed to get balance")
+        else:
+            print_warning("Force complete endpoint not available or failed")
+            print_warning("Cannot test game completion commission handling")
+            record_test("Commission Test - Game Completion Commission", False, "Force complete not available")
+    else:
+        print_error("Failed to create second game")
+        record_test("Commission Test - Second Game Creation", False, "Creation failed")
+    
+    # TEST 4: Mathematical balance verification
+    print_subheader("TEST 4: Mathematical Balance Verification")
+    
+    # Get final balance
+    final_balance_response, final_balance_success = make_request(
+        "GET", "/economy/balance", 
+        auth_token=admin_token
+    )
+    
+    if final_balance_success:
+        final_virtual_balance = final_balance_response.get("virtual_balance", 0)
+        final_frozen_balance = final_balance_response.get("frozen_balance", 0)
+        
+        print_success(f"Final balance - Virtual: ${final_virtual_balance}, Frozen: ${final_frozen_balance}")
+        
+        # Calculate expected final balance
+        # Initial balance - commission from completed game (if any)
+        total_commission_deducted = expected_commission2 if force_complete_success else 0
+        expected_final_virtual = initial_virtual_balance - total_commission_deducted
+        expected_final_frozen = initial_frozen_balance
+        
+        virtual_math_correct = abs(final_virtual_balance - expected_final_virtual) < 0.01
+        frozen_math_correct = abs(final_frozen_balance - expected_final_frozen) < 0.01
+        
+        if virtual_math_correct and frozen_math_correct:
+            print_success("✓ Mathematical balance verification passed")
+            print_success("✓ No money created or lost in the system")
+            record_test("Commission Test - Mathematical Balance Verification", True)
+        else:
+            print_error("✗ Mathematical balance verification failed")
+            print_error(f"Expected final virtual: ${expected_final_virtual}, got: ${final_virtual_balance}")
+            print_error(f"Expected final frozen: ${expected_final_frozen}, got: ${final_frozen_balance}")
+            record_test("Commission Test - Mathematical Balance Verification", False, "Math incorrect")
+    else:
+        print_error("Failed to get final balance")
+        record_test("Commission Test - Mathematical Balance Verification", False, "Failed to get balance")
+    
+    print_subheader("Commission Logic Test Summary")
+    print_success("Commission logic testing completed")
+    print_success("Key findings:")
+    print_success("- Commission freezing on game creation")
+    print_success("- Commission return on game cancellation")
+    print_success("- Commission deduction on game completion")
+    print_success("- Mathematical balance correctness")
+
 def test_cancel_bet_functionality() -> None:
     """Test the Cancel bet functionality as requested in the review."""
     print_header("CANCEL BET FUNCTIONALITY TEST")
