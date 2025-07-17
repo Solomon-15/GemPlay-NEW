@@ -161,31 +161,36 @@ def test_bot_settings_get(admin_token: str) -> None:
     if success:
         print_success("GET /api/admin/bot-settings returned 200 OK")
         
-        # Check response structure
-        expected_fields = ["globalMaxActiveBets", "globalMaxHumanBots", "paginationSize", "autoActivateFromQueue", "priorityType"]
-        missing_fields = []
-        
-        for field in expected_fields:
-            if field not in response:
-                missing_fields.append(field)
-        
-        if not missing_fields:
-            print_success("Response contains all expected fields")
-            record_test("GET bot-settings - Response Structure", True)
+        # Check response structure - the endpoint returns nested structure
+        if "success" in response and "settings" in response:
+            settings = response["settings"]
+            expected_fields = ["globalMaxActiveBets", "globalMaxHumanBots", "paginationSize", "autoActivateFromQueue", "priorityType"]
+            missing_fields = []
+            
+            for field in expected_fields:
+                if field not in settings:
+                    missing_fields.append(field)
+            
+            if not missing_fields:
+                print_success("Response contains all expected fields")
+                record_test("GET bot-settings - Response Structure", True)
+            else:
+                print_warning(f"Response missing some fields: {missing_fields}")
+                record_test("GET bot-settings - Response Structure", False, f"Missing fields: {missing_fields}")
+            
+            # Check data types
+            if isinstance(settings.get("globalMaxActiveBets"), int):
+                print_success("globalMaxActiveBets is integer")
+            else:
+                print_error(f"globalMaxActiveBets should be integer, got: {type(settings.get('globalMaxActiveBets'))}")
+            
+            if isinstance(settings.get("autoActivateFromQueue"), bool):
+                print_success("autoActivateFromQueue is boolean")
+            else:
+                print_error(f"autoActivateFromQueue should be boolean, got: {type(settings.get('autoActivateFromQueue'))}")
         else:
-            print_warning(f"Response missing some fields: {missing_fields}")
-            record_test("GET bot-settings - Response Structure", False, f"Missing fields: {missing_fields}")
-        
-        # Check data types
-        if isinstance(response.get("globalMaxActiveBets"), int):
-            print_success("globalMaxActiveBets is integer")
-        else:
-            print_error(f"globalMaxActiveBets should be integer, got: {type(response.get('globalMaxActiveBets'))}")
-        
-        if isinstance(response.get("autoActivateFromQueue"), bool):
-            print_success("autoActivateFromQueue is boolean")
-        else:
-            print_error(f"autoActivateFromQueue should be boolean, got: {type(response.get('autoActivateFromQueue'))}")
+            print_error("Response missing 'success' or 'settings' fields")
+            record_test("GET bot-settings - Response Structure", False, "Missing success or settings fields")
         
         record_test("GET bot-settings - No 500 Error", True)
         
