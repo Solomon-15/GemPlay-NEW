@@ -273,9 +273,15 @@ const RegularBotsManagement = () => {
   const handleBulkDelete = async () => {
     if (selectedBots.size === 0) return;
     
-    if (!window.confirm(`Вы уверены, что хотите удалить ${selectedBots.size} ботов? Это действие нельзя отменить.`)) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "Удаление ботов",
+      message: `Вы уверены, что хотите удалить ${selectedBots.size} ботов? Это действие нельзя отменить.`,
+      confirmText: "Удалить",
+      cancelText: "Отмена",
+      type: "danger"
+    });
+    
+    if (!confirmed) return;
     
     setBulkActionLoading(true);
     
