@@ -62,6 +62,16 @@ def test_commission_fix_verification():
     if buy_response.status_code == 200:
         print("✅ Bought 30 Ruby gems for testing")
     
+    # Get balance after buying gems
+    balance_after_buy = requests.get(f"{BASE_URL}/economy/balance", headers=headers).json()
+    virtual_after_buy = balance_after_buy["virtual_balance"]
+    frozen_after_buy = balance_after_buy["frozen_balance"]
+    print(f"✅ After buying gems - Virtual: ${virtual_after_buy}, Frozen: ${frozen_after_buy}")
+    
+    # Update initial balance to be after gems purchase
+    initial_virtual = virtual_after_buy
+    initial_frozen = frozen_after_buy
+    
     # Step 4: Create game and verify symmetric logic
     print("\n4. CREATE GAME AND VERIFY COMMISSION FREEZING...")
     create_data = {
