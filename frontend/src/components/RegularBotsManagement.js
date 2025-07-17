@@ -682,21 +682,18 @@ const RegularBotsManagement = () => {
       // Загружаем все параметры бота в форму создания
       setBotForm({
         name: response.data.bot.name || '',
-        pause_timer: response.data.bot.pause_timer || 5,
-        recreation_interval: response.data.bot.recreation_interval || 30,
-        games_per_cycle: response.data.bot.games_per_cycle || 12,
-        cycle_amount: response.data.bot.cycle_total_amount || 500,
-        win_percentage: response.data.bot.win_percentage || 60,
-        min_bet_amount: response.data.bot.min_bet_amount || 1,
-        avg_bet_amount: response.data.bot.avg_bet_amount || 50,
-        bet_distribution: response.data.bot.bet_distribution || {
-          small: false,
-          medium: false,
-          large: false
-        },
-        bot_behavior: response.data.bot.bot_behavior || 'balanced',
-        bot_type: response.data.bot.bot_type || 'Стандартный',
-        creation_mode: response.data.bot.creation_mode || 'queue-based'
+        min_bet_amount: response.data.bot.min_bet_amount || 1.0,
+        max_bet_amount: response.data.bot.max_bet_amount || 50.0,
+        win_percentage: response.data.bot.win_percentage || 55.0,
+        cycle_games: response.data.bot.cycle_games || 12,
+        individual_limit: response.data.bot.individual_limit || 12,
+        creation_mode: response.data.bot.creation_mode || 'queue-based',
+        priority_order: response.data.bot.priority_order || 50,
+        pause_between_games: response.data.bot.pause_between_games || 5,
+        profit_strategy: response.data.bot.profit_strategy || 'balanced',
+        cycle_total_amount: response.data.bot.cycle_total_amount || 0,
+        can_accept_bets: response.data.bot.can_accept_bets || false,
+        can_play_with_bots: response.data.bot.can_play_with_bots || true
       });
       
       // Устанавливаем режим редактирования
