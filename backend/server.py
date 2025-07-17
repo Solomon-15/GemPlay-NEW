@@ -12400,7 +12400,7 @@ async def get_bot_cycle_history(
         )
 
 @api_router.delete("/admin/bots/{bot_id}/delete", response_model=dict)
-async def delete_bot(
+async def delete_bot_admin(
     bot_id: str,
     delete_data: dict,
     current_user: User = Depends(get_current_admin)
