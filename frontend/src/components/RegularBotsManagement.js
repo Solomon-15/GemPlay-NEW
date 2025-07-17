@@ -1975,8 +1975,17 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-purple-400 font-roboto text-sm">
-                        {bot.profit_strategy === 'start_profit' ? 'Ранняя прибыль' :
-                         bot.profit_strategy === 'end_loss' ? 'Поздние потери' : 'Сбалансированная'}
+                        {(() => {
+                          const strategy = bot.profit_strategy || 'balanced';
+                          switch(strategy) {
+                            case 'start-positive': return 'Ранняя прибыль';
+                            case 'start_profit': return 'Ранняя прибыль';
+                            case 'start-negative': return 'Поздние потери';
+                            case 'end_loss': return 'Поздние потери';
+                            case 'balanced': return 'Сбалансированная';
+                            default: return 'Сбалансированная';
+                          }
+                        })()}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
