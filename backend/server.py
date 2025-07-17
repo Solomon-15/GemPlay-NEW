@@ -9348,7 +9348,7 @@ async def reset_bot_bets_super_admin(
                     
                     commission_amount = bet_amount * 0.06
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                        await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -9373,7 +9373,7 @@ async def reset_bot_bets_super_admin(
                     
                     commission_amount = bet_amount * 0.06
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                        await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -9397,7 +9397,7 @@ async def reset_bot_bets_super_admin(
                     
                     commission_amount = bet_amount * 0.06
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                        await db.users.update_one(
                         {"id": opponent_id},
                         {
                             "$inc": {
@@ -9741,7 +9741,7 @@ async def cancel_stuck_game(game_id: str):
         # Return creator's commission
         commission = game_obj.bet_amount * 0.06
         if not (game_obj.is_bot_game):
-    await db.users.update_one(
+            await db.users.update_one(
             {"id": game_obj.creator_id},
             {
                 "$inc": {
@@ -9770,7 +9770,7 @@ async def cancel_stuck_game(game_id: str):
                 
                 # Return opponent's commission
                 if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                    await db.users.update_one(
                     {"id": game_obj.opponent_id},
                     {
                         "$inc": {
