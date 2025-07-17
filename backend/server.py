@@ -12877,45 +12877,10 @@ async def startup_event():
 # BOT SETTINGS API
 # ==============================================================================
 
-@api_router.get("/admin/bot-settings-simple")
-async def get_bot_settings_simple():
-    """Simple bot settings endpoint without authentication for testing."""
-    try:
-        # Get bot settings from database
-        settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        
-        if not settings:
-            # Create default settings if not exists
-            default_settings = {
-                "id": "bot_settings",
-                "globalMaxActiveBets": 50,
-                "globalMaxHumanBots": 30,
-                "paginationSize": 10,
-                "autoActivateFromQueue": True,
-                "priorityType": "order",
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-            await db.bot_settings.insert_one(default_settings)
-            settings = default_settings
-        
-        return {
-            "success": True,
-            "settings": {
-                "globalMaxActiveBets": settings.get("globalMaxActiveBets", 50),
-                "globalMaxHumanBots": settings.get("globalMaxHumanBots", 30),
-                "paginationSize": settings.get("paginationSize", 10),
-                "autoActivateFromQueue": settings.get("autoActivateFromQueue", True),
-                "priorityType": settings.get("priorityType", "order")
-            }
-        }
-        
-    except Exception as e:
-        logger.error(f"Error fetching bot settings: {e}")
-        return {
-            "success": False,
-            "error": str(e)
-        }
+@api_router.get("/admin/test-endpoint")
+async def test_endpoint():
+    """Test endpoint."""
+    return {"message": "working"}
 
 @api_router.put("/admin/bot-settings", response_model=dict)
 async def update_bot_global_settings(
