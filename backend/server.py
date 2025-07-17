@@ -2642,16 +2642,16 @@ async def create_game(
         
         # Freeze commission balance - ПРАВИЛЬНАЯ ЛОГИКА: списываем с virtual_balance и добавляем к frozen_balance
         if not (game_obj.is_bot_game):
-    await db.users.update_one(
-            {"id": current_user.id},
-            {
-                "$inc": {
-                    "virtual_balance": -commission_required,  # Списываем с virtual_balance
-                    "frozen_balance": commission_required     # Добавляем к frozen_balance
-                },
-                "$set": {"updated_at": datetime.utcnow()}
-            }
-        )
+            await db.users.update_one(
+                {"id": current_user.id},
+                {
+                    "$inc": {
+                        "virtual_balance": -commission_required,  # Списываем с virtual_balance
+                        "frozen_balance": commission_required     # Добавляем к frozen_balance
+                    },
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
         
         logger.info(f"💰 User virtual_balance after: ${user['virtual_balance'] - commission_required}")
         logger.info(f"💰 User frozen_balance after: ${user['frozen_balance'] + commission_required}")
