@@ -12007,7 +12007,7 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
         raise
 
 @api_router.put("/admin/bots/{bot_id}", response_model=dict)
-async def update_bot_settings(
+async def update_individual_bot_settings(
     bot_id: str,
     update_data: dict,
     current_user: User = Depends(get_current_admin)
