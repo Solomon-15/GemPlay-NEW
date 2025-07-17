@@ -1305,7 +1305,12 @@ const RegularBotsManagement = () => {
               <div className="bg-surface-sidebar rounded-lg p-3">
                 <div className="text-text-secondary text-sm">Ставок в очереди</div>
                 <div className="text-orange-400 text-xl font-rajdhani font-bold">
-                  {Math.max(0, activeBetsStats.regular_bots.current - activeBetsStats.regular_bots.max)}
+                  {(() => {
+                    const activeBots = botsList.filter(bot => bot.is_active);
+                    const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
+                    const totalMaxBets = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
+                    return Math.max(0, totalMaxBets - totalActiveBets);
+                  })()}
                 </div>
               </div>
               <div className="bg-surface-sidebar rounded-lg p-3">
