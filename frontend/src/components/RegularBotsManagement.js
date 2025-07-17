@@ -367,6 +367,9 @@ const RegularBotsManagement = () => {
       });
       setBotsList(sortedBots);
       
+      // Сброс выбора при изменении списка ботов
+      clearSelection();
+      
       // Обновление пагинации
       if (response.data.total_count !== undefined) {
         pagination.updatePagination(response.data.total_count);
