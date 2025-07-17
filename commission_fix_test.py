@@ -93,17 +93,17 @@ def test_commission_fix_verification():
     virtual_change = initial_virtual - virtual_after_create
     frozen_change = frozen_after_create - initial_frozen
     
-    virtual_correct = abs(virtual_after_create - expected_virtual_after) < 0.01
-    frozen_correct = abs(frozen_after_create - expected_frozen_after) < 0.01
+    virtual_correct = abs(virtual_change - expected_commission) < 0.01
+    frozen_correct = abs(frozen_change - expected_commission) < 0.01
     
     if virtual_correct and frozen_correct:
         print("✅ COMMISSION LOGIC FIXED: Symmetric freezing working correctly")
-        print(f"   - Virtual balance decreased by ${expected_commission}")
-        print(f"   - Frozen balance increased by ${expected_commission}")
+        print(f"   - Virtual balance decreased by ${virtual_change:.2f} (expected: ${expected_commission:.2f})")
+        print(f"   - Frozen balance increased by ${frozen_change:.2f} (expected: ${expected_commission:.2f})")
     else:
         print("❌ COMMISSION LOGIC STILL BROKEN:")
-        print(f"   - Expected virtual: ${expected_virtual_after}, got: ${virtual_after_create}")
-        print(f"   - Expected frozen: ${expected_frozen_after}, got: ${frozen_after_create}")
+        print(f"   - Virtual balance change: ${virtual_change:.2f}, expected: ${expected_commission:.2f}")
+        print(f"   - Frozen balance change: ${frozen_change:.2f}, expected: ${expected_commission:.2f}")
         return False
     
     # Step 5: Cancel game and verify symmetric return
