@@ -238,6 +238,90 @@ const RegularBotsManagement = () => {
     setShowBulkActions(false);
   };
 
+  // Функции для массовых действий
+  const handleBulkToggleStatus = async (activate) => {
+    if (selectedBots.size === 0) return;
+    
+    setBulkActionLoading(true);
+    const action = activate ? 'активировать' : 'деактивировать';
+    
+    try {
+      const token = localStorage.getItem('token');
+      const promises = Array.from(selectedBots).map(botId =>
+        axios.post(`${API}/admin/bots/${botId}/toggle`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      );
+      
+      await Promise.all(promises);
+      showSuccessRU(`Успешно ${activate ? 'активированы' : 'деактивированы'} ${selectedBots.size} ботов`);
+      await fetchBotsList();
+      clearSelection();
+    } catch (error) {
+      console.error(`Error bulk ${action} bots:`, error);
+      showErrorRU(`Ошибка при ${action} ботов`);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedBots.size === 0) return;
+    
+    if (!window.confirm(`Вы уверены, что хотите удалить ${selectedBots.size} ботов? Это действие нельзя отменить.`)) {
+      return;
+    }
+    
+    setBulkActionLoading(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const promises = Array.from(selectedBots).map(botId =>
+        axios.delete(`${API}/admin/bots/${botId}/delete`, {
+          headers: { Authorization: `Bearer ${token}` },
+          data: { reason: 'Массовое удаление из админ-панели' }
+        })
+      );
+      
+      await Promise.all(promises);
+      showSuccessRU(`Успешно удалены ${selectedBots.size} ботов`);
+      await fetchBotsList();
+      clearSelection();
+    } catch (error) {
+      console.error('Error bulk delete bots:', error);
+      showErrorRU('Ошибка при удалении ботов');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkUpdateLimits = async (newLimit) => {
+    if (selectedBots.size === 0 || !newLimit) return;
+    
+    setBulkActionLoading(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const promises = Array.from(selectedBots).map(botId =>
+        axios.put(`${API}/admin/bots/${botId}`, {
+          individual_limit: parseInt(newLimit)
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      );
+      
+      await Promise.all(promises);
+      showSuccessRU(`Успешно обновлены лимиты для ${selectedBots.size} ботов`);
+      await fetchBotsList();
+      clearSelection();
+    } catch (error) {
+      console.error('Error bulk update limits:', error);
+      showErrorRU('Ошибка при обновлении лимитов');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
     fetchBotsList();
