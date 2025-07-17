@@ -554,22 +554,6 @@ const RegularBotsManagement = () => {
     return validation.isValid;
   };
 
-  // Создание кастомного типа бота
-  const createCustomBotType = () => {
-    const newType = {
-      id: `custom-${Date.now()}`,
-      name: `${customTypeForm.name}: ${customTypeForm.min_bet}–${customTypeForm.max_bet} $`,
-      min: customTypeForm.min_bet,
-      max: customTypeForm.max_bet
-    };
-    
-    setCustomBotTypes(prev => [...prev, newType]);
-    setIsCustomTypeModalOpen(false);
-    setCustomTypeForm({ name: '', min_bet: 1, max_bet: 10 });
-    setBotForm(prev => ({ ...prev, bot_type: newType.id }));
-    showSuccessRU('Кастомный тип бота создан');
-  };
-
   // Обработчики для новых действий расширенной системы
   const handleToggleBotStatus = async (bot) => {
     try {
