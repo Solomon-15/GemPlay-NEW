@@ -12869,9 +12869,9 @@ async def test_simple():
     """Test simple endpoint."""
     return {"message": "simple test working"}
 
-@api_router.get("/admin/bot-settings", response_model=dict)
-async def get_bot_settings_fixed(current_user: User = Depends(get_current_admin)):
-    """Get bot settings - fixed version."""
+@api_router.get("/admin/bot-settings-v2", response_model=dict)
+async def get_bot_settings_v2(current_user: User = Depends(get_current_admin)):
+    """Get bot settings - version 2 with unique name."""
     try:
         # Get bot settings from database
         settings = await db.bot_settings.find_one({"id": "bot_settings"})
