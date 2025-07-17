@@ -107,6 +107,24 @@ const RegularBotsManagement = () => {
     can_play_with_bots: true
   });
 
+  // Calculate cycle total amount automatically
+  const calculateCycleTotalAmount = () => {
+    if (!botForm.min_bet_amount || !botForm.max_bet_amount || !botForm.cycle_games) {
+      return 0;
+    }
+    
+    const averageValue = (botForm.min_bet_amount + botForm.max_bet_amount) / 2;
+    const totalAmount = Math.round(averageValue * botForm.cycle_games);
+    
+    return totalAmount;
+  };
+
+  // Update cycle total amount when relevant fields change
+  useEffect(() => {
+    const newAmount = calculateCycleTotalAmount();
+    setBotForm(prev => ({ ...prev, cycle_total_amount: newAmount }));
+  }, [botForm.min_bet_amount, botForm.max_bet_amount, botForm.cycle_games]);
+
   // Состояние для валидации расширенной системы
   const [extendedValidation, setExtendedValidation] = useState({
     isValid: true,
