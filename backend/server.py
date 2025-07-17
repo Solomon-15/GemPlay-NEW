@@ -942,25 +942,18 @@ def start_background_scheduler():
     scheduler_thread = Thread(target=run_scheduler, daemon=True)
     scheduler_thread.start()
     
-    # Start bot automation loop
-    bot_automation_thread = Thread(target=run_bot_automation, daemon=True)
-    bot_automation_thread.start()
+    # Start bot automation using asyncio create_task
+    asyncio.create_task(bot_automation_loop())
 
-def run_bot_automation():
+async def bot_automation_loop():
     """Run bot automation loop every 5 seconds."""
-    import asyncio
-    
-    async def bot_automation_loop():
-        while True:
-            try:
-                await maintain_all_bots_active_bets()
-                await asyncio.sleep(5)  # Каждые 5 секунд
-            except Exception as e:
-                logger.error(f"Error in bot automation loop: {e}")
-                await asyncio.sleep(5)  # Пауза даже при ошибке
-    
-    # Run the async loop
-    asyncio.run(bot_automation_loop())
+    while True:
+        try:
+            await maintain_all_bots_active_bets()
+            await asyncio.sleep(5)  # Каждые 5 секунд
+        except Exception as e:
+            logger.error(f"Error in bot automation loop: {e}")
+            await asyncio.sleep(5)  # Пауза даже при ошибке
 
 async def maintain_all_bots_active_bets():
     """Поддерживает количество активных ставок для всех активных ботов."""
