@@ -326,11 +326,16 @@ const RegularBotsManagement = () => {
   const handleBulkUpdateLimits = async () => {
     if (selectedBots.size === 0) return;
     
-    const newLimit = prompt('Введите новый лимит активных ставок (1-66):');
-    if (!newLimit || parseInt(newLimit) < 1 || parseInt(newLimit) > 66) {
-      showErrorRU('Неверный лимит. Введите число от 1 до 66.');
-      return;
-    }
+    const newLimit = await prompt({
+      title: "Изменение лимитов",
+      message: "Введите новый лимит активных ставок для выбранных ботов:",
+      placeholder: "Введите число от 1 до 66",
+      type: "number",
+      min: 1,
+      max: 66
+    });
+    
+    if (!newLimit) return;
     
     const confirmed = await confirm({
       title: "Изменение лимитов",
