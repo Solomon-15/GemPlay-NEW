@@ -5716,18 +5716,12 @@ def run_regular_bot_commission_tests() -> None:
     print_summary()
 
 if __name__ == "__main__":
-    print_header("GEMPLAY COMMISSION LOGIC TESTING")
-    print("Testing commission logic as requested in the review")
+    print_header("GEMPLAY AUTOMATIC BOT BETTING SYSTEM TESTING")
+    print("Testing automatic bot betting system as requested in the review")
     
     try:
-        # Test regular bot commission logic (main focus of review request)
-        test_regular_bot_commission_logic()
-        
-        # Test commission logic comprehensively
-        test_commission_logic_comprehensive()
-        
-        # Also test cancel bet functionality as it's related
-        test_cancel_bet_functionality()
+        # Test automatic bot betting system (main focus of review request)
+        test_automatic_bot_betting_system()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
