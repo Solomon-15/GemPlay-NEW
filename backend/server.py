@@ -12877,58 +12877,10 @@ async def startup_event():
 # BOT SETTINGS API
 # ==============================================================================
 
-@api_router.get("/admin/bot-global-settings", response_model=dict)
-async def get_bot_global_settings_v2(current_user: User = Depends(get_current_admin)):
-    """Get bot settings."""
-    try:
-        logger.info("Starting GET /admin/bot-settings endpoint")
-        logger.info(f"Current user: {current_user.email}")
-        
-        # Get bot settings from database
-        logger.info("Querying bot_settings collection")
-        settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        logger.info(f"Found settings: {settings}")
-        
-        if not settings:
-            logger.info("No settings found, creating default settings")
-            # Create default settings if not exists
-            default_settings = {
-                "id": "bot_settings",
-                "globalMaxActiveBets": 50,
-                "globalMaxHumanBots": 30,
-                "paginationSize": 10,
-                "autoActivateFromQueue": True,
-                "priorityType": "order",
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-            logger.info("Inserting default settings into database")
-            await db.bot_settings.insert_one(default_settings)
-            settings = default_settings
-            logger.info("Default settings created successfully")
-        
-        logger.info("Preparing response")
-        response_data = {
-            "success": True,
-            "settings": {
-                "globalMaxActiveBets": settings.get("globalMaxActiveBets", 50),
-                "globalMaxHumanBots": settings.get("globalMaxHumanBots", 30),
-                "paginationSize": settings.get("paginationSize", 10),
-                "autoActivateFromQueue": settings.get("autoActivateFromQueue", True),
-                "priorityType": settings.get("priorityType", "order")
-            }
-        }
-        logger.info(f"Response prepared: {response_data}")
-        return response_data
-        
-    except Exception as e:
-        logger.error(f"Error fetching bot settings: {e}")
-        logger.error(f"Exception type: {type(e)}")
-        logger.error(f"Exception traceback:", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to fetch bot settings"
-        )
+@api_router.get("/admin/test-bot-settings", response_model=dict)
+async def test_bot_settings(current_user: User = Depends(get_current_admin)):
+    """Test endpoint for bot settings."""
+    return {"message": "Test successful", "user": current_user.email}
 
 @api_router.put("/admin/bot-settings", response_model=dict)
 async def update_bot_global_settings(
