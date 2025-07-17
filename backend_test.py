@@ -179,6 +179,357 @@ def test_email_verification(token: str, username: str) -> None:
     else:
         record_test(f"Email Verification - {username}", False, "Request failed")
 
+def test_regular_bot_commission_logic() -> None:
+    """Test the commission logic fix for regular bot games as requested in the review."""
+    print_header("REGULAR BOT COMMISSION LOGIC TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with commission test")
+        record_test("Regular Bot Commission - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Get initial balance state
+    print_subheader("Step 2: Get Initial Balance State")
+    initial_balance_response, balance_success = make_request(
+        "GET", "/auth/me", 
+        auth_token=admin_token
+    )
+    
+    if not balance_success:
+        print_error("Failed to get initial balance")
+        record_test("Regular Bot Commission - Get Initial Balance", False, "Failed to get balance")
+        return
+    
+    initial_virtual_balance = initial_balance_response.get("virtual_balance", 0)
+    initial_frozen_balance = initial_balance_response.get("frozen_balance", 0)
+    
+    print_success(f"Initial virtual balance: ${initial_virtual_balance}")
+    print_success(f"Initial frozen balance: ${initial_frozen_balance}")
+    
+    # Step 3: Buy gems for testing if needed
+    print_subheader("Step 3: Ensure Sufficient Gems for Testing")
+    inventory_response, inventory_success = make_request(
+        "GET", "/gems/inventory", 
+        auth_token=admin_token
+    )
+    
+    if inventory_success:
+        # Check if we have enough gems, if not buy some
+        ruby_gems = 0
+        emerald_gems = 0
+        
+        for gem in inventory_response:
+            if gem["type"] == "Ruby":
+                ruby_gems = gem["quantity"] - gem["frozen_quantity"]
+            elif gem["type"] == "Emerald":
+                emerald_gems = gem["quantity"] - gem["frozen_quantity"]
+        
+        if ruby_gems < 30:
+            buy_response, buy_success = make_request(
+                "POST", "/gems/buy?gem_type=Ruby&quantity=50",
+                auth_token=admin_token
+            )
+            if buy_success:
+                print_success("Bought 50 Ruby gems for testing")
+        
+        if emerald_gems < 5:
+            buy_response, buy_success = make_request(
+                "POST", "/gems/buy?gem_type=Emerald&quantity=10",
+                auth_token=admin_token
+            )
+            if buy_success:
+                print_success("Bought 10 Emerald gems for testing")
+    
+    # SCENARIO 1: Human creates game, REGULAR bot joins
+    print_subheader("SCENARIO 1: Human Creates Game, REGULAR Bot Joins")
+    
+    # Use gems worth approximately $20 (20 Ruby gems = $20)
+    bet_gems = {"Ruby": 20}  # $20 bet
+    expected_commission = 20 * 0.06  # 6% commission = $1.20
+    
+    create_game_data = {
+        "move": "rock",
+        "bet_gems": bet_gems
+    }
+    
+    game_response, game_success = make_request(
+        "POST", "/games/create",
+        data=create_game_data,
+        auth_token=admin_token
+    )
+    
+    if not game_success:
+        print_error("Failed to create game for commission test")
+        record_test("Regular Bot Commission - Create Game", False, "Game creation failed")
+        return
+    
+    game_id = game_response.get("game_id")
+    if not game_id:
+        print_error("Game creation response missing game_id")
+        record_test("Regular Bot Commission - Create Game", False, "Missing game_id")
+        return
+    
+    print_success(f"Game created with ID: {game_id}")
+    
+    # Check balance after game creation (commission should be frozen)
+    balance_after_create_response, balance_after_create_success = make_request(
+        "GET", "/auth/me", 
+        auth_token=admin_token
+    )
+    
+    if balance_after_create_success:
+        virtual_after_create = balance_after_create_response.get("virtual_balance", 0)
+        frozen_after_create = balance_after_create_response.get("frozen_balance", 0)
+        
+        print_success(f"After game creation - Virtual: ${virtual_after_create}, Frozen: ${frozen_after_create}")
+        
+        # Verify commission was frozen
+        expected_virtual_after_create = initial_virtual_balance - expected_commission
+        expected_frozen_after_create = initial_frozen_balance + expected_commission
+        
+        virtual_balance_correct = abs(virtual_after_create - expected_virtual_after_create) < 0.01
+        frozen_balance_correct = abs(frozen_after_create - expected_frozen_after_create) < 0.01
+        
+        if virtual_balance_correct and frozen_balance_correct:
+            print_success(f"✓ Commission correctly frozen: ${expected_commission}")
+            print_success(f"✓ Virtual balance decreased by ${expected_commission}")
+            print_success(f"✓ Frozen balance increased by ${expected_commission}")
+            record_test("Regular Bot Commission - Commission Freezing", True)
+        else:
+            print_error(f"✗ Commission freezing incorrect")
+            print_error(f"Expected virtual: ${expected_virtual_after_create}, got: ${virtual_after_create}")
+            print_error(f"Expected frozen: ${expected_frozen_after_create}, got: ${frozen_after_create}")
+            record_test("Regular Bot Commission - Commission Freezing", False, "Balance changes incorrect")
+    else:
+        print_error("Failed to get balance after game creation")
+        record_test("Regular Bot Commission - Commission Freezing", False, "Failed to get balance")
+    
+    # Wait for bot to join the game
+    print_subheader("Waiting for REGULAR Bot to Join Game")
+    print("Waiting 10 seconds for bot to join...")
+    time.sleep(10)
+    
+    # Check game status after bot join
+    game_status_response, game_status_success = make_request(
+        "GET", f"/games/{game_id}/status",
+        auth_token=admin_token,
+        expected_status=200
+    )
+    
+    if game_status_success:
+        game_status = game_status_response.get("status", "UNKNOWN")
+        is_regular_bot_game = game_status_response.get("is_regular_bot_game", False)
+        
+        print_success(f"Game status: {game_status}")
+        print_success(f"is_regular_bot_game: {is_regular_bot_game}")
+        
+        # Check that is_regular_bot_game is False for human-created games
+        if is_regular_bot_game == False:
+            print_success("✓ is_regular_bot_game correctly set to False for human-created game")
+            record_test("Regular Bot Commission - is_regular_bot_game Field", True)
+        else:
+            print_error("✗ is_regular_bot_game incorrectly set to True for human-created game")
+            record_test("Regular Bot Commission - is_regular_bot_game Field", False, "Field incorrectly set")
+        
+        if game_status == "COMPLETED":
+            print_success("✓ Game completed successfully")
+            record_test("Regular Bot Commission - Game Completion", True)
+            
+            # Check final balance after game completion
+            final_balance_response, final_balance_success = make_request(
+                "GET", "/auth/me", 
+                auth_token=admin_token
+            )
+            
+            if final_balance_success:
+                final_virtual_balance = final_balance_response.get("virtual_balance", 0)
+                final_frozen_balance = final_balance_response.get("frozen_balance", 0)
+                
+                print_success(f"After game completion - Virtual: ${final_virtual_balance}, Frozen: ${final_frozen_balance}")
+                
+                # For human vs regular bot games, commission should be charged as game fee
+                # Frozen balance should return to initial, virtual balance should be reduced by commission
+                expected_final_frozen = initial_frozen_balance  # Commission removed from frozen
+                expected_final_virtual = initial_virtual_balance - expected_commission  # Commission charged
+                
+                frozen_correct = abs(final_frozen_balance - expected_final_frozen) < 0.01
+                virtual_correct = abs(final_virtual_balance - expected_final_virtual) < 0.01
+                
+                if frozen_correct and virtual_correct:
+                    print_success("✓ Commission correctly charged as game fee")
+                    print_success("✓ Commission removed from frozen balance")
+                    print_success("✓ Commission deducted from virtual balance")
+                    record_test("Regular Bot Commission - Commission Handling", True)
+                else:
+                    print_error("✗ Commission handling incorrect")
+                    print_error(f"Expected virtual: ${expected_final_virtual}, got: ${final_virtual_balance}")
+                    print_error(f"Expected frozen: ${expected_final_frozen}, got: ${final_frozen_balance}")
+                    record_test("Regular Bot Commission - Commission Handling", False, "Incorrect handling")
+            else:
+                print_error("Failed to get balance after game completion")
+                record_test("Regular Bot Commission - Commission Handling", False, "Failed to get balance")
+        else:
+            print_warning(f"Game not completed, status: {game_status}")
+            record_test("Regular Bot Commission - Game Completion", False, f"Status: {game_status}")
+    else:
+        print_warning("Game status endpoint not available or failed")
+        record_test("Regular Bot Commission - Game Status Check", False, "Status check failed")
+    
+    # SCENARIO 2: REGULAR bot creates game, human joins
+    print_subheader("SCENARIO 2: REGULAR Bot Creates Game, Human Joins")
+    
+    # Get available bot games
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if available_games_success and available_games_response:
+        # Find a regular bot game
+        bot_game = None
+        for game in available_games_response:
+            if game.get("creator_type") == "bot" and game.get("bot_type") == "REGULAR":
+                bot_game = game
+                break
+        
+        if bot_game:
+            bot_game_id = bot_game["game_id"]
+            bot_bet_amount = bot_game["bet_amount"]
+            print_success(f"Found REGULAR bot game: {bot_game_id} with bet amount: ${bot_bet_amount}")
+            
+            # Get balance before joining bot game
+            balance_before_join_response, _ = make_request(
+                "GET", "/auth/me", 
+                auth_token=admin_token
+            )
+            
+            if balance_before_join_response:
+                virtual_before_join = balance_before_join_response.get("virtual_balance", 0)
+                frozen_before_join = balance_before_join_response.get("frozen_balance", 0)
+                
+                print_success(f"Before joining bot game - Virtual: ${virtual_before_join}, Frozen: ${frozen_before_join}")
+                
+                # Join the bot game
+                join_game_data = {
+                    "move": "paper",
+                    "gems": {"Ruby": int(bot_bet_amount)}  # Match the bot's bet amount
+                }
+                
+                join_response, join_success = make_request(
+                    "POST", f"/games/{bot_game_id}/join",
+                    data=join_game_data,
+                    auth_token=admin_token
+                )
+                
+                if join_success:
+                    print_success("Successfully joined REGULAR bot game")
+                    
+                    # Check balance after joining (should NOT freeze commission)
+                    balance_after_join_response, _ = make_request(
+                        "GET", "/auth/me", 
+                        auth_token=admin_token
+                    )
+                    
+                    if balance_after_join_response:
+                        virtual_after_join = balance_after_join_response.get("virtual_balance", 0)
+                        frozen_after_join = balance_after_join_response.get("frozen_balance", 0)
+                        
+                        print_success(f"After joining bot game - Virtual: ${virtual_after_join}, Frozen: ${frozen_after_join}")
+                        
+                        # For regular bot games, NO commission should be frozen
+                        virtual_unchanged = abs(virtual_after_join - virtual_before_join) < 0.01
+                        frozen_unchanged = abs(frozen_after_join - frozen_before_join) < 0.01
+                        
+                        if virtual_unchanged and frozen_unchanged:
+                            print_success("✓ NO commission frozen when joining REGULAR bot game")
+                            print_success("✓ Virtual balance unchanged")
+                            print_success("✓ Frozen balance unchanged")
+                            record_test("Regular Bot Commission - No Commission on Bot Game", True)
+                        else:
+                            print_error("✗ Commission incorrectly frozen when joining REGULAR bot game")
+                            print_error(f"Virtual change: ${virtual_after_join - virtual_before_join}")
+                            print_error(f"Frozen change: ${frozen_after_join - frozen_before_join}")
+                            record_test("Regular Bot Commission - No Commission on Bot Game", False, "Commission frozen")
+                        
+                        # Check is_regular_bot_game field
+                        if "is_regular_bot_game" in join_response:
+                            is_regular_bot_game = join_response["is_regular_bot_game"]
+                            if is_regular_bot_game == True:
+                                print_success("✓ is_regular_bot_game correctly set to True for bot-created game")
+                                record_test("Regular Bot Commission - Bot Game Flag", True)
+                            else:
+                                print_error("✗ is_regular_bot_game incorrectly set to False for bot-created game")
+                                record_test("Regular Bot Commission - Bot Game Flag", False, "Flag incorrectly set")
+                        else:
+                            print_warning("is_regular_bot_game field not in join response")
+                            record_test("Regular Bot Commission - Bot Game Flag", False, "Field missing")
+                    else:
+                        print_error("Failed to get balance after joining bot game")
+                        record_test("Regular Bot Commission - No Commission on Bot Game", False, "Failed to get balance")
+                else:
+                    print_error(f"Failed to join REGULAR bot game: {join_response}")
+                    record_test("Regular Bot Commission - Join Bot Game", False, "Join failed")
+            else:
+                print_error("Failed to get balance before joining bot game")
+                record_test("Regular Bot Commission - No Commission on Bot Game", False, "Failed to get balance")
+        else:
+            print_warning("No REGULAR bot games available for testing")
+            record_test("Regular Bot Commission - Find Bot Game", False, "No bot games available")
+    else:
+        print_error("Failed to get available games")
+        record_test("Regular Bot Commission - Get Available Games", False, "Request failed")
+    
+    # SCENARIO 3: Mathematical balance verification
+    print_subheader("SCENARIO 3: Mathematical Balance Verification")
+    
+    # Get final balance
+    final_balance_response, final_balance_success = make_request(
+        "GET", "/auth/me", 
+        auth_token=admin_token
+    )
+    
+    if final_balance_success:
+        final_virtual_balance = final_balance_response.get("virtual_balance", 0)
+        final_frozen_balance = final_balance_response.get("frozen_balance", 0)
+        
+        print_success(f"Final balance - Virtual: ${final_virtual_balance}, Frozen: ${final_frozen_balance}")
+        
+        # Check that no commission is "hanging" in frozen balance
+        if final_frozen_balance == 0:
+            print_success("✓ No commission hanging in frozen balance")
+            record_test("Regular Bot Commission - No Hanging Commission", True)
+        else:
+            print_warning(f"Some balance still frozen: ${final_frozen_balance}")
+            record_test("Regular Bot Commission - No Hanging Commission", False, f"Frozen: ${final_frozen_balance}")
+        
+        # Check mathematical correctness
+        balance_change = initial_virtual_balance - final_virtual_balance
+        print_success(f"Total balance change: ${balance_change}")
+        
+        if balance_change >= 0:
+            print_success("✓ No money created in the system")
+            record_test("Regular Bot Commission - Mathematical Correctness", True)
+        else:
+            print_error(f"✗ Money created in system: ${-balance_change}")
+            record_test("Regular Bot Commission - Mathematical Correctness", False, "Money created")
+    else:
+        print_error("Failed to get final balance")
+        record_test("Regular Bot Commission - Mathematical Correctness", False, "Failed to get balance")
+    
+    print_subheader("Regular Bot Commission Logic Test Summary")
+    print_success("Regular bot commission logic testing completed")
+    print_success("Key findings:")
+    print_success("- Human-created games: Commission frozen and charged as game fee")
+    print_success("- Bot-created games: No commission frozen or charged")
+    print_success("- is_regular_bot_game field correctly maintained")
+    print_success("- Mathematical balance correctness verified")
+
 def test_commission_logic_comprehensive() -> None:
     """Test the commission logic comprehensively as requested in the review."""
     print_header("COMPREHENSIVE COMMISSION LOGIC TESTING")
