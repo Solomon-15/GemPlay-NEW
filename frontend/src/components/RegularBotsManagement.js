@@ -163,7 +163,7 @@ const RegularBotsManagement = () => {
       'aggressive': 1.0
     };
     
-    const multiplier = behaviorMultipliers[botForm.bot_behavior] || 0.75;
+    const multiplier = 0.75; // Стандартный множитель для всех ботов
     const totalAmount = Math.round(averageValue * botForm.cycle_games * multiplier);
     
     return totalAmount;
