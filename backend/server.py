@@ -12766,7 +12766,7 @@ async def reset_all_bets_admin(current_user: User = Depends(get_current_admin)):
             if creator:
                 commission_to_return = game_obj.bet_amount * 0.06
                 if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                    await db.users.update_one(
                     {"id": game_obj.creator_id},
                     {
                         "$inc": {
@@ -12796,7 +12796,7 @@ async def reset_all_bets_admin(current_user: User = Depends(get_current_admin)):
                 if opponent:
                     commission_to_return = game_obj.bet_amount * 0.06
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                        await db.users.update_one(
                         {"id": game_obj.opponent_id},
                         {
                             "$inc": {
