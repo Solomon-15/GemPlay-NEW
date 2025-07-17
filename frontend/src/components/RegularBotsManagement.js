@@ -2523,67 +2523,6 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Поведение бота */}
-              <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Поведение бота (Bot Behavior)</h4>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="bot_behavior"
-                      value="aggressive"
-                      checked={botForm.bot_behavior === 'aggressive'}
-                      onChange={(e) => {
-                        const newForm = {...botForm, bot_behavior: e.target.value};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="mr-3"
-                    />
-                    <div>
-                      <span className="text-red-400 font-medium">Aggressive</span>
-                      <div className="text-xs text-text-secondary">Дорогие гемы, высокие ставки (множитель 1.0)</div>
-                    </div>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="bot_behavior"
-                      value="balanced"
-                      checked={botForm.bot_behavior === 'balanced'}
-                      onChange={(e) => {
-                        const newForm = {...botForm, bot_behavior: e.target.value};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="mr-3"
-                    />
-                    <div>
-                      <span className="text-yellow-400 font-medium">Balanced</span>
-                      <div className="text-xs text-text-secondary">Средние гемы, умеренные ставки (множитель 0.75)</div>
-                    </div>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="bot_behavior"
-                      value="cautious"
-                      checked={botForm.bot_behavior === 'cautious'}
-                      onChange={(e) => {
-                        const newForm = {...botForm, bot_behavior: e.target.value};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="mr-3"
-                    />
-                    <div>
-                      <span className="text-green-400 font-medium">Cautious</span>
-                      <div className="text-xs text-text-secondary">Дешёвые гемы, минимальные ставки (множитель 0.5)</div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
               {/* Тип бота */}
               <div className="border border-border-primary rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-white mb-3">Тип бота (Bot Type)</h4>
