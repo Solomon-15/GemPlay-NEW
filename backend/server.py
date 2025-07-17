@@ -10407,7 +10407,7 @@ async def create_regular_bots(
     """Create regular bots (admin only) - ОБНОВЛЕНО для новой системы."""
     try:
         # Параметры согласно новой спецификации
-        count = min(bot_config.get("count", 5), 100)  # 1-100
+        count = min(bot_config.get("count", 1), 100)  # 1-100
         min_bet = bot_config.get("min_bet_amount", 1.0)  # 1-10000
         max_bet = bot_config.get("max_bet_amount", 50.0)  # 1-10000
         win_rate = bot_config.get("win_percentage", 55.0) / 100.0  # 0-100% -> 0.0-1.0
