@@ -7830,7 +7830,7 @@ async def bot_create_game_automatically(bot: Bot):
             return {'Ruby': fallback_amount}, fallback_amount
         
         # Generate gem-based bet within bot's limits
-        bet_gems, bet_amount = generate_gem_based_bet(bot.min_bet, bot.max_bet)
+        bet_gems, bet_amount = generate_gem_based_bet(bot.min_bet_amount, bot.max_bet_amount)
         
         # Generate bot's move
         bot_move = BotGameLogic.calculate_bot_move(bot)
