@@ -3980,6 +3980,9 @@ const RegularBotsManagement = () => {
           </div>
         </div>
       )}
+
+      {/* Модальное окно подтверждения */}
+      <ConfirmationModal {...confirmationModal} />
     </div>
   );
 };
