@@ -2652,9 +2652,10 @@ async def create_game(
             }
         )
         
-        logger.info(f"💰 User virtual_balance after: ${user['virtual_balance']} (UNCHANGED)")
+        logger.info(f"💰 User virtual_balance after: ${user['virtual_balance'] - commission_required}")
         logger.info(f"💰 User frozen_balance after: ${user['frozen_balance'] + commission_required}")
         logger.info(f"💰 Commission frozen: ${commission_required}")
+        logger.info(f"💰 Commission deducted from virtual_balance: ${commission_required}")
 
         # Create the game
         game = Game(
