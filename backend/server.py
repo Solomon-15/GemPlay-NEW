@@ -8710,7 +8710,7 @@ async def cancel_any_bet(
         creator_user = await db.users.find_one({"id": creator_id})
         if creator_user:
             if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                await db.users.update_one(
                 {"id": creator_id},
                 {
                     "$inc": {
@@ -8818,7 +8818,7 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                        await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -8863,7 +8863,7 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                        await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -8880,7 +8880,7 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
                     opponent_user = await db.users.find_one({"id": opponent_id})
                     if opponent_user:
                         if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                            await db.users.update_one(
                             {"id": opponent_id},
                             {
                                 "$inc": {
@@ -8987,7 +8987,7 @@ async def reset_all_bets(current_user: User = Depends(get_current_super_admin)):
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                        await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
