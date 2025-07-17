@@ -10422,14 +10422,16 @@ async def create_regular_bots(
         created_bots = []
         
         for i in range(count):
+            bot_name = bot_config.get("name", f"Regular Bot #{i+1}")
             bot = Bot(
-                name=f"Regular Bot #{i+1}",
+                name=bot_name,
                 bot_type=BotType.REGULAR,
                 min_bet_amount=min_bet,
                 max_bet_amount=max_bet,
                 win_rate=win_rate,
                 cycle_games=cycle_games,
                 current_limit=individual_limit,
+                individual_limit=individual_limit,
                 creation_mode=creation_mode,
                 priority_order=priority_order,
                 pause_between_games=pause_between_games,
