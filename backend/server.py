@@ -3550,20 +3550,19 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     )
                     await db.profit_entries.insert_one(profit_entry.dict())
             
-            # Handle commission for loser - return frozen commission (only if commission was charged)
+            # Handle commission for loser - ПРАВИЛЬНАЯ ЛОГИКА: просто убираем комиссию как плату за игру
             if not is_regular_bot_game:
                 loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
                 loser = await db.users.find_one({"id": loser_id})
                 
                 if loser:
-                    # Loser is a human player - return frozen commission
-                    commission_to_return = game.bet_amount * 0.06
+                    # Loser is a human player - комиссия просто списывается как плата за игру
+                    commission_to_deduct = game.bet_amount * 0.06
                     await db.users.update_one(
                         {"id": loser_id},
                         {
                             "$inc": {
-                                "virtual_balance": commission_to_return,  # Return commission to balance
-                                "frozen_balance": -commission_to_return   # Remove from frozen
+                                "frozen_balance": -commission_to_deduct   # Просто убираем комиссию из frozen_balance
                             },
                             "$set": {"updated_at": datetime.utcnow()}
                         }
