@@ -4920,7 +4920,7 @@ async def reset_all_games(current_admin: User = Depends(get_current_admin)):
             # Unfreeze creator's commission
             creator_commission = game_obj.bet_amount * 0.06
             if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                await db.users.update_one(
                 {"id": game_obj.creator_id},
                 {
                     "$inc": {
