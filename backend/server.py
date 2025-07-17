@@ -11708,7 +11708,10 @@ async def generate_extended_bot_cycle_bets(bot_id: str, cycle_length: int, cycle
             
             game = Game(
                 creator_id=bot_id,
+                creator_type="bot",
+                bot_type=bot.bot_type,
                 creator_move=bot_move,
+                is_regular_bot_game=(bot.bot_type == "REGULAR"),
                 creator_move_hash=hashlib.sha256(f"{bot_move.value}{salt}".encode()).hexdigest(),
                 creator_salt=salt,
                 bet_amount=float(bet_amount),
