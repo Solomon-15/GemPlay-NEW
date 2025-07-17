@@ -4743,7 +4743,7 @@ async def cancel_game(game_id: str, current_user: User = Depends(get_current_use
         
         # ПРАВИЛЬНАЯ ЛОГИКА: При отмене игры комиссия возвращается из frozen_balance в virtual_balance
         if not (game_obj.is_bot_game):
-    await db.users.update_one(
+            await db.users.update_one(
             {"id": current_user.id},
             {
                 "$inc": {
