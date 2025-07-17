@@ -12877,8 +12877,8 @@ async def startup_event():
 # BOT SETTINGS API
 # ==============================================================================
 
-@api_router.get("/admin/bot-settings", response_model=dict)
-async def get_bot_global_settings(current_user: User = Depends(get_current_admin)):
+@api_router.get("/admin/bot-global-settings", response_model=dict)
+async def get_bot_global_settings_v2(current_user: User = Depends(get_current_admin)):
     """Get bot settings."""
     try:
         logger.info("Starting GET /admin/bot-settings endpoint")
