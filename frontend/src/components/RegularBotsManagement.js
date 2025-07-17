@@ -247,8 +247,20 @@ const RegularBotsManagement = () => {
   const handleBulkToggleStatus = async (activate) => {
     if (selectedBots.size === 0) return;
     
-    setBulkActionLoading(true);
     const action = activate ? 'активировать' : 'деактивировать';
+    const actionPast = activate ? 'активированы' : 'деактивированы';
+    
+    const confirmed = await confirm({
+      title: activate ? "Активация ботов" : "Деактивация ботов",
+      message: `Вы уверены, что хотите ${action} ${selectedBots.size} ботов?`,
+      confirmText: activate ? "Активировать" : "Деактивировать",
+      cancelText: "Отмена",
+      type: activate ? "success" : "warning"
+    });
+    
+    if (!confirmed) return;
+    
+    setBulkActionLoading(true);
     
     try {
       const token = localStorage.getItem('token');
@@ -259,7 +271,7 @@ const RegularBotsManagement = () => {
       );
       
       await Promise.all(promises);
-      showSuccessRU(`Успешно ${activate ? 'активированы' : 'деактивированы'} ${selectedBots.size} ботов`);
+      showSuccessRU(`Успешно ${actionPast} ${selectedBots.size} ботов`);
       await fetchBotsList();
       clearSelection();
     } catch (error) {
