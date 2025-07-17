@@ -1860,6 +1860,14 @@ const RegularBotsManagement = () => {
                 botsList.map((bot) => (
                   <tr key={bot.id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
                     <td className="px-4 py-4 whitespace-nowrap text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedBots.has(bot.id)}
+                        onChange={() => handleSelectBot(bot.id)}
+                        className="w-4 h-4 text-accent-primary bg-surface-primary border-border-primary rounded focus:ring-accent-primary focus:ring-2"
+                      />
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {bot.name || `Bot #${bot.id.substring(0, 3)}`}
                       </div>
