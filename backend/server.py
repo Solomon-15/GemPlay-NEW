@@ -7883,7 +7883,7 @@ async def bot_join_game_automatically(bot: Bot):
                     "status": GameStatus.REVEAL,  # Changed from ACTIVE to REVEAL
                     "started_at": datetime.utcnow(),
                     "reveal_deadline": datetime.utcnow() + timedelta(minutes=1),  # Give 1 minute for reveal
-                    "is_regular_bot_game": bot.bot_type == "REGULAR",  # Mark as regular bot game
+                    # НЕ ПЕРЕЗАПИСЫВАЕМ is_regular_bot_game - оставляем как было при создании игры
                     "commission_returned": commission_returned  # Track returned commission
                 }
             }
