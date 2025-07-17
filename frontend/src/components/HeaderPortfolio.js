@@ -69,9 +69,9 @@ const HeaderPortfolio = ({ user }) => {
 
     return {
       balance: {
-        total: virtualBalance,
+        total: virtualBalance + frozenBalance,  // Полный баланс = virtual + frozen
         frozen: frozenBalance,
-        available: virtualBalance - frozenBalance
+        available: virtualBalance  // Доступный баланс = virtual_balance
       },
       gems: {
         totalCount: totalGemsCount,
