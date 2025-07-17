@@ -3999,6 +3999,9 @@ const RegularBotsManagement = () => {
 
       {/* Модальное окно подтверждения */}
       <ConfirmationModal {...confirmationModal} />
+      
+      {/* Модальное окно ввода */}
+      <InputModal {...inputModal} />
     </div>
   );
 };
