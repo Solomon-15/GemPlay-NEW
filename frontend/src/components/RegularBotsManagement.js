@@ -206,6 +206,9 @@ const RegularBotsManagement = () => {
   const [activeTab, setActiveTab] = useState('bots'); // 'bots' или 'settings'
 
   const { showSuccessRU, showErrorRU } = useNotifications();
+  
+  // Хук для модального окна подтверждения
+  const { confirm, confirmationModal } = useConfirmation();
 
   // Функции для массового выбора ботов
   const handleSelectBot = (botId) => {
