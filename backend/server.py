@@ -595,6 +595,16 @@ def generate_verification_token() -> str:
     """Generate email verification token."""
     return str(uuid.uuid4())
 
+async def generate_unique_bot_name() -> str:
+    """Generate unique bot name in format Bot#1, Bot#2, etc."""
+    counter = 1
+    while True:
+        bot_name = f"Bot#{counter}"
+        existing_bot = await db.bots.find_one({"name": bot_name})
+        if not existing_bot:
+            return bot_name
+        counter += 1
+
 # ==============================================================================
 # SECURITY FUNCTIONS
 # ==============================================================================
