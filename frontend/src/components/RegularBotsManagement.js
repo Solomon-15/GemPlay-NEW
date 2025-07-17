@@ -1864,12 +1864,7 @@ const RegularBotsManagement = () => {
                   {bulkActionLoading ? 'Загрузка...' : 'Выключить всех'}
                 </button>
                 <button
-                  onClick={() => {
-                    const newLimit = prompt('Введите новый лимит активных ставок (1-66):');
-                    if (newLimit && parseInt(newLimit) >= 1 && parseInt(newLimit) <= 66) {
-                      handleBulkUpdateLimits(newLimit);
-                    }
-                  }}
+                  onClick={handleBulkUpdateLimits}
                   disabled={bulkActionLoading}
                   className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
