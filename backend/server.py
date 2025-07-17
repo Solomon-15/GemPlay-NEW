@@ -931,15 +931,77 @@ async def startup_event():
     logger.info("GemPlay API started successfully!")
 
 def start_background_scheduler():
-    """Start background scheduler for daily bonuses."""
+    """Start background scheduler for daily bonuses and bot automation."""
     def run_scheduler():
         schedule.every().day.at("00:00").do(reset_daily_limits)
         while True:
             schedule.run_pending()
             time.sleep(60)
     
+    # Start daily scheduler
     scheduler_thread = Thread(target=run_scheduler, daemon=True)
     scheduler_thread.start()
+    
+    # Start bot automation loop
+    bot_automation_thread = Thread(target=run_bot_automation, daemon=True)
+    bot_automation_thread.start()
+
+def run_bot_automation():
+    """Run bot automation loop every 5 seconds."""
+    import asyncio
+    
+    async def bot_automation_loop():
+        while True:
+            try:
+                await maintain_all_bots_active_bets()
+                await asyncio.sleep(5)  # Каждые 5 секунд
+            except Exception as e:
+                logger.error(f"Error in bot automation loop: {e}")
+                await asyncio.sleep(5)  # Пауза даже при ошибке
+    
+    # Run the async loop
+    asyncio.run(bot_automation_loop())
+
+async def maintain_all_bots_active_bets():
+    """Поддерживает количество активных ставок для всех активных ботов."""
+    try:
+        # Получаем всех активных обычных ботов
+        active_bots = await db.bots.find({
+            "is_active": True,
+            "bot_type": "REGULAR"
+        }).to_list(1000)
+        
+        if not active_bots:
+            return
+            
+        logger.info(f"🤖 Checking {len(active_bots)} active bots for bet maintenance")
+        
+        # Проверяем каждого бота
+        for bot_doc in active_bots:
+            try:
+                bot_id = bot_doc["id"]
+                cycle_games = bot_doc.get("cycle_games", 12)
+                
+                # Подсчитываем текущие активные ставки
+                current_active_bets = await db.games.count_documents({
+                    "creator_id": bot_id,
+                    "status": "WAITING"
+                })
+                
+                # Если активных ставок меньше цикла, создаем новые
+                if current_active_bets < cycle_games:
+                    needed_bets = cycle_games - current_active_bets
+                    logger.info(f"🎯 Bot {bot_doc['name']} needs {needed_bets} more bets ({current_active_bets}/{cycle_games})")
+                    
+                    # Поддерживаем активные ставки на уровне цикла
+                    await maintain_bot_active_bets_count(bot_id, cycle_games)
+                    
+            except Exception as e:
+                logger.error(f"Error maintaining bets for bot {bot_doc.get('name', 'unknown')}: {e}")
+                continue
+                
+    except Exception as e:
+        logger.error(f"Error in maintain_all_bots_active_bets: {e}")
 
 def reset_daily_limits():
     """Reset daily limits for all users."""
