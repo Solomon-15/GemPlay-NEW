@@ -12914,21 +12914,8 @@ async def update_bot_global_settings_fixed(
     settings: BotSettingsRequest,
     current_user: User = Depends(get_current_admin)
 ):
-    """Update bot settings."""
+    """Update bot settings - fixed version."""
     try:
-        # Validate settings
-        if settings.globalMaxActiveBets < 1 or settings.globalMaxActiveBets > 200:
-            raise HTTPException(
-                status_code=400,
-                detail="Global max active bets must be between 1 and 200"
-            )
-        
-        if settings.globalMaxHumanBots < 1 or settings.globalMaxHumanBots > 100:
-            raise HTTPException(
-                status_code=400,
-                detail="Global max human bots must be between 1 and 100"
-            )
-        
         # Update or create settings
         await db.bot_settings.update_one(
             {"id": "bot_settings"},
@@ -12950,13 +12937,11 @@ async def update_bot_global_settings_fixed(
             "message": "Bot settings updated successfully"
         }
         
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error updating bot settings: {e}")
         raise HTTPException(
             status_code=500,
-            detail="Failed to update bot settings"
+            detail=f"Failed to update bot settings: {str(e)}"
         )
 
 @api_router.get("/admin/bot-queue-stats", response_model=dict)
