@@ -83,7 +83,6 @@ const RegularBotsManagement = () => {
   const [botForm, setBotForm] = useState({
     // Основные параметры
     name: '',
-    count: 1, // Количество ботов для создания (1-100)
     
     // Настройки ставок (обновлены согласно спецификации)
     min_bet_amount: 1.0, // 1-10000
@@ -103,11 +102,7 @@ const RegularBotsManagement = () => {
     profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
     
     // Старые поля для совместимости
-    bot_type: 'type-1', // 'type-1' to 'type-11' or custom
-    custom_min_bet: 1,
-    custom_max_bet: 10,
     cycle_total_amount: 0, // calculated automatically
-    win_rate_percent: 55,
     can_accept_bets: false,
     can_play_with_bots: true
   });
