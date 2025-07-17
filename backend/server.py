@@ -2790,16 +2790,16 @@ async def handle_game_timeout(game_id: str):
         # Return commission to opponent
         commission = game_obj.bet_amount * 0.06
         if not (game_obj.is_bot_game):
-    await db.users.update_one(
-            {"id": game_obj.opponent_id},
-            {
-                "$inc": {
-                    "virtual_balance": commission,
-                    "frozen_balance": -commission
-                },
-                "$set": {"updated_at": datetime.utcnow()}
-            }
-        )
+            await db.users.update_one(
+                {"id": game_obj.opponent_id},
+                {
+                    "$inc": {
+                        "virtual_balance": commission,
+                        "frozen_balance": -commission
+                    },
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
         
         # Recreate bet for creator - change status back to WAITING
         await db.games.update_one(
