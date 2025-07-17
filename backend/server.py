@@ -12703,7 +12703,7 @@ async def delete_user_account(
         )
 
 @api_router.post("/admin/games/reset-all", response_model=dict)
-async def reset_all_bets(current_user: User = Depends(get_current_admin)):
+async def reset_all_bets_admin(current_user: User = Depends(get_current_admin)):
     """Reset all bets for all players and bots (admin only)."""
     try:
         # Get all active games (WAITING, ACTIVE)
