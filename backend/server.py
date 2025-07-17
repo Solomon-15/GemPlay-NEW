@@ -12881,10 +12881,16 @@ async def startup_event():
 async def get_bot_global_settings(current_user: User = Depends(get_current_admin)):
     """Get bot settings."""
     try:
+        logger.info("Starting GET /admin/bot-settings endpoint")
+        logger.info(f"Current user: {current_user.email}")
+        
         # Get bot settings from database
+        logger.info("Querying bot_settings collection")
         settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        logger.info(f"Found settings: {settings}")
         
         if not settings:
+            logger.info("No settings found, creating default settings")
             # Create default settings if not exists
             default_settings = {
                 "id": "bot_settings",
