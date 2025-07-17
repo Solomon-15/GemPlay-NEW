@@ -218,7 +218,9 @@ def test_bot_settings_put(admin_token: str) -> None:
         record_test("PUT bot-settings - Update Settings", False, "Cannot get current settings")
         return
     
-    print_success(f"Current settings: {json.dumps(current_response, indent=2)}")
+    # Extract settings from nested structure
+    current_settings = current_response.get("settings", {})
+    print_success(f"Current settings: {json.dumps(current_settings, indent=2)}")
     
     # Prepare test update data
     test_settings = {
@@ -256,10 +258,13 @@ def test_bot_settings_put(admin_token: str) -> None:
         if verify_success:
             print_success("Successfully retrieved settings after update")
             
+            # Extract settings from nested structure
+            verify_settings = verify_response.get("settings", {})
+            
             # Check if values were actually updated
             all_updated = True
             for key, expected_value in test_settings.items():
-                actual_value = verify_response.get(key)
+                actual_value = verify_settings.get(key)
                 if actual_value == expected_value:
                     print_success(f"✓ {key}: {actual_value} (correctly updated)")
                 else:
