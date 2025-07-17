@@ -173,7 +173,7 @@ const RegularBotsManagement = () => {
   useEffect(() => {
     const newAmount = calculateCycleTotalAmount();
     setBotForm(prev => ({ ...prev, cycle_total_amount: newAmount }));
-  }, [botForm.bot_type, botForm.cycle_games, botForm.bot_behavior, botForm.custom_min_bet, botForm.custom_max_bet]);
+  }, [botForm.bot_type, botForm.cycle_games, botForm.custom_min_bet, botForm.custom_max_bet]);
 
   // Generate automatic bot name
   const generateBotName = () => {
