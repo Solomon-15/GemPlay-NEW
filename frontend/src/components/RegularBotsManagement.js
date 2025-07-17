@@ -1223,28 +1223,40 @@ const RegularBotsManagement = () => {
           <div className="bg-surface-sidebar rounded-lg p-3">
             <div className="text-text-secondary text-sm">Текущие активные ставки</div>
             <div className="text-white text-xl font-rajdhani font-bold">
-              {activeBetsStats.regular_bots.current}
+              {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.active_bets || 0), 0)}
             </div>
           </div>
           <div className="bg-surface-sidebar rounded-lg p-3">
             <div className="text-text-secondary text-sm">Максимальный лимит</div>
             <div className="text-accent-primary text-xl font-rajdhani font-bold">
-              {activeBetsStats.regular_bots.max}
+              {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.cycle_games || 12), 0)}
             </div>
           </div>
           <div className="bg-surface-sidebar rounded-lg p-3">
             <div className="text-text-secondary text-sm">Доступные слоты</div>
             <div className="text-green-400 text-xl font-rajdhani font-bold">
-              {activeBetsStats.regular_bots.available}
+              {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + ((bot.cycle_games || 12) - (bot.active_bets || 0)), 0)}
             </div>
           </div>
           <div className="bg-surface-sidebar rounded-lg p-3">
             <div className="text-text-secondary text-sm">Заполненность</div>
             <div className={`text-xl font-rajdhani font-bold ${
-              activeBetsStats.regular_bots.percentage >= 90 ? 'text-red-400' :
-              activeBetsStats.regular_bots.percentage >= 70 ? 'text-yellow-400' : 'text-green-400'
+              (() => {
+                const activeBots = botsList.filter(bot => bot.is_active);
+                const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
+                const totalMaxBets = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
+                const percentage = totalMaxBets > 0 ? Math.round((totalActiveBets / totalMaxBets) * 100) : 0;
+                
+                return percentage >= 90 ? 'text-red-400' :
+                       percentage >= 70 ? 'text-yellow-400' : 'text-green-400';
+              })()
             }`}>
-              {activeBetsStats.regular_bots.percentage}%
+              {(() => {
+                const activeBots = botsList.filter(bot => bot.is_active);
+                const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
+                const totalMaxBets = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
+                return totalMaxBets > 0 ? Math.round((totalActiveBets / totalMaxBets) * 100) : 0;
+              })()}%
             </div>
           </div>
         </div>
@@ -1254,14 +1266,29 @@ const RegularBotsManagement = () => {
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div 
               className={`h-2 rounded-full transition-all duration-300 ${
-                activeBetsStats.regular_bots.percentage >= 90 ? 'bg-red-500' :
-                activeBetsStats.regular_bots.percentage >= 70 ? 'bg-yellow-500' : 'bg-green-500'
+                (() => {
+                  const activeBots = botsList.filter(bot => bot.is_active);
+                  const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
+                  const totalMaxBets = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
+                  const percentage = totalMaxBets > 0 ? Math.round((totalActiveBets / totalMaxBets) * 100) : 0;
+                  
+                  return percentage >= 90 ? 'bg-red-500' :
+                         percentage >= 70 ? 'bg-yellow-500' : 'bg-green-500';
+                })()
               }`}
-              style={{ width: `${Math.min(100, activeBetsStats.regular_bots.percentage)}%` }}
+              style={{ 
+                width: `${(() => {
+                  const activeBots = botsList.filter(bot => bot.is_active);
+                  const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
+                  const totalMaxBets = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
+                  const percentage = totalMaxBets > 0 ? Math.round((totalActiveBets / totalMaxBets) * 100) : 0;
+                  return Math.min(100, percentage);
+                })()}%`
+              }}
             ></div>
           </div>
           <div className="text-text-secondary text-xs mt-1">
-            {activeBetsStats.regular_bots.current} из {activeBetsStats.regular_bots.max} активных ставок
+            {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.active_bets || 0), 0)} из {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.cycle_games || 12), 0)} активных ставок
           </div>
         </div>
       </div>
