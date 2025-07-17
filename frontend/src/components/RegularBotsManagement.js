@@ -491,11 +491,6 @@ const RegularBotsManagement = () => {
   const validateExtendedBotForm = (formData) => {
     const errors = [];
     
-    // Проверка количества ботов
-    if (formData.count < 1 || formData.count > 100) {
-      errors.push('Количество ботов должно быть от 1 до 100');
-    }
-    
     // Проверка диапазона ставок
     if (formData.min_bet_amount < 1 || formData.min_bet_amount > 10000) {
       errors.push('Минимальная ставка должна быть от 1 до 10000');
