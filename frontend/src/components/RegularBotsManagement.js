@@ -613,7 +613,7 @@ const RegularBotsManagement = () => {
       
       // Подготавливаем данные для новой системы
       const botData = {
-        count: botForm.count,
+        name: botForm.name,
         min_bet_amount: botForm.min_bet_amount,
         max_bet_amount: botForm.max_bet_amount,
         win_percentage: botForm.win_percentage,
@@ -636,7 +636,6 @@ const RegularBotsManagement = () => {
       // Сбрасываем форму
       setBotForm({
         name: '',
-        count: 1,
         min_bet_amount: 1.0,
         max_bet_amount: 50.0,
         win_percentage: 55.0,
@@ -646,11 +645,7 @@ const RegularBotsManagement = () => {
         priority_order: 50,
         pause_between_games: 5,
         profit_strategy: 'balanced',
-        bot_type: 'type-1',
-        custom_min_bet: 1,
-        custom_max_bet: 10,
         cycle_total_amount: 0,
-        win_rate_percent: 55,
         can_accept_bets: false,
         can_play_with_bots: true
       });
@@ -660,7 +655,7 @@ const RegularBotsManagement = () => {
       
     } catch (error) {
       console.error('Ошибка создания бота:', error);
-      showErrorRU('Ошибка при создании бота');
+      showErrorRU(error.response?.data?.detail || 'Ошибка при создании бота');
     }
   };
 
