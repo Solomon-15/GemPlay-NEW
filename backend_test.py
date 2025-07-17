@@ -5107,4 +5107,21 @@ def run_regular_bot_commission_tests() -> None:
     print_summary()
 
 if __name__ == "__main__":
-    run_regular_bot_commission_tests()
+    print_header("GEMPLAY COMMISSION LOGIC TESTING")
+    print("Testing commission logic as requested in the review")
+    
+    try:
+        # Test commission logic comprehensively
+        test_commission_logic_comprehensive()
+        
+        # Also test cancel bet functionality as it's related
+        test_cancel_bet_functionality()
+        
+    except KeyboardInterrupt:
+        print("\n\nTesting interrupted by user")
+    except Exception as e:
+        print(f"\n\nUnexpected error during testing: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        print_summary()
