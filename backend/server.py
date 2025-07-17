@@ -986,6 +986,24 @@ async def maintain_all_bots_active_bets():
                     needed_bets = cycle_games - current_active_bets
                     logger.info(f"🎯 Bot {bot_doc['name']} needs {needed_bets} more bets ({current_active_bets}/{cycle_games})")
                     
+                    # Создаем объект Bot из документа базы данных
+                    bot_obj = Bot(
+                        id=bot_doc["id"],
+                        name=bot_doc["name"],
+                        bot_type=bot_doc.get("bot_type", "REGULAR"),
+                        min_bet=bot_doc.get("min_bet_amount", bot_doc.get("min_bet", 1.0)),
+                        max_bet=bot_doc.get("max_bet_amount", bot_doc.get("max_bet", 100.0)),
+                        win_rate_percent=bot_doc.get("win_rate_percent", 60.0),
+                        cycle_games=bot_doc.get("cycle_games", 12),
+                        pause_between_games=bot_doc.get("pause_between_games", 5),
+                        is_active=bot_doc.get("is_active", True),
+                        can_accept_bets=bot_doc.get("can_accept_bets", True),
+                        can_play_with_bots=bot_doc.get("can_play_with_bots", True),
+                        created_at=bot_doc.get("created_at", datetime.utcnow()),
+                        bot_behavior=bot_doc.get("bot_behavior", "balanced"),
+                        profit_strategy=bot_doc.get("profit_strategy", "balanced")
+                    )
+                    
                     # Поддерживаем активные ставки на уровне цикла
                     await maintain_bot_active_bets_count(bot_id, cycle_games)
                     
