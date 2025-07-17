@@ -12878,7 +12878,7 @@ async def startup_event():
 # ==============================================================================
 
 @api_router.get("/admin/bot-settings", response_model=dict)
-async def get_bot_settings(current_user: User = Depends(get_current_admin)):
+async def get_bot_settings_main(current_user: User = Depends(get_current_admin)):
     """Get bot settings."""
     try:
         # Get bot settings from database
