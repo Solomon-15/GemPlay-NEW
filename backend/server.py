@@ -7876,7 +7876,7 @@ async def bot_join_game_automatically(bot: Bot):
         available_games = await db.games.find({
             "status": GameStatus.WAITING,
             "creator_id": {"$ne": bot.id},  # Don't join own games
-            "bet_amount": {"$gte": bot.min_bet, "$lte": bot.max_bet}
+            "bet_amount": {"$gte": bot.min_bet_amount, "$lte": bot.max_bet_amount}
         }).to_list(10)
         
         if not available_games:
