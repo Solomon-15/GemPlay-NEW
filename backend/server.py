@@ -3553,15 +3553,15 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     # Loser is a human player - комиссия просто списывается как плата за игру
                     commission_to_deduct = game.bet_amount * 0.06
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
-                        {"id": loser_id},
-                        {
-                            "$inc": {
-                                "frozen_balance": -commission_to_deduct   # Просто убираем комиссию из frozen_balance
-                            },
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
+                        await db.users.update_one(
+                            {"id": loser_id},
+                            {
+                                "$inc": {
+                                    "frozen_balance": -commission_to_deduct   # Просто убираем комиссию из frozen_balance
+                                },
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
             
         else:
             # Draw - return frozen commissions to both players (only if commission was charged)
