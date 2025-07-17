@@ -12902,10 +12902,13 @@ async def get_bot_global_settings(current_user: User = Depends(get_current_admin
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }
+            logger.info("Inserting default settings into database")
             await db.bot_settings.insert_one(default_settings)
             settings = default_settings
+            logger.info("Default settings created successfully")
         
-        return {
+        logger.info("Preparing response")
+        response = {
             "success": True,
             "settings": {
                 "globalMaxActiveBets": settings.get("globalMaxActiveBets", 50),
@@ -12915,9 +12918,13 @@ async def get_bot_global_settings(current_user: User = Depends(get_current_admin
                 "priorityType": settings.get("priorityType", "order")
             }
         }
+        logger.info(f"Response prepared: {response}")
+        return response
         
     except Exception as e:
         logger.error(f"Error fetching bot settings: {e}")
+        logger.error(f"Exception type: {type(e)}")
+        logger.error(f"Exception traceback:", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Failed to fetch bot settings"
