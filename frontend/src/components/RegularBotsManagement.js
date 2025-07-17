@@ -2665,75 +2665,6 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Тип бота */}
-              <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Тип бота (Bot Type)</h4>
-                <div className="flex items-center space-x-3">
-                  <div className="flex-1">
-                    <select
-                      value={botForm.bot_type}
-                      onChange={(e) => {
-                        const newForm = {...botForm, bot_type: e.target.value};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    >
-                      {botTypes.map(type => (
-                        <option key={type.id} value={type.id}>
-                          {type.name}
-                        </option>
-                      ))}
-                      {customBotTypes.map(type => (
-                        <option key={type.id} value={type.id}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <button
-                    onClick={() => setIsCustomTypeModalOpen(true)}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-rajdhani font-bold text-sm"
-                  >
-                    Создать тип
-                  </button>
-                </div>
-                
-                {/* Кастомные поля для custom типа */}
-                {botForm.bot_type === 'custom' && (
-                  <div className="mt-3 grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-text-secondary text-xs mb-1">Мин. ставка:</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={botForm.custom_min_bet}
-                        onChange={(e) => {
-                          const newForm = {...botForm, custom_min_bet: parseInt(e.target.value) || 1};
-                          setBotForm(newForm);
-                          validateExtendedFormInRealTime(newForm);
-                        }}
-                        className="w-full px-2 py-1 bg-surface-sidebar border border-border-primary rounded text-white text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-text-secondary text-xs mb-1">Макс. ставка:</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={botForm.custom_max_bet}
-                        onChange={(e) => {
-                          const newForm = {...botForm, custom_max_bet: parseInt(e.target.value) || 10};
-                          setBotForm(newForm);
-                          validateExtendedFormInRealTime(newForm);
-                        }}
-                        className="w-full px-2 py-1 bg-surface-sidebar border border-border-primary rounded text-white text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {/* Автоматически рассчитанная сумма за цикл */}
               <div className="border border-blue-500 bg-blue-900 bg-opacity-20 rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-blue-400 mb-2">Автоматический расчёт</h4>
@@ -2741,7 +2672,7 @@ const RegularBotsManagement = () => {
                   Сумма за цикл: ${botForm.cycle_total_amount}
                 </div>
                 <div className="text-sm text-blue-300 mt-1">
-                  Рассчитывается по формуле: Среднее значение диапазона × Игр в цикле × Множитель поведения
+                  Рассчитывается по формуле: (Мин. ставка + Макс. ставка) / 2 × Игр в цикле
                 </div>
               </div>
 
