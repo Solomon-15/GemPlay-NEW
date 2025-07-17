@@ -69,6 +69,12 @@ const RegularBotsManagement = () => {
   // Пагинация для списка ботов
   const pagination = usePagination(1, 10);
 
+  // Состояния для массового выбора ботов
+  const [selectedBots, setSelectedBots] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
   // Form states for creating bot with new extended system
   const [botForm, setBotForm] = useState({
     // Основные параметры
