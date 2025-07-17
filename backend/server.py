@@ -7866,7 +7866,7 @@ async def bot_join_game_automatically(bot: Bot):
             if not creator_is_regular_bot:
                 # Игра была создана человеком или Human-ботом, возвращаем комиссию
                 if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                    await db.users.update_one(
                     {"id": game_obj.creator_id},
                     {
                         "$inc": {
@@ -8231,7 +8231,7 @@ async def cancel_user_bet(
         creator_user = await db.users.find_one({"id": creator_id})
         if creator_user:
             if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                await db.users.update_one(
                 {"id": creator_id},
                 {
                     "$inc": {
@@ -8353,7 +8353,7 @@ async def cleanup_stuck_bets(
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                        await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -8398,7 +8398,7 @@ async def cleanup_stuck_bets(
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
                     if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                        await db.users.update_one(
                         {"id": creator_id},
                         {
                             "$inc": {
@@ -8415,7 +8415,7 @@ async def cleanup_stuck_bets(
                     opponent_user = await db.users.find_one({"id": opponent_id})
                     if opponent_user:
                         if not (game_obj.is_bot_game):
-    await db.users.update_one(
+                            await db.users.update_one(
                             {"id": opponent_id},
                             {
                                 "$inc": {
