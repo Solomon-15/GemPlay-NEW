@@ -3573,7 +3573,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         
                         # ПРАВИЛЬНАЯ ЛОГИКА: При ничьей возвращаем комиссию из frozen_balance в virtual_balance
                         if not (game_obj.is_bot_game):
-                            await db.users.update_one(
+                                                    await db.users.update_one(
                                 {"id": player_id},
                                 {
                                     "$inc": {
