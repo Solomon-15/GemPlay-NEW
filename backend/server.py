@@ -12918,7 +12918,7 @@ async def get_bot_global_settings(current_user: User = Depends(get_current_admin
         )
 
 @api_router.put("/admin/bot-settings", response_model=dict)
-async def update_bot_settings(
+async def update_bot_global_settings(
     settings: BotSettingsRequest,
     current_user: User = Depends(get_current_admin)
 ):
