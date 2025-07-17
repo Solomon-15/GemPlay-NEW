@@ -4546,8 +4546,8 @@ async def get_bot_profit_accumulators(
             detail="Failed to get bot profit accumulators"
         )
 
-@api_router.post("/admin/bots/{bot_id}/force-complete-cycle", response_model=dict)
-async def force_complete_bot_cycle(
+@api_router.post("/admin/bots/{bot_id}/force-complete-cycle-v2", response_model=dict)
+async def force_complete_bot_cycle_v2(
     bot_id: str,
     current_user: User = Depends(get_current_admin)
 ):
