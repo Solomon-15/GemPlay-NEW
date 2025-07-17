@@ -12157,7 +12157,7 @@ async def update_individual_bot_settings(
         )
 
 @api_router.post("/admin/bots/{bot_id}/toggle", response_model=dict)
-async def toggle_bot_status(
+async def toggle_bot_status_admin(
     bot_id: str,
     current_user: User = Depends(get_current_admin)
 ):
