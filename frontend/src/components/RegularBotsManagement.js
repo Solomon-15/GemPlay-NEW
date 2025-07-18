@@ -1954,7 +1954,7 @@ const RegularBotsManagement = () => {
                         </div>
                         <div className="flex items-center justify-center space-x-2">
                           <span className="text-green-400 font-roboto text-sm font-medium">
-                            {(bot.active_bets || 0)}/{bot.cycle_games || 12}
+                            {(bot.current_cycle_games || 0)}/{bot.cycle_games || 12}
                           </span>
                           <button
                             onClick={() => handleCycleModal(bot)}
