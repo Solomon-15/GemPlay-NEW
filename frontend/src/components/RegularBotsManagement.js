@@ -461,10 +461,16 @@ const RegularBotsManagement = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      // Обновляем локальное состояние для немедленного обновления UI
       setBotSettings(newSettings);
       setIsGlobalSettingsOpen(false);
       showSuccessRU(response.data.message);
+      
+      // Обновляем статистику активных ставок
       await fetchActiveBetsStats();
+      
+      // Принудительно обновляем компонент для мгновенного отображения изменений
+      await fetchBotsList();
     } catch (error) {
       console.error('Ошибка обновления настроек:', error);
       showErrorRU('Ошибка при обновлении настроек');
