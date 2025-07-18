@@ -1308,8 +1308,8 @@ const RegularBotsManagement = () => {
                   {(() => {
                     const activeBots = botsList.filter(bot => bot.is_active);
                     const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
-                    const totalMaxBets = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
-                    return Math.max(0, totalMaxBets - totalActiveBets);
+                    const maxBets = botSettings.max_active_bets_regular;
+                    return Math.max(0, maxBets - totalActiveBets);
                   })()}
                 </div>
               </div>
