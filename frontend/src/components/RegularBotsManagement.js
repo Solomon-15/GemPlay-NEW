@@ -1958,7 +1958,7 @@ const RegularBotsManagement = () => {
                           <div
                             className="bg-green-500 h-2 rounded-full transition-all duration-300"
                             style={{
-                              width: `${Math.min(((bot.active_bets || 0) / (bot.cycle_games || 12)) * 100, 100)}%`
+                              width: `${Math.min(((bot.current_cycle_games || 0) / (bot.cycle_games || 12)) * 100, 100)}%`
                             }}
                           ></div>
                         </div>
