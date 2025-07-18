@@ -1938,7 +1938,7 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-orange-400 font-roboto text-sm">
-                        {bot.win_percentage || bot.win_rate_percent || bot.win_rate || 55}%
+                        {bot.win_percentage || bot.win_rate || 55}%
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
