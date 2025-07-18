@@ -12827,6 +12827,164 @@ async def delete_user_account(
             detail="Failed to delete user account"
         )
 
+@api_router.get("/admin/bots/{bot_id}/active-bets", response_model=dict)
+async def get_bot_active_bets(
+    bot_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get active bets for a specific bot and manage them according to remaining_slots."""
+    try:
+        # Получаем бота
+        bot_doc = await db.bots.find_one({"id": bot_id})
+        if not bot_doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bot not found"
+            )
+        
+        bot = Bot(**bot_doc)
+        
+        # Вычисляем remaining_slots (как в /admin/bots/regular/list)
+        cycle_games = bot_doc.get('cycle_games', 12)
+        if cycle_games <= 0:
+            cycle_games = 12
+        
+        # Считаем отыгранные ставки (победы + поражения, исключая ничьи)
+        played_games = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "COMPLETED",
+            "winner_id": {"$ne": None}
+        })
+        
+        current_cycle_played = played_games % cycle_games
+        remaining_slots = max(0, cycle_games - current_cycle_played)
+        
+        # Получаем текущие активные ставки
+        active_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+        }).to_list(100)
+        
+        current_active_count = len(active_games)
+        
+        # Если активных ставок больше, чем remaining_slots - удаляем лишние
+        if current_active_count > remaining_slots:
+            excess_games = current_active_count - remaining_slots
+            games_to_cancel = active_games[:excess_games]
+            
+            for game in games_to_cancel:
+                game_obj = Game(**game)
+                
+                # Возвращаем гемы создателю
+                if game_obj.bet_amount > 0:
+                    await db.users.update_one(
+                        {"id": game_obj.creator_id},
+                        {"$inc": {"gems": game_obj.bet_amount}}
+                    )
+                
+                # Удаляем игру
+                await db.games.delete_one({"id": game_obj.id})
+                
+                logger.info(f"Cancelled excess game {game_obj.id} for bot {bot_id}")
+        
+        # Если активных ставок меньше, чем remaining_slots - создаем новые
+        elif current_active_count < remaining_slots:
+            needed_games = remaining_slots - current_active_count
+            
+            for _ in range(needed_games):
+                # Создаем новую ставку для бота
+                bet_amount = random.uniform(bot.min_bet_amount, bot.max_bet_amount)
+                bet_amount = round(bet_amount, 2)
+                
+                # Убеждаемся, что у бота достаточно гемов
+                bot_user = await db.users.find_one({"id": bot_id})
+                if not bot_user or bot_user.get("gems", 0) < bet_amount:
+                    # Если у бота нет гемов, добавляем их
+                    await db.users.update_one(
+                        {"id": bot_id},
+                        {"$inc": {"gems": bet_amount}}
+                    )
+                
+                # Создаем новую игру
+                new_game = Game(
+                    creator_id=bot_id,
+                    bet_amount=bet_amount,
+                    status=GameStatus.WAITING,
+                    is_bot_game=True,
+                    is_regular_bot_game=True
+                )
+                
+                await db.games.insert_one(new_game.dict())
+                
+                # Списываем гемы
+                await db.users.update_one(
+                    {"id": bot_id},
+                    {"$inc": {"gems": -bet_amount}}
+                )
+                
+                logger.info(f"Created new game {new_game.id} for bot {bot_id}")
+        
+        # Получаем обновленный список активных ставок
+        updated_active_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+        }).to_list(100)
+        
+        # Получаем статистику завершенных игр
+        completed_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": "COMPLETED"
+        }).to_list(1000)
+        
+        # Подготавливаем данные для ответа
+        bets_data = []
+        for game in updated_active_games:
+            bets_data.append({
+                "id": game["id"],
+                "created_at": game["created_at"],
+                "bet_amount": game["bet_amount"],
+                "status": game["status"].lower(),
+                "opponent_name": game.get("opponent_name", "—"),
+                "move": game.get("move", "—"),
+                "selected_gem": game.get("selected_gem", "—"),
+                "result": game.get("result", "—")
+            })
+        
+        # Статистика
+        total_bets = len(bets_data)
+        total_bet_amount = sum(bet["bet_amount"] for bet in bets_data)
+        
+        # Статистика завершенных игр
+        bot_wins = len([g for g in completed_games if g.get("winner_id") == bot_id])
+        player_wins = len([g for g in completed_games if g.get("winner_id") and g.get("winner_id") != bot_id])
+        draws = len([g for g in completed_games if not g.get("winner_id")])
+        
+        return {
+            "bets": bets_data,
+            "totalBets": total_bets,
+            "totalBetAmount": total_bet_amount,
+            "gamesPlayed": len(completed_games),
+            "botWins": bot_wins,
+            "playerWins": player_wins,
+            "draws": draws,
+            "remaining_slots": remaining_slots,
+            "current_cycle_played": current_cycle_played,
+            "cycle_games": cycle_games,
+            "actions_taken": {
+                "cancelled": max(0, current_active_count - remaining_slots),
+                "created": max(0, remaining_slots - current_active_count)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error managing bot active bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to manage bot active bets"
+        )
+
 @api_router.post("/admin/games/reset-all", response_model=dict)
 async def reset_all_bets_admin(current_user: User = Depends(get_current_admin)):
     """Reset all bets for all players and bots (admin only)."""
