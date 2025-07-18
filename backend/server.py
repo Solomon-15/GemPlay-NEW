@@ -11418,6 +11418,9 @@ async def get_regular_bots_list(
                 "metadata.cycle_id": {"$exists": True}
             }) % cycle_games
             
+            # Прогресс цикла (как в cycle-history)
+            cycle_progress = f"{current_cycle_games}/{cycle_games}"
+            
             bot_details.append({
                 "id": bot.id,
                 "name": bot.name or f"Bot #{bot.id[:8]}",
