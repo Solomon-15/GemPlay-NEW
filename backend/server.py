@@ -11412,14 +11412,21 @@ async def get_regular_bots_list(
             if cycle_games <= 0:
                 cycle_games = 12  # Значение по умолчанию
             
-            current_cycle_games = await db.games.count_documents({
+            # Считаем только отыгранные ставки (победы + поражения, исключая ничьи)
+            played_games = await db.games.count_documents({
                 "creator_id": bot.id,
                 "status": "COMPLETED",
-                "metadata.cycle_id": {"$exists": True}
-            }) % cycle_games
+                "winner_id": {"$ne": None}  # Исключаем ничьи (когда winner_id = None)
+            })
             
-            # Прогресс цикла (как в cycle-history)
-            cycle_progress = f"{current_cycle_games}/{cycle_games}"
+            # Отыгранные ставки в текущем цикле
+            current_cycle_played = played_games % cycle_games
+            
+            # Прогресс цикла (X/12 где X = отыгранные ставки без ничьих)
+            cycle_progress = f"{current_cycle_played}/{cycle_games}"
+            
+            # Оставшиеся ставки для активных ставок (12 - X)
+            remaining_slots = max(0, cycle_games - current_cycle_played)
             
             bot_details.append({
                 "id": bot.id,
@@ -11436,7 +11443,7 @@ async def get_regular_bots_list(
                 "win_rate": round(win_rate, 1),
                 "bot_profit_amount": round(bot_profit_amount, 2),
                 "bot_profit_percent": round(bot_profit_percent, 1),
-                "current_cycle_games": current_cycle_games,
+                "current_cycle_games": current_cycle_played,
                 "cycle_games": cycle_games,
                 "cycle_progress": cycle_progress,
                 "cycle_total_amount": bot_doc.get('cycle_total_amount', 500.0),
