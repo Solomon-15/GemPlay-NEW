@@ -2509,23 +2509,47 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Процент побед */}
-              <div>
-                <label className="block text-text-secondary text-sm mb-2">Процент побед:</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={botForm.win_percentage}
-                  onChange={(e) => {
-                    const newForm = {...botForm, win_percentage: parseFloat(e.target.value) || 55.0};
-                    setBotForm(newForm);
-                    validateExtendedFormInRealTime(newForm);
-                  }}
-                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                />
-                <div className="text-xs text-text-secondary mt-1">
-                  Целевой процент побед (0-100%, по умолчанию 55%)
+              {/* Процент побед и стратегия прибыли */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Настройки выигрыша</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Процент побед:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={botForm.win_percentage}
+                      onChange={(e) => {
+                        const newForm = {...botForm, win_percentage: parseFloat(e.target.value) || 55.0};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                    <div className="text-xs text-text-secondary mt-1">
+                      Целевой процент побед (0-100%, по умолчанию 55%)
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Стратегия прибыли:</label>
+                    <select
+                      value={botForm.profit_strategy}
+                      onChange={(e) => {
+                        const newForm = {...botForm, profit_strategy: e.target.value};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    >
+                      <option value="start-positive">В начале в плюсе</option>
+                      <option value="balanced">Баланс</option>
+                      <option value="start-negative">В минусе</option>
+                    </select>
+                    <div className="text-xs text-text-secondary mt-1">
+                      Поведение бота в рамках цикла
+                    </div>
+                  </div>
                 </div>
               </div>
 
