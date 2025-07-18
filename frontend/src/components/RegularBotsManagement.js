@@ -2821,15 +2821,21 @@ const RegularBotsManagement = () => {
                 {/* Детальная статистика */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                   <div className="bg-surface-sidebar rounded-lg p-4">
-                    <div className="text-text-secondary text-sm">Всего ставок</div>
+                    <div className="text-text-secondary text-sm">Активные ставки</div>
                     <div className="text-blue-400 text-2xl font-rajdhani font-bold">
                       {activeBetsData?.totalBets || 0}
                     </div>
+                    <div className="text-text-secondary text-xs">
+                      Из {activeBetsData?.remaining_slots || 0} возможных
+                    </div>
                   </div>
                   <div className="bg-surface-sidebar rounded-lg p-4">
-                    <div className="text-text-secondary text-sm">Сыгранных игр</div>
+                    <div className="text-text-secondary text-sm">Прогресс цикла</div>
                     <div className="text-white text-2xl font-rajdhani font-bold">
-                      {activeBetsData?.gamesPlayed || 0}
+                      {activeBetsData?.current_cycle_played || 0}/{activeBetsData?.cycle_games || 12}
+                    </div>
+                    <div className="text-text-secondary text-xs">
+                      Отыгранных ставок
                     </div>
                   </div>
                   <div className="bg-surface-sidebar rounded-lg p-4">
@@ -2837,14 +2843,39 @@ const RegularBotsManagement = () => {
                     <div className="text-green-400 text-2xl font-rajdhani font-bold">
                       {activeBetsData?.botWins || 0}
                     </div>
+                    <div className="text-text-secondary text-xs">
+                      Побед
+                    </div>
                   </div>
                   <div className="bg-surface-sidebar rounded-lg p-4">
                     <div className="text-text-secondary text-sm">Выигрыши игроков</div>
                     <div className="text-orange-400 text-2xl font-rajdhani font-bold">
                       {activeBetsData?.playerWins || 0}
                     </div>
+                    <div className="text-text-secondary text-xs">
+                      Поражений
+                    </div>
                   </div>
                 </div>
+
+                {/* Информация о действиях */}
+                {activeBetsData?.actions_taken && (activeBetsData.actions_taken.cancelled > 0 || activeBetsData.actions_taken.created > 0) && (
+                  <div className="bg-blue-900 bg-opacity-20 border border-blue-500 rounded-lg p-4 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-blue-400 text-xl">ℹ️</span>
+                      <div>
+                        <h4 className="font-rajdhani font-bold text-blue-400">Автоматические действия</h4>
+                        <p className="text-blue-300 text-sm">
+                          {activeBetsData.actions_taken.cancelled > 0 && 
+                            `Отменено ${activeBetsData.actions_taken.cancelled} лишних ставок. `}
+                          {activeBetsData.actions_taken.created > 0 && 
+                            `Создано ${activeBetsData.actions_taken.created} новых ставок. `}
+                          Количество активных ставок приведено в соответствие с циклом бота.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {!activeBetsData?.bets || activeBetsData.bets.length === 0 ? (
                   <div className="text-center py-8">
