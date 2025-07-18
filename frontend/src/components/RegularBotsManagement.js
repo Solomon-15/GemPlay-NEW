@@ -1224,34 +1224,34 @@ const RegularBotsManagement = () => {
 
       {/* Статистика активных ставок */}
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
-        <h3 className="text-lg font-rajdhani font-bold text-white mb-3">Активные ставки обычных ботов</h3>
+        <h3 className="text-lg font-rajdhani font-bold text-white mb-3">Оставшиеся ставки обычных ботов</h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-surface-sidebar rounded-lg p-3">
-            <div className="text-text-secondary text-sm">Текущие активные ставки</div>
+            <div className="text-text-secondary text-sm">Оставшиеся ставки</div>
             <div className="text-white text-xl font-rajdhani font-bold">
-              {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.active_bets || 0), 0)}
+              {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.remaining_slots || 0), 0)}
             </div>
           </div>
           <div className="bg-surface-sidebar rounded-lg p-3">
-            <div className="text-text-secondary text-sm">Максимальный лимит</div>
+            <div className="text-text-secondary text-sm">Отыгранные ставки</div>
             <div className="text-accent-primary text-xl font-rajdhani font-bold">
-              {botSettings.max_active_bets_regular}
+              {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.current_cycle_games || 0), 0)}
             </div>
           </div>
           <div className="bg-surface-sidebar rounded-lg p-3">
-            <div className="text-text-secondary text-sm">Доступные слоты</div>
+            <div className="text-text-secondary text-sm">Общий потенциал</div>
             <div className="text-green-400 text-xl font-rajdhani font-bold">
-              {Math.max(0, botSettings.max_active_bets_regular - botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.active_bets || 0), 0))}
+              {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.cycle_games || 12), 0)}
             </div>
           </div>
           <div className="bg-surface-sidebar rounded-lg p-3">
-            <div className="text-text-secondary text-sm">Заполненность</div>
+            <div className="text-text-secondary text-sm">Прогресс циклов</div>
             <div className={`text-xl font-rajdhani font-bold ${
               (() => {
                 const activeBots = botsList.filter(bot => bot.is_active);
-                const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
-                const maxBets = botSettings.max_active_bets_regular;
-                const percentage = maxBets > 0 ? Math.round((totalActiveBets / maxBets) * 100) : 0;
+                const totalPlayed = activeBots.reduce((total, bot) => total + (bot.current_cycle_games || 0), 0);
+                const totalCycle = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
+                const percentage = totalCycle > 0 ? Math.round((totalPlayed / totalCycle) * 100) : 0;
                 
                 return percentage >= 90 ? 'text-red-400' :
                        percentage >= 70 ? 'text-yellow-400' : 'text-green-400';
@@ -1259,9 +1259,9 @@ const RegularBotsManagement = () => {
             }`}>
               {(() => {
                 const activeBots = botsList.filter(bot => bot.is_active);
-                const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
-                const maxBets = botSettings.max_active_bets_regular;
-                return maxBets > 0 ? Math.round((totalActiveBets / maxBets) * 100) : 0;
+                const totalPlayed = activeBots.reduce((total, bot) => total + (bot.current_cycle_games || 0), 0);
+                const totalCycle = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
+                return totalCycle > 0 ? Math.round((totalPlayed / totalCycle) * 100) : 0;
               })()}%
             </div>
           </div>
@@ -1274,9 +1274,9 @@ const RegularBotsManagement = () => {
               className={`h-2 rounded-full transition-all duration-300 ${
                 (() => {
                   const activeBots = botsList.filter(bot => bot.is_active);
-                  const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
-                  const maxBets = botSettings.max_active_bets_regular;
-                  const percentage = maxBets > 0 ? Math.round((totalActiveBets / maxBets) * 100) : 0;
+                  const totalPlayed = activeBots.reduce((total, bot) => total + (bot.current_cycle_games || 0), 0);
+                  const totalCycle = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
+                  const percentage = totalCycle > 0 ? Math.round((totalPlayed / totalCycle) * 100) : 0;
                   
                   return percentage >= 90 ? 'bg-red-500' :
                          percentage >= 70 ? 'bg-yellow-500' : 'bg-green-500';
@@ -1285,16 +1285,16 @@ const RegularBotsManagement = () => {
               style={{ 
                 width: `${(() => {
                   const activeBots = botsList.filter(bot => bot.is_active);
-                  const totalActiveBets = activeBots.reduce((total, bot) => total + (bot.active_bets || 0), 0);
-                  const maxBets = botSettings.max_active_bets_regular;
-                  const percentage = maxBets > 0 ? Math.round((totalActiveBets / maxBets) * 100) : 0;
+                  const totalPlayed = activeBots.reduce((total, bot) => total + (bot.current_cycle_games || 0), 0);
+                  const totalCycle = activeBots.reduce((total, bot) => total + (bot.cycle_games || 12), 0);
+                  const percentage = totalCycle > 0 ? Math.round((totalPlayed / totalCycle) * 100) : 0;
                   return Math.min(100, percentage);
                 })()}%`
               }}
             ></div>
           </div>
           <div className="text-text-secondary text-xs mt-1">
-            {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.active_bets || 0), 0)} из {botSettings.max_active_bets_regular} активных ставок
+            {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.current_cycle_games || 0), 0)} отыгранных из {botsList.filter(bot => bot.is_active).reduce((total, bot) => total + (bot.cycle_games || 12), 0)} общего потенциала
           </div>
         </div>
       </div>
