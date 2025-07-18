@@ -11451,7 +11451,7 @@ async def get_regular_bots_list(
                 "pause_timer": bot_doc.get('pause_timer', 5),
                 "recreate_timer": bot_doc.get('recreate_timer', 30),
                 "pause_between_games": bot_doc.get('pause_between_games', 5),
-                "win_percentage": bot_doc.get('win_percentage', 60.0),
+                "win_percentage": bot_doc.get('win_percentage', bot_doc.get('win_rate', 0.55) * 100),
                 "can_accept_bets": bot_doc.get('can_accept_bets', False),
                 "can_play_with_bots": bot_doc.get('can_play_with_bots', False),
                 "created_at": bot.created_at,
