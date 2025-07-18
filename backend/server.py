@@ -11438,6 +11438,7 @@ async def get_regular_bots_list(
                 "bot_profit_percent": round(bot_profit_percent, 1),
                 "current_cycle_games": current_cycle_games,
                 "cycle_games": cycle_games,
+                "cycle_progress": cycle_progress,
                 "cycle_total_amount": bot_doc.get('cycle_total_amount', 500.0),
                 "bot_type_name": bot_doc.get('bot_type_name', 'Type 1'),
                 "bot_type_id": bot_doc.get('bot_type_id', 'type-1'),
