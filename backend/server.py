@@ -582,6 +582,51 @@ class JoinGameRequest(BaseModel):
     move: GameMove
     gems: Dict[str, int]  # Player's selected gems combination
 
+class CreateSoundRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    category: SoundCategory
+    event_trigger: str = Field(..., min_length=1, max_length=50)
+    game_type: GameType = GameType.ALL
+    is_enabled: bool = True
+    priority: int = Field(default=5, ge=1, le=10)
+    volume: float = Field(default=0.5, ge=0.0, le=1.0)
+    delay: int = Field(default=0, ge=0, le=5000)  # Max 5 seconds delay
+    can_repeat: bool = True
+
+class UpdateSoundRequest(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    category: Optional[SoundCategory] = None
+    event_trigger: Optional[str] = Field(None, min_length=1, max_length=50)
+    game_type: Optional[GameType] = None
+    is_enabled: Optional[bool] = None
+    priority: Optional[int] = Field(None, ge=1, le=10)
+    volume: Optional[float] = Field(None, ge=0.0, le=1.0)
+    delay: Optional[int] = Field(None, ge=0, le=5000)
+    can_repeat: Optional[bool] = None
+
+class UploadSoundFileRequest(BaseModel):
+    file_data: str  # Base64 encoded audio file
+    file_format: str = Field(..., regex="^(mp3|wav|ogg)$")  # Only these formats
+    file_size: int = Field(..., gt=0, le=5242880)  # Max 5MB
+
+class SoundResponse(BaseModel):
+    id: str
+    name: str
+    category: SoundCategory
+    event_trigger: str
+    game_type: GameType
+    is_enabled: bool
+    priority: int
+    volume: float
+    delay: int
+    can_repeat: bool
+    has_audio_file: bool  # Whether audio_data exists
+    file_format: Optional[str] = None
+    file_size: Optional[int] = None
+    is_default: bool
+    created_at: datetime
+    updated_at: datetime
+
 # ==============================================================================
 # UTILITY FUNCTIONS
 # ==============================================================================
