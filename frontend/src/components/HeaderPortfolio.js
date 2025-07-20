@@ -187,7 +187,16 @@ const HeaderPortfolio = ({ user }) => {
         </button>
       </div>
     </div>
-  );
+
+    {/* Sound Settings Modal */}
+    <SoundSettings 
+      isOpen={showSoundSettings} 
+      onClose={() => {
+        ui.modalClose();
+        setShowSoundSettings(false);
+      }} 
+    />
+  </>;
 }
 
 export default HeaderPortfolio;
