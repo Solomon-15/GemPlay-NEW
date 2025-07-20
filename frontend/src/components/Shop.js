@@ -13,6 +13,8 @@ const API = `${BACKEND_URL}/api`;
 const Shop = ({ user, onUpdateUser }) => {
   const { showSuccess, showError } = useNotifications();
   const { getGemIconPath, refreshInventory } = useGems();
+  const { gem, ui, system } = useSound();
+  const hoverProps = useHoverSound(true);
   const [gems, setGems] = useState([]);
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
