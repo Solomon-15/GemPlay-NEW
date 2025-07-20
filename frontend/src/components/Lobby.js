@@ -13,6 +13,9 @@ const API = `${BACKEND_URL}/api`;
 
 const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const { showSuccess, showError } = useNotifications();
+  const { game, ui } = useSound();
+  const hoverProps = useHoverSound(true);
+  const modalSound = useModalSound();
   const [stats, setStats] = useState({ available: 0, gems: 0, total: 0 });
   const [myBets, setMyBets] = useState([]);
   const [availableBets, setAvailableBets] = useState([]);
