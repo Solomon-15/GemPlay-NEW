@@ -115,32 +115,41 @@ const SoundSettings = ({ isOpen, onClose }) => {
           {enabled && (
             <div>
               <h4 className="text-white font-semibold mb-3">Тест звуков</h4>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2 mb-3">
                 <button
-                  onClick={() => testSound('createBet')}
+                  onClick={() => testSound('создание_ставки')}
                   className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
                 >
                   💎 Ставка
                 </button>
                 <button
-                  onClick={() => testSound('victory')}
+                  onClick={() => testSound('победа')}
                   className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
                 >
                   🎉 Победа
                 </button>
                 <button
-                  onClick={() => testSound('buyGem')}
+                  onClick={() => testSound('покупка_гема')}
                   className="px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm"
                 >
                   💰 Покупка
                 </button>
                 <button
-                  onClick={() => testSound('notification')}
+                  onClick={() => testSound('уведомление')}
                   className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors text-sm"
                 >
                   🔔 Уведомление
                 </button>
               </div>
+              
+              {/* Кнопка перезагрузки звуков */}
+              <button
+                onClick={handleReloadSounds}
+                disabled={reloading}
+                className="w-full px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-sm disabled:opacity-50"
+              >
+                {reloading ? '🔄 Перезагружаем...' : '🔄 Перезагрузить звуки'}
+              </button>
             </div>
           )}
 
