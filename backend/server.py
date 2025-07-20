@@ -14383,6 +14383,14 @@ async def get_sound_events(current_user: User = Depends(get_current_admin)):
     return events
 
 # ==============================================================================
+# INCLUDE ROUTERS
+# ==============================================================================
+
+# Include routers in the main app
+app.include_router(auth_router)
+app.include_router(api_router)
+
+# ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
 
