@@ -606,7 +606,7 @@ class UpdateSoundRequest(BaseModel):
 
 class UploadSoundFileRequest(BaseModel):
     file_data: str  # Base64 encoded audio file
-    file_format: str = Field(..., regex="^(mp3|wav|ogg)$")  # Only these formats
+    file_format: str = Field(..., pattern="^(mp3|wav|ogg)$")  # Only these formats
     file_size: int = Field(..., gt=0, le=5242880)  # Max 5MB
 
 class SoundResponse(BaseModel):
