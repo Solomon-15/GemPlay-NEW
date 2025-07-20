@@ -1025,6 +1025,48 @@ async def startup_event():
             )
             await db.users.insert_one(admin_user.dict())
     
+    # Create default sounds if they don't exist
+    default_sounds = [
+        # Gaming sounds
+        {"name": "Создание ставки", "category": SoundCategory.GAMING, "event_trigger": "создание_ставки", "game_type": GameType.ALL, "priority": 7, "is_default": True},
+        {"name": "Принятие ставки", "category": SoundCategory.GAMING, "event_trigger": "принятие_ставки", "game_type": GameType.ALL, "priority": 6, "is_default": True},
+        {"name": "Выбор хода", "category": SoundCategory.GAMING, "event_trigger": "выбор_хода", "game_type": GameType.ALL, "priority": 5, "is_default": True},
+        {"name": "Раскрытие хода", "category": SoundCategory.GAMING, "event_trigger": "reveal", "game_type": GameType.ALL, "priority": 8, "is_default": True},
+        {"name": "Победа (Human vs Human)", "category": SoundCategory.GAMING, "event_trigger": "победа", "game_type": GameType.HUMAN_VS_HUMAN, "priority": 9, "volume": 0.8, "is_default": True},
+        {"name": "Победа (Human vs Bot)", "category": SoundCategory.GAMING, "event_trigger": "победа", "game_type": GameType.HUMAN_VS_BOT, "priority": 8, "volume": 0.7, "is_default": True},
+        {"name": "Поражение (Human vs Human)", "category": SoundCategory.GAMING, "event_trigger": "поражение", "game_type": GameType.HUMAN_VS_HUMAN, "priority": 6, "volume": 0.4, "is_default": True},
+        {"name": "Поражение (Human vs Bot)", "category": SoundCategory.GAMING, "event_trigger": "поражение", "game_type": GameType.HUMAN_VS_BOT, "priority": 5, "volume": 0.3, "is_default": True},
+        {"name": "Ничья", "category": SoundCategory.GAMING, "event_trigger": "ничья", "game_type": GameType.ALL, "priority": 4, "volume": 0.5, "is_default": True},
+        
+        # Gems sounds  
+        {"name": "Покупка гема", "category": SoundCategory.GAMING, "event_trigger": "покупка_гема", "game_type": GameType.ALL, "priority": 6, "is_default": True},
+        {"name": "Продажа гема", "category": SoundCategory.GAMING, "event_trigger": "продажа_гема", "game_type": GameType.ALL, "priority": 5, "is_default": True},
+        {"name": "Подарок гемов", "category": SoundCategory.GAMING, "event_trigger": "подарок_гемов", "game_type": GameType.ALL, "priority": 7, "volume": 0.7, "is_default": True},
+        
+        # UI sounds
+        {"name": "Hover эффект", "category": SoundCategory.UI, "event_trigger": "hover", "game_type": GameType.ALL, "priority": 2, "volume": 0.3, "can_repeat": False, "is_default": True},
+        {"name": "Открытие модального окна", "category": SoundCategory.UI, "event_trigger": "открытие_модала", "game_type": GameType.ALL, "priority": 3, "volume": 0.4, "is_default": True},
+        {"name": "Закрытие модального окна", "category": SoundCategory.UI, "event_trigger": "закрытие_модала", "game_type": GameType.ALL, "priority": 3, "volume": 0.4, "is_default": True},
+        
+        # System sounds
+        {"name": "Системное уведомление", "category": SoundCategory.SYSTEM, "event_trigger": "уведомление", "game_type": GameType.ALL, "priority": 6, "volume": 0.6, "is_default": True},
+        {"name": "Ошибка", "category": SoundCategory.SYSTEM, "event_trigger": "ошибка", "game_type": GameType.ALL, "priority": 8, "volume": 0.5, "is_default": True},
+        {"name": "Таймер истекает", "category": SoundCategory.SYSTEM, "event_trigger": "таймер_reveal", "game_type": GameType.ALL, "priority": 9, "volume": 0.7, "is_default": True},
+        {"name": "Получение награды", "category": SoundCategory.SYSTEM, "event_trigger": "награда", "game_type": GameType.ALL, "priority": 8, "volume": 0.8, "is_default": True}
+    ]
+    
+    # Insert default sounds
+    for sound_data in default_sounds:
+        existing = await db.sounds.find_one({
+            "event_trigger": sound_data["event_trigger"], 
+            "game_type": sound_data["game_type"],
+            "is_default": True
+        })
+        if not existing:
+            sound = Sound(**sound_data)
+            await db.sounds.insert_one(sound.dict())
+            logger.info(f"Created default sound: {sound_data['name']}")
+    
     # Start background tasks
     start_background_scheduler()
     
