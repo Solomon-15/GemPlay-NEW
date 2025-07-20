@@ -6,6 +6,7 @@ import CreateBetModal from './CreateBetModal';
 import JoinBattleModal from './JoinBattleModal';
 import { useNotifications } from './NotificationContext';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
+import { useSound, useHoverSound, useModalSound } from '../hooks/useSound';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
