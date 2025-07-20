@@ -98,7 +98,7 @@ const SoundSettings = ({ isOpen, onClose }) => {
                     type="radio"
                     name="volumeLevel"
                     value={level.value}
-                    checked={volumeLevel === level.value}
+                    checked={currentLevel === level.value}
                     onChange={() => handleVolumeChange(level.value)}
                     className="w-4 h-4 text-accent-primary"
                   />
