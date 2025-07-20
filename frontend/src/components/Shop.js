@@ -214,6 +214,7 @@ const Shop = ({ user, onUpdateUser }) => {
                   <button 
                     onClick={() => handleBuyGem(gem.type)}
                     disabled={!canAfford || buyingGem === gem.type}
+                    {...hoverProps}
                     className={`w-full py-3 px-6 rounded-lg font-rajdhani font-bold text-lg transition-all duration-300 uppercase tracking-wider ${
                       canAfford && buyingGem !== gem.type
                         ? 'text-white hover:scale-105'
