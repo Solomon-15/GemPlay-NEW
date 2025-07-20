@@ -775,7 +775,11 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                ui.settings();
+                setActiveTab(tab.id);
+              }}
+              {...hoverProps}
               className={`flex-1 py-3 px-4 rounded-lg font-rajdhani font-bold transition-all duration-300 ${
                 activeTab === tab.id
                   ? 'bg-accent-primary text-white shadow-lg'
