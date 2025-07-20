@@ -776,7 +776,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
             <button
               key={tab.id}
               onClick={() => {
-                ui.settings();
+                ui.click();
                 setActiveTab(tab.id);
               }}
               {...hoverProps}
