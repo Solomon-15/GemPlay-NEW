@@ -801,7 +801,10 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       {showCreateBetModal && (
         <CreateBetModal
           user={user}
-          onClose={() => setShowCreateBetModal(false)}
+          onClose={() => {
+            modalSound.onClose();
+            setShowCreateBetModal(false);
+          }}
           onUpdateUser={onUpdateUser}
         />
       )}
