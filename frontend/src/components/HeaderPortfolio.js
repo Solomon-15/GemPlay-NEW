@@ -113,7 +113,7 @@ const HeaderPortfolio = ({ user }) => {
 
   return (
     <>
-    <div className="flex space-x-1 sm:space-x-2 md:space-x-4 overflow-x-auto">
+      <div className="flex space-x-1 sm:space-x-2 md:space-x-4 overflow-x-auto">
       {/* Balance Block - Compact for Header */}
       <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-green-500/20 hover:border-green-500/40 transition-colors duration-200 min-w-0 flex-shrink-0 shadow-sm">
         <div className="text-center">
