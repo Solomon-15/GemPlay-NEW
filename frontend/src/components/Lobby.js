@@ -750,7 +750,12 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       {/* Create Bet Button */}
       <div className="text-center mb-8">
         <button 
-          onClick={() => setShowCreateBetModal(true)}
+          onClick={() => {
+            game.createBet();
+            modalSound.onOpen();
+            setShowCreateBetModal(true);
+          }}
+          {...hoverProps}
           className="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-rajdhani font-bold text-xl rounded-lg hover:scale-105 hover:from-green-400 hover:to-green-500 transition-all duration-300 shadow-lg hover:shadow-green-500/50"
         >
           <svg className="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
