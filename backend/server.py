@@ -231,6 +231,23 @@ class BotType(str, Enum):
     REGULAR = "REGULAR"
     HUMAN = "HUMAN"
 
+class SoundCategory(str, Enum):
+    GAMING = "GAMING"           # Игровые действия
+    UI = "UI"                   # UI элементы  
+    SYSTEM = "SYSTEM"           # Системные уведомления
+    BACKGROUND = "BACKGROUND"   # Фоновые звуки/музыка
+
+class GameType(str, Enum):
+    HUMAN_VS_HUMAN = "HUMAN_VS_HUMAN"
+    HUMAN_VS_BOT = "HUMAN_VS_BOT" 
+    ALL = "ALL"
+
+class SoundPriority(str, Enum):
+    LOW = "LOW"           # 1-2
+    MEDIUM = "MEDIUM"     # 3-5
+    HIGH = "HIGH"         # 6-8
+    CRITICAL = "CRITICAL" # 9-10
+
 # ==============================================================================
 # MODELS
 # ==============================================================================
