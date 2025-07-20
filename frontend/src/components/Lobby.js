@@ -153,6 +153,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   };
 
   const handleCloseJoinBattle = () => {
+    modalSound.onClose();
     setSelectedBetForJoin(null);
     setShowJoinBattleModal(false);
   };
