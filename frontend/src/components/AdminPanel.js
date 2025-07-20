@@ -235,6 +235,15 @@ const AdminPanel = ({ user, onClose }) => {
       )
     },
     {
+      id: 'sounds',
+      title: 'Звуки',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.114 5.636a9 9 0 0 1 0 12.728M16.463 8.288a5.25 5.25 0 0 1 0 7.424M6.75 8.25l4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.5c-.69 0-1.25-.56-1.25-1.25v-3.5c0-.69.56-1.25 1.25-1.25h2.25Z" />
+        </svg>
+      )
+    },
+    {
       id: 'settings',
       title: 'Настройки',
       icon: (
