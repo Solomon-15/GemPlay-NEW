@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
+import SoundSettings from './SoundSettings';
+import { useSound } from '../hooks/useSound';
 
 const HeaderPortfolio = ({ user }) => {
   const [balance, setBalance] = useState(null);
