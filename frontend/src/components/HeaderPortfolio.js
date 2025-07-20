@@ -166,8 +166,28 @@ const HeaderPortfolio = ({ user }) => {
           </div>
         </div>
       </div>
+
+      {/* Sound Settings Button */}
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-blue-500/20 hover:border-blue-500/40 transition-colors duration-200 min-w-0 flex-shrink-0 shadow-sm">
+        <button
+          onClick={() => {
+            ui.modalOpen();
+            setShowSoundSettings(true);
+          }}
+          onMouseEnter={() => ui.hover()}
+          className="text-center w-full h-full flex flex-col items-center justify-center"
+          title="Настройки звука"
+        >
+          <div className="text-lg mb-1">
+            {settings.isEnabled() ? '🔊' : '🔇'}
+          </div>
+          <div className="text-xs text-text-secondary hidden md:block">
+            Sound
+          </div>
+        </button>
+      </div>
     </div>
   );
-};
+}
 
 export default HeaderPortfolio;
