@@ -478,6 +478,24 @@ class Notification(BaseModel):
     read: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class Sound(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # Название звука
+    category: SoundCategory  # Категория звука
+    event_trigger: str  # Событие-триггер (создание_ставки, победа, hover и т.д.)
+    game_type: GameType = GameType.ALL  # Тип игры
+    is_enabled: bool = True  # Включен/выключен
+    priority: int = Field(default=5, ge=1, le=10)  # Приоритет 1-10
+    volume: float = Field(default=0.5, ge=0.0, le=1.0)  # Громкость 0.0-1.0
+    delay: int = Field(default=0, ge=0)  # Задержка в миллисекундах
+    can_repeat: bool = True  # Можно ли воспроизводить повторно
+    audio_data: Optional[str] = None  # Base64 данные аудиофайла
+    file_format: Optional[str] = None  # mp3/wav/ogg
+    file_size: Optional[int] = None  # Размер файла в байтах
+    is_default: bool = False  # Дефолтный звук (программный)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 # ==============================================================================
 # RESPONSE MODELS
 # ==============================================================================
