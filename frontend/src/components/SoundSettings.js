@@ -1,33 +1,71 @@
 import React, { useState, useEffect } from 'react';
-import { soundSystem, playSound } from '../utils/soundSystem';
+import soundManager from '../utils/SoundManager';
 
 const SoundSettings = ({ isOpen, onClose }) => {
-  const [volumeLevel, setVolumeLevel] = useState(soundSystem.getVolumeLevel());
-  const [enabled, setEnabled] = useState(soundSystem.getEnabled());
+  const [volume, setVolume] = useState(soundManager.volume);
+  const [enabled, setEnabled] = useState(soundManager.enabled);
+  const [reloading, setReloading] = useState(false);
 
   useEffect(() => {
-    setVolumeLevel(soundSystem.getVolumeLevel());
-    setEnabled(soundSystem.getEnabled());
+    if (isOpen) {
+      setVolume(soundManager.volume);
+      setEnabled(soundManager.enabled);
+    }
   }, [isOpen]);
 
-  const handleVolumeChange = (level) => {
-    soundSystem.setVolumeLevel(level);
-    setVolumeLevel(level);
-    setEnabled(level !== 'off');
-    
-    // Проигрываем тестовый звук
-    if (level !== 'off') {
-      setTimeout(() => playSound.settings(), 100);
+  // Преобразование volume в уровни для совместимости
+  const getVolumeLevel = (vol) => {
+    if (!enabled || vol === 0) return 'off';
+    if (vol <= 0.3) return 'quiet';
+    if (vol <= 0.7) return 'normal';
+    return 'loud';
+  };
+
+  const getVolumeFromLevel = (level) => {
+    switch (level) {
+      case 'off': return 0;
+      case 'quiet': return 0.3;
+      case 'normal': return 0.5;
+      case 'loud': return 1.0;
+      default: return 0.3;
     }
   };
 
-  const testSound = (soundName) => {
+  const handleVolumeChange = (level) => {
+    const newVolume = getVolumeFromLevel(level);
+    const newEnabled = level !== 'off';
+    
+    soundManager.updateSettings(newEnabled, newVolume);
+    setVolume(newVolume);
+    setEnabled(newEnabled);
+    
+    // Проигрываем тестовый звук
+    if (newEnabled) {
+      setTimeout(() => soundManager.playSound('создание_ставки'), 100);
+    }
+  };
+
+  const testSound = async (eventTrigger) => {
     if (enabled) {
-      playSound[soundName]();
+      await soundManager.playSound(eventTrigger);
+    }
+  };
+
+  const handleReloadSounds = async () => {
+    setReloading(true);
+    try {
+      await soundManager.reloadSounds();
+      console.log('Sounds reloaded successfully');
+    } catch (error) {
+      console.error('Error reloading sounds:', error);
+    } finally {
+      setReloading(false);
     }
   };
 
   if (!isOpen) return null;
+
+  const currentLevel = getVolumeLevel(volume);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
