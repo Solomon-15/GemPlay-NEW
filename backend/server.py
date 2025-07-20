@@ -14094,6 +14094,295 @@ async def test_new_endpoint():
     return {"message": "New endpoint working", "status": "success"}
 
 # ==============================================================================
+# SOUNDS API ENDPOINTS  
+# ==============================================================================
+
+@api_router.get("/admin/sounds", response_model=List[SoundResponse])
+async def get_sounds(current_user: User = Depends(get_current_admin)):
+    """Get all sounds (admin only)."""
+    try:
+        sounds = await db.sounds.find().to_list(1000)
+        response_sounds = []
+        
+        for sound in sounds:
+            sound_response = SoundResponse(
+                id=sound["id"],
+                name=sound["name"],
+                category=sound["category"],
+                event_trigger=sound["event_trigger"],
+                game_type=sound["game_type"],
+                is_enabled=sound["is_enabled"],
+                priority=sound["priority"],
+                volume=sound["volume"],
+                delay=sound["delay"],
+                can_repeat=sound["can_repeat"],
+                has_audio_file=bool(sound.get("audio_data")),
+                file_format=sound.get("file_format"),
+                file_size=sound.get("file_size"),
+                is_default=sound.get("is_default", False),
+                created_at=sound["created_at"],
+                updated_at=sound["updated_at"]
+            )
+            response_sounds.append(sound_response)
+            
+        return response_sounds
+        
+    except Exception as e:
+        logger.error(f"Error getting sounds: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get sounds"
+        )
+
+@api_router.post("/admin/sounds", response_model=SoundResponse)
+async def create_sound(sound_data: CreateSoundRequest, current_user: User = Depends(get_current_admin)):
+    """Create a new sound (admin only)."""
+    try:
+        # Create new sound
+        new_sound = Sound(
+            name=sound_data.name,
+            category=sound_data.category,
+            event_trigger=sound_data.event_trigger,
+            game_type=sound_data.game_type,
+            is_enabled=sound_data.is_enabled,
+            priority=sound_data.priority,
+            volume=sound_data.volume,
+            delay=sound_data.delay,
+            can_repeat=sound_data.can_repeat
+        )
+        
+        await db.sounds.insert_one(new_sound.dict())
+        
+        return SoundResponse(
+            id=new_sound.id,
+            name=new_sound.name,
+            category=new_sound.category,
+            event_trigger=new_sound.event_trigger,
+            game_type=new_sound.game_type,
+            is_enabled=new_sound.is_enabled,
+            priority=new_sound.priority,
+            volume=new_sound.volume,
+            delay=new_sound.delay,
+            can_repeat=new_sound.can_repeat,
+            has_audio_file=False,
+            is_default=new_sound.is_default,
+            created_at=new_sound.created_at,
+            updated_at=new_sound.updated_at
+        )
+        
+    except Exception as e:
+        logger.error(f"Error creating sound: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create sound"
+        )
+
+@api_router.put("/admin/sounds/{sound_id}", response_model=SoundResponse)
+async def update_sound(sound_id: str, sound_data: UpdateSoundRequest, current_user: User = Depends(get_current_admin)):
+    """Update a sound (admin only)."""
+    try:
+        # Check if sound exists
+        existing_sound = await db.sounds.find_one({"id": sound_id})
+        if not existing_sound:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Sound not found"
+            )
+        
+        # Prepare update data
+        update_data = {}
+        if sound_data.name is not None:
+            update_data["name"] = sound_data.name
+        if sound_data.category is not None:
+            update_data["category"] = sound_data.category
+        if sound_data.event_trigger is not None:
+            update_data["event_trigger"] = sound_data.event_trigger
+        if sound_data.game_type is not None:
+            update_data["game_type"] = sound_data.game_type
+        if sound_data.is_enabled is not None:
+            update_data["is_enabled"] = sound_data.is_enabled
+        if sound_data.priority is not None:
+            update_data["priority"] = sound_data.priority
+        if sound_data.volume is not None:
+            update_data["volume"] = sound_data.volume
+        if sound_data.delay is not None:
+            update_data["delay"] = sound_data.delay
+        if sound_data.can_repeat is not None:
+            update_data["can_repeat"] = sound_data.can_repeat
+            
+        update_data["updated_at"] = datetime.utcnow()
+        
+        # Update sound
+        await db.sounds.update_one(
+            {"id": sound_id},
+            {"$set": update_data}
+        )
+        
+        # Get updated sound
+        updated_sound = await db.sounds.find_one({"id": sound_id})
+        
+        return SoundResponse(
+            id=updated_sound["id"],
+            name=updated_sound["name"],
+            category=updated_sound["category"],
+            event_trigger=updated_sound["event_trigger"],
+            game_type=updated_sound["game_type"],
+            is_enabled=updated_sound["is_enabled"],
+            priority=updated_sound["priority"],
+            volume=updated_sound["volume"],
+            delay=updated_sound["delay"],
+            can_repeat=updated_sound["can_repeat"],
+            has_audio_file=bool(updated_sound.get("audio_data")),
+            file_format=updated_sound.get("file_format"),
+            file_size=updated_sound.get("file_size"),
+            is_default=updated_sound.get("is_default", False),
+            created_at=updated_sound["created_at"],
+            updated_at=updated_sound["updated_at"]
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating sound: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update sound"
+        )
+
+@api_router.delete("/admin/sounds/{sound_id}", response_model=dict)
+async def delete_sound(sound_id: str, current_user: User = Depends(get_current_admin)):
+    """Delete a sound (admin only)."""
+    try:
+        # Check if sound exists
+        existing_sound = await db.sounds.find_one({"id": sound_id})
+        if not existing_sound:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Sound not found"
+            )
+        
+        # Don't allow deleting default sounds
+        if existing_sound.get("is_default", False):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete default sounds"
+            )
+        
+        # Delete sound
+        await db.sounds.delete_one({"id": sound_id})
+        
+        return {"success": True, "message": "Sound deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting sound: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete sound"
+        )
+
+@api_router.post("/admin/sounds/{sound_id}/upload", response_model=SoundResponse)
+async def upload_sound_file(sound_id: str, file_data: UploadSoundFileRequest, current_user: User = Depends(get_current_admin)):
+    """Upload audio file for a sound (admin only)."""
+    try:
+        # Check if sound exists
+        existing_sound = await db.sounds.find_one({"id": sound_id})
+        if not existing_sound:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Sound not found"
+            )
+        
+        # Check file size (5MB max)
+        if file_data.file_size > 5242880:  # 5MB in bytes
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File size exceeds 5MB limit"
+            )
+        
+        # Update sound with file data
+        update_data = {
+            "audio_data": file_data.file_data,
+            "file_format": file_data.file_format,
+            "file_size": file_data.file_size,
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.sounds.update_one(
+            {"id": sound_id},
+            {"$set": update_data}
+        )
+        
+        # Get updated sound
+        updated_sound = await db.sounds.find_one({"id": sound_id})
+        
+        return SoundResponse(
+            id=updated_sound["id"],
+            name=updated_sound["name"],
+            category=updated_sound["category"],
+            event_trigger=updated_sound["event_trigger"],
+            game_type=updated_sound["game_type"],
+            is_enabled=updated_sound["is_enabled"],
+            priority=updated_sound["priority"],
+            volume=updated_sound["volume"],
+            delay=updated_sound["delay"],
+            can_repeat=updated_sound["can_repeat"],
+            has_audio_file=True,
+            file_format=updated_sound["file_format"],
+            file_size=updated_sound["file_size"],
+            is_default=updated_sound.get("is_default", False),
+            created_at=updated_sound["created_at"],
+            updated_at=updated_sound["updated_at"]
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading sound file: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to upload sound file"
+        )
+
+@api_router.get("/admin/sounds/categories", response_model=List[str])
+async def get_sound_categories(current_user: User = Depends(get_current_admin)):
+    """Get all sound categories (admin only)."""
+    return [category.value for category in SoundCategory]
+
+@api_router.get("/admin/sounds/events", response_model=List[str])
+async def get_sound_events(current_user: User = Depends(get_current_admin)):
+    """Get all possible sound events (admin only)."""
+    # Default sound events based on requirements
+    events = [
+        # Gaming events
+        "создание_ставки",
+        "принятие_ставки", 
+        "выбор_хода",
+        "reveal",
+        "победа",
+        "поражение",
+        "ничья",
+        
+        # Gems events
+        "покупка_гема",
+        "продажа_гема",
+        "подарок_гемов",
+        
+        # UI events  
+        "hover",
+        "открытие_модала",
+        "закрытие_модала",
+        "уведомление",
+        
+        # System events
+        "ошибка",
+        "таймер_reveal",
+        "награда"
+    ]
+    return events
+
+# ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
 
