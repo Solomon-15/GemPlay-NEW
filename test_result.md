@@ -1,4 +1,13 @@
 backend:
+  - task: "Sound System Testing"
+    implemented: true
+    working: "pending_test"
+    file: "/app/frontend/src/utils/soundSystem.js, /app/frontend/src/hooks/useSound.js, /app/frontend/src/components/SoundSettings.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history: []
+
   - task: "Automatic Bot Bet Creation System - Every 5 Seconds"
     implemented: true
     working: true
