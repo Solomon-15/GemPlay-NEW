@@ -1,15 +1,15 @@
 import { useEffect, useCallback } from 'react';
-import { soundSystem, playSound } from '../utils/soundSystem';
+import soundManager from '../utils/SoundManager';
 
 /**
- * Хук для работы со звуковыми эффектами
+ * Хук для работы с новой звуковой системой
  */
 export const useSound = () => {
   // Инициализация AudioContext при первом взаимодействии пользователя
   useEffect(() => {
     const handleFirstInteraction = () => {
-      if (soundSystem.context && soundSystem.context.state === 'suspended') {
-        soundSystem.context.resume();
+      if (soundManager.context && soundManager.context.state === 'suspended') {
+        soundManager.context.resume();
       }
       // Удаляем обработчики после первого взаимодействия
       document.removeEventListener('click', handleFirstInteraction);
@@ -25,49 +25,69 @@ export const useSound = () => {
     };
   }, []);
 
-  // Игровые звуки
+  // Игровые звуки с поддержкой типов игр
   const gameAudio = {
-    createBet: useCallback(() => playSound.createBet(), []),
-    acceptBet: useCallback(() => playSound.acceptBet(), []),
-    selectMove: useCallback(() => playSound.selectMove(), []),
-    reveal: useCallback(() => playSound.reveal(), []),
-    victory: useCallback(() => playSound.victory(), []),
-    defeat: useCallback(() => playSound.defeat(), []),
-    draw: useCallback(() => playSound.draw(), [])
+    createBet: useCallback((gameType = 'ALL') => soundManager.playSound('создание_ставки', gameType), []),
+    acceptBet: useCallback((gameType = 'ALL') => soundManager.playSound('принятие_ставки', gameType), []),
+    selectMove: useCallback((gameType = 'ALL') => soundManager.playSound('выбор_хода', gameType), []),
+    reveal: useCallback((gameType = 'ALL') => soundManager.playSound('reveal', gameType), []),
+    victory: useCallback((gameType = 'ALL') => soundManager.playSound('победа', gameType), []),
+    defeat: useCallback((gameType = 'ALL') => soundManager.playSound('поражение', gameType), []),
+    draw: useCallback((gameType = 'ALL') => soundManager.playSound('ничья', gameType), [])
   };
 
   // Звуки действий с гемами
   const gemAudio = {
-    buy: useCallback(() => playSound.buyGem(), []),
-    sell: useCallback(() => playSound.sellGem(), []),
-    gift: useCallback(() => playSound.giftGem(), [])
+    buy: useCallback(() => soundManager.playSound('покупка_гема'), []),
+    sell: useCallback(() => soundManager.playSound('продажа_гема'), []),
+    gift: useCallback(() => soundManager.playSound('подарок_гемов'), [])
   };
 
   // Звуки интерфейса
   const uiAudio = {
-    hover: useCallback(() => playSound.hover(), []),
-    modalOpen: useCallback(() => playSound.modalOpen(), []),
-    modalClose: useCallback(() => playSound.modalClose(), []),
-    notification: useCallback(() => playSound.notification(), []),
-    error: useCallback(() => playSound.error(), []),
-    settings: useCallback(() => playSound.settings(), [])
+    hover: useCallback(() => soundManager.playSound('hover'), []),
+    modalOpen: useCallback(() => soundManager.playSound('открытие_модала'), []),
+    modalClose: useCallback(() => soundManager.playSound('закрытие_модала'), []),
+    notification: useCallback(() => soundManager.playSound('уведомление'), []),
+    error: useCallback(() => soundManager.playSound('ошибка'), []),
+    click: useCallback(() => soundManager.playSound('создание_ставки'), []) // Переиспользуем звук создания ставки для кликов
   };
 
   // Звуки системы
   const systemAudio = {
-    timerTick: useCallback(() => playSound.timerTick(), []),
-    timerExpire: useCallback(() => playSound.timerExpire(), []),
-    reward: useCallback(() => playSound.reward(), [])
+    timerExpire: useCallback(() => soundManager.playSound('таймер_reveal'), []),
+    reward: useCallback(() => soundManager.playSound('награда'), [])
   };
 
   // Настройки звука
   const soundSettings = {
-    isEnabled: useCallback(() => soundSystem.getEnabled(), []),
-    getVolume: useCallback(() => soundSystem.getVolume(), []),
-    getVolumeLevel: useCallback(() => soundSystem.getVolumeLevel(), []),
-    setEnabled: useCallback((enabled) => soundSystem.setEnabled(enabled), []),
-    setVolume: useCallback((volume) => soundSystem.setVolume(volume), []),
-    setVolumeLevel: useCallback((level) => soundSystem.setVolumeLevel(level), [])
+    isEnabled: useCallback(() => soundManager.enabled, []),
+    getVolume: useCallback(() => soundManager.volume, []),
+    setEnabled: useCallback((enabled) => soundManager.updateSettings(enabled, soundManager.volume), []),
+    setVolume: useCallback((volume) => soundManager.updateSettings(soundManager.enabled, volume), []),
+    reloadSounds: useCallback(() => soundManager.reloadSounds(), [])
+  };
+
+  // Совместимость с существующим API
+  const playSound = {
+    createBet: gameAudio.createBet,
+    acceptBet: gameAudio.acceptBet,
+    selectMove: gameAudio.selectMove,
+    reveal: gameAudio.reveal,
+    victory: gameAudio.victory,
+    defeat: gameAudio.defeat,
+    draw: gameAudio.draw,
+    buyGem: gemAudio.buy,
+    sellGem: gemAudio.sell,
+    giftGem: gemAudio.gift,
+    hover: uiAudio.hover,
+    modalOpen: uiAudio.modalOpen,
+    modalClose: uiAudio.modalClose,
+    notification: uiAudio.notification,
+    error: uiAudio.error,
+    settings: uiAudio.click,
+    timerExpire: systemAudio.timerExpire,
+    reward: systemAudio.reward
   };
 
   return {
@@ -80,8 +100,15 @@ export const useSound = () => {
     // Настройки
     settings: soundSettings,
     
-    // Прямой доступ к playSound для особых случаев
-    playSound
+    // Прямой доступ к playSound для совместимости
+    playSound,
+    
+    // Новые функции
+    playCoin: gemAudio.buy, // Алиас для совместимости
+    playClick: uiAudio.click,
+    playSuccess: gameAudio.victory,
+    playModalClose: uiAudio.modalClose,
+    playHover: uiAudio.hover
   };
 };
 
