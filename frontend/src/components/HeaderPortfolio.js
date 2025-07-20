@@ -8,6 +8,9 @@ const HeaderPortfolio = ({ user }) => {
   const [balance, setBalance] = useState(null);
   const [gems, setGems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showSoundSettings, setShowSoundSettings] = useState(false);
+  
+  const { ui, settings } = useSound();
 
   const API = process.env.REACT_APP_BACKEND_URL;
 
