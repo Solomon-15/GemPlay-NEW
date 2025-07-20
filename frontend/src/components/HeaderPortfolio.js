@@ -196,7 +196,8 @@ const HeaderPortfolio = ({ user }) => {
         setShowSoundSettings(false);
       }} 
     />
-  </>;
-}
+    </React.Fragment>
+  );
+};
 
 export default HeaderPortfolio;
