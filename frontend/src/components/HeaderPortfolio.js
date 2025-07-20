@@ -187,17 +187,17 @@ const HeaderPortfolio = ({ user }) => {
           </div>
         </button>
       </div>
-    </div>
+      </div>
 
-    {/* Sound Settings Modal */}
-    <SoundSettings 
-      isOpen={showSoundSettings} 
-      onClose={() => {
-        ui.modalClose();
-        setShowSoundSettings(false);
-      }} 
-    />
-    </React.Fragment>
+      {/* Sound Settings Modal */}
+      <SoundSettings 
+        isOpen={showSoundSettings} 
+        onClose={() => {
+          ui.modalClose();
+          setShowSoundSettings(false);
+        }} 
+      />
+    </>
   );
 };
 
