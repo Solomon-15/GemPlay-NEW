@@ -1,342 +1,412 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import API, { getApiConfig } from '../utils/api';
+import { useApi } from './useApi';
 import { useNotifications } from '../components/NotificationContext';
 
 /**
- * Централизованный хук для управления ботами
- * Объединяет все операции CRUD с ботами и их состоянием
+ * ОПТИМИЗИРОВАННЫЙ хук для управления ботами
+ * Объединяет функциональность useBotsManagement + useBotOperations
+ * Использует useApi для устранения дублирования HTTP запросов
  */
 export const useBotsManagement = () => {
+  const { botsApi, errorUtils, loading: apiLoading } = useApi();
   const { showSuccessRU, showErrorRU } = useNotifications();
   
-  // Основные состояния
+  // Централизованные состояния
   const [botsList, setBotsList] = useState([]);
   const [stats, setStats] = useState({});
   const [activeBetsStats, setActiveBetsStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Состояния для операций
-  const [operationLoading, setOperationLoading] = useState({});
-  const [bulkOperationLoading, setBulkOperationLoading] = useState(false);
+  // Состояния операций (объединенные из двух хуков)
+  const [operationStates, setOperationStates] = useState({});
+  const [validationErrors, setValidationErrors] = useState({});
 
   /**
-   * Получение списка ботов
+   * Универсальная функция для управления состояниями операций
+   */
+  const setOperationState = useCallback((operation, state) => {
+    setOperationStates(prev => ({
+      ...prev,
+      [operation]: state
+    }));
+  }, []);
+
+  const getOperationState = useCallback((operation) => {
+    return operationStates[operation] || false;
+  }, [operationStates]);
+
+  /**
+   * Валидация данных бота (из useBotOperations)
+   */
+  const validateBotData = useCallback((botData) => {
+    const errors = {};
+    
+    if (!botData.name || botData.name.trim().length < 3) {
+      errors.name = 'Имя бота должно содержать минимум 3 символа';
+    }
+    
+    if (botData.cycle_games && (botData.cycle_games < 1 || botData.cycle_games > 100)) {
+      errors.cycle_games = 'Количество игр в цикле должно быть от 1 до 100';
+    }
+    
+    if (botData.win_rate && (botData.win_rate < 10 || botData.win_rate > 90)) {
+      errors.win_rate = 'Win rate должен быть от 10% до 90%';
+    }
+    
+    if (botData.min_bet_amount && botData.max_bet_amount) {
+      if (botData.min_bet_amount >= botData.max_bet_amount) {
+        errors.bet_range = 'Минимальная ставка должна быть меньше максимальной';
+      }
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, []);
+
+  /**
+   * Получение списка ботов (использует useApi вместо прямого axios)
    */
   const fetchBotsList = useCallback(async (page = 1, limit = 50) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await axios.get(`${API}/admin/bots/regular/list`, {
-        ...getApiConfig(),
-        params: { page, limit }
-      });
+      const response = await botsApi.getList({ page, limit });
       
-      if (response.data.success) {
-        setBotsList(response.data.bots || []);
-        return response.data;
+      if (response.success) {
+        setBotsList(response.bots || []);
+        return response;
       } else {
-        throw new Error(response.data.message || 'Ошибка получения списка ботов');
+        throw new Error(response.message || 'Ошибка получения списка ботов');
       }
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка загрузки ботов';
+      const errorMessage = errorUtils.getErrorMessage(err);
       setError(errorMessage);
       showErrorRU(errorMessage);
       return null;
     } finally {
       setLoading(false);
     }
-  }, [showErrorRU]);
+  }, [botsApi, errorUtils, showErrorRU]);
 
   /**
-   * Получение статистики ботов
+   * Получение статистики ботов (использует useApi)
    */
   const fetchStats = useCallback(async () => {
     try {
-      const response = await axios.get(`${API}/admin/bots/stats`, getApiConfig());
-      if (response.data.success) {
-        setStats(response.data.stats || {});
-        return response.data.stats;
+      const response = await botsApi.getStats();
+      if (response.success) {
+        setStats(response.stats || {});
+        return response.stats;
       }
     } catch (err) {
       console.error('Ошибка загрузки статистики:', err);
     }
-  }, []);
+  }, [botsApi]);
 
   /**
-   * Получение статистики активных ставок
+   * Получение статистики активных ставок (использует useApi)
    */
   const fetchActiveBetsStats = useCallback(async () => {
     try {
-      const response = await axios.get(`${API}/admin/bots/active-bets-stats`, getApiConfig());
-      if (response.data.success) {
-        setActiveBetsStats(response.data.stats || {});
-        return response.data.stats;
+      const response = await botsApi.getActiveBetsStats();
+      if (response.success) {
+        setActiveBetsStats(response.stats || {});
+        return response.stats;
       }
     } catch (err) {
       console.error('Ошибка загрузки статистики активных ставок:', err);
     }
-  }, []);
+  }, [botsApi]);
 
   /**
-   * Создание нового бота
+   * Создание бота с валидацией (объединенная логика)
    */
   const createBot = useCallback(async (botData) => {
     try {
-      setOperationLoading(prev => ({ ...prev, create: true }));
+      setOperationState('creating', true);
       
-      const response = await axios.post(`${API}/admin/bots/regular/create`, botData, getApiConfig());
-      
-      if (response.data.success) {
-        showSuccessRU(response.data.message || 'Бот успешно создан');
-        
-        // Обновляем список ботов
-        await fetchBotsList();
-        await fetchStats();
-        
-        return response.data;
-      } else {
-        throw new Error(response.data.message || 'Ошибка создания бота');
+      if (!validateBotData(botData)) {
+        throw new Error('Пожалуйста, исправьте ошибки в форме');
       }
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка при создании бота';
+      
+      const response = await botsApi.create(botData);
+      
+      if (response.success) {
+        showSuccessRU(response.message || 'Бот успешно создан');
+        setValidationErrors({});
+        
+        // Обновляем данные
+        await Promise.all([fetchBotsList(), fetchStats()]);
+        
+        return response;
+      } else {
+        throw new Error(response.message || 'Ошибка создания бота');
+      }
+    } catch (error) {
+      const errorMessage = errorUtils.getErrorMessage(error);
       showErrorRU(errorMessage);
-      throw err;
+      throw error;
     } finally {
-      setOperationLoading(prev => ({ ...prev, create: false }));
+      setOperationState('creating', false);
     }
-  }, [showSuccessRU, showErrorRU, fetchBotsList, fetchStats]);
+  }, [botsApi, errorUtils, showSuccessRU, showErrorRU, validateBotData, fetchBotsList, fetchStats]);
 
   /**
-   * Обновление бота
+   * Обновление бота с валидацией (объединенная логика)
    */
   const updateBot = useCallback(async (botId, botData) => {
     try {
-      setOperationLoading(prev => ({ ...prev, [`update_${botId}`]: true }));
+      setOperationState(`updating_${botId}`, true);
       
-      const response = await axios.put(`${API}/admin/bots/regular/${botId}`, botData, getApiConfig());
+      if (!validateBotData(botData)) {
+        throw new Error('Пожалуйста, исправьте ошибки в форме');
+      }
       
-      if (response.data.success) {
-        showSuccessRU(response.data.message || 'Бот успешно обновлен');
+      const response = await botsApi.update(botId, botData);
+      
+      if (response.success) {
+        showSuccessRU(response.message || 'Бот успешно обновлен');
+        setValidationErrors({});
         
-        // Обновляем список ботов
+        // Обновляем список
         await fetchBotsList();
         
-        return response.data;
+        return response;
       } else {
-        throw new Error(response.data.message || 'Ошибка обновления бота');
+        throw new Error(response.message || 'Ошибка обновления бота');
       }
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка при обновлении бота';
+    } catch (error) {
+      const errorMessage = errorUtils.getErrorMessage(error);
       showErrorRU(errorMessage);
-      throw err;
+      throw error;
     } finally {
-      setOperationLoading(prev => ({ ...prev, [`update_${botId}`]: false }));
+      setOperationState(`updating_${botId}`, false);
     }
-  }, [showSuccessRU, showErrorRU, fetchBotsList]);
+  }, [botsApi, errorUtils, showSuccessRU, showErrorRU, validateBotData, fetchBotsList]);
 
   /**
-   * Удаление бота
+   * Удаление бота с валидацией причины (объединенная логика)
    */
   const deleteBot = useCallback(async (botId, reason) => {
     try {
-      setOperationLoading(prev => ({ ...prev, [`delete_${botId}`]: true }));
+      setOperationState(`deleting_${botId}`, true);
       
-      const response = await axios.delete(`${API}/admin/bots/regular/${botId}`, {
-        ...getApiConfig(),
-        data: { reason }
-      });
-      
-      if (response.data.success) {
-        showSuccessRU(response.data.message || 'Бот успешно удален');
-        
-        // Обновляем список ботов
-        await fetchBotsList();
-        await fetchStats();
-        
-        return response.data;
-      } else {
-        throw new Error(response.data.message || 'Ошибка удаления бота');
+      if (!reason || reason.trim().length < 5) {
+        throw new Error('Укажите причину удаления (минимум 5 символов)');
       }
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка при удалении бота';
+      
+      const response = await botsApi.delete(botId, reason);
+      
+      if (response.success) {
+        showSuccessRU(response.message || 'Бот успешно удален');
+        
+        // Обновляем данные
+        await Promise.all([fetchBotsList(), fetchStats()]);
+        
+        return response;
+      } else {
+        throw new Error(response.message || 'Ошибка удаления бота');
+      }
+    } catch (error) {
+      const errorMessage = errorUtils.getErrorMessage(error);
       showErrorRU(errorMessage);
-      throw err;
+      throw error;
     } finally {
-      setOperationLoading(prev => ({ ...prev, [`delete_${botId}`]: false }));
+      setOperationState(`deleting_${botId}`, false);
     }
-  }, [showSuccessRU, showErrorRU, fetchBotsList, fetchStats]);
+  }, [botsApi, errorUtils, showSuccessRU, showErrorRU, fetchBotsList, fetchStats]);
 
   /**
-   * Переключение статуса бота
+   * Переключение статуса бота (объединенная логика)
    */
-  const toggleBotStatus = useCallback(async (botId) => {
+  const toggleBotStatus = useCallback(async (botId, currentStatus) => {
     try {
-      setOperationLoading(prev => ({ ...prev, [`toggle_${botId}`]: true }));
+      setOperationState(`toggling_${botId}`, true);
       
-      const response = await axios.post(`${API}/admin/bots/regular/${botId}/toggle`, {}, getApiConfig());
+      const response = await botsApi.toggleStatus(botId);
       
-      if (response.data.success) {
-        showSuccessRU(response.data.message || 'Статус бота изменен');
+      if (response.success) {
+        const newStatus = !currentStatus;
+        showSuccessRU(response.message || `Бот ${newStatus ? 'включен' : 'выключен'}`);
         
-        // Обновляем список ботов
-        await fetchBotsList();
-        await fetchStats();
+        // Обновляем данные
+        await Promise.all([fetchBotsList(), fetchStats()]);
         
-        return response.data;
+        return response;
       } else {
-        throw new Error(response.data.message || 'Ошибка изменения статуса бота');
+        throw new Error(response.message || 'Ошибка изменения статуса');
       }
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка при изменении статуса бота';
+    } catch (error) {
+      const errorMessage = errorUtils.getErrorMessage(error);
       showErrorRU(errorMessage);
-      throw err;
+      throw error;
     } finally {
-      setOperationLoading(prev => ({ ...prev, [`toggle_${botId}`]: false }));
+      setOperationState(`toggling_${botId}`, false);
     }
-  }, [showSuccessRU, showErrorRU, fetchBotsList, fetchStats]);
+  }, [botsApi, errorUtils, showSuccessRU, showErrorRU, fetchBotsList, fetchStats]);
 
   /**
-   * Получение активных ставок бота
+   * Получение активных ставок бота (использует useApi)
    */
   const fetchBotActiveBets = useCallback(async (botId) => {
     try {
-      setOperationLoading(prev => ({ ...prev, [`active_bets_${botId}`]: true }));
+      setOperationState(`fetching_active_bets_${botId}`, true);
       
-      const response = await axios.get(`${API}/admin/bots/${botId}/active-bets`, getApiConfig());
+      const response = await botsApi.getActiveBets(botId);
       
-      if (response.data.success) {
-        return response.data;
+      if (response.success) {
+        return response;
       } else {
-        throw new Error(response.data.message || 'Ошибка получения активных ставок');
+        throw new Error(response.message || 'Ошибка получения активных ставок');
       }
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка загрузки активных ставок';
+    } catch (error) {
+      const errorMessage = errorUtils.getErrorMessage(error);
       showErrorRU(errorMessage);
-      throw err;
+      throw error;
     } finally {
-      setOperationLoading(prev => ({ ...prev, [`active_bets_${botId}`]: false }));
+      setOperationState(`fetching_active_bets_${botId}`, false);
     }
-  }, [showErrorRU]);
+  }, [botsApi, errorUtils, showErrorRU]);
 
   /**
-   * Получение истории циклов бота
+   * Получение истории циклов бота (использует useApi)
    */
   const fetchBotCycleHistory = useCallback(async (botId) => {
     try {
-      setOperationLoading(prev => ({ ...prev, [`cycle_history_${botId}`]: true }));
+      setOperationState(`fetching_cycle_history_${botId}`, true);
       
-      const response = await axios.get(`${API}/admin/bots/${botId}/cycle-history`, getApiConfig());
+      const response = await botsApi.getCycleHistory(botId);
       
-      if (response.data.success) {
-        return response.data;
+      if (response.success) {
+        return response;
       } else {
-        throw new Error(response.data.message || 'Ошибка получения истории циклов');
+        throw new Error(response.message || 'Ошибка получения истории циклов');
       }
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка загрузки истории циклов';
+    } catch (error) {
+      const errorMessage = errorUtils.getErrorMessage(error);
       showErrorRU(errorMessage);
-      throw err;
+      throw error;
     } finally {
-      setOperationLoading(prev => ({ ...prev, [`cycle_history_${botId}`]: false }));
+      setOperationState(`fetching_cycle_history_${botId}`, false);
     }
-  }, [showErrorRU]);
+  }, [botsApi, errorUtils, showErrorRU]);
 
   /**
-   * Обновление лимита ставок бота
+   * Обновление лимита ставок бота с валидацией (объединенная логика)
    */
   const updateBotLimit = useCallback(async (botId, newLimit) => {
     try {
-      setOperationLoading(prev => ({ ...prev, [`limit_${botId}`]: true }));
+      setOperationState(`updating_limit_${botId}`, true);
       
-      const response = await axios.put(`${API}/admin/bots/${botId}/limit`, {
-        limit: newLimit
-      }, getApiConfig());
+      const limit = parseInt(newLimit);
       
-      if (response.data.success) {
-        showSuccessRU(response.data.message || 'Лимит бота обновлен');
+      if (isNaN(limit) || limit < 1 || limit > 100) {
+        throw new Error('Лимит должен быть числом от 1 до 100');
+      }
+      
+      const response = await botsApi.updateLimit(botId, limit);
+      
+      if (response.success) {
+        showSuccessRU(response.message || 'Лимит успешно обновлен');
         
-        // Обновляем список ботов
+        // Обновляем список
         await fetchBotsList();
         
-        return response.data;
+        return response;
       } else {
-        throw new Error(response.data.message || 'Ошибка обновления лимита');
+        throw new Error(response.message || 'Ошибка обновления лимита');
       }
-    } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка при обновлении лимита';
+    } catch (error) {
+      const errorMessage = errorUtils.getErrorMessage(error);
       showErrorRU(errorMessage);
-      throw err;
+      throw error;
     } finally {
-      setOperationLoading(prev => ({ ...prev, [`limit_${botId}`]: false }));
+      setOperationState(`updating_limit_${botId}`, false);
     }
-  }, [showSuccessRU, showErrorRU, fetchBotsList]);
+  }, [botsApi, errorUtils, showSuccessRU, showErrorRU, fetchBotsList]);
 
   /**
-   * Массовые операции
+   * Массовые операции (объединенные из двух хуков)
    */
   const bulkOperations = {
     /**
-     * Включить/выключить всех ботов
+     * Переключение всех ботов (использует useApi)
      */
     toggleAllBots: useCallback(async (enabled) => {
       try {
-        setBulkOperationLoading(true);
+        setOperationState('toggling_all', true);
         
-        const response = await axios.post(`${API}/admin/bots/toggle-all`, {
-          enabled
-        }, getApiConfig());
+        const response = await botsApi.toggleAll(enabled);
         
-        if (response.data.success) {
-          showSuccessRU(response.data.message || `Все боты ${enabled ? 'включены' : 'выключены'}`);
+        if (response.success) {
+          showSuccessRU(response.message || `Все боты ${enabled ? 'включены' : 'выключены'}`);
           
           // Обновляем данные
-          await fetchBotsList();
-          await fetchStats();
+          await Promise.all([fetchBotsList(), fetchStats()]);
           
-          return response.data;
+          return response;
         } else {
-          throw new Error(response.data.message || 'Ошибка массовой операции');
+          throw new Error(response.message || 'Ошибка массовой операции');
         }
-      } catch (err) {
-        const errorMessage = err.response?.data?.detail || err.message || 'Ошибка массовой операции';
+      } catch (error) {
+        const errorMessage = errorUtils.getErrorMessage(error);
         showErrorRU(errorMessage);
-        throw err;
+        throw error;
       } finally {
-        setBulkOperationLoading(false);
+        setOperationState('toggling_all', false);
       }
-    }, [showSuccessRU, showErrorRU, fetchBotsList, fetchStats]),
+    }, [botsApi, errorUtils, showSuccessRU, showErrorRU, fetchBotsList, fetchStats]),
 
     /**
-     * Запуск обычных ботов
+     * Запуск обычных ботов (использует useApi)
      */
     startRegularBots: useCallback(async () => {
       try {
-        setBulkOperationLoading(true);
+        setOperationState('starting_regular', true);
         
-        const response = await axios.post(`${API}/admin/bots/start-regular`, {}, getApiConfig());
+        const response = await botsApi.startRegular();
         
-        if (response.data.limit_reached) {
-          showErrorRU(`Лимит активных ставок достигнут: ${response.data.current_active_bets}/${response.data.max_active_bets}`);
+        if (response.limit_reached) {
+          showErrorRU(`Лимит достигнут: ${response.current_active_bets}/${response.max_active_bets}`);
         } else {
-          showSuccessRU(response.data.message || 'Обычные боты запущены');
+          showSuccessRU(response.message || 'Обычные боты запущены');
         }
         
         // Обновляем данные
-        await fetchStats();
-        await fetchActiveBetsStats();
+        await Promise.all([fetchStats(), fetchActiveBetsStats()]);
         
-        return response.data;
-      } catch (err) {
-        const errorMessage = err.response?.data?.detail || err.message || 'Ошибка при запуске ботов';
+        return response;
+      } catch (error) {
+        const errorMessage = errorUtils.getErrorMessage(error);
         showErrorRU(errorMessage);
-        throw err;
+        throw error;
       } finally {
-        setBulkOperationLoading(false);
+        setOperationState('starting_regular', false);
       }
-    }, [showSuccessRU, showErrorRU, fetchStats, fetchActiveBetsStats])
+    }, [botsApi, errorUtils, showSuccessRU, showErrorRU, fetchStats, fetchActiveBetsStats])
+  };
+
+  /**
+   * Утилиты для работы с состоянием (из useBotOperations)
+   */
+  const stateUtils = {
+    isOperationInProgress: useCallback((operation) => {
+      return getOperationState(operation);
+    }, [getOperationState]),
+
+    getActiveOperations: useCallback(() => {
+      return Object.keys(operationStates).filter(key => operationStates[key]);
+    }, [operationStates]),
+
+    clearAllOperationStates: useCallback(() => {
+      setOperationStates({});
+    }, []),
+
+    clearValidationErrors: useCallback(() => {
+      setValidationErrors({});
+    }, [])
   };
 
   /**
@@ -362,11 +432,12 @@ export const useBotsManagement = () => {
     loading,
     error,
     
-    // Состояния операций
-    operationLoading,
-    bulkOperationLoading,
+    // Состояния операций (объединенные)
+    operationStates,
+    validationErrors,
+    apiLoading, // Из useApi
     
-    // Основные операции
+    // Основные операции (объединенные и оптимизированные)
     fetchBotsList,
     fetchStats,
     fetchActiveBetsStats,
@@ -383,7 +454,17 @@ export const useBotsManagement = () => {
     // Массовые операции
     bulkOperations,
     
-    // Утилиты
+    // Утилиты (из useBotOperations)
+    stateUtils,
+    validateBotData,
+    getOperationState,
+    
+    // Удобные проверки состояний
+    isCreating: getOperationState('creating'),
+    isTogglingAll: getOperationState('toggling_all'),
+    isStartingRegular: getOperationState('starting_regular'),
+    
+    // Общие утилиты
     refresh: useCallback(async () => {
       await Promise.all([
         fetchBotsList(),
