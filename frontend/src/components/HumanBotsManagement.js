@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
-import { useBotOperations } from '../hooks/useBotOperations';
+import { useBotsManagement } from '../hooks/useBotsManagement';
 
 const HumanBotsManagement = () => {
   const { botsApi } = useApi();
-  const { bulkOperations } = useBotOperations();
+  const { bulkOperations } = useBotsManagement();
   const [stats, setStats] = useState({
     active_bots: 0,
     bets_24h: 0,
