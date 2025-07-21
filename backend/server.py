@@ -147,47 +147,6 @@ class BotQueueStats(BaseModel):
     totalHumanBots: int = 0
 
 # Bot model
-class Bot(BaseModel):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    type: BotType = BotType.REGULAR
-    name: Optional[str] = None  # Только для Human ботов
-    mode: BotMode = BotMode.ALGORITHMIC
-    is_active: bool = True
-    bot_type: Optional[str] = None  # Добавляем для совместимости
-    
-    # Настройки поведения
-    min_bet_amount: float = 1.0
-    max_bet_amount: float = 100.0
-    win_percentage: float = 60.0  # % побед за цикл
-    cycle_length: int = 12  # Количество игр в цикле
-    cycle_total_amount: float = 500.0  # Общая сумма за цикл
-    pause_timer: int = 5  # Минуты паузы между играми
-    recreate_timer: int = 30  # Секунды для пересоздания ставки
-    
-    # Настройки лимитов
-    max_individual_bets: int = 12  # Индивидуальный лимит активных ставок
-    priority_order: int = 0  # Порядок приоритета для очереди
-    
-    # Дополнительные настройки
-    can_accept_bets: bool = False  # Может ли принимать чужие ставки
-    can_play_with_bots: bool = False  # Может ли играть с другими ботами
-    
-    # Статистика
-    games_played: int = 0
-    games_won: int = 0
-    current_cycle_games: int = 0
-    current_cycle_wins: int = 0
-    current_cycle_losses: int = 0
-    total_bet_amount: float = 0.0
-    
-    # Состояние
-    last_game_time: Optional[datetime] = None
-    last_bet_time: Optional[datetime] = None
-    current_bet_id: Optional[str] = None
-    
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
 class UserStatus(str, Enum):
     ACTIVE = "ACTIVE"
     BANNED = "BANNED"
@@ -226,10 +185,6 @@ class TransactionType(str, Enum):
     WIN = "WIN"
     REFUND = "REFUND"
     DAILY_BONUS = "DAILY_BONUS"
-
-class BotType(str, Enum):
-    REGULAR = "REGULAR"
-    HUMAN = "HUMAN"
 
 class SoundCategory(str, Enum):
     GAMING = "GAMING"           # Игровые действия
@@ -674,16 +629,6 @@ async def create_refresh_token(user_id: str) -> str:
 def generate_verification_token() -> str:
     """Generate email verification token."""
     return str(uuid.uuid4())
-
-async def generate_unique_bot_name() -> str:
-    """Generate unique bot name in format Bot#1, Bot#2, etc."""
-    counter = 1
-    while True:
-        bot_name = f"Bot#{counter}"
-        existing_bot = await db.bots.find_one({"name": bot_name})
-        if not existing_bot:
-            return bot_name
-        counter += 1
 
 async def generate_unique_bot_name() -> str:
     """Generate unique bot name in format Bot#1, Bot#2, etc."""
