@@ -730,6 +730,7 @@ class HumanBotsStatsResponse(BaseModel):
     total_bots: int
     active_bots: int
     total_games_24h: int
+    total_bets: int
     total_revenue_24h: float
     avg_revenue_per_bot: float
     most_active_bots: List[Dict[str, Any]]
