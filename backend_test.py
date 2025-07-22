@@ -6700,12 +6700,12 @@ def test_human_bot_bet_limit_feature():
         record_test("Human-bot All Bets - Non-existent Bot", False, f"Unexpected response: {response}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY HUMAN-BOT LIST API TESTING")
-    print("Testing Human-bot List API endpoint to verify recent changes as requested in the review")
+    print_header("GEMPLAY HUMAN-BOT DELETION FUNCTIONALITY TESTING")
+    print("Testing Human-bot deletion functionality as requested in the review")
     
     try:
-        # Test Human-bot List API endpoint (main focus of review request)
-        test_human_bot_list_api_endpoint()
+        # Test Human-bot deletion functionality (main focus of review request)
+        test_human_bot_deletion_functionality()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
