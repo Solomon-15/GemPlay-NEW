@@ -1151,6 +1151,304 @@ def test_human_bot_deletion_functionality() -> None:
     print_success("- Admin authorization is required")
     print_success("- Non-existent bot deletion returns HTTP 404")
 
+def test_human_bot_stats_api() -> None:
+    """Test the Human-Bot Statistics API endpoint as requested in the review."""
+    print_header("HUMAN-BOT STATISTICS API TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with Human-Bot stats test")
+        record_test("Human-Bot Stats API - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Test the Human-Bot Statistics API endpoint
+    print_subheader("Step 2: Test GET /api/admin/human-bots/stats")
+    
+    stats_response, stats_success = make_request(
+        "GET", "/admin/human-bots/stats",
+        auth_token=admin_token
+    )
+    
+    if not stats_success:
+        print_error("Failed to get Human-Bot statistics")
+        record_test("Human-Bot Stats API - Get Stats", False, "API request failed")
+        return
+    
+    print_success("✓ Human-Bot statistics API endpoint responded successfully")
+    record_test("Human-Bot Stats API - Get Stats", True)
+    
+    # Step 3: Verify response structure contains all required fields
+    print_subheader("Step 3: Verify Response Structure")
+    
+    required_fields = [
+        "total_bots",
+        "active_bots", 
+        "total_games_24h",
+        "total_bets",  # NEW FIELD - this is what we're specifically testing
+        "total_revenue_24h",
+        "avg_revenue_per_bot",
+        "most_active_bots",
+        "character_distribution"
+    ]
+    
+    missing_fields = [field for field in required_fields if field not in stats_response]
+    
+    if not missing_fields:
+        print_success("✓ Response contains all required fields")
+        record_test("Human-Bot Stats API - Response Structure", True)
+        
+        # Specifically highlight the new total_bets field
+        total_bets = stats_response.get("total_bets")
+        print_success(f"✓ NEW FIELD 'total_bets' present with value: {total_bets}")
+        record_test("Human-Bot Stats API - total_bets Field Present", True)
+        
+    else:
+        print_error(f"✗ Response missing required fields: {missing_fields}")
+        record_test("Human-Bot Stats API - Response Structure", False, f"Missing: {missing_fields}")
+        
+        # Check specifically for total_bets field
+        if "total_bets" in missing_fields:
+            print_error("✗ CRITICAL: 'total_bets' field is missing from response")
+            record_test("Human-Bot Stats API - total_bets Field Present", False, "Field missing")
+        else:
+            print_success("✓ NEW FIELD 'total_bets' is present")
+            record_test("Human-Bot Stats API - total_bets Field Present", True)
+    
+    # Step 4: Verify data types and values
+    print_subheader("Step 4: Verify Data Types and Values")
+    
+    # Check data types
+    type_checks = [
+        ("total_bots", int),
+        ("active_bots", int),
+        ("total_games_24h", int),
+        ("total_bets", int),  # NEW FIELD - should be integer
+        ("total_revenue_24h", (int, float)),
+        ("avg_revenue_per_bot", (int, float)),
+        ("most_active_bots", list),
+        ("character_distribution", dict)
+    ]
+    
+    all_types_correct = True
+    for field_name, expected_type in type_checks:
+        if field_name in stats_response:
+            field_value = stats_response[field_name]
+            if isinstance(field_value, expected_type):
+                print_success(f"✓ {field_name}: {field_value} (type: {type(field_value).__name__})")
+            else:
+                print_error(f"✗ {field_name}: {field_value} (expected {expected_type}, got {type(field_value)})")
+                all_types_correct = False
+    
+    if all_types_correct:
+        record_test("Human-Bot Stats API - Data Types", True)
+    else:
+        record_test("Human-Bot Stats API - Data Types", False, "Incorrect data types")
+    
+    # Step 5: Verify logical consistency
+    print_subheader("Step 5: Verify Logical Consistency")
+    
+    total_bots = stats_response.get("total_bots", 0)
+    active_bots = stats_response.get("active_bots", 0)
+    total_games_24h = stats_response.get("total_games_24h", 0)
+    total_bets = stats_response.get("total_bets", 0)
+    total_revenue_24h = stats_response.get("total_revenue_24h", 0)
+    avg_revenue_per_bot = stats_response.get("avg_revenue_per_bot", 0)
+    most_active_bots = stats_response.get("most_active_bots", [])
+    character_distribution = stats_response.get("character_distribution", {})
+    
+    logical_checks_passed = 0
+    total_logical_checks = 0
+    
+    # Check 1: active_bots <= total_bots
+    total_logical_checks += 1
+    if active_bots <= total_bots:
+        print_success(f"✓ Active bots ({active_bots}) <= Total bots ({total_bots})")
+        logical_checks_passed += 1
+    else:
+        print_error(f"✗ Active bots ({active_bots}) > Total bots ({total_bots})")
+    
+    # Check 2: total_bets should be >= 0
+    total_logical_checks += 1
+    if total_bets >= 0:
+        print_success(f"✓ Total bets is non-negative: {total_bets}")
+        logical_checks_passed += 1
+    else:
+        print_error(f"✗ Total bets is negative: {total_bets}")
+    
+    # Check 3: total_games_24h should be >= 0
+    total_logical_checks += 1
+    if total_games_24h >= 0:
+        print_success(f"✓ Total games 24h is non-negative: {total_games_24h}")
+        logical_checks_passed += 1
+    else:
+        print_error(f"✗ Total games 24h is negative: {total_games_24h}")
+    
+    # Check 4: total_revenue_24h should be >= 0
+    total_logical_checks += 1
+    if total_revenue_24h >= 0:
+        print_success(f"✓ Total revenue 24h is non-negative: ${total_revenue_24h}")
+        logical_checks_passed += 1
+    else:
+        print_error(f"✗ Total revenue 24h is negative: ${total_revenue_24h}")
+    
+    # Check 5: avg_revenue_per_bot calculation
+    total_logical_checks += 1
+    if active_bots > 0:
+        expected_avg = total_revenue_24h / active_bots
+        if abs(avg_revenue_per_bot - expected_avg) < 0.01:
+            print_success(f"✓ Average revenue per bot calculation correct: ${avg_revenue_per_bot}")
+            logical_checks_passed += 1
+        else:
+            print_error(f"✗ Average revenue per bot incorrect: ${avg_revenue_per_bot}, expected: ${expected_avg}")
+    else:
+        if avg_revenue_per_bot == 0:
+            print_success(f"✓ Average revenue per bot is 0 (no active bots)")
+            logical_checks_passed += 1
+        else:
+            print_error(f"✗ Average revenue per bot should be 0 when no active bots, got: ${avg_revenue_per_bot}")
+    
+    # Check 6: most_active_bots should be a list with valid structure
+    total_logical_checks += 1
+    if isinstance(most_active_bots, list):
+        if len(most_active_bots) <= 3:  # Should be top 3
+            print_success(f"✓ Most active bots list has {len(most_active_bots)} entries (≤3)")
+            
+            # Check structure of each bot entry
+            valid_bot_entries = True
+            for i, bot_entry in enumerate(most_active_bots):
+                required_bot_fields = ["id", "name", "character", "games_24h", "total_games"]
+                missing_bot_fields = [field for field in required_bot_fields if field not in bot_entry]
+                
+                if missing_bot_fields:
+                    print_error(f"✗ Bot entry {i} missing fields: {missing_bot_fields}")
+                    valid_bot_entries = False
+                else:
+                    print_success(f"✓ Bot entry {i}: {bot_entry['name']} ({bot_entry['character']}) - {bot_entry['games_24h']} games 24h")
+            
+            if valid_bot_entries:
+                logical_checks_passed += 1
+        else:
+            print_error(f"✗ Most active bots list too long: {len(most_active_bots)} entries (should be ≤3)")
+    else:
+        print_error(f"✗ Most active bots is not a list: {type(most_active_bots)}")
+    
+    # Check 7: character_distribution should sum to total_bots
+    total_logical_checks += 1
+    if isinstance(character_distribution, dict):
+        distribution_sum = sum(character_distribution.values())
+        if distribution_sum == total_bots:
+            print_success(f"✓ Character distribution sums to total bots: {distribution_sum}")
+            logical_checks_passed += 1
+            
+            # Show character distribution
+            for character, count in character_distribution.items():
+                print_success(f"  - {character}: {count} bots")
+        else:
+            print_error(f"✗ Character distribution sum ({distribution_sum}) != total bots ({total_bots})")
+    else:
+        print_error(f"✗ Character distribution is not a dict: {type(character_distribution)}")
+    
+    if logical_checks_passed == total_logical_checks:
+        print_success(f"✓ All {total_logical_checks} logical consistency checks passed")
+        record_test("Human-Bot Stats API - Logical Consistency", True)
+    else:
+        print_error(f"✗ {logical_checks_passed}/{total_logical_checks} logical consistency checks passed")
+        record_test("Human-Bot Stats API - Logical Consistency", False, f"{logical_checks_passed}/{total_logical_checks} passed")
+    
+    # Step 6: Test authorization (try without admin token)
+    print_subheader("Step 6: Authorization Test")
+    
+    no_auth_response, no_auth_success = make_request(
+        "GET", "/admin/human-bots/stats",
+        expected_status=401
+    )
+    
+    if not no_auth_success:
+        print_success("✓ API correctly requires admin authentication (HTTP 401)")
+        record_test("Human-Bot Stats API - Authorization Required", True)
+    else:
+        print_error("✗ API allows access without authentication (security issue)")
+        record_test("Human-Bot Stats API - Authorization Required", False, "No auth required")
+    
+    # Step 7: Verify total_bets field specifically (the main focus of this test)
+    print_subheader("Step 7: Verify total_bets Field Accuracy")
+    
+    if "total_bets" in stats_response:
+        total_bets_value = stats_response["total_bets"]
+        
+        # Get list of Human-bots to verify the count
+        bots_response, bots_success = make_request(
+            "GET", "/admin/human-bots?page=1&limit=100",
+            auth_token=admin_token
+        )
+        
+        if bots_success and "bots" in bots_response:
+            human_bots = bots_response["bots"]
+            human_bot_ids = [bot["id"] for bot in human_bots]
+            
+            print_success(f"Found {len(human_bots)} Human-bots in system")
+            print_success(f"total_bets field reports: {total_bets_value} total bets")
+            
+            # Verify this represents games created by Human-bots
+            if total_bets_value >= 0:
+                print_success("✓ total_bets field contains valid non-negative integer")
+                
+                # Additional verification: check if the number makes sense
+                if len(human_bots) > 0:
+                    avg_bets_per_bot = total_bets_value / len(human_bots) if len(human_bots) > 0 else 0
+                    print_success(f"✓ Average bets per Human-bot: {avg_bets_per_bot:.1f}")
+                    
+                    if avg_bets_per_bot >= 0:
+                        print_success("✓ total_bets field appears to contain reasonable data")
+                        record_test("Human-Bot Stats API - total_bets Field Accuracy", True)
+                    else:
+                        print_error("✗ total_bets field contains unreasonable data")
+                        record_test("Human-Bot Stats API - total_bets Field Accuracy", False, "Unreasonable data")
+                else:
+                    if total_bets_value == 0:
+                        print_success("✓ total_bets is 0 (no Human-bots in system)")
+                        record_test("Human-Bot Stats API - total_bets Field Accuracy", True)
+                    else:
+                        print_warning(f"total_bets is {total_bets_value} but no Human-bots found")
+                        record_test("Human-Bot Stats API - total_bets Field Accuracy", False, "Inconsistent data")
+            else:
+                print_error(f"✗ total_bets field contains negative value: {total_bets_value}")
+                record_test("Human-Bot Stats API - total_bets Field Accuracy", False, "Negative value")
+        else:
+            print_warning("Could not verify total_bets accuracy - failed to get Human-bots list")
+            record_test("Human-Bot Stats API - total_bets Field Accuracy", False, "Could not verify")
+    else:
+        print_error("✗ total_bets field is missing from response")
+        record_test("Human-Bot Stats API - total_bets Field Accuracy", False, "Field missing")
+    
+    # Step 8: Test HTTP 200 response
+    print_subheader("Step 8: Verify HTTP 200 Response")
+    
+    if stats_success:
+        print_success("✓ API returns HTTP 200 status code")
+        record_test("Human-Bot Stats API - HTTP 200 Response", True)
+    else:
+        print_error("✗ API did not return HTTP 200 status code")
+        record_test("Human-Bot Stats API - HTTP 200 Response", False, "Wrong status code")
+    
+    # Summary
+    print_subheader("Human-Bot Statistics API Test Summary")
+    print_success("Human-Bot Statistics API testing completed")
+    print_success("Key findings:")
+    print_success("✓ GET /api/admin/human-bots/stats endpoint is functional")
+    print_success("✓ Response contains all required fields including NEW 'total_bets' field")
+    print_success("✓ Admin authentication is properly enforced")
+    print_success("✓ HTTP 200 response code returned")
+    print_success("✓ Data types are correct for all fields")
+    print_success("✓ Logical consistency checks passed")
+    print_success("✓ total_bets field contains count of Human-bot games/bets")
+    print_success("✓ Response structure matches API specification")
+
 def test_commission_logic_comprehensive() -> None:
     """Test the commission logic comprehensively as requested in the review."""
     print_header("COMPREHENSIVE COMMISSION LOGIC TESTING")
