@@ -15418,57 +15418,83 @@ async def get_human_bot_active_bets_count(bot_id: str) -> int:
     except:
         return 0
 
-@api_router.get("/admin/human-bots", response_model=dict)
-async def get_human_bots(
-    page: int = 1,
-    limit: int = 10,
-    character: Optional[HumanBotCharacter] = None,
-    is_active: Optional[bool] = None,
+@api_router.get("/admin/human-bots", response_model=HumanBotsListResponse)
+async def list_human_bots(
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=100),
     current_admin: User = Depends(get_current_admin)
 ):
-    """Get human bots with pagination and filtering."""
+    """List human bots with pagination."""
     try:
-        # Build query
-        query = {}
-        if character:
-            query["character"] = character
-        if is_active is not None:
-            query["is_active"] = is_active
-        
-        # Calculate pagination
         skip = (page - 1) * limit
         
         # Get total count
-        total_count = await db.human_bots.count_documents(query)
+        total_bots = await db.human_bots.count_documents({})
         
-        # Get human bots
-        human_bots_data = await db.human_bots.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        # Get bots
+        bots_cursor = db.human_bots.find({}).sort("created_at", -1).skip(skip).limit(limit)
+        bots_list = await bots_cursor.to_list(length=limit)
         
-        # Convert to response format
-        human_bots = []
-        for bot_data in human_bots_data:
-            bot = HumanBot(**bot_data)
-            response = HumanBotResponse(
-                **bot.dict(),
-                win_rate=(bot.total_games_won / bot.total_games_played * 100) if bot.total_games_played > 0 else 0
+        # Format response bots with active bets count
+        response_bots = []
+        for bot in bots_list:
+            # Calculate win rate
+            win_rate = (bot.get("total_games_won", 0) / max(bot.get("total_games_played", 1), 1)) * 100
+            
+            # Get active bets count
+            active_bets_count = await get_human_bot_active_bets_count(bot["id"])
+            
+            response_bot = HumanBotResponse(
+                id=bot["id"],
+                name=bot["name"],
+                character=bot["character"],
+                is_active=bot["is_active"],
+                min_bet=bot["min_bet"],
+                max_bet=bot["max_bet"],
+                bet_limit=bot.get("bet_limit", 12),  # Default to 12 if missing
+                win_percentage=bot["win_percentage"],
+                loss_percentage=bot["loss_percentage"],
+                draw_percentage=bot["draw_percentage"],
+                min_delay=bot["min_delay"],
+                max_delay=bot["max_delay"],
+                use_commit_reveal=bot["use_commit_reveal"],
+                logging_level=bot["logging_level"],
+                total_games_played=bot.get("total_games_played", 0),
+                total_games_won=bot.get("total_games_won", 0),
+                total_amount_wagered=bot.get("total_amount_wagered", 0.0),
+                total_amount_won=bot.get("total_amount_won", 0.0),
+                win_rate=round(win_rate, 2),
+                last_action_time=bot.get("last_action_time"),
+                created_at=bot["created_at"],
+                updated_at=bot["updated_at"]
             )
-            human_bots.append(response.dict())
+            
+            # Add active bets count as additional field
+            response_bot_dict = response_bot.dict()
+            response_bot_dict["active_bets_count"] = active_bets_count
+            response_bots.append(response_bot_dict)
         
-        return {
-            "bots": human_bots,
-            "total_count": total_count,
-            "current_page": page,
-            "total_pages": (total_count + limit - 1) // limit,
-            "items_per_page": limit,
-            "has_next": page * limit < total_count,
-            "has_prev": page > 1
-        }
+        # Calculate pagination
+        total_pages = (total_bots + limit - 1) // limit
+        
+        return HumanBotsListResponse(
+            success=True,
+            bots=response_bots,
+            pagination=PaginationInfo(
+                current_page=page,
+                total_pages=total_pages,
+                per_page=limit,
+                total_items=total_bots,
+                has_next=page < total_pages,
+                has_prev=page > 1
+            )
+        )
         
     except Exception as e:
-        logger.error(f"Error fetching human bots: {e}")
+        logger.error(f"Error listing human bots: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch human bots"
+            detail="Failed to list human bots"
         )
 
 @api_router.post("/admin/human-bots", response_model=HumanBotResponse)
