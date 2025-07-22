@@ -1313,6 +1313,9 @@ def start_background_scheduler():
     
     # Start bot automation using asyncio create_task
     asyncio.create_task(bot_automation_loop())
+    
+    # Start human bot simulation background task
+    asyncio.create_task(human_bot_simulation_task())
 
 async def bot_automation_loop():
     """Run bot automation loop every 5 seconds."""
