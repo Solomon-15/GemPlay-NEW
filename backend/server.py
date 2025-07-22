@@ -16018,8 +16018,15 @@ async def get_human_bots_stats(current_admin: User = Depends(get_current_admin))
         total_bots = await db.human_bots.count_documents({})
         active_bots = await db.human_bots.count_documents({"is_active": True})
         
-        # Get bots for detailed stats
+        # Get all human bot IDs
+        bot_ids = []
         all_bots = await db.human_bots.find({}).to_list(None)
+        bot_ids = [bot["id"] for bot in all_bots]
+        
+        # Count total bets (games) created by Human-bots
+        total_bets = await db.games.count_documents({
+            "creator_id": {"$in": bot_ids}
+        })
         
         # Calculate character distribution
         character_distribution = {}
@@ -16067,6 +16074,7 @@ async def get_human_bots_stats(current_admin: User = Depends(get_current_admin))
             total_bots=total_bots,
             active_bots=active_bots,
             total_games_24h=total_games_24h,
+            total_bets=total_bets,
             total_revenue_24h=total_revenue_24h,
             avg_revenue_per_bot=total_revenue_24h / active_bots if active_bots > 0 else 0,
             most_active_bots=most_active_bots[:3],
