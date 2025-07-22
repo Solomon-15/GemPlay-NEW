@@ -15404,6 +15404,20 @@ async def upload_sound_file(sound_id: str, file_data: UploadSoundFileRequest, cu
 # HUMAN BOTS API
 # ==============================================================================
 
+async def get_human_bot_active_bets_count(bot_id: str) -> int:
+    """Get count of active bets for a human bot."""
+    try:
+        count = await db.games.count_documents({
+            "$and": [
+                {"creator_id": bot_id},
+                {"status": {"$in": ["WAITING", "REVEAL", "ACTIVE"]}},
+                {"is_human_bot": True}
+            ]
+        })
+        return count
+    except:
+        return 0
+
 @api_router.get("/admin/human-bots", response_model=dict)
 async def get_human_bots(
     page: int = 1,
