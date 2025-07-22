@@ -15677,9 +15677,10 @@ async def update_human_bot(
 @api_router.delete("/admin/human-bots/{bot_id}", response_model=dict)
 async def delete_human_bot(
     bot_id: str,
+    force_delete: bool = False,
     current_admin: User = Depends(get_current_admin)
 ):
-    """Delete a human bot."""
+    """Delete a human bot. If force_delete=true, will cancel active games and refund players."""
     try:
         # Find existing bot
         existing_bot = await db.human_bots.find_one({"id": bot_id})
@@ -15689,17 +15690,95 @@ async def delete_human_bot(
                 detail="Human bot not found"
             )
         
-        # Check if bot has active games
-        active_games = await db.games.count_documents({
+        # Get active games details
+        active_games_cursor = db.games.find({
             "creator_id": bot_id,
             "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
         })
+        active_games_list = await active_games_cursor.to_list(None)
+        active_games_count = len(active_games_list)
         
-        if active_games > 0:
+        # If has active games and not force delete - return detailed info
+        if active_games_count > 0 and not force_delete:
+            games_info = []
+            total_frozen_balance = 0
+            for game in active_games_list:
+                # Calculate frozen balance (commission)
+                commission = game.get('total_bet_amount', 0) * 0.06
+                total_frozen_balance += commission
+                
+                games_info.append({
+                    "game_id": game.get("id", ""),
+                    "bet_amount": game.get('total_bet_amount', 0),
+                    "status": game.get('status', ''),
+                    "opponent": game.get('opponent_name', 'Не найден'),
+                    "created_at": game.get('created_at', '').isoformat() if game.get('created_at') else ''
+                })
+            
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete bot with active games"
+                detail={
+                    "message": "Cannot delete bot with active games",
+                    "active_games_count": active_games_count,
+                    "total_frozen_balance": total_frozen_balance,
+                    "games": games_info[:5],  # Show only first 5 games
+                    "force_delete_required": True
+                }
             )
+        
+        # If force delete - cancel all active games and refund players
+        cancelled_games = 0
+        refunded_amount = 0
+        
+        if active_games_count > 0 and force_delete:
+            for game in active_games_list:
+                try:
+                    game_id = game.get("id")
+                    opponent_id = game.get("opponent_id")
+                    total_bet_amount = game.get("total_bet_amount", 0)
+                    commission_amount = total_bet_amount * 0.06
+                    
+                    # Cancel the game
+                    await db.games.update_one(
+                        {"id": game_id},
+                        {
+                            "$set": {
+                                "status": "CANCELLED",
+                                "cancelled_reason": "Bot deleted by admin",
+                                "cancelled_at": datetime.utcnow(),
+                                "cancelled_by": "ADMIN"
+                            }
+                        }
+                    )
+                    
+                    # Refund opponent if exists
+                    if opponent_id and opponent_id != bot_id:
+                        opponent = await db.users.find_one({"id": opponent_id})
+                        if opponent:
+                            # Return bet amount + commission to opponent
+                            refund_amount = total_bet_amount / 2  # Opponent's bet share
+                            await db.users.update_one(
+                                {"id": opponent_id},
+                                {"$inc": {"balance": refund_amount}}
+                            )
+                            
+                            # Also return commission if it was frozen
+                            if commission_amount > 0:
+                                await db.users.update_one(
+                                    {"id": opponent_id},
+                                    {"$inc": {"balance": commission_amount}}
+                                )
+                            
+                            refunded_amount += refund_amount + commission_amount
+                            
+                            # Log the refund
+                            logger.info(f"Refunded ${refund_amount + commission_amount:.2f} to user {opponent_id} for cancelled game {game_id}")
+                    
+                    cancelled_games += 1
+                    
+                except Exception as game_error:
+                    logger.error(f"Error cancelling game {game_id}: {game_error}")
+                    continue
         
         # Delete bot
         await db.human_bots.delete_one({"id": bot_id})
@@ -15713,12 +15792,27 @@ async def delete_human_bot(
             action="DELETE_HUMAN_BOT",
             target_type="human_bot",
             target_id=bot_id,
-            details={"name": existing_bot["name"]}
+            details={
+                "name": existing_bot["name"],
+                "force_delete": force_delete,
+                "cancelled_games": cancelled_games,
+                "refunded_amount": refunded_amount
+            }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        logger.info(f"Human bot deleted: {bot_id}")
-        return {"success": True, "message": "Human bot deleted successfully"}
+        success_message = f"Human bot deleted successfully"
+        if cancelled_games > 0:
+            success_message += f". Cancelled {cancelled_games} active games, refunded ${refunded_amount:.2f} to players"
+        
+        logger.info(f"Human bot deleted: {bot_id}, cancelled games: {cancelled_games}, refunded: ${refunded_amount:.2f}")
+        
+        return {
+            "success": True, 
+            "message": success_message,
+            "cancelled_games": cancelled_games,
+            "refunded_amount": refunded_amount
+        }
         
     except HTTPException:
         raise
