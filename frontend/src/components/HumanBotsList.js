@@ -1,0 +1,709 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNotifications } from './NotificationContext';
+import useConfirmation from '../hooks/useConfirmation';
+import useInput from '../hooks/useInput';
+import ConfirmationModal from './ConfirmationModal';
+import InputModal from './InputModal';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+const HumanBotsList = ({ onEditBot, onCreateBot }) => {
+  const { addNotification } = useNotifications();
+  const { confirm, confirmationModal } = useConfirmation();
+  const { prompt, inputModal } = useInput();
+
+  // States
+  const [humanBots, setHumanBots] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({});
+  
+  // Multiple selection states
+  const [selectedBots, setSelectedBots] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  // Active bets modal states
+  const [isActiveBetsModalOpen, setIsActiveBetsModalOpen] = useState(false);
+  const [selectedBotForActiveBets, setSelectedBotForActiveBets] = useState(null);
+  const [activeBetsData, setActiveBetsData] = useState(null);
+  const [loadingActiveBets, setLoadingActiveBets] = useState(false);
+  const [showAllBets, setShowAllBets] = useState(false);
+  const [allBetsData, setAllBetsData] = useState(null);
+  const [allBetsPage, setAllBetsPage] = useState(1);
+
+  useEffect(() => {
+    fetchHumanBots();
+    fetchStats();
+  }, []);
+
+  const fetchHumanBots = async () => {
+    try {
+      setLoading(true);
+      const response = await executeOperation('/admin/human-bots?limit=100', 'GET');
+      if (response.success !== false) {
+        setHumanBots(response.bots || []);
+      }
+    } catch (error) {
+      console.error('Ошибка получения Human-ботов:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const response = await executeOperation('/admin/human-bots/stats', 'GET');
+      if (response.success !== false) {
+        setStats(response);
+      }
+    } catch (error) {
+      console.error('Ошибка получения статистики:', error);
+    }
+  };
+
+  // Helper function to execute API operations
+  const executeOperation = async (endpoint, method = 'GET', data = null) => {
+    try {
+      const token = localStorage.getItem('token');
+      const config = {
+        method,
+        url: `${API}${endpoint}`,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      };
+      
+      if (data) {
+        if (method === 'GET') {
+          config.params = data;
+        } else {
+          config.data = data;
+        }
+      }
+      
+      const response = await axios(config);
+      return response.data;
+    } catch (err) {
+      let errorMessage = 'Ошибка API запроса';
+      
+      // Handle different error response formats
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        
+        // Handle FastAPI validation errors (array format)
+        if (Array.isArray(errorData) && errorData.length > 0) {
+          errorMessage = errorData.map(e => e.msg || e.message || 'Validation error').join(', ');
+        }
+        // Handle standard error with detail
+        else if (errorData.detail) {
+          errorMessage = typeof errorData.detail === 'string' ? errorData.detail : 'Validation error';
+        }
+        // Handle error message
+        else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+        // Handle error as string
+        else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
+      }
+      // Fallback to error message
+      else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      addNotification(errorMessage, 'error');
+      throw new Error(errorMessage);
+    }
+  };
+
+  // Multiple selection handlers
+  const handleSelectBot = (botId) => {
+    const newSelected = new Set(selectedBots);
+    if (newSelected.has(botId)) {
+      newSelected.delete(botId);
+    } else {
+      newSelected.add(botId);
+    }
+    setSelectedBots(newSelected);
+    setShowBulkActions(newSelected.size > 0);
+    setSelectAll(newSelected.size === humanBots.length && humanBots.length > 0);
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedBots(new Set());
+      setShowBulkActions(false);
+    } else {
+      const allBotIds = new Set(humanBots.map(bot => bot.id));
+      setSelectedBots(allBotIds);
+      setShowBulkActions(true);
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const clearSelection = () => {
+    setSelectedBots(new Set());
+    setSelectAll(false);
+    setShowBulkActions(false);
+  };
+
+  // Bulk actions
+  const handleBulkToggleStatus = async (activate) => {
+    if (selectedBots.size === 0) return;
+
+    const action = activate ? 'активировать' : 'деактивировать';
+    const confirmed = await confirm({
+      title: `${activate ? 'Активация' : 'Деактивация'} выбранных Human-ботов`,
+      message: `Вы уверены, что хотите ${action} ${selectedBots.size} выбранных Human-ботов?`,
+      type: activate ? "success" : "warning"
+    });
+
+    if (confirmed) {
+      setBulkActionLoading(true);
+      try {
+        const selectedBotIds = Array.from(selectedBots);
+        let successCount = 0;
+
+        for (const botId of selectedBotIds) {
+          try {
+            await executeOperation(`/admin/human-bots/${botId}/toggle-status`, 'POST');
+            successCount++;
+          } catch (error) {
+            console.error(`Ошибка для бота ${botId}:`, error);
+          }
+        }
+
+        addNotification(`${action} ${successCount} из ${selectedBots.size} Human-ботов`, 'success');
+        clearSelection();
+        await fetchHumanBots();
+        await fetchStats();
+      } catch (error) {
+        console.error('Ошибка массового изменения статуса:', error);
+      } finally {
+        setBulkActionLoading(false);
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedBots.size === 0) return;
+
+    const confirmed = await confirm({
+      title: 'Удаление выбранных Human-ботов',
+      message: `Вы уверены, что хотите удалить ${selectedBots.size} выбранных Human-ботов? Это действие необратимо!`,
+      type: "danger"
+    });
+
+    if (confirmed) {
+      setBulkActionLoading(true);
+      try {
+        const selectedBotIds = Array.from(selectedBots);
+        let successCount = 0;
+
+        for (const botId of selectedBotIds) {
+          try {
+            await executeOperation(`/admin/human-bots/${botId}`, 'DELETE');
+            successCount++;
+          } catch (error) {
+            console.error(`Ошибка удаления бота ${botId}:`, error);
+          }
+        }
+
+        addNotification(`Удалено ${successCount} из ${selectedBots.size} Human-ботов`, 'success');
+        clearSelection();
+        await fetchHumanBots();
+        await fetchStats();
+      } catch (error) {
+        console.error('Ошибка массового удаления:', error);
+      } finally {
+        setBulkActionLoading(false);
+      }
+    }
+  };
+
+  // Active bets modal handlers
+  const handleActiveBetsModal = async (bot) => {
+    setSelectedBotForActiveBets(bot);
+    setIsActiveBetsModalOpen(true);
+    setLoadingActiveBets(true);
+    setShowAllBets(false);
+    
+    try {
+      const response = await executeOperation(`/admin/human-bots/${bot.id}/active-bets`, 'GET');
+      setActiveBetsData(response);
+    } catch (error) {
+      console.error('Ошибка получения активных ставок:', error);
+      setActiveBetsData(null);
+    } finally {
+      setLoadingActiveBets(false);
+    }
+  };
+
+  const handleShowAllBets = async () => {
+    if (!selectedBotForActiveBets) return;
+    
+    setShowAllBets(true);
+    setLoadingActiveBets(true);
+    
+    try {
+      const response = await executeOperation(
+        `/admin/human-bots/${selectedBotForActiveBets.id}/all-bets?page=${allBetsPage}&limit=20`, 
+        'GET'
+      );
+      setAllBetsData(response);
+    } catch (error) {
+      console.error('Ошибка получения всех ставок:', error);
+      setAllBetsData(null);
+    } finally {
+      setLoadingActiveBets(false);
+    }
+  };
+
+  const handleToggleStatus = async (bot) => {
+    try {
+      await executeOperation(`/admin/human-bots/${bot.id}/toggle-status`, 'POST');
+      addNotification(`Human-бот ${bot.name} ${bot.is_active ? 'деактивирован' : 'активирован'}`, 'success');
+      await fetchHumanBots();
+      await fetchStats();
+    } catch (error) {
+      console.error('Ошибка переключения статуса:', error);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatTimeLeft = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const getCharacterName = (character) => {
+    const characterMap = {
+      'STABLE': 'Стабильный',
+      'AGGRESSIVE': 'Агрессивный',
+      'CAUTIOUS': 'Осторожный',
+      'BALANCED': 'Балансированный',
+      'IMPULSIVE': 'Импульсивный',
+      'ANALYST': 'Аналитик',
+      'MIMIC': 'Мимик'
+    };
+    return characterMap[character] || character;
+  };
+
+  return (
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-border-primary">
+        <h3 className="text-lg font-rajdhani font-bold text-white">Список Human ботов</h3>
+        {loading && <div className="text-text-secondary">Загрузка...</div>}
+      </div>
+
+      {/* Bulk actions panel */}
+      {showBulkActions && (
+        <div className="p-4 bg-accent-primary bg-opacity-10 border-b border-border-primary">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-white font-roboto text-sm">
+                Выбрано ботов: <span className="font-bold">{selectedBots.size}</span>
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleBulkToggleStatus(true)}
+                disabled={bulkActionLoading}
+                className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+              >
+                {bulkActionLoading ? 'Загрузка...' : 'Включить всех'}
+              </button>
+              <button
+                onClick={() => handleBulkToggleStatus(false)}
+                disabled={bulkActionLoading}
+                className="px-3 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700 disabled:opacity-50 transition-colors"
+              >
+                {bulkActionLoading ? 'Загрузка...' : 'Выключить всех'}
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkActionLoading}
+                className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
+              >
+                {bulkActionLoading ? 'Загрузка...' : 'Удалить всех'}
+              </button>
+              <button
+                onClick={clearSelection}
+                className="px-3 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700 transition-colors"
+              >
+                Отменить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Table with horizontal scroll */}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-surface-sidebar">
+            <tr>
+              <th className="px-4 py-3 text-center text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                <input
+                  type="checkbox"
+                  checked={selectAll}
+                  onChange={handleSelectAll}
+                  className="w-4 h-4 text-accent-primary bg-surface-primary border-border-primary rounded focus:ring-accent-primary focus:ring-2"
+                />
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Имя
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Статистика
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Ставки
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Характер
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Статус
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Диапазон ставок
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Процент побед
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Лимиты ставок
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Действия
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border-primary">
+            {humanBots.length === 0 ? (
+              <tr>
+                <td colSpan="10" className="px-4 py-8 text-center text-text-secondary">
+                  Нет Human-ботов для отображения
+                </td>
+              </tr>
+            ) : (
+              humanBots.map((bot) => (
+                <tr key={bot.id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <input
+                      type="checkbox"
+                      checked={selectedBots.has(bot.id)}
+                      onChange={() => handleSelectBot(bot.id)}
+                      className="w-4 h-4 text-accent-primary bg-surface-primary border-border-primary rounded focus:ring-accent-primary focus:ring-2"
+                    />
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <div className="text-white font-roboto text-sm">
+                      {bot.name}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <div className="text-accent-primary font-roboto text-xs">
+                      <div>Игр: {bot.total_games_played || 0}</div>
+                      <div>Побед: {bot.total_games_won || 0}</div>
+                      <div>Заработано: ${(bot.total_amount_won || 0).toFixed(2)}</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <button
+                      onClick={() => handleActiveBetsModal(bot)}
+                      className="text-blue-400 hover:text-blue-300 underline font-roboto text-sm cursor-pointer"
+                      title="Показать активные ставки"
+                    >
+                      {/* Здесь будет количество активных ставок, пока показываем 0 */}
+                      0
+                    </button>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <span className={`px-2 py-1 text-xs rounded-full font-roboto font-medium text-white ${
+                      bot.character === 'AGGRESSIVE' ? 'bg-red-600' :
+                      bot.character === 'CAUTIOUS' ? 'bg-blue-600' :
+                      bot.character === 'STABLE' ? 'bg-green-600' :
+                      bot.character === 'IMPULSIVE' ? 'bg-purple-600' :
+                      bot.character === 'ANALYST' ? 'bg-indigo-600' :
+                      bot.character === 'MIMIC' ? 'bg-pink-600' :
+                      'bg-gray-600'
+                    }`}>
+                      {getCharacterName(bot.character)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <span className={`px-2 py-1 text-xs rounded-full font-roboto font-medium ${
+                      bot.is_active 
+                        ? 'bg-green-600 text-white' 
+                        : 'bg-red-600 text-white'
+                    }`}>
+                      {bot.is_active ? 'Активен' : 'Неактивен'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <div className="text-accent-primary font-roboto text-xs">
+                      <div>Min: ${bot.min_bet}</div>
+                      <div>Max: ${bot.max_bet}</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <div className="text-orange-400 font-roboto text-sm">
+                      {bot.win_percentage}%
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <div className="text-yellow-400 font-roboto text-sm">
+                      {bot.bet_limit || 12}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <div className="flex space-x-2 justify-center">
+                      <button
+                        onClick={() => onEditBot(bot)}
+                        className="p-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        title="Настройки"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleToggleStatus(bot)}
+                        className={`p-1 text-white rounded hover:opacity-80 ${
+                          bot.is_active ? 'bg-yellow-600' : 'bg-green-600'
+                        }`}
+                        title={bot.is_active ? 'Деактивировать' : 'Активировать'}
+                      >
+                        {bot.is_active ? '⏸️' : '▶️'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Active bets modal */}
+      {isActiveBetsModalOpen && selectedBotForActiveBets && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-blue-500 border-opacity-50 rounded-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-border-primary">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-600 rounded-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-rajdhani text-xl font-bold text-white">
+                    {showAllBets ? '📋 История ставок' : '🎯 Активные ставки'}
+                  </h3>
+                  <p className="text-blue-400 font-rajdhani font-bold">{selectedBotForActiveBets.name}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsActiveBetsModalOpen(false);
+                  setSelectedBotForActiveBets(null);
+                  setActiveBetsData(null);
+                  setAllBetsData(null);
+                  setShowAllBets(false);
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              {loadingActiveBets ? (
+                <div className="text-center text-text-secondary py-12">
+                  <div className="text-4xl mb-4">⏳</div>
+                  <h4 className="font-rajdhani text-xl font-bold">Загрузка данных...</h4>
+                </div>
+              ) : showAllBets && allBetsData ? (
+                <div>
+                  <div className="mb-6 text-center">
+                    <div className="text-2xl font-bold text-blue-400 mb-2">
+                      Всего ставок: {allBetsData.total_bets}
+                    </div>
+                    <button
+                      onClick={() => setShowAllBets(false)}
+                      className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                    >
+                      ← Вернуться к активным ставкам
+                    </button>
+                  </div>
+                  
+                  {allBetsData.bets.length === 0 ? (
+                    <div className="text-center text-text-secondary py-8">
+                      <div className="text-6xl mb-4">📭</div>
+                      <h4 className="font-rajdhani text-xl font-bold mb-2">Нет истории ставок</h4>
+                      <p>У этого Human-бота пока нет сыгранных ставок</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-surface-sidebar">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата</th>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ставка</th>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Результат</th>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Противник</th>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Выигрыш</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-primary">
+                          {allBetsData.bets.map((bet) => (
+                            <tr key={bet.game_id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
+                              <td className="px-4 py-3 text-text-secondary text-sm">
+                                {formatDate(bet.created_at)}
+                              </td>
+                              <td className="px-4 py-3 text-white font-bold">
+                                ${bet.bet_amount} ({bet.total_gems} 💎)
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`px-2 py-1 text-xs rounded-full font-bold ${
+                                  bet.result === 'Победа' ? 'bg-green-600 text-white' :
+                                  bet.result === 'Поражение' ? 'bg-red-600 text-white' :
+                                  bet.result === 'Ничья' ? 'bg-gray-600 text-white' :
+                                  bet.result === 'Отменена' ? 'bg-yellow-600 text-black' :
+                                  'bg-blue-600 text-white'
+                                }`}>
+                                  {bet.result}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-white text-sm">{bet.opponent}</td>
+                              <td className="px-4 py-3 text-green-400 font-bold">
+                                {bet.winnings > 0 ? `+$${bet.winnings.toFixed(2)}` : '$0.00'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              ) : activeBetsData ? (
+                <div>
+                  <div className="mb-6 text-center">
+                    <div className="text-2xl font-bold text-blue-400 mb-2">
+                      Активных ставок: {activeBetsData.active_bets_count}
+                    </div>
+                    <button
+                      onClick={handleShowAllBets}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Показать все ставки
+                    </button>
+                  </div>
+                  
+                  {activeBetsData.bets.length === 0 ? (
+                    <div className="text-center text-text-secondary py-8">
+                      <div className="text-6xl mb-4">💤</div>
+                      <h4 className="font-rajdhani text-xl font-bold mb-2">Нет активных ставок</h4>
+                      <p>У этого Human-бота сейчас нет активных ставок</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-surface-sidebar">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Создана</th>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ставка</th>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Статус</th>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Противник</th>
+                            <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Отмена через</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-primary">
+                          {activeBetsData.bets.map((bet) => (
+                            <tr key={bet.game_id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
+                              <td className="px-4 py-3 text-text-secondary text-sm">
+                                {formatDate(bet.created_at)}
+                              </td>
+                              <td className="px-4 py-3 text-white font-bold">
+                                ${bet.bet_amount} ({bet.total_gems} 💎)
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`px-2 py-1 text-xs rounded-full font-bold ${
+                                  bet.status === 'WAITING' ? 'bg-blue-600 text-white' :
+                                  bet.status === 'REVEAL' ? 'bg-yellow-600 text-black' :
+                                  bet.status === 'ACTIVE' ? 'bg-green-600 text-white' :
+                                  'bg-gray-600 text-white'
+                                }`}>
+                                  {bet.status}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-white text-sm">{bet.opponent}</td>
+                              <td className="px-4 py-3 text-red-400 text-sm">
+                                {formatTimeLeft(bet.time_until_cancel)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center text-text-secondary py-8">
+                  <div className="text-6xl mb-4">❌</div>
+                  <h4 className="font-rajdhani text-xl font-bold mb-2">Ошибка загрузки</h4>
+                  <p>Не удалось загрузить данные о ставках</p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-between items-center p-6 border-t border-border-primary">
+              <div className="text-text-secondary text-sm">
+                💡 <strong>Подсказка:</strong> Активные ставки обновляются автоматически каждые 15 минут
+              </div>
+              <button
+                onClick={() => {
+                  setIsActiveBetsModalOpen(false);
+                  setSelectedBotForActiveBets(null);
+                  setActiveBetsData(null);
+                  setAllBetsData(null);
+                  setShowAllBets(false);
+                }}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modals */}
+      <ConfirmationModal {...confirmationModal} />
+      <InputModal {...inputModal} />
+    </div>
+  );
+};
+
+export default HumanBotsList;
