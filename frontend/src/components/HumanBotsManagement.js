@@ -444,6 +444,20 @@ const HumanBotsManagement = () => {
 
               <div className="form-row">
                 <div className="form-group">
+                  <label>Лимит ставок</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={createFormData.bet_limit}
+                    onChange={(e) => setCreateFormData({...createFormData, bet_limit: parseInt(e.target.value)})}
+                  />
+                  <small className="form-help">Максимальное количество одновременных ставок (1-100)</small>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
                   <label>% Побед</label>
                   <input
                     type="number"
