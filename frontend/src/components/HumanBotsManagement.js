@@ -171,9 +171,18 @@ const HumanBotsManagement = () => {
     }
 
     try {
-      const response = await executeOperation('/admin/human-bots', 'POST', createFormData);
+      let response;
+      if (editingBot) {
+        // Edit existing bot
+        response = await executeOperation(`/admin/human-bots/${editingBot.id}`, 'PUT', createFormData);
+      } else {
+        // Create new bot
+        response = await executeOperation('/admin/human-bots', 'POST', createFormData);
+      }
+      
       if (response.success !== false) {
         setShowCreateForm(false);
+        setEditingBot(null);
         setCreateFormData({
           name: '',
           character: 'BALANCED',
@@ -192,7 +201,7 @@ const HumanBotsManagement = () => {
         fetchStats();
       }
     } catch (error) {
-      console.error('Ошибка создания Human-бота:', error);
+      console.error('Ошибка создания/редактирования Human-бота:', error);
     }
   };
 
