@@ -5715,6 +5715,378 @@ def run_regular_bot_commission_tests() -> None:
     # Print summary
     print_summary()
 
+def test_human_bot_bet_limit_feature():
+    """Test the newly implemented Human-bot bet limit feature backend functionality."""
+    print_header("TESTING HUMAN-BOT BET LIMIT FEATURE")
+    
+    # Step 1: Login as admin
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Cannot proceed with Human-bot bet limit tests - admin login failed")
+        return
+    
+    # Step 2: Test Create Human-bot with bet_limit field
+    print_subheader("Step 2: Create Human-bot with bet_limit")
+    
+    # Test with default bet_limit (should be 12)
+    create_data = {
+        "name": f"TestBot_BetLimit_{int(time.time())}",
+        "character": "BALANCED",
+        "min_bet": 5.0,
+        "max_bet": 50.0,
+        "win_percentage": 40.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,
+        "min_delay": 30,
+        "max_delay": 90
+        # bet_limit not specified - should default to 12
+    }
+    
+    response, success = make_request("POST", "/admin/human-bots", data=create_data, auth_token=admin_token)
+    
+    if success:
+        bot_id = response.get("id")
+        bet_limit = response.get("bet_limit")
+        
+        print_success(f"Human-bot created successfully: {bot_id}")
+        print_success(f"Bot name: {response.get('name')}")
+        print_success(f"Bet limit: {bet_limit}")
+        
+        # Verify bet_limit defaults to 12
+        if bet_limit == 12:
+            print_success("✓ bet_limit correctly defaults to 12")
+            record_test("Human-bot Creation - Default bet_limit", True)
+        else:
+            print_error(f"✗ bet_limit should default to 12, got {bet_limit}")
+            record_test("Human-bot Creation - Default bet_limit", False, f"Got {bet_limit} instead of 12")
+        
+        # Store bot_id for later tests
+        test_bot_id = bot_id
+        record_test("Human-bot Creation - Basic", True)
+    else:
+        print_error(f"Failed to create Human-bot: {response}")
+        record_test("Human-bot Creation - Basic", False, f"Failed: {response}")
+        return
+    
+    # Step 3: Test Create Human-bot with custom bet_limit
+    print_subheader("Step 3: Create Human-bot with custom bet_limit")
+    
+    create_data_custom = {
+        "name": f"TestBot_CustomLimit_{int(time.time())}",
+        "character": "AGGRESSIVE",
+        "min_bet": 10.0,
+        "max_bet": 100.0,
+        "bet_limit": 25,  # Custom bet_limit
+        "win_percentage": 50.0,
+        "loss_percentage": 30.0,
+        "draw_percentage": 20.0,
+        "min_delay": 20,
+        "max_delay": 60
+    }
+    
+    response, success = make_request("POST", "/admin/human-bots", data=create_data_custom, auth_token=admin_token)
+    
+    if success:
+        bet_limit = response.get("bet_limit")
+        print_success(f"Human-bot with custom bet_limit created: {response.get('id')}")
+        print_success(f"Custom bet_limit: {bet_limit}")
+        
+        if bet_limit == 25:
+            print_success("✓ Custom bet_limit correctly set to 25")
+            record_test("Human-bot Creation - Custom bet_limit", True)
+        else:
+            print_error(f"✗ Custom bet_limit should be 25, got {bet_limit}")
+            record_test("Human-bot Creation - Custom bet_limit", False, f"Got {bet_limit} instead of 25")
+    else:
+        print_error(f"Failed to create Human-bot with custom bet_limit: {response}")
+        record_test("Human-bot Creation - Custom bet_limit", False, f"Failed: {response}")
+    
+    # Step 4: Test bet_limit validation (should be 1-100)
+    print_subheader("Step 4: Test bet_limit validation")
+    
+    # Test bet_limit = 0 (should fail)
+    invalid_data_low = create_data.copy()
+    invalid_data_low["name"] = f"TestBot_Invalid_Low_{int(time.time())}"
+    invalid_data_low["bet_limit"] = 0
+    
+    response, success = make_request("POST", "/admin/human-bots", data=invalid_data_low, auth_token=admin_token, expected_status=422)
+    
+    if not success and "bet_limit" in str(response).lower():
+        print_success("✓ bet_limit = 0 correctly rejected")
+        record_test("Human-bot Validation - bet_limit too low", True)
+    else:
+        print_error(f"✗ bet_limit = 0 should be rejected: {response}")
+        record_test("Human-bot Validation - bet_limit too low", False, f"Not rejected: {response}")
+    
+    # Test bet_limit = 101 (should fail)
+    invalid_data_high = create_data.copy()
+    invalid_data_high["name"] = f"TestBot_Invalid_High_{int(time.time())}"
+    invalid_data_high["bet_limit"] = 101
+    
+    response, success = make_request("POST", "/admin/human-bots", data=invalid_data_high, auth_token=admin_token, expected_status=422)
+    
+    if not success and "bet_limit" in str(response).lower():
+        print_success("✓ bet_limit = 101 correctly rejected")
+        record_test("Human-bot Validation - bet_limit too high", True)
+    else:
+        print_error(f"✗ bet_limit = 101 should be rejected: {response}")
+        record_test("Human-bot Validation - bet_limit too high", False, f"Not rejected: {response}")
+    
+    # Test bet_limit = 1 (should pass)
+    valid_data_min = create_data.copy()
+    valid_data_min["name"] = f"TestBot_Valid_Min_{int(time.time())}"
+    valid_data_min["bet_limit"] = 1
+    
+    response, success = make_request("POST", "/admin/human-bots", data=valid_data_min, auth_token=admin_token)
+    
+    if success and response.get("bet_limit") == 1:
+        print_success("✓ bet_limit = 1 correctly accepted")
+        record_test("Human-bot Validation - bet_limit minimum valid", True)
+    else:
+        print_error(f"✗ bet_limit = 1 should be accepted: {response}")
+        record_test("Human-bot Validation - bet_limit minimum valid", False, f"Failed: {response}")
+    
+    # Test bet_limit = 100 (should pass)
+    valid_data_max = create_data.copy()
+    valid_data_max["name"] = f"TestBot_Valid_Max_{int(time.time())}"
+    valid_data_max["bet_limit"] = 100
+    
+    response, success = make_request("POST", "/admin/human-bots", data=valid_data_max, auth_token=admin_token)
+    
+    if success and response.get("bet_limit") == 100:
+        print_success("✓ bet_limit = 100 correctly accepted")
+        record_test("Human-bot Validation - bet_limit maximum valid", True)
+    else:
+        print_error(f"✗ bet_limit = 100 should be accepted: {response}")
+        record_test("Human-bot Validation - bet_limit maximum valid", False, f"Failed: {response}")
+    
+    # Step 5: Test Update Human-bot with bet_limit
+    print_subheader("Step 5: Update Human-bot bet_limit")
+    
+    update_data = {
+        "bet_limit": 30
+    }
+    
+    response, success = make_request("PUT", f"/admin/human-bots/{test_bot_id}", data=update_data, auth_token=admin_token)
+    
+    if success:
+        updated_bet_limit = response.get("bet_limit")
+        print_success(f"Human-bot updated successfully")
+        print_success(f"Updated bet_limit: {updated_bet_limit}")
+        
+        if updated_bet_limit == 30:
+            print_success("✓ bet_limit correctly updated to 30")
+            record_test("Human-bot Update - bet_limit", True)
+        else:
+            print_error(f"✗ bet_limit should be 30, got {updated_bet_limit}")
+            record_test("Human-bot Update - bet_limit", False, f"Got {updated_bet_limit} instead of 30")
+    else:
+        print_error(f"Failed to update Human-bot bet_limit: {response}")
+        record_test("Human-bot Update - bet_limit", False, f"Failed: {response}")
+    
+    # Step 6: Test Bulk create with bet_limit_range
+    print_subheader("Step 6: Bulk create with bet_limit_range")
+    
+    bulk_data = {
+        "count": 3,
+        "character": "CAUTIOUS",
+        "min_bet_range": [5.0, 15.0],
+        "max_bet_range": [20.0, 40.0],
+        "bet_limit_range": [10, 20],  # bet_limit should be between 10-20
+        "win_percentage": 35.0,
+        "loss_percentage": 45.0,
+        "draw_percentage": 20.0,
+        "delay_range": [30, 90]
+    }
+    
+    response, success = make_request("POST", "/admin/human-bots/bulk-create", data=bulk_data, auth_token=admin_token)
+    
+    if success:
+        created_count = response.get("created_count", 0)
+        created_bots = response.get("created_bots", [])
+        
+        print_success(f"Bulk created {created_count} Human-bots")
+        
+        if created_count == 3:
+            print_success("✓ All 3 bots created successfully")
+            record_test("Human-bot Bulk Create - Count", True)
+            
+            # Store bot IDs for later testing
+            bulk_bot_ids = [bot["id"] for bot in created_bots]
+            
+            # Verify bet_limit_range was applied (we need to fetch the bots to check)
+            print_success("Verifying bet_limit_range was applied...")
+            
+            # Get list of human bots to verify bet_limit values
+            response, success = make_request("GET", "/admin/human-bots", auth_token=admin_token)
+            if success:
+                all_bots = response.get("bots", [])
+                bulk_created_bots = [bot for bot in all_bots if bot["id"] in bulk_bot_ids]
+                
+                bet_limits_in_range = True
+                for bot in bulk_created_bots:
+                    bet_limit = bot.get("bet_limit", 0)
+                    if not (10 <= bet_limit <= 20):
+                        bet_limits_in_range = False
+                        print_error(f"Bot {bot['name']} has bet_limit {bet_limit} outside range [10, 20]")
+                    else:
+                        print_success(f"Bot {bot['name']} has bet_limit {bet_limit} (within range)")
+                
+                if bet_limits_in_range:
+                    print_success("✓ All bulk created bots have bet_limit within specified range")
+                    record_test("Human-bot Bulk Create - bet_limit_range", True)
+                else:
+                    print_error("✗ Some bulk created bots have bet_limit outside specified range")
+                    record_test("Human-bot Bulk Create - bet_limit_range", False, "bet_limit outside range")
+            else:
+                print_error("Failed to verify bet_limit_range")
+                record_test("Human-bot Bulk Create - bet_limit_range", False, "Failed to verify")
+        else:
+            print_error(f"✗ Expected 3 bots, created {created_count}")
+            record_test("Human-bot Bulk Create - Count", False, f"Created {created_count} instead of 3")
+    else:
+        print_error(f"Failed to bulk create Human-bots: {response}")
+        record_test("Human-bot Bulk Create", False, f"Failed: {response}")
+    
+    # Step 7: Test Active bets endpoint
+    print_subheader("Step 7: Test Active bets endpoint")
+    
+    response, success = make_request("GET", f"/admin/human-bots/{test_bot_id}/active-bets", auth_token=admin_token)
+    
+    if success:
+        bot_name = response.get("bot_name")
+        active_bets_count = response.get("active_bets_count", 0)
+        bets = response.get("bets", [])
+        
+        print_success(f"Active bets endpoint successful for bot: {bot_name}")
+        print_success(f"Active bets count: {active_bets_count}")
+        print_success(f"Bets data structure: {len(bets)} bets")
+        
+        # Verify response structure
+        required_fields = ["success", "bot_id", "bot_name", "active_bets_count", "bets"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if not missing_fields:
+            print_success("✓ Active bets response has correct structure")
+            record_test("Human-bot Active Bets - Response Structure", True)
+        else:
+            print_error(f"✗ Active bets response missing fields: {missing_fields}")
+            record_test("Human-bot Active Bets - Response Structure", False, f"Missing: {missing_fields}")
+        
+        # Verify bet data structure if bets exist
+        if bets:
+            sample_bet = bets[0]
+            bet_required_fields = ["game_id", "bet_amount", "status", "created_at", "opponent", "time_until_cancel"]
+            bet_missing_fields = [field for field in bet_required_fields if field not in sample_bet]
+            
+            if not bet_missing_fields:
+                print_success("✓ Bet data structure is correct")
+                record_test("Human-bot Active Bets - Bet Structure", True)
+            else:
+                print_error(f"✗ Bet data missing fields: {bet_missing_fields}")
+                record_test("Human-bot Active Bets - Bet Structure", False, f"Missing: {bet_missing_fields}")
+        else:
+            print_success("✓ No active bets (expected for new bot)")
+            record_test("Human-bot Active Bets - No Bets", True)
+        
+        record_test("Human-bot Active Bets Endpoint", True)
+    else:
+        print_error(f"Failed to get active bets: {response}")
+        record_test("Human-bot Active Bets Endpoint", False, f"Failed: {response}")
+    
+    # Step 8: Test All bets endpoint with pagination
+    print_subheader("Step 8: Test All bets endpoint with pagination")
+    
+    # Test with default pagination
+    response, success = make_request("GET", f"/admin/human-bots/{test_bot_id}/all-bets", auth_token=admin_token)
+    
+    if success:
+        bot_name = response.get("bot_name")
+        total_bets = response.get("total_bets", 0)
+        bets = response.get("bets", [])
+        pagination = response.get("pagination", {})
+        
+        print_success(f"All bets endpoint successful for bot: {bot_name}")
+        print_success(f"Total bets: {total_bets}")
+        print_success(f"Bets in response: {len(bets)}")
+        print_success(f"Pagination: {pagination}")
+        
+        # Verify response structure
+        required_fields = ["success", "bot_id", "bot_name", "total_bets", "bets", "pagination"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if not missing_fields:
+            print_success("✓ All bets response has correct structure")
+            record_test("Human-bot All Bets - Response Structure", True)
+        else:
+            print_error(f"✗ All bets response missing fields: {missing_fields}")
+            record_test("Human-bot All Bets - Response Structure", False, f"Missing: {missing_fields}")
+        
+        # Verify pagination structure
+        pagination_fields = ["current_page", "total_pages", "per_page", "has_next", "has_prev"]
+        pagination_missing = [field for field in pagination_fields if field not in pagination]
+        
+        if not pagination_missing:
+            print_success("✓ Pagination structure is correct")
+            record_test("Human-bot All Bets - Pagination Structure", True)
+        else:
+            print_error(f"✗ Pagination missing fields: {pagination_missing}")
+            record_test("Human-bot All Bets - Pagination Structure", False, f"Missing: {pagination_missing}")
+        
+        record_test("Human-bot All Bets Endpoint", True)
+    else:
+        print_error(f"Failed to get all bets: {response}")
+        record_test("Human-bot All Bets Endpoint", False, f"Failed: {response}")
+    
+    # Step 9: Test All bets endpoint with custom pagination
+    print_subheader("Step 9: Test All bets endpoint with custom pagination")
+    
+    response, success = make_request("GET", f"/admin/human-bots/{test_bot_id}/all-bets?page=1&limit=5", auth_token=admin_token)
+    
+    if success:
+        pagination = response.get("pagination", {})
+        per_page = pagination.get("per_page", 0)
+        current_page = pagination.get("current_page", 0)
+        
+        print_success(f"Custom pagination successful")
+        print_success(f"Per page: {per_page}, Current page: {current_page}")
+        
+        if per_page == 5 and current_page == 1:
+            print_success("✓ Custom pagination parameters correctly applied")
+            record_test("Human-bot All Bets - Custom Pagination", True)
+        else:
+            print_error(f"✗ Custom pagination not applied correctly")
+            record_test("Human-bot All Bets - Custom Pagination", False, f"per_page={per_page}, page={current_page}")
+    else:
+        print_error(f"Failed to get all bets with custom pagination: {response}")
+        record_test("Human-bot All Bets - Custom Pagination", False, f"Failed: {response}")
+    
+    # Step 10: Test with non-existent bot ID
+    print_subheader("Step 10: Test endpoints with non-existent bot ID")
+    
+    fake_bot_id = "non-existent-bot-id"
+    
+    # Test active bets with fake ID
+    response, success = make_request("GET", f"/admin/human-bots/{fake_bot_id}/active-bets", auth_token=admin_token, expected_status=404)
+    
+    if not success and "not found" in str(response).lower():
+        print_success("✓ Active bets correctly returns 404 for non-existent bot")
+        record_test("Human-bot Active Bets - Non-existent Bot", True)
+    else:
+        print_error(f"✗ Active bets should return 404 for non-existent bot: {response}")
+        record_test("Human-bot Active Bets - Non-existent Bot", False, f"Unexpected response: {response}")
+    
+    # Test all bets with fake ID
+    response, success = make_request("GET", f"/admin/human-bots/{fake_bot_id}/all-bets", auth_token=admin_token, expected_status=404)
+    
+    if not success and "not found" in str(response).lower():
+        print_success("✓ All bets correctly returns 404 for non-existent bot")
+        record_test("Human-bot All Bets - Non-existent Bot", True)
+    else:
+        print_error(f"✗ All bets should return 404 for non-existent bot: {response}")
+        record_test("Human-bot All Bets - Non-existent Bot", False, f"Unexpected response: {response}")
+
 if __name__ == "__main__":
     print_header("GEMPLAY AUTOMATIC BOT BETTING SYSTEM TESTING")
     print("Testing automatic bot betting system as requested in the review")
