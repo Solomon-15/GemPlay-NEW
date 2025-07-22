@@ -98,9 +98,18 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
         if (Array.isArray(errorData) && errorData.length > 0) {
           errorMessage = errorData.map(e => e.msg || e.message || 'Validation error').join(', ');
         }
-        // Handle standard error with detail
+        // Handle standard error with detail (might be object with detailed info)
         else if (errorData.detail) {
-          errorMessage = typeof errorData.detail === 'string' ? errorData.detail : 'Validation error';
+          if (typeof errorData.detail === 'object') {
+            // For structured error responses (like active games info)
+            errorMessage = errorData.detail.message || 'Structured error';
+            // Store the full error detail for parsing
+            const error = new Error(errorMessage);
+            error.detailData = errorData.detail;
+            throw error;
+          } else {
+            errorMessage = errorData.detail;
+          }
         }
         // Handle error message
         else if (errorData.message) {
