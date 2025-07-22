@@ -1970,7 +1970,9 @@ async def apply_human_bot_outcome(game_obj: Game) -> Optional[Dict[str, str]]:
             return {"winner_id": None, "result_status": "draw"}
             
     except Exception as e:
-        logger.error(f"Error applying human bot outcome: {e}")
+        logger.error(f"Error applying human bot outcome for game {game_obj.id}: {e}")
+        logger.error(f"Game creator_id: {game_obj.creator_id}, opponent_id: {game_obj.opponent_id}")
+        logger.error(f"Error traceback:", exc_info=True)
         return None
 
 def determine_rps_winner(creator_move: GameMove, opponent_move: GameMove, creator_id: str, opponent_id: str) -> tuple:
