@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useBotsManagement } from '../hooks/useBotsManagement';
-import { useConfirmation } from '../hooks/useConfirmation';
-import { useInput } from '../hooks/useInput';
+import useConfirmation from '../hooks/useConfirmation';
+import useInput from '../hooks/useInput';
 import InputModal from './InputModal';
 import ConfirmationModal from './ConfirmationModal';
 
