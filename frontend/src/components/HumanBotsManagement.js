@@ -158,20 +158,23 @@ const HumanBotsManagement = () => {
   };
 
   const handleDeleteBot = async (botId, botName) => {
-    showConfirmation(
-      `Вы уверены, что хотите удалить Human-бота "${botName}"?`,
-      async () => {
-        try {
-          const response = await executeOperation(`/admin/human-bots/${botId}`, 'DELETE');
-          if (response.success !== false) {
-            fetchHumanBots();
-            fetchStats();
-          }
-        } catch (error) {
-          console.error('Ошибка удаления Human-бота:', error);
+    const confirmed = await confirm({
+      title: "Удаление Human-бота",
+      message: `Вы уверены, что хотите удалить Human-бота "${botName}"?`,
+      type: "danger"
+    });
+    
+    if (confirmed) {
+      try {
+        const response = await executeOperation(`/admin/human-bots/${botId}`, 'DELETE');
+        if (response.success !== false) {
+          fetchHumanBots();
+          fetchStats();
         }
+      } catch (error) {
+        console.error('Ошибка удаления Human-бота:', error);
       }
-    );
+    }
   };
 
   const handleToggleAll = async (activate) => {
