@@ -328,7 +328,7 @@ const HumanBotsManagement = () => {
       {/* Statistics */}
       <div className="stats-grid">
         <div className="stat-card">
-          <h3>Общее количество</h3>
+          <h3>Количество ботов</h3>
           <div className="stat-value">{stats.total_bots || 0}</div>
         </div>
         <div className="stat-card">
