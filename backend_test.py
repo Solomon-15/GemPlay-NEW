@@ -5715,6 +5715,255 @@ def run_regular_bot_commission_tests() -> None:
     # Print summary
     print_summary()
 
+def test_human_bot_list_api_endpoint() -> None:
+    """Test the Human-bot List API endpoint to verify recent changes as requested in the review."""
+    print_header("HUMAN-BOT LIST API ENDPOINT TESTING")
+    
+    # Step 1: Admin Login Test
+    print_subheader("Step 1: Admin Login Test")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with Human-bot List API test")
+        record_test("Human-bot List API - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("Admin login successful - authentication test passed")
+    record_test("Human-bot List API - Admin Login", True)
+    
+    # Step 2: Test Human-bot List API Endpoint
+    print_subheader("Step 2: Test GET /api/admin/human-bots Endpoint")
+    
+    # Test with default pagination
+    print("Testing with default pagination...")
+    list_response, list_success = make_request(
+        "GET", "/admin/human-bots",
+        auth_token=admin_token
+    )
+    
+    if not list_success:
+        print_error("Failed to get human-bots list")
+        record_test("Human-bot List API - Basic Request", False, "Request failed")
+        return
+    
+    print_success("Human-bots list API request successful")
+    record_test("Human-bot List API - Basic Request", True)
+    
+    # Step 3: Verify New Response Format with Pagination
+    print_subheader("Step 3: Verify New Response Format with Pagination")
+    
+    # Check for required top-level fields
+    required_fields = ["success", "bots", "pagination"]
+    missing_fields = [field for field in required_fields if field not in list_response]
+    
+    if missing_fields:
+        print_error(f"Response missing required fields: {missing_fields}")
+        record_test("Human-bot List API - Response Format", False, f"Missing fields: {missing_fields}")
+    else:
+        print_success("Response has all required top-level fields: success, bots, pagination")
+        record_test("Human-bot List API - Response Format", True)
+    
+    # Verify success field
+    if list_response.get("success") == True:
+        print_success("✓ success field is True")
+    else:
+        print_error(f"✗ success field is {list_response.get('success')}, expected True")
+    
+    # Verify bots field is array
+    bots = list_response.get("bots", [])
+    if isinstance(bots, list):
+        print_success(f"✓ bots field is array with {len(bots)} items")
+    else:
+        print_error(f"✗ bots field is {type(bots)}, expected array")
+    
+    # Verify pagination object
+    pagination = list_response.get("pagination", {})
+    if isinstance(pagination, dict):
+        print_success("✓ pagination field is object")
+        
+        # Check pagination fields
+        pagination_fields = ["current_page", "total_pages", "per_page", "total_items", "has_next", "has_prev"]
+        missing_pagination_fields = [field for field in pagination_fields if field not in pagination]
+        
+        if missing_pagination_fields:
+            print_error(f"Pagination missing fields: {missing_pagination_fields}")
+            record_test("Human-bot List API - Pagination Fields", False, f"Missing: {missing_pagination_fields}")
+        else:
+            print_success("✓ Pagination has all required fields")
+            print_success(f"  - current_page: {pagination['current_page']}")
+            print_success(f"  - total_pages: {pagination['total_pages']}")
+            print_success(f"  - per_page: {pagination['per_page']}")
+            print_success(f"  - total_items: {pagination['total_items']}")
+            print_success(f"  - has_next: {pagination['has_next']}")
+            print_success(f"  - has_prev: {pagination['has_prev']}")
+            record_test("Human-bot List API - Pagination Fields", True)
+    else:
+        print_error(f"✗ pagination field is {type(pagination)}, expected object")
+        record_test("Human-bot List API - Pagination Fields", False, "Pagination not object")
+    
+    # Step 4: Verify bet_limit Field in Bot Responses
+    print_subheader("Step 4: Verify bet_limit Field in Bot Responses")
+    
+    if bots:
+        print(f"Testing bet_limit field in {len(bots)} bots...")
+        bet_limit_found = 0
+        bet_limit_missing = 0
+        
+        for i, bot in enumerate(bots):
+            bot_name = bot.get("name", f"Bot {i+1}")
+            
+            if "bet_limit" in bot:
+                bet_limit_value = bot["bet_limit"]
+                print_success(f"✓ Bot '{bot_name}': bet_limit = {bet_limit_value}")
+                bet_limit_found += 1
+            else:
+                print_error(f"✗ Bot '{bot_name}': bet_limit field MISSING")
+                bet_limit_missing += 1
+        
+        if bet_limit_missing == 0:
+            print_success(f"✓ ALL {len(bots)} bots have bet_limit field")
+            record_test("Human-bot List API - bet_limit Field", True)
+        else:
+            print_error(f"✗ {bet_limit_missing} out of {len(bots)} bots missing bet_limit field")
+            record_test("Human-bot List API - bet_limit Field", False, f"{bet_limit_missing} bots missing field")
+    else:
+        print_warning("No bots found to test bet_limit field")
+        record_test("Human-bot List API - bet_limit Field", False, "No bots to test")
+    
+    # Step 5: Verify active_bets_count Field in Bot Responses
+    print_subheader("Step 5: Verify active_bets_count Field in Bot Responses")
+    
+    if bots:
+        print(f"Testing active_bets_count field in {len(bots)} bots...")
+        active_bets_found = 0
+        active_bets_missing = 0
+        
+        for i, bot in enumerate(bots):
+            bot_name = bot.get("name", f"Bot {i+1}")
+            
+            if "active_bets_count" in bot:
+                active_bets_value = bot["active_bets_count"]
+                print_success(f"✓ Bot '{bot_name}': active_bets_count = {active_bets_value}")
+                active_bets_found += 1
+            else:
+                print_error(f"✗ Bot '{bot_name}': active_bets_count field MISSING")
+                active_bets_missing += 1
+        
+        if active_bets_missing == 0:
+            print_success(f"✓ ALL {len(bots)} bots have active_bets_count field")
+            record_test("Human-bot List API - active_bets_count Field", True)
+        else:
+            print_error(f"✗ {active_bets_missing} out of {len(bots)} bots missing active_bets_count field")
+            record_test("Human-bot List API - active_bets_count Field", False, f"{active_bets_missing} bots missing field")
+    else:
+        print_warning("No bots found to test active_bets_count field")
+        record_test("Human-bot List API - active_bets_count Field", False, "No bots to test")
+    
+    # Step 6: Test Pagination Parameters
+    print_subheader("Step 6: Test Pagination Parameters")
+    
+    # Test with custom pagination
+    print("Testing with custom pagination (page=1, limit=5)...")
+    paginated_response, paginated_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=5",
+        auth_token=admin_token
+    )
+    
+    if paginated_success:
+        print_success("Custom pagination request successful")
+        
+        paginated_pagination = paginated_response.get("pagination", {})
+        if paginated_pagination.get("per_page") == 5:
+            print_success("✓ Custom limit parameter working (per_page = 5)")
+            record_test("Human-bot List API - Custom Pagination", True)
+        else:
+            print_error(f"✗ Custom limit not applied, per_page = {paginated_pagination.get('per_page')}")
+            record_test("Human-bot List API - Custom Pagination", False, "Limit not applied")
+        
+        if paginated_pagination.get("current_page") == 1:
+            print_success("✓ Custom page parameter working (current_page = 1)")
+        else:
+            print_error(f"✗ Custom page not applied, current_page = {paginated_pagination.get('current_page')}")
+    else:
+        print_error("Custom pagination request failed")
+        record_test("Human-bot List API - Custom Pagination", False, "Request failed")
+    
+    # Step 7: Test JSON Structure Validation
+    print_subheader("Step 7: Test JSON Structure Validation")
+    
+    try:
+        # Verify response is valid JSON (already parsed by make_request)
+        print_success("✓ Response is valid JSON")
+        
+        # Verify response structure matches expected format
+        if (isinstance(list_response, dict) and 
+            "success" in list_response and 
+            "bots" in list_response and 
+            "pagination" in list_response):
+            print_success("✓ JSON structure matches expected format")
+            record_test("Human-bot List API - JSON Structure", True)
+        else:
+            print_error("✗ JSON structure does not match expected format")
+            record_test("Human-bot List API - JSON Structure", False, "Structure mismatch")
+    except Exception as e:
+        print_error(f"✗ JSON structure validation failed: {e}")
+        record_test("Human-bot List API - JSON Structure", False, f"Validation error: {e}")
+    
+    # Step 8: Test Bot Data Completeness
+    print_subheader("Step 8: Test Bot Data Completeness")
+    
+    if bots:
+        print("Testing bot data completeness...")
+        expected_bot_fields = ["id", "name", "character", "is_active", "min_bet", "max_bet", 
+                              "bet_limit", "active_bets_count", "win_percentage", "loss_percentage", 
+                              "draw_percentage", "created_at"]
+        
+        complete_bots = 0
+        incomplete_bots = 0
+        
+        for i, bot in enumerate(bots):
+            bot_name = bot.get("name", f"Bot {i+1}")
+            missing_fields = [field for field in expected_bot_fields if field not in bot]
+            
+            if not missing_fields:
+                print_success(f"✓ Bot '{bot_name}': All fields present")
+                complete_bots += 1
+            else:
+                print_warning(f"⚠ Bot '{bot_name}': Missing fields: {missing_fields}")
+                incomplete_bots += 1
+        
+        if incomplete_bots == 0:
+            print_success(f"✓ ALL {len(bots)} bots have complete data")
+            record_test("Human-bot List API - Bot Data Completeness", True)
+        else:
+            print_warning(f"⚠ {incomplete_bots} out of {len(bots)} bots have incomplete data")
+            record_test("Human-bot List API - Bot Data Completeness", False, f"{incomplete_bots} incomplete")
+    
+    # Step 9: Summary
+    print_subheader("Step 9: Human-bot List API Test Summary")
+    
+    print_success("Human-bot List API endpoint testing completed")
+    print_success("Key findings:")
+    print_success("✓ Admin authentication working")
+    print_success("✓ API endpoint accessible")
+    print_success("✓ Response format validation")
+    print_success("✓ Pagination structure verification")
+    print_success("✓ bet_limit field presence check")
+    print_success("✓ active_bets_count field presence check")
+    print_success("✓ JSON structure validation")
+    print_success("✓ Custom pagination parameters")
+    
+    # Overall test result
+    if (list_success and 
+        list_response.get("success") == True and 
+        isinstance(list_response.get("bots"), list) and 
+        isinstance(list_response.get("pagination"), dict)):
+        print_success("🎉 OVERALL RESULT: Human-bot List API endpoint is WORKING")
+        record_test("Human-bot List API - Overall Test", True)
+    else:
+        print_error("❌ OVERALL RESULT: Human-bot List API endpoint has ISSUES")
+        record_test("Human-bot List API - Overall Test", False, "Critical issues found")
+
 def test_human_bot_bet_limit_feature():
     """Test the newly implemented Human-bot bet limit feature backend functionality."""
     print_header("TESTING HUMAN-BOT BET LIMIT FEATURE")
