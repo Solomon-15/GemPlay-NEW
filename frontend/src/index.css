@@ -241,8 +241,8 @@ button {
 /* Statistics Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
   margin-bottom: 2rem;
 }
 
@@ -250,17 +250,23 @@ button {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(64, 224, 208, 0.3);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.2rem;
   text-align: center;
   backdrop-filter: blur(10px);
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  aspect-ratio: 1.2 / 1;
 }
 
 .stat-card h3 {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #B0B0B0;
   margin: 0 0 0.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  line-height: 1.2;
 }
 
 .stat-value {
