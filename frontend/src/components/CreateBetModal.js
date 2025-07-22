@@ -56,19 +56,33 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   };
 
   /**
-   * NEW STRATEGY HANDLER - Uses pure frontend algorithms
+   * Enhanced strategy handler with improved error handling
    */
   const handleStrategySelect = (strategy) => {
     if (!betAmount || parseFloat(betAmount) <= 0) {
-      showError('Please enter bet amount first');
+      showError('Please enter a valid bet amount first');
       return;
     }
     
     const amount = parseFloat(betAmount);
+    
+    // Validate amount range
+    if (amount < MIN_BET) {
+      showError(`Minimum bet amount is $${MIN_BET}`);
+      return;
+    }
+    
+    if (amount > MAX_BET) {
+      showError(`Maximum bet amount is $${MAX_BET}`);
+      return;
+    }
+    
     setLoading(true);
     
     try {
-      // Use new frontend algorithms
+      console.log(`Attempting ${strategy} strategy for $${amount} with gems:`, gemsData.map(g => `${g.name}: ${g.available_quantity}`));
+      
+      // Use enhanced frontend algorithms
       const result = calculateGemCombination(strategy, gemsData, amount);
       
       if (result.success) {
@@ -78,14 +92,25 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           autoSelected[item.type] = item.quantity;
         });
         
+        // Final validation before setting
+        const totalValue = result.combination.reduce((sum, item) => sum + item.totalValue, 0);
+        if (Math.abs(totalValue - amount) > 0.01) {
+          throw new Error(`Amount mismatch: expected $${amount}, got $${totalValue}`);
+        }
+        
         setSelectedGems(autoSelected);
         showSuccess(result.message);
+        console.log(`${strategy} strategy successful:`, autoSelected);
       } else {
         showError(result.message);
+        console.error(`${strategy} strategy failed:`, result.message);
       }
     } catch (error) {
       console.error('Error calculating gem combination:', error);
-      showError('Error calculating gem combination');
+      const errorMsg = error.message.includes('available in inventory') 
+        ? error.message 
+        : 'Error calculating gem combination. Please try manually selecting gems.';
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }
