@@ -365,92 +365,28 @@ const HumanBotsManagement = () => {
         </div>
       </div>
 
-      {/* Human Bots Table */}
-      {loading && <div className="loading">Загрузка...</div>}
-      {error && <div className="error">Ошибка: {error}</div>}
-
-      <div className="table-container">
-        <table className="bots-table">
-          <thead>
-            <tr>
-              <th>Имя</th>
-              <th>Характер</th>
-              <th>Статус</th>
-              <th>Диапазон ставок</th>
-              <th>Процент побед</th>
-              <th>Статистика</th>
-              <th>Действия</th>
-            </tr>
-          </thead>
-          <tbody>
-            {humanBots.length > 0 ? humanBots.map(bot => (
-              <tr key={bot.id}>
-                <td>{bot.name}</td>
-                <td>
-                  <span className={`character-badge character-${bot.character.toLowerCase()}`}>
-                    {getCharacterLabel(bot.character)}
-                  </span>
-                </td>
-                <td>
-                  <span 
-                    className={`status-indicator status-${getStatusColor(bot.is_active)}`}
-                  >
-                    {bot.is_active ? 'Активен' : 'Неактивен'}
-                  </span>
-                </td>
-                <td>{formatCurrency(bot.min_bet)} - {formatCurrency(bot.max_bet)}</td>
-                <td>{formatPercentage(bot.win_rate)}</td>
-                <td>
-                  <div className="stats-cell">
-                    <div>Игр: {bot.total_games_played}</div>
-                    <div>Выиграл: {bot.total_games_won}</div>
-                    <div>Заработал: {formatCurrency(bot.total_amount_won)}</div>
-                  </div>
-                </td>
-                <td>
-                  <div className="action-buttons">
-                    <button
-                      className={`btn-sm ${bot.is_active ? 'btn-warning' : 'btn-success'}`}
-                      onClick={() => handleToggleStatus(bot.id)}
-                    >
-                      {bot.is_active ? '⏸️' : '▶️'}
-                    </button>
-                    <button
-                      className="btn-sm btn-danger"
-                      onClick={() => handleDeleteBot(bot.id, bot.name)}
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            )) : (
-              <tr>
-                <td colSpan="7" className="no-data">Нет Human-ботов</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button 
-            disabled={currentPage === 1} 
-            onClick={() => setCurrentPage(currentPage - 1)}
-          >
-            Предыдущая
-          </button>
-          <span>Страница {currentPage} из {totalPages}</span>
-          <button 
-            disabled={currentPage === totalPages} 
-            onClick={() => setCurrentPage(currentPage + 1)}
-          >
-            Следующая
-          </button>
-        </div>
-      )}
+      {/* Human Bots List */}
+      <HumanBotsList 
+        onEditBot={(bot) => {
+          setEditingBot(bot);
+          setCreateFormData({
+            name: bot.name || '',
+            character: bot.character || 'BALANCED',
+            min_bet: bot.min_bet || 1,
+            max_bet: bot.max_bet || 100,
+            bet_limit: bot.bet_limit || 12,
+            win_percentage: bot.win_percentage || 40,
+            loss_percentage: bot.loss_percentage || 40,
+            draw_percentage: bot.draw_percentage || 20,
+            min_delay: bot.min_delay || 30,
+            max_delay: bot.max_delay || 120,
+            use_commit_reveal: bot.use_commit_reveal !== undefined ? bot.use_commit_reveal : true,
+            logging_level: bot.logging_level || 'INFO'
+          });
+          setShowCreateForm(true);
+        }}
+        onCreateBot={() => setShowCreateForm(true)}
+      />
 
       {/* Create Bot Form */}
       {showCreateForm && (
