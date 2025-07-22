@@ -661,8 +661,8 @@ const HumanBotsManagement = () => {
       )}
 
       {/* Modals */}
-      <ConfirmationModal {...confirmationState} onClose={handleConfirmation} />
-      <InputModal {...inputModalState} onClose={handleInputModal} />
+      <ConfirmationModal {...confirmationModal} />
+      <InputModal {...inputModal} />
     </div>
   );
 };
