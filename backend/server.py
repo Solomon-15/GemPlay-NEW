@@ -597,6 +597,46 @@ class JoinGameRequest(BaseModel):
     move: GameMove
     gems: Dict[str, int]  # Player's selected gems combination
 
+# Human Bot Request Models
+class CreateHumanBotRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
+    character: HumanBotCharacter
+    min_bet: float = Field(..., ge=1.0, le=10000.0)
+    max_bet: float = Field(..., ge=1.0, le=10000.0)
+    win_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
+    loss_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
+    draw_percentage: float = Field(default=20.0, ge=0.0, le=100.0)
+    min_delay: int = Field(default=30, ge=1, le=300)
+    max_delay: int = Field(default=120, ge=1, le=300)
+    use_commit_reveal: bool = True
+    logging_level: str = Field(default="INFO")
+
+class UpdateHumanBotRequest(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=50)
+    character: Optional[HumanBotCharacter] = None
+    is_active: Optional[bool] = None
+    min_bet: Optional[float] = Field(None, ge=1.0, le=10000.0)
+    max_bet: Optional[float] = Field(None, ge=1.0, le=10000.0)
+    win_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
+    loss_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
+    draw_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
+    min_delay: Optional[int] = Field(None, ge=1, le=300)
+    max_delay: Optional[int] = Field(None, ge=1, le=300)
+    use_commit_reveal: Optional[bool] = None
+    logging_level: Optional[str] = None
+
+class BulkCreateHumanBotsRequest(BaseModel):
+    count: int = Field(..., ge=1, le=50)  # Максимум 50 ботов за раз
+    character: HumanBotCharacter
+    min_bet_range: List[float] = Field(..., min_length=2, max_length=2)  # [min, max]
+    max_bet_range: List[float] = Field(..., min_length=2, max_length=2)  # [min, max]  
+    win_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
+    loss_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
+    draw_percentage: float = Field(default=20.0, ge=0.0, le=100.0)
+    delay_range: List[int] = Field(default=[30, 120], min_length=2, max_length=2)  # [min, max] секунды
+    use_commit_reveal: bool = True
+    logging_level: str = Field(default="INFO")
+
 class CreateSoundRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     category: SoundCategory
