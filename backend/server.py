@@ -15703,6 +15703,12 @@ async def bulk_create_human_bots(
                 detail="Invalid max bet range"
             )
         
+        if bulk_data.bet_limit_range[0] > bulk_data.bet_limit_range[1]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid bet limit range"
+            )
+        
         if bulk_data.delay_range[0] >= bulk_data.delay_range[1]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -15729,12 +15735,16 @@ async def bulk_create_human_bots(
                 min_delay = random.randint(bulk_data.delay_range[0], bulk_data.delay_range[1] // 2)
                 max_delay = random.randint(min_delay + 1, bulk_data.delay_range[1])
                 
+                # Generate bet_limit within range
+                bet_limit = random.randint(bulk_data.bet_limit_range[0], bulk_data.bet_limit_range[1])
+                
                 # Create bot
                 human_bot = HumanBot(
                     name=bot_name,
                     character=bulk_data.character,
                     min_bet=round(min_bet, 2),
                     max_bet=round(max_bet, 2),
+                    bet_limit=bet_limit,
                     win_percentage=bulk_data.win_percentage,
                     loss_percentage=bulk_data.loss_percentage,
                     draw_percentage=bulk_data.draw_percentage,
