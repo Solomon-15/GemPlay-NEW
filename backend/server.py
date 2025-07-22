@@ -4515,10 +4515,25 @@ async def determine_game_winner(game_id: str) -> dict:
         }
         
     except Exception as e:
-        logger.error(f"Error determining game winner: {e}")
+        logger.error(f"Error determining game winner for game {game_id}: {e}")
+        logger.error(f"Error type: {type(e)}")
+        logger.error(f"Error traceback:", exc_info=True)
+        
+        # Try to get game data for debugging
+        try:
+            game_debug = await db.games.find_one({"id": game_id})
+            if game_debug:
+                logger.error(f"Game debug data: status={game_debug.get('status')}, "
+                           f"creator_move={game_debug.get('creator_move')}, "
+                           f"opponent_move={game_debug.get('opponent_move')}, "
+                           f"creator_id={game_debug.get('creator_id')}, "
+                           f"opponent_id={game_debug.get('opponent_id')}")
+        except Exception as debug_e:
+            logger.error(f"Could not fetch game debug data: {debug_e}")
+        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to determine game winner"
+            detail=f"Failed to determine game winner: {str(e)}"
         )
 
 async def distribute_game_rewards(game: Game, winner_id: str, commission_amount: float):
