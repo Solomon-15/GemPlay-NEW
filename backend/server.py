@@ -735,6 +735,19 @@ class HumanBotsStatsResponse(BaseModel):
     most_active_bots: List[Dict[str, Any]]
     character_distribution: Dict[str, int]
 
+class PaginationInfo(BaseModel):
+    current_page: int
+    total_pages: int
+    per_page: int
+    total_items: int
+    has_next: bool
+    has_prev: bool
+
+class HumanBotsListResponse(BaseModel):
+    success: bool
+    bots: List[Dict[str, Any]]
+    pagination: PaginationInfo
+
 # ==============================================================================
 # UTILITY FUNCTIONS
 # ==============================================================================
