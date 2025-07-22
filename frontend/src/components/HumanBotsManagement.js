@@ -49,9 +49,36 @@ const HumanBotsManagement = () => {
       const response = await axios(config);
       return response.data;
     } catch (err) {
-      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка API запроса';
+      let errorMessage = 'Ошибка API запроса';
+      
+      // Handle different error response formats
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        
+        // Handle FastAPI validation errors (array format)
+        if (Array.isArray(errorData) && errorData.length > 0) {
+          errorMessage = errorData.map(e => e.msg || e.message || 'Validation error').join(', ');
+        }
+        // Handle standard error with detail
+        else if (errorData.detail) {
+          errorMessage = typeof errorData.detail === 'string' ? errorData.detail : 'Validation error';
+        }
+        // Handle error message
+        else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+        // Handle error as string
+        else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
+      }
+      // Fallback to error message
+      else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
-      throw err;
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
