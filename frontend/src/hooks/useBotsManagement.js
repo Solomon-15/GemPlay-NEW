@@ -410,6 +410,23 @@ export const useBotsManagement = () => {
   };
 
   /**
+   * Универсальная функция для API операций (включая Human-ботов)
+   */
+  const executeOperation = useCallback(async (url, method, data = null) => {
+    try {
+      const { request } = await import('../utils/api');
+      const response = await request(url, {
+        method,
+        data
+      });
+      return response;
+    } catch (error) {
+      console.error(`Error executing ${method} ${url}:`, error);
+      throw error;
+    }
+  }, []);
+
+  /**
    * Инициализация данных при монтировании
    */
   useEffect(() => {
