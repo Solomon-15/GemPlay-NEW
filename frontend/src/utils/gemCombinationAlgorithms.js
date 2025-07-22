@@ -382,9 +382,16 @@ export const calculateSmartStrategy = (gemsData, targetAmount) => {
     };
   }
 
-  // Convert to combination format
+  // Convert to combination format with FINAL VALIDATION
   const combination = Object.entries(selectedGems).map(([gemType, quantity]) => {
     const gemInfo = availableGems.find(g => g.type === gemType);
+    
+    // CRITICAL CHECK: Ensure we don't exceed available quantity
+    if (quantity > gemInfo.availableQuantity) {
+      console.error(`VALIDATION ERROR: Trying to use ${quantity} ${gemType} but only ${gemInfo.availableQuantity} available`);
+      throw new Error(`Cannot use ${quantity} ${gemType}, only ${gemInfo.availableQuantity} available in inventory`);
+    }
+    
     return {
       type: gemType,
       name: gemInfo.name,
@@ -397,6 +404,16 @@ export const calculateSmartStrategy = (gemsData, targetAmount) => {
   });
 
   const totalValue = combination.reduce((sum, item) => sum + item.totalValue, 0);
+  
+  // FINAL AMOUNT VALIDATION
+  if (Math.abs(totalValue - targetAmount) > 0.01) {
+    console.error(`AMOUNT MISMATCH: Target ${targetAmount}, got ${totalValue}`);
+    return {
+      success: false,
+      combination: [],
+      message: `Amount calculation error: expected $${targetAmount.toFixed(2)}, got $${totalValue.toFixed(2)}`
+    };
+  }
 
   return {
     success: true,
