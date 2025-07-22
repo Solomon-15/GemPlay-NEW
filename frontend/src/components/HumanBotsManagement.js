@@ -545,7 +545,7 @@ const HumanBotsManagement = () => {
               </div>
 
               <div className="modal-actions">
-                <button type="submit" className="btn-primary">Создать</button>
+                <button type="submit" className="btn-primary">{editingBot ? 'Сохранить' : 'Создать'}</button>
                 <button 
                   type="button" 
                   className="btn-secondary"
