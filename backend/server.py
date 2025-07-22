@@ -1297,7 +1297,7 @@ async def startup_event():
     # Start background tasks
     start_background_scheduler()
     
-    logger.info("GemPlay API started successfully!")
+    logger.info("GemPlay API started successfully with background tasks!")
 
 def start_background_scheduler():
     """Start background scheduler for daily bonuses and bot automation."""
