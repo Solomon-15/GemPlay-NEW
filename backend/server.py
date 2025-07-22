@@ -1638,8 +1638,13 @@ async def join_human_bot_bet(human_bot: HumanBot):
             # Create user profile for human bot if it doesn't exist
             await create_human_bot_user_profile(human_bot)
             bot_user = await db.users.find_one({"id": human_bot.id})
+            
+        # Double check if user was created successfully
+        if not bot_user:
+            logger.error(f"Could not create or find user profile for human bot {human_bot.id}")
+            return
         
-        if bot_user["virtual_balance"] < commission_amount:
+        if bot_user.get("virtual_balance", 0) < commission_amount:
             # Give human bot some balance for commission
             await db.users.update_one(
                 {"id": human_bot.id},
