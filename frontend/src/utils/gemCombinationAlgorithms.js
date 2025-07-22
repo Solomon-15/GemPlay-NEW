@@ -540,25 +540,76 @@ export const calculateBigStrategy = (gemsData, targetAmount) => {
 };
 
 /**
- * Main strategy selector function
+ * Main strategy selector function with enhanced validation
  * @param {string} strategy - 'small', 'smart', or 'big'
  * @param {Array} gemsData - Gems inventory data
  * @param {number} targetAmount - Target bet amount
  * @returns {Object} Strategy result
  */
 export const calculateGemCombination = (strategy, gemsData, targetAmount) => {
-  switch (strategy) {
-    case 'small':
-      return calculateSmallStrategy(gemsData, targetAmount);
-    case 'smart':
-      return calculateSmartStrategy(gemsData, targetAmount);
-    case 'big':
-      return calculateBigStrategy(gemsData, targetAmount);
-    default:
-      return {
-        success: false,
-        combination: [],
-        message: "Invalid strategy selected."
-      };
+  // Pre-validation checks
+  if (!gemsData || !Array.isArray(gemsData)) {
+    return {
+      success: false,
+      combination: [],
+      message: "Invalid gems data provided."
+    };
+  }
+  
+  if (!targetAmount || targetAmount <= 0) {
+    return {
+      success: false,
+      combination: [],
+      message: "Please enter a valid bet amount."
+    };
+  }
+  
+  // Check if any gems are available
+  const availableGemsCount = gemsData.filter(gem => gem.available_quantity > 0).length;
+  if (availableGemsCount === 0) {
+    return {
+      success: false,
+      combination: [],
+      message: "No gems available in inventory. Purchase gems first."
+    };
+  }
+  
+  // Calculate total possible value from available gems
+  const maxPossibleValue = gemsData.reduce((sum, gem) => {
+    return sum + (gem.available_quantity * gem.price);
+  }, 0);
+  
+  if (targetAmount > maxPossibleValue) {
+    return {
+      success: false,
+      combination: [],
+      message: `Cannot create bet of $${targetAmount.toFixed(2)}. Maximum possible with current inventory: $${maxPossibleValue.toFixed(2)}`
+    };
+  }
+  
+  console.log(`Strategy: ${strategy}, Target: $${targetAmount}, Max possible: $${maxPossibleValue}`);
+  
+  try {
+    switch (strategy) {
+      case 'small':
+        return calculateSmallStrategy(gemsData, targetAmount);
+      case 'smart':
+        return calculateSmartStrategy(gemsData, targetAmount);
+      case 'big':
+        return calculateBigStrategy(gemsData, targetAmount);
+      default:
+        return {
+          success: false,
+          combination: [],
+          message: "Invalid strategy selected."
+        };
+    }
+  } catch (error) {
+    console.error('Error in gem combination algorithm:', error);
+    return {
+      success: false,
+      combination: [],
+      message: `Error calculating gem combination: ${error.message}`
+    };
   }
 };
