@@ -5629,10 +5629,19 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
         
         result = []
         for game in games:
-            # Get creator info
+            # Get creator info (user or human bot)
             creator = await db.users.find_one({"id": game["creator_id"]})
             if not creator:
-                continue
+                # Try to find as human bot
+                human_bot = await db.human_bots.find_one({"id": game["creator_id"]})
+                if human_bot:
+                    creator = {
+                        "id": human_bot["id"],
+                        "username": human_bot["name"],
+                        "gender": "male"  # Default gender for human bots
+                    }
+                else:
+                    continue
                 
             # Calculate time remaining (24 hour limit)
             created_time = game["created_at"]
@@ -5656,12 +5665,13 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                 "creator": {
                     "id": creator["id"],
                     "username": creator["username"],
-                    "gender": creator["gender"]
+                    "gender": creator.get("gender", "male")
                 },
                 "bet_amount": game["bet_amount"],
                 "bet_gems": game["bet_gems"],
                 "created_at": game["created_at"],
-                "time_remaining_hours": time_remaining.total_seconds() / 3600
+                "time_remaining_hours": time_remaining.total_seconds() / 3600,
+                "is_human_bot": game.get("creator_type") == "human_bot"  # Add flag for identification
             })
         
         return result
