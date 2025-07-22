@@ -682,6 +682,49 @@ class SoundResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+class HumanBotResponse(BaseModel):
+    id: str
+    name: str
+    character: HumanBotCharacter
+    is_active: bool
+    min_bet: float
+    max_bet: float
+    win_percentage: float
+    loss_percentage: float
+    draw_percentage: float
+    min_delay: int
+    max_delay: int
+    use_commit_reveal: bool
+    logging_level: str
+    total_games_played: int
+    total_games_won: int
+    total_amount_wagered: float
+    total_amount_won: float
+    win_rate: float  # Calculated field
+    last_action_time: Optional[datetime]
+    created_at: datetime
+    updated_at: datetime
+
+class HumanBotLogResponse(BaseModel):
+    id: str
+    human_bot_id: str
+    action_type: str
+    description: str
+    game_id: Optional[str]
+    bet_amount: Optional[float]
+    outcome: Optional[str]
+    move_played: Optional[str]
+    created_at: datetime
+
+class HumanBotsStatsResponse(BaseModel):
+    total_bots: int
+    active_bots: int
+    total_games_24h: int
+    total_revenue_24h: float
+    avg_revenue_per_bot: float
+    most_active_bots: List[Dict[str, Any]]
+    character_distribution: Dict[str, int]
+
 # ==============================================================================
 # UTILITY FUNCTIONS
 # ==============================================================================
