@@ -1368,10 +1368,10 @@ def test_human_bot_stats_api() -> None:
         expected_status=401
     )
     
-    if not no_auth_success:
+    if not no_auth_success:  # This means we got the expected 401
         print_success("✓ API correctly requires admin authentication (HTTP 401)")
         record_test("Human-Bot Stats API - Authorization Required", True)
-    else:
+    else:  # This means we got 200 when we expected 401
         print_error("✗ API allows access without authentication (security issue)")
         record_test("Human-Bot Stats API - Authorization Required", False, "No auth required")
     
