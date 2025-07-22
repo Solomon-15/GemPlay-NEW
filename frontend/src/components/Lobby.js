@@ -113,13 +113,18 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         total: balanceResponse.data.total_value || 0
       });
       
-      // Filter games - exclude bot games from general games list
+      // Filter games - separate human bots from regular bots
       const allGames = gamesResponse.data || [];
-      setAvailableBets(allGames.filter(game => !game.is_bot_game));
       
-      // Set bot games from dedicated endpoint
+      // Available bets should include human players AND human bots (but not regular bots)
+      setAvailableBets(allGames.filter(game => 
+        !game.is_bot_game ||  // Include all non-bot games (human players)
+        game.is_human_bot     // Include Human-bot games (they should appear as regular players)
+      ));
+      
+      // Set bot games from dedicated endpoint (only regular bots)
       const activeBotGames = botGamesResponse.data || [];
-      setAvailableBots(activeBotGames);
+      setAvailableBots(activeBotGames.filter(game => game.is_bot_game && !game.is_human_bot));
       
       const userGames = myBetsResponse.data || [];
       setMyBets(userGames.filter(game => game.status === 'WAITING'));
