@@ -16016,6 +16016,37 @@ async def toggle_all_human_bots(
             detail="Failed to toggle all human bots"
         )
 
+# Test endpoint without auth for debugging
+@api_router.post("/test/human-bots/toggle-all", response_model=dict)
+async def test_toggle_all_human_bots(request: ToggleAllRequest):
+    """Test toggle all human bots without auth."""
+    try:
+        # Update all bots
+        result = await db.human_bots.update_many(
+            {},
+            {
+                "$set": {
+                    "is_active": request.activate,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"TEST: All human bots {'activated' if request.activate else 'deactivated'}: {result.modified_count} bots")
+        
+        return {
+            "success": True,
+            "message": f"All human bots {'activated' if request.activate else 'deactivated'} successfully",
+            "affected_count": result.modified_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Test error toggling all human bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to toggle all human bots: {str(e)}"
+        )
+
 # ==============================================================================
 # INCLUDE ROUTERS
 # ==============================================================================
