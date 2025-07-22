@@ -1496,15 +1496,12 @@ async def create_human_bot_bet(human_bot: HumanBot):
         # Ensure bot has gems (setup if needed)
         await setup_human_bot_gems(human_bot.id)
         
-        # Generate bet amount based on character
-        bet_amount = HumanBotBehavior.get_bet_amount(
+        # Generate gem combination and bet amount based on character
+        bet_gems, bet_amount = await generate_human_bot_gem_combination_and_amount(
             human_bot.character,
             human_bot.min_bet,
             human_bot.max_bet
         )
-        
-        # Generate gem combination for the bet amount
-        bet_gems = await generate_human_bot_gem_combination(bet_amount)
         
         # Generate bot's move
         bot_move = HumanBotBehavior.get_move_choice(human_bot.character)
