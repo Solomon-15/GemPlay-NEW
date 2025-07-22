@@ -213,13 +213,86 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
       try {
         const selectedBotIds = Array.from(selectedBots);
         let successCount = 0;
-
+        let forceDeleteNeeded = [];
+        
+        // First pass - try normal delete for all bots
         for (const botId of selectedBotIds) {
           try {
             await executeOperation(`/admin/human-bots/${botId}`, 'DELETE');
             successCount++;
           } catch (error) {
             console.error(`Ошибка удаления бота ${botId}:`, error);
+            
+            // Check if this bot has active games
+            if (error.detailData && error.detailData.force_delete_required) {
+              const bot = humanBots.find(b => b.id === botId);
+              forceDeleteNeeded.push({
+                bot,
+                errorInfo: error.detailData
+              });
+            } else if (error.message.includes('Cannot delete bot with active games')) {
+              const bot = humanBots.find(b => b.id === botId);
+              forceDeleteNeeded.push({
+                bot,
+                errorInfo: {
+                  active_games_count: 'неизвестно',
+                  total_frozen_balance: 0,
+                  games: []
+                }
+              });
+            }
+          }
+        }
+
+        // If some bots need force delete, ask for confirmation
+        if (forceDeleteNeeded.length > 0) {
+          const totalActiveGames = forceDeleteNeeded.reduce((sum, item) => 
+            sum + (typeof item.errorInfo.active_games_count === 'number' ? item.errorInfo.active_games_count : 0), 0
+          );
+          const totalFrozenBalance = forceDeleteNeeded.reduce((sum, item) => 
+            sum + (item.errorInfo.total_frozen_balance || 0), 0
+          );
+
+          const forceConfirmed = await confirm({
+            title: `⚠️ Принудительное удаление ботов с активными играми`,
+            message: (
+              <div className="text-left">
+                <p className="mb-3">
+                  <strong>{forceDeleteNeeded.length} ботов</strong> имеют активные игры:
+                </p>
+                <div className="bg-yellow-100 border border-yellow-400 rounded p-3 mb-3 text-sm">
+                  <div><strong>Общее количество активных игр:</strong> {totalActiveGames}</div>
+                  <div><strong>Общая сумма заморожена:</strong> ${totalFrozenBalance.toFixed(2)}</div>
+                </div>
+                <div className="mb-3 max-h-32 overflow-y-auto text-xs">
+                  {forceDeleteNeeded.map((item, index) => (
+                    <div key={index} className="border-b py-1">
+                      <strong>{item.bot?.name}:</strong> {item.errorInfo.active_games_count} активных игр
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-red-600 font-semibold mb-2">
+                  ⚠️ При принудительном удалении все активные игры будут отменены, 
+                  а средства возвращены игрокам.
+                </p>
+                <p className="text-sm">
+                  Продолжить принудительное удаление {forceDeleteNeeded.length} ботов?
+                </p>
+              </div>
+            ),
+            type: "danger"
+          });
+
+          if (forceConfirmed) {
+            // Force delete the remaining bots
+            for (const item of forceDeleteNeeded) {
+              try {
+                await executeOperation(`/admin/human-bots/${item.bot.id}?force_delete=true`, 'DELETE');
+                successCount++;
+              } catch (forceError) {
+                console.error(`Ошибка принудительного удаления бота ${item.bot.id}:`, forceError);
+              }
+            }
           }
         }
 
