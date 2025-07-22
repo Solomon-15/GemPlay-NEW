@@ -294,24 +294,20 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     } catch (error) {
       console.error('Ошибка удаления бота:', error);
       
-      // Check if error contains active games info
+      // Check if error has detailed active games info
+      if (error.detailData && error.detailData.force_delete_required) {
+        await handleDeleteBotWithActiveGames(bot, error.detailData);
+        return;
+      }
+      
+      // Check if error message contains active games info
       if (error.message.includes('Cannot delete bot with active games')) {
-        // Try to parse detailed error information
-        try {
-          const errorResponse = JSON.parse(error.message.replace('Cannot delete bot with active games', '').trim());
-          if (errorResponse && errorResponse.force_delete_required) {
-            await handleDeleteBotWithActiveGames(bot, errorResponse);
-            return;
-          }
-        } catch (parseError) {
-          // If parsing fails, show generic confirmation
-          await handleDeleteBotWithActiveGames(bot, {
-            active_games_count: 'неизвестное количество',
-            total_frozen_balance: 0,
-            games: []
-          });
-          return;
-        }
+        await handleDeleteBotWithActiveGames(bot, {
+          active_games_count: 'неизвестное количество',
+          total_frozen_balance: 0,
+          games: []
+        });
+        return;
       }
       
       // For other errors, show generic error
