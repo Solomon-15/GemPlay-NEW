@@ -5077,28 +5077,80 @@ class RegularBotSystem:
     
     async def generate_bet_parameters(self, bot: dict):
         """Генерация параметров ставки на основе настроек бота."""
-        # Базовая сумма ставки
+        # Диапазон сумм ставки
         min_bet = bot.get("min_bet_amount", 1.0)
         max_bet = bot.get("max_bet_amount", 100.0)
-        bet_amount = random.uniform(min_bet, max_bet)
         
-        # Корректировка на основе стратегии прибыли
-        profit_strategy = bot.get("profit_strategy", "balanced")
-        if profit_strategy == "start-positive":
-            bet_amount *= random.uniform(0.8, 1.2)
-        elif profit_strategy == "start-negative":
-            bet_amount *= random.uniform(0.9, 1.1)
-        else:  # balanced
-            bet_amount *= random.uniform(0.85, 1.15)
-        
-        # Генерация комбинации гемов
-        gem_combination = await self.generate_gem_combination(bet_amount)
+        # Генерируем комбинацию гемов сначала, потом рассчитываем сумму
+        gem_combination, actual_bet_amount = await self.generate_gem_combination_and_amount(min_bet, max_bet)
         
         return {
-            "bet_amount": round(bet_amount, 2),
+            "bet_amount": actual_bet_amount,
             "bet_gems": gem_combination,
-            "total_value": self.calculate_total_gem_value(gem_combination)
+            "total_value": actual_bet_amount  # Сумма всегда точная по гемам
         }
+    
+    async def generate_gem_combination_and_amount(self, min_bet: float, max_bet: float):
+        """Generate gem combination first, then calculate exact bet amount."""
+        gem_values = {
+            'Ruby': 1, 'Amber': 2, 'Topaz': 5, 'Emerald': 10,
+            'Aquamarine': 25, 'Sapphire': 50, 'Magic': 100
+        }
+        
+        gem_types = list(gem_values.keys())
+        attempts = 0
+        max_attempts = 50
+        
+        while attempts < max_attempts:
+            combination = {}
+            
+            # Random selection of gem types (1-4 types)
+            selected_types = random.sample(gem_types, random.randint(1, 4))
+            
+            for gem_type in selected_types:
+                # Random quantity (1-5 gems per type)
+                max_quantity = 5 if gem_type in ['Ruby', 'Amber'] else 3
+                quantity = random.randint(1, max_quantity)
+                combination[gem_type] = quantity
+            
+            # Calculate total value
+            total_value = sum(gem_values[gem_type] * quantity for gem_type, quantity in combination.items())
+            
+            # Check if it's within the bet range
+            if min_bet <= total_value <= max_bet:
+                return combination, float(total_value)
+            
+            attempts += 1
+        
+        # Fallback: generate simple combination within range
+        target_amount = random.uniform(min_bet, max_bet)
+        target_int = int(target_amount)
+        combination = {}
+        remaining = target_int
+        
+        # Use efficient algorithm as fallback
+        gem_types_desc = ["Magic", "Sapphire", "Aquamarine", "Emerald", "Topaz", "Amber", "Ruby"]
+        
+        for gem_type in gem_types_desc:
+            if remaining <= 0:
+                break
+                
+            gem_value = gem_values[gem_type]
+            if remaining >= gem_value:
+                quantity = remaining // gem_value
+                # Limit quantity to make it realistic
+                max_quantity = min(quantity, 3) if gem_type in ["Magic", "Sapphire"] else min(quantity, 5)
+                if max_quantity > 0:
+                    combination[gem_type] = max_quantity
+                    remaining -= max_quantity * gem_value
+        
+        # If there's remaining value, add Ruby gems
+        if remaining > 0:
+            combination["Ruby"] = combination.get("Ruby", 0) + remaining
+        
+        # Calculate final amount
+        final_amount = sum(gem_values[gem_type] * quantity for gem_type, quantity in combination.items())
+        return combination, float(final_amount)
     
     async def generate_gem_combination(self, target_amount: float):
         """Генерация комбинации гемов для заданной суммы."""
