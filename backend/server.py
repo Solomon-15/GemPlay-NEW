@@ -399,6 +399,9 @@ class HumanBot(BaseModel):
     min_bet: float = Field(ge=1.0, le=10000.0)  # 1-10000
     max_bet: float = Field(ge=1.0, le=10000.0)  # 1-10000
     
+    # Лимит ставок (максимальное количество одновременных ставок)
+    bet_limit: int = Field(default=12, ge=1, le=100)  # 1-100
+    
     # Распределение исходов (в процентах, сумма должна быть 100%)
     win_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     loss_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
