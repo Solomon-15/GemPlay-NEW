@@ -773,6 +773,145 @@ def generate_verification_token() -> str:
     """Generate email verification token."""
     return str(uuid.uuid4())
 
+async def generate_unique_human_bot_name() -> str:
+    """Generate unique human bot name in format Player1, Player2, etc."""
+    counter = 1
+    while True:
+        bot_name = f"Player{counter}"
+        existing_bot = await db.human_bots.find_one({"name": bot_name})
+        if not existing_bot:
+            return bot_name
+        counter += 1
+
+# ==============================================================================
+# HUMAN BOT BEHAVIOR ALGORITHMS
+# ==============================================================================
+
+class HumanBotBehavior:
+    """Алгоритмы поведения для Human-ботов с разными характерами"""
+    
+    @staticmethod
+    def get_bet_amount(character: HumanBotCharacter, min_bet: float, max_bet: float) -> float:
+        """Определить размер ставки на основе характера"""
+        bet_range = max_bet - min_bet
+        
+        if character == HumanBotCharacter.STABLE:
+            # Стабильные ставки в нижней трети диапазона
+            return min_bet + (bet_range * random.uniform(0.1, 0.4))
+            
+        elif character == HumanBotCharacter.AGGRESSIVE:
+            # Крупные ставки в верхней половине диапазона
+            return min_bet + (bet_range * random.uniform(0.6, 1.0))
+            
+        elif character == HumanBotCharacter.CAUTIOUS:
+            # Минимальные ставки
+            return min_bet + (bet_range * random.uniform(0.0, 0.2))
+            
+        elif character == HumanBotCharacter.BALANCED:
+            # Равномерно по всему диапазону
+            return min_bet + (bet_range * random.uniform(0.2, 0.8))
+            
+        elif character == HumanBotCharacter.IMPULSIVE:
+            # Случайные всплески - или очень мало, или очень много
+            if random.random() < 0.3:
+                return min_bet + (bet_range * random.uniform(0.8, 1.0))  # Всплеск
+            else:
+                return min_bet + (bet_range * random.uniform(0.0, 0.3))  # Обычно мало
+                
+        elif character == HumanBotCharacter.ANALYST:
+            # Адаптивные ставки (пока используем средние значения)
+            return min_bet + (bet_range * random.uniform(0.3, 0.7))
+            
+        elif character == HumanBotCharacter.MIMIC:
+            # Копирует средние ставки (пока используем центральные значения)
+            return min_bet + (bet_range * random.uniform(0.4, 0.6))
+        
+        # Fallback
+        return min_bet + (bet_range * 0.5)
+
+    @staticmethod
+    def get_action_decision(character: HumanBotCharacter) -> str:
+        """Решить, создать ставку или присоединиться к существующей"""
+        if character == HumanBotCharacter.AGGRESSIVE:
+            return "create" if random.random() < 0.7 else "join"  # Любят создавать ставки
+        elif character == HumanBotCharacter.CAUTIOUS:
+            return "join" if random.random() < 0.7 else "create"  # Предпочитают присоединяться
+        else:
+            return "create" if random.random() < 0.5 else "join"  # 50/50
+
+    @staticmethod
+    def get_move_choice(character: HumanBotCharacter) -> GameMove:
+        """Выбор хода в зависимости от характера"""
+        moves = [GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
+        
+        if character == HumanBotCharacter.STABLE:
+            # Предпочитает камень (стабильность)
+            return random.choices(moves, weights=[0.5, 0.25, 0.25])[0]
+            
+        elif character == HumanBotCharacter.AGGRESSIVE:
+            # Предпочитает ножницы (агрессивность)
+            return random.choices(moves, weights=[0.25, 0.25, 0.5])[0]
+            
+        elif character == HumanBotCharacter.CAUTIOUS:
+            # Предпочитает бумагу (защита)
+            return random.choices(moves, weights=[0.25, 0.5, 0.25])[0]
+            
+        else:
+            # Остальные используют равномерный выбор
+            return random.choice(moves)
+
+    @staticmethod
+    def should_win_game(character: HumanBotCharacter, win_percentage: float, loss_percentage: float, 
+                       draw_percentage: float, game_value: float = 0) -> str:
+        """Определить исход игры на основе характера и настроек"""
+        
+        # Базовые вероятности
+        rand = random.uniform(0, 100)
+        
+        # Модификации на основе характера
+        win_mod = 0
+        loss_mod = 0
+        
+        if character == HumanBotCharacter.AGGRESSIVE and game_value > 100:
+            win_mod = 10  # Агрессивные боты чаще выигрывают дорогие игры
+        elif character == HumanBotCharacter.CAUTIOUS and game_value > 100:
+            win_mod = -10  # Осторожные боты реже выигрывают дорогие игры
+        elif character == HumanBotCharacter.ANALYST:
+            # Аналитик адаптируется (пока простая логика)
+            if game_value > 50:
+                win_mod = 5
+        
+        adjusted_win = win_percentage + win_mod
+        adjusted_loss = loss_percentage + loss_mod
+        adjusted_draw = 100 - adjusted_win - adjusted_loss
+        
+        if rand <= adjusted_win:
+            return "WIN"
+        elif rand <= adjusted_win + adjusted_loss:
+            return "LOSS"
+        else:
+            return "DRAW"
+
+    @staticmethod
+    def get_delay_time(character: HumanBotCharacter, min_delay: int, max_delay: int) -> int:
+        """Получить время задержки между действиями"""
+        
+        if character == HumanBotCharacter.IMPULSIVE:
+            # Импульсивные боты иногда действуют очень быстро
+            if random.random() < 0.3:
+                return min(min_delay, 10)  # Очень быстро
+            else:
+                return random.randint(min_delay, max_delay)
+                
+        elif character == HumanBotCharacter.CAUTIOUS:
+            # Осторожные боты действуют медленнее
+            delay_range = max_delay - min_delay
+            return min_delay + int(delay_range * random.uniform(0.6, 1.0))
+            
+        else:
+            # Обычная задержка
+            return random.randint(min_delay, max_delay)
+
 async def generate_unique_bot_name() -> str:
     """Generate unique bot name in format Bot#1, Bot#2, etc."""
     counter = 1
