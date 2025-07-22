@@ -14258,10 +14258,6 @@ async def start_bot_automation():
     """Start the NEW bot automation background task."""
     asyncio.create_task(new_bot_automation_task())
 
-# Include routers
-app.include_router(auth_router)
-app.include_router(api_router)
-
 # ==============================================================================
 # BOT SETTINGS API
 # ==============================================================================
