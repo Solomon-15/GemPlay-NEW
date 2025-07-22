@@ -1873,7 +1873,7 @@ async def create_human_bot_user_profile(human_bot: HumanBot):
         bot_user = User(
             id=human_bot.id,
             username=human_bot.name,
-            email=f"{human_bot.name.lower().replace(' ', '_')}@humanbots.gemplay.local",
+            email=f"{human_bot.name.lower().replace(' ', '_')}@botuser.local",  # Fixed domain
             password_hash="",  # Human bots don't need passwords
             role=UserRole.USER,
             status=UserStatus.ACTIVE,
