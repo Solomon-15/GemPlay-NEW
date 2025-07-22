@@ -462,6 +462,7 @@ export const useBotsManagement = () => {
     updateBot,
     deleteBot,
     toggleBotStatus,
+    executeOperation, // Добавляем универсальную функцию
     
     // Специальные операции
     fetchBotActiveBets,
