@@ -388,6 +388,57 @@ class AdminLog(BaseModel):
     user_agent: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+class HumanBot(BaseModel):
+    """Модель для Human-ботов с характерами и настройками поведения"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # Уникальное имя бота
+    character: HumanBotCharacter  # Тип характера (1 из 7)
+    is_active: bool = True
+    
+    # Диапазон ставок
+    min_bet: float = Field(ge=1.0, le=10000.0)  # 1-10000
+    max_bet: float = Field(ge=1.0, le=10000.0)  # 1-10000
+    
+    # Распределение исходов (в процентах, сумма должна быть 100%)
+    win_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
+    loss_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
+    draw_percentage: float = Field(default=20.0, ge=0.0, le=100.0)
+    
+    # Интервал между действиями (в секундах)
+    min_delay: int = Field(default=30, ge=1, le=300)   # 1-300 секунд
+    max_delay: int = Field(default=120, ge=1, le=300)  # 1-300 секунд
+    
+    # Настройки commit-reveal
+    use_commit_reveal: bool = True
+    
+    # Уровень логирования
+    logging_level: str = Field(default="INFO")  # INFO, DEBUG
+    
+    # Статистика
+    total_games_played: int = 0
+    total_games_won: int = 0  
+    total_amount_wagered: float = 0.0
+    total_amount_won: float = 0.0
+    
+    # Временные метки
+    last_action_time: Optional[datetime] = None
+    last_bet_time: Optional[datetime] = None
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class HumanBotLog(BaseModel):
+    """Модель для логирования действий Human-ботов"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    human_bot_id: str
+    action_type: str  # "CREATE_BET", "JOIN_BET", "WIN", "LOSS", "DRAW"
+    description: str
+    game_id: Optional[str] = None
+    bet_amount: Optional[float] = None
+    outcome: Optional[str] = None  # "WIN", "LOSS", "DRAW"
+    move_played: Optional[str] = None  # "rock", "paper", "scissors"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 class SecurityAlert(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
