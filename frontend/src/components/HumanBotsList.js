@@ -275,6 +275,91 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     }
   };
 
+  const handleDeleteBot = async (bot) => {
+    try {
+      // First try normal delete
+      await executeOperation(`/admin/human-bots/${bot.id}`, 'DELETE');
+      addNotification(`Human-бот ${bot.name} успешно удален`, 'success');
+      await fetchHumanBots();
+      await fetchStats();
+    } catch (error) {
+      console.error('Ошибка удаления бота:', error);
+      
+      // Check if error contains active games info
+      if (error.message.includes('Cannot delete bot with active games')) {
+        // Try to parse detailed error information
+        try {
+          const errorResponse = JSON.parse(error.message.replace('Cannot delete bot with active games', '').trim());
+          if (errorResponse && errorResponse.force_delete_required) {
+            await handleDeleteBotWithActiveGames(bot, errorResponse);
+            return;
+          }
+        } catch (parseError) {
+          // If parsing fails, show generic confirmation
+          await handleDeleteBotWithActiveGames(bot, {
+            active_games_count: 'неизвестное количество',
+            total_frozen_balance: 0,
+            games: []
+          });
+          return;
+        }
+      }
+      
+      // For other errors, show generic error
+      addNotification(`Ошибка удаления бота: ${error.message}`, 'error');
+    }
+  };
+
+  const handleDeleteBotWithActiveGames = async (bot, errorInfo) => {
+    const confirmed = await confirm({
+      title: `⚠️ Удаление бота с активными играми`,
+      message: (
+        <div className="text-left">
+          <p className="mb-3">
+            <strong>Human-бот {bot.name}</strong> имеет активные игры:
+          </p>
+          <div className="bg-yellow-100 border border-yellow-400 rounded p-3 mb-3 text-sm">
+            <div><strong>Активных игр:</strong> {errorInfo.active_games_count}</div>
+            <div><strong>Заморожено средств:</strong> ${errorInfo.total_frozen_balance?.toFixed(2) || '0.00'}</div>
+          </div>
+          {errorInfo.games && errorInfo.games.length > 0 && (
+            <div className="mb-3">
+              <p className="text-sm font-semibold mb-2">Активные игры:</p>
+              <div className="max-h-32 overflow-y-auto text-xs">
+                {errorInfo.games.map((game, index) => (
+                  <div key={index} className="border-b py-1">
+                    <div>Ставка: ${game.bet_amount} | Статус: {game.status}</div>
+                    <div>Противник: {game.opponent}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <p className="text-sm text-red-600 font-semibold">
+            ⚠️ При принудительном удалении все активные игры будут отменены, 
+            а средства возвращены игрокам.
+          </p>
+          <p className="mt-2 text-sm">
+            Продолжить принудительное удаление?
+          </p>
+        </div>
+      ),
+      type: "danger"
+    });
+
+    if (confirmed) {
+      try {
+        const response = await executeOperation(`/admin/human-bots/${bot.id}?force_delete=true`, 'DELETE');
+        addNotification(response.message || `Human-бот ${bot.name} принудительно удален`, 'success');
+        await fetchHumanBots();
+        await fetchStats();
+      } catch (forceError) {
+        console.error('Ошибка принудительного удаления:', forceError);
+        addNotification(`Ошибка принудительного удаления: ${forceError.message}`, 'error');
+      }
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
       day: '2-digit',
