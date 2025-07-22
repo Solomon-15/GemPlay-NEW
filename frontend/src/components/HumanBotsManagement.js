@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useBotsManagement } from '../hooks/useBotsManagement';
+import axios from 'axios';
 import useConfirmation from '../hooks/useConfirmation';
 import useInput from '../hooks/useInput';
 import InputModal from './InputModal';
 import ConfirmationModal from './ConfirmationModal';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
 const HumanBotsManagement = () => {
-  const { loading, error, executeOperation } = useBotsManagement();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const { confirm, confirmationModal } = useConfirmation();
   const { prompt, inputModal } = useInput();
   const [humanBots, setHumanBots] = useState([]);
@@ -17,6 +21,41 @@ const HumanBotsManagement = () => {
     character: '',
     is_active: null
   });
+
+  // Helper function to execute API operations
+  const executeOperation = async (endpoint, method = 'GET', data = null) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem('token');
+      const config = {
+        method,
+        url: `${API}${endpoint}`,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      };
+      
+      if (data) {
+        if (method === 'GET') {
+          config.params = data;
+        } else {
+          config.data = data;
+        }
+      }
+      
+      const response = await axios(config);
+      return response.data;
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || err.message || 'Ошибка API запроса';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const characters = [
     { value: 'STABLE', label: 'Стабильный', description: 'Ровные небольшие ставки' },
