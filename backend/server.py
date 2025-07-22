@@ -105,6 +105,15 @@ class BotType(str, Enum):
     REGULAR = "REGULAR"
     HUMAN = "HUMAN"
 
+class HumanBotCharacter(str, Enum):
+    STABLE = "STABLE"           # Стабильный
+    AGGRESSIVE = "AGGRESSIVE"   # Агрессивный
+    CAUTIOUS = "CAUTIOUS"      # Осторожный
+    BALANCED = "BALANCED"       # Балансированный
+    IMPULSIVE = "IMPULSIVE"     # Импульсивный
+    ANALYST = "ANALYST"         # Аналитик
+    MIMIC = "MIMIC"            # Мимик
+
 class BotMode(str, Enum):
     SIMPLE = "SIMPLE"      # Простой рандом
     ALGORITHMIC = "ALGORITHMIC"  # С алгоритмом побед
