@@ -4292,20 +4292,51 @@ async def determine_game_winner(game_id: str) -> dict:
         
         game_obj = Game(**game)
         
-        # Check if this is a bot game
+        # Check if this is a bot game and identify bot types
         is_bot_game = False
+        is_regular_bot_game = False
+        has_human_bot = False
         
         # Check if creator is a bot
+        creator_regular_bot = None
+        creator_human_bot = None
         if game_obj.creator_id:
-            bot_creator = await db.bots.find_one({"id": game_obj.creator_id})
-            if bot_creator:
+            creator_regular_bot = await db.bots.find_one({"id": game_obj.creator_id})
+            creator_human_bot = await db.human_bots.find_one({"id": game_obj.creator_id})
+            if creator_regular_bot:
                 is_bot_game = True
+                is_regular_bot_game = True
+            elif creator_human_bot:
+                is_bot_game = True
+                has_human_bot = True
         
         # Check if opponent is a bot
+        opponent_regular_bot = None
+        opponent_human_bot = None
         if game_obj.opponent_id:
-            bot_opponent = await db.bots.find_one({"id": game_obj.opponent_id})
-            if bot_opponent:
+            opponent_regular_bot = await db.bots.find_one({"id": game_obj.opponent_id})
+            opponent_human_bot = await db.human_bots.find_one({"id": game_obj.opponent_id})
+            if opponent_regular_bot:
                 is_bot_game = True
+                if creator_regular_bot:  # Both are regular bots
+                    is_regular_bot_game = True
+            elif opponent_human_bot:
+                is_bot_game = True
+                has_human_bot = True
+        
+        # For Human bot games, apply their outcome logic
+        if has_human_bot:
+            # Check if we need to apply Human bot outcome override
+            human_bot_override = await apply_human_bot_outcome(game_obj)
+            if human_bot_override:
+                winner_id = human_bot_override["winner_id"]
+                result_status = human_bot_override["result_status"]
+            else:
+                # Apply normal rock-paper-scissors logic
+                winner_id, result_status = determine_rps_winner(game_obj.creator_move, game_obj.opponent_move, game_obj.creator_id, game_obj.opponent_id)
+        else:
+            # Apply normal rock-paper-scissors logic
+            winner_id, result_status = determine_rps_winner(game_obj.creator_move, game_obj.opponent_move, game_obj.creator_id, game_obj.opponent_id)
         
         # Verify move hash (commit-reveal) - only for human vs human games
         if not is_bot_game:
@@ -4336,30 +4367,9 @@ async def determine_game_winner(game_id: str) -> dict:
             else:
                 logger.info(f"Bot game {game_id} has no hash verification data, proceeding without verification")
         
-        # Determine winner using rock-paper-scissors logic
-        creator_move = game_obj.creator_move
-        opponent_move = game_obj.opponent_move
-        
-        winner_id = None
-        result_status = "draw"
-        
-        if creator_move == opponent_move:
-            result_status = "draw"
-        elif (
-            (creator_move == GameMove.ROCK and opponent_move == GameMove.SCISSORS) or
-            (creator_move == GameMove.SCISSORS and opponent_move == GameMove.PAPER) or
-            (creator_move == GameMove.PAPER and opponent_move == GameMove.ROCK)
-        ):
-            winner_id = game_obj.creator_id
-            result_status = "creator_wins"
-        else:
-            winner_id = game_obj.opponent_id
-            result_status = "opponent_wins"
-        
         # Calculate commission
         # Each player pays 6% commission on their bet amount
         # For regular bot games, no commission is charged
-        is_regular_bot_game = getattr(game_obj, 'is_regular_bot_game', False)
         commission_amount = 0
         if winner_id and not is_regular_bot_game:
             commission_amount = game_obj.bet_amount * 0.06  # 6% from winner only
@@ -4391,35 +4401,22 @@ async def determine_game_winner(game_id: str) -> dict:
         if game_obj.is_bot_game and game_obj.bot_id:
             await update_bot_cycle_tracking(game_obj.bot_id, winner_id == game_obj.bot_id)
         
-        # Get user details for response
-        creator = await db.users.find_one({"id": game_obj.creator_id})
-        if not creator:
-            # Creator might be a bot
-            creator = await db.bots.find_one({"id": game_obj.creator_id})
-            if creator:
-                creator = {"id": creator["id"], "username": creator["name"]}
+        # Process human bot game outcome
+        if has_human_bot:
+            await process_human_bot_game_outcome(game_id, winner_id)
         
-        opponent = await db.users.find_one({"id": game_obj.opponent_id})
-        if not opponent:
-            # Opponent might be a bot
-            opponent = await db.bots.find_one({"id": game_obj.opponent_id})
-            if opponent:
-                opponent = {"id": opponent["id"], "username": opponent["name"]}
+        # Get user details for response
+        creator = await get_player_info(game_obj.creator_id)
+        opponent = await get_player_info(game_obj.opponent_id)
         
         return {
             "game_id": game_id,
             "result": result_status,
-            "creator_move": creator_move.value,
-            "opponent_move": opponent_move.value,
+            "creator_move": game_obj.creator_move.value,
+            "opponent_move": game_obj.opponent_move.value,
             "winner_id": winner_id,
-            "creator": {
-                "id": creator["id"],
-                "username": creator["username"]
-            },
-            "opponent": {
-                "id": opponent["id"], 
-                "username": opponent["username"]
-            },
+            "creator": creator,
+            "opponent": opponent,
             "bet_amount": game_obj.bet_amount,
             "total_pot": total_pot,
             "commission": commission_amount,
