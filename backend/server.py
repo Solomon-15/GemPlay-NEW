@@ -14614,42 +14614,641 @@ async def upload_sound_file(sound_id: str, file_data: UploadSoundFileRequest, cu
             detail="Failed to upload sound file"
         )
 
-@api_router.get("/admin/sounds/categories", response_model=List[str])
-async def get_sound_categories(current_user: User = Depends(get_current_admin)):
-    """Get all sound categories (admin only)."""
-    return [category.value for category in SoundCategory]
+# ==============================================================================
+# HUMAN BOTS API
+# ==============================================================================
 
-@api_router.get("/admin/sounds/events", response_model=List[str])
-async def get_sound_events(current_user: User = Depends(get_current_admin)):
-    """Get all possible sound events (admin only)."""
-    # Default sound events based on requirements
-    events = [
-        # Gaming events
-        "создание_ставки",
-        "принятие_ставки", 
-        "выбор_хода",
-        "reveal",
-        "победа",
-        "поражение",
-        "ничья",
+@api_router.get("/admin/human-bots", response_model=dict)
+async def get_human_bots(
+    page: int = 1,
+    limit: int = 10,
+    character: Optional[HumanBotCharacter] = None,
+    is_active: Optional[bool] = None,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get human bots with pagination and filtering."""
+    try:
+        # Build query
+        query = {}
+        if character:
+            query["character"] = character
+        if is_active is not None:
+            query["is_active"] = is_active
         
-        # Gems events
-        "покупка_гема",
-        "продажа_гема",
-        "подарок_гемов",
+        # Calculate pagination
+        skip = (page - 1) * limit
         
-        # UI events  
-        "hover",
-        "открытие_модала",
-        "закрытие_модала",
-        "уведомление",
+        # Get total count
+        total_count = await db.human_bots.count_documents(query)
         
-        # System events
-        "ошибка",
-        "таймер_reveal",
-        "награда"
-    ]
-    return events
+        # Get human bots
+        human_bots_data = await db.human_bots.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        
+        # Convert to response format
+        human_bots = []
+        for bot_data in human_bots_data:
+            bot = HumanBot(**bot_data)
+            response = HumanBotResponse(
+                **bot.dict(),
+                win_rate=(bot.total_games_won / bot.total_games_played * 100) if bot.total_games_played > 0 else 0
+            )
+            human_bots.append(response.dict())
+        
+        return {
+            "bots": human_bots,
+            "total_count": total_count,
+            "current_page": page,
+            "total_pages": (total_count + limit - 1) // limit,
+            "items_per_page": limit,
+            "has_next": page * limit < total_count,
+            "has_prev": page > 1
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching human bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch human bots"
+        )
+
+@api_router.post("/admin/human-bots", response_model=HumanBotResponse)
+async def create_human_bot(
+    bot_data: CreateHumanBotRequest,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Create a new human bot."""
+    try:
+        # Validate percentages sum to 100
+        total_percentage = bot_data.win_percentage + bot_data.loss_percentage + bot_data.draw_percentage
+        if abs(total_percentage - 100.0) > 0.01:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Win, loss, and draw percentages must sum to 100%"
+            )
+        
+        # Check if name is unique
+        existing_bot = await db.human_bots.find_one({"name": bot_data.name})
+        if existing_bot:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Bot name already exists"
+            )
+        
+        # Validate bet range
+        if bot_data.min_bet >= bot_data.max_bet:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Minimum bet must be less than maximum bet"
+            )
+        
+        # Validate delay range
+        if bot_data.min_delay >= bot_data.max_delay:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Minimum delay must be less than maximum delay"
+            )
+        
+        # Create human bot
+        human_bot = HumanBot(**bot_data.dict())
+        await db.human_bots.insert_one(human_bot.dict())
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="CREATE_HUMAN_BOT",
+            target_type="human_bot",
+            target_id=human_bot.id,
+            details={
+                "name": human_bot.name,
+                "character": human_bot.character,
+                "bet_range": f"${human_bot.min_bet}-${human_bot.max_bet}"
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        # Return response
+        response = HumanBotResponse(
+            **human_bot.dict(),
+            win_rate=0.0  # New bot has no games yet
+        )
+        
+        logger.info(f"Human bot created: {human_bot.name} ({human_bot.character})")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating human bot: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create human bot"
+        )
+
+@api_router.put("/admin/human-bots/{bot_id}", response_model=HumanBotResponse)
+async def update_human_bot(
+    bot_id: str,
+    bot_data: UpdateHumanBotRequest,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Update a human bot."""
+    try:
+        # Find existing bot
+        existing_bot = await db.human_bots.find_one({"id": bot_id})
+        if not existing_bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Human bot not found"
+            )
+        
+        # Prepare update data
+        update_data = {}
+        for field, value in bot_data.dict(exclude_unset=True).items():
+            if value is not None:
+                update_data[field] = value
+        
+        # Validate percentages if any are provided
+        if any(key in update_data for key in ["win_percentage", "loss_percentage", "draw_percentage"]):
+            current_bot = HumanBot(**existing_bot)
+            win_pct = update_data.get("win_percentage", current_bot.win_percentage)
+            loss_pct = update_data.get("loss_percentage", current_bot.loss_percentage)
+            draw_pct = update_data.get("draw_percentage", current_bot.draw_percentage)
+            
+            total_percentage = win_pct + loss_pct + draw_pct
+            if abs(total_percentage - 100.0) > 0.01:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Win, loss, and draw percentages must sum to 100%"
+                )
+        
+        # Check name uniqueness if name is being changed
+        if "name" in update_data and update_data["name"] != existing_bot["name"]:
+            name_exists = await db.human_bots.find_one({"name": update_data["name"]})
+            if name_exists:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Bot name already exists"
+                )
+        
+        # Validate bet range if being updated
+        min_bet = update_data.get("min_bet", existing_bot["min_bet"])
+        max_bet = update_data.get("max_bet", existing_bot["max_bet"])
+        if min_bet >= max_bet:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Minimum bet must be less than maximum bet"
+            )
+        
+        # Validate delay range if being updated
+        min_delay = update_data.get("min_delay", existing_bot["min_delay"])
+        max_delay = update_data.get("max_delay", existing_bot["max_delay"])
+        if min_delay >= max_delay:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Minimum delay must be less than maximum delay"
+            )
+        
+        # Add updated timestamp
+        update_data["updated_at"] = datetime.utcnow()
+        
+        # Update bot
+        await db.human_bots.update_one(
+            {"id": bot_id},
+            {"$set": update_data}
+        )
+        
+        # Get updated bot
+        updated_bot_data = await db.human_bots.find_one({"id": bot_id})
+        updated_bot = HumanBot(**updated_bot_data)
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="UPDATE_HUMAN_BOT",
+            target_type="human_bot",
+            target_id=bot_id,
+            details={"updated_fields": list(update_data.keys())}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        # Return response
+        response = HumanBotResponse(
+            **updated_bot.dict(),
+            win_rate=(updated_bot.total_games_won / updated_bot.total_games_played * 100) if updated_bot.total_games_played > 0 else 0
+        )
+        
+        logger.info(f"Human bot updated: {bot_id}")
+        return response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating human bot: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update human bot"
+        )
+
+@api_router.delete("/admin/human-bots/{bot_id}", response_model=dict)
+async def delete_human_bot(
+    bot_id: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Delete a human bot."""
+    try:
+        # Find existing bot
+        existing_bot = await db.human_bots.find_one({"id": bot_id})
+        if not existing_bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Human bot not found"
+            )
+        
+        # Check if bot has active games
+        active_games = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+        })
+        
+        if active_games > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete bot with active games"
+            )
+        
+        # Delete bot
+        await db.human_bots.delete_one({"id": bot_id})
+        
+        # Delete bot logs
+        await db.human_bot_logs.delete_many({"human_bot_id": bot_id})
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="DELETE_HUMAN_BOT",
+            target_type="human_bot",
+            target_id=bot_id,
+            details={"name": existing_bot["name"]}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Human bot deleted: {bot_id}")
+        return {"success": True, "message": "Human bot deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting human bot: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete human bot"
+        )
+
+@api_router.post("/admin/human-bots/bulk-create", response_model=dict)
+async def bulk_create_human_bots(
+    bulk_data: BulkCreateHumanBotsRequest,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Create multiple human bots at once."""
+    try:
+        # Validate percentages sum to 100
+        total_percentage = bulk_data.win_percentage + bulk_data.loss_percentage + bulk_data.draw_percentage
+        if abs(total_percentage - 100.0) > 0.01:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Win, loss, and draw percentages must sum to 100%"
+            )
+        
+        # Validate ranges
+        if bulk_data.min_bet_range[0] >= bulk_data.min_bet_range[1]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid min bet range"
+            )
+        
+        if bulk_data.max_bet_range[0] >= bulk_data.max_bet_range[1]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid max bet range"
+            )
+        
+        if bulk_data.delay_range[0] >= bulk_data.delay_range[1]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid delay range"
+            )
+        
+        # Create bots
+        created_bots = []
+        failed_bots = []
+        
+        for i in range(bulk_data.count):
+            try:
+                # Generate unique name
+                bot_name = await generate_unique_human_bot_name()
+                
+                # Generate random values within ranges
+                min_bet = random.uniform(bulk_data.min_bet_range[0], bulk_data.min_bet_range[1])
+                max_bet = random.uniform(bulk_data.max_bet_range[0], bulk_data.max_bet_range[1])
+                
+                # Ensure min_bet < max_bet
+                if min_bet >= max_bet:
+                    min_bet, max_bet = max_bet * 0.5, max_bet
+                
+                min_delay = random.randint(bulk_data.delay_range[0], bulk_data.delay_range[1] // 2)
+                max_delay = random.randint(min_delay + 1, bulk_data.delay_range[1])
+                
+                # Create bot
+                human_bot = HumanBot(
+                    name=bot_name,
+                    character=bulk_data.character,
+                    min_bet=round(min_bet, 2),
+                    max_bet=round(max_bet, 2),
+                    win_percentage=bulk_data.win_percentage,
+                    loss_percentage=bulk_data.loss_percentage,
+                    draw_percentage=bulk_data.draw_percentage,
+                    min_delay=min_delay,
+                    max_delay=max_delay,
+                    use_commit_reveal=bulk_data.use_commit_reveal,
+                    logging_level=bulk_data.logging_level
+                )
+                
+                await db.human_bots.insert_one(human_bot.dict())
+                created_bots.append({
+                    "id": human_bot.id,
+                    "name": human_bot.name,
+                    "character": human_bot.character,
+                    "bet_range": f"${human_bot.min_bet}-${human_bot.max_bet}"
+                })
+                
+            except Exception as e:
+                failed_bots.append({
+                    "index": i,
+                    "error": str(e)
+                })
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="BULK_CREATE_HUMAN_BOTS",
+            target_type="human_bot",
+            target_id="bulk",
+            details={
+                "character": bulk_data.character,
+                "requested_count": bulk_data.count,
+                "created_count": len(created_bots),
+                "failed_count": len(failed_bots)
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Bulk created {len(created_bots)} human bots ({bulk_data.character})")
+        
+        return {
+            "success": True,
+            "message": f"Created {len(created_bots)} human bots",
+            "created_count": len(created_bots),
+            "failed_count": len(failed_bots),
+            "created_bots": created_bots,
+            "failed_bots": failed_bots
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error bulk creating human bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to bulk create human bots"
+        )
+
+@api_router.post("/admin/human-bots/{bot_id}/toggle-status", response_model=dict)
+async def toggle_human_bot_status(
+    bot_id: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Toggle human bot active status."""
+    try:
+        # Find bot
+        bot_data = await db.human_bots.find_one({"id": bot_id})
+        if not bot_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Human bot not found"
+            )
+        
+        # Toggle status
+        new_status = not bot_data["is_active"]
+        
+        await db.human_bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "is_active": new_status,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="TOGGLE_HUMAN_BOT_STATUS",
+            target_type="human_bot",
+            target_id=bot_id,
+            details={
+                "name": bot_data["name"],
+                "new_status": "active" if new_status else "inactive"
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Human bot {bot_id} status changed to {'active' if new_status else 'inactive'}")
+        
+        return {
+            "success": True,
+            "message": f"Bot {'activated' if new_status else 'deactivated'} successfully",
+            "new_status": new_status
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error toggling human bot status: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to toggle human bot status"
+        )
+
+@api_router.get("/admin/human-bots/stats", response_model=HumanBotsStatsResponse)
+async def get_human_bots_stats(current_admin: User = Depends(get_current_admin)):
+    """Get human bots statistics."""
+    try:
+        # Basic counts
+        total_bots = await db.human_bots.count_documents({})
+        active_bots = await db.human_bots.count_documents({"is_active": True})
+        
+        # Get bots for detailed stats
+        all_bots = await db.human_bots.find({}).to_list(None)
+        
+        # Calculate character distribution
+        character_distribution = {}
+        total_games_24h = 0
+        total_revenue_24h = 0.0
+        
+        # Calculate date for 24h ago
+        day_ago = datetime.utcnow() - timedelta(days=1)
+        
+        for bot in all_bots:
+            character = bot["character"]
+            character_distribution[character] = character_distribution.get(character, 0) + 1
+            
+            # Count games in last 24h
+            games_24h = await db.human_bot_logs.count_documents({
+                "human_bot_id": bot["id"],
+                "created_at": {"$gte": day_ago}
+            })
+            total_games_24h += games_24h
+            
+            # Calculate revenue (simplified for now)
+            revenue_24h = bot.get("total_amount_won", 0) * 0.03  # Assume 3% commission
+            total_revenue_24h += revenue_24h
+        
+        # Find most active bots
+        most_active_bots = []
+        for bot in all_bots[:5]:  # Top 5
+            games_count = await db.human_bot_logs.count_documents({
+                "human_bot_id": bot["id"],
+                "created_at": {"$gte": day_ago}
+            })
+            
+            most_active_bots.append({
+                "id": bot["id"],
+                "name": bot["name"],
+                "character": bot["character"],
+                "games_24h": games_count,
+                "total_games": bot.get("total_games_played", 0)
+            })
+        
+        # Sort by activity
+        most_active_bots.sort(key=lambda x: x["games_24h"], reverse=True)
+        
+        return HumanBotsStatsResponse(
+            total_bots=total_bots,
+            active_bots=active_bots,
+            total_games_24h=total_games_24h,
+            total_revenue_24h=total_revenue_24h,
+            avg_revenue_per_bot=total_revenue_24h / active_bots if active_bots > 0 else 0,
+            most_active_bots=most_active_bots[:3],
+            character_distribution=character_distribution
+        )
+        
+    except Exception as e:
+        logger.error(f"Error fetching human bots stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch human bots stats"
+        )
+
+@api_router.get("/admin/human-bots/{bot_id}/logs", response_model=dict)
+async def get_human_bot_logs(
+    bot_id: str,
+    page: int = 1,
+    limit: int = 20,
+    action_type: Optional[str] = None,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get logs for a specific human bot."""
+    try:
+        # Verify bot exists
+        bot = await db.human_bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Human bot not found"
+            )
+        
+        # Build query
+        query = {"human_bot_id": bot_id}
+        if action_type:
+            query["action_type"] = action_type
+        
+        # Calculate pagination
+        skip = (page - 1) * limit
+        
+        # Get logs
+        logs = await db.human_bot_logs.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        total_count = await db.human_bot_logs.count_documents(query)
+        
+        # Convert to response format
+        log_responses = []
+        for log in logs:
+            log_response = HumanBotLogResponse(**log)
+            log_responses.append(log_response.dict())
+        
+        return {
+            "logs": log_responses,
+            "total_count": total_count,
+            "current_page": page,
+            "total_pages": (total_count + limit - 1) // limit,
+            "items_per_page": limit,
+            "bot_name": bot["name"],
+            "bot_character": bot["character"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching human bot logs: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch human bot logs"
+        )
+
+@api_router.post("/admin/human-bots/toggle-all", response_model=dict)
+async def toggle_all_human_bots(
+    activate: bool,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Toggle all human bots active status."""
+    try:
+        # Update all bots
+        result = await db.human_bots.update_many(
+            {},
+            {
+                "$set": {
+                    "is_active": activate,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="TOGGLE_ALL_HUMAN_BOTS",
+            target_type="human_bot",
+            target_id="all",
+            details={
+                "action": "activate" if activate else "deactivate",
+                "affected_count": result.modified_count
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"All human bots {'activated' if activate else 'deactivated'}: {result.modified_count} bots")
+        
+        return {
+            "success": True,
+            "message": f"All human bots {'activated' if activate else 'deactivated'} successfully",
+            "affected_count": result.modified_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error toggling all human bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to toggle all human bots"
+        )
 
 # ==============================================================================
 # INCLUDE ROUTERS
