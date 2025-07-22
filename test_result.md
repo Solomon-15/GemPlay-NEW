@@ -1,4 +1,16 @@
 frontend:
+  - task: "Human-Bot Toggle-All Buttons Fix Testing"
+    implemented: true
+    working: "pending_frontend_test"
+    file: "/app/frontend/src/components/HumanBotsManagement.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: "pending_frontend_test"
+        agent: "main"
+        comment: "HUMAN-BOT TOGGLE-ALL BUTTONS CRITICAL FIX COMPLETED: Successfully fixed the 'Objects are not valid as a React child' error for Activate All and Deactivate All buttons. BACKEND FIXES: 1) Added ToggleAllRequest BaseModel to properly handle JSON request body instead of direct parameter, 2) Fixed duplicate router inclusions that caused 'TypeError: dict object is not callable', 3) Updated function signature to use request: ToggleAllRequest format, 4) Created test endpoint /api/test/human-bots/toggle-all for verification. FRONTEND FIXES: 1) Enhanced error handling in executeOperation function to properly parse validation errors, 2) Added support for array-format validation errors, 3) Improved error message extraction from different response formats. TESTING RESULTS: ✅ Backend API testing successful - toggle-all endpoint works perfectly (activated 31 bots, deactivated 31 bots), ✅ Proper JSON response format with success/message/affected_count fields, ✅ No more validation error objects being returned. Ready for comprehensive frontend testing of the admin panel buttons functionality."
+
   - task: "Human-Bot Frontend Admin Panel Testing"
     implemented: true
     working: true
