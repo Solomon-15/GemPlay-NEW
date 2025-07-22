@@ -633,6 +633,35 @@ const HumanBotsManagement = () => {
 
               <div className="form-row">
                 <div className="form-group">
+                  <label>Диапазон лимитов ставок</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    placeholder="От"
+                    value={bulkCreateData.bet_limit_range[0]}
+                    onChange={(e) => setBulkCreateData({
+                      ...bulkCreateData, 
+                      bet_limit_range: [parseInt(e.target.value), bulkCreateData.bet_limit_range[1]]
+                    })}
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    placeholder="До"
+                    value={bulkCreateData.bet_limit_range[1]}
+                    onChange={(e) => setBulkCreateData({
+                      ...bulkCreateData, 
+                      bet_limit_range: [bulkCreateData.bet_limit_range[0], parseInt(e.target.value)]
+                    })}
+                  />
+                  <small className="form-help">Диапазон максимального количества одновременных ставок (1-100)</small>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
                   <label>% Побед</label>
                   <input
                     type="number"
