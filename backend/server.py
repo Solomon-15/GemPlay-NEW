@@ -638,6 +638,7 @@ class BulkCreateHumanBotsRequest(BaseModel):
     character: HumanBotCharacter
     min_bet_range: List[float] = Field(..., min_length=2, max_length=2)  # [min, max]
     max_bet_range: List[float] = Field(..., min_length=2, max_length=2)  # [min, max]  
+    bet_limit_range: List[int] = Field(default=[12, 12], min_length=2, max_length=2)  # [min, max] лимит ставок
     win_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     loss_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     draw_percentage: float = Field(default=20.0, ge=0.0, le=100.0)
