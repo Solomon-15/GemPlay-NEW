@@ -1833,6 +1833,117 @@ async def log_human_bot_action(
     except Exception as e:
         logger.error(f"Error logging human bot action: {e}")
 
+async def apply_human_bot_outcome(game_obj: Game) -> Optional[Dict[str, str]]:
+    """Apply Human bot outcome logic based on their win/loss percentages."""
+    try:
+        # Check if any human bots are involved
+        creator_human_bot = None
+        opponent_human_bot = None
+        
+        if game_obj.creator_id:
+            creator_human_bot = await db.human_bots.find_one({"id": game_obj.creator_id})
+        
+        if game_obj.opponent_id:
+            opponent_human_bot = await db.human_bots.find_one({"id": game_obj.opponent_id})
+        
+        # If no human bots involved, return None
+        if not creator_human_bot and not opponent_human_bot:
+            return None
+        
+        # Determine outcome based on human bot settings
+        if creator_human_bot and opponent_human_bot:
+            # Both are human bots - use creator's settings for simplicity
+            human_bot = creator_human_bot
+        elif creator_human_bot:
+            human_bot = creator_human_bot
+        else:
+            human_bot = opponent_human_bot
+        
+        # Get the human bot's outcome preferences
+        win_percentage = human_bot.get("win_percentage", 40.0)
+        loss_percentage = human_bot.get("loss_percentage", 40.0)
+        draw_percentage = human_bot.get("draw_percentage", 20.0)
+        
+        # Use the HumanBotBehavior to determine outcome
+        character = HumanBotCharacter(human_bot.get("character", "BALANCED"))
+        outcome = HumanBotBehavior.should_win_game(
+            character, 
+            win_percentage, 
+            loss_percentage, 
+            draw_percentage, 
+            game_obj.bet_amount
+        )
+        
+        # Map outcome to winner_id and result_status
+        if outcome == "WIN":
+            if creator_human_bot:
+                return {"winner_id": game_obj.creator_id, "result_status": "creator_wins"}
+            else:
+                return {"winner_id": game_obj.opponent_id, "result_status": "opponent_wins"}
+        elif outcome == "LOSS":
+            if creator_human_bot:
+                return {"winner_id": game_obj.opponent_id, "result_status": "opponent_wins"}
+            else:
+                return {"winner_id": game_obj.creator_id, "result_status": "creator_wins"}
+        else:  # DRAW
+            return {"winner_id": None, "result_status": "draw"}
+            
+    except Exception as e:
+        logger.error(f"Error applying human bot outcome: {e}")
+        return None
+
+def determine_rps_winner(creator_move: GameMove, opponent_move: GameMove, creator_id: str, opponent_id: str) -> tuple:
+    """Determine winner using rock-paper-scissors logic."""
+    winner_id = None
+    result_status = "draw"
+    
+    if creator_move == opponent_move:
+        result_status = "draw"
+    elif (
+        (creator_move == GameMove.ROCK and opponent_move == GameMove.SCISSORS) or
+        (creator_move == GameMove.SCISSORS and opponent_move == GameMove.PAPER) or
+        (creator_move == GameMove.PAPER and opponent_move == GameMove.ROCK)
+    ):
+        winner_id = creator_id
+        result_status = "creator_wins"
+    else:
+        winner_id = opponent_id
+        result_status = "opponent_wins"
+    
+    return winner_id, result_status
+
+async def get_player_info(player_id: str) -> Dict[str, str]:
+    """Get player information (user, bot, or human bot)."""
+    # Try to find as user first
+    user = await db.users.find_one({"id": player_id})
+    if user:
+        return {
+            "id": user["id"],
+            "username": user["username"]
+        }
+    
+    # Try to find as regular bot
+    bot = await db.bots.find_one({"id": player_id})
+    if bot:
+        return {
+            "id": bot["id"],
+            "username": bot["name"]
+        }
+    
+    # Try to find as human bot
+    human_bot = await db.human_bots.find_one({"id": player_id})
+    if human_bot:
+        return {
+            "id": human_bot["id"],
+            "username": human_bot["name"]
+        }
+    
+    # Fallback if not found
+    return {
+        "id": player_id,
+        "username": "Unknown Player"
+    }
+
 async def process_human_bot_game_outcome(game_id: str, winner_id: Optional[str]):
     """Process game outcome for human bots and update statistics."""
     try:
