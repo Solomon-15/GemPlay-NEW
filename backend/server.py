@@ -4414,9 +4414,19 @@ async def determine_game_winner(game_id: str) -> dict:
                 result_status = human_bot_override["result_status"]
             else:
                 # Apply normal rock-paper-scissors logic
+                if not game_obj.creator_move or not game_obj.opponent_move:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Missing move data for Human bot game"
+                    )
                 winner_id, result_status = determine_rps_winner(game_obj.creator_move, game_obj.opponent_move, game_obj.creator_id, game_obj.opponent_id)
         else:
             # Apply normal rock-paper-scissors logic
+            if not game_obj.creator_move or not game_obj.opponent_move:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Missing move data for regular game"
+                )
             winner_id, result_status = determine_rps_winner(game_obj.creator_move, game_obj.opponent_move, game_obj.creator_id, game_obj.opponent_id)
         
         # Verify move hash (commit-reveal) - only for human vs human games
