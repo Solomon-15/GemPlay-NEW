@@ -1411,6 +1411,486 @@ async def shutdown_event():
     logger.info("GemPlay API shutdown complete")
 
 # ==============================================================================
+# HUMAN BOT SIMULATION TASKS
+# ==============================================================================
+
+async def human_bot_simulation_task():
+    """Background task for Human bot simulation."""
+    logger.info("🤖 Human bot simulation task started")
+    
+    while True:
+        try:
+            # Get active human bots
+            active_human_bots = await db.human_bots.find({"is_active": True}).to_list(100)
+            
+            if not active_human_bots:
+                await asyncio.sleep(60)  # No active bots, wait 1 minute
+                continue
+            
+            logger.info(f"🤖 Checking {len(active_human_bots)} active Human bots for actions")
+            
+            for bot_data in active_human_bots:
+                try:
+                    human_bot = HumanBot(**bot_data)
+                    
+                    # Check if bot should take action based on delay
+                    if await should_human_bot_take_action(human_bot):
+                        # Decide action: create bet or join existing bet
+                        action = HumanBotBehavior.get_action_decision(human_bot.character)
+                        
+                        if action == "create":
+                            await create_human_bot_bet(human_bot)
+                        else:
+                            await join_human_bot_bet(human_bot)
+                        
+                        # Log action
+                        await log_human_bot_action(
+                            human_bot.id,
+                            "ACTION_DECISION",
+                            f"Bot decided to {action}",
+                            None,
+                            None,
+                            None,
+                            None
+                        )
+                
+                except Exception as e:
+                    logger.error(f"Error processing human bot {bot_data.get('id')}: {e}")
+            
+            # Wait before next cycle (shorter interval for human bots)
+            await asyncio.sleep(15)  # Check every 15 seconds
+            
+        except Exception as e:
+            logger.error(f"Error in human bot simulation task: {e}")
+            await asyncio.sleep(60)  # Wait longer if error occurred
+
+async def should_human_bot_take_action(human_bot: HumanBot) -> bool:
+    """Determine if human bot should take action based on timing and character."""
+    if not human_bot.is_active:
+        return False
+    
+    # Check if enough time has passed since last action
+    if human_bot.last_action_time:
+        time_since_last = datetime.utcnow() - human_bot.last_action_time
+        min_delay = HumanBotBehavior.get_delay_time(human_bot.character, human_bot.min_delay, human_bot.max_delay)
+        
+        if time_since_last.total_seconds() < min_delay:
+            return False
+    
+    # Character-based probability to act
+    if human_bot.character == HumanBotCharacter.IMPULSIVE:
+        return random.random() < 0.8  # 80% chance - very active
+    elif human_bot.character == HumanBotCharacter.AGGRESSIVE:
+        return random.random() < 0.6  # 60% chance - quite active
+    elif human_bot.character == HumanBotCharacter.CAUTIOUS:
+        return random.random() < 0.2  # 20% chance - less active
+    else:
+        return random.random() < 0.4  # 40% chance - moderate activity
+
+async def create_human_bot_bet(human_bot: HumanBot):
+    """Create a bet as a human bot."""
+    try:
+        # Ensure bot has gems (setup if needed)
+        await setup_human_bot_gems(human_bot.id)
+        
+        # Generate bet amount based on character
+        bet_amount = HumanBotBehavior.get_bet_amount(
+            human_bot.character,
+            human_bot.min_bet,
+            human_bot.max_bet
+        )
+        
+        # Generate gem combination for the bet amount
+        bet_gems = await generate_human_bot_gem_combination(bet_amount)
+        
+        # Generate bot's move
+        bot_move = HumanBotBehavior.get_move_choice(human_bot.character)
+        
+        # Create commit-reveal if enabled
+        if human_bot.use_commit_reveal:
+            salt = secrets.token_hex(32)
+            move_hash = hash_move_with_salt(bot_move, salt)
+        else:
+            salt = None
+            move_hash = None
+        
+        # Create game
+        game = Game(
+            creator_id=human_bot.id,
+            creator_type="human_bot",
+            creator_move=bot_move if not human_bot.use_commit_reveal else None,
+            creator_move_hash=move_hash,
+            creator_salt=salt,
+            bet_amount=bet_amount,
+            bet_gems=bet_gems,
+            is_bot_game=True,
+            bot_id=human_bot.id,
+            bot_type="HUMAN",
+            metadata={
+                "character": human_bot.character,
+                "human_bot": True,
+                "auto_created": True
+            }
+        )
+        
+        await db.games.insert_one(game.dict())
+        
+        # Update human bot's last action time and statistics
+        await db.human_bots.update_one(
+            {"id": human_bot.id},
+            {
+                "$set": {
+                    "last_action_time": datetime.utcnow(),
+                    "last_bet_time": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                "$inc": {
+                    "total_amount_wagered": bet_amount
+                }
+            }
+        )
+        
+        # Log the action
+        await log_human_bot_action(
+            human_bot.id,
+            "CREATE_BET",
+            f"Created bet with amount ${bet_amount}",
+            game.id,
+            bet_amount,
+            None,
+            bot_move.value
+        )
+        
+        logger.info(f"🤖 Human bot {human_bot.name} ({human_bot.character}) created bet ${bet_amount}")
+        
+    except Exception as e:
+        logger.error(f"Error creating human bot bet: {e}")
+
+async def join_human_bot_bet(human_bot: HumanBot):
+    """Join an existing bet as a human bot."""
+    try:
+        # Find available games that human bot can join
+        available_games = await db.games.find({
+            "status": GameStatus.WAITING,
+            "creator_id": {"$ne": human_bot.id},  # Don't join own games
+            "bet_amount": {"$gte": human_bot.min_bet, "$lte": human_bot.max_bet},
+            # Human bots can join both human and regular bot games
+        }).to_list(20)
+        
+        if not available_games:
+            logger.info(f"🤖 No available games for human bot {human_bot.name}")
+            return
+        
+        # Filter games based on character preferences
+        suitable_games = []
+        for game_data in available_games:
+            game = Game(**game_data)
+            
+            # Character-based game selection
+            if human_bot.character == HumanBotCharacter.CAUTIOUS:
+                # Prefer lower value games
+                if game.bet_amount <= (human_bot.min_bet + human_bot.max_bet) / 2:
+                    suitable_games.append(game)
+            elif human_bot.character == HumanBotCharacter.AGGRESSIVE:
+                # Prefer higher value games
+                if game.bet_amount >= (human_bot.min_bet + human_bot.max_bet) / 2:
+                    suitable_games.append(game)
+            else:
+                # All games are suitable for other characters
+                suitable_games.append(game)
+        
+        if not suitable_games:
+            logger.info(f"🤖 No suitable games for human bot {human_bot.name} ({human_bot.character})")
+            return
+        
+        # Select random game
+        selected_game = random.choice(suitable_games)
+        
+        # Ensure bot has required gems
+        await setup_human_bot_gems(human_bot.id)
+        
+        # Check if bot has enough gems
+        for gem_type, quantity in selected_game.bet_gems.items():
+            bot_gems = await db.user_gems.find_one({"user_id": human_bot.id, "gem_type": gem_type})
+            if not bot_gems or bot_gems["quantity"] < quantity:
+                logger.info(f"🤖 Human bot {human_bot.name} doesn't have enough {gem_type} gems")
+                return
+        
+        # Freeze bot's gems
+        for gem_type, quantity in selected_game.bet_gems.items():
+            await db.user_gems.update_one(
+                {"user_id": human_bot.id, "gem_type": gem_type},
+                {
+                    "$inc": {"frozen_quantity": quantity},
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+        
+        # Generate bot's move based on character
+        bot_move = HumanBotBehavior.get_move_choice(human_bot.character)
+        
+        # Freeze commission (for human bots, commission applies)
+        commission_amount = selected_game.bet_amount * 0.06  # 6% commission
+        
+        # Check if human bot has enough balance for commission
+        bot_user = await db.users.find_one({"id": human_bot.id})
+        if not bot_user:
+            # Create user profile for human bot if it doesn't exist
+            await create_human_bot_user_profile(human_bot)
+            bot_user = await db.users.find_one({"id": human_bot.id})
+        
+        if bot_user["virtual_balance"] < commission_amount:
+            # Give human bot some balance for commission
+            await db.users.update_one(
+                {"id": human_bot.id},
+                {"$inc": {"virtual_balance": 1000.0}}  # Add $1000 balance
+            )
+        
+        # Freeze commission
+        await db.users.update_one(
+            {"id": human_bot.id},
+            {
+                "$inc": {
+                    "frozen_balance": commission_amount,
+                    "virtual_balance": -commission_amount
+                },
+                "$set": {"updated_at": datetime.utcnow()}
+            }
+        )
+        
+        # Update game with bot as opponent
+        await db.games.update_one(
+            {"id": selected_game.id},
+            {
+                "$set": {
+                    "opponent_id": human_bot.id,
+                    "opponent_move": bot_move,
+                    "opponent_gems": selected_game.bet_gems,  # Same gems as creator
+                    "status": GameStatus.REVEAL if selected_game.creator_move_hash else GameStatus.ACTIVE,
+                    "started_at": datetime.utcnow(),
+                    "reveal_deadline": datetime.utcnow() + timedelta(minutes=5) if selected_game.creator_move_hash else None
+                }
+            }
+        )
+        
+        # Update human bot's last action time and statistics
+        await db.human_bots.update_one(
+            {"id": human_bot.id},
+            {
+                "$set": {
+                    "last_action_time": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                },
+                "$inc": {
+                    "total_amount_wagered": selected_game.bet_amount,
+                    "total_games_played": 1
+                }
+            }
+        )
+        
+        # Log the action
+        await log_human_bot_action(
+            human_bot.id,
+            "JOIN_BET",
+            f"Joined game with bet amount ${selected_game.bet_amount}",
+            selected_game.id,
+            selected_game.bet_amount,
+            None,
+            bot_move.value
+        )
+        
+        logger.info(f"🤖 Human bot {human_bot.name} ({human_bot.character}) joined game {selected_game.id}")
+        
+        # If not using commit-reveal, determine winner immediately
+        if not selected_game.creator_move_hash:
+            await determine_game_winner(selected_game.id)
+        
+    except Exception as e:
+        logger.error(f"Error joining human bot bet: {e}")
+
+async def setup_human_bot_gems(human_bot_id: str):
+    """Ensure human bot has adequate gems for betting."""
+    try:
+        # Define gem types and minimum quantities
+        gem_types = ["Ruby", "Amber", "Topaz", "Emerald", "Aquamarine", "Sapphire", "Magic"]
+        min_quantities = [50, 25, 10, 5, 2, 1, 1]  # Minimum quantities for each gem type
+        
+        for gem_type, min_qty in zip(gem_types, min_quantities):
+            # Check current gem quantity
+            user_gem = await db.user_gems.find_one({
+                "user_id": human_bot_id,
+                "gem_type": gem_type
+            })
+            
+            if not user_gem:
+                # Create new gem entry
+                new_gem = UserGem(
+                    user_id=human_bot_id,
+                    gem_type=GemType(gem_type),
+                    quantity=min_qty * 2  # Give double the minimum
+                )
+                await db.user_gems.insert_one(new_gem.dict())
+            elif user_gem["quantity"] < min_qty:
+                # Top up gems if below minimum
+                await db.user_gems.update_one(
+                    {"user_id": human_bot_id, "gem_type": gem_type},
+                    {
+                        "$inc": {"quantity": min_qty * 2 - user_gem["quantity"]},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+        
+    except Exception as e:
+        logger.error(f"Error setting up human bot gems: {e}")
+
+async def generate_human_bot_gem_combination(target_amount: float) -> dict:
+    """Generate a realistic gem combination for the target amount."""
+    # Gem values
+    gem_values = {
+        "Ruby": 1, "Amber": 2, "Topaz": 5, "Emerald": 10,
+        "Aquamarine": 25, "Sapphire": 50, "Magic": 100
+    }
+    
+    target_int = int(target_amount)
+    combination = {}
+    remaining = target_int
+    
+    # Start with larger gems for efficiency
+    gem_types_desc = ["Magic", "Sapphire", "Aquamarine", "Emerald", "Topaz", "Amber", "Ruby"]
+    
+    for gem_type in gem_types_desc:
+        if remaining <= 0:
+            break
+            
+        gem_value = gem_values[gem_type]
+        if remaining >= gem_value:
+            quantity = remaining // gem_value
+            # Limit quantity to make it realistic
+            max_quantity = min(quantity, 3) if gem_type in ["Magic", "Sapphire"] else min(quantity, 5)
+            if max_quantity > 0:
+                combination[gem_type] = max_quantity
+                remaining -= max_quantity * gem_value
+    
+    # If there's remaining value, add Ruby gems
+    if remaining > 0:
+        combination["Ruby"] = combination.get("Ruby", 0) + remaining
+    
+    return combination
+
+async def create_human_bot_user_profile(human_bot: HumanBot):
+    """Create a user profile for human bot if it doesn't exist."""
+    try:
+        # Check if user profile already exists
+        existing_user = await db.users.find_one({"id": human_bot.id})
+        if existing_user:
+            return
+        
+        # Create user profile
+        bot_user = User(
+            id=human_bot.id,
+            username=human_bot.name,
+            email=f"{human_bot.name.lower().replace(' ', '_')}@humanbots.gemplay.local",
+            password_hash="",  # Human bots don't need passwords
+            role=UserRole.USER,
+            status=UserStatus.ACTIVE,
+            email_verified=True,
+            virtual_balance=2000.0,  # Give initial balance
+            gender=random.choice(["male", "female"])
+        )
+        
+        await db.users.insert_one(bot_user.dict())
+        logger.info(f"Created user profile for human bot: {human_bot.name}")
+        
+    except Exception as e:
+        logger.error(f"Error creating human bot user profile: {e}")
+
+async def log_human_bot_action(
+    human_bot_id: str,
+    action_type: str,
+    description: str,
+    game_id: Optional[str] = None,
+    bet_amount: Optional[float] = None,
+    outcome: Optional[str] = None,
+    move_played: Optional[str] = None
+):
+    """Log human bot action."""
+    try:
+        log_entry = HumanBotLog(
+            human_bot_id=human_bot_id,
+            action_type=action_type,
+            description=description,
+            game_id=game_id,
+            bet_amount=bet_amount,
+            outcome=outcome,
+            move_played=move_played
+        )
+        
+        await db.human_bot_logs.insert_one(log_entry.dict())
+        
+    except Exception as e:
+        logger.error(f"Error logging human bot action: {e}")
+
+async def process_human_bot_game_outcome(game_id: str, winner_id: Optional[str]):
+    """Process game outcome for human bots and update statistics."""
+    try:
+        # Get game details
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            return
+        
+        # Check if any human bots are involved
+        human_bot_ids = []
+        
+        # Check creator
+        creator_bot = await db.human_bots.find_one({"id": game["creator_id"]})
+        if creator_bot:
+            human_bot_ids.append(game["creator_id"])
+        
+        # Check opponent
+        if game.get("opponent_id"):
+            opponent_bot = await db.human_bots.find_one({"id": game["opponent_id"]})
+            if opponent_bot:
+                human_bot_ids.append(game["opponent_id"])
+        
+        # Process outcome for each human bot
+        for bot_id in human_bot_ids:
+            outcome = "DRAW"
+            if winner_id == bot_id:
+                outcome = "WIN"
+            elif winner_id and winner_id != bot_id:
+                outcome = "LOSS"
+            
+            # Update human bot statistics
+            update_data = {"updated_at": datetime.utcnow()}
+            
+            if outcome == "WIN":
+                update_data["$inc"] = {
+                    "total_games_won": 1,
+                    "total_amount_won": game["bet_amount"] * 2  # Winner takes all
+                }
+            
+            await db.human_bots.update_one(
+                {"id": bot_id},
+                {"$set": update_data}
+            )
+            
+            # Log the outcome
+            await log_human_bot_action(
+                bot_id,
+                outcome,
+                f"Game {game_id} ended with outcome: {outcome}",
+                game_id,
+                game["bet_amount"],
+                outcome,
+                None
+            )
+            
+            logger.info(f"🎯 Human bot {bot_id} game outcome: {outcome} for ${game['bet_amount']}")
+        
+    except Exception as e:
+        logger.error(f"Error processing human bot game outcome: {e}")
+
+# ==============================================================================
 # API ROUTES
 # ==============================================================================
 
