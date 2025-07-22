@@ -456,11 +456,12 @@ export const calculateBigStrategy = (gemsData, targetAmount) => {
     for (const gem of sortedGems) {
       const currentUsed = selectedGems[gem.type] || 0;
       
-      // Check if we can use this gem (has quantity and fits in remaining amount)
+      // Enhanced validation with logging
       if (currentUsed < gem.availableQuantity && gem.price <= remaining) {
         selectedGems[gem.type] = currentUsed + 1;
         remaining -= gem.price;
         foundGem = true;
+        console.log(`Big Strategy: Using ${gem.name} #${currentUsed + 1}/${gem.availableQuantity}, remaining: $${remaining.toFixed(2)}`);
         break;
       }
     }
