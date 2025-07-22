@@ -7,8 +7,8 @@ import ConfirmationModal from './ConfirmationModal';
 
 const HumanBotsManagement = () => {
   const { loading, error, executeOperation } = useBotsManagement();
-  const { confirmationState, showConfirmation, handleConfirmation } = useConfirmation();
-  const { inputModalState, showInputModal, handleInputModal } = useInput();
+  const { confirm, confirmationModal } = useConfirmation();
+  const { prompt, inputModal } = useInput();
   const [humanBots, setHumanBots] = useState([]);
   const [stats, setStats] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
