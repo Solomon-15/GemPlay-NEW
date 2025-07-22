@@ -432,8 +432,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                       className="text-blue-400 hover:text-blue-300 underline font-roboto text-sm cursor-pointer"
                       title="Показать активные ставки"
                     >
-                      {/* Здесь будет количество активных ставок, пока показываем 0 */}
-                      0
+                      {bot.active_bets_count || 0}
                     </button>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
