@@ -401,7 +401,7 @@ const HumanBotsManagement = () => {
       {showCreateForm && (
         <div className="modal-overlay">
           <div className="modal-content large-modal">
-            <h3>Создать Human-бота</h3>
+            <h3>{editingBot ? 'Редактировать Human-бота' : 'Создать Human-бота'}</h3>
             <form onSubmit={(e) => { e.preventDefault(); handleCreateBot(); }}>
               <div className="form-row">
                 <div className="form-group">
