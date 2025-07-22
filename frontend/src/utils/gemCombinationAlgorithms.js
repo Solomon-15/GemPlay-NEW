@@ -99,17 +99,29 @@ const findExactCombinationDP = (availableGems, targetAmount) => {
   
   return { success: true, combination };
 };
+/**
+ * Get available gems with proper validation and logging
+ */
 const getAvailableGems = (gemsData) => {
-  return gemsData
+  const availableGems = gemsData
     .filter(gem => gem.available_quantity > 0)
     .map(gem => ({
       type: gem.type,
       name: gem.name,
       price: gem.price,
-      availableQuantity: gem.available_quantity,
+      availableQuantity: gem.available_quantity, // Use actual available quantity
+      totalQuantity: gem.quantity, // Add total for debugging
+      frozenQuantity: gem.frozen_quantity, // Add frozen for debugging
       icon: gem.icon,
       color: gem.color
     }));
+  
+  // Debug logging
+  console.log('Available gems for strategy:', availableGems.map(g => 
+    `${g.name}: ${g.availableQuantity}/${g.totalQuantity} available (${g.frozenQuantity} frozen)`
+  ));
+  
+  return availableGems;
 };
 
 /**
