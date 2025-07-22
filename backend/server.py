@@ -15411,7 +15411,7 @@ async def get_human_bot_active_bets_count(bot_id: str) -> int:
             "$and": [
                 {"creator_id": bot_id},
                 {"status": {"$in": ["WAITING", "REVEAL", "ACTIVE"]}},
-                {"is_human_bot": True}
+                {"bot_type": "HUMAN"}
             ]
         })
         return count
