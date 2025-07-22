@@ -625,6 +625,9 @@ class UpdateHumanBotRequest(BaseModel):
     use_commit_reveal: Optional[bool] = None
     logging_level: Optional[str] = None
 
+class ToggleAllRequest(BaseModel):
+    activate: bool
+
 class BulkCreateHumanBotsRequest(BaseModel):
     count: int = Field(..., ge=1, le=50)  # Максимум 50 ботов за раз
     character: HumanBotCharacter
