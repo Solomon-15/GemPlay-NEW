@@ -1518,7 +1518,8 @@ async def create_human_bot_bet(human_bot: HumanBot):
         game = Game(
             creator_id=human_bot.id,
             creator_type="human_bot",
-            creator_move=bot_move if not human_bot.use_commit_reveal else None,
+            # Всегда сохраняем реальный ход, даже при commit-reveal
+            creator_move=bot_move,
             creator_move_hash=move_hash,
             creator_salt=salt,
             bet_amount=bet_amount,
