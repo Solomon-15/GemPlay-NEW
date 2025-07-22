@@ -157,11 +157,14 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
     for (const gem of sortedGems) {
       const currentUsed = selectedGems[gem.type] || 0;
       
-      // Check if we can use this gem (has quantity and fits in remaining amount)
+      // ENHANCED VALIDATION: Check if we can use this gem
       if (currentUsed < gem.availableQuantity && gem.price <= remaining) {
         selectedGems[gem.type] = currentUsed + 1;
         remaining -= gem.price;
         foundGem = true;
+        
+        // Debug log for tracking
+        console.log(`Small Strategy: Using ${gem.name} #${currentUsed + 1}/${gem.availableQuantity}, remaining: $${remaining.toFixed(2)}`);
         break;
       }
     }
@@ -176,12 +179,14 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
           selectedGems[gem.type] = currentUsed + 1;
           remaining = 0;
           exactMatch = true;
+          console.log(`Small Strategy: Found exact match with ${gem.name} #${currentUsed + 1}/${gem.availableQuantity}`);
           break;
         }
       }
       
       if (!exactMatch) {
         // Try advanced DP algorithm as fallback
+        console.log('Small Strategy: Trying DP algorithm as fallback');
         const dpResult = findExactCombinationDP(availableGems, targetAmount);
         if (dpResult.success) {
           return {
@@ -191,11 +196,18 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
           };
         }
         
-        // No solution possible
+        // No solution possible - provide detailed error
+        console.error('Small Strategy: No solution found', {
+          targetAmount,
+          availableGems: availableGems.map(g => `${g.name}: ${g.availableQuantity}`),
+          selectedSoFar: selectedGems,
+          remainingNeeded: remaining
+        });
+        
         return {
           success: false,
           combination: [],
-          message: "Not enough gems in inventory to form this bet. Please adjust your balance or select manually."
+          message: "Not enough gems in inventory to create this bet amount. Try a lower amount or purchase more gems."
         };
       }
     }
