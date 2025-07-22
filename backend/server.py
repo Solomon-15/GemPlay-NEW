@@ -15976,7 +15976,7 @@ async def get_human_bot_logs(
 
 @api_router.post("/admin/human-bots/toggle-all", response_model=dict)
 async def toggle_all_human_bots(
-    activate: bool,
+    request: ToggleAllRequest,
     current_admin: User = Depends(get_current_admin)
 ):
     """Toggle all human bots active status."""
@@ -15986,7 +15986,7 @@ async def toggle_all_human_bots(
             {},
             {
                 "$set": {
-                    "is_active": activate,
+                    "is_active": request.activate,
                     "updated_at": datetime.utcnow()
                 }
             }
@@ -15999,17 +15999,17 @@ async def toggle_all_human_bots(
             target_type="human_bot",
             target_id="all",
             details={
-                "action": "activate" if activate else "deactivate",
+                "action": "activate" if request.activate else "deactivate",
                 "affected_count": result.modified_count
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        logger.info(f"All human bots {'activated' if activate else 'deactivated'}: {result.modified_count} bots")
+        logger.info(f"All human bots {'activated' if request.activate else 'deactivated'}: {result.modified_count} bots")
         
         return {
             "success": True,
-            "message": f"All human bots {'activated' if activate else 'deactivated'} successfully",
+            "message": f"All human bots {'activated' if request.activate else 'deactivated'} successfully",
             "affected_count": result.modified_count
         }
         
