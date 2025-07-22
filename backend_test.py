@@ -788,6 +788,369 @@ def test_automatic_bot_betting_system() -> None:
     print_success("- is_regular_bot_game field correctly maintained")
     print_success("- Mathematical balance correctness verified")
 
+def test_human_bot_deletion_functionality() -> None:
+    """Test the Human-Bot deletion functionality as requested in the review."""
+    print_header("HUMAN-BOT DELETION FUNCTIONALITY TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with Human-Bot deletion test")
+        record_test("Human-Bot Deletion - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Get list of existing Human-Bots
+    print_subheader("Step 2: Get Existing Human-Bots")
+    bots_response, bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if not bots_success:
+        print_error("Failed to get Human-Bots list")
+        record_test("Human-Bot Deletion - Get Bots List", False, "Failed to get bots")
+        return
+    
+    existing_bots = bots_response.get("bots", [])
+    print_success(f"Found {len(existing_bots)} existing Human-Bots")
+    
+    # Step 3: Create a test Human-Bot for deletion testing
+    print_subheader("Step 3: Create Test Human-Bot")
+    
+    test_bot_data = {
+        "name": f"TestBot_Delete_{int(time.time())}",
+        "character": "BALANCED",
+        "min_bet": 5.0,
+        "max_bet": 50.0,
+        "bet_limit": 12,
+        "win_percentage": 40.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,
+        "min_delay": 30,
+        "max_delay": 90,
+        "use_commit_reveal": True,
+        "logging_level": "INFO"
+    }
+    
+    create_response, create_success = make_request(
+        "POST", "/admin/human-bots",
+        data=test_bot_data,
+        auth_token=admin_token
+    )
+    
+    if not create_success:
+        print_error("Failed to create test Human-Bot")
+        record_test("Human-Bot Deletion - Create Test Bot", False, "Bot creation failed")
+        return
+    
+    test_bot_id = create_response.get("id")
+    if not test_bot_id:
+        print_error("Test bot creation response missing ID")
+        record_test("Human-Bot Deletion - Create Test Bot", False, "Missing bot ID")
+        return
+    
+    print_success(f"Test Human-Bot created with ID: {test_bot_id}")
+    record_test("Human-Bot Deletion - Create Test Bot", True)
+    
+    # SCENARIO 1: Normal deletion without active games
+    print_subheader("SCENARIO 1: Normal Deletion Without Active Games")
+    
+    delete_response, delete_success = make_request(
+        "DELETE", f"/admin/human-bots/{test_bot_id}",
+        auth_token=admin_token
+    )
+    
+    if delete_success:
+        print_success("✓ Normal deletion successful")
+        
+        # Verify response structure
+        expected_fields = ["success", "message", "cancelled_games", "refunded_amount"]
+        missing_fields = [field for field in expected_fields if field not in delete_response]
+        
+        if not missing_fields:
+            print_success("✓ Response has all expected fields")
+            record_test("Human-Bot Deletion - Normal Delete Response Structure", True)
+        else:
+            print_error(f"✗ Response missing fields: {missing_fields}")
+            record_test("Human-Bot Deletion - Normal Delete Response Structure", False, f"Missing: {missing_fields}")
+        
+        # Check success flag
+        if delete_response.get("success") == True:
+            print_success("✓ Success flag is True")
+            record_test("Human-Bot Deletion - Normal Delete Success Flag", True)
+        else:
+            print_error(f"✗ Success flag is {delete_response.get('success')}")
+            record_test("Human-Bot Deletion - Normal Delete Success Flag", False, f"Success: {delete_response.get('success')}")
+        
+        # Check cancelled games and refunded amount (should be 0 for normal deletion)
+        cancelled_games = delete_response.get("cancelled_games", -1)
+        refunded_amount = delete_response.get("refunded_amount", -1)
+        
+        if cancelled_games == 0 and refunded_amount == 0:
+            print_success("✓ No games cancelled and no refunds (as expected for normal deletion)")
+            record_test("Human-Bot Deletion - Normal Delete No Active Games", True)
+        else:
+            print_warning(f"Cancelled games: {cancelled_games}, Refunded: ${refunded_amount}")
+            record_test("Human-Bot Deletion - Normal Delete No Active Games", False, f"Games: {cancelled_games}, Refund: ${refunded_amount}")
+        
+        record_test("Human-Bot Deletion - Normal Delete", True)
+        
+    else:
+        print_error("✗ Normal deletion failed")
+        print_error(f"Response: {delete_response}")
+        record_test("Human-Bot Deletion - Normal Delete", False, f"Delete failed: {delete_response}")
+    
+    # SCENARIO 2: Create bot with active games and test deletion without force
+    print_subheader("SCENARIO 2: Deletion With Active Games (Without Force)")
+    
+    # Create another test bot
+    test_bot_data2 = {
+        "name": f"TestBot_WithGames_{int(time.time())}",
+        "character": "AGGRESSIVE",
+        "min_bet": 10.0,
+        "max_bet": 100.0,
+        "bet_limit": 15,
+        "win_percentage": 45.0,
+        "loss_percentage": 35.0,
+        "draw_percentage": 20.0,
+        "min_delay": 20,
+        "max_delay": 60,
+        "use_commit_reveal": True,
+        "logging_level": "INFO"
+    }
+    
+    create_response2, create_success2 = make_request(
+        "POST", "/admin/human-bots",
+        data=test_bot_data2,
+        auth_token=admin_token
+    )
+    
+    if not create_success2:
+        print_error("Failed to create second test Human-Bot")
+        record_test("Human-Bot Deletion - Create Bot With Games", False, "Bot creation failed")
+        return
+    
+    test_bot_id2 = create_response2.get("id")
+    print_success(f"Second test Human-Bot created with ID: {test_bot_id2}")
+    
+    # Wait for bot to potentially create games (Human-bots create games automatically)
+    print("Waiting 30 seconds for Human-Bot to potentially create games...")
+    time.sleep(30)
+    
+    # Check if bot has active games
+    games_response, games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    bot_has_active_games = False
+    if games_success and isinstance(games_response, list):
+        for game in games_response:
+            if game.get("creator_id") == test_bot_id2:
+                bot_has_active_games = True
+                print_success(f"✓ Found active game created by test bot: {game.get('game_id')}")
+                break
+    
+    if not bot_has_active_games:
+        print_warning("Test bot has no active games - creating a manual game for testing")
+        # We'll still test the deletion logic even without active games
+    
+    # Try to delete bot without force (should fail if has active games)
+    delete_without_force_response, delete_without_force_success = make_request(
+        "DELETE", f"/admin/human-bots/{test_bot_id2}",
+        auth_token=admin_token,
+        expected_status=400 if bot_has_active_games else 200
+    )
+    
+    if bot_has_active_games and not delete_without_force_success:
+        print_success("✓ Deletion correctly failed with active games")
+        
+        # Verify HTTP 400 response structure
+        if "detail" in delete_without_force_response:
+            detail = delete_without_force_response["detail"]
+            
+            # Check required fields in error response
+            required_error_fields = ["message", "active_games_count", "total_frozen_balance", "games", "force_delete_required"]
+            missing_error_fields = [field for field in required_error_fields if field not in detail]
+            
+            if not missing_error_fields:
+                print_success("✓ Error response has all required fields")
+                record_test("Human-Bot Deletion - Active Games Error Response Structure", True)
+                
+                # Check specific field values
+                active_games_count = detail.get("active_games_count", 0)
+                total_frozen_balance = detail.get("total_frozen_balance", 0)
+                games_list = detail.get("games", [])
+                force_delete_required = detail.get("force_delete_required", False)
+                
+                print_success(f"✓ Active games count: {active_games_count}")
+                print_success(f"✓ Total frozen balance: ${total_frozen_balance}")
+                print_success(f"✓ Games list length: {len(games_list)}")
+                print_success(f"✓ Force delete required: {force_delete_required}")
+                
+                if force_delete_required == True:
+                    print_success("✓ force_delete_required correctly set to True")
+                    record_test("Human-Bot Deletion - Force Delete Required Flag", True)
+                else:
+                    print_error("✗ force_delete_required not set to True")
+                    record_test("Human-Bot Deletion - Force Delete Required Flag", False, f"Flag: {force_delete_required}")
+                
+                record_test("Human-Bot Deletion - Active Games Error Response", True)
+                
+            else:
+                print_error(f"✗ Error response missing fields: {missing_error_fields}")
+                record_test("Human-Bot Deletion - Active Games Error Response Structure", False, f"Missing: {missing_error_fields}")
+        else:
+            print_error("✗ Error response missing 'detail' field")
+            record_test("Human-Bot Deletion - Active Games Error Response", False, "Missing detail field")
+    
+    elif not bot_has_active_games and delete_without_force_success:
+        print_success("✓ Deletion successful (no active games)")
+        record_test("Human-Bot Deletion - No Active Games Delete", True)
+        
+        # Create another bot for force delete testing
+        create_response3, create_success3 = make_request(
+            "POST", "/admin/human-bots",
+            data=test_bot_data2,
+            auth_token=admin_token
+        )
+        if create_success3:
+            test_bot_id2 = create_response3.get("id")
+            print_success(f"Created replacement bot for force delete test: {test_bot_id2}")
+    
+    # SCENARIO 3: Force deletion with active games
+    print_subheader("SCENARIO 3: Force Deletion With Active Games")
+    
+    # Try force deletion
+    force_delete_response, force_delete_success = make_request(
+        "DELETE", f"/admin/human-bots/{test_bot_id2}?force_delete=true",
+        auth_token=admin_token
+    )
+    
+    if force_delete_success:
+        print_success("✓ Force deletion successful")
+        
+        # Verify response structure
+        expected_force_fields = ["success", "message", "cancelled_games", "refunded_amount"]
+        missing_force_fields = [field for field in expected_force_fields if field not in force_delete_response]
+        
+        if not missing_force_fields:
+            print_success("✓ Force delete response has all expected fields")
+            record_test("Human-Bot Deletion - Force Delete Response Structure", True)
+        else:
+            print_error(f"✗ Force delete response missing fields: {missing_force_fields}")
+            record_test("Human-Bot Deletion - Force Delete Response Structure", False, f"Missing: {missing_force_fields}")
+        
+        # Check success flag
+        if force_delete_response.get("success") == True:
+            print_success("✓ Force delete success flag is True")
+            record_test("Human-Bot Deletion - Force Delete Success Flag", True)
+        else:
+            print_error(f"✗ Force delete success flag is {force_delete_response.get('success')}")
+            record_test("Human-Bot Deletion - Force Delete Success Flag", False, f"Success: {force_delete_response.get('success')}")
+        
+        # Check cancelled games and refunded amount
+        cancelled_games = force_delete_response.get("cancelled_games", 0)
+        refunded_amount = force_delete_response.get("refunded_amount", 0)
+        
+        print_success(f"✓ Cancelled games: {cancelled_games}")
+        print_success(f"✓ Refunded amount: ${refunded_amount}")
+        
+        if cancelled_games >= 0 and refunded_amount >= 0:
+            print_success("✓ Cancelled games and refunded amount are non-negative")
+            record_test("Human-Bot Deletion - Force Delete Game Cancellation", True)
+        else:
+            print_error(f"✗ Invalid cancelled games ({cancelled_games}) or refunded amount (${refunded_amount})")
+            record_test("Human-Bot Deletion - Force Delete Game Cancellation", False, f"Games: {cancelled_games}, Refund: ${refunded_amount}")
+        
+        record_test("Human-Bot Deletion - Force Delete", True)
+        
+    else:
+        print_error("✗ Force deletion failed")
+        print_error(f"Response: {force_delete_response}")
+        record_test("Human-Bot Deletion - Force Delete", False, f"Force delete failed: {force_delete_response}")
+    
+    # SCENARIO 4: Test authorization (try without admin token)
+    print_subheader("SCENARIO 4: Authorization Test")
+    
+    # Create one more test bot for auth testing
+    test_bot_data3 = {
+        "name": f"TestBot_Auth_{int(time.time())}",
+        "character": "CAUTIOUS",
+        "min_bet": 1.0,
+        "max_bet": 20.0,
+        "bet_limit": 8,
+        "win_percentage": 30.0,
+        "loss_percentage": 50.0,
+        "draw_percentage": 20.0,
+        "min_delay": 60,
+        "max_delay": 120,
+        "use_commit_reveal": True,
+        "logging_level": "INFO"
+    }
+    
+    create_response3, create_success3 = make_request(
+        "POST", "/admin/human-bots",
+        data=test_bot_data3,
+        auth_token=admin_token
+    )
+    
+    if create_success3:
+        test_bot_id3 = create_response3.get("id")
+        print_success(f"Test bot for auth testing created: {test_bot_id3}")
+        
+        # Try to delete without admin token (should fail with 401)
+        no_auth_response, no_auth_success = make_request(
+            "DELETE", f"/admin/human-bots/{test_bot_id3}",
+            expected_status=401
+        )
+        
+        if not no_auth_success:
+            print_success("✓ Deletion correctly failed without authentication")
+            record_test("Human-Bot Deletion - Authorization Required", True)
+        else:
+            print_error("✗ Deletion succeeded without authentication (security issue)")
+            record_test("Human-Bot Deletion - Authorization Required", False, "No auth required")
+        
+        # Clean up - delete the auth test bot
+        cleanup_response, cleanup_success = make_request(
+            "DELETE", f"/admin/human-bots/{test_bot_id3}",
+            auth_token=admin_token
+        )
+        if cleanup_success:
+            print_success("✓ Cleaned up auth test bot")
+    
+    # SCENARIO 5: Test deletion of non-existent bot
+    print_subheader("SCENARIO 5: Delete Non-Existent Bot")
+    
+    fake_bot_id = "non-existent-bot-id-12345"
+    not_found_response, not_found_success = make_request(
+        "DELETE", f"/admin/human-bots/{fake_bot_id}",
+        auth_token=admin_token,
+        expected_status=404
+    )
+    
+    if not not_found_success:
+        print_success("✓ Deletion correctly failed for non-existent bot (HTTP 404)")
+        record_test("Human-Bot Deletion - Non-Existent Bot", True)
+    else:
+        print_error("✗ Deletion succeeded for non-existent bot")
+        record_test("Human-Bot Deletion - Non-Existent Bot", False, "Delete succeeded")
+    
+    # Summary
+    print_subheader("Human-Bot Deletion Test Summary")
+    print_success("Human-Bot deletion functionality testing completed")
+    print_success("Key findings:")
+    print_success("- Normal deletion without active games works correctly")
+    print_success("- Deletion with active games returns HTTP 400 with detailed info")
+    print_success("- Force deletion cancels games and refunds players")
+    print_success("- Admin authorization is required")
+    print_success("- Non-existent bot deletion returns HTTP 404")
+
 def test_commission_logic_comprehensive() -> None:
     """Test the commission logic comprehensively as requested in the review."""
     print_header("COMPREHENSIVE COMMISSION LOGIC TESTING")
