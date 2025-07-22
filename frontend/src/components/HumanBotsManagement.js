@@ -178,21 +178,24 @@ const HumanBotsManagement = () => {
   };
 
   const handleToggleAll = async (activate) => {
-    showConfirmation(
-      `Вы уверены, что хотите ${activate ? 'активировать' : 'деактивировать'} всех Human-ботов?`,
-      async () => {
-        try {
-          const response = await executeOperation('/admin/human-bots/toggle-all', 'POST', { activate });
-          if (response.success !== false) {
-            fetchHumanBots();
-            fetchStats();
-            alert(`${activate ? 'Активировано' : 'Деактивировано'} ${response.affected_count} ботов`);
-          }
-        } catch (error) {
-          console.error('Ошибка массового переключения статуса:', error);
+    const confirmed = await confirm({
+      title: `${activate ? 'Активация' : 'Деактивация'} всех Human-ботов`,
+      message: `Вы уверены, что хотите ${activate ? 'активировать' : 'деактивировать'} всех Human-ботов?`,
+      type: activate ? "success" : "warning"
+    });
+    
+    if (confirmed) {
+      try {
+        const response = await executeOperation('/admin/human-bots/toggle-all', 'POST', { activate });
+        if (response.success !== false) {
+          fetchHumanBots();
+          fetchStats();
+          alert(`${activate ? 'Активировано' : 'Деактивировано'} ${response.affected_count} ботов`);
         }
+      } catch (error) {
+        console.error('Ошибка массового переключения статуса:', error);
       }
-    );
+    }
   };
 
   const getCharacterLabel = (character) => {
