@@ -698,6 +698,7 @@ class HumanBotResponse(BaseModel):
     is_active: bool
     min_bet: float
     max_bet: float
+    bet_limit: int
     win_percentage: float
     loss_percentage: float
     draw_percentage: float
