@@ -116,11 +116,23 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       // Filter games - separate human bots from regular bots
       const allGames = gamesResponse.data || [];
       
-      // Available bets should include human players AND human bots (but not regular bots)
-      setAvailableBets(allGames.filter(game => 
-        !game.is_bot_game ||  // Include all non-bot games (human players)
-        game.is_human_bot     // Include Human-bot games (they should appear as regular players)
-      ));
+      // Available bets should include:
+      // 1. All human player games (is_bot_game is false or undefined)
+      // 2. Human-bot games (is_human_bot is true)
+      setAvailableBets(allGames.filter(game => {
+        // If it's not a bot game at all, include it (human players)
+        if (!game.is_bot_game) {
+          return true;
+        }
+        
+        // If it's a bot game, only include if it's a human bot
+        if (game.is_bot_game && game.is_human_bot) {
+          return true;
+        }
+        
+        // Exclude regular bot games
+        return false;
+      }));
       
       // Set bot games from dedicated endpoint (only regular bots)
       const activeBotGames = botGamesResponse.data || [];
