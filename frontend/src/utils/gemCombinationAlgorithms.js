@@ -338,10 +338,12 @@ export const calculateSmartStrategy = (gemsData, targetAmount) => {
       for (const gem of allGemsOrdered) {
         const currentUsed = selectedGems[gem.type] || 0;
         
+        // Enhanced validation with logging
         if (currentUsed < gem.availableQuantity && gem.price <= remaining) {
           selectedGems[gem.type] = currentUsed + 1;
           remaining -= gem.price;
           foundGem = true;
+          console.log(`Smart Strategy Phase 2: Using ${gem.name} #${currentUsed + 1}/${gem.availableQuantity}, remaining: $${remaining.toFixed(2)}`);
           break;
         }
       }
