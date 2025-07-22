@@ -332,6 +332,10 @@ const HumanBotsManagement = () => {
           <div className="stat-value">{stats.total_bots || 0}</div>
         </div>
         <div className="stat-card">
+          <h3>Количество ставок</h3>
+          <div className="stat-value">{stats.total_bets || 0}</div>
+        </div>
+        <div className="stat-card">
           <h3>Активные</h3>
           <div className="stat-value">{stats.active_bots || 0}</div>
         </div>
