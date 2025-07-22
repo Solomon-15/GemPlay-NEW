@@ -606,6 +606,7 @@ class CreateHumanBotRequest(BaseModel):
     character: HumanBotCharacter
     min_bet: float = Field(..., ge=1.0, le=10000.0)
     max_bet: float = Field(..., ge=1.0, le=10000.0)
+    bet_limit: int = Field(default=12, ge=1, le=100)
     win_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     loss_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     draw_percentage: float = Field(default=20.0, ge=0.0, le=100.0)
@@ -620,6 +621,7 @@ class UpdateHumanBotRequest(BaseModel):
     is_active: Optional[bool] = None
     min_bet: Optional[float] = Field(None, ge=1.0, le=10000.0)
     max_bet: Optional[float] = Field(None, ge=1.0, le=10000.0)
+    bet_limit: Optional[int] = Field(None, ge=1, le=100)
     win_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
     loss_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
     draw_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
