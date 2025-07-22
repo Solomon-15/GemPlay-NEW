@@ -16047,6 +16047,29 @@ async def test_toggle_all_human_bots(request: ToggleAllRequest):
             detail=f"Failed to toggle all human bots: {str(e)}"
         )
 
+# Simple auth test endpoint
+@api_router.post("/test/auth", response_model=dict)
+async def test_auth():
+    """Test basic auth functionality."""
+    return {"message": "Auth endpoint working without authentication"}
+
+# Test admin login without complex logic
+@api_router.post("/test/admin-login", response_model=dict)
+async def test_admin_login(credentials: UserLogin):
+    """Test admin login functionality."""
+    try:
+        user = await db.users.find_one({"email": credentials.email})
+        if not user:
+            return {"error": "User not found"}
+        
+        if not verify_password(credentials.password, user["password_hash"]):
+            return {"error": "Invalid password"}
+            
+        return {"success": True, "user_type": user.get("user_type", "unknown")}
+    except Exception as e:
+        logger.error(f"Test admin login error: {e}")
+        return {"error": f"Login test failed: {str(e)}"}
+
 # ==============================================================================
 # INCLUDE ROUTERS
 # ==============================================================================
