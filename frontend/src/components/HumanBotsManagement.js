@@ -549,7 +549,10 @@ const HumanBotsManagement = () => {
                 <button 
                   type="button" 
                   className="btn-secondary"
-                  onClick={() => setShowCreateForm(false)}
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setEditingBot(null);
+                  }}
                 >
                   Отмена
                 </button>
