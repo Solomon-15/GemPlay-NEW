@@ -32,6 +32,7 @@ const BotTable = ({
       <table className="w-full">
         <thead>
           <tr className="border-b border-border-primary">
+            <th className="text-left py-4 px-4 font-rajdhani font-bold text-white">№</th>
             <th className="text-left py-4 px-4 font-rajdhani font-bold text-white">ID</th>
             <th className="text-left py-4 px-4 font-rajdhani font-bold text-white">Имя</th>
             <th className="text-left py-4 px-4 font-rajdhani font-bold text-white">Статус</th>
