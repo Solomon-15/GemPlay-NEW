@@ -630,7 +630,7 @@ const HumanBotsManagement = () => {
                                 ...humanBotSettings,
                                 max_delay_seconds: parseInt(e.target.value) || 3600
                               })}
-                              className="w-full px-4 py-2 bg-surface-primary border border-border-primary rounded-lg text-white font-roboto"
+                              className="w-full px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
                               disabled={settingsSaving}
                             />
                           </div>
