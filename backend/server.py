@@ -15913,6 +15913,28 @@ async def bulk_create_human_bots(
                 detail="Invalid delay range"
             )
         
+        # Validate total bet_limit against global limit
+        # Get global settings for max limit
+        global_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        global_max = global_settings.get("max_active_bets_human", 100) if global_settings else 100
+        
+        # Get all existing human bots to check total limit
+        existing_bots = await db.human_bots.find({}).to_list(None)
+        existing_bots_total = sum(bot.get("bet_limit", 12) for bot in existing_bots)
+        
+        # Calculate expected total limits for new bots (use average of range)
+        expected_avg_bet_limit = (bulk_data.bet_limit_range[0] + bulk_data.bet_limit_range[1]) / 2
+        expected_total_new_limits = expected_avg_bet_limit * bulk_data.count
+        
+        # Check if bulk creation would exceed global limit
+        if existing_bots_total + expected_total_new_limits > global_max:
+            available = global_max - existing_bots_total
+            max_possible_bots = int(available / expected_avg_bet_limit)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Bulk creation would exceed global limit. Available capacity: {available:.0f}, can create max {max_possible_bots} bots with these limits"
+            )
+        
         # Create bots
         created_bots = []
         failed_bots = []
