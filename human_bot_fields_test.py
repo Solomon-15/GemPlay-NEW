@@ -209,6 +209,46 @@ def test_human_bot_game_fields():
     
     print_success(f"Total games found across all bots: {len(all_bot_games)}")
     
+    # Get full game data from available games endpoint
+    print_subheader("Getting Full Game Data from Available Games")
+    
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if not available_games_success or not isinstance(available_games_response, list):
+        print_error("Failed to get available games - cannot verify game fields")
+        return
+    
+    print_success(f"Found {len(available_games_response)} total available games")
+    
+    # Match bot games with available games to get full field data
+    enriched_bot_games = []
+    bot_game_ids = {game["game_id"] for game in all_bot_games}
+    
+    for available_game in available_games_response:
+        game_id = available_game.get("game_id")
+        if game_id in bot_game_ids:
+            # Find the corresponding bot game to get expected bot info
+            for bot_game in all_bot_games:
+                if bot_game["game_id"] == game_id:
+                    # Merge available game data with expected bot info
+                    enriched_game = {**available_game}
+                    enriched_game["expected_bot_id"] = bot_game["expected_bot_id"]
+                    enriched_game["expected_bot_name"] = bot_game["expected_bot_name"]
+                    enriched_bot_games.append(enriched_game)
+                    break
+    
+    print_success(f"Successfully matched {len(enriched_bot_games)} bot games with available games data")
+    
+    if not enriched_bot_games:
+        print_error("No bot games found in available games - cannot verify fields")
+        return
+    
+    # Update all_bot_games with enriched data
+    all_bot_games = enriched_bot_games
+    
     # Step 4: Check fields of each game
     print_subheader("Step 3: Проверить поля каждой игры")
     
