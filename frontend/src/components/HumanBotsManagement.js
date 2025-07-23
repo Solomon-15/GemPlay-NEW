@@ -835,6 +835,21 @@ const HumanBotsManagement = () => {
                 </div>
               </div>
 
+              {/* Настройки автоигры */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={createFormData.can_play_with_other_bots || false}
+                      onChange={(e) => setCreateFormData({...createFormData, can_play_with_other_bots: e.target.checked})}
+                    />
+                    Играть друг с другом
+                  </label>
+                  <small className="form-help">Разрешить этому боту автоматически играть с другими Human-ботами</small>
+                </div>
+              </div>
+
               <div className="modal-actions">
                 <button type="submit" className="btn-primary">{editingBot ? 'Сохранить' : 'Создать'}</button>
                 <button 
