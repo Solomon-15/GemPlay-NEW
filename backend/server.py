@@ -10764,7 +10764,7 @@ async def reset_bot_bets_super_admin(
                             }
                         )
                     
-                    commission_amount = bet_amount * 0.06
+                    commission_amount = bet_amount * 0.03
                     await db.users.update_one(
                         {"id": creator_id},
                         {
