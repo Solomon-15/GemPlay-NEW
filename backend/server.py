@@ -2233,6 +2233,212 @@ async def process_human_bot_game_outcome(game_id: str, winner_id: Optional[str])
     except Exception as e:
         logger.error(f"Error processing human bot game outcome: {e}")
 
+async def process_human_bot_auto_play(active_human_bots: list, settings: dict):
+    """Process auto-play between human bots if enabled."""
+    try:
+        if not active_human_bots or len(active_human_bots) < 2:
+            return
+        
+        # Get auto-play settings
+        min_delay = settings.get("min_delay_seconds", 1)
+        max_delay = settings.get("max_delay_seconds", 3600)
+        
+        # Find bots that can play with other bots
+        auto_play_bots = [
+            bot for bot in active_human_bots 
+            if bot.get("can_play_with_other_bots", True)
+        ]
+        
+        if len(auto_play_bots) < 2:
+            return
+        
+        logger.info(f"🤖 Processing auto-play for {len(auto_play_bots)} human bots")
+        
+        # Randomly select pairs of bots for auto-play
+        import random
+        random.shuffle(auto_play_bots)
+        
+        # Process pairs
+        for i in range(0, len(auto_play_bots) - 1, 2):
+            bot1_data = auto_play_bots[i]
+            bot2_data = auto_play_bots[i + 1]
+            
+            try:
+                bot1 = HumanBot(**bot1_data)
+                bot2 = HumanBot(**bot2_data)
+                
+                # Check if both bots are ready for auto-play
+                current_time = datetime.utcnow()
+                
+                # Check delays
+                if bot1.last_action_time:
+                    time_since_last1 = (current_time - bot1.last_action_time).total_seconds()
+                    if time_since_last1 < min_delay:
+                        continue
+                
+                if bot2.last_action_time:
+                    time_since_last2 = (current_time - bot2.last_action_time).total_seconds()
+                    if time_since_last2 < min_delay:
+                        continue
+                
+                # Check bet limits
+                bot1_active = await get_human_bot_active_bets_count(bot1.id)
+                bot2_active = await get_human_bot_active_bets_count(bot2.id)
+                
+                if bot1_active >= bot1.bet_limit or bot2_active >= bot2.bet_limit:
+                    continue
+                
+                # Create auto-play game between the two bots
+                await create_auto_play_game_between_bots(bot1, bot2)
+                
+                logger.info(f"🎮 Created auto-play game between {bot1.name} and {bot2.name}")
+                
+            except Exception as e:
+                logger.error(f"Error in auto-play between bots: {e}")
+                continue
+        
+    except Exception as e:
+        logger.error(f"Error in process_human_bot_auto_play: {e}")
+
+async def create_auto_play_game_between_bots(bot1: HumanBot, bot2: HumanBot):
+    """Create an auto-play game between two human bots."""
+    try:
+        # Ensure both bots have gems
+        await setup_human_bot_gems(bot1.id)
+        await setup_human_bot_gems(bot2.id)
+        
+        # Determine bet amount (use minimum of both bots' ranges)
+        min_bet = max(bot1.min_bet, bot2.min_bet)
+        max_bet = min(bot1.max_bet, bot2.max_bet)
+        
+        if min_bet > max_bet:
+            # No compatible bet range
+            return
+        
+        # Generate bet amount
+        bet_amount = HumanBotBehavior.get_bet_amount(bot1.character, min_bet, max_bet)
+        
+        # Generate gem combinations for both bots
+        bot1_gems, _ = await generate_human_bot_gem_combination_and_amount(
+            bot1.character, bet_amount, bet_amount
+        )
+        bot2_gems, _ = await generate_human_bot_gem_combination_and_amount(
+            bot2.character, bet_amount, bet_amount
+        )
+        
+        # Generate moves for both bots
+        bot1_move = HumanBotBehavior.get_move_choice(bot1.character)
+        bot2_move = HumanBotBehavior.get_move_choice(bot2.character)
+        
+        # Create game with both bots
+        game = Game(
+            creator_id=bot1.id,
+            creator_type="human_bot",
+            opponent_id=bot2.id,
+            creator_move=bot1_move,
+            opponent_move=bot2_move,
+            bet_amount=bet_amount,
+            bet_gems=bot1_gems,
+            opponent_gems=bot2_gems,
+            status=GameStatus.COMPLETED,  # Auto-complete the game
+            started_at=datetime.utcnow(),
+            completed_at=datetime.utcnow(),
+            is_bot_game=True,
+            bot_type="HUMAN"
+        )
+        
+        # Determine winner based on bot behaviors
+        outcome1 = HumanBotBehavior.should_win_game(
+            bot1.character, bot1.win_percentage, bot1.loss_percentage, 
+            bot1.draw_percentage, bet_amount
+        )
+        outcome2 = HumanBotBehavior.should_win_game(
+            bot2.character, bot2.win_percentage, bot2.loss_percentage, 
+            bot2.draw_percentage, bet_amount
+        )
+        
+        # Resolve winner (if both want to win, use random; if both want to lose, use random)
+        if outcome1 == "WIN" and outcome2 == "LOSS":
+            game.winner_id = bot1.id
+        elif outcome1 == "LOSS" and outcome2 == "WIN":
+            game.winner_id = bot2.id
+        elif outcome1 == "DRAW" or outcome2 == "DRAW":
+            game.winner_id = None  # Draw
+        else:
+            # Both want same outcome, use random
+            if random.random() < 0.5:
+                game.winner_id = bot1.id
+            else:
+                game.winner_id = bot2.id
+        
+        # Save game
+        await db.games.insert_one(game.dict())
+        
+        # Update bot statistics
+        await update_human_bot_stats_after_auto_play(bot1, bot2, game)
+        
+        # Update last action times
+        current_time = datetime.utcnow()
+        await db.human_bots.update_one(
+            {"id": bot1.id},
+            {"$set": {"last_action_time": current_time}}
+        )
+        await db.human_bots.update_one(
+            {"id": bot2.id},
+            {"$set": {"last_action_time": current_time}}
+        )
+        
+        # Log actions
+        await log_human_bot_action(
+            bot1.id, "AUTO_PLAY", f"Auto-play game vs {bot2.name}",
+            game.id, bet_amount, 
+            "WIN" if game.winner_id == bot1.id else ("LOSS" if game.winner_id else "DRAW"),
+            bot1_move.value
+        )
+        await log_human_bot_action(
+            bot2.id, "AUTO_PLAY", f"Auto-play game vs {bot1.name}",
+            game.id, bet_amount,
+            "WIN" if game.winner_id == bot2.id else ("LOSS" if game.winner_id else "DRAW"),
+            bot2_move.value
+        )
+        
+    except Exception as e:
+        logger.error(f"Error creating auto-play game between bots: {e}")
+
+async def update_human_bot_stats_after_auto_play(bot1: HumanBot, bot2: HumanBot, game: Game):
+    """Update human bot statistics after auto-play game."""
+    try:
+        # Update bot1 stats
+        bot1_update = {
+            "total_games_played": 1,
+            "total_amount_wagered": game.bet_amount
+        }
+        if game.winner_id == bot1.id:
+            bot1_update["total_games_won"] = 1
+            bot1_update["total_amount_won"] = game.bet_amount * 2
+        
+        await db.human_bots.update_one(
+            {"id": bot1.id},
+            {"$inc": bot1_update, "$set": {"updated_at": datetime.utcnow()}}
+        )
+        
+        # Update bot2 stats
+        bot2_update = {
+            "total_games_played": 1,
+            "total_amount_wagered": game.bet_amount
+        }
+        if game.winner_id == bot2.id:
+            bot2_update["total_games_won"] = 1
+            bot2_update["total_amount_won"] = game.bet_amount * 2
+        
+        await db.human_bots.update_one(
+            {"id": bot2.id},
+            {"$inc": bot2_update, "$set": {"updated_at": datetime.utcnow()}}
+        )
+        
+    except Exception as e:
+        logger.error(f"Error updating human bot stats after auto-play: {e}")
+
 # ==============================================================================
 # API ROUTES
 # ==============================================================================
