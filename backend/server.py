@@ -16575,8 +16575,8 @@ async def get_human_bot_all_bets(
             formatted_bets.append({
                 "id": game.get("id", ""),
                 "created_at": game.get("created_at").isoformat() if game.get("created_at") else "",
-                "total_bet_amount": game.get("total_bet_amount", 0),
-                "bet_amount": game.get("total_bet_amount", 0) // 2,  # Each player's share
+                "bet_amount": game.get("bet_amount", 0),
+                "total_bet_amount": game.get("bet_amount", 0),
                 "creator_gem": game.get("creator_gem", ""),
                 "selected_gem": game.get("creator_gem", ""),
                 "status": game.get("status", ""),
