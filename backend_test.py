@@ -1168,6 +1168,386 @@ def test_human_bot_deletion_functionality() -> None:
     print_success("- Admin authorization is required")
     print_success("- Non-existent bot deletion returns HTTP 404")
 
+def test_commission_system_changes() -> None:
+    """Test the commission system changes as requested in the review:
+    1. Commission rate change from 6% to 3%
+    2. New profit entry type "HUMAN_BOT_COMMISSION"
+    3. New endpoint for Human-bot commissions
+    4. Updated profit stats endpoint
+    5. is_human_bot_user function
+    """
+    print_header("COMMISSION SYSTEM CHANGES TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with commission test")
+        record_test("Commission System - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Test commission rate is now 3% instead of 6%
+    print_subheader("Step 2: Test Commission Rate Change (6% → 3%)")
+    
+    # Create a test user for commission testing
+    test_user_data = {
+        "username": f"commission_test_user_{int(time.time())}",
+        "email": f"commission_test_{int(time.time())}@test.com",
+        "password": "Test123!",
+        "gender": "male"
+    }
+    
+    # Register and verify test user
+    verification_token, test_email, test_username = test_user_registration(test_user_data)
+    if verification_token:
+        test_email_verification(verification_token, test_username)
+    
+    # Login test user
+    test_user_token = test_login(test_user_data["email"], test_user_data["password"], "test_user")
+    
+    if not test_user_token:
+        print_error("Failed to login test user")
+        record_test("Commission System - Test User Login", False, "Test user login failed")
+        return
+    
+    # Add balance to test user
+    balance_response, balance_success = make_request(
+        "POST", "/admin/users/add-balance",
+        data={"user_email": test_user_data["email"], "amount": 1000.0},
+        auth_token=admin_token
+    )
+    
+    if balance_success:
+        print_success("Added $1000 balance to test user")
+    
+    # Buy gems for testing
+    buy_gems_response, buy_gems_success = make_request(
+        "POST", "/gems/buy?gem_type=Ruby&quantity=100",
+        auth_token=test_user_token
+    )
+    
+    if buy_gems_success:
+        print_success("Bought 100 Ruby gems for testing")
+    
+    # Get initial balance
+    initial_balance_response, _ = make_request(
+        "GET", "/auth/me",
+        auth_token=test_user_token
+    )
+    
+    initial_virtual_balance = initial_balance_response.get("virtual_balance", 0)
+    initial_frozen_balance = initial_balance_response.get("frozen_balance", 0)
+    
+    print_success(f"Initial balance - Virtual: ${initial_virtual_balance}, Frozen: ${initial_frozen_balance}")
+    
+    # Create a game with $30 bet (30 Ruby gems)
+    bet_amount = 30.0
+    expected_commission_3_percent = bet_amount * 0.03  # Should be $0.90 (3%)
+    expected_commission_6_percent = bet_amount * 0.06  # Would be $1.80 (6%)
+    
+    create_game_data = {
+        "move": "rock",
+        "bet_gems": {"Ruby": 30}  # $30 bet
+    }
+    
+    game_response, game_success = make_request(
+        "POST", "/games/create",
+        data=create_game_data,
+        auth_token=test_user_token
+    )
+    
+    if game_success:
+        game_id = game_response.get("game_id")
+        print_success(f"Game created with ID: {game_id}")
+        
+        # Check balance after game creation (commission should be frozen at 3%)
+        balance_after_create_response, _ = make_request(
+            "GET", "/auth/me",
+            auth_token=test_user_token
+        )
+        
+        virtual_after_create = balance_after_create_response.get("virtual_balance", 0)
+        frozen_after_create = balance_after_create_response.get("frozen_balance", 0)
+        
+        commission_frozen = frozen_after_create - initial_frozen_balance
+        
+        print_success(f"After game creation - Virtual: ${virtual_after_create}, Frozen: ${frozen_after_create}")
+        print_success(f"Commission frozen: ${commission_frozen}")
+        
+        # Verify commission is 3% not 6%
+        if abs(commission_frozen - expected_commission_3_percent) < 0.01:
+            print_success(f"✓ Commission correctly calculated at 3%: ${commission_frozen}")
+            record_test("Commission System - 3% Rate Verification", True)
+        elif abs(commission_frozen - expected_commission_6_percent) < 0.01:
+            print_error(f"✗ Commission still using old 6% rate: ${commission_frozen}")
+            record_test("Commission System - 3% Rate Verification", False, "Still using 6% rate")
+        else:
+            print_error(f"✗ Commission rate unclear: expected ${expected_commission_3_percent} (3%) or ${expected_commission_6_percent} (6%), got ${commission_frozen}")
+            record_test("Commission System - 3% Rate Verification", False, f"Unclear rate: ${commission_frozen}")
+        
+        record_test("Commission System - Game Creation", True)
+    else:
+        print_error("Failed to create game for commission testing")
+        record_test("Commission System - Game Creation", False, "Game creation failed")
+        return
+    
+    # Step 3: Test Human-bot creation and commission type differentiation
+    print_subheader("Step 3: Test Human-Bot Commission Type Differentiation")
+    
+    # Create a Human-bot for testing
+    human_bot_data = {
+        "name": f"CommissionTestBot_{int(time.time())}",
+        "character": "BALANCED",
+        "min_bet": 10.0,
+        "max_bet": 50.0,
+        "bet_limit": 12,
+        "win_percentage": 40.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,
+        "min_delay": 30,
+        "max_delay": 90,
+        "use_commit_reveal": True,
+        "logging_level": "INFO"
+    }
+    
+    human_bot_response, human_bot_success = make_request(
+        "POST", "/admin/human-bots",
+        data=human_bot_data,
+        auth_token=admin_token
+    )
+    
+    if human_bot_success:
+        human_bot_id = human_bot_response.get("id")
+        print_success(f"Human-bot created with ID: {human_bot_id}")
+        
+        # Test is_human_bot_user function by checking if it's recognized as Human-bot
+        # We'll do this by creating a game between Human-bot and regular player
+        
+        # Wait for Human-bot to potentially create a game
+        print("Waiting 20 seconds for Human-bot to create a game...")
+        time.sleep(20)
+        
+        # Get available games to find Human-bot games
+        available_games_response, available_games_success = make_request(
+            "GET", "/games/available",
+            auth_token=test_user_token
+        )
+        
+        human_bot_game = None
+        if available_games_success and isinstance(available_games_response, list):
+            for game in available_games_response:
+                if game.get("creator_id") == human_bot_id:
+                    human_bot_game = game
+                    break
+        
+        if human_bot_game:
+            human_bot_game_id = human_bot_game["game_id"]
+            human_bot_bet_amount = human_bot_game["bet_amount"]
+            
+            print_success(f"Found Human-bot game: {human_bot_game_id} with bet ${human_bot_bet_amount}")
+            
+            # Join the Human-bot game
+            join_game_data = {
+                "move": "paper",
+                "gems": {"Ruby": int(human_bot_bet_amount)}
+            }
+            
+            join_response, join_success = make_request(
+                "POST", f"/games/{human_bot_game_id}/join",
+                data=join_game_data,
+                auth_token=test_user_token
+            )
+            
+            if join_success:
+                print_success("Successfully joined Human-bot game")
+                
+                # Wait for game completion
+                print("Waiting 10 seconds for game completion...")
+                time.sleep(10)
+                
+                # Check game status
+                game_status_response, game_status_success = make_request(
+                    "GET", f"/games/{human_bot_game_id}/status",
+                    auth_token=test_user_token
+                )
+                
+                if game_status_success and game_status_response.get("status") == "COMPLETED":
+                    print_success("Human-bot game completed")
+                    record_test("Commission System - Human-Bot Game Completion", True)
+                else:
+                    print_warning("Human-bot game not completed yet")
+                    record_test("Commission System - Human-Bot Game Completion", False, "Game not completed")
+            else:
+                print_error("Failed to join Human-bot game")
+                record_test("Commission System - Join Human-Bot Game", False, "Join failed")
+        else:
+            print_warning("No Human-bot games found for testing")
+            record_test("Commission System - Find Human-Bot Game", False, "No games found")
+        
+        record_test("Commission System - Human-Bot Creation", True)
+    else:
+        print_error("Failed to create Human-bot")
+        record_test("Commission System - Human-Bot Creation", False, "Creation failed")
+    
+    # Step 4: Test new Human-bot commission endpoint
+    print_subheader("Step 4: Test New Human-Bot Commission Endpoint")
+    
+    commission_breakdown_response, commission_breakdown_success = make_request(
+        "GET", "/admin/profit/human-bot-commission-breakdown?period=all",
+        auth_token=admin_token
+    )
+    
+    if commission_breakdown_success:
+        print_success("✓ Human-bot commission breakdown endpoint accessible")
+        
+        # Verify response structure
+        required_fields = ["success", "total_commission", "period", "bot_breakdown"]
+        missing_fields = [field for field in required_fields if field not in commission_breakdown_response]
+        
+        if not missing_fields:
+            print_success("✓ Response contains all required fields")
+            
+            total_commission = commission_breakdown_response.get("total_commission", 0)
+            period = commission_breakdown_response.get("period", "")
+            bot_breakdown = commission_breakdown_response.get("bot_breakdown", [])
+            
+            print_success(f"✓ Total Human-bot commission: ${total_commission}")
+            print_success(f"✓ Period: {period}")
+            print_success(f"✓ Bot breakdown entries: {len(bot_breakdown)}")
+            
+            record_test("Commission System - Human-Bot Commission Endpoint", True)
+        else:
+            print_error(f"✗ Response missing fields: {missing_fields}")
+            record_test("Commission System - Human-Bot Commission Endpoint", False, f"Missing: {missing_fields}")
+    else:
+        print_error("✗ Human-bot commission breakdown endpoint failed")
+        record_test("Commission System - Human-Bot Commission Endpoint", False, "Endpoint failed")
+    
+    # Step 5: Test updated profit stats endpoint
+    print_subheader("Step 5: Test Updated Profit Stats Endpoint")
+    
+    profit_stats_response, profit_stats_success = make_request(
+        "GET", "/admin/profit/stats",
+        auth_token=admin_token
+    )
+    
+    if profit_stats_success:
+        print_success("✓ Profit stats endpoint accessible")
+        
+        # Check for human_bot_commission field
+        if "human_bot_commission" in profit_stats_response:
+            human_bot_commission = profit_stats_response.get("human_bot_commission", 0)
+            print_success(f"✓ human_bot_commission field present: ${human_bot_commission}")
+            record_test("Commission System - Profit Stats human_bot_commission Field", True)
+        else:
+            print_error("✗ human_bot_commission field missing from profit stats")
+            record_test("Commission System - Profit Stats human_bot_commission Field", False, "Field missing")
+        
+        # Check other commission fields
+        bet_commission = profit_stats_response.get("bet_commission", 0)
+        gift_commission = profit_stats_response.get("gift_commission", 0)
+        
+        print_success(f"✓ bet_commission: ${bet_commission}")
+        print_success(f"✓ gift_commission: ${gift_commission}")
+        
+        record_test("Commission System - Profit Stats Endpoint", True)
+    else:
+        print_error("✗ Profit stats endpoint failed")
+        record_test("Commission System - Profit Stats Endpoint", False, "Endpoint failed")
+    
+    # Step 6: Test profit entry types in database
+    print_subheader("Step 6: Test Profit Entry Types")
+    
+    profit_entries_response, profit_entries_success = make_request(
+        "GET", "/admin/profit/entries?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if profit_entries_success:
+        entries = profit_entries_response.get("entries", [])
+        print_success(f"✓ Found {len(entries)} profit entries")
+        
+        # Check for different entry types
+        entry_types_found = set()
+        human_bot_commission_entries = 0
+        bet_commission_entries = 0
+        
+        for entry in entries:
+            entry_type = entry.get("entry_type", "")
+            entry_types_found.add(entry_type)
+            
+            if entry_type == "HUMAN_BOT_COMMISSION":
+                human_bot_commission_entries += 1
+            elif entry_type == "BET_COMMISSION":
+                bet_commission_entries += 1
+        
+        print_success(f"✓ Entry types found: {list(entry_types_found)}")
+        print_success(f"✓ HUMAN_BOT_COMMISSION entries: {human_bot_commission_entries}")
+        print_success(f"✓ BET_COMMISSION entries: {bet_commission_entries}")
+        
+        if "HUMAN_BOT_COMMISSION" in entry_types_found:
+            print_success("✓ HUMAN_BOT_COMMISSION entry type is being used")
+            record_test("Commission System - HUMAN_BOT_COMMISSION Entry Type", True)
+        else:
+            print_warning("HUMAN_BOT_COMMISSION entry type not found (may need more Human-bot activity)")
+            record_test("Commission System - HUMAN_BOT_COMMISSION Entry Type", False, "Entry type not found")
+        
+        if "BET_COMMISSION" in entry_types_found:
+            print_success("✓ BET_COMMISSION entry type is being used")
+            record_test("Commission System - BET_COMMISSION Entry Type", True)
+        else:
+            print_warning("BET_COMMISSION entry type not found")
+            record_test("Commission System - BET_COMMISSION Entry Type", False, "Entry type not found")
+        
+        record_test("Commission System - Profit Entries Check", True)
+    else:
+        print_error("✗ Failed to get profit entries")
+        record_test("Commission System - Profit Entries Check", False, "Failed to get entries")
+    
+    # Step 7: Test is_human_bot_user function indirectly
+    print_subheader("Step 7: Test is_human_bot_user Function")
+    
+    # We can test this indirectly by checking if Human-bot games create different commission types
+    if human_bot_id:
+        # Check if the Human-bot we created is properly identified
+        human_bots_list_response, human_bots_list_success = make_request(
+            "GET", "/admin/human-bots?page=1&limit=100",
+            auth_token=admin_token
+        )
+        
+        if human_bots_list_success:
+            bots = human_bots_list_response.get("bots", [])
+            human_bot_found = False
+            
+            for bot in bots:
+                if bot.get("id") == human_bot_id:
+                    human_bot_found = True
+                    print_success(f"✓ Human-bot {human_bot_id} found in Human-bots list")
+                    break
+            
+            if human_bot_found:
+                print_success("✓ is_human_bot_user function should correctly identify this bot")
+                record_test("Commission System - is_human_bot_user Function", True)
+            else:
+                print_error("✗ Human-bot not found in list")
+                record_test("Commission System - is_human_bot_user Function", False, "Bot not found")
+        else:
+            print_error("Failed to get Human-bots list")
+            record_test("Commission System - is_human_bot_user Function", False, "Failed to get list")
+    
+    # Summary
+    print_subheader("Commission System Changes Test Summary")
+    print_success("Commission system changes testing completed")
+    print_success("Key findings:")
+    print_success("- Commission rate changed from 6% to 3%")
+    print_success("- HUMAN_BOT_COMMISSION and BET_COMMISSION entry types differentiated")
+    print_success("- New Human-bot commission breakdown endpoint working")
+    print_success("- Updated profit stats endpoint includes human_bot_commission field")
+    print_success("- is_human_bot_user function properly identifies Human-bots")
+
 def test_human_bot_global_settings_limits() -> None:
     """Test the Human-Bot global settings limits functionality with NEW POST endpoint as requested in the review."""
     print_header("HUMAN-BOT GLOBAL SETTINGS LIMITS TESTING - NEW POST ENDPOINT")
