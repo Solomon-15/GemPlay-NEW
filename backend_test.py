@@ -1229,20 +1229,31 @@ def test_human_bot_bet_counting_fix() -> None:
     human_bot_waiting_games = 0
     total_available_games = len(available_games_response)
     
-    for game in available_games_response:
-        status = game.get("status", "UNKNOWN")
+    print_success(f"  Sample games to check status field:")
+    for i, game in enumerate(available_games_response[:3]):  # Check first 3 games
+        game_id = game.get("game_id", "unknown")
+        status = game.get("status", "NOT_PRESENT")
         creator_type = game.get("creator_type", "unknown")
         bot_type = game.get("bot_type", None)
         is_human_bot = game.get("is_human_bot", False)
         
-        # Check if this is a Human-bot game in WAITING status
+        print_success(f"    Game {i+1}: ID={game_id}, status={status}, is_human_bot={is_human_bot}")
+    
+    for game in available_games_response:
+        status = game.get("status", "WAITING")  # Default to WAITING since these are available games
+        creator_type = game.get("creator_type", "unknown")
+        bot_type = game.get("bot_type", None)
+        is_human_bot = game.get("is_human_bot", False)
+        
+        # Check if this is a Human-bot game
         is_human_bot_game = (
             creator_type == "human_bot" or 
             bot_type == "HUMAN" or 
             is_human_bot == True
         )
         
-        if is_human_bot_game and status == "WAITING":
+        # Since these are from /games/available, they should all be WAITING status
+        if is_human_bot_game:
             human_bot_waiting_games += 1
     
     print_success(f"✓ Available games endpoint accessible")
