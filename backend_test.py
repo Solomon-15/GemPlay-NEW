@@ -8546,17 +8546,11 @@ def test_concurrent_games_functionality() -> None:
             record_test(test.__name__, False, f"Exception: {e}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY COMMISSION SYSTEM CHANGES TESTING")
-    print("Testing commission system changes as requested in the review:")
-    print("1. Commission rate change from 6% to 3%")
-    print("2. New profit entry type 'HUMAN_BOT_COMMISSION'")
-    print("3. New endpoint for Human-bot commissions")
-    print("4. Updated profit stats endpoint")
-    print("5. is_human_bot_user function")
+    print_header("GEMPLAY BACKEND API TESTING - TIMEOUT CHECKER TASK DATABASE STATE")
     
     try:
-        # Test Commission System Changes (main focus of review request)
-        test_commission_system_changes()
+        # Run the specific test requested in the review
+        test_timeout_checker_task_database_state()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
