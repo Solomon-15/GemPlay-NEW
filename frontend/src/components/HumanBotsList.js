@@ -358,6 +358,19 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     }
   };
 
+  const handleToggleAutoPlay = async (bot, canPlay) => {
+    try {
+      await executeOperation(`/admin/human-bots/${bot.id}/toggle-auto-play`, 'POST', {
+        can_play_with_other_bots: canPlay
+      });
+      addNotification(`Human-бот ${bot.name} ${canPlay ? 'может' : 'не может'} играть с другими ботами`, 'success');
+      await fetchHumanBots();
+      await fetchStats();
+    } catch (error) {
+      console.error('Ошибка переключения автоигры:', error);
+    }
+  };
+
   const handleDeleteBot = async (bot) => {
     try {
       // First try normal delete
