@@ -1799,87 +1799,141 @@ async def setup_human_bot_gems(human_bot_id: str):
         logger.error(f"Error setting up human bot gems: {e}")
 
 async def generate_human_bot_gem_combination_and_amount(character: HumanBotCharacter, min_bet: float, max_bet: float) -> tuple:
-    """Generate realistic gem combination first, then calculate bet amount from gems."""
+    """Generate gem combination and bet amount based on character personality."""
+    # Validate input parameters
+    if min_bet <= 0:
+        min_bet = 1  # Default minimum
+    if max_bet <= min_bet:
+        max_bet = max(min_bet * 2, 100)  # Ensure valid range
+    
+    logger.info(f"Generating bet for character {character}, range: ${min_bet}-${max_bet}")
+    
     # Gem values
     gem_values = {
         "Ruby": 1, "Amber": 2, "Topaz": 5, "Emerald": 10,
         "Aquamarine": 25, "Sapphire": 50, "Magic": 100
     }
     
-    # Character-based gem selection strategy
-    if character == HumanBotCharacter.STABLE:
-        # Stable: prefer lower value gems, fewer different types
-        gem_pool = ["Ruby", "Amber", "Topaz", "Emerald"]
-        max_gems_per_type = 3
-        max_types = 2
-    elif character == HumanBotCharacter.AGGRESSIVE:
-        # Aggressive: prefer higher value gems, more variety
-        gem_pool = ["Emerald", "Aquamarine", "Sapphire", "Magic"]
-        max_gems_per_type = 2
-        max_types = 3
+    # Character-based bet amount selection
+    bet_range = max_bet - min_bet
+    target_amount = 0
+    
+    if character == HumanBotCharacter.AGGRESSIVE:
+        # 70-100% of range (high bets)
+        min_pct, max_pct = 0.7, 1.0
+        target_amount = min_bet + (bet_range * random.uniform(min_pct, max_pct))
+        gem_pool = ["Emerald", "Aquamarine", "Sapphire", "Magic"]  # Prefer high-value gems
+        logger.debug(f"AGGRESSIVE bot choosing from ${min_bet + bet_range * min_pct:.2f}-${max_bet}")
+        
     elif character == HumanBotCharacter.CAUTIOUS:
-        # Cautious: mostly low value gems
-        gem_pool = ["Ruby", "Amber", "Topaz"]
-        max_gems_per_type = 5
-        max_types = 2
-    else:
-        # Balanced/Others: mix of all gems
+        # 0-30% of range (low bets)
+        min_pct, max_pct = 0.0, 0.3
+        target_amount = min_bet + (bet_range * random.uniform(min_pct, max_pct))
+        gem_pool = ["Ruby", "Amber", "Topaz"]  # Prefer low-value gems
+        logger.debug(f"CAUTIOUS bot choosing from ${min_bet}-${min_bet + bet_range * max_pct:.2f}")
+        
+    elif character == HumanBotCharacter.BALANCED:
+        # 0-100% of range (equal distribution)
+        target_amount = random.uniform(min_bet, max_bet)
+        gem_pool = list(gem_values.keys())  # All gems available
+        logger.debug(f"BALANCED bot choosing from ${min_bet}-${max_bet}")
+        
+    elif character == HumanBotCharacter.IMPULSIVE:
+        # 0-100% chaotic (can jump between extremes)
+        choices = [
+            random.uniform(min_bet, min_bet + bet_range * 0.2),  # Low bet
+            random.uniform(min_bet + bet_range * 0.4, min_bet + bet_range * 0.6),  # Mid bet
+            random.uniform(min_bet + bet_range * 0.8, max_bet)  # High bet
+        ]
+        target_amount = random.choice(choices)
+        gem_pool = list(gem_values.keys())  # All gems, chaotic selection
+        logger.debug(f"IMPULSIVE bot chaotically chose ${target_amount:.2f}")
+        
+    elif character == HumanBotCharacter.ANALYST:
+        # 40-70% of range ("optimal" bets)
+        min_pct, max_pct = 0.4, 0.7
+        target_amount = min_bet + (bet_range * random.uniform(min_pct, max_pct))
+        gem_pool = ["Topaz", "Emerald", "Aquamarine"]  # "Optimal" middle-tier gems
+        logger.debug(f"ANALYST bot choosing optimal ${min_bet + bet_range * min_pct:.2f}-${min_bet + bet_range * max_pct:.2f}")
+        
+    elif character == HumanBotCharacter.STABLE:
+        # 30-70% of range (stable middle bets)
+        min_pct, max_pct = 0.3, 0.7
+        target_amount = min_bet + (bet_range * random.uniform(min_pct, max_pct))
+        gem_pool = ["Ruby", "Amber", "Topaz", "Emerald"]  # Stable, predictable gems
+        logger.debug(f"STABLE bot choosing stable ${min_bet + bet_range * min_pct:.2f}-${min_bet + bet_range * max_pct:.2f}")
+        
+    elif character == HumanBotCharacter.MIMIC:
+        # Copy recent successful bet patterns (for now, use balanced approach)
+        target_amount = random.uniform(min_bet, max_bet)
         gem_pool = list(gem_values.keys())
-        max_gems_per_type = 3
-        max_types = 3
+        logger.debug(f"MIMIC bot mimicking patterns, chose ${target_amount:.2f}")
+        
+    else:
+        # Default: balanced approach
+        target_amount = random.uniform(min_bet, max_bet)
+        gem_pool = list(gem_values.keys())
+        logger.debug(f"DEFAULT character choosing ${target_amount:.2f}")
     
-    combination = {}
-    attempts = 0
-    max_attempts = 50
-    
-    while attempts < max_attempts:
-        combination = {}
-        
-        # Select random gem types (1 to max_types)
-        selected_types = random.sample(gem_pool, random.randint(1, min(len(gem_pool), max_types)))
-        
-        for gem_type in selected_types:
-            # Random quantity (1 to max_gems_per_type)
-            quantity = random.randint(1, max_gems_per_type)
-            combination[gem_type] = quantity
-        
-        # Calculate total value
-        total_value = sum(gem_values[gem_type] * quantity for gem_type, quantity in combination.items())
-        
-        # Check if it's within the bet range
-        if min_bet <= total_value <= max_bet:
-            return combination, float(total_value)
-        
-        attempts += 1
-    
-    # Fallback: generate simple combination within range
-    target_amount = random.uniform(min_bet, max_bet)
+    # Ensure target amount is within bounds
+    target_amount = max(min_bet, min(target_amount, max_bet))
     target_int = int(target_amount)
+    
+    logger.info(f"Character {character} selected bet amount: ${target_amount:.2f}")
+    
+    # Generate gem combination for the target amount
     combination = {}
     remaining = target_int
     
-    # Use efficient algorithm as fallback
-    gem_types_desc = ["Magic", "Sapphire", "Aquamarine", "Emerald", "Topaz", "Amber", "Ruby"]
+    # Character-specific gem selection strategy
+    if character == HumanBotCharacter.AGGRESSIVE:
+        # Start with high-value gems, less quantity
+        gem_types_order = ["Magic", "Sapphire", "Aquamarine", "Emerald"]
+        max_per_type = 2
+    elif character == HumanBotCharacter.CAUTIOUS:
+        # Start with low-value gems, more quantity for safety
+        gem_types_order = ["Ruby", "Amber", "Topaz", "Emerald"]
+        max_per_type = 10
+    elif character == HumanBotCharacter.IMPULSIVE:
+        # Random order, chaotic quantities
+        gem_types_order = random.sample(list(gem_values.keys()), len(gem_values))
+        max_per_type = random.randint(1, 5)
+    elif character == HumanBotCharacter.ANALYST:
+        # Optimal middle gems, calculated quantities
+        gem_types_order = ["Emerald", "Topaz", "Aquamarine", "Ruby"]
+        max_per_type = 3
+    else:
+        # Balanced/Stable/Default: standard descending order
+        gem_types_order = ["Magic", "Sapphire", "Aquamarine", "Emerald", "Topaz", "Amber", "Ruby"]
+        max_per_type = 5
     
-    for gem_type in gem_types_desc:
+    # Generate combination using character strategy
+    for gem_type in gem_types_order:
         if remaining <= 0:
             break
             
         gem_value = gem_values[gem_type]
         if remaining >= gem_value:
-            quantity = remaining // gem_value
-            # Limit quantity to make it realistic
-            max_quantity = min(quantity, 3) if gem_type in ["Magic", "Sapphire"] else min(quantity, 5)
+            max_quantity = min(remaining // gem_value, max_per_type)
             if max_quantity > 0:
-                combination[gem_type] = max_quantity
-                remaining -= max_quantity * gem_value
+                # Add some randomness based on character
+                if character == HumanBotCharacter.IMPULSIVE:
+                    quantity = random.randint(1, max_quantity) if max_quantity > 1 else 1
+                else:
+                    quantity = max_quantity
+                    
+                combination[gem_type] = quantity
+                remaining -= quantity * gem_value
     
-    # If there's remaining value, add Ruby gems
+    # Handle remaining value with Ruby gems (always small denomination)
     if remaining > 0:
         combination["Ruby"] = combination.get("Ruby", 0) + remaining
     
     # Calculate final amount
     final_amount = sum(gem_values[gem_type] * quantity for gem_type, quantity in combination.items())
+    
+    logger.info(f"Generated combination for {character}: {combination}, total: ${final_amount}")
+    
     return combination, float(final_amount)
 
 async def generate_human_bot_gem_combination(target_amount: float) -> dict:
