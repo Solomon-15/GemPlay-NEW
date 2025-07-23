@@ -138,6 +138,9 @@ class BotSettingsRequest(BaseModel):
 # Human Bot Settings Request model - новая модель для настроек Human-ботов
 class HumanBotSettingsRequest(BaseModel):
     max_active_bets_human: int = Field(ge=1, le=1000, description="Максимальное количество активных ставок для всех Human ботов")
+    auto_play_enabled: Optional[bool] = Field(default=False, description="Глобальное включение автоигры между Human-ботами")
+    min_delay_seconds: Optional[int] = Field(default=1, ge=1, le=3600, description="Минимальная задержка между играми (секунды)")
+    max_delay_seconds: Optional[int] = Field(default=3600, ge=1, le=3600, description="Максимальная задержка между играми (секунды)")
 
 # Interface Settings model
 class InterfaceSettings(BaseModel):
