@@ -1870,7 +1870,7 @@ const ProfitAdmin = ({ user }) => {
                                       {formatCurrencyWithSymbol(game.frozen_commission || 0, true)}
                                     </div>
                                     <div className="text-xs text-text-secondary">
-                                      {game.commission_rate ? `${(game.commission_rate * 100).toFixed(1)}%` : '6%'}
+                                      {game.commission_rate ? `${(game.commission_rate * 100).toFixed(1)}%` : '3%'}
                                     </div>
                                   </div>
                                 </div>
