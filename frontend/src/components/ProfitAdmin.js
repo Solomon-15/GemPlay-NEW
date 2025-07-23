@@ -2363,10 +2363,10 @@ const ProfitAdmin = ({ user }) => {
               )}
 
               {/* Заглушка для других модальных окон */}
-              {activeModal !== 'bet_commission' && activeModal !== 'gift_commission' && 
-               activeModal !== 'bot_revenue' && activeModal !== 'frozen_funds' && 
-               activeModal !== 'total_revenue' && activeModal !== 'expenses' && 
-               activeModal !== 'net_profit' && (
+              {activeModal !== 'bet_commission' && activeModal !== 'human_bot_commission' && 
+               activeModal !== 'gift_commission' && activeModal !== 'bot_revenue' && 
+               activeModal !== 'frozen_funds' && activeModal !== 'total_revenue' && 
+               activeModal !== 'expenses' && activeModal !== 'net_profit' && (
                 <div className="text-center text-text-secondary py-8">
                   <div className="text-4xl mb-4">📊</div>
                   <h4 className="font-rajdhani text-lg font-bold mb-2">Детализация в разработке</h4>
