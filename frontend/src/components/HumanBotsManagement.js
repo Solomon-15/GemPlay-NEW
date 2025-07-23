@@ -180,6 +180,50 @@ const HumanBotsManagement = () => {
     }
   };
 
+  const fetchHumanBotSettings = async () => {
+    try {
+      setSettingsLoading(true);
+      const response = await executeOperation('/admin/human-bots/settings', 'GET');
+      if (response.success !== false) {
+        setHumanBotSettings(response.settings);
+      }
+    } catch (error) {
+      console.error('Ошибка получения настроек Human-ботов:', error);
+    } finally {
+      setSettingsLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      setSettingsSaving(true);
+      const response = await executeOperation('/admin/human-bots/settings', 'PUT', {
+        max_active_bets_human: humanBotSettings.max_active_bets_human
+      });
+      
+      if (response.success !== false) {
+        alert(response.message || 'Настройки сохранены успешно');
+        // Обновить настройки после сохранения
+        await fetchHumanBotSettings();
+        // Обновить список ботов если были изменения
+        if (response.adjusted_bots_count > 0) {
+          await fetchHumanBots();
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка сохранения настроек:', error);
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
+  // Обновленный useEffect для загрузки настроек при переключении на вкладку настроек
+  useEffect(() => {
+    if (activeTab === 'settings') {
+      fetchHumanBotSettings();
+    }
+  }, [activeTab]);
+
   const handleCreateBot = async () => {
     if (createFormData.win_percentage + createFormData.loss_percentage + createFormData.draw_percentage !== 100) {
       alert('Сумма процентов должна равняться 100%');
