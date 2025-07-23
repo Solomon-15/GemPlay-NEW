@@ -8599,6 +8599,16 @@ async def get_total_revenue_breakdown(
                 "icon": "percent"
             },
             {
+                "source": "human_bot_commission",
+                "name": "Комиссия от Human-ботов",
+                "amount": human_bot_commission_total,
+                "percentage": 0,  # Will be calculated below
+                "transactions": human_bot_commission_count,
+                "avg_per_transaction": human_bot_commission_total / human_bot_commission_count if human_bot_commission_count > 0 else 0,
+                "color": "orange",
+                "icon": "robot"
+            },
+            {
                 "source": "gift_commission",
                 "name": "Комиссия от подарков",
                 "amount": gift_commission_total,
