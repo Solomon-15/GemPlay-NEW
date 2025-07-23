@@ -8,7 +8,7 @@ export const GAME_MOVES = [
 export const GAME_CONSTANTS = {
   MIN_BET: 1,
   MAX_BET: 3000,
-  COMMISSION_RATE: 0.06 // 6%
+  COMMISSION_RATE: 0.03 // 3%
 };
 
 /**
