@@ -16548,6 +16548,9 @@ async def get_human_bots_settings(current_admin: User = Depends(get_current_admi
             default_settings = {
                 "id": "bot_settings",
                 "max_active_bets_human": 100,
+                "auto_play_enabled": False,
+                "min_delay_seconds": 1,
+                "max_delay_seconds": 3600,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }
