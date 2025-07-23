@@ -16286,7 +16286,7 @@ async def update_human_bots_settings(
             response["message"] += f". {len(adjusted_bots)} bot limits were automatically adjusted proportionally."
             response["adjusted_bots"] = adjusted_bots
         
-        return response
+        return JSONResponse(content=response)
         
     except Exception as e:
         logger.error(f"Error updating human bots settings: {e}")
