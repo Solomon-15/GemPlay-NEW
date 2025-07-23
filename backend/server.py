@@ -3866,7 +3866,7 @@ async def create_game(
         
         logger.info(f"💰 COMMISSION DEBUG - User: {current_user.id}")
         logger.info(f"💰 Total bet amount: ${total_bet_amount}")
-        logger.info(f"💰 Commission required: ${commission_required} (6%)")
+        logger.info(f"💰 Commission required: ${commission_required} (3%)")
         logger.info(f"💰 User virtual_balance before: ${user['virtual_balance']}")
         logger.info(f"💰 User frozen_balance before: ${user['frozen_balance']}")
         
