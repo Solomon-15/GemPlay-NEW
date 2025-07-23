@@ -46,8 +46,11 @@ const BotTable = ({
           </tr>
         </thead>
         <tbody>
-          {bots.map((bot) => (
+          {bots.map((bot, index) => (
             <tr key={bot.id} className="border-b border-border-primary hover:bg-surface-sidebar hover:bg-opacity-30">
+              <td className="px-4 py-4 whitespace-nowrap">
+                <div className="text-white font-roboto text-sm font-bold">{index + 1}</div>
+              </td>
               <td className="px-4 py-4 whitespace-nowrap">
                 <div className="text-text-secondary font-roboto text-sm">{bot.id}</div>
               </td>
