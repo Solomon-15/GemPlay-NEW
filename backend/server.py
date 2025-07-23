@@ -8548,13 +8548,24 @@ async def get_total_revenue_breakdown(
             query["created_at"] = {"$gte": start_date}
         
         bet_commission_total = 0
-        bet_commission_entries = await db.profit_history.find(query).to_list(None)
+        bet_commission_entries = await db.profit_entries.find(query).to_list(None)
         bet_commission_count = len(bet_commission_entries)
         for entry in bet_commission_entries:
             bet_commission_total += entry.get("amount", 0)
         
+        # Get commission from Human-bots
+        query = {"entry_type": "HUMAN_BOT_COMMISSION"}
+        if start_date:
+            query["created_at"] = {"$gte": start_date}
+        
+        human_bot_commission_total = 0
+        human_bot_commission_entries = await db.profit_entries.find(query).to_list(None)
+        human_bot_commission_count = len(human_bot_commission_entries)
+        for entry in human_bot_commission_entries:
+            human_bot_commission_total += entry.get("amount", 0)
+        
         # Get commission from gifts
-        query = {"type": "GIFT_COMMISSION"}
+        query = {"entry_type": "GIFT_COMMISSION"}
         if start_date:
             query["created_at"] = {"$gte": start_date}
         
