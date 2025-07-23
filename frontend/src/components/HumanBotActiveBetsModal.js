@@ -137,7 +137,9 @@ const HumanBotActiveBetsModal = ({
             <div className="text-right">
               <div className="text-text-secondary text-sm">Общая сумма</div>
               <div className="text-accent-primary text-2xl font-rajdhani font-bold">
-                ${activeBetsData?.totalBetAmount || 0}
+                ${activeBetsData?.bets ? 
+                  activeBetsData.bets.reduce((sum, bet) => sum + (bet.bet_amount || bet.total_bet_amount || 0), 0).toFixed(2) : 
+                  0}
               </div>
             </div>
             <button
