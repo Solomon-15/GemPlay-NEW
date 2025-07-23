@@ -8015,6 +8015,7 @@ async def get_profit_stats(current_admin: User = Depends(get_current_admin)):
         
         # Extract specific commission types
         bet_commission = profit_breakdown.get("BET_COMMISSION", 0)
+        human_bot_commission = profit_breakdown.get("HUMAN_BOT_COMMISSION", 0)
         gift_commission = profit_breakdown.get("GIFT_COMMISSION", 0)
         bot_revenue = profit_breakdown.get("BOT_REVENUE", 0)
         
