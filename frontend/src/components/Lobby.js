@@ -26,6 +26,12 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const [activeTab, setActiveTab] = useState('live-players');
   const [showCreateBetModal, setShowCreateBetModal] = useState(false);
   
+  // Состояние для фильтров Available Bets
+  const [betFilters, setBetFilters] = useState({
+    minAmount: '',
+    maxAmount: ''
+  });
+  
   // Состояние для Join Battle модального окна
   const [selectedBetForJoin, setSelectedBetForJoin] = useState(null);
   const [showJoinBattleModal, setShowJoinBattleModal] = useState(false);
