@@ -649,6 +649,17 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={bot.can_play_with_other_bots || false}
+                        onChange={(e) => handleToggleAutoPlay(bot, e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent-primary peer-focus:ring-opacity-25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent-primary"></div>
+                    </label>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
                     <div className="flex space-x-2 justify-center">
                       <button
                         onClick={() => onEditBot(bot)}
