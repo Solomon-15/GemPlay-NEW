@@ -2758,6 +2758,11 @@ const RegularBotsManagement = () => {
                           return (
                             <tr key={bet.id || index} className="hover:bg-green-900 hover:bg-opacity-20 transition-colors hover:border-l-4 hover:border-green-400">
                               <td className="px-4 py-3">
+                                <div className="text-sm font-roboto text-white font-bold">
+                                  {index + 1}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
                                 <div className="text-sm font-roboto text-white font-mono">
                                   {bet.id ? bet.id.substring(0, 8) : `#${index + 1}`}
                                 </div>
