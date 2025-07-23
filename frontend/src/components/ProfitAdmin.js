@@ -817,6 +817,7 @@ const ProfitAdmin = ({ user }) => {
                   <h3 className="font-rajdhani text-lg font-bold text-white flex items-center space-x-2">
                     <div className={`${
                       categories[activeCategory]?.color === 'green' ? 'text-green-400' :
+                      categories[activeCategory]?.color === 'cyan' ? 'text-cyan-400' :
                       categories[activeCategory]?.color === 'blue' ? 'text-blue-400' :
                       categories[activeCategory]?.color === 'purple' ? 'text-purple-400' : 'text-gray-400'
                     }`}>
