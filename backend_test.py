@@ -8821,11 +8821,11 @@ def test_concurrent_games_functionality() -> None:
             record_test(test.__name__, False, f"Exception: {e}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - TIMEOUT CHECKER TASK DATABASE STATE")
+    print_header("GEMPLAY BACKEND API TESTING - REVIEW REQUIREMENTS")
     
     try:
         # Run the specific test requested in the review
-        test_timeout_checker_task_database_state()
+        test_review_requirements()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
