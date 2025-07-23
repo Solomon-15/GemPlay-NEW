@@ -9058,11 +9058,11 @@ def test_concurrent_games_functionality() -> None:
             record_test(test.__name__, False, f"Exception: {e}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - REVIEW REQUIREMENTS")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT BET COUNTING FIX")
     
     try:
         # Run the specific test requested in the review
-        test_review_requirements()
+        test_human_bot_bet_counting_fix()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
