@@ -4914,7 +4914,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 for player_id in [game.creator_id, game.opponent_id]:
                     player = await db.users.find_one({"id": player_id})
                     if player:  # Only process human players
-                        commission_to_return = game.bet_amount * 0.06
+                        commission_to_return = game.bet_amount * 0.03
                         
                         # ПРАВИЛЬНАЯ ЛОГИКА: При ничьей возвращаем комиссию из frozen_balance в virtual_balance
                         await db.users.update_one(
