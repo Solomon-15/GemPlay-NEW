@@ -10383,7 +10383,7 @@ async def reset_all_bets(current_user: User = Depends(get_current_super_admin)):
                     reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
                 
                 # Return commission to creator (only if it's a user)
-                commission_amount = bet_amount * 0.06
+                commission_amount = bet_amount * 0.03
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
                     await db.users.update_one(
