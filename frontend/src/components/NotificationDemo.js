@@ -14,7 +14,7 @@ const NotificationDemo = () => {
   } = useNotifications();
 
   const handleBetCreated = () => {
-    showSuccess('Bet created! $6.00 (6%) frozen until game completion.', { duration: 7000 });
+    showSuccess('Bet created! $3.00 (3%) frozen until game completion.', { duration: 7000 });
   };
 
   const handleBetCreatedRU = () => {
