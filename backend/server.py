@@ -16446,9 +16446,10 @@ async def get_human_bots_stats(current_admin: User = Depends(get_current_admin))
         all_bots = await db.human_bots.find({}).to_list(None)
         bot_ids = [bot["id"] for bot in all_bots]
         
-        # Count total bets (games) created by Human-bots
+        # Count total bets (games) created by Human-bots (only WAITING - available for joining)
         total_bets = await db.games.count_documents({
-            "creator_id": {"$in": bot_ids}
+            "creator_id": {"$in": bot_ids},
+            "status": "WAITING"  # Only count WAITING bets (available for joining)
         })
         
         # Calculate character distribution
