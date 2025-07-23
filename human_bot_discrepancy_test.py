@@ -97,7 +97,10 @@ class HumanBotDiscrepancyInvestigator:
         print("=" * 60)
         
         try:
-            response = requests.get(f"{BASE_URL}/games/available")
+            response = requests.get(
+                f"{BASE_URL}/games/available",
+                headers=self.get_admin_headers()
+            )
             
             if response.status_code == 200:
                 data = response.json()
