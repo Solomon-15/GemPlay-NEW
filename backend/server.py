@@ -1367,6 +1367,9 @@ def start_background_scheduler():
     
     # Start human bot simulation background task
     asyncio.create_task(human_bot_simulation_task())
+    
+    # Start game timeout checker task
+    asyncio.create_task(timeout_checker_task())
 
 async def bot_automation_loop():
     """Run bot automation loop every 5 seconds."""
