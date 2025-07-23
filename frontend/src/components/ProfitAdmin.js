@@ -1335,6 +1335,128 @@ const ProfitAdmin = ({ user }) => {
                 </div>
               )}
 
+              {/* Модальное окно для комиссии от Human-ботов */}
+              {activeModal === 'human_bot_commission' && (
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                      <svg className="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="4" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                        <rect x="14" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+                        <rect x="4" y="14" width="16" height="6" strokeWidth="2" rx="1"/>
+                        <circle cx="17" cy="7" r="1" fill="currentColor"/>
+                        <circle cx="7" cy="7" r="1" fill="currentColor"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
+                        <text x="12" y="16" textAnchor="middle" fontSize="8" fill="currentColor">%</text>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-rajdhani text-lg font-bold text-white">Комиссия от Human-ботов</h4>
+                      <p className="text-sm text-text-secondary">Детализация комиссий, взимаемых с Human-ботов в играх</p>
+                    </div>
+                  </div>
+
+                  {modalLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
+                      <p className="text-cyan-400">Загрузка данных...</p>
+                    </div>
+                  ) : modalError ? (
+                    <div className="text-center py-8">
+                      <div className="text-red-400 mb-2">⚠️</div>
+                      <p className="text-sm text-red-400">{modalError}</p>
+                      <button 
+                        onClick={() => loadModalData('human_bot_commission')}
+                        className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                      >
+                        Повторить попытку
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="bg-surface-sidebar rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div>
+                            <span className="text-sm text-text-secondary">Общая сумма:</span>
+                            <div className="text-2xl font-bold text-cyan-400">
+                              {formatCurrencyWithSymbol(modalData.total_amount || 0, true)}
+                            </div>
+                            <div className="text-xs text-cyan-300 mt-1">
+                              {modalData.period === 'day' && 'за день'}
+                              {modalData.period === 'week' && 'за неделю'}
+                              {modalData.period === 'month' && 'за месяц'}
+                              {modalData.period === 'all' && 'за все время'}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-sm text-text-secondary">Всего транзакций:</span>
+                            <div className="text-2xl font-bold text-cyan-400">{modalData.total_transactions || 0}</div>
+                            <div className="text-xs text-cyan-300 mt-1">комиссионных операций</div>
+                          </div>
+                          <div>
+                            <span className="text-sm text-text-secondary">Средняя комиссия:</span>
+                            <div className="text-2xl font-bold text-cyan-400">
+                              {formatCurrencyWithSymbol(modalData.avg_per_transaction || 0, true)}
+                            </div>
+                            <div className="text-xs text-cyan-300 mt-1">за транзакцию</div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-cyan-300">
+                          Активных Human-ботов: {modalData.unique_bots || 0} • Ставка комиссии: {modalData.summary?.commission_rate || '3%'}
+                        </div>
+                      </div>
+
+                      {modalData.breakdown && modalData.breakdown.length > 0 ? (
+                        <div className="space-y-3">
+                          <h5 className="font-rajdhani text-sm font-bold text-cyan-400 mb-2">Комиссии по Human-ботам:</h5>
+                          {modalData.breakdown.map((bot, index) => (
+                            <div key={index} className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
+                              <div className="flex justify-between items-center mb-2">
+                                <div>
+                                  <span className="text-sm font-medium text-cyan-400">{bot.bot_name}</span>
+                                  <div className="text-xs text-text-secondary">ID: {bot.bot_id}</div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-lg font-bold text-cyan-400">
+                                    {formatCurrencyWithSymbol(bot.amount || 0, true)}
+                                  </div>
+                                  <div className="text-xs text-cyan-300">{bot.transactions} игр</div>
+                                </div>
+                              </div>
+                              <div className="text-xs text-text-secondary">
+                                Средняя комиссия: {formatCurrencyWithSymbol(bot.avg_per_transaction || 0, true)} за игру
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="text-4xl mb-4">🤖</div>
+                          <h4 className="font-rajdhani text-lg font-bold mb-2 text-cyan-400">Нет данных</h4>
+                          <p className="text-sm text-text-secondary">За выбранный период Human-боты не генерировали комиссий</p>
+                        </div>
+                      )}
+
+                      {modalData.summary && modalData.summary.top_earning_bot && (
+                        <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
+                          <h5 className="font-rajdhani text-sm font-bold text-cyan-400 mb-2">Статистика:</h5>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="flex justify-between">
+                              <span className="text-cyan-300">Топ-бот по доходу:</span>
+                              <span className="text-cyan-400">{modalData.summary.top_earning_bot}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-cyan-300">Лучший результат:</span>
+                              <span className="text-cyan-400">{formatCurrencyWithSymbol(modalData.summary.top_earning_amount || 0, true)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Модальное окно для комиссии от подарков */}
               {activeModal === 'gift_commission' && (
                 <div className="space-y-6">
