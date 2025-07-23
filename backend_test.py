@@ -1293,8 +1293,8 @@ def test_human_bot_global_settings_limits() -> None:
         print_error(f"Response: {update_response}")
         record_test("Human-Bot Settings - POST Settings", False, "API request failed")
     
-    # Step 5: Verify settings were updated
-    print_subheader("Step 5: Verify Settings Update")
+    # Step 5: Verify settings were updated via GET
+    print_subheader("Step 5: Verify Settings Update via GET")
     
     updated_settings_response, updated_settings_success = make_request(
         "GET", "/admin/human-bots/settings",
@@ -1304,9 +1304,12 @@ def test_human_bot_global_settings_limits() -> None:
     if updated_settings_success:
         updated_settings = updated_settings_response.get("settings", {})
         updated_max_limit = updated_settings.get("max_active_bets_human", 0)
+        updated_usage = updated_settings.get("current_usage", {})
+        updated_usage_percentage = updated_usage.get("usage_percentage", 0)
         
         if updated_max_limit == new_limit:
             print_success(f"✓ Global limit successfully updated to {new_limit}")
+            print_success(f"✓ Current usage percentage: {updated_usage_percentage}%")
             record_test("Human-Bot Settings - Settings Persistence", True)
         else:
             print_error(f"✗ Global limit not updated correctly: expected {new_limit}, got {updated_max_limit}")
@@ -1315,7 +1318,158 @@ def test_human_bot_global_settings_limits() -> None:
         print_error("Failed to verify settings update")
         record_test("Human-Bot Settings - Settings Persistence", False, "Failed to get updated settings")
     
-    # Step 6: Test bot creation with limit validation
+    # Step 6: Test proportional adjustment (set limit SMALLER than current sum)
+    print_subheader("Step 6: Test Proportional Adjustment - Set Global Limit Below Current Sum")
+    
+    # Get current sum of individual limits
+    if updated_settings_success:
+        current_usage = updated_settings.get("current_usage", {})
+        total_individual_limits = current_usage.get("total_individual_limits", 0)
+        
+        print_success(f"Current sum of individual limits: {total_individual_limits}")
+        
+        # Set global limit SMALLER than current sum (as mentioned in review: 20)
+        if total_individual_limits > 20:
+            small_limit = 20
+            
+            proportional_data = {
+                "max_active_bets_human": small_limit
+            }
+            
+            proportional_response, proportional_success = make_request(
+                "POST", "/admin/human-bots/update-settings",
+                data=proportional_data,
+                auth_token=admin_token
+            )
+            
+            if proportional_success:
+                print_success(f"✓ Global limit set to {small_limit} (below current sum)")
+                
+                # Check if response includes adjusted_bots_count and list of adjusted bots
+                if "adjusted_bots_count" in proportional_response:
+                    adjusted_count = proportional_response.get("adjusted_bots_count", 0)
+                    print_success(f"✓ Adjusted bots count: {adjusted_count}")
+                    record_test("Human-Bot Settings - Proportional Adjustment Response", True)
+                else:
+                    print_warning("Response missing adjusted_bots_count field")
+                    record_test("Human-Bot Settings - Proportional Adjustment Response", False, "Missing adjusted_bots_count")
+                
+                # Wait for adjustment to process
+                time.sleep(2)
+                
+                # Verify individual limits were adjusted proportionally
+                adjusted_settings_response, adjusted_settings_success = make_request(
+                    "GET", "/admin/human-bots/settings",
+                    auth_token=admin_token
+                )
+                
+                if adjusted_settings_success:
+                    adjusted_usage = adjusted_settings_response["settings"].get("current_usage", {})
+                    new_total_individual = adjusted_usage.get("total_individual_limits", 0)
+                    
+                    print_success(f"New sum of individual limits after adjustment: {new_total_individual}")
+                    
+                    if new_total_individual <= small_limit:
+                        print_success("✓ Individual bot limits were proportionally corrected")
+                        record_test("Human-Bot Settings - Proportional Correction", True)
+                    else:
+                        print_error(f"✗ Individual limits ({new_total_individual}) still exceed global limit ({small_limit})")
+                        record_test("Human-Bot Settings - Proportional Correction", False, "Limits not corrected")
+                else:
+                    print_error("Failed to verify proportional adjustment")
+                    record_test("Human-Bot Settings - Proportional Correction", False, "Failed to verify")
+            else:
+                print_error("Failed to set small global limit for proportional adjustment")
+                record_test("Human-Bot Settings - Proportional Adjustment", False, "Failed to set limit")
+        else:
+            print_warning(f"Current sum ({total_individual_limits}) too small to test proportional adjustment")
+            record_test("Human-Bot Settings - Proportional Adjustment", False, "Sum too small")
+    
+    # Step 7: Test bot creation with limit validation (set small global limit first)
+    print_subheader("Step 7: Test Bot Creation Limit Validation")
+    
+    # Set a small global limit (25 as mentioned in review)
+    small_global_limit = 25
+    small_limit_data = {
+        "max_active_bets_human": small_global_limit
+    }
+    
+    small_limit_response, small_limit_success = make_request(
+        "POST", "/admin/human-bots/update-settings",
+        data=small_limit_data,
+        auth_token=admin_token
+    )
+    
+    if small_limit_success:
+        print_success(f"✓ Set small global limit: {small_global_limit}")
+        
+        # Get current available limit
+        current_settings_response, _ = make_request(
+            "GET", "/admin/human-bots/settings",
+            auth_token=admin_token
+        )
+        
+        if current_settings_response:
+            current_usage = current_settings_response["settings"].get("current_usage", {})
+            available_limit = current_usage.get("available", 0)
+            
+            print_success(f"Available limit: {available_limit}")
+            
+            # Try to create a bot with bet_limit greater than available
+            if available_limit >= 0:
+                excessive_limit = available_limit + 10
+                
+                test_bot_data = {
+                    "name": f"TestBot_ExcessiveLimit_{int(time.time())}",
+                    "character": "BALANCED",
+                    "min_bet": 5.0,
+                    "max_bet": 50.0,
+                    "bet_limit": excessive_limit,
+                    "win_percentage": 40.0,
+                    "loss_percentage": 40.0,
+                    "draw_percentage": 20.0,
+                    "min_delay": 30,
+                    "max_delay": 90,
+                    "use_commit_reveal": True,
+                    "logging_level": "INFO"
+                }
+                
+                create_response, create_success = make_request(
+                    "POST", "/admin/human-bots",
+                    data=test_bot_data,
+                    auth_token=admin_token,
+                    expected_status=400
+                )
+                
+                if not create_success:
+                    print_success("✓ Bot creation correctly failed with excessive bet_limit")
+                    
+                    # Check error message mentions global limit
+                    if "detail" in create_response:
+                        error_detail = create_response["detail"]
+                        # Handle both string and list formats for error detail
+                        if isinstance(error_detail, list):
+                            error_text = str(error_detail)
+                        else:
+                            error_text = str(error_detail)
+                        
+                        if "global" in error_text.lower() or "limit" in error_text.lower():
+                            print_success("✓ Error message mentions global limit")
+                            record_test("Human-Bot Settings - Creation Limit Validation", True)
+                        else:
+                            print_error(f"✗ Error message doesn't mention global limit: {error_text}")
+                            record_test("Human-Bot Settings - Creation Limit Validation", False, "Error message unclear")
+                    else:
+                        print_warning("Error response doesn't contain detail field")
+                        record_test("Human-Bot Settings - Creation Limit Validation", False, "No error detail")
+                else:
+                    print_error("✗ Bot creation succeeded with excessive bet_limit (should have failed)")
+                    record_test("Human-Bot Settings - Creation Limit Validation", False, "Creation should have failed")
+            else:
+                print_warning("No available limit to test excessive creation")
+                record_test("Human-Bot Settings - Creation Limit Validation", False, "No available limit")
+    
+    # Step 8: Test GET after changes to verify current_usage recalculation
     print_subheader("Step 6: Test Bot Creation Limit Validation")
     
     # Get current usage to calculate available limit
