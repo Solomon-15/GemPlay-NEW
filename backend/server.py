@@ -16210,6 +16210,7 @@ async def update_human_bots_settings(
 ):
     """Update human bots global settings with automatic proportional adjustment of individual limits."""
     try:
+        logger.info(f"Updating human bots settings: {settings}")
         # Get current bot settings
         current_settings = await db.bot_settings.find_one({"id": "bot_settings"})
         current_max = current_settings.get("max_active_bets_human", 100) if current_settings else 100
