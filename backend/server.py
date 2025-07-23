@@ -641,6 +641,7 @@ class UpdateHumanBotRequest(BaseModel):
     max_delay: Optional[int] = Field(None, ge=1, le=300)
     use_commit_reveal: Optional[bool] = None
     logging_level: Optional[str] = None
+    can_play_with_other_bots: Optional[bool] = None
 
 class ToggleAllRequest(BaseModel):
     activate: bool
