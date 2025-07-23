@@ -472,7 +472,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         </div>
         
         <div className="flex justify-between">
-          <span className="text-text-secondary">Commission (6%):</span>
+          <span className="text-text-secondary">Commission (3%):</span>
           <span className="text-orange-400 font-rajdhani font-bold">
             {formatDollarAmount(totalGemValue * COMMISSION_RATE)}
           </span>
