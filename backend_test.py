@@ -7,6 +7,7 @@ from typing import Dict, Any, Optional, List, Tuple
 import random
 import string
 import hashlib
+from datetime import datetime
 
 # Configuration
 BASE_URL = "https://3f3f02b9-c79c-40e7-814a-6b1e36d42891.preview.emergentagent.com/api"
@@ -24,6 +25,22 @@ TEST_USERS = [
     {
         "username": "player2",
         "email": "player2@test.com",
+        "password": "Test123!",
+        "gender": "female"
+    }
+]
+
+# Additional test users for concurrent games testing
+CONCURRENT_TEST_USERS = [
+    {
+        "username": "concurrent_user1",
+        "email": "concurrent_user1@test.com",
+        "password": "Test123!",
+        "gender": "male"
+    },
+    {
+        "username": "concurrent_user2",
+        "email": "concurrent_user2@test.com",
         "password": "Test123!",
         "gender": "female"
     }
