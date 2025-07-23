@@ -7461,12 +7461,12 @@ def test_human_bot_bet_limit_feature():
         record_test("Human-bot All Bets - Non-existent Bot", False, f"Unexpected response: {response}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY HUMAN-BOT STATISTICS API TESTING")
-    print("Testing Human-bot Statistics API with new total_bets field as requested in the review")
+    print_header("GEMPLAY HUMAN-BOT GLOBAL SETTINGS LIMITS TESTING")
+    print("Testing Human-bot tabbed interface with global settings limits as requested in the review")
     
     try:
-        # Test Human-bot Statistics API (main focus of review request)
-        test_human_bot_stats_api()
+        # Test Human-bot Global Settings Limits (main focus of review request)
+        test_human_bot_global_settings_limits()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
