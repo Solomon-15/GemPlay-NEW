@@ -4916,6 +4916,19 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                             "$set": {"updated_at": datetime.utcnow()}
                         }
                     )
+                    
+                    # Record profit entry from loser's commission
+                    is_loser_human_bot = await is_human_bot_user(loser_id)
+                    entry_type = "HUMAN_BOT_COMMISSION" if is_loser_human_bot else "BET_COMMISSION"
+                    
+                    profit_entry = ProfitEntry(
+                        entry_type=entry_type,
+                        amount=commission_to_deduct,
+                        source_user_id=loser_id,
+                        reference_id=game.id,
+                        description=f"3% commission from PvP game loser (${game.bet_amount} bet)"
+                    )
+                    await db.profit_entries.insert_one(profit_entry.dict())
             
         else:
             # Draw - return frozen commissions to both players (only if commission was charged)
