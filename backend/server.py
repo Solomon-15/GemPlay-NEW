@@ -1489,6 +1489,10 @@ async def human_bot_simulation_task():
     
     while True:
         try:
+            # Get global settings for auto-play
+            settings = await db.bot_settings.find_one({"id": "bot_settings"})
+            auto_play_enabled = settings.get("auto_play_enabled", False) if settings else False
+            
             # Get active human bots
             active_human_bots = await db.human_bots.find({"is_active": True}).to_list(100)
             
@@ -1498,6 +1502,7 @@ async def human_bot_simulation_task():
             
             logger.info(f"🤖 Checking {len(active_human_bots)} active Human bots for actions")
             
+            # Process regular bot actions (create/join individual bets)
             for bot_data in active_human_bots:
                 try:
                     human_bot = HumanBot(**bot_data)
@@ -1525,6 +1530,10 @@ async def human_bot_simulation_task():
                 
                 except Exception as e:
                     logger.error(f"Error processing human bot {bot_data.get('id')}: {e}")
+            
+            # Process auto-play between bots if enabled
+            if auto_play_enabled:
+                await process_human_bot_auto_play(active_human_bots, settings)
             
             # Wait before next cycle (shorter interval for human bots)
             await asyncio.sleep(15)  # Check every 15 seconds
