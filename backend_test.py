@@ -1152,8 +1152,8 @@ def test_human_bot_deletion_functionality() -> None:
     print_success("- Non-existent bot deletion returns HTTP 404")
 
 def test_human_bot_global_settings_limits() -> None:
-    """Test the Human-Bot global settings limits functionality as requested in the review."""
-    print_header("HUMAN-BOT GLOBAL SETTINGS LIMITS TESTING")
+    """Test the Human-Bot global settings limits functionality with NEW POST endpoint as requested in the review."""
+    print_header("HUMAN-BOT GLOBAL SETTINGS LIMITS TESTING - NEW POST ENDPOINT")
     
     # Step 1: Login as admin user
     print_subheader("Step 1: Admin Login")
@@ -1242,35 +1242,56 @@ def test_human_bot_global_settings_limits() -> None:
     
     # Store original settings for restoration later
     original_max_limit = settings_response.get("settings", {}).get("max_active_bets_human", 100)
+    original_total_individual = settings_response.get("settings", {}).get("current_usage", {}).get("total_individual_limits", 0)
     
-    # Step 4: Test PUT /api/admin/human-bots/settings
-    print_subheader("Step 4: Test PUT /api/admin/human-bots/settings")
+    # Step 4: Test NEW POST /api/admin/human-bots/update-settings (CORRECTED ENDPOINT)
+    print_subheader("Step 4: Test NEW POST /api/admin/human-bots/update-settings")
     
-    # Test updating global settings
-    new_limit = 150
+    # Test updating global settings with new value (50 as mentioned in review)
+    new_limit = 50
     update_data = {
         "max_active_bets_human": new_limit
     }
     
     update_response, update_success = make_request(
-        "PUT", "/admin/human-bots/settings",
+        "POST", "/admin/human-bots/update-settings",
         data=update_data,
         auth_token=admin_token
     )
     
     if update_success:
-        print_success("✓ Human-Bot settings update successful")
+        print_success("✓ Human-Bot settings update successful via NEW POST endpoint")
         
-        # Verify update response structure
-        if "success" in update_response and update_response["success"]:
-            print_success("✓ Update response indicates success")
-            record_test("Human-Bot Settings - PUT Settings", True)
+        # Verify update response structure (should contain success, message, old_max_limit, new_max_limit)
+        required_update_fields = ["success", "message", "old_max_limit", "new_max_limit"]
+        missing_update_fields = [field for field in required_update_fields if field not in update_response]
+        
+        if not missing_update_fields:
+            print_success("✓ Update response contains all required fields")
+            
+            old_limit = update_response.get("old_max_limit", 0)
+            new_limit_response = update_response.get("new_max_limit", 0)
+            message = update_response.get("message", "")
+            
+            print_success(f"✓ Old limit: {old_limit}")
+            print_success(f"✓ New limit: {new_limit_response}")
+            print_success(f"✓ Message: {message}")
+            
+            if old_limit == original_max_limit and new_limit_response == new_limit:
+                print_success("✓ Limit change values are correct")
+                record_test("Human-Bot Settings - POST Update Response", True)
+            else:
+                print_error(f"✗ Limit change values incorrect: expected old={original_max_limit}, new={new_limit}")
+                record_test("Human-Bot Settings - POST Update Response", False, "Incorrect limit values")
         else:
-            print_error("✗ Update response indicates failure")
-            record_test("Human-Bot Settings - PUT Settings", False, "Update failed")
+            print_error(f"✗ Update response missing fields: {missing_update_fields}")
+            record_test("Human-Bot Settings - POST Update Response", False, f"Missing: {missing_update_fields}")
+        
+        record_test("Human-Bot Settings - POST Settings", True)
     else:
-        print_error("✗ Human-Bot settings update failed")
-        record_test("Human-Bot Settings - PUT Settings", False, "API request failed")
+        print_error("✗ Human-Bot settings update failed via NEW POST endpoint")
+        print_error(f"Response: {update_response}")
+        record_test("Human-Bot Settings - POST Settings", False, "API request failed")
     
     # Step 5: Verify settings were updated
     print_subheader("Step 5: Verify Settings Update")
