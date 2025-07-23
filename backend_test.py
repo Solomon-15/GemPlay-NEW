@@ -1168,6 +1168,243 @@ def test_human_bot_deletion_functionality() -> None:
     print_success("- Admin authorization is required")
     print_success("- Non-existent bot deletion returns HTTP 404")
 
+def test_human_bot_bet_counting_fix() -> None:
+    """Test the Human-Bot bet counting issue fix as requested in the review:
+    1. Check Human-Bot statistics for total_bets (should only count WAITING bets)
+    2. Check Available Bets in lobby (count Human-bot games in WAITING status)
+    3. Check individual bot counts (active_bets_count should show only WAITING bets)
+    4. Compare all three numbers - they should be identical
+    """
+    print_header("HUMAN-BOT BET COUNTING FIX TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with bet counting test")
+        record_test("Human-Bot Bet Counting - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # STEP 2: Get Human-Bot Statistics (total_bets should only count WAITING bets)
+    print_subheader("Step 2: Check Human-Bot Statistics total_bets")
+    
+    stats_response, stats_success = make_request(
+        "GET", "/admin/human-bots/stats",
+        auth_token=admin_token
+    )
+    
+    if not stats_success:
+        print_error("Failed to get Human-bot statistics")
+        record_test("Human-Bot Bet Counting - Get Statistics", False, "Stats endpoint failed")
+        return
+    
+    total_bets_from_stats = stats_response.get("total_bets", 0)
+    total_bots = stats_response.get("total_bots", 0)
+    active_bots = stats_response.get("active_bots", 0)
+    
+    print_success(f"✓ Human-bot statistics endpoint accessible")
+    print_success(f"  Total Human-bots: {total_bots}")
+    print_success(f"  Active Human-bots: {active_bots}")
+    print_success(f"  total_bets from stats: {total_bets_from_stats}")
+    
+    record_test("Human-Bot Bet Counting - Get Statistics", True)
+    
+    # STEP 3: Check Available Bets in Lobby (count Human-bot games in WAITING status)
+    print_subheader("Step 3: Check Available Bets in Lobby")
+    
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if not available_games_success or not isinstance(available_games_response, list):
+        print_error("Failed to get available games")
+        record_test("Human-Bot Bet Counting - Get Available Games", False, "Games endpoint failed")
+        return
+    
+    # Count Human-bot games in WAITING status
+    human_bot_waiting_games = 0
+    total_available_games = len(available_games_response)
+    
+    for game in available_games_response:
+        status = game.get("status", "UNKNOWN")
+        creator_type = game.get("creator_type", "unknown")
+        bot_type = game.get("bot_type", None)
+        is_human_bot = game.get("is_human_bot", False)
+        
+        # Check if this is a Human-bot game in WAITING status
+        is_human_bot_game = (
+            creator_type == "human_bot" or 
+            bot_type == "HUMAN" or 
+            is_human_bot == True
+        )
+        
+        if is_human_bot_game and status == "WAITING":
+            human_bot_waiting_games += 1
+    
+    print_success(f"✓ Available games endpoint accessible")
+    print_success(f"  Total available games: {total_available_games}")
+    print_success(f"  Human-bot games in WAITING status: {human_bot_waiting_games}")
+    
+    record_test("Human-Bot Bet Counting - Get Available Games", True)
+    
+    # STEP 4: Check Individual Bot Counts (active_bets_count should show only WAITING bets)
+    print_subheader("Step 4: Check Individual Bot active_bets_count")
+    
+    # Get list of Human-bots
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if not human_bots_success or "bots" not in human_bots_response:
+        print_error("Failed to get Human-bots list")
+        record_test("Human-Bot Bet Counting - Get Bots List", False, "Bots endpoint failed")
+        return
+    
+    human_bots = human_bots_response["bots"]
+    print_success(f"✓ Found {len(human_bots)} Human-bots to check")
+    
+    # Sum up all individual active_bets_count
+    total_individual_active_bets = 0
+    bots_checked = 0
+    
+    print_success(f"  Individual bot active_bets_count:")
+    
+    for bot in human_bots:
+        bot_id = bot.get("id")
+        bot_name = bot.get("name", "Unknown")
+        active_bets_count = bot.get("active_bets_count", 0)
+        is_active = bot.get("is_active", False)
+        
+        if is_active:  # Only count active bots
+            total_individual_active_bets += active_bets_count
+            bots_checked += 1
+            
+            print_success(f"    {bot_name}: {active_bets_count} active bets")
+            
+            # Verify this bot's active_bets_count by checking actual games
+            bot_games_in_available = 0
+            for game in available_games_response:
+                if game.get("creator_id") == bot_id and game.get("status") == "WAITING":
+                    bot_games_in_available += 1
+            
+            if bot_games_in_available == active_bets_count:
+                print_success(f"      ✓ Matches games in available list ({bot_games_in_available})")
+            else:
+                print_warning(f"      ⚠ Mismatch: {active_bets_count} reported vs {bot_games_in_available} in available")
+    
+    print_success(f"  Total individual active_bets_count sum: {total_individual_active_bets}")
+    print_success(f"  Active bots checked: {bots_checked}")
+    
+    record_test("Human-Bot Bet Counting - Get Individual Counts", True)
+    
+    # STEP 5: Compare All Three Numbers
+    print_subheader("Step 5: Compare All Three Numbers")
+    
+    print_success(f"COMPARISON RESULTS:")
+    print_success(f"  1. total_bets from statistics API: {total_bets_from_stats}")
+    print_success(f"  2. Human-bot games in Available Bets: {human_bot_waiting_games}")
+    print_success(f"  3. Sum of individual active_bets_count: {total_individual_active_bets}")
+    
+    # Check if all three numbers are identical
+    numbers_match = (
+        total_bets_from_stats == human_bot_waiting_games == total_individual_active_bets
+    )
+    
+    if numbers_match:
+        print_success(f"✅ SUCCESS: All three numbers are IDENTICAL ({total_bets_from_stats})")
+        print_success(f"✅ The Human-Bot bet counting fix is working correctly!")
+        print_success(f"✅ Statistics now show only WAITING bets, matching Available Bets lobby")
+        record_test("Human-Bot Bet Counting - Numbers Match", True)
+    else:
+        print_error(f"❌ FAILURE: Numbers do NOT match!")
+        print_error(f"❌ Statistics API: {total_bets_from_stats}")
+        print_error(f"❌ Available Bets: {human_bot_waiting_games}")
+        print_error(f"❌ Individual Sum: {total_individual_active_bets}")
+        print_error(f"❌ The bet counting issue is NOT fully resolved")
+        record_test("Human-Bot Bet Counting - Numbers Match", False, "Numbers don't match")
+    
+    # STEP 6: Additional Verification - Check for Non-WAITING Games
+    print_subheader("Step 6: Verify Only WAITING Bets Are Counted")
+    
+    # Count all Human-bot games by status
+    status_counts = {"WAITING": 0, "ACTIVE": 0, "REVEAL": 0, "COMPLETED": 0, "CANCELLED": 0, "TIMEOUT": 0}
+    
+    for game in available_games_response:
+        status = game.get("status", "UNKNOWN")
+        creator_type = game.get("creator_type", "unknown")
+        bot_type = game.get("bot_type", None)
+        is_human_bot = game.get("is_human_bot", False)
+        
+        is_human_bot_game = (
+            creator_type == "human_bot" or 
+            bot_type == "HUMAN" or 
+            is_human_bot == True
+        )
+        
+        if is_human_bot_game and status in status_counts:
+            status_counts[status] += 1
+    
+    print_success(f"Human-bot games by status in Available Bets:")
+    for status, count in status_counts.items():
+        print_success(f"  {status}: {count} games")
+    
+    # Verify that only WAITING games are counted
+    non_waiting_games = sum(count for status, count in status_counts.items() if status != "WAITING")
+    
+    if non_waiting_games == 0:
+        print_success(f"✅ CORRECT: Only WAITING games are shown in Available Bets")
+        record_test("Human-Bot Bet Counting - Only WAITING Games", True)
+    else:
+        print_warning(f"⚠ Found {non_waiting_games} non-WAITING Human-bot games in Available Bets")
+        record_test("Human-Bot Bet Counting - Only WAITING Games", False, f"{non_waiting_games} non-waiting games")
+    
+    # STEP 7: Test Edge Cases
+    print_subheader("Step 7: Test Edge Cases")
+    
+    # Check if inactive bots are excluded from counts
+    inactive_bots = [bot for bot in human_bots if not bot.get("is_active", True)]
+    inactive_bots_with_games = 0
+    
+    for bot in inactive_bots:
+        bot_id = bot.get("id")
+        for game in available_games_response:
+            if game.get("creator_id") == bot_id:
+                inactive_bots_with_games += 1
+                break
+    
+    if inactive_bots_with_games == 0:
+        print_success(f"✅ CORRECT: Inactive bots ({len(inactive_bots)}) have no games in Available Bets")
+        record_test("Human-Bot Bet Counting - Inactive Bots Excluded", True)
+    else:
+        print_warning(f"⚠ Found {inactive_bots_with_games} inactive bots with games in Available Bets")
+        record_test("Human-Bot Bet Counting - Inactive Bots Excluded", False, f"{inactive_bots_with_games} inactive with games")
+    
+    # Summary
+    print_subheader("Human-Bot Bet Counting Fix Test Summary")
+    
+    if numbers_match:
+        print_success("🎉 HUMAN-BOT BET COUNTING FIX VERIFICATION: SUCCESS")
+        print_success("✅ All three counting methods now return identical results")
+        print_success("✅ Statistics API total_bets field correctly counts only WAITING bets")
+        print_success("✅ Available Bets lobby shows same count as admin statistics")
+        print_success("✅ Individual bot active_bets_count fields are accurate")
+        print_success("✅ The fix has successfully resolved the counting discrepancy")
+    else:
+        print_error("❌ HUMAN-BOT BET COUNTING FIX VERIFICATION: FAILED")
+        print_error("❌ Numbers still don't match between different counting methods")
+        print_error("❌ The issue may require additional investigation")
+    
+    print_success(f"\nFinal Numbers:")
+    print_success(f"  Statistics API total_bets: {total_bets_from_stats}")
+    print_success(f"  Available Bets Human-bot games: {human_bot_waiting_games}")
+    print_success(f"  Sum of individual active_bets_count: {total_individual_active_bets}")
+    print_success(f"  Numbers match: {'YES' if numbers_match else 'NO'}")
+
 def test_review_requirements() -> None:
     """Test the specific requirements from the review request:
     1. Human-bot управления статистика - GET /api/admin/human-bots/stats
