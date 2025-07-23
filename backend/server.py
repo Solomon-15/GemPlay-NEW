@@ -3979,32 +3979,42 @@ async def create_game(
 async def check_user_concurrent_games(user_id: str) -> bool:
     """Check if user can join another game (no active games as creator or opponent)."""
     try:
+        # Only consider truly active statuses: ACTIVE and REVEAL
+        # WAITING games don't prevent joining others (users can create and join simultaneously)
+        # COMPLETED, CANCELLED, TIMEOUT games are finished and don't block joining
+        active_statuses = [GameStatus.ACTIVE, GameStatus.REVEAL]
+        
         # Check if user is already in an active game as opponent
         active_as_opponent = await db.games.find_one({
             "opponent_id": user_id,
-            "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
+            "status": {"$in": active_statuses}
         })
         
         # Check if user is already in an active game as creator
         active_as_creator = await db.games.find_one({
             "creator_id": user_id,
-            "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
+            "status": {"$in": active_statuses}
         })
         
-        # Also check if user has WAITING games as creator (should be able to join others if they just created a game)
-        # This is optional - users can create games and join others until someone accepts their created game
-        
-        # User can join if they have no active games
+        # User can join if they have no truly active games
         can_join = active_as_opponent is None and active_as_creator is None
         
+        # Detailed logging for debugging
         if not can_join:
-            logger.info(f"User {user_id} cannot join game - has active games: opponent={active_as_opponent is not None}, creator={active_as_creator is not None}")
+            logger.warning(f"User {user_id} blocked from joining games:")
+            if active_as_opponent:
+                logger.warning(f"  - Has active game as opponent: {active_as_opponent.get('id')} (status: {active_as_opponent.get('status')})")
+            if active_as_creator:
+                logger.warning(f"  - Has active game as creator: {active_as_creator.get('id')} (status: {active_as_creator.get('status')})")
+        else:
+            logger.info(f"User {user_id} can join games - no active games found")
         
         return can_join
         
     except Exception as e:
         logger.error(f"Error checking concurrent games for user {user_id}: {e}")
-        return False
+        # In case of error, be conservative and allow joining
+        return True
 
 async def handle_game_timeout(game_id: str):
     """Handle game timeout - return funds and potentially recreate bet."""
