@@ -307,7 +307,7 @@ class Transaction(BaseModel):
 
 class ProfitEntry(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    entry_type: str  # "BET_COMMISSION", "GIFT_COMMISSION", "ADMIN_ADJUSTMENT"
+    entry_type: str  # "BET_COMMISSION", "HUMAN_BOT_COMMISSION", "GIFT_COMMISSION", "ADMIN_ADJUSTMENT"
     amount: float
     source_user_id: str  # Пользователь, с которого взята комиссия
     reference_id: Optional[str] = None  # ID игры, подарка и т.д.
