@@ -69,7 +69,7 @@ export const formatInteger = (amount) => {
 /**
  * Calculate commission amount
  * @param {number} amount - Base amount
- * @param {number} percentage - Commission percentage (e.g., 6 for 6%)
+ * @param {number} percentage - Commission percentage (e.g., 3 for 3%)
  * @returns {number} Commission amount
  */
 export const calculateCommission = (amount, percentage) => {
