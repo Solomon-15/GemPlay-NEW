@@ -4125,10 +4125,36 @@ async def join_game(
     logger.info(f"🤝 JOIN_GAME called for user {current_user.id}, game {game_id}")
     try:
         # Check if user can join another game (no active games as opponent)
-        if not await check_user_concurrent_games(current_user.id):
+        can_join = await check_user_concurrent_games(current_user.id)
+        if not can_join:
+            # Get detailed information about user's active games for better error message
+            active_games = []
+            
+            # Check for active games as opponent
+            active_as_opponent = await db.games.find_one({
+                "opponent_id": current_user.id,
+                "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
+            })
+            if active_as_opponent:
+                active_games.append(f"opponent in game {active_as_opponent['id'][:8]} (status: {active_as_opponent['status']})")
+            
+            # Check for active games as creator
+            active_as_creator = await db.games.find_one({
+                "creator_id": current_user.id,
+                "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
+            })
+            if active_as_creator:
+                active_games.append(f"creator of game {active_as_creator['id'][:8]} (status: {active_as_creator['status']})")
+            
+            error_detail = "You cannot join multiple games simultaneously. Please complete your current game first."
+            if active_games:
+                error_detail += f" Active games: {', '.join(active_games)}"
+            
+            logger.warning(f"User {current_user.id} blocked from joining game {game_id}: {error_detail}")
+            
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="You cannot join multiple games simultaneously. Please complete your current game first."
+                detail=error_detail
             )
         
         # Get the game
