@@ -395,6 +395,14 @@ const ProfitAdmin = ({ user }) => {
           setModalData(expensesResponse.data);
           break;
           
+        case 'human_bot_commission':
+          // Загружаем данные о комиссиях от Human-ботов
+          const humanBotCommissionResponse = await axios.get(`${API}/admin/profit/human-bot-commission-breakdown?period=${period}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setModalData(humanBotCommissionResponse.data);
+          break;
+          
         case 'net_profit':
           // Загружаем данные о чистой прибыли
           const netProfitResponse = await axios.get(`${API}/admin/profit/net-profit-analysis?period=${period}`, {
