@@ -17248,7 +17248,7 @@ async def toggle_all_human_bots(
 @api_router.post("/admin/human-bots/{bot_id}/toggle-auto-play", response_model=dict)
 async def toggle_human_bot_auto_play(
     bot_id: str,
-    can_play_with_other_bots: bool = Body(...),
+    request: ToggleAutoPlayRequest,
     current_admin: User = Depends(get_current_admin)
 ):
     """Toggle human bot auto-play with other bots."""
@@ -17266,7 +17266,7 @@ async def toggle_human_bot_auto_play(
             {"id": bot_id},
             {
                 "$set": {
-                    "can_play_with_other_bots": can_play_with_other_bots,
+                    "can_play_with_other_bots": request.can_play_with_other_bots,
                     "updated_at": datetime.utcnow()
                 }
             }
@@ -17280,17 +17280,17 @@ async def toggle_human_bot_auto_play(
             target_id=bot_id,
             details={
                 "name": bot_data["name"],
-                "can_play_with_other_bots": can_play_with_other_bots
+                "can_play_with_other_bots": request.can_play_with_other_bots
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        logger.info(f"Human bot {bot_id} auto-play setting changed to {can_play_with_other_bots}")
+        logger.info(f"Human bot {bot_id} auto-play setting changed to {request.can_play_with_other_bots}")
         
         return {
             "success": True,
-            "message": f"Bot auto-play {'enabled' if can_play_with_other_bots else 'disabled'} successfully",
-            "can_play_with_other_bots": can_play_with_other_bots
+            "message": f"Bot auto-play {'enabled' if request.can_play_with_other_bots else 'disabled'} successfully",
+            "can_play_with_other_bots": request.can_play_with_other_bots
         }
         
     except HTTPException:
