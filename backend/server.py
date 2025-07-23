@@ -4745,6 +4745,11 @@ async def determine_game_winner(game_id: str) -> dict:
             detail=f"Failed to determine game winner: {str(e)}"
         )
 
+async def is_human_bot_user(user_id: str) -> bool:
+    """Check if user_id belongs to a Human-bot."""
+    human_bot = await db.human_bots.find_one({"id": user_id})
+    return human_bot is not None
+
 async def distribute_game_rewards(game: Game, winner_id: str, commission_amount: float):
     """Distribute gems and handle commissions after game completion."""
     try:
