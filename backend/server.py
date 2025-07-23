@@ -6052,11 +6052,12 @@ async def force_complete_bot_cycle_v2(
 async def get_available_games(current_user: User = Depends(get_current_user)):
     """Get list of available games for joining."""
     try:
-        # Get waiting games (exclude user's own games)
+        # Get waiting games 
+        # For Human-bot games: show ALL waiting games (no user exclusion)
+        # For regular user games: exclude current user's own games
         games = await db.games.find({
-            "status": GameStatus.WAITING,
-            "creator_id": {"$ne": current_user.id}
-        }).sort("created_at", -1).limit(50).to_list(50)
+            "status": GameStatus.WAITING
+        }).sort("created_at", -1).to_list(500)  # Increased limit to show all Human-bot games
         
         result = []
         for game in games:
