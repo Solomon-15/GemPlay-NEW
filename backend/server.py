@@ -1520,8 +1520,18 @@ async def should_human_bot_take_action(human_bot: HumanBot) -> bool:
         return random.random() < 0.4  # 40% chance - moderate activity
 
 async def create_human_bot_bet(human_bot: HumanBot):
-    """Create a bet as a human bot."""
+    """Create a bet as a human bot (only if bet_limit allows)."""
     try:
+        # Check current active bets count vs bet_limit
+        current_active_bets = await get_human_bot_active_bets_count(human_bot.id)
+        bot_limit = human_bot.bet_limit or 12  # Default to 12 if not set
+        
+        if current_active_bets >= bot_limit:
+            logger.debug(f"Human bot {human_bot.name} has reached bet limit ({current_active_bets}/{bot_limit}), skipping bet creation")
+            return
+        
+        logger.info(f"Creating bet for Human bot {human_bot.name} (active: {current_active_bets}/{bot_limit})")
+        
         # Ensure bot has gems (setup if needed)
         await setup_human_bot_gems(human_bot.id)
         
