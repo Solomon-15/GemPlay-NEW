@@ -344,28 +344,98 @@ def test_concurrent_games_issue():
     # Step 7: Check if User 1 can join another game after completion
     print_subheader("Step 7: Test User 1 Can Join Another Game After Completion")
     
-    # Check can-join status after game completion
-    can_join_after_response, can_join_after_success = make_request(
-        "GET", "/games/can-join", auth_token=user1_token
+    # Since the can-join endpoint doesn't exist, we'll test by trying to join a game directly
+    print_success("Testing by attempting to join an existing game...")
+    
+    # Get available games to find one to join
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available", auth_token=user1_token
     )
     
-    if can_join_after_success:
-        can_join_after = can_join_after_response.get("can_join_games", False)
-        print_success(f"After game completion - User 1 can join games: {can_join_after}")
+    if available_games_success and isinstance(available_games_response, list):
+        # Find a game that User 1 didn't create
+        target_game = None
+        for game in available_games_response:
+            if (game.get("creator", {}).get("id") != user1_id and 
+                game.get("status", "WAITING") == "WAITING"):
+                target_game = game
+                break
         
-        if can_join_after:
-            print_success("✓ User can join games after completion - ISSUE NOT REPRODUCED")
+        if target_game:
+            target_game_id = target_game.get("game_id")
+            bet_amount = target_game.get("bet_amount", 5)
+            print_success(f"Found target game to join: {target_game_id} (bet: ${bet_amount})")
+            
+            join_target_data = {
+                "move": "rock",
+                "gems": {"Ruby": int(bet_amount)}
+            }
+            
+            # This is the critical test - try to join after completing a game
+            join_target_response, join_target_success = make_request(
+                "POST", f"/games/{target_game_id}/join",
+                data=join_target_data,
+                auth_token=user1_token,
+                expected_status=200  # We expect this to succeed if no bug
+            )
+            
+            if join_target_success:
+                print_success("✓ User can join games after completion - ISSUE NOT REPRODUCED")
+            else:
+                error_detail = join_target_response.get("detail", "")
+                if "cannot join multiple games simultaneously" in error_detail.lower():
+                    print_error("✗ BUG CONFIRMED: User cannot join games due to 'multiple games simultaneously' error")
+                    print_error(f"Error message: {error_detail}")
+                    
+                    # This is the exact issue described in the review request
+                    print_error("ROOT CAUSE: check_user_concurrent_games function is incorrectly identifying completed games as active")
+                else:
+                    print_warning(f"Join failed for different reason: {error_detail}")
         else:
-            print_error("✗ User CANNOT join games after completion - ISSUE REPRODUCED!")
+            print_warning("No suitable games found to test joining - will create one")
             
-            # Debug: Check what games the user has
-            status_counts = check_game_statuses_in_db(user1_token)
-            print_warning(f"User 1 game status counts after completion: {status_counts}")
+            # Create a game with User 2 for User 1 to join
+            create_test_game_data = {
+                "move": "scissors",
+                "bet_gems": {"Ruby": 3}
+            }
             
-            # This is the bug - completed games are still blocking new joins
-            print_error("BUG CONFIRMED: Completed games are blocking new game joins")
+            test_game_response, test_game_success = make_request(
+                "POST", "/games/create", 
+                data=create_test_game_data, 
+                auth_token=user2_token
+            )
+            
+            if test_game_success:
+                test_game_id = test_game_response.get("game_id")
+                print_success(f"Created test game with User 2: {test_game_id}")
+                
+                # Now try to join with User 1
+                join_test_data = {
+                    "move": "paper",
+                    "gems": {"Ruby": 3}
+                }
+                
+                join_test_response, join_test_success = make_request(
+                    "POST", f"/games/{test_game_id}/join",
+                    data=join_test_data,
+                    auth_token=user1_token,
+                    expected_status=200
+                )
+                
+                if join_test_success:
+                    print_success("✓ User can join games after completion - ISSUE NOT REPRODUCED")
+                else:
+                    error_detail = join_test_response.get("detail", "")
+                    if "cannot join multiple games simultaneously" in error_detail.lower():
+                        print_error("✗ BUG CONFIRMED: User cannot join games due to 'multiple games simultaneously' error")
+                        print_error(f"Error message: {error_detail}")
+                    else:
+                        print_warning(f"Join failed for different reason: {error_detail}")
+            else:
+                print_error("Failed to create test game with User 2")
     else:
-        print_error("Failed to check can-join status after completion")
+        print_error("Failed to get available games for join test")
     
     # Step 8: Try to create another game to confirm the issue
     print_subheader("Step 8: Try to Create Another Game")
