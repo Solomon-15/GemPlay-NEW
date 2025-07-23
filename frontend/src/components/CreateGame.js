@@ -180,7 +180,7 @@ const CreateGame = ({ user, onUpdateUser }) => {
                 </p>
               </div>
               <div className="text-center">
-                <p className="font-roboto text-text-secondary">Комиссия (6%)</p>
+                <p className="font-roboto text-text-secondary">Комиссия (3%)</p>
                 <p className="font-rajdhani text-2xl font-bold text-yellow-400">
                   ${commission.toFixed(2)}
                 </p>
