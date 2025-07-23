@@ -8453,7 +8453,7 @@ async def get_frozen_funds_details(
         for game in active_games:
             # Calculate frozen commission for this game
             bet_amount = game.get("bet_amount", 0)
-            commission_rate = 0.06  # 6% commission
+            commission_rate = 0.03  # 3% commission
             frozen_commission = bet_amount * commission_rate
             
             total_frozen += frozen_commission
