@@ -4868,8 +4868,12 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 
                 # Record profit entry from bet commission (only if commission was charged)
                 if not is_regular_bot_game and commission_amount > 0:
+                    # Determine if winner is a Human-bot
+                    is_winner_human_bot = await is_human_bot_user(winner_id)
+                    entry_type = "HUMAN_BOT_COMMISSION" if is_winner_human_bot else "BET_COMMISSION"
+                    
                     profit_entry = ProfitEntry(
-                        entry_type="BET_COMMISSION",
+                        entry_type=entry_type,
                         amount=commission_amount,
                         source_user_id=winner_id,
                         reference_id=game.id,
