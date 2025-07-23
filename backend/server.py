@@ -9266,7 +9266,7 @@ async def bot_join_game_automatically(bot: Bot):
         # For REGULAR bots, return commission to creator (no commission charged)
         commission_returned = 0
         if bot.bot_type == "REGULAR":
-            commission_amount = game_obj.bet_amount * 0.06
+            commission_amount = game_obj.bet_amount * 0.03
             
             # Проверяем, была ли игра создана обычным ботом (тогда комиссия не была заморожена)
             creator_bot = await db.bots.find_one({"id": game_obj.creator_id})
