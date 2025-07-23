@@ -422,6 +422,9 @@ class HumanBot(BaseModel):
     # Уровень логирования
     logging_level: str = Field(default="INFO")  # INFO, DEBUG
     
+    # Auto-play settings
+    can_play_with_other_bots: bool = Field(default=True)  # Can play with other bots automatically
+    
     # Статистика
     total_games_played: int = 0
     total_games_won: int = 0  
