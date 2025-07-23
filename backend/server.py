@@ -4672,7 +4672,7 @@ async def determine_game_winner(game_id: str) -> dict:
         # For regular bot games, no commission is charged
         commission_amount = 0
         if winner_id and not is_regular_bot_game:
-            commission_amount = game_obj.bet_amount * 0.06  # 6% from winner only
+            commission_amount = game_obj.bet_amount * 0.03  # 3% from winner only
         
         total_pot = game_obj.bet_amount * 2  # Both players' bets
         
