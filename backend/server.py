@@ -4868,7 +4868,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         amount=commission_amount,
                         source_user_id=winner_id,
                         reference_id=game.id,
-                        description=f"6% commission from PvP game winner (${game.bet_amount} bet)"
+                        description=f"3% commission from PvP game winner (${game.bet_amount} bet)"
                     )
                     await db.profit_entries.insert_one(profit_entry.dict())
             
