@@ -278,7 +278,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         <div className="bg-surface-card border border-border-primary rounded-lg w-full max-w-md p-6">
           <h2 className="text-xl font-russo text-white mb-4">⚠️ Insufficient Funds</h2>
           <p className="text-text-secondary mb-4">
-            You need at least ${commissionAmount.toFixed(2)} for commission (6%) to join this bet.
+            You need at least ${commissionAmount.toFixed(2)} for commission (3%) to join this bet.
           </p>
           <p className="text-text-secondary mb-4">
             Balance: ${totalBalance.toFixed(2)} | Frozen: ${frozenBalance.toFixed(2)} | Available: ${availableForSpending.toFixed(2)}
