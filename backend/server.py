@@ -15539,6 +15539,27 @@ async def create_human_bot(
                 detail="Minimum delay must be less than maximum delay"
             )
         
+        # Validate bet_limit against global limit
+        bet_limit = bot_data.bet_limit or 12  # Default bet_limit
+        
+        # Get global settings for max limit
+        global_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        global_max = global_settings.get("max_active_bets_human", 100) if global_settings else 100
+        
+        # Get all existing human bots to check total limit
+        existing_bots = await db.human_bots.find({}).to_list(None)
+        
+        # Calculate total limit of existing bots
+        existing_bots_total = sum(bot.get("bet_limit", 12) for bot in existing_bots)
+        
+        # Check if new bot limit would exceed global limit
+        if existing_bots_total + bet_limit > global_max:
+            available = global_max - existing_bots_total
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Bot limit ({bet_limit}) would exceed global limit. Available: {available}/{global_max}"
+            )
+        
         # Create human bot
         human_bot = HumanBot(**bot_data.dict())
         await db.human_bots.insert_one(human_bot.dict())
