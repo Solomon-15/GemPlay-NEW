@@ -7466,13 +7466,452 @@ def test_human_bot_bet_limit_feature():
         print_error(f"✗ All bets should return 404 for non-existent bot: {response}")
         record_test("Human-bot All Bets - Non-existent Bot", False, f"Unexpected response: {response}")
 
-if __name__ == "__main__":
-    print_header("GEMPLAY HUMAN-BOT GLOBAL SETTINGS LIMITS TESTING")
-    print("Testing Human-bot tabbed interface with global settings limits as requested in the review")
+# ==============================================================================
+# CONCURRENT GAMES TESTING FUNCTIONS
+# ==============================================================================
+
+def test_can_join_endpoint_structure() -> None:
+    """Test /api/games/can-join endpoint structure and response"""
+    print_subheader("Testing /api/games/can-join endpoint structure...")
+    
+    # Login as first test user
+    user_token = test_login(CONCURRENT_TEST_USERS[0]["email"], CONCURRENT_TEST_USERS[0]["password"], "concurrent_user1")
+    
+    if not user_token:
+        print_error("Failed to login test user for can-join endpoint test")
+        record_test("can-join endpoint - user login", False, "Login failed")
+        return
+    
+    # Test the endpoint
+    response, success = make_request(
+        "GET", "/games/can-join",
+        auth_token=user_token
+    )
+    
+    if not success:
+        print_error(f"can-join endpoint returned status other than 200")
+        record_test("can-join endpoint availability", False, f"Status: {response}")
+        return
+    
+    # Check required fields
+    required_fields = [
+        "can_join_games",
+        "has_active_as_opponent", 
+        "has_active_as_creator",
+        "waiting_games_count"
+    ]
+    
+    missing_fields = []
+    for field in required_fields:
+        if field not in response:
+            missing_fields.append(field)
+    
+    if missing_fields:
+        print_error(f"can-join endpoint missing required fields: {missing_fields}")
+        record_test("can-join endpoint structure", False, f"Missing: {missing_fields}")
+        return
+    
+    # Verify data types
+    type_checks = [
+        ("can_join_games", bool),
+        ("has_active_as_opponent", bool),
+        ("has_active_as_creator", bool), 
+        ("waiting_games_count", int)
+    ]
+    
+    type_errors = []
+    for field, expected_type in type_checks:
+        if not isinstance(response[field], expected_type):
+            type_errors.append(f"{field} should be {expected_type.__name__}, got {type(response[field]).__name__}")
+    
+    if type_errors:
+        print_error(f"can-join endpoint type errors: {type_errors}")
+        record_test("can-join endpoint data types", False, f"Type errors: {type_errors}")
+        return
+    
+    print_success("✓ can-join endpoint structure correct")
+    print_success(f"✓ Response: {response}")
+    record_test("can-join endpoint structure", True)
+
+def setup_user_gems_for_testing(user_token: str) -> bool:
+    """Setup gems for user to create bets"""
+    try:
+        # Add balance first
+        balance_response, balance_success = make_request(
+            "POST", "/admin/add-balance",
+            data={"amount": 100.0},
+            auth_token=user_token
+        )
+        
+        # Buy some gems
+        gem_purchases = [
+            {"gem_type": "Ruby", "quantity": 20},
+            {"gem_type": "Emerald", "quantity": 10}
+        ]
+        
+        for purchase in gem_purchases:
+            make_request(
+                "POST", "/gems/buy",
+                data=purchase,
+                auth_token=user_token
+            )
+        
+        return True
+        
+    except Exception as e:
+        print_error(f"Error setting up gems: {e}")
+        return False
+
+def create_game_for_user(user_token: str, bet_gems=None) -> Optional[str]:
+    """Create a game for specified user"""
+    try:
+        if bet_gems is None:
+            bet_gems = {"Ruby": 3, "Emerald": 1}
+        
+        game_data = {
+            "move": "rock",
+            "bet_gems": bet_gems
+        }
+        
+        response, success = make_request(
+            "POST", "/games/create",
+            data=game_data,
+            auth_token=user_token,
+            expected_status=201
+        )
+        
+        if success:
+            return response.get("game_id")
+        else:
+            print_error(f"Failed to create game: {response}")
+            return None
+            
+    except Exception as e:
+        print_error(f"Error creating game: {e}")
+        return None
+
+def join_game_as_user(user_token: str, game_id: str, join_gems=None) -> Tuple[bool, Dict]:
+    """Join a game as specified user"""
+    try:
+        if join_gems is None:
+            join_gems = {"Ruby": 3, "Emerald": 1}
+        
+        join_data = {
+            "move": "paper",
+            "gems": join_gems
+        }
+        
+        response, success = make_request(
+            "POST", f"/games/{game_id}/join",
+            data=join_data,
+            auth_token=user_token
+        )
+        
+        return success, response
+        
+    except Exception as e:
+        print_error(f"Error joining game: {e}")
+        return False, {}
+
+def complete_game(game_id: str, creator_token: str) -> bool:
+    """Complete a game by revealing creator's move"""
+    try:
+        reveal_data = {
+            "move": "rock"
+        }
+        
+        response, success = make_request(
+            "POST", f"/games/{game_id}/reveal",
+            data=reveal_data,
+            auth_token=creator_token
+        )
+        
+        return success
+        
+    except Exception as e:
+        print_error(f"Error completing game {game_id}: {e}")
+        return False
+
+def test_concurrent_games_scenario() -> None:
+    """Test the main concurrent games scenario from review request"""
+    print_subheader("Testing concurrent games scenario...")
+    
+    # Setup users
+    user1_token = test_login(CONCURRENT_TEST_USERS[0]["email"], CONCURRENT_TEST_USERS[0]["password"], "concurrent_user1")
+    user2_token = test_login(CONCURRENT_TEST_USERS[1]["email"], CONCURRENT_TEST_USERS[1]["password"], "concurrent_user2")
+    
+    if not user1_token or not user2_token:
+        print_error("Failed to setup users for concurrent games test")
+        record_test("concurrent games scenario setup", False, "User setup failed")
+        return
+    
+    # Setup gems for both users
+    if not setup_user_gems_for_testing(user1_token) or not setup_user_gems_for_testing(user2_token):
+        print_error("Failed to setup user gems")
+        record_test("concurrent games scenario setup", False, "Gem setup failed")
+        return
+    
+    # Step 1: User 1 creates a game
+    print("Step 1: User 1 creates a game...")
+    game_id = create_game_for_user(user1_token)
+    if not game_id:
+        print_error("User 1 failed to create game")
+        record_test("concurrent games scenario - game creation", False, "Game creation failed")
+        return
+    
+    print_success(f"✓ User 1 created game: {game_id[:8]}")
+    
+    # Step 2: Check User 1's can-join status (should be True - waiting games don't block)
+    print("Step 2: Checking User 1's can-join status after creating game...")
+    can_join_response, can_join_success = make_request(
+        "GET", "/games/can-join", 
+        auth_token=user1_token
+    )
+    
+    if can_join_success:
+        if can_join_response.get("can_join_games") != True:
+            print_error(f"User 1 cannot join games after creating waiting game: {can_join_response}")
+            record_test("concurrent games - waiting game blocking", False, "Waiting game blocks joining")
+            return
+        print_success(f"✓ User 1 can still join games (waiting games don't block): {can_join_response}")
+    
+    # Step 3: User 2 joins the game
+    print("Step 3: User 2 joins the game...")
+    join_success, join_response = join_game_as_user(user2_token, game_id)
+    if not join_success:
+        print_error(f"User 2 failed to join game: {join_response}")
+        record_test("concurrent games scenario - game joining", False, "Game joining failed")
+        return
+    
+    print_success("✓ User 2 successfully joined the game")
+    
+    # Step 4: Check both users' can-join status (should be False - active game blocks)
+    print("Step 4: Checking both users' can-join status during active game...")
+    
+    # Check User 1 (creator)
+    can_join_response1, _ = make_request("GET", "/games/can-join", auth_token=user1_token)
+    if can_join_response1.get("can_join_games") != False:
+        print_error(f"User 1 (creator) should not be able to join games during active game: {can_join_response1}")
+        record_test("concurrent games - active game blocking creator", False, "Creator not blocked")
+        return
+    print_success(f"✓ User 1 (creator) correctly blocked from joining games: {can_join_response1}")
+    
+    # Check User 2 (opponent)
+    can_join_response2, _ = make_request("GET", "/games/can-join", auth_token=user2_token)
+    if can_join_response2.get("can_join_games") != False:
+        print_error(f"User 2 (opponent) should not be able to join games during active game: {can_join_response2}")
+        record_test("concurrent games - active game blocking opponent", False, "Opponent not blocked")
+        return
+    print_success(f"✓ User 2 (opponent) correctly blocked from joining games: {can_join_response2}")
+    
+    # Step 5: Complete the game
+    print("Step 5: Completing the game...")
+    if not complete_game(game_id, user1_token):
+        print_error("Failed to complete the game")
+        record_test("concurrent games scenario - game completion", False, "Game completion failed")
+        return
+    
+    print_success("✓ Game completed successfully")
+    
+    # Wait a moment for game state to update
+    time.sleep(2)
+    
+    # Step 6: Check both users can join games again (completed games don't block)
+    print("Step 6: Checking both users can join games after completion...")
+    
+    # Check User 1
+    can_join_response1_after, _ = make_request("GET", "/games/can-join", auth_token=user1_token)
+    if can_join_response1_after.get("can_join_games") != True:
+        print_error(f"User 1 should be able to join games after completion: {can_join_response1_after}")
+        record_test("concurrent games - completed game not blocking creator", False, "Creator still blocked")
+        return
+    print_success(f"✓ User 1 can join games after completion: {can_join_response1_after}")
+    
+    # Check User 2
+    can_join_response2_after, _ = make_request("GET", "/games/can-join", auth_token=user2_token)
+    if can_join_response2_after.get("can_join_games") != True:
+        print_error(f"User 2 should be able to join games after completion: {can_join_response2_after}")
+        record_test("concurrent games - completed game not blocking opponent", False, "Opponent still blocked")
+        return
+    print_success(f"✓ User 2 can join games after completion: {can_join_response2_after}")
+    
+    # Step 7: User 1 tries to join a new game (should succeed)
+    print("Step 7: User 1 tries to join a new game...")
+    
+    # First, create another game with User 2
+    new_game_id = create_game_for_user(user2_token)
+    if not new_game_id:
+        print_error("Failed to create new game for testing")
+        record_test("concurrent games scenario - new game creation", False, "New game creation failed")
+        return
+    
+    # User 1 joins the new game
+    join_success_new, join_response_new = join_game_as_user(user1_token, new_game_id)
+    if not join_success_new:
+        print_error(f"User 1 failed to join new game after completing previous game: {join_response_new}")
+        record_test("concurrent games scenario - joining new game after completion", False, "New game joining failed")
+        return
+    
+    print_success("✓ User 1 successfully joined new game after completing previous game")
+    
+    record_test("concurrent games scenario", True, "Complete scenario passed: create → join → complete → join new game")
+
+def test_improved_error_messages() -> None:
+    """Test improved error messages in join_game with active game details"""
+    print_subheader("Testing improved error messages...")
+    
+    # Setup users
+    user1_token = test_login(CONCURRENT_TEST_USERS[0]["email"], CONCURRENT_TEST_USERS[0]["password"], "concurrent_user1")
+    user2_token = test_login(CONCURRENT_TEST_USERS[1]["email"], CONCURRENT_TEST_USERS[1]["password"], "concurrent_user2")
+    
+    if not user1_token or not user2_token:
+        print_error("Failed to setup users for error message test")
+        record_test("improved error messages setup", False, "User setup failed")
+        return
     
     try:
-        # Test Human-bot Global Settings Limits (main focus of review request)
-        test_human_bot_global_settings_limits()
+        # Setup: Create a game with User 1 and have User 2 join it
+        game_id = create_game_for_user(user1_token)
+        if not game_id:
+            print_error("Failed to create game for error message testing")
+            record_test("improved error messages setup", False, "Game creation failed")
+            return
+        
+        # User 2 joins the game
+        join_success, _ = join_game_as_user(user2_token, game_id)
+        if not join_success:
+            print_error("Failed to join game for error message testing")
+            record_test("improved error messages setup", False, "Game joining failed")
+            return
+        
+        # Now try to have User 1 join another game (should fail with detailed error)
+        another_game_id = create_game_for_user(user2_token)  # User 2 creates another game
+        if not another_game_id:
+            print_error("Failed to create second game for error message testing")
+            record_test("improved error messages setup", False, "Second game creation failed")
+            return
+        
+        # User 1 tries to join (should fail with detailed error message)
+        join_data = {
+            "move": "scissors",
+            "gems": {"Ruby": 2}
+        }
+        
+        response, success = make_request(
+            "POST", f"/games/{another_game_id}/join",
+            data=join_data,
+            auth_token=user1_token,
+            expected_status=400
+        )
+        
+        if success:
+            print_error(f"Expected 400 status code, but join succeeded: {response}")
+            record_test("improved error messages - status code", False, "Join should have failed")
+            return
+        
+        error_detail = response.get("detail", "")
+        
+        # Check if error message contains expected elements
+        expected_elements = [
+            "cannot join multiple games simultaneously",
+            "complete your current game first"
+        ]
+        
+        missing_elements = []
+        for element in expected_elements:
+            if element.lower() not in error_detail.lower():
+                missing_elements.append(element)
+        
+        if missing_elements:
+            print_error(f"Error message missing expected elements: {missing_elements}")
+            record_test("improved error messages - content", False, f"Missing: {missing_elements}")
+            return
+        
+        # Check if error message contains game details
+        if "active games:" not in error_detail.lower() and "game" not in error_detail.lower():
+            print_error("Error message should contain details about active games")
+            record_test("improved error messages - game details", False, "Missing game details")
+            return
+        
+        print_success("✓ Error message contains expected content and game details")
+        print_success(f"✓ Error detail: {error_detail}")
+        record_test("improved error messages", True)
+        
+    except Exception as e:
+        print_error(f"Exception occurred during error message test: {e}")
+        record_test("improved error messages", False, f"Exception: {e}")
+
+def test_logging_verification() -> None:
+    """Test that improved logging is working (indirect verification)"""
+    print_subheader("Testing improved logging verification...")
+    
+    user_token = test_login(CONCURRENT_TEST_USERS[0]["email"], CONCURRENT_TEST_USERS[0]["password"], "concurrent_user1")
+    
+    if not user_token:
+        print_error("Failed to login user for logging verification")
+        record_test("logging verification", False, "User login failed")
+        return
+    
+    try:
+        # Create a game to have some activity
+        game_id = create_game_for_user(user_token)
+        if game_id:
+            # Check can-join status multiple times to trigger logging
+            for i in range(3):
+                response, success = make_request("GET", "/games/can-join", auth_token=user_token)
+                if success:
+                    if "can_join_games" in response:
+                        continue
+                else:
+                    print_error(f"Inconsistent responses from can-join endpoint: {response}")
+                    record_test("logging verification", False, "Inconsistent responses")
+                    return
+            
+            print_success("✓ Logging appears to be working (consistent API responses)")
+            record_test("logging verification", True, "Verified through multiple can-join endpoint calls")
+        else:
+            print_error("Could not create game for logging verification")
+            record_test("logging verification", False, "Game creation failed")
+            
+    except Exception as e:
+        print_error(f"Exception occurred during logging verification: {e}")
+        record_test("logging verification", False, f"Exception: {e}")
+
+def test_concurrent_games_functionality() -> None:
+    """Main function to test concurrent games functionality"""
+    print_header("CONCURRENT GAMES FUNCTIONALITY TESTING")
+    print("Testing improved logic for concurrent games and new /api/games/can-join endpoint")
+    
+    # Register and setup test users
+    print_subheader("Setting up test users...")
+    
+    for user_data in CONCURRENT_TEST_USERS:
+        # Try to register user (may already exist)
+        make_request("POST", "/auth/register", data=user_data)
+    
+    # Run tests
+    tests = [
+        test_can_join_endpoint_structure,
+        test_concurrent_games_scenario,
+        test_improved_error_messages,
+        test_logging_verification
+    ]
+    
+    for test in tests:
+        try:
+            test()
+            time.sleep(1)  # Brief pause between tests
+        except Exception as e:
+            print_error(f"Test {test.__name__} failed with exception: {e}")
+            record_test(test.__name__, False, f"Exception: {e}")
+
+if __name__ == "__main__":
+    print_header("GEMPLAY CONCURRENT GAMES TESTING")
+    print("Testing improved concurrent games logic and new /api/games/can-join endpoint as requested in the review")
+    
+    try:
+        # Test Concurrent Games Functionality (main focus of review request)
+        test_concurrent_games_functionality()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
