@@ -7577,7 +7577,7 @@ def create_game_for_user(user_token: str, bet_gems=None) -> Optional[str]:
             "POST", "/games/create",
             data=game_data,
             auth_token=user_token,
-            expected_status=201
+            expected_status=200  # Changed from 201 to 200
         )
         
         if success:
