@@ -16183,7 +16183,7 @@ async def get_human_bots_settings(current_admin: User = Depends(get_current_admi
         total_individual_limits = sum(bot.get("bet_limit", 12) for bot in all_bots)
         max_limit = settings.get("max_active_bets_human", 100)
         
-        return {
+        return JSONResponse(content={
             "success": True,
             "settings": {
                 "max_active_bets_human": max_limit,
@@ -16194,7 +16194,7 @@ async def get_human_bots_settings(current_admin: User = Depends(get_current_admi
                     "usage_percentage": round((total_individual_limits / max_limit) * 100, 1) if max_limit > 0 else 0
                 }
             }
-        }
+        })
         
     except Exception as e:
         logger.error(f"Error fetching human bots settings: {e}")
