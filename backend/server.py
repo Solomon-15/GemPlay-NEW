@@ -16202,7 +16202,7 @@ async def get_human_bots_settings(current_admin: User = Depends(get_current_admi
             detail="Failed to fetch human bots settings"
         )
 
-@api_router.put("/admin/human-bots/settings", response_model=dict)
+@api_router.put("/admin/human-bots/settings")
 async def update_human_bots_settings(
     settings: HumanBotSettingsRequest,
     current_admin: User = Depends(get_current_admin)
