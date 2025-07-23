@@ -643,6 +643,9 @@ class UpdateHumanBotRequest(BaseModel):
     logging_level: Optional[str] = None
     can_play_with_other_bots: Optional[bool] = None
 
+class ToggleAutoPlayRequest(BaseModel):
+    can_play_with_other_bots: bool
+
 class ToggleAllRequest(BaseModel):
     activate: bool
 
