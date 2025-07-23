@@ -4047,7 +4047,7 @@ async def handle_game_timeout(game_id: str):
             )
             
         # Return commission to opponent
-        commission = game_obj.bet_amount * 0.06
+        commission = game_obj.bet_amount * 0.03
         await db.users.update_one(
             {"id": game_obj.opponent_id},
             {
