@@ -566,6 +566,88 @@ const HumanBotsManagement = () => {
                       </div>
                     </div>
 
+                    {/* Настройки автоигры между Human-ботами */}
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <h4 className="font-rajdhani font-bold text-white mb-3">🎮 Автоигра между Human-ботами</h4>
+                      <div className="space-y-4">
+                        {/* Глобальный переключатель */}
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <label className="font-rajdhani font-bold text-white">
+                              Включить автоигру между Human-ботами
+                            </label>
+                            <p className="text-text-secondary text-sm">
+                              Позволяет Human-ботам играть друг с другом автоматически
+                            </p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={humanBotSettings.auto_play_enabled || false}
+                              onChange={(e) => setHumanBotSettings({
+                                ...humanBotSettings,
+                                auto_play_enabled: e.target.checked
+                              })}
+                              className="sr-only peer"
+                              disabled={settingsSaving}
+                            />
+                            <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-accent-primary peer-focus:ring-opacity-25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-primary"></div>
+                          </label>
+                        </div>
+
+                        {/* Настройка диапазона задержки */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block font-rajdhani font-bold text-white mb-2">
+                              Минимальная задержка (секунды)
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="3600"
+                              value={humanBotSettings.min_delay_seconds || 1}
+                              onChange={(e) => setHumanBotSettings({
+                                ...humanBotSettings,
+                                min_delay_seconds: parseInt(e.target.value) || 1
+                              })}
+                              className="w-full px-4 py-2 bg-surface-primary border border-border-primary rounded-lg text-white font-roboto"
+                              disabled={settingsSaving}
+                            />
+                          </div>
+                          <div>
+                            <label className="block font-rajdhani font-bold text-white mb-2">
+                              Максимальная задержка (секунды)
+                            </label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="3600"
+                              value={humanBotSettings.max_delay_seconds || 3600}
+                              onChange={(e) => setHumanBotSettings({
+                                ...humanBotSettings,
+                                max_delay_seconds: parseInt(e.target.value) || 3600
+                              })}
+                              className="w-full px-4 py-2 bg-surface-primary border border-border-primary rounded-lg text-white font-roboto"
+                              disabled={settingsSaving}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4">
+                          <div className="flex-1 text-text-secondary text-sm">
+                            💡 Human-боты будут создавать игры друг с другом с случайной задержкой от {humanBotSettings.min_delay_seconds || 1} до {humanBotSettings.max_delay_seconds || 3600} секунд ({Math.round((humanBotSettings.max_delay_seconds || 3600) / 60)} минут)
+                          </div>
+                          <button
+                            onClick={handleSaveSettings}
+                            disabled={settingsSaving}
+                            className="px-6 py-2 bg-accent-primary text-white rounded-lg hover:bg-opacity-80 transition-colors disabled:opacity-50"
+                          >
+                            {settingsSaving ? 'Сохранение...' : 'Сохранить'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Настройка максимального лимита */}
                     <div className="space-y-4">
                       <div>
