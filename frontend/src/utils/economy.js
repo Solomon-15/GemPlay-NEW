@@ -255,7 +255,7 @@ export const formatTimeRemaining = (expiresAt) => {
 // Constants for the virtual economy
 export const ECONOMY_CONFIG = {
   COMMISSION: {
-    BET: 6, // 6% commission on bets
+    BET: 3, // 3% commission on bets
     GIFT: 3, // 3% commission on gifts
     TRANSACTION: 0 // No transaction fees for buy/sell
   },
