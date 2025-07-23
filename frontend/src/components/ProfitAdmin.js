@@ -182,6 +182,22 @@ const ProfitAdmin = ({ user }) => {
       color: 'green',
       description: '3% комиссия с PvP-игр'
     },
+    'HUMAN_BOT_COMMISSION': {
+      name: 'Комиссия от Human-ботов',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="4" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+          <rect x="14" y="4" width="6" height="6" strokeWidth="2" rx="1"/>
+          <rect x="4" y="14" width="16" height="6" strokeWidth="2" rx="1"/>
+          <circle cx="17" cy="7" r="1" fill="currentColor"/>
+          <circle cx="7" cy="7" r="1" fill="currentColor"/>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 17h8"/>
+          <text x="12" y="16" textAnchor="middle" fontSize="8" fill="currentColor">%</text>
+        </svg>
+      ),
+      color: 'cyan',
+      description: '3% комиссия с игр Human-ботов'
+    },
     'BOT_REVENUE': {
       name: 'Доход от Обычных ботов',
       icon: (
