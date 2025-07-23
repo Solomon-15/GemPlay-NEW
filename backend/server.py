@@ -6145,7 +6145,7 @@ async def cancel_game(game_id: str, current_user: User = Depends(get_current_use
             )
         
         # Return frozen commission - ПРАВИЛЬНАЯ ЛОГИКА: возвращаем из frozen_balance в virtual_balance
-        commission_to_return = game_obj.bet_amount * 0.06
+        commission_to_return = game_obj.bet_amount * 0.03
         
         # ПРАВИЛЬНАЯ ЛОГИКА: При отмене игры комиссия возвращается из frozen_balance в virtual_balance
         await db.users.update_one(
