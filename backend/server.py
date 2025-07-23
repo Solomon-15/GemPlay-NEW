@@ -16630,14 +16630,22 @@ async def update_human_bots_settings(
                     })
         
         # Update global settings
+        update_data = {
+            "max_active_bets_human": new_max,
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Add auto-play settings if provided
+        if settings.auto_play_enabled is not None:
+            update_data["auto_play_enabled"] = settings.auto_play_enabled
+        if settings.min_delay_seconds is not None:
+            update_data["min_delay_seconds"] = settings.min_delay_seconds
+        if settings.max_delay_seconds is not None:
+            update_data["max_delay_seconds"] = settings.max_delay_seconds
+        
         await db.bot_settings.update_one(
             {"id": "bot_settings"},
-            {
-                "$set": {
-                    "max_active_bets_human": new_max,
-                    "updated_at": datetime.utcnow()
-                }
-            },
+            {"$set": update_data},
             upsert=True
         )
         
