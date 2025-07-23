@@ -15764,11 +15764,11 @@ async def upload_sound_file(sound_id: str, file_data: UploadSoundFileRequest, cu
 # ==============================================================================
 
 async def get_human_bot_active_bets_count(bot_id: str) -> int:
-    """Get count of active bets for a human bot (only WAITING, ACTIVE, REVEAL statuses)."""
+    """Get count of active bets for a human bot (only WAITING status - available for joining)."""
     try:
         count = await db.games.count_documents({
             "creator_id": bot_id,
-            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+            "status": "WAITING"  # Only count WAITING bets (available for joining)
         })
         return count
     except Exception as e:
