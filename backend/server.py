@@ -10602,7 +10602,7 @@ async def reset_user_bets(
                         )
                         reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
                     
-                    commission_amount = bet_amount * 0.06
+                    commission_amount = bet_amount * 0.03
                     await db.users.update_one(
                         {"id": user_id},
                         {
