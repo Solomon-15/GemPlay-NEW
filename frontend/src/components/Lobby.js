@@ -146,8 +146,16 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       
       const userGames = myBetsResponse.data || [];
       setMyBets(userGames.filter(game => game.status === 'WAITING'));
-      setOngoingBattles(userGames.filter(game => game.status === 'ACTIVE'));
-      setOngoingBotBattles(userGames.filter(game => game.status === 'ACTIVE' && game.is_bot_game));
+      
+      // Ongoing battles should include ACTIVE and REVEAL statuses
+      // These are games where user is actively participating
+      setOngoingBattles(userGames.filter(game => 
+        game.status === 'ACTIVE' || game.status === 'REVEAL'
+      ));
+      
+      setOngoingBotBattles(userGames.filter(game => 
+        (game.status === 'ACTIVE' || game.status === 'REVEAL') && game.is_bot_game
+      ));
       
       setLoading(false);
     } catch (error) {
