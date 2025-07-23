@@ -16210,14 +16210,20 @@ async def update_human_bots_settings(
 ):
     """Update human bots global settings with automatic proportional adjustment of individual limits."""
     try:
+        logger.info(f"Updating human bots settings: {settings}")
+        
         # Get current bot settings
         current_settings = await db.bot_settings.find_one({"id": "bot_settings"})
         current_max = current_settings.get("max_active_bets_human", 100) if current_settings else 100
         new_max = settings.max_active_bets_human
         
+        logger.info(f"Current max: {current_max}, New max: {new_max}")
+        
         # Get all human bots
         all_bots = await db.human_bots.find({}).to_list(None)
         current_total_limits = sum(bot.get("bet_limit", 12) for bot in all_bots)
+        
+        logger.info(f"Current total limits: {current_total_limits}")
         
         # If new limit is lower than current total, need to adjust individual limits proportionally
         adjusted_bots = []
@@ -16286,10 +16292,13 @@ async def update_human_bots_settings(
             response["message"] += f". {len(adjusted_bots)} bot limits were automatically adjusted proportionally."
             response["adjusted_bots"] = adjusted_bots
         
-        return JSONResponse(content=response)
+        logger.info(f"Returning response: {response}")
+        return response
         
     except Exception as e:
         logger.error(f"Error updating human bots settings: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update human bots settings"
