@@ -16203,19 +16203,97 @@ async def get_human_bots_settings(current_admin: User = Depends(get_current_admi
             detail="Failed to fetch human bots settings"
         )
 
-@api_router.put("/admin/human-bots/settings")
+@api_router.post("/admin/human-bots/update-settings", response_model=dict)
 async def update_human_bots_settings(
-    settings: HumanBotSettingsRequest
+    settings: HumanBotSettingsRequest,
+    current_admin: User = Depends(get_current_admin)
 ):
     """Update human bots global settings with automatic proportional adjustment of individual limits."""
-    logger.info(f"Updating human bots settings: {settings}")
-    
-    # Simple test response first
-    return {
-        "success": True,
-        "message": "Test response",
-        "max_active_bets_human": settings.max_active_bets_human
-    }
+    try:
+        # Get current bot settings
+        current_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+        current_max = current_settings.get("max_active_bets_human", 100) if current_settings else 100
+        new_max = settings.max_active_bets_human
+        
+        # Get all human bots
+        all_bots = await db.human_bots.find({}).to_list(None)
+        current_total_limits = sum(bot.get("bet_limit", 12) for bot in all_bots)
+        
+        # If new limit is lower than current total, need to adjust individual limits proportionally
+        adjusted_bots = []
+        if new_max < current_total_limits:
+            # Calculate proportional adjustment factor
+            adjustment_factor = new_max / current_total_limits
+            
+            # Adjust each bot's individual limit proportionally
+            for bot in all_bots:
+                old_limit = bot.get("bet_limit", 12)
+                new_limit = max(1, round(old_limit * adjustment_factor))  # Ensure at least 1
+                
+                if new_limit != old_limit:
+                    await db.human_bots.update_one(
+                        {"id": bot["id"]},
+                        {
+                            "$set": {
+                                "bet_limit": new_limit,
+                                "updated_at": datetime.utcnow()
+                            }
+                        }
+                    )
+                    adjusted_bots.append({
+                        "bot_id": bot["id"],
+                        "bot_name": bot["name"],
+                        "old_limit": old_limit,
+                        "new_limit": new_limit
+                    })
+        
+        # Update global settings
+        await db.bot_settings.update_one(
+            {"id": "bot_settings"},
+            {
+                "$set": {
+                    "max_active_bets_human": new_max,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="UPDATE_HUMAN_BOTS_SETTINGS",
+            target_type="settings",
+            target_id="human_bots_settings",
+            details={
+                "old_max_limit": current_max,
+                "new_max_limit": new_max,
+                "adjusted_bots_count": len(adjusted_bots),
+                "adjusted_bots": adjusted_bots[:10]  # Limit to first 10 for logs
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        response = {
+            "success": True,
+            "message": f"Human bots settings updated successfully",
+            "old_max_limit": current_max,
+            "new_max_limit": new_max
+        }
+        
+        if adjusted_bots:
+            response["adjusted_bots_count"] = len(adjusted_bots)
+            response["message"] += f". {len(adjusted_bots)} bot limits were automatically adjusted proportionally."
+            response["adjusted_bots"] = adjusted_bots
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error updating human bots settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update human bots settings"
+        )
 
 @api_router.get("/admin/human-bots/{bot_id}/logs", response_model=dict)
 async def get_human_bot_logs(
