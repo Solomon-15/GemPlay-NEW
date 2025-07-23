@@ -542,6 +542,52 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     return items.slice(startIndex, endIndex);
   };
 
+  // Функция фильтрации доступных ставок по сумме
+  const getFilteredAvailableBets = () => {
+    let filtered = availableBets;
+    
+    if (betFilters.minAmount) {
+      const minAmount = parseFloat(betFilters.minAmount);
+      if (!isNaN(minAmount)) {
+        filtered = filtered.filter(game => (game.bet_amount || 0) >= minAmount);
+      }
+    }
+    
+    if (betFilters.maxAmount) {
+      const maxAmount = parseFloat(betFilters.maxAmount);
+      if (!isNaN(maxAmount)) {
+        filtered = filtered.filter(game => (game.bet_amount || 0) <= maxAmount);
+      }
+    }
+    
+    return filtered;
+  };
+
+  // Обработчики для фильтров
+  const handleFilterChange = (field, value) => {
+    setBetFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Сбросить пагинацию при изменении фильтров
+    setCurrentPage(prev => ({
+      ...prev,
+      availableBets: 1
+    }));
+  };
+
+  const clearFilters = () => {
+    setBetFilters({
+      minAmount: '',
+      maxAmount: ''
+    });
+    setCurrentPage(prev => ({
+      ...prev,
+      availableBets: 1
+    }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
