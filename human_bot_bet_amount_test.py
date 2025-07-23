@@ -127,7 +127,7 @@ def login_admin() -> Optional[str]:
     print_subheader("Admin Login")
     
     login_data = {
-        "username": ADMIN_USER["email"],
+        "email": ADMIN_USER["email"],
         "password": ADMIN_USER["password"]
     }
     
