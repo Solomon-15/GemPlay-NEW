@@ -10259,7 +10259,7 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
                     cleanup_results["total_gems_returned"][gem_type] = cleanup_results["total_gems_returned"].get(gem_type, 0) + quantity
                 
                 # Return commission to both players (only if they're users)
-                commission_amount = bet_amount * 0.06
+                commission_amount = bet_amount * 0.03
                 
                 # Return to creator
                 creator_user = await db.users.find_one({"id": creator_id})
