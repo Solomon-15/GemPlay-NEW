@@ -9587,11 +9587,11 @@ def test_concurrent_games_functionality() -> None:
             record_test(test.__name__, False, f"Exception: {e}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - IS_HUMAN_BOT FLAG LOGIC FIX")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT GAME FIELDS DATABASE VERIFICATION")
     
     try:
         # Run the specific test requested in the review
-        test_is_human_bot_flag_logic_fix()
+        test_human_bot_game_fields_database_verification()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
