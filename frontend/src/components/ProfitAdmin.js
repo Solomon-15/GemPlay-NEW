@@ -234,6 +234,7 @@ const ProfitAdmin = ({ user }) => {
   const getCategoryBadgeColor = (categoryKey) => {
     const colors = {
       'BET_COMMISSION': 'bg-green-600',
+      'HUMAN_BOT_COMMISSION': 'bg-cyan-600',
       'BOT_REVENUE': 'bg-blue-600', 
       'GIFT_COMMISSION': 'bg-purple-600'
     };
