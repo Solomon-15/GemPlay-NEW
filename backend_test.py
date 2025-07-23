@@ -10190,12 +10190,45 @@ def test_variant_b_human_bot_lobby_fix() -> None:
     print_success(f"- Total available games: {total_available_games}")
     print_success(f"- Вариант Б работает: {'ДА' if variant_b_success else 'НЕТ'}")
 
+def print_summary() -> None:
+    """Print test results summary."""
+    print_header("TEST RESULTS SUMMARY")
+    
+    total_tests = test_results["total"]
+    passed_tests = test_results["passed"]
+    failed_tests = test_results["failed"]
+    
+    if total_tests == 0:
+        print_warning("No tests were executed")
+        return
+    
+    success_rate = (passed_tests / total_tests) * 100
+    
+    print_success(f"Total Tests: {total_tests}")
+    print_success(f"Passed: {passed_tests}")
+    print_error(f"Failed: {failed_tests}")
+    print_success(f"Success Rate: {success_rate:.1f}%")
+    
+    if failed_tests > 0:
+        print_subheader("Failed Tests:")
+        for test in test_results["tests"]:
+            if not test["passed"]:
+                print_error(f"- {test['name']}: {test['details']}")
+    
+    print_subheader("Overall Result:")
+    if success_rate >= 80:
+        print_success("🎉 TESTING COMPLETED SUCCESSFULLY!")
+    elif success_rate >= 60:
+        print_warning("⚠️ TESTING COMPLETED WITH WARNINGS")
+    else:
+        print_error("❌ TESTING COMPLETED WITH FAILURES")
+
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT GAME FIELDS DATABASE VERIFICATION")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT AUTO-PLAY SYSTEM")
     
     try:
         # Run the specific test requested in the review
-        test_human_bot_game_fields_database_verification()
+        test_human_bot_auto_play_system()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
