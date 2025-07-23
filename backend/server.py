@@ -15638,6 +15638,30 @@ async def update_human_bot(
                 detail="Minimum delay must be less than maximum delay"
             )
         
+        # Validate bet_limit if being updated
+        if "bet_limit" in update_data:
+            new_bet_limit = update_data["bet_limit"]
+            
+            # Get global settings for max limit
+            global_settings = await db.bot_settings.find_one({"id": "bot_settings"})
+            global_max = global_settings.get("max_active_bets_human", 100) if global_settings else 100
+            
+            # Get all other human bots to check total limit
+            other_bots = await db.human_bots.find({
+                "id": {"$ne": bot_id}
+            }).to_list(None)
+            
+            # Calculate total limit of other bots
+            other_bots_total = sum(bot.get("bet_limit", 12) for bot in other_bots)
+            
+            # Check if new limit would exceed global limit
+            if other_bots_total + new_bet_limit > global_max:
+                available = global_max - other_bots_total
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Bot limit ({new_bet_limit}) would exceed global limit. Available: {available}/{global_max}"
+                )
+        
         # Add updated timestamp
         update_data["updated_at"] = datetime.utcnow()
         
