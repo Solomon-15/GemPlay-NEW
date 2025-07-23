@@ -8570,13 +8570,13 @@ async def get_total_revenue_breakdown(
             query["created_at"] = {"$gte": start_date}
         
         gift_commission_total = 0
-        gift_commission_entries = await db.profit_history.find(query).to_list(None)
+        gift_commission_entries = await db.profit_entries.find(query).to_list(None)
         gift_commission_count = len(gift_commission_entries)
         for entry in gift_commission_entries:
             gift_commission_total += entry.get("amount", 0)
         
         # Get bot revenue
-        query = {"type": "BOT_REVENUE"}
+        query = {"entry_type": "BOT_REVENUE"}
         if start_date:
             query["created_at"] = {"$gte": start_date}
         
