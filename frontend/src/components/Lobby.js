@@ -644,7 +644,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       {/* Available Bets */}
       <SectionBlock
         title="Available Bets"
-        count={availableBets.length}
+        count={getFilteredAvailableBets().length}
         color="text-blue-400"
         icon={
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -652,8 +652,52 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           </svg>
         }
       >
+        {/* Фильтры по сумме ставки */}
+        <div className="mb-4 bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-text-secondary">Мин. сумма:</label>
+              <input
+                type="number"
+                placeholder="$0"
+                value={betFilters.minAmount}
+                onChange={(e) => handleFilterChange('minAmount', e.target.value)}
+                className="w-20 px-2 py-1 bg-surface-card border border-accent-primary border-opacity-30 rounded text-white text-sm focus:outline-none focus:border-accent-primary"
+                min="0"
+                step="1"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-text-secondary">Макс. сумма:</label>
+              <input
+                type="number"
+                placeholder="$∞"
+                value={betFilters.maxAmount}
+                onChange={(e) => handleFilterChange('maxAmount', e.target.value)}
+                className="w-20 px-2 py-1 bg-surface-card border border-accent-primary border-opacity-30 rounded text-white text-sm focus:outline-none focus:border-accent-primary"
+                min="0"
+                step="1"
+              />
+            </div>
+            
+            {(betFilters.minAmount || betFilters.maxAmount) && (
+              <button
+                onClick={clearFilters}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+              >
+                Очистить
+              </button>
+            )}
+            
+            <div className="text-sm text-text-secondary">
+              Показано: {getFilteredAvailableBets().length} из {availableBets.length} ставок
+            </div>
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {getPaginatedItems(availableBets, currentPage.availableBets, interfaceSettings.live_players.available_bets).map((game) => (
+          {getPaginatedItems(getFilteredAvailableBets(), currentPage.availableBets, interfaceSettings.live_players.available_bets).map((game) => (
             <PlayerCard 
               key={game.game_id || game.id} 
               game={game} 
@@ -668,6 +712,11 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
               currentTime={new Date()}
             />
           ))}
+          {getFilteredAvailableBets().length === 0 && availableBets.length > 0 && (
+            <div className="col-span-full text-text-secondary text-center py-8">
+              Нет ставок, соответствующих фильтрам
+            </div>
+          )}
           {availableBets.length === 0 && (
             <div className="col-span-full text-text-secondary text-center py-8">
               No available bets
@@ -676,7 +725,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         </div>
         <PaginationControls
           currentPage={currentPage.availableBets}
-          totalItems={availableBets.length}
+          totalItems={getFilteredAvailableBets().length}
           onPageChange={handlePageChange}
           section="availableBets"
           itemsPerPage={interfaceSettings.live_players.available_bets}
