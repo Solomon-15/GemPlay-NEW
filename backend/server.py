@@ -16658,6 +16658,9 @@ async def update_human_bots_settings(
             details={
                 "old_max_limit": current_max,
                 "new_max_limit": new_max,
+                "auto_play_enabled": settings.auto_play_enabled,
+                "min_delay_seconds": settings.min_delay_seconds,
+                "max_delay_seconds": settings.max_delay_seconds,
                 "adjusted_bots_count": len(adjusted_bots),
                 "adjusted_bots": adjusted_bots[:10]  # Limit to first 10 for logs
             }
