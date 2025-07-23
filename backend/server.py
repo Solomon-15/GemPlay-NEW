@@ -4079,6 +4079,46 @@ async def handle_game_timeout(game_id: str):
     except Exception as e:
         logger.error(f"Error handling game timeout: {e}")
 
+@api_router.get("/games/can-join")
+async def can_join_games(current_user: User = Depends(get_current_user)):
+    """Check if user can join games and get their current game status."""
+    try:
+        # Check if user can join games
+        can_join = await check_user_concurrent_games(current_user.id)
+        
+        # Get user's current games for debugging
+        active_as_opponent = await db.games.find_one({
+            "opponent_id": current_user.id,
+            "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
+        })
+        
+        active_as_creator = await db.games.find_one({
+            "creator_id": current_user.id,
+            "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
+        })
+        
+        # Get waiting games count
+        waiting_games_count = await db.games.count_documents({
+            "creator_id": current_user.id,
+            "status": GameStatus.WAITING
+        })
+        
+        return {
+            "can_join_games": can_join,
+            "has_active_as_opponent": active_as_opponent is not None,
+            "has_active_as_creator": active_as_creator is not None,
+            "waiting_games_count": waiting_games_count,
+            "active_game_opponent_id": active_as_opponent["id"] if active_as_opponent else None,
+            "active_game_creator_id": active_as_creator["id"] if active_as_creator else None
+        }
+        
+    except Exception as e:
+        logger.error(f"Error checking can join games for user {current_user.id}: {e}")
+        return {
+            "can_join_games": True,  # Default to allowing joins on error
+            "error": "Failed to check game status"
+        }
+
 @api_router.get("/debug/user-games/{user_id}")
 async def debug_user_games(user_id: str, current_user: User = Depends(get_current_user)):
     """Debug endpoint to check user's active games."""
