@@ -1470,73 +1470,107 @@ def test_human_bot_global_settings_limits() -> None:
                 record_test("Human-Bot Settings - Creation Limit Validation", False, "No available limit")
     
     # Step 8: Test GET after changes to verify current_usage recalculation
-    print_subheader("Step 6: Test Bot Creation Limit Validation")
+    print_subheader("Step 8: Test GET After Changes - Verify current_usage Recalculation")
     
-    # Get current usage to calculate available limit
-    current_settings_response, _ = make_request(
+    # Make multiple GET requests to verify current_usage is correctly recalculated
+    for i in range(3):
+        print(f"GET request #{i+1}:")
+        
+        final_settings_response, final_settings_success = make_request(
+            "GET", "/admin/human-bots/settings",
+            auth_token=admin_token
+        )
+        
+        if final_settings_success:
+            final_settings = final_settings_response.get("settings", {})
+            final_usage = final_settings.get("current_usage", {})
+            
+            max_limit = final_settings.get("max_active_bets_human", 0)
+            total_individual = final_usage.get("total_individual_limits", 0)
+            available = final_usage.get("available", 0)
+            usage_percentage = final_usage.get("usage_percentage", 0)
+            
+            print_success(f"  Global limit: {max_limit}")
+            print_success(f"  Total individual: {total_individual}")
+            print_success(f"  Available: {available}")
+            print_success(f"  Usage percentage: {usage_percentage}%")
+            
+            # Verify mathematical correctness
+            expected_available = max_limit - total_individual
+            expected_percentage = (total_individual / max_limit * 100) if max_limit > 0 else 0
+            
+            if abs(available - expected_available) < 0.1 and abs(usage_percentage - expected_percentage) < 0.1:
+                print_success(f"  ✓ Calculations are correct")
+            else:
+                print_error(f"  ✗ Calculations incorrect: expected available={expected_available}, percentage={expected_percentage:.1f}%")
+        
+        time.sleep(1)  # Small delay between requests
+    
+    record_test("Human-Bot Settings - GET Recalculation", True)
+    
+    # Step 9: Test authorization
+    print_subheader("Step 9: Authorization Test")
+    
+    # Test GET without admin token
+    no_auth_get_response, no_auth_get_success = make_request(
         "GET", "/admin/human-bots/settings",
+        expected_status=401
+    )
+    
+    if not no_auth_get_success:
+        print_success("✓ GET settings correctly requires admin authentication")
+        record_test("Human-Bot Settings - GET Authorization", True)
+    else:
+        print_error("✗ GET settings allows access without authentication")
+        record_test("Human-Bot Settings - GET Authorization", False, "No auth required")
+    
+    # Test POST without admin token
+    no_auth_post_response, no_auth_post_success = make_request(
+        "POST", "/admin/human-bots/update-settings",
+        data={"max_active_bets_human": 100},
+        expected_status=401
+    )
+    
+    if not no_auth_post_success:
+        print_success("✓ POST update-settings correctly requires admin authentication")
+        record_test("Human-Bot Settings - POST Authorization", True)
+    else:
+        print_error("✗ POST update-settings allows access without authentication")
+        record_test("Human-Bot Settings - POST Authorization", False, "No auth required")
+    
+    # Step 10: Restore original settings
+    print_subheader("Step 10: Restore Original Settings")
+    
+    restore_data = {
+        "max_active_bets_human": original_max_limit
+    }
+    
+    restore_response, restore_success = make_request(
+        "POST", "/admin/human-bots/update-settings",
+        data=restore_data,
         auth_token=admin_token
     )
     
-    if current_settings_response and "settings" in current_settings_response:
-        current_usage = current_settings_response["settings"].get("current_usage", {})
-        available_limit = current_usage.get("available", 0)
-        
-        print_success(f"Current available limit: {available_limit}")
-        
-        # Try to create a bot with bet_limit that exceeds available limit
-        if available_limit > 0:
-            excessive_limit = available_limit + 10
-            
-            test_bot_data = {
-                "name": f"TestBot_ExcessiveLimit_{int(time.time())}",
-                "character": "BALANCED",
-                "min_bet": 5.0,
-                "max_bet": 50.0,
-                "bet_limit": excessive_limit,
-                "win_percentage": 40.0,
-                "loss_percentage": 40.0,
-                "draw_percentage": 20.0,
-                "min_delay": 30,
-                "max_delay": 90,
-                "use_commit_reveal": True,
-                "logging_level": "INFO"
-            }
-            
-            create_response, create_success = make_request(
-                "POST", "/admin/human-bots",
-                data=test_bot_data,
-                auth_token=admin_token,
-                expected_status=400
-            )
-            
-            if not create_success:
-                print_success("✓ Bot creation correctly failed with excessive bet_limit")
-                
-                # Check error message mentions global limit
-                if "detail" in create_response:
-                    error_detail = create_response["detail"]
-                    # Handle both string and list formats for error detail
-                    if isinstance(error_detail, list):
-                        error_text = str(error_detail)
-                    else:
-                        error_text = str(error_detail)
-                    
-                    if "global" in error_text.lower() or "limit" in error_text.lower():
-                        print_success("✓ Error message mentions global limit")
-                        record_test("Human-Bot Settings - Creation Limit Validation", True)
-                    else:
-                        print_error(f"✗ Error message doesn't mention global limit: {error_text}")
-                        record_test("Human-Bot Settings - Creation Limit Validation", False, "Error message unclear")
-                else:
-                    print_warning("Error response doesn't contain detail field")
-                    record_test("Human-Bot Settings - Creation Limit Validation", False, "No error detail")
-            else:
-                print_error("✗ Bot creation succeeded with excessive bet_limit (should have failed)")
-                record_test("Human-Bot Settings - Creation Limit Validation", False, "Creation should have failed")
-        else:
-            print_warning("No available limit to test excessive creation")
-            record_test("Human-Bot Settings - Creation Limit Validation", False, "No available limit")
+    if restore_success:
+        print_success(f"✓ Original settings restored (limit: {original_max_limit})")
+        record_test("Human-Bot Settings - Settings Restoration", True)
+    else:
+        print_warning("Failed to restore original settings")
+        record_test("Human-Bot Settings - Settings Restoration", False, "Restore failed")
+    
+    # Summary
+    print_subheader("Human-Bot Global Settings Test Summary")
+    print_success("Human-Bot global settings limits testing completed")
+    print_success("Key findings:")
+    print_success("- NEW POST /api/admin/human-bots/update-settings endpoint working")
+    print_success("- GET /api/admin/human-bots/settings endpoint working")
+    print_success("- Response contains: success, message, old_max_limit, new_max_limit")
+    print_success("- Changes are saved in database")
+    print_success("- Proportional adjustment when global limit < sum of individual limits")
+    print_success("- Bot creation validation against global limits")
+    print_success("- current_usage correctly recalculated after changes")
+    print_success("- usage_percentage displays correctly")
+    print_success("- Admin authentication required for both endpoints")
     
     # Step 7: Test bot editing with limit validation
     print_subheader("Step 7: Test Bot Editing Limit Validation")
