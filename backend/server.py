@@ -8782,7 +8782,7 @@ async def get_expenses_details(
         if start_date:
             query["created_at"] = {"$gte": start_date}
         
-        revenue_entries = await db.profit_history.find(query).to_list(None)
+        revenue_entries = await db.profit_entries.find(query).to_list(None)
         
         for entry in revenue_entries:
             total_revenue += entry.get("amount", 0)
