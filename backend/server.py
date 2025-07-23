@@ -4897,7 +4897,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 
                 if loser:
                     # Loser is a human player - комиссия просто списывается как плата за игру
-                    commission_to_deduct = game.bet_amount * 0.06
+                    commission_to_deduct = game.bet_amount * 0.03
                     await db.users.update_one(
                         {"id": loser_id},
                         {
