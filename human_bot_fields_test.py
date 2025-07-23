@@ -186,12 +186,19 @@ def test_human_bot_game_fields():
         )
         
         if active_bets_success:
-            games = active_bets_response.get("games", [])
-            print_success(f"Found {len(games)} active games for bot {bot_name}")
+            bets = active_bets_response.get("bets", [])
+            print_success(f"Found {len(bets)} active bets for bot {bot_name}")
             
-            for game in games:
-                game["expected_bot_id"] = bot_id
-                game["expected_bot_name"] = bot_name
+            # Convert bets to games format and add expected bot info
+            for bet in bets:
+                game = {
+                    "game_id": bet.get("id"),
+                    "bet_amount": bet.get("bet_amount"),
+                    "status": bet.get("status"),
+                    "created_at": bet.get("created_at"),
+                    "expected_bot_id": bot_id,
+                    "expected_bot_name": bot_name
+                }
                 all_bot_games.append(game)
         else:
             print_warning(f"Failed to get active bets for bot {bot_name}")
