@@ -8655,6 +8655,100 @@ async def get_total_revenue_breakdown(
             detail="Failed to fetch total revenue breakdown"
         )
 
+@api_router.get("/admin/profit/human-bot-commission-breakdown", response_model=dict)
+async def get_human_bot_commission_breakdown(
+    period: str = "month",  # day, week, month, all
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get detailed breakdown of Human-bot commission revenue."""
+    try:
+        # Calculate date filter based on period
+        now = datetime.now()
+        if period == "day":
+            start_date = now - timedelta(days=1)
+        elif period == "week":
+            start_date = now - timedelta(weeks=1)
+        elif period == "month":
+            start_date = now - timedelta(days=30)
+        else:  # "all"
+            start_date = None
+        
+        # Get commission from Human-bots
+        query = {"entry_type": "HUMAN_BOT_COMMISSION"}
+        if start_date:
+            query["created_at"] = {"$gte": start_date}
+        
+        human_bot_commission_entries = await db.profit_entries.find(query).to_list(None)
+        
+        # Group by Human-bot to show individual statistics
+        bot_breakdown = []
+        bot_totals = {}
+        
+        for entry in human_bot_commission_entries:
+            source_user_id = entry.get("source_user_id")
+            amount = entry.get("amount", 0)
+            
+            if source_user_id not in bot_totals:
+                # Get Human-bot info
+                human_bot = await db.human_bots.find_one({"id": source_user_id})
+                bot_name = human_bot.get("name", "Unknown Bot") if human_bot else "Unknown Bot"
+                
+                bot_totals[source_user_id] = {
+                    "name": bot_name,
+                    "total": 0,
+                    "count": 0,
+                    "games": []
+                }
+            
+            bot_totals[source_user_id]["total"] += amount
+            bot_totals[source_user_id]["count"] += 1
+            bot_totals[source_user_id]["games"].append({
+                "amount": amount,
+                "date": entry.get("created_at"),
+                "game_id": entry.get("reference_id"),
+                "description": entry.get("description", "")
+            })
+        
+        # Convert to breakdown format
+        for bot_id, data in bot_totals.items():
+            bot_breakdown.append({
+                "bot_id": bot_id,
+                "bot_name": data["name"],
+                "amount": data["total"],
+                "transactions": data["count"],
+                "avg_per_transaction": data["total"] / data["count"] if data["count"] > 0 else 0,
+                "games": data["games"]
+            })
+        
+        # Sort by total amount descending
+        bot_breakdown.sort(key=lambda x: x["amount"], reverse=True)
+        
+        # Calculate totals
+        total_amount = sum(entry.get("amount", 0) for entry in human_bot_commission_entries)
+        total_transactions = len(human_bot_commission_entries)
+        
+        return {
+            "success": True,
+            "period": period,
+            "total_amount": total_amount,
+            "total_transactions": total_transactions,
+            "avg_per_transaction": total_amount / total_transactions if total_transactions > 0 else 0,
+            "unique_bots": len(bot_breakdown),
+            "breakdown": bot_breakdown,
+            "summary": {
+                "top_earning_bot": bot_breakdown[0]["bot_name"] if bot_breakdown else None,
+                "top_earning_amount": bot_breakdown[0]["amount"] if bot_breakdown else 0,
+                "commission_rate": "3%"
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching Human-bot commission breakdown: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch Human-bot commission breakdown"
+        )
+
 @api_router.get("/admin/profit/expenses-details", response_model=dict)
 async def get_expenses_details(
     period: str = "month",  # day, week, month, all
