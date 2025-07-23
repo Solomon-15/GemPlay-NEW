@@ -1370,6 +1370,9 @@ def start_background_scheduler():
     
     # Start game timeout checker task
     asyncio.create_task(timeout_checker_task())
+    
+    # Clean up stuck games from previous runs
+    asyncio.create_task(cleanup_stuck_games())
 
 async def bot_automation_loop():
     """Run bot automation loop every 5 seconds."""
