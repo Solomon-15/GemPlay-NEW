@@ -4547,6 +4547,35 @@ async def reset_bot_bets(
             detail="Ошибка при сбросе ставок бота"
         )
 
+async def cleanup_stuck_games():
+    """Clean up games stuck in REVEAL status - run once on startup."""
+    try:
+        logger.info("🔧 Cleaning up stuck games in REVEAL status...")
+        
+        # Find all games stuck in REVEAL status
+        stuck_games = await db.games.find({
+            "status": GameStatus.REVEAL
+        }).to_list(1000)
+        
+        if not stuck_games:
+            logger.info("✅ No stuck games found")
+            return
+            
+        logger.info(f"🔧 Found {len(stuck_games)} stuck games in REVEAL status")
+        
+        for game_data in stuck_games:
+            try:
+                game_id = game_data["id"]
+                logger.info(f"🔧 Handling stuck game {game_id}")
+                await handle_game_timeout(game_id)
+            except Exception as e:
+                logger.error(f"❌ Error handling stuck game {game_data.get('id', 'unknown')}: {e}")
+        
+        logger.info("✅ Stuck games cleanup completed")
+        
+    except Exception as e:
+        logger.error(f"❌ Error in cleanup_stuck_games: {e}")
+
 async def timeout_checker_task():
     """Background task to check for game timeouts."""
     while True:
