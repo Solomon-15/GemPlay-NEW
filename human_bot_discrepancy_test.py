@@ -103,19 +103,16 @@ class HumanBotDiscrepancyInvestigator:
             )
             
             if response.status_code == 200:
-                data = response.json()
-                games = data.get("games", [])
+                games = response.json()  # API returns list directly
                 
                 # Count Human-bot games
                 human_bot_games = []
                 regular_games = []
                 
                 for game in games:
-                    creator_type = game.get("creator_type", "unknown")
-                    is_bot_game = game.get("is_bot_game", False)
-                    bot_type = game.get("bot_type")
+                    is_human_bot = game.get("is_human_bot", False)
                     
-                    if creator_type == "human_bot" or (is_bot_game and bot_type == "HUMAN"):
+                    if is_human_bot:
                         human_bot_games.append(game)
                     else:
                         regular_games.append(game)
@@ -128,23 +125,23 @@ class HumanBotDiscrepancyInvestigator:
                 # Show sample Human-bot games
                 print(f"\n📋 Sample Human-bot games (first 5):")
                 for i, game in enumerate(human_bot_games[:5]):
-                    print(f"   {i+1}. Game ID: {game.get('id', 'N/A')[:8]}...")
-                    print(f"      Creator ID: {game.get('creator_id', 'N/A')[:8]}...")
-                    print(f"      Creator Type: {game.get('creator_type', 'N/A')}")
-                    print(f"      Bot Type: {game.get('bot_type', 'N/A')}")
-                    print(f"      Status: {game.get('status', 'N/A')}")
+                    creator = game.get("creator", {})
+                    print(f"   {i+1}. Game ID: {game.get('game_id', 'N/A')[:8]}...")
+                    print(f"      Creator: {creator.get('username', 'N/A')} (ID: {creator.get('id', 'N/A')[:8]}...)")
+                    print(f"      Is Human Bot: {game.get('is_human_bot', 'N/A')}")
                     print(f"      Bet Amount: ${game.get('bet_amount', 'N/A')}")
+                    print(f"      Time Remaining: {game.get('time_remaining_hours', 'N/A'):.1f}h")
                 
                 self.investigation_results["lobby"] = {
                     "status": "success",
                     "total_games": len(games),
                     "human_bot_games": len(human_bot_games),
                     "regular_games": len(regular_games),
-                    "human_bot_game_ids": [g.get("id") for g in human_bot_games],
-                    "raw_data": data
+                    "human_bot_game_ids": [g.get("game_id") for g in human_bot_games],
+                    "raw_data": {"games": games}
                 }
                 
-                return data
+                return {"games": games}
             else:
                 print(f"❌ Lobby available games API failed: {response.status_code}")
                 print(f"   Response: {response.text}")
