@@ -8275,12 +8275,17 @@ def test_concurrent_games_functionality() -> None:
             record_test(test.__name__, False, f"Exception: {e}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY CONCURRENT GAMES TESTING")
-    print("Testing improved concurrent games logic and new /api/games/can-join endpoint as requested in the review")
+    print_header("GEMPLAY COMMISSION SYSTEM CHANGES TESTING")
+    print("Testing commission system changes as requested in the review:")
+    print("1. Commission rate change from 6% to 3%")
+    print("2. New profit entry type 'HUMAN_BOT_COMMISSION'")
+    print("3. New endpoint for Human-bot commissions")
+    print("4. Updated profit stats endpoint")
+    print("5. is_human_bot_user function")
     
     try:
-        # Test Concurrent Games Functionality (main focus of review request)
-        test_concurrent_games_functionality()
+        # Test Commission System Changes (main focus of review request)
+        test_commission_system_changes()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
