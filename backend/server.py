@@ -870,23 +870,45 @@ class HumanBotBehavior:
 
     @staticmethod
     def get_move_choice(character: HumanBotCharacter) -> GameMove:
-        """Выбор хода в зависимости от характера"""
+        """Выбор хода в зависимости от характера (расширенная стратегия)"""
         moves = [GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
         
-        if character == HumanBotCharacter.STABLE:
-            # Предпочитает камень (стабильность)
-            return random.choices(moves, weights=[0.5, 0.25, 0.25])[0]
-            
-        elif character == HumanBotCharacter.AGGRESSIVE:
-            # Предпочитает ножницы (агрессивность)
-            return random.choices(moves, weights=[0.25, 0.25, 0.5])[0]
+        if character == HumanBotCharacter.AGGRESSIVE:
+            # Агрессивные: предпочитают рискованные ходы (ножницы), атакующая стратегия
+            return random.choices(moves, weights=[0.2, 0.3, 0.5])[0]
             
         elif character == HumanBotCharacter.CAUTIOUS:
-            # Предпочитает бумагу (защита)
-            return random.choices(moves, weights=[0.25, 0.5, 0.25])[0]
+            # Осторожные: предпочитают "безопасный" камень, консервативная стратегия  
+            return random.choices(moves, weights=[0.6, 0.25, 0.15])[0]
+            
+        elif character == HumanBotCharacter.BALANCED:
+            # Сбалансированные: равномерное распределение
+            return random.choice(moves)
+            
+        elif character == HumanBotCharacter.IMPULSIVE:
+            # Импульсивные: полностью случайные, но с всплесками одного хода
+            if random.random() < 0.3:  # 30% шанс "зацикливания" на одном ходу
+                favorite_move = random.choice(moves)
+                return favorite_move
+            else:
+                return random.choice(moves)
+                
+        elif character == HumanBotCharacter.ANALYST:
+            # Аналитики: стратегия на основе "мета-анализа" - адаптивная стратегия
+            # Симулируем анализ предыдущих игр (пока используем взвешенную логику)
+            return random.choices(moves, weights=[0.35, 0.4, 0.25])[0]  # Чуть больше бумаги
+            
+        elif character == HumanBotCharacter.STABLE:
+            # Стабильные: предсказуемые паттерны, предпочитают камень
+            return random.choices(moves, weights=[0.5, 0.3, 0.2])[0]
+            
+        elif character == HumanBotCharacter.MIMIC:
+            # Мимики: пытаются копировать успешные стратегии (пока сбалансированно)
+            # В будущем можно добавить анализ успешных ходов других игроков
+            return random.choice(moves)
             
         else:
-            # Остальные используют равномерный выбор
+            # Default: сбалансированный подход
             return random.choice(moves)
 
     @staticmethod
