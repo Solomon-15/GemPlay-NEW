@@ -357,37 +357,254 @@ const HumanBotsManagement = () => {
     <div className="human-bots-management">
       <div className="bots-header">
         <h2>Управление Human-ботами</h2>
-        <div className="header-actions">
-          <button
-            className="btn-primary"
-            onClick={() => setShowCreateForm(true)}
-          >
-            + Создать бота
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => setShowBulkCreateForm(true)}
-          >
-            📦 Массовое создание
-          </button>
-          <button
-            className="btn-success"
-            onClick={() => handleToggleAll(true)}
-          >
-            ✅ Активировать всех
-          </button>
-          <button
-            className="btn-warning"
-            onClick={() => handleToggleAll(false)}
-          >
-            ⏸️ Деактивировать всех
-          </button>
-        </div>
       </div>
 
-      {/* Statistics */}
-      <div className="stats-grid">
-        <div className="stat-card">
+      {/* Табы */}
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
+        <div className="flex border-b border-border-primary">
+          <button
+            onClick={() => setActiveTab('bots')}
+            className={`flex-1 px-6 py-4 text-center font-rajdhani font-bold transition-colors ${
+              activeTab === 'bots'
+                ? 'bg-accent-primary text-white border-b-2 border-accent-primary'
+                : 'text-text-secondary hover:text-white hover:bg-surface-sidebar'
+            }`}
+          >
+            📋 Список ботов
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`flex-1 px-6 py-4 text-center font-rajdhani font-bold transition-colors ${
+              activeTab === 'settings'
+                ? 'bg-accent-primary text-white border-b-2 border-accent-primary'
+                : 'text-text-secondary hover:text-white hover:bg-surface-sidebar'
+            }`}
+          >
+            ⚙️ Настройки
+          </button>
+        </div>
+
+        {/* Содержимое табов */}
+        <div className="p-6">
+          {activeTab === 'bots' && (
+            <div className="space-y-6">
+              {/* Действия для ботов */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                <button
+                  className="btn-primary"
+                  onClick={() => setShowCreateForm(true)}
+                >
+                  + Создать бота
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => setShowBulkCreateForm(true)}
+                >
+                  📦 Массовое создание
+                </button>
+                <button
+                  className="btn-success"
+                  onClick={() => handleToggleAll(true)}
+                >
+                  ✅ Активировать всех
+                </button>
+                <button
+                  className="btn-warning"
+                  onClick={() => handleToggleAll(false)}
+                >
+                  ⏸️ Деактивировать всех
+                </button>
+              </div>
+
+              {/* Statistics */}
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <h3>Количество ботов</h3>
+                  <div className="stat-value">{stats.total_bots || 0}</div>
+                </div>
+                <div className="stat-card">
+                  <h3>Количество ставок</h3>
+                  <div className="stat-value">{stats.total_bets || 0}</div>
+                </div>
+                <div className="stat-card">
+                  <h3>Активные</h3>
+                  <div className="stat-value">{stats.active_bots || 0}</div>
+                </div>
+                <div className="stat-card">
+                  <h3>Игр за 24ч</h3>
+                  <div className="stat-value">{stats.total_games_24h || 0}</div>
+                </div>
+                <div className="stat-card">
+                  <h3>Доход за 24ч</h3>
+                  <div className="stat-value">{formatCurrency(stats.total_revenue_24h || 0)}</div>
+                </div>
+              </div>
+
+              {/* Filters */}
+              <div className="filters-section">
+                <div className="filter-group">
+                  <label>Характер:</label>
+                  <select 
+                    value={filters.character} 
+                    onChange={(e) => setFilters({...filters, character: e.target.value})}
+                  >
+                    <option value="">Все</option>
+                    {characters.map(char => (
+                      <option key={char.value} value={char.value}>
+                        {char.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="filter-group">
+                  <label>Статус:</label>
+                  <select 
+                    value={filters.is_active || ''} 
+                    onChange={(e) => setFilters({...filters, is_active: e.target.value === '' ? null : e.target.value === 'true'})}
+                  >
+                    <option value="">Все</option>
+                    <option value="true">Активные</option>
+                    <option value="false">Неактивные</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Human Bots List */}
+              <HumanBotsList 
+                onEditBot={(bot) => {
+                  setEditingBot(bot);
+                  setCreateFormData({
+                    name: bot.name || '',
+                    character: bot.character || 'BALANCED',
+                    min_bet: bot.min_bet || 1,
+                    max_bet: bot.max_bet || 100,
+                    bet_limit: bot.bet_limit || 12,
+                    win_percentage: bot.win_percentage || 40,
+                    loss_percentage: bot.loss_percentage || 40,
+                    draw_percentage: bot.draw_percentage || 20,
+                    min_delay: bot.min_delay || 30,
+                    max_delay: bot.max_delay || 120,
+                    use_commit_reveal: bot.use_commit_reveal !== undefined ? bot.use_commit_reveal : true,
+                    logging_level: bot.logging_level || 'INFO'
+                  });
+                  setShowCreateForm(true);
+                }}
+                onCreateBot={() => setShowCreateForm(true)}
+              />
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              {/* Настройки лимитов Human-ботов */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-green-600 rounded-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-rajdhani text-xl font-bold text-white">
+                        Глобальные настройки Human-ботов
+                      </h3>
+                      <p className="text-text-secondary font-roboto">
+                        Управление общими лимитами для всех Human-ботов
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {settingsLoading ? (
+                  <div className="text-center py-8">
+                    <div className="text-accent-primary text-2xl mb-2">⏳</div>
+                    <p className="text-text-secondary">Загрузка настроек...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Текущее использование */}
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <h4 className="font-rajdhani font-bold text-white mb-3">Текущее использование</h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center">
+                          <div className="text-accent-primary font-bold text-lg">
+                            {humanBotSettings.current_usage?.total_individual_limits || 0}
+                          </div>
+                          <div className="text-text-secondary text-sm">Использовано</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-white font-bold text-lg">
+                            {humanBotSettings.current_usage?.max_limit || 100}
+                          </div>
+                          <div className="text-text-secondary text-sm">Максимум</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-green-400 font-bold text-lg">
+                            {humanBotSettings.current_usage?.available || 0}
+                          </div>
+                          <div className="text-text-secondary text-sm">Доступно</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-orange-400 font-bold text-lg">
+                            {humanBotSettings.current_usage?.usage_percentage || 0}%
+                          </div>
+                          <div className="text-text-secondary text-sm">Использование</div>
+                        </div>
+                      </div>
+
+                      {/* Прогресс бар */}
+                      <div className="mt-4">
+                        <div className="bg-surface-primary rounded-full h-3 overflow-hidden">
+                          <div 
+                            className="bg-accent-primary h-full transition-all duration-300"
+                            style={{ 
+                              width: `${Math.min(humanBotSettings.current_usage?.usage_percentage || 0, 100)}%` 
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Настройка максимального лимита */}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block font-rajdhani font-bold text-white mb-2">
+                          Максимум активных ставок для всех Human-ботов
+                        </label>
+                        <div className="flex items-center space-x-4">
+                          <input
+                            type="number"
+                            min="1"
+                            max="1000"
+                            value={humanBotSettings.max_active_bets_human || 100}
+                            onChange={(e) => setHumanBotSettings({
+                              ...humanBotSettings,
+                              max_active_bets_human: parseInt(e.target.value) || 100
+                            })}
+                            className="flex-1 max-w-xs px-4 py-2 bg-surface-primary border border-border-primary rounded-lg text-white font-roboto"
+                            disabled={settingsSaving}
+                          />
+                          <button
+                            onClick={handleSaveSettings}
+                            disabled={settingsSaving}
+                            className="px-6 py-2 bg-accent-primary text-white rounded-lg hover:bg-opacity-80 transition-colors disabled:opacity-50"
+                          >
+                            {settingsSaving ? 'Сохранение...' : 'Сохранить'}
+                          </button>
+                        </div>
+                        <p className="text-text-secondary text-sm mt-2">
+                          💡 При уменьшении лимита индивидуальные лимиты ботов будут автоматически скорректированы пропорционально
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
           <h3>Количество ботов</h3>
           <div className="stat-value">{stats.total_bots || 0}</div>
         </div>
