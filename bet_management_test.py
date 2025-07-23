@@ -10,7 +10,7 @@ import hashlib
 from datetime import datetime, timedelta
 
 # Configuration
-BASE_URL = "https://08bcb831-c8d2-408d-a0c7-6d67d08ef8ad.preview.emergentagent.com/api"
+BASE_URL = "https://2627752d-501d-4a26-b2a7-e95c943e88cf.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
