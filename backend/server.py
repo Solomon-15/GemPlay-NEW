@@ -6063,6 +6063,8 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
         for game in games:
             # Get creator info (user or human bot)
             creator = await db.users.find_one({"id": game["creator_id"]})
+            is_human_bot_game = False
+            
             if not creator:
                 # Try to find as human bot
                 human_bot = await db.human_bots.find_one({"id": game["creator_id"]})
@@ -6072,8 +6074,14 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                         "username": human_bot["name"],
                         "gender": "male"  # Default gender for human bots
                     }
+                    is_human_bot_game = True
                 else:
                     continue
+            
+            # For regular user games: exclude current user's own games
+            # For Human-bot games: show ALL games (no exclusion)
+            if not is_human_bot_game and game["creator_id"] == current_user.id:
+                continue  # Skip user's own games, but allow all Human-bot games
                 
             # Calculate time remaining (24 hour limit)
             created_time = game["created_at"]
