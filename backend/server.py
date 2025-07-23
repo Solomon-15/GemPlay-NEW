@@ -6102,7 +6102,10 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                 "bet_gems": game["bet_gems"],
                 "created_at": game["created_at"],
                 "time_remaining_hours": time_remaining.total_seconds() / 3600,
-                "is_human_bot": game.get("creator_type") == "human_bot"  # Add flag for identification
+                "is_human_bot": (
+                    game.get("creator_type") == "human_bot" or
+                    (game.get("is_bot_game") == True and game.get("bot_type") == "HUMAN")
+                )  # Check both creator_type and bot_type for Human-bot identification
             })
         
         return result
