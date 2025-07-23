@@ -197,7 +197,7 @@ const HumanBotsManagement = () => {
   const handleSaveSettings = async () => {
     try {
       setSettingsSaving(true);
-      const response = await executeOperation('/admin/human-bots/settings', 'PUT', {
+      const response = await executeOperation('/admin/human-bots/update-settings', 'POST', {
         max_active_bets_human: humanBotSettings.max_active_bets_human
       });
       
