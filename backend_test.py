@@ -1168,6 +1168,277 @@ def test_human_bot_deletion_functionality() -> None:
     print_success("- Admin authorization is required")
     print_success("- Non-existent bot deletion returns HTTP 404")
 
+def test_timeout_checker_task_database_state() -> None:
+    """Test database state after timeout_checker_task fix as requested in the review:
+    1. Game statistics by status (WAITING, ACTIVE, REVEAL, COMPLETED, CANCELLED, TIMEOUT)
+    2. Human-bot bets count (only WAITING, ACTIVE, REVEAL statuses)
+    3. Available games through GET /api/games/available
+    4. Human-bot commission statistics
+    """
+    print_header("TIMEOUT CHECKER TASK DATABASE STATE TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with database state test")
+        record_test("Timeout Checker - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Get game statistics by status
+    print_subheader("Step 2: Game Statistics by Status")
+    
+    # We'll use a direct database query approach through available endpoints
+    # First, get all available games to understand current state
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if available_games_success and isinstance(available_games_response, list):
+        print_success(f"Found {len(available_games_response)} available games")
+        
+        # Count games by status and type
+        status_counts = {
+            "WAITING": 0,
+            "ACTIVE": 0,
+            "REVEAL": 0,
+            "COMPLETED": 0,
+            "CANCELLED": 0,
+            "TIMEOUT": 0
+        }
+        
+        human_bot_games = 0
+        regular_bot_games = 0
+        human_games = 0
+        
+        for game in available_games_response:
+            status = game.get("status", "UNKNOWN")
+            creator_type = game.get("creator_type", "unknown")
+            bot_type = game.get("bot_type", None)
+            
+            # Count by status
+            if status in status_counts:
+                status_counts[status] += 1
+            
+            # Count by creator type
+            if creator_type == "human_bot" or bot_type == "HUMAN":
+                human_bot_games += 1
+            elif creator_type == "bot" and bot_type == "REGULAR":
+                regular_bot_games += 1
+            elif creator_type == "user":
+                human_games += 1
+        
+        print_success("Game Statistics by Status:")
+        for status, count in status_counts.items():
+            print_success(f"  {status}: {count} games")
+        
+        print_success(f"\nGame Statistics by Creator Type:")
+        print_success(f"  Human-bot games: {human_bot_games}")
+        print_success(f"  Regular bot games: {regular_bot_games}")
+        print_success(f"  Human player games: {human_games}")
+        
+        # Check for stuck games in REVEAL status
+        if status_counts["REVEAL"] == 0:
+            print_success("✓ No games stuck in REVEAL status")
+            record_test("Timeout Checker - No Stuck REVEAL Games", True)
+        else:
+            print_warning(f"⚠ Found {status_counts['REVEAL']} games in REVEAL status")
+            record_test("Timeout Checker - No Stuck REVEAL Games", False, f"{status_counts['REVEAL']} games in REVEAL")
+        
+        record_test("Timeout Checker - Game Statistics", True)
+    else:
+        print_error("Failed to get available games")
+        record_test("Timeout Checker - Game Statistics", False, "Failed to get games")
+        return
+    
+    # Step 3: Human-bot active bets count
+    print_subheader("Step 3: Human-Bot Active Bets Count")
+    
+    # Get Human-bots list with active bets count
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=100",
+        auth_token=admin_token
+    )
+    
+    if human_bots_success and "bots" in human_bots_response:
+        human_bots = human_bots_response["bots"]
+        total_human_bots = len(human_bots)
+        total_active_bets = 0
+        active_human_bots = 0
+        
+        print_success(f"Found {total_human_bots} Human-bots in system")
+        
+        for bot in human_bots:
+            bot_name = bot.get("name", "Unknown")
+            is_active = bot.get("is_active", False)
+            active_bets_count = bot.get("active_bets_count", 0)
+            bet_limit = bot.get("bet_limit", 12)
+            
+            if is_active:
+                active_human_bots += 1
+            
+            total_active_bets += active_bets_count
+            
+            print_success(f"  {bot_name}: {active_bets_count}/{bet_limit} active bets (Active: {is_active})")
+        
+        print_success(f"\nHuman-Bot Summary:")
+        print_success(f"  Total Human-bots: {total_human_bots}")
+        print_success(f"  Active Human-bots: {active_human_bots}")
+        print_success(f"  Total active bets: {total_active_bets}")
+        
+        # Compare with available games count
+        if human_bot_games <= total_active_bets:
+            print_success(f"✓ Available Human-bot games ({human_bot_games}) ≤ Total active bets ({total_active_bets})")
+            record_test("Timeout Checker - Human-Bot Bets Consistency", True)
+        else:
+            print_error(f"✗ Available Human-bot games ({human_bot_games}) > Total active bets ({total_active_bets})")
+            record_test("Timeout Checker - Human-Bot Bets Consistency", False, "Inconsistent counts")
+        
+        record_test("Timeout Checker - Human-Bot Active Bets", True)
+    else:
+        print_error("Failed to get Human-bots list")
+        record_test("Timeout Checker - Human-Bot Active Bets", False, "Failed to get Human-bots")
+    
+    # Step 4: Check available games endpoint specifically
+    print_subheader("Step 4: Available Games Endpoint Verification")
+    
+    # Test the endpoint multiple times to check consistency
+    consistent_results = True
+    game_counts = []
+    
+    for i in range(3):
+        games_response, games_success = make_request(
+            "GET", "/games/available",
+            auth_token=admin_token
+        )
+        
+        if games_success and isinstance(games_response, list):
+            game_count = len(games_response)
+            game_counts.append(game_count)
+            print_success(f"  Check {i+1}: {game_count} available games")
+        else:
+            consistent_results = False
+            print_error(f"  Check {i+1}: Failed to get games")
+        
+        if i < 2:  # Don't sleep after last check
+            time.sleep(2)
+    
+    if consistent_results and len(set(game_counts)) <= 2:  # Allow for minor variations
+        avg_games = sum(game_counts) / len(game_counts)
+        print_success(f"✓ Available games endpoint consistent (avg: {avg_games:.1f} games)")
+        record_test("Timeout Checker - Available Games Consistency", True)
+    else:
+        print_error(f"✗ Available games endpoint inconsistent: {game_counts}")
+        record_test("Timeout Checker - Available Games Consistency", False, f"Counts: {game_counts}")
+    
+    # Step 5: Human-bot commission statistics
+    print_subheader("Step 5: Human-Bot Commission Statistics")
+    
+    # Get Human-bot statistics
+    human_bot_stats_response, human_bot_stats_success = make_request(
+        "GET", "/admin/human-bots/stats",
+        auth_token=admin_token
+    )
+    
+    if human_bot_stats_success:
+        print_success("✓ Human-bot statistics endpoint accessible")
+        
+        # Extract key statistics
+        total_bots = human_bot_stats_response.get("total_bots", 0)
+        active_bots = human_bot_stats_response.get("active_bots", 0)
+        total_games_24h = human_bot_stats_response.get("total_games_24h", 0)
+        total_bets = human_bot_stats_response.get("total_bets", 0)
+        total_revenue_24h = human_bot_stats_response.get("total_revenue_24h", 0)
+        
+        print_success(f"  Total Human-bots: {total_bots}")
+        print_success(f"  Active Human-bots: {active_bots}")
+        print_success(f"  Games in 24h: {total_games_24h}")
+        print_success(f"  Total bets: {total_bets}")
+        print_success(f"  Revenue in 24h: ${total_revenue_24h}")
+        
+        # Check if statistics are reasonable
+        if total_bots > 0 and active_bots <= total_bots:
+            print_success("✓ Bot counts are reasonable")
+            record_test("Timeout Checker - Human-Bot Stats Reasonable", True)
+        else:
+            print_error(f"✗ Bot counts unreasonable: total={total_bots}, active={active_bots}")
+            record_test("Timeout Checker - Human-Bot Stats Reasonable", False, "Unreasonable counts")
+        
+        record_test("Timeout Checker - Human-Bot Statistics", True)
+    else:
+        print_error("Failed to get Human-bot statistics")
+        record_test("Timeout Checker - Human-Bot Statistics", False, "Stats endpoint failed")
+    
+    # Get commission breakdown
+    commission_response, commission_success = make_request(
+        "GET", "/admin/profit/human-bot-commission-breakdown?period=24h",
+        auth_token=admin_token
+    )
+    
+    if commission_success:
+        print_success("✓ Human-bot commission breakdown accessible")
+        
+        total_commission = commission_response.get("total_commission", 0)
+        commission_rate = commission_response.get("commission_rate", "unknown")
+        
+        print_success(f"  Total commission: ${total_commission}")
+        print_success(f"  Commission rate: {commission_rate}")
+        
+        # Verify commission rate is 3%
+        if commission_rate == "3%":
+            print_success("✓ Commission rate correctly set to 3%")
+            record_test("Timeout Checker - Commission Rate 3%", True)
+        else:
+            print_error(f"✗ Commission rate is {commission_rate}, expected 3%")
+            record_test("Timeout Checker - Commission Rate 3%", False, f"Rate: {commission_rate}")
+        
+        record_test("Timeout Checker - Commission Breakdown", True)
+    else:
+        print_error("Failed to get commission breakdown")
+        record_test("Timeout Checker - Commission Breakdown", False, "Breakdown endpoint failed")
+    
+    # Step 6: Overall system health check
+    print_subheader("Step 6: Overall System Health Check")
+    
+    # Check if timeout checker task has resolved stuck games
+    health_indicators = {
+        "no_stuck_reveal_games": status_counts.get("REVEAL", 0) == 0,
+        "human_bot_bets_consistent": human_bot_games <= total_active_bets if 'total_active_bets' in locals() else False,
+        "available_games_stable": consistent_results,
+        "commission_rate_correct": commission_rate == "3%" if 'commission_rate' in locals() else False,
+        "statistics_accessible": human_bot_stats_success
+    }
+    
+    healthy_indicators = sum(health_indicators.values())
+    total_indicators = len(health_indicators)
+    
+    print_success(f"System Health Score: {healthy_indicators}/{total_indicators}")
+    
+    for indicator, status in health_indicators.items():
+        status_symbol = "✓" if status else "✗"
+        print_success(f"  {status_symbol} {indicator.replace('_', ' ').title()}: {'PASS' if status else 'FAIL'}")
+    
+    if healthy_indicators >= total_indicators * 0.8:  # 80% threshold
+        print_success("✓ Overall system health is GOOD")
+        record_test("Timeout Checker - Overall System Health", True)
+    else:
+        print_error(f"✗ Overall system health is POOR ({healthy_indicators}/{total_indicators})")
+        record_test("Timeout Checker - Overall System Health", False, f"Score: {healthy_indicators}/{total_indicators}")
+    
+    # Summary
+    print_subheader("Timeout Checker Task Database State Test Summary")
+    print_success("Database state verification completed after timeout_checker_task fix")
+    print_success("Key findings:")
+    print_success(f"- Games by status: WAITING={status_counts.get('WAITING', 0)}, ACTIVE={status_counts.get('ACTIVE', 0)}, REVEAL={status_counts.get('REVEAL', 0)}")
+    print_success(f"- COMPLETED={status_counts.get('COMPLETED', 0)}, CANCELLED={status_counts.get('CANCELLED', 0)}, TIMEOUT={status_counts.get('TIMEOUT', 0)}")
+    print_success(f"- Human-bot games: {human_bot_games} available, {total_active_bets if 'total_active_bets' in locals() else 'N/A'} total active bets")
+    print_success(f"- Commission rate: {commission_rate if 'commission_rate' in locals() else 'N/A'}")
+    print_success(f"- System health: {healthy_indicators}/{total_indicators} indicators passing")
+
 def test_commission_system_changes() -> None:
     """Test the commission system changes as requested in the review:
     1. Commission rate change from 6% to 3%
