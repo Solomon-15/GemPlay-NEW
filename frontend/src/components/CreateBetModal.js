@@ -28,7 +28,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   // Constants
   const MIN_BET = 1;
   const MAX_BET = 3000;
-  const COMMISSION_RATE = 0.06; // 6%
+  const COMMISSION_RATE = 0.03; // 3%
   
   const moves = [
     { id: 'rock', name: 'Rock', icon: '/Rock.svg' },
