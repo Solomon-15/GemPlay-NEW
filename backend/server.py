@@ -10012,7 +10012,7 @@ async def get_all_bets(
                 "bet_gems": game.get("bet_gems", {}),
                 "opponent_gems": game.get("opponent_gems", {}),
                 "winner_id": game.get("winner_id"),
-                "commission_amount": game.get("commission_amount", game.get("bet_amount", 0) * 0.06),
+                "commission_amount": game.get("commission_amount", game.get("bet_amount", 0) * 0.03),
                 "age_hours": round(bet_age_hours, 1),
                 "is_stuck": bet_age_hours > 24 and game.get("status") in ["WAITING", "ACTIVE", "REVEAL"],
                 "can_cancel": game.get("status") == "WAITING",
