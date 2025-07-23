@@ -1,101 +1,98 @@
 <analysis>
-The AI engineer's work trajectory details several phases of application development and bug fixing. Initially, a critical bug in the Human-bot active bets modal, displaying zero amounts, was resolved by correcting backend data retrieval (). Following this, an issue with concurrent games errors was addressed by improving error messaging and adding a diagnostic endpoint, though the original bug wasn't fully reproduced. The most significant phase involved a comprehensive overhaul of the commission system, changing the rate from 6% to 3%, introducing a distinct  type, and updating both backend calculations () and frontend UI (, ). Most recently, the focus shifted to a discrepancy between Human-bot bet counts in the admin panel and the lobby. This was diagnosed as a missing  in  startup, leading to stuck REVEAL games, and later, an inconsistent filtering/counting logic for  bets between the backend and frontend. The engineer fixed the timeout task, implemented a cleanup function for stuck games, and aligned the bet counting logic across the admin panel and lobby by modifying  and  to ensure only  bets are counted and displayed consistently. The trajectory concludes with the full resolution and verification of this bet counting synchronization issue.
+The AI engineer's work, initially focused on critical bug fixes and feature enhancements, transitioned to addressing new product requirements. The preceding phase involved resolving a long-standing discrepancy in Human-bot bet counts between the admin panel and the lobby, ensuring only 'WAITING' bets were consistently displayed. This was achieved by fixing a missing  in , implementing a cleanup for stuck games, and aligning filtering logic in  and . With that resolved, the work shifted to new user-requested features: adding numbering columns to bot lists and active bet modals (for both Human and Regular bots), correcting the Total sum in the Human-bot active bets modal, and implementing an extensive Human-bot auto-play system with global and individual settings for inter-bot game creation, including random bet amounts and play frequency. The engineer has begun implementing the numbering and sum fixes, making several edits to frontend components like , , and , and is now investigating the global settings for Human-bot auto-play.
 </analysis>
 
 <product_requirements>
-The GemPlay application simulates an asynchronous PvP gem betting game, designed for platform revenue showcase. It features Human-bots with configurable betting limits, probabilistic outcomes with commission, player masking, and comprehensive admin panel management. Key investor KPIs are crucial. Recent enhancements included styled Human-bot list blocks, active bet count modals, bet limits, an edit feature, total bets statistics, a tabbed admin panel, global active bet limits, and bet sum generation influenced by bot character.
+The GemPlay application is an asynchronous PvP gem betting game designed to showcase platform revenue. It features configurable Human-bots with betting limits, probabilistic outcomes, commission, and player masking. Investor KPIs are crucial. Previous work included styling, active bet modals, bet limits, an edit feature, total bets statistics, a tabbed admin panel, global active bet limits, and bet sum generation based on bot character.
 
-The latest core requirements were a commission system overhaul:
-1.  **Commission Rate**: Changed from 6% to 3% for human players and Human-bots.
-2.  **Commission Retention**: Retained on win/loss; returned on a draw. Regular bots have no commission.
-3.  **Admin Panel Display**: 3% human commission under Комиссия от ставок, 3% Human-bot commission under a *new* Комиссия от Human-ботов tab. Profit from Regular Bots goes to Доход от ботов.
-4.  **UI Updates**: All UI/admin panel texts mentioning 6% must update to 3%.
+Recent core requirements:
+1.  **Commission System Overhaul**:
+    *   Reduced commission rate from 6% to 3% for human players and Human-bots.
+    *   Commission is retained on win/loss, returned on a draw (Regular bots have no commission).
+    *   Admin Panel Display: 3% human commission under Комиссия от ставок, a *new* Комиссия от Human-ботов tab for Human-bot commission. Profit from Regular Bots goes to Доход от ботов.
+    *   UI Updates: All UI/admin panel texts mentioning 6% changed to 3%.
+2.  **Bet Count Consistency**: Admin panel's Количество ставок for Human-bots and Available Bets in the Lobby must display identical counts, showing *only*  status bets.
 
-A subsequent critical requirement focused on bet count consistency:
--   In the Human bots admin panel, Количество ставок and Available Bets in the Lobby must display identical counts, specifically showing only **WAITING** status bets.
+New requirements (post previous work resolution):
+3.  **UI Numbering**: Add a № (Number) column to Human bots and Regular bots lists in the Admin Panel. Add a № column to Active bets modals for both Human and Regular bots, with numbering starting from 1, continuous, and recalculating on sort.
+4.  **Human-bot Total Bet Sum Fix**: Correct the Общая сумма (Total sum) in the Active bets modal for Human bots to display the total sum of *all* bets for that specific bot.
+5.  **Human-bot Auto-play**:
+    *   Human-bots should randomly create games with other Human-bots, with a random delay between 1 second and 1 hour after game completion (this range is a global, configurable parameter).
+    *   Bet amount for auto-created games should be random within the bot's configured  -  range.
+    *   Human-bots have unlimited funds.
+    *   Global toggle (enable/disable inter-bot play) in Управление Human-ботами → Настройки (in a new block/section).
+    *   Individual checkbox for inter-bot play during bot creation (Создать Human-бота modal).
+    *   New column Играть друг с другом (Play with each other) with a checkbox in the Список Human ботов table.
 </product_requirements>
 
 <key_technical_concepts>
--   **React.js**: Frontend UI development for components like , , .
--   **FastAPI**: Backend RESTful API framework for game logic, data handling in .
--   **MongoDB**: NoSQL database used for persistent storage of game data, users, and profit entries.
--   **Pydantic**: Data validation and serialization for API models and schemas.
--   **Supervisor**: Process manager used to control and run backend (FastAPI) and frontend (React) services.
+-   **React.js**: Frontend development for UI components and interactive elements.
+-   **FastAPI**: Python backend framework for API endpoints and business logic.
+-   **MongoDB**: NoSQL database for data persistence and management.
+-   **Pydantic**: Data validation and serialization for API request/response models.
+-   **Supervisor**: Process management for running backend and frontend services.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a MERN-stack variant: MongoDB, FastAPI, and React.
+The application utilizes a MERN-stack variant, combining MongoDB, FastAPI, and React.
 
 
 
--   : The core FastAPI backend.
-    -   **Importance**: Handles all API routes, game mechanics (creation, joining, completion), user/bot management, and profit calculations, interacting directly with MongoDB.
+-   : The central FastAPI backend application.
+    -   **Importance**: Manages all API routes, game operations (creation, joining, completion), user and bot administration, and profit calculations, interacting directly with MongoDB.
     -   **Changes**:
-        *   **Initial Bet Amount Fix**: Modified  retrieval in  endpoints.
-        *   **Concurrent Games Fix**: Enhanced  and error messages. Added  endpoint.
-        *   **Commission Overhaul**: Replaced  with  commission rate. Introduced  and  profit entry type in . Added , updated  and . Corrected  to .
-        *   **Game Timeout & Bet Consistency Fixes**:
-            *   Added  to the  function (line 1369) to ensure automatic game completion.
-            *   Introduced  function (lines 4572-4649) to forcefully complete games stuck in REVEAL status and added its call to .
-            *   Modified  (lines 15766-15778) to count only games in  status.
-            *   Modified  calculation within  (lines 16457-16463) to count only games in  status.
-            *   Updated  endpoint (line 6051) logic:
-                *   Removed the limit of 50 games.
-                *   Removed the exclusion of current user's own games ().
-                *   Ensured , ,  fields are returned in the API response.
-                *   Adjusted internal filtering to correctly identify human-bot games while still excluding non-human-bot games.
+        *   Fixed  retrieval in .
+        *   Improved  and added .
+        *   Commission overhaul: changed  to , introduced  and  in , updated profit endpoints (, , ), and corrected  to .
+        *   Game timeout & Bet Consistency Fixes:
+            *   Added  to .
+            *   Implemented and called .
+            *   Modified  to count only  games.
+            *   Modified  calculation in  to count only  games.
+            *   Updated  endpoint: removed limit of 50 and current user exclusion, ensured , ,  fields are returned, and adjusted internal filtering.
 -   : React component for the admin panel's profit section.
     -   **Importance**: Displays revenue, commission breakdowns, and historical profit data.
-    -   **Changes**: Added  as a new category with  color, updated tab rendering and modal logic () to support the new commission type.
+    -   **Changes**: Added  category with  color, updated tab rendering and modal logic for the new commission type.
 -   : Displays active bets for a human-bot.
-    -   **Importance**: Visualizes the detailed Amount for bets.
-    -   **Changes**: No direct code changes, but backend fixes to  directly impacted its displayed Amount column.
+    -   **Importance**: Visualizes detailed bet information for a specific Human-bot.
+    -   **Changes**: Backend fixes to  improved the displayed Amount column. The AI engineer made recent edits to potentially add the № column and fix the Общая сумма display.
 -   : Frontend utility for API calls.
-    -   **Importance**: Centralizes API communication.
+    -   **Importance**: Centralizes API communication logic.
     -   **Changes**: Updated textual descriptions from 6% to 3% commission.
 -   : React component for the main game lobby.
-    -   **Importance**: Displays available games (), ongoing battles, and allows users to join games.
-    -   **Changes**:
-        *   Added state for  and  filters.
-        *   Modified data fetching and rendering logic to properly categorize games into Available Bets (WAITING status) and Ongoing Battles (ACTIVE/REVEAL status).
-        *   Implemented a filtering function for available bets based on /.
-        *   Added filter input components to the UI for Available Bets section.
-        *   Removed hardcoded limits and user-specific exclusions from the fetched data logic to align with backend changes, ensuring all WAITING Human-bot games are displayed.
+    -   **Importance**: Displays available games and ongoing battles for users to join.
+    -   **Changes**: Added / state and filters, modified data fetching to categorize games into Available Bets (WAITING) and Ongoing Battles (ACTIVE/REVEAL), removed hardcoded limits and user-specific exclusions to align with backend changes, and added filter input components.
 -   : Component for displaying individual game cards in the lobby.
-    -   **Importance**: Renders game details and interactive buttons (e.g., Accept, In the game).
-    -   **Changes**: Updated button rendering logic to display In the game for games in  or  status, and Accept for  status games, ensuring correct UI based on game state.
--   : Markdown file tracking testing results and user problem statements.
+    -   **Importance**: Renders game details and interactive buttons.
+    -   **Changes**: Updated button rendering logic to display In the game for / status and Accept for  status.
+-   : Component displaying the list of Human-bots in the admin panel.
+    -   **Importance**: Allows management and overview of Human-bots.
+    -   **Changes**: Recently modified by the AI engineer to add the № (Number) column as per new requirements.
+-   : Component displaying the list of Regular bots in the admin panel.
+    -   **Importance**: Allows management and overview of Regular bots.
+    -   **Changes**: Recently modified by the AI engineer to add the № (Number) column as per new requirements.
+-   : Markdown file for tracking testing results and problem statements.
     -   **Importance**: Records test outcomes and critical user feedback/diagnoses.
-    -   **Changes**: Updated with detailed summaries of backend and frontend testing, confirming fixes for bet amount, commission system, and consistency of bet counts/game statuses.
+    -   **Changes**: Updated with detailed summaries of backend and frontend testing, confirming fixes for bet amount, commission system, and consistency of bet counts/game statuses. Will be updated with new feature testing.
 </code_architecture>
 
 <pending_tasks>
-The trajectory concludes with the full resolution of the last identified problem regarding bet count consistency (ОТЛИЧНО! ЗАДАЧА ПОЛНОСТЬЮ РЕШЕНА!). Therefore, there are no explicitly pending tasks from the previous AI engineer in the provided trajectory.
+-   Continue implementing № (Number) columns in the Active bets modal for Human and Regular bots.
+-   Implement the Human-bot auto-play feature, including global settings, individual bot settings, random bet amount generation, and opponent selection.
+-   Add the Играть друг с другом (Play with each other) column in the Список Human ботов table.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was addressing a critical discrepancy in bet counting: the admin panel's Количество ставок for Human-bots showed a much higher number (e.g., 121-124) than Available Bets in the Lobby (e.g., 45), despite the user's requirement for them to be identical and represent only  bets.
+Immediately before this summary request, the AI engineer was implementing the new UI enhancements requested by the user. Specifically, the focus was on adding numbering columns to bot lists and active bets modals, and correcting the Total sum display in the Human-bot active bets modal.
 
-The core issues identified were:
-1.  **Stuck Games**: The  responsible for completing games was not being launched at backend startup, causing games to remain perpetually in the  status, inflating counts.
-2.  **Incorrect Bet Counting in Admin Panel**: The  and  in the admin panel were counting , , or even  games, instead of strictly  games as required.
-3.  **Lobby Filtering/Inconsistency**: The  endpoint used by the lobby was applying a limit (50 games) and excluding the current user's own games, and was not returning all necessary fields (, , ) in its response, leading to misidentification of Human-bot games in the frontend.
+The following actions confirm the ongoing work:
+-   Multiple successful edits were performed on  and , indicating the addition of the № (Number) column to these bot lists.
+-   An edit was successfully made to  to replace the total bet amount calculation, addressing the Общая сумма (Total sum) fix for Human-bot active bets modal. The subsequent ESLint error and fix attempt in  also suggest active UI work.
+-   The engineer used  to search for components related to активные ставки (active bets) and Настройки Human (Human settings), showing they were investigating relevant frontend files for both the numbering in active bets modals and the upcoming global settings for Human-bot auto-play.
 
-To resolve this, the AI engineer made the following changes:
--   **Backend ():**
-    -   Ensured  is launched at application .
-    -   Implemented and called  to resolve existing stuck games.
-    -   Corrected  and  to count *only*  status Human-bot games.
-    -   Modified  to remove the 50-game limit and the exclusion of the user's own games, ensuring all  games are returned.
-    -   Ensured the  response explicitly includes , , and  fields.
--   **Frontend (, ):**
-    -   Updated  to process and display all available  games from the backend without client-side filtering that would reduce the count.
-    -   Added UI filters (min/max bet amount) in the  component.
-    -   Modified  to correctly display In the game for  or  games and Accept for  games.
-
-The work culminated in successful backend and frontend testing, confirming that the admin panel and lobby now display identical counts for  Human-bot bets, and that games transition correctly between statuses. The current state is that this specific consistency issue is fully resolved and validated.
+The current state is that the initial UI numbering and Total sum fixes are in progress, with significant edits already made to the relevant frontend React components. The engineer has started identifying the location for implementing the new global settings for Human-bot auto-play.
 </current_work>
 
 <optional_next_step>
-The trajectory concludes with the explicit statement that the task is ПОЛНОСТЬЮ РЕШЕНА! (FULLY RESOLVED!). Therefore, no optional next steps are identified from the previous engineer's work.
+The next step is to continue implementing the remaining numbering columns in the active bets modals and then proceed with the Human-bot auto-play feature development.
 </optional_next_step>

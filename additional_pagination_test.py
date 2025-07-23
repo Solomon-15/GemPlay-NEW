@@ -6,7 +6,7 @@ Tests specific edge cases and metadata format validation
 import requests
 import json
 
-BASE_URL = "https://8e080f25-8919-4bb5-9f98-8dbf560b5d39.preview.emergentagent.com/api"
+BASE_URL = "https://08bcb831-c8d2-408d-a0c7-6d67d08ef8ad.preview.emergentagent.com/api"
 ADMIN_USER = {"email": "admin@gemplay.com", "password": "Admin123!"}
 
 def login_admin():
