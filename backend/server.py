@@ -4831,7 +4831,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 else:
                     # Normal human vs human game with commission
                     # ПРАВИЛЬНАЯ ЛОГИКА: Просто списываем комиссию из frozen_balance как плату за игру
-                    commission_to_deduct = game.bet_amount * 0.06  # 6% от ставки победителя
+                    commission_to_deduct = game.bet_amount * 0.03  # 3% от ставки победителя
                     
                     new_winner_frozen = winner["frozen_balance"] - commission_to_deduct
                     new_winner_balance = winner["virtual_balance"]  # virtual_balance не изменяется
