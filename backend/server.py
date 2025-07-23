@@ -8397,7 +8397,7 @@ async def get_bot_revenue_details(
             if start_date:
                 query["created_at"] = {"$gte": start_date}
             
-            profit_entries = await db.profit_history.find(query).to_list(None)
+            profit_entries = await db.profit_entries.find(query).to_list(None)
             
             for entry in profit_entries:
                 bot_revenue += entry.get("amount", 0)
