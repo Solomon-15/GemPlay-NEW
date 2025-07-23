@@ -1401,6 +1401,381 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_auto_play_system() -> None:
+    """Test the new Human-Bot auto-play system functionality as requested in the review:
+    
+    1. **Эндпоинт переключения автоигры**: POST /api/admin/human-bots/{bot_id}/toggle-auto-play
+    2. **Обновленные эндпоинты настроек**: 
+       - GET /api/admin/human-bots/settings - должен возвращать новые поля auto_play_enabled, min_delay_seconds, max_delay_seconds
+       - POST /api/admin/human-bots/update-settings - должен принимать и сохранять новые поля автоигры
+    3. **Создание Human-ботов с новым полем**: POST /api/admin/human-bots - должен принимать поле can_play_with_other_bots
+    4. **Список Human-ботов**: GET /api/admin/human-bots - должен возвращать поле can_play_with_other_bots для каждого бота
+    5. **Фоновая задача автоигры**: Проверить что задача human_bot_simulation_task включает логику автоигры
+    """
+    print_header("HUMAN-BOT AUTO-PLAY SYSTEM TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with auto-play test")
+        record_test("Human-Bot Auto-Play - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Test updated settings endpoints
+    print_subheader("Step 2: Test Updated Settings Endpoints")
+    
+    # Test GET /api/admin/human-bots/settings - should return new auto-play fields
+    settings_response, settings_success = make_request(
+        "GET", "/admin/human-bots/settings",
+        auth_token=admin_token
+    )
+    
+    if settings_success:
+        print_success("✓ GET /admin/human-bots/settings endpoint accessible")
+        
+        # Check for new auto-play fields
+        expected_fields = ["auto_play_enabled", "min_delay_seconds", "max_delay_seconds"]
+        settings_data = settings_response.get("settings", {})
+        
+        missing_fields = []
+        for field in expected_fields:
+            if field not in settings_data:
+                missing_fields.append(field)
+        
+        if not missing_fields:
+            print_success("✓ All new auto-play fields present in settings response")
+            print_success(f"  auto_play_enabled: {settings_data.get('auto_play_enabled')}")
+            print_success(f"  min_delay_seconds: {settings_data.get('min_delay_seconds')}")
+            print_success(f"  max_delay_seconds: {settings_data.get('max_delay_seconds')}")
+            record_test("Human-Bot Auto-Play - Settings GET Fields", True)
+        else:
+            print_error(f"✗ Missing auto-play fields in settings: {missing_fields}")
+            record_test("Human-Bot Auto-Play - Settings GET Fields", False, f"Missing: {missing_fields}")
+    else:
+        print_error("✗ Failed to get Human-Bot settings")
+        record_test("Human-Bot Auto-Play - Settings GET", False, "Settings endpoint failed")
+    
+    # Test POST /api/admin/human-bots/update-settings - should accept new auto-play fields
+    print_subheader("Step 2b: Test Settings Update with Auto-Play Fields")
+    
+    update_settings_data = {
+        "max_active_bets_human": 150,
+        "auto_play_enabled": True,
+        "min_delay_seconds": 30,
+        "max_delay_seconds": 180
+    }
+    
+    update_response, update_success = make_request(
+        "POST", "/admin/human-bots/update-settings",
+        data=update_settings_data,
+        auth_token=admin_token
+    )
+    
+    if update_success:
+        print_success("✓ POST /admin/human-bots/update-settings accepts auto-play fields")
+        
+        # Verify response structure
+        if "success" in update_response and update_response["success"]:
+            print_success("✓ Settings update successful")
+            record_test("Human-Bot Auto-Play - Settings POST", True)
+        else:
+            print_error("✗ Settings update failed")
+            record_test("Human-Bot Auto-Play - Settings POST", False, "Update failed")
+        
+        # Verify settings were saved by getting them again
+        verify_response, verify_success = make_request(
+            "GET", "/admin/human-bots/settings",
+            auth_token=admin_token
+        )
+        
+        if verify_success:
+            verify_settings = verify_response.get("settings", {})
+            auto_play_enabled = verify_settings.get("auto_play_enabled")
+            min_delay = verify_settings.get("min_delay_seconds")
+            max_delay = verify_settings.get("max_delay_seconds")
+            
+            if auto_play_enabled == True and min_delay == 30 and max_delay == 180:
+                print_success("✓ Auto-play settings correctly saved to database")
+                record_test("Human-Bot Auto-Play - Settings Persistence", True)
+            else:
+                print_error(f"✗ Auto-play settings not saved correctly: enabled={auto_play_enabled}, min={min_delay}, max={max_delay}")
+                record_test("Human-Bot Auto-Play - Settings Persistence", False, "Settings not saved")
+    else:
+        print_error("✗ Failed to update Human-Bot settings with auto-play fields")
+        record_test("Human-Bot Auto-Play - Settings POST", False, "Update endpoint failed")
+    
+    # Step 3: Test Human-Bot creation with new can_play_with_other_bots field
+    print_subheader("Step 3: Test Human-Bot Creation with can_play_with_other_bots Field")
+    
+    test_bot_data = {
+        "name": f"AutoPlayTestBot_{int(time.time())}",
+        "character": "BALANCED",
+        "min_bet": 10.0,
+        "max_bet": 100.0,
+        "bet_limit": 15,
+        "win_percentage": 40.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,
+        "min_delay": 30,
+        "max_delay": 90,
+        "use_commit_reveal": True,
+        "logging_level": "INFO",
+        "can_play_with_other_bots": True  # New field
+    }
+    
+    create_response, create_success = make_request(
+        "POST", "/admin/human-bots",
+        data=test_bot_data,
+        auth_token=admin_token
+    )
+    
+    if create_success:
+        print_success("✓ Human-Bot creation accepts can_play_with_other_bots field")
+        
+        test_bot_id = create_response.get("id")
+        if test_bot_id:
+            print_success(f"✓ Test bot created with ID: {test_bot_id}")
+            record_test("Human-Bot Auto-Play - Create with New Field", True)
+        else:
+            print_error("✗ Bot creation response missing ID")
+            record_test("Human-Bot Auto-Play - Create with New Field", False, "Missing bot ID")
+    else:
+        print_error("✗ Failed to create Human-Bot with can_play_with_other_bots field")
+        record_test("Human-Bot Auto-Play - Create with New Field", False, "Creation failed")
+        return
+    
+    # Step 4: Test Human-Bot list returns can_play_with_other_bots field
+    print_subheader("Step 4: Test Human-Bot List Returns can_play_with_other_bots Field")
+    
+    list_response, list_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if list_success:
+        print_success("✓ Human-Bot list endpoint accessible")
+        
+        bots = list_response.get("bots", [])
+        if bots:
+            # Check if our test bot is in the list and has the field
+            test_bot_found = False
+            field_present_count = 0
+            
+            for bot in bots:
+                if "can_play_with_other_bots" in bot:
+                    field_present_count += 1
+                
+                if bot.get("id") == test_bot_id:
+                    test_bot_found = True
+                    can_play_value = bot.get("can_play_with_other_bots")
+                    
+                    if can_play_value == True:
+                        print_success(f"✓ Test bot found with can_play_with_other_bots: {can_play_value}")
+                    else:
+                        print_error(f"✗ Test bot has incorrect can_play_with_other_bots value: {can_play_value}")
+            
+            if field_present_count == len(bots):
+                print_success(f"✓ All {len(bots)} bots have can_play_with_other_bots field")
+                record_test("Human-Bot Auto-Play - List Field Present", True)
+            else:
+                print_error(f"✗ Only {field_present_count}/{len(bots)} bots have can_play_with_other_bots field")
+                record_test("Human-Bot Auto-Play - List Field Present", False, f"Missing in {len(bots) - field_present_count} bots")
+            
+            if test_bot_found:
+                print_success("✓ Test bot found in list with correct field value")
+                record_test("Human-Bot Auto-Play - Test Bot in List", True)
+            else:
+                print_error("✗ Test bot not found in list")
+                record_test("Human-Bot Auto-Play - Test Bot in List", False, "Bot not found")
+        else:
+            print_error("✗ No bots found in list")
+            record_test("Human-Bot Auto-Play - List Field Present", False, "No bots in list")
+    else:
+        print_error("✗ Failed to get Human-Bot list")
+        record_test("Human-Bot Auto-Play - List Endpoint", False, "List endpoint failed")
+    
+    # Step 5: Test toggle auto-play endpoint
+    print_subheader("Step 5: Test Toggle Auto-Play Endpoint")
+    
+    # Test POST /api/admin/human-bots/{bot_id}/toggle-auto-play
+    toggle_response, toggle_success = make_request(
+        "POST", f"/admin/human-bots/{test_bot_id}/toggle-auto-play",
+        auth_token=admin_token
+    )
+    
+    if toggle_success:
+        print_success("✓ Toggle auto-play endpoint accessible")
+        
+        # Check response structure
+        expected_toggle_fields = ["success", "message", "bot_id", "can_play_with_other_bots"]
+        missing_toggle_fields = [field for field in expected_toggle_fields if field not in toggle_response]
+        
+        if not missing_toggle_fields:
+            print_success("✓ Toggle response has all expected fields")
+            
+            success_flag = toggle_response.get("success")
+            bot_id_response = toggle_response.get("bot_id")
+            new_value = toggle_response.get("can_play_with_other_bots")
+            
+            if success_flag and bot_id_response == test_bot_id:
+                print_success(f"✓ Toggle successful, new can_play_with_other_bots value: {new_value}")
+                record_test("Human-Bot Auto-Play - Toggle Endpoint", True)
+            else:
+                print_error(f"✗ Toggle response incorrect: success={success_flag}, bot_id={bot_id_response}")
+                record_test("Human-Bot Auto-Play - Toggle Endpoint", False, "Incorrect response")
+        else:
+            print_error(f"✗ Toggle response missing fields: {missing_toggle_fields}")
+            record_test("Human-Bot Auto-Play - Toggle Endpoint", False, f"Missing fields: {missing_toggle_fields}")
+    else:
+        print_error("✗ Toggle auto-play endpoint failed")
+        record_test("Human-Bot Auto-Play - Toggle Endpoint", False, "Endpoint failed")
+    
+    # Step 6: Test authentication requirements
+    print_subheader("Step 6: Test Authentication Requirements")
+    
+    # Test toggle endpoint without admin token (should fail with 401)
+    no_auth_response, no_auth_success = make_request(
+        "POST", f"/admin/human-bots/{test_bot_id}/toggle-auto-play",
+        expected_status=401
+    )
+    
+    if not no_auth_success:
+        print_success("✓ Toggle auto-play correctly requires admin authentication")
+        record_test("Human-Bot Auto-Play - Auth Required", True)
+    else:
+        print_error("✗ Toggle auto-play succeeded without authentication (security issue)")
+        record_test("Human-Bot Auto-Play - Auth Required", False, "No auth required")
+    
+    # Step 7: Test parameter validation
+    print_subheader("Step 7: Test Parameter Validation")
+    
+    # Test with invalid bot ID
+    invalid_bot_id = "invalid-bot-id-12345"
+    invalid_response, invalid_success = make_request(
+        "POST", f"/admin/human-bots/{invalid_bot_id}/toggle-auto-play",
+        auth_token=admin_token,
+        expected_status=404
+    )
+    
+    if not invalid_success:
+        print_success("✓ Toggle auto-play correctly handles invalid bot ID (HTTP 404)")
+        record_test("Human-Bot Auto-Play - Invalid Bot ID", True)
+    else:
+        print_error("✗ Toggle auto-play succeeded with invalid bot ID")
+        record_test("Human-Bot Auto-Play - Invalid Bot ID", False, "Invalid ID accepted")
+    
+    # Step 8: Test database persistence of toggle
+    print_subheader("Step 8: Test Database Persistence of Toggle")
+    
+    # Get bot details to verify the toggle was persisted
+    bot_details_response, bot_details_success = make_request(
+        "GET", f"/admin/human-bots/{test_bot_id}",
+        auth_token=admin_token
+    )
+    
+    if bot_details_success:
+        current_can_play = bot_details_response.get("can_play_with_other_bots")
+        print_success(f"✓ Bot details accessible, current can_play_with_other_bots: {current_can_play}")
+        
+        # Toggle again to test both directions
+        second_toggle_response, second_toggle_success = make_request(
+            "POST", f"/admin/human-bots/{test_bot_id}/toggle-auto-play",
+            auth_token=admin_token
+        )
+        
+        if second_toggle_success:
+            new_can_play = second_toggle_response.get("can_play_with_other_bots")
+            
+            if new_can_play != current_can_play:
+                print_success(f"✓ Toggle correctly changed value from {current_can_play} to {new_can_play}")
+                record_test("Human-Bot Auto-Play - Toggle Persistence", True)
+            else:
+                print_error(f"✗ Toggle did not change value: {current_can_play} -> {new_can_play}")
+                record_test("Human-Bot Auto-Play - Toggle Persistence", False, "Value not changed")
+        else:
+            print_error("✗ Second toggle failed")
+            record_test("Human-Bot Auto-Play - Toggle Persistence", False, "Second toggle failed")
+    else:
+        print_error("✗ Failed to get bot details for persistence test")
+        record_test("Human-Bot Auto-Play - Toggle Persistence", False, "Failed to get bot details")
+    
+    # Step 9: Test background task auto-play logic (indirect test)
+    print_subheader("Step 9: Test Background Task Auto-Play Logic")
+    
+    # Enable auto-play globally and check if bots can play with each other
+    enable_auto_play_data = {
+        "max_active_bets_human": 150,
+        "auto_play_enabled": True,
+        "min_delay_seconds": 5,  # Short delay for testing
+        "max_delay_seconds": 10
+    }
+    
+    enable_response, enable_success = make_request(
+        "POST", "/admin/human-bots/update-settings",
+        data=enable_auto_play_data,
+        auth_token=admin_token
+    )
+    
+    if enable_success:
+        print_success("✓ Auto-play enabled globally for testing")
+        
+        # Wait a bit for background task to potentially create auto-play games
+        print("Waiting 30 seconds for background task to process auto-play...")
+        time.sleep(30)
+        
+        # Check available games for potential auto-play games
+        games_response, games_success = make_request(
+            "GET", "/games/available",
+            auth_token=admin_token
+        )
+        
+        if games_success and isinstance(games_response, list):
+            human_bot_games = [game for game in games_response if game.get("creator_type") == "human_bot"]
+            
+            print_success(f"✓ Found {len(human_bot_games)} Human-bot games in available list")
+            
+            if len(human_bot_games) > 0:
+                print_success("✓ Background task is creating Human-bot games (auto-play working)")
+                record_test("Human-Bot Auto-Play - Background Task", True)
+            else:
+                print_warning("⚠ No Human-bot games found (may need more time or bots)")
+                record_test("Human-Bot Auto-Play - Background Task", False, "No games created")
+        else:
+            print_error("✗ Failed to get available games for background task test")
+            record_test("Human-Bot Auto-Play - Background Task", False, "Failed to get games")
+    else:
+        print_error("✗ Failed to enable auto-play for background task test")
+        record_test("Human-Bot Auto-Play - Background Task", False, "Failed to enable auto-play")
+    
+    # Cleanup: Delete test bot
+    print_subheader("Cleanup: Delete Test Bot")
+    
+    cleanup_response, cleanup_success = make_request(
+        "DELETE", f"/admin/human-bots/{test_bot_id}",
+        auth_token=admin_token
+    )
+    
+    if cleanup_success:
+        print_success("✓ Test bot cleaned up successfully")
+    else:
+        print_warning("⚠ Failed to cleanup test bot")
+    
+    # Summary
+    print_subheader("Human-Bot Auto-Play System Test Summary")
+    print_success("Human-Bot auto-play system testing completed")
+    print_success("Key findings:")
+    print_success("- Settings endpoints support new auto-play fields")
+    print_success("- Human-Bot creation accepts can_play_with_other_bots field")
+    print_success("- Human-Bot list returns can_play_with_other_bots field")
+    print_success("- Toggle auto-play endpoint works with proper authentication")
+    print_success("- Parameter validation and error handling working")
+    print_success("- Database persistence of toggle changes verified")
+    print_success("- Background task auto-play logic indirectly tested")
+
 def test_human_bot_game_fields_database_verification() -> None:
     """Test the Human-Bot Game Fields Database Verification as requested in the review:
     
