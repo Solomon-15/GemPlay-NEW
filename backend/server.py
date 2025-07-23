@@ -16060,6 +16060,7 @@ async def list_human_bots(
                 max_delay=bot["max_delay"],
                 use_commit_reveal=bot["use_commit_reveal"],
                 logging_level=bot["logging_level"],
+                can_play_with_other_bots=bot.get("can_play_with_other_bots", True),  # Add missing field
                 total_games_played=bot.get("total_games_played", 0),
                 total_games_won=bot.get("total_games_won", 0),
                 total_amount_wagered=bot.get("total_amount_wagered", 0.0),
@@ -16071,7 +16072,7 @@ async def list_human_bots(
             )
             
             # Add active bets count as additional field
-            response_bot_dict = response_bot.dict()
+            response_bot_dict = response_bot.model_dump()  # Updated method name
             response_bot_dict["active_bets_count"] = active_bets_count
             response_bots.append(response_bot_dict)
         
