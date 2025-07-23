@@ -1341,11 +1341,17 @@ def test_human_bot_global_settings_limits() -> None:
                 # Check error message mentions global limit
                 if "detail" in create_response:
                     error_detail = create_response["detail"]
-                    if "global" in error_detail.lower() or "limit" in error_detail.lower():
+                    # Handle both string and list formats for error detail
+                    if isinstance(error_detail, list):
+                        error_text = str(error_detail)
+                    else:
+                        error_text = str(error_detail)
+                    
+                    if "global" in error_text.lower() or "limit" in error_text.lower():
                         print_success("✓ Error message mentions global limit")
                         record_test("Human-Bot Settings - Creation Limit Validation", True)
                     else:
-                        print_error(f"✗ Error message doesn't mention global limit: {error_detail}")
+                        print_error(f"✗ Error message doesn't mention global limit: {error_text}")
                         record_test("Human-Bot Settings - Creation Limit Validation", False, "Error message unclear")
                 else:
                     print_warning("Error response doesn't contain detail field")
