@@ -1168,6 +1168,239 @@ def test_human_bot_deletion_functionality() -> None:
     print_success("- Admin authorization is required")
     print_success("- Non-existent bot deletion returns HTTP 404")
 
+def test_is_human_bot_flag_logic_fix() -> None:
+    """Test the is_human_bot flag logic fix as requested in the review:
+    
+    БЫСТРАЯ ПРОВЕРКА:
+    1. Админ панель total_bets: GET /api/admin/human-bots/stats - записать значение total_bets
+    2. Лобби Available Bets: GET /api/games/available - подсчитать Human-bot игры (is_human_bot=true)
+    3. СРАВНИТЬ ЧИСЛА: Должны быть ИДЕНТИЧНЫМИ после исправления!
+    4. Дополнительная проверка: Показать примеры игр с их флагами
+    
+    ЦЕЛЬ: Подтвердить, что после исправления логики is_human_bot, числа стали идентичными!
+    """
+    print_header("IS_HUMAN_BOT FLAG LOGIC FIX TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with is_human_bot flag test")
+        record_test("is_human_bot Flag Fix - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # STEP 2: Админ панель total_bets - GET /api/admin/human-bots/stats
+    print_subheader("Step 2: Админ панель total_bets")
+    
+    stats_response, stats_success = make_request(
+        "GET", "/admin/human-bots/stats",
+        auth_token=admin_token
+    )
+    
+    if not stats_success:
+        print_error("Failed to get Human-bot statistics")
+        record_test("is_human_bot Flag Fix - Get Admin Stats", False, "Stats endpoint failed")
+        return
+    
+    admin_total_bets = stats_response.get("total_bets", 0)
+    total_bots = stats_response.get("total_bots", 0)
+    active_bots = stats_response.get("active_bots", 0)
+    
+    print_success(f"✓ Admin panel statistics endpoint accessible")
+    print_success(f"  Total Human-bots: {total_bots}")
+    print_success(f"  Active Human-bots: {active_bots}")
+    print_success(f"  📊 ADMIN PANEL total_bets: {admin_total_bets}")
+    
+    record_test("is_human_bot Flag Fix - Get Admin Stats", True)
+    
+    # STEP 3: Лобби Available Bets - GET /api/games/available - подсчитать Human-bot игры (is_human_bot=true)
+    print_subheader("Step 3: Лобби Available Bets")
+    
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if not available_games_success or not isinstance(available_games_response, list):
+        print_error("Failed to get available games")
+        record_test("is_human_bot Flag Fix - Get Available Games", False, "Games endpoint failed")
+        return
+    
+    # Подсчитать Human-bot игры (is_human_bot=true)
+    human_bot_games_count = 0
+    total_available_games = len(available_games_response)
+    
+    print_success(f"✓ Available games endpoint accessible")
+    print_success(f"  Total available games: {total_available_games}")
+    
+    # Подсчитать игры с is_human_bot=true
+    for game in available_games_response:
+        is_human_bot = game.get("is_human_bot", False)
+        if is_human_bot == True:
+            human_bot_games_count += 1
+    
+    print_success(f"  🎮 LOBBY Available Bets (is_human_bot=true): {human_bot_games_count}")
+    
+    record_test("is_human_bot Flag Fix - Get Available Games", True)
+    
+    # STEP 4: СРАВНИТЬ ЧИСЛА - Должны быть ИДЕНТИЧНЫМИ после исправления!
+    print_subheader("Step 4: СРАВНИТЬ ЧИСЛА")
+    
+    print_success(f"COMPARISON RESULTS:")
+    print_success(f"  📊 Admin Panel total_bets: {admin_total_bets}")
+    print_success(f"  🎮 Lobby Available Bets (is_human_bot=true): {human_bot_games_count}")
+    
+    # Проверить, идентичны ли числа
+    numbers_identical = (admin_total_bets == human_bot_games_count)
+    
+    if numbers_identical:
+        print_success(f"✅ SUCCESS: Числа ИДЕНТИЧНЫ ({admin_total_bets})!")
+        print_success(f"✅ is_human_bot flag logic fix работает правильно!")
+        print_success(f"✅ После исправления логики is_human_bot, числа стали идентичными!")
+        record_test("is_human_bot Flag Fix - Numbers Identical", True)
+    else:
+        print_error(f"❌ FAILURE: Числа НЕ идентичны!")
+        print_error(f"❌ Admin Panel total_bets: {admin_total_bets}")
+        print_error(f"❌ Lobby Available Bets: {human_bot_games_count}")
+        print_error(f"❌ Разница: {abs(admin_total_bets - human_bot_games_count)} игр")
+        record_test("is_human_bot Flag Fix - Numbers Identical", False, f"Difference: {abs(admin_total_bets - human_bot_games_count)}")
+    
+    # STEP 5: Дополнительная проверка - Показать примеры игр с их флагами
+    print_subheader("Step 5: Дополнительная проверка - Примеры игр с флагами")
+    
+    print_success(f"Показать несколько примеров игр с их флагами:")
+    
+    examples_shown = 0
+    max_examples = 5
+    
+    for i, game in enumerate(available_games_response):
+        if examples_shown >= max_examples:
+            break
+            
+        game_id = game.get("game_id", "unknown")
+        creator_type = game.get("creator_type", "unknown")
+        is_bot_game = game.get("is_bot_game", False)
+        bot_type = game.get("bot_type", None)
+        is_human_bot = game.get("is_human_bot", False)
+        bet_amount = game.get("bet_amount", 0)
+        
+        print_success(f"  Game {examples_shown + 1}: ID={game_id}")
+        print_success(f"    creator_type: {creator_type}")
+        print_success(f"    is_bot_game: {is_bot_game}")
+        print_success(f"    bot_type: {bot_type}")
+        print_success(f"    is_human_bot: {is_human_bot} ({'✅' if is_human_bot else '❌'})")
+        print_success(f"    bet_amount: ${bet_amount}")
+        
+        examples_shown += 1
+    
+    # Подсчитать статистику по флагам
+    flag_stats = {
+        "creator_type_human_bot": 0,
+        "creator_type_bot": 0,
+        "creator_type_user": 0,
+        "is_bot_game_true": 0,
+        "is_bot_game_false": 0,
+        "bot_type_HUMAN": 0,
+        "bot_type_REGULAR": 0,
+        "bot_type_null": 0,
+        "is_human_bot_true": 0,
+        "is_human_bot_false": 0
+    }
+    
+    for game in available_games_response:
+        creator_type = game.get("creator_type", "unknown")
+        is_bot_game = game.get("is_bot_game", False)
+        bot_type = game.get("bot_type", None)
+        is_human_bot = game.get("is_human_bot", False)
+        
+        # creator_type stats
+        if creator_type == "human_bot":
+            flag_stats["creator_type_human_bot"] += 1
+        elif creator_type == "bot":
+            flag_stats["creator_type_bot"] += 1
+        elif creator_type == "user":
+            flag_stats["creator_type_user"] += 1
+        
+        # is_bot_game stats
+        if is_bot_game:
+            flag_stats["is_bot_game_true"] += 1
+        else:
+            flag_stats["is_bot_game_false"] += 1
+        
+        # bot_type stats
+        if bot_type == "HUMAN":
+            flag_stats["bot_type_HUMAN"] += 1
+        elif bot_type == "REGULAR":
+            flag_stats["bot_type_REGULAR"] += 1
+        else:
+            flag_stats["bot_type_null"] += 1
+        
+        # is_human_bot stats
+        if is_human_bot:
+            flag_stats["is_human_bot_true"] += 1
+        else:
+            flag_stats["is_human_bot_false"] += 1
+    
+    print_success(f"Статистика по флагам в Available Games:")
+    print_success(f"  creator_type:")
+    print_success(f"    human_bot: {flag_stats['creator_type_human_bot']}")
+    print_success(f"    bot: {flag_stats['creator_type_bot']}")
+    print_success(f"    user: {flag_stats['creator_type_user']}")
+    print_success(f"  is_bot_game:")
+    print_success(f"    true: {flag_stats['is_bot_game_true']}")
+    print_success(f"    false: {flag_stats['is_bot_game_false']}")
+    print_success(f"  bot_type:")
+    print_success(f"    HUMAN: {flag_stats['bot_type_HUMAN']}")
+    print_success(f"    REGULAR: {flag_stats['bot_type_REGULAR']}")
+    print_success(f"    null: {flag_stats['bot_type_null']}")
+    print_success(f"  is_human_bot:")
+    print_success(f"    true: {flag_stats['is_human_bot_true']} ✅")
+    print_success(f"    false: {flag_stats['is_human_bot_false']}")
+    
+    # Проверить логику is_human_bot
+    expected_human_bot_games = flag_stats["creator_type_human_bot"]  # Игры созданные human_bot
+    actual_human_bot_games = flag_stats["is_human_bot_true"]  # Игры с is_human_bot=true
+    
+    if expected_human_bot_games == actual_human_bot_games:
+        print_success(f"✅ is_human_bot logic CORRECT: {expected_human_bot_games} creator_type=human_bot games = {actual_human_bot_games} is_human_bot=true games")
+        record_test("is_human_bot Flag Fix - Logic Verification", True)
+    else:
+        print_error(f"❌ is_human_bot logic INCORRECT: {expected_human_bot_games} creator_type=human_bot games ≠ {actual_human_bot_games} is_human_bot=true games")
+        record_test("is_human_bot Flag Fix - Logic Verification", False, f"Expected: {expected_human_bot_games}, Actual: {actual_human_bot_games}")
+    
+    # STEP 6: Финальная проверка - убедиться что исправление работает
+    print_subheader("Step 6: Финальная проверка")
+    
+    if numbers_identical and expected_human_bot_games == actual_human_bot_games:
+        print_success("🎉 IS_HUMAN_BOT FLAG LOGIC FIX VERIFICATION: SUCCESS")
+        print_success("✅ Admin Panel total_bets и Lobby Available Bets идентичны")
+        print_success("✅ is_human_bot flag правильно устанавливается для Human-bot игр")
+        print_success("✅ Логика is_human_bot исправлена и работает корректно")
+        print_success("✅ Числа стали идентичными после исправления!")
+        
+        record_test("is_human_bot Flag Fix - Overall Success", True)
+    else:
+        print_error("❌ IS_HUMAN_BOT FLAG LOGIC FIX VERIFICATION: FAILED")
+        if not numbers_identical:
+            print_error("❌ Admin Panel и Lobby числа не совпадают")
+        if expected_human_bot_games != actual_human_bot_games:
+            print_error("❌ is_human_bot flag логика некорректна")
+        print_error("❌ Исправление требует дополнительной работы")
+        
+        record_test("is_human_bot Flag Fix - Overall Success", False, "Fix not working correctly")
+    
+    # Summary
+    print_subheader("is_human_bot Flag Logic Fix Test Summary")
+    print_success("Тестирование исправления логики is_human_bot флага завершено")
+    print_success("Ключевые результаты:")
+    print_success(f"- Admin Panel total_bets: {admin_total_bets}")
+    print_success(f"- Lobby Available Bets (is_human_bot=true): {human_bot_games_count}")
+    print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
+    print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
+
 def test_human_bot_bet_counting_fix() -> None:
     """Test the Human-Bot bet counting issue fix as requested in the review:
     1. Check Human-Bot statistics for total_bets (should only count WAITING bets)
