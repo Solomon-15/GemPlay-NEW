@@ -16205,26 +16205,17 @@ async def get_human_bots_settings(current_admin: User = Depends(get_current_admi
 
 @api_router.put("/admin/human-bots/settings")
 async def update_human_bots_settings(
-    settings: HumanBotSettingsRequest,
-    current_admin: User = Depends(get_current_admin)
+    settings: HumanBotSettingsRequest
 ):
     """Update human bots global settings with automatic proportional adjustment of individual limits."""
-    try:
-        logger.info(f"Updating human bots settings: {settings}")
-        
-        # Simple test response first
-        return {
-            "success": True,
-            "message": "Test response",
-            "max_active_bets_human": settings.max_active_bets_human
-        }
-        
-    except Exception as e:
-        logger.error(f"Error updating human bots settings: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update human bots settings"
-        )
+    logger.info(f"Updating human bots settings: {settings}")
+    
+    # Simple test response first
+    return {
+        "success": True,
+        "message": "Test response",
+        "max_active_bets_human": settings.max_active_bets_human
+    }
 
 @api_router.get("/admin/human-bots/{bot_id}/logs", response_model=dict)
 async def get_human_bot_logs(
