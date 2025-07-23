@@ -10110,7 +10110,7 @@ async def cancel_any_bet(
             )
         
         # Return commission balance (only if creator is a user, not a bot)
-        commission_amount = game.get("bet_amount", 0) * 0.06
+        commission_amount = game.get("bet_amount", 0) * 0.03
         creator_user = await db.users.find_one({"id": creator_id})
         if creator_user:
             await db.users.update_one(
