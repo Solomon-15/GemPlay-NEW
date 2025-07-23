@@ -1401,6 +1401,280 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_game_fields_database_verification() -> None:
+    """Test the Human-Bot Game Fields Database Verification as requested in the review:
+    
+    Финальная проверка исправления Human-bot подсчета:
+    1. Админ панель total_bets: GET /api/admin/human-bots/stats - записать значение total_bets
+    2. Лобби с полными полями: GET /api/games/available - теперь API должен возвращать поля: creator_type, is_bot_game, bot_type, creator_id
+    3. Подсчитать игры где creator_type="human_bot" OR (is_bot_game=true AND bot_type="HUMAN")
+    4. СРАВНИТЬ ЧИСЛА ФИНАЛЬНО: Админ панель total_bets и правильный подсчет Human-bot игр из лобби должны быть ИДЕНТИЧНЫМИ!
+    5. Показать примеры: 3-5 примеров игр с полными полями creator_type, is_bot_game, bot_type, is_human_bot для каждой
+    """
+    print_header("HUMAN-BOT GAME FIELDS DATABASE VERIFICATION")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with game fields verification")
+        record_test("Human-Bot Game Fields - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # STEP 2: Админ панель total_bets - GET /api/admin/human-bots/stats
+    print_subheader("Step 2: Админ панель total_bets")
+    
+    stats_response, stats_success = make_request(
+        "GET", "/admin/human-bots/stats",
+        auth_token=admin_token
+    )
+    
+    if not stats_success:
+        print_error("Failed to get Human-bot statistics")
+        record_test("Human-Bot Game Fields - Get Admin Stats", False, "Stats endpoint failed")
+        return
+    
+    admin_total_bets = stats_response.get("total_bets", 0)
+    total_bots = stats_response.get("total_bots", 0)
+    active_bots = stats_response.get("active_bots", 0)
+    
+    print_success(f"✓ Admin panel statistics endpoint accessible")
+    print_success(f"  Total Human-bots: {total_bots}")
+    print_success(f"  Active Human-bots: {active_bots}")
+    print_success(f"  📊 ADMIN PANEL total_bets: {admin_total_bets}")
+    
+    record_test("Human-Bot Game Fields - Get Admin Stats", True)
+    
+    # STEP 3: Лобби с полными полями - GET /api/games/available
+    print_subheader("Step 3: Лобби с полными полями")
+    
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if not available_games_success or not isinstance(available_games_response, list):
+        print_error("Failed to get available games")
+        record_test("Human-Bot Game Fields - Get Available Games", False, "Games endpoint failed")
+        return
+    
+    total_available_games = len(available_games_response)
+    print_success(f"✓ Available games endpoint accessible")
+    print_success(f"  Total available games: {total_available_games}")
+    
+    # Check if API now returns the required fields
+    required_fields = ["creator_type", "is_bot_game", "bot_type", "creator_id"]
+    fields_present = {field: 0 for field in required_fields}
+    fields_missing = {field: 0 for field in required_fields}
+    
+    for game in available_games_response:
+        for field in required_fields:
+            if field in game and game[field] is not None:
+                fields_present[field] += 1
+            else:
+                fields_missing[field] += 1
+    
+    print_success(f"Field presence analysis:")
+    all_fields_present = True
+    for field in required_fields:
+        present_count = fields_present[field]
+        missing_count = fields_missing[field]
+        percentage = (present_count / total_available_games * 100) if total_available_games > 0 else 0
+        
+        if present_count == total_available_games:
+            print_success(f"  ✅ {field}: {present_count}/{total_available_games} ({percentage:.1f}%)")
+        else:
+            print_error(f"  ❌ {field}: {present_count}/{total_available_games} ({percentage:.1f}%) - {missing_count} missing")
+            all_fields_present = False
+    
+    if all_fields_present:
+        print_success("✅ ALL REQUIRED FIELDS PRESENT in API response!")
+        record_test("Human-Bot Game Fields - Required Fields Present", True)
+    else:
+        print_error("❌ SOME REQUIRED FIELDS MISSING from API response!")
+        record_test("Human-Bot Game Fields - Required Fields Present", False, "Missing fields detected")
+    
+    # STEP 4: Подсчитать игры где creator_type="human_bot" OR (is_bot_game=true AND bot_type="HUMAN")
+    print_subheader("Step 4: Подсчитать Human-bot игры по правильной логике")
+    
+    human_bot_games_count = 0
+    human_bot_games_details = []
+    
+    for game in available_games_response:
+        creator_type = game.get("creator_type", "unknown")
+        is_bot_game = game.get("is_bot_game", False)
+        bot_type = game.get("bot_type", None)
+        
+        # Правильная логика: creator_type="human_bot" OR (is_bot_game=true AND bot_type="HUMAN")
+        is_human_bot_game = (
+            creator_type == "human_bot" or 
+            (is_bot_game == True and bot_type == "HUMAN")
+        )
+        
+        if is_human_bot_game:
+            human_bot_games_count += 1
+            human_bot_games_details.append({
+                "game_id": game.get("game_id", "unknown"),
+                "creator_type": creator_type,
+                "is_bot_game": is_bot_game,
+                "bot_type": bot_type,
+                "creator_id": game.get("creator_id", "unknown"),
+                "is_human_bot": game.get("is_human_bot", False),
+                "bet_amount": game.get("bet_amount", 0)
+            })
+    
+    print_success(f"  🎮 LOBBY Human-bot games (правильный подсчет): {human_bot_games_count}")
+    print_success(f"  Логика: creator_type='human_bot' OR (is_bot_game=true AND bot_type='HUMAN')")
+    
+    record_test("Human-Bot Game Fields - Count Human-bot Games", True)
+    
+    # STEP 5: СРАВНИТЬ ЧИСЛА ФИНАЛЬНО
+    print_subheader("Step 5: СРАВНИТЬ ЧИСЛА ФИНАЛЬНО")
+    
+    print_success(f"FINAL COMPARISON RESULTS:")
+    print_success(f"  📊 Admin Panel total_bets: {admin_total_bets}")
+    print_success(f"  🎮 Lobby Human-bot games (правильный подсчет): {human_bot_games_count}")
+    
+    # Проверить, идентичны ли числа
+    numbers_identical = (admin_total_bets == human_bot_games_count)
+    
+    if numbers_identical:
+        print_success(f"✅ SUCCESS: Числа ИДЕНТИЧНЫ ({admin_total_bets})!")
+        print_success(f"✅ Human-bot подсчет исправлен и работает правильно!")
+        print_success(f"✅ После добавления полей в API response, подсчет стал правильным!")
+        record_test("Human-Bot Game Fields - Numbers Identical", True)
+    else:
+        print_error(f"❌ FAILURE: Числа НЕ идентичны!")
+        print_error(f"❌ Admin Panel total_bets: {admin_total_bets}")
+        print_error(f"❌ Lobby Human-bot games: {human_bot_games_count}")
+        print_error(f"❌ Разница: {abs(admin_total_bets - human_bot_games_count)} игр")
+        record_test("Human-Bot Game Fields - Numbers Identical", False, f"Difference: {abs(admin_total_bets - human_bot_games_count)}")
+    
+    # STEP 6: Показать примеры игр с полными полями
+    print_subheader("Step 6: Показать примеры игр с полными полями")
+    
+    print_success(f"Показать 3-5 примеров игр с полными полями:")
+    
+    examples_shown = 0
+    max_examples = min(5, len(human_bot_games_details))
+    
+    if max_examples == 0:
+        print_warning("Нет Human-bot игр для показа примеров")
+        # Показать примеры любых игр
+        max_examples = min(5, len(available_games_response))
+        for i in range(max_examples):
+            game = available_games_response[i]
+            game_id = game.get("game_id", "unknown")
+            creator_type = game.get("creator_type", "unknown")
+            is_bot_game = game.get("is_bot_game", False)
+            bot_type = game.get("bot_type", None)
+            creator_id = game.get("creator_id", "unknown")
+            is_human_bot = game.get("is_human_bot", False)
+            bet_amount = game.get("bet_amount", 0)
+            
+            print_success(f"  Game {i + 1}: ID={game_id}")
+            print_success(f"    creator_type: {creator_type}")
+            print_success(f"    is_bot_game: {is_bot_game}")
+            print_success(f"    bot_type: {bot_type}")
+            print_success(f"    creator_id: {creator_id}")
+            print_success(f"    is_human_bot: {is_human_bot}")
+            print_success(f"    bet_amount: ${bet_amount}")
+    else:
+        for i, game_detail in enumerate(human_bot_games_details[:max_examples]):
+            print_success(f"  Human-bot Game {i + 1}: ID={game_detail['game_id']}")
+            print_success(f"    creator_type: {game_detail['creator_type']} ✅")
+            print_success(f"    is_bot_game: {game_detail['is_bot_game']}")
+            print_success(f"    bot_type: {game_detail['bot_type']}")
+            print_success(f"    creator_id: {game_detail['creator_id']}")
+            print_success(f"    is_human_bot: {game_detail['is_human_bot']}")
+            print_success(f"    bet_amount: ${game_detail['bet_amount']}")
+            examples_shown += 1
+    
+    # Подсчитать статистику по всем полям
+    field_stats = {
+        "creator_type": {},
+        "is_bot_game": {"true": 0, "false": 0},
+        "bot_type": {},
+        "is_human_bot": {"true": 0, "false": 0}
+    }
+    
+    for game in available_games_response:
+        # creator_type stats
+        creator_type = game.get("creator_type", "unknown")
+        if creator_type not in field_stats["creator_type"]:
+            field_stats["creator_type"][creator_type] = 0
+        field_stats["creator_type"][creator_type] += 1
+        
+        # is_bot_game stats
+        is_bot_game = game.get("is_bot_game", False)
+        if is_bot_game:
+            field_stats["is_bot_game"]["true"] += 1
+        else:
+            field_stats["is_bot_game"]["false"] += 1
+        
+        # bot_type stats
+        bot_type = game.get("bot_type", None)
+        if bot_type is None:
+            bot_type = "null"
+        if bot_type not in field_stats["bot_type"]:
+            field_stats["bot_type"][bot_type] = 0
+        field_stats["bot_type"][bot_type] += 1
+        
+        # is_human_bot stats
+        is_human_bot = game.get("is_human_bot", False)
+        if is_human_bot:
+            field_stats["is_human_bot"]["true"] += 1
+        else:
+            field_stats["is_human_bot"]["false"] += 1
+    
+    print_success(f"Полная статистика по полям в Available Games:")
+    print_success(f"  creator_type:")
+    for key, value in field_stats["creator_type"].items():
+        print_success(f"    {key}: {value}")
+    print_success(f"  is_bot_game:")
+    for key, value in field_stats["is_bot_game"].items():
+        print_success(f"    {key}: {value}")
+    print_success(f"  bot_type:")
+    for key, value in field_stats["bot_type"].items():
+        print_success(f"    {key}: {value}")
+    print_success(f"  is_human_bot:")
+    for key, value in field_stats["is_human_bot"].items():
+        print_success(f"    {key}: {value} {'✅' if key == 'true' else ''}")
+    
+    # STEP 7: Финальная проверка
+    print_subheader("Step 7: Финальная проверка")
+    
+    if numbers_identical and all_fields_present:
+        print_success("🎉 HUMAN-BOT GAME FIELDS DATABASE VERIFICATION: SUCCESS")
+        print_success("✅ Admin Panel total_bets и Lobby Human-bot games идентичны")
+        print_success("✅ Все требуемые поля (creator_type, is_bot_game, bot_type, creator_id) присутствуют в API")
+        print_success("✅ Подсчет Human-bot игр работает правильно")
+        print_success("✅ После добавления полей в API response, подсчет стал правильным и числа совпадают!")
+        
+        record_test("Human-Bot Game Fields - Overall Success", True)
+    else:
+        print_error("❌ HUMAN-BOT GAME FIELDS DATABASE VERIFICATION: FAILED")
+        if not numbers_identical:
+            print_error("❌ Admin Panel и Lobby числа не совпадают")
+        if not all_fields_present:
+            print_error("❌ Не все требуемые поля присутствуют в API response")
+        print_error("❌ Исправление требует дополнительной работы")
+        
+        record_test("Human-Bot Game Fields - Overall Success", False, "Verification failed")
+    
+    # Summary
+    print_subheader("Human-Bot Game Fields Database Verification Summary")
+    print_success("Финальная проверка исправления Human-bot подсчета завершена")
+    print_success("Ключевые результаты:")
+    print_success(f"- Admin Panel total_bets: {admin_total_bets}")
+    print_success(f"- Lobby Human-bot games (правильный подсчет): {human_bot_games_count}")
+    print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
+    print_success(f"- Все поля присутствуют: {'ДА' if all_fields_present else 'НЕТ'}")
+    print_success(f"- Примеров показано: {examples_shown}")
+
 def test_human_bot_bet_counting_fix() -> None:
     """Test the Human-Bot bet counting issue fix as requested in the review:
     1. Check Human-Bot statistics for total_bets (should only count WAITING bets)
