@@ -198,7 +198,10 @@ const HumanBotsManagement = () => {
     try {
       setSettingsSaving(true);
       const response = await executeOperation('/admin/human-bots/update-settings', 'POST', {
-        max_active_bets_human: humanBotSettings.max_active_bets_human
+        max_active_bets_human: humanBotSettings.max_active_bets_human,
+        auto_play_enabled: humanBotSettings.auto_play_enabled || false,
+        min_delay_seconds: humanBotSettings.min_delay_seconds || 1,
+        max_delay_seconds: humanBotSettings.max_delay_seconds || 3600
       });
       
       if (response.success !== false) {
