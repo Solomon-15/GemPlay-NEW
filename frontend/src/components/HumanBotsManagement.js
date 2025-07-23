@@ -23,6 +23,22 @@ const HumanBotsManagement = () => {
     is_active: null
   });
 
+  // Состояние для табов
+  const [activeTab, setActiveTab] = useState('bots'); // 'bots' или 'settings'
+
+  // Состояние для настроек Human-ботов
+  const [humanBotSettings, setHumanBotSettings] = useState({
+    max_active_bets_human: 100,
+    current_usage: {
+      total_individual_limits: 0,
+      max_limit: 100,
+      available: 100,
+      usage_percentage: 0
+    }
+  });
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+
   // Helper function to execute API operations
   const executeOperation = async (endpoint, method = 'GET', data = null) => {
     try {
