@@ -16305,40 +16305,42 @@ async def get_human_bot_logs(
 ):
     """Get logs for a specific human bot."""
     try:
-        # Verify bot exists
+        # Find bot
         bot = await db.human_bots.find_one({"id": bot_id})
         if not bot:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Human bot not found"
-            )
+            raise HTTPException(status_code=404, detail="Human bot not found")
         
         # Build query
         query = {"human_bot_id": bot_id}
         if action_type:
-            query["action_type"] = action_type
+            query["action"] = action_type
         
-        # Calculate pagination
+        # Get total count
+        total = await db.human_bot_logs.count_documents(query)
+        
+        # Get logs with pagination
         skip = (page - 1) * limit
+        logs = await db.human_bot_logs.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(None)
         
-        # Get logs
-        logs = await db.human_bot_logs.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
-        total_count = await db.human_bot_logs.count_documents(query)
-        
-        # Convert to response format
-        log_responses = []
+        # Format logs
+        formatted_logs = []
         for log in logs:
-            log_response = HumanBotLogResponse(**log)
-            log_responses.append(log_response.dict())
+            formatted_logs.append({
+                "id": log.get("id", ""),
+                "action": log.get("action", ""),
+                "details": log.get("details", {}),
+                "created_at": log.get("created_at").isoformat() if log.get("created_at") else "",
+            })
         
         return {
-            "logs": log_responses,
-            "total_count": total_count,
-            "current_page": page,
-            "total_pages": (total_count + limit - 1) // limit,
-            "items_per_page": limit,
-            "bot_name": bot["name"],
-            "bot_character": bot["character"]
+            "success": True,
+            "logs": formatted_logs,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total,
+                "pages": (total + limit - 1) // limit
+            }
         }
         
     except HTTPException:
@@ -16348,6 +16350,239 @@ async def get_human_bot_logs(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch human bot logs"
+        )
+
+@api_router.get("/admin/human-bots/{bot_id}/active-bets", response_model=dict)
+async def get_human_bot_active_bets(
+    bot_id: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get active bets for a specific Human-bot (only WAITING, ACTIVE, REVEAL statuses)."""
+    try:
+        # Find bot
+        bot = await db.human_bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(status_code=404, detail="Human bot not found")
+        
+        # Get only active bets (WAITING, ACTIVE, REVEAL)
+        active_statuses = ["WAITING", "ACTIVE", "REVEAL"]
+        active_bets_cursor = db.games.find({
+            "creator_id": bot_id,
+            "status": {"$in": active_statuses}
+        }).sort("created_at", -1)
+        
+        active_bets_list = await active_bets_cursor.to_list(None)
+        
+        # Calculate statistics
+        total_active_bets = len(active_bets_list)
+        total_bet_amount = sum(game.get('total_bet_amount', 0) for game in active_bets_list)
+        
+        # Get win/loss statistics from all completed games
+        completed_games_cursor = db.games.find({
+            "creator_id": bot_id,
+            "status": "COMPLETED"
+        })
+        completed_games_list = await completed_games_cursor.to_list(None)
+        
+        bot_wins = sum(1 for game in completed_games_list if game.get('winner_id') == bot_id)
+        player_wins = sum(1 for game in completed_games_list if game.get('winner_id') and game.get('winner_id') != bot_id)
+        
+        # Format active bets for display
+        formatted_bets = []
+        for game in active_bets_list:
+            # Get opponent info
+            opponent_id = game.get('opponent_id', '')
+            opponent_name = '—'
+            if opponent_id:
+                opponent = await db.users.find_one({"id": opponent_id})
+                if opponent:
+                    opponent_name = opponent.get('username', opponent.get('email', opponent_id))
+            
+            formatted_bets.append({
+                "id": game.get("id", ""),
+                "created_at": game.get("created_at").isoformat() if game.get("created_at") else "",
+                "total_bet_amount": game.get("total_bet_amount", 0),
+                "bet_amount": game.get("total_bet_amount", 0) // 2,  # Each player's share
+                "creator_gem": game.get("creator_gem", ""),
+                "selected_gem": game.get("creator_gem", ""),
+                "status": game.get("status", ""),
+                "opponent_id": opponent_id,
+                "opponent_name": opponent_name,
+                "winner_id": game.get("winner_id", ""),
+                "result": game.get("result", "")
+            })
+        
+        return {
+            "success": True,
+            "bot_id": bot_id,
+            "bot_name": bot.get("name", ""),
+            "activeBets": total_active_bets,
+            "totalBets": total_active_bets,  # For active-only view
+            "totalBetAmount": total_bet_amount,
+            "botWins": bot_wins,
+            "playerWins": player_wins,
+            "bets": formatted_bets
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching human bot active bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch human bot active bets"
+        )
+
+@api_router.get("/admin/human-bots/{bot_id}/all-bets", response_model=dict)
+async def get_human_bot_all_bets(
+    bot_id: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get all bets for a specific Human-bot (active + completed + cancelled + archived)."""
+    try:
+        # Find bot
+        bot = await db.human_bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(status_code=404, detail="Human bot not found")
+        
+        # Get all bets
+        all_bets_cursor = db.games.find({
+            "creator_id": bot_id
+        }).sort("created_at", -1)
+        
+        all_bets_list = await all_bets_cursor.to_list(None)
+        
+        # Separate active and completed bets
+        active_statuses = ["WAITING", "ACTIVE", "REVEAL"]
+        active_bets = [game for game in all_bets_list if game.get('status') in active_statuses]
+        completed_bets = [game for game in all_bets_list if game.get('status') not in active_statuses]
+        
+        # Calculate statistics
+        total_active_bets = len(active_bets)
+        total_all_bets = len(all_bets_list)
+        total_bet_amount = sum(game.get('total_bet_amount', 0) for game in all_bets_list)
+        
+        # Calculate win/loss statistics from completed games
+        completed_games = [game for game in all_bets_list if game.get('status') == 'COMPLETED']
+        bot_wins = sum(1 for game in completed_games if game.get('winner_id') == bot_id)
+        player_wins = sum(1 for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot_id)
+        
+        # Format all bets for display
+        formatted_bets = []
+        for game in all_bets_list:
+            # Get opponent info
+            opponent_id = game.get('opponent_id', '')
+            opponent_name = '—'
+            if opponent_id:
+                opponent = await db.users.find_one({"id": opponent_id})
+                if opponent:
+                    opponent_name = opponent.get('username', opponent.get('email', opponent_id))
+            
+            formatted_bets.append({
+                "id": game.get("id", ""),
+                "created_at": game.get("created_at").isoformat() if game.get("created_at") else "",
+                "total_bet_amount": game.get("total_bet_amount", 0),
+                "bet_amount": game.get("total_bet_amount", 0) // 2,  # Each player's share
+                "creator_gem": game.get("creator_gem", ""),
+                "selected_gem": game.get("creator_gem", ""),
+                "status": game.get("status", ""),
+                "opponent_id": opponent_id,
+                "opponent_name": opponent_name,
+                "winner_id": game.get("winner_id", ""),
+                "result": game.get("result", "")
+            })
+        
+        return {
+            "success": True,
+            "bot_id": bot_id,
+            "bot_name": bot.get("name", ""),
+            "activeBets": total_active_bets,
+            "totalBets": total_all_bets,  # All bets including completed
+            "totalBetAmount": total_bet_amount,
+            "botWins": bot_wins,
+            "playerWins": player_wins,
+            "completedBetsCount": len(completed_bets),
+            "bets": formatted_bets
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching human bot all bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch human bot all bets"
+        )
+
+@api_router.post("/admin/human-bots/{bot_id}/clear-completed-bets", response_model=dict)
+async def clear_human_bot_completed_bets(
+    bot_id: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Clear completed bets for a specific Human-bot by changing status to ARCHIVED."""
+    try:
+        # Find bot
+        bot = await db.human_bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(status_code=404, detail="Human bot not found")
+        
+        # Get completed and cancelled bets
+        clearable_statuses = ["COMPLETED", "CANCELLED"]
+        clearable_bets_cursor = db.games.find({
+            "creator_id": bot_id,
+            "status": {"$in": clearable_statuses}
+        })
+        
+        clearable_bets_list = await clearable_bets_cursor.to_list(None)
+        cleared_count = len(clearable_bets_list)
+        
+        if cleared_count > 0:
+            # Update status to ARCHIVED instead of deleting
+            result = await db.games.update_many(
+                {
+                    "creator_id": bot_id,
+                    "status": {"$in": clearable_statuses}
+                },
+                {
+                    "$set": {
+                        "status": "ARCHIVED",
+                        "archived_at": datetime.utcnow(),
+                        "archived_by": current_admin.id
+                    }
+                }
+            )
+            
+            # Log admin action
+            admin_log = AdminLog(
+                admin_id=current_admin.id,
+                action="CLEAR_HUMAN_BOT_COMPLETED_BETS",
+                target_type="human_bot",
+                target_id=bot_id,
+                details={
+                    "bot_name": bot.get("name", ""),
+                    "cleared_count": cleared_count,
+                    "modified_count": result.modified_count
+                }
+            )
+            await db.admin_logs.insert_one(admin_log.dict())
+            
+            logger.info(f"Cleared {cleared_count} completed bets for Human-bot {bot_id}")
+        
+        return {
+            "success": True,
+            "message": f"Cleared {cleared_count} completed bets",
+            "cleared_count": cleared_count,
+            "bot_id": bot_id,
+            "bot_name": bot.get("name", "")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error clearing human bot completed bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to clear human bot completed bets"
         )
 
 @api_router.post("/admin/human-bots/toggle-all", response_model=dict)
