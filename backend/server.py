@@ -122,17 +122,21 @@ class BotMode(str, Enum):
 class BotSettings(BaseModel):
     id: str = Field(default="bot_settings")
     max_active_bets_regular: int = 50  # Максимальное количество активных ставок для обычных ботов
-    max_active_bets_human: int = 30    # Максимальное количество активных ставок для Human ботов
+    max_active_bets_human: int = 100    # Максимальное количество активных ставок для Human ботов (обновлено с 30 до 100)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 # Bot Settings Request model
 class BotSettingsRequest(BaseModel):
     globalMaxActiveBets: int = Field(ge=1, le=200)
-    globalMaxHumanBots: int = Field(ge=1, le=100)
+    globalMaxHumanBots: int = Field(ge=1, le=1000)  # Увеличен лимит до 1000
     paginationSize: int = Field(ge=5, le=50)
     autoActivateFromQueue: bool = True
     priorityType: str = Field(default="order")  # 'order' or 'manual'
+
+# Human Bot Settings Request model - новая модель для настроек Human-ботов
+class HumanBotSettingsRequest(BaseModel):
+    max_active_bets_human: int = Field(ge=1, le=1000, description="Максимальное количество активных ставок для всех Human ботов")
 
 # Interface Settings model
 class InterfaceSettings(BaseModel):
