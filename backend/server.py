@@ -8581,7 +8581,7 @@ async def get_total_revenue_breakdown(
             query["created_at"] = {"$gte": start_date}
         
         bot_revenue_total = 0
-        bot_revenue_entries = await db.profit_history.find(query).to_list(None)
+        bot_revenue_entries = await db.profit_entries.find(query).to_list(None)
         bot_revenue_count = len(bot_revenue_entries)
         for entry in bot_revenue_entries:
             bot_revenue_total += entry.get("amount", 0)
