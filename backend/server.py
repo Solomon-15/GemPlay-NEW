@@ -4581,6 +4581,7 @@ async def cleanup_stuck_games():
 
 async def timeout_checker_task():
     """Background task to check for game timeouts."""
+    logger.info("⏰ Game timeout checker task started")
     while True:
         try:
             current_time = datetime.utcnow()
@@ -4591,17 +4592,23 @@ async def timeout_checker_task():
                 "reveal_deadline": {"$lt": current_time}
             }).to_list(100)
             
-            for game_data in expired_games:
-                try:
-                    await handle_game_timeout(game_data["id"])
-                except Exception as e:
-                    logger.error(f"Error handling timeout for game {game_data['id']}: {e}")
+            if expired_games:
+                logger.info(f"⏰ Found {len(expired_games)} expired games to handle")
+                
+                for game_data in expired_games:
+                    try:
+                        await handle_game_timeout(game_data["id"])
+                        logger.info(f"⏰ Successfully handled timeout for game {game_data['id']}")
+                    except Exception as e:
+                        logger.error(f"❌ Error handling timeout for game {game_data['id']}: {e}")
+            else:
+                logger.debug("⏰ No expired games found")
             
             # Sleep for 10 seconds before next check
             await asyncio.sleep(10)
             
         except Exception as e:
-            logger.error(f"Error in timeout checker: {e}")
+            logger.error(f"❌ Error in timeout checker: {e}")
             await asyncio.sleep(30)  # Wait longer on error
 
 async def determine_game_winner(game_id: str) -> dict:
