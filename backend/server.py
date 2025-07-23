@@ -16159,7 +16159,7 @@ async def get_human_bots_stats(current_admin: User = Depends(get_current_admin))
             detail="Failed to fetch human bots stats"
         )
 
-@api_router.get("/admin/human-bots/settings", response_model=dict)
+@api_router.get("/admin/human-bots/settings")
 async def get_human_bots_settings(current_admin: User = Depends(get_current_admin)):
     """Get human bots global settings."""
     try:
