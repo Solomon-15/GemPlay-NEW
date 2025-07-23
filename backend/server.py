@@ -16554,7 +16554,7 @@ async def get_human_bot_all_bets(
         # Calculate statistics
         total_active_bets = len(active_bets)
         total_all_bets = len(all_bets_list)
-        total_bet_amount = sum(game.get('total_bet_amount', 0) for game in all_bets_list)
+        total_bet_amount = sum(game.get('bet_amount', 0) for game in all_bets_list)
         
         # Calculate win/loss statistics from completed games
         completed_games = [game for game in all_bets_list if game.get('status') == 'COMPLETED']
