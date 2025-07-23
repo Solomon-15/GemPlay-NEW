@@ -566,12 +566,12 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
           <tbody className="divide-y divide-border-primary">
             {humanBots.length === 0 ? (
               <tr>
-                <td colSpan="10" className="px-4 py-8 text-center text-text-secondary">
+                <td colSpan="11" className="px-4 py-8 text-center text-text-secondary">
                   Нет Human-ботов для отображения
                 </td>
               </tr>
             ) : (
-              humanBots.map((bot) => (
+              humanBots.map((bot, index) => (
                 <tr key={bot.id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
                   <td className="px-4 py-4 whitespace-nowrap text-center">
                     <input
@@ -580,6 +580,11 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                       onChange={() => handleSelectBot(bot.id)}
                       className="w-4 h-4 text-accent-primary bg-surface-primary border-border-primary rounded focus:ring-accent-primary focus:ring-2"
                     />
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <div className="text-white font-roboto text-sm font-bold">
+                      {index + 1}
+                    </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
                     <div className="text-white font-roboto text-sm">
