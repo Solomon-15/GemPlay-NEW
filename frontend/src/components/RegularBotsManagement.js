@@ -2738,6 +2738,7 @@ const RegularBotsManagement = () => {
                     <table className="w-full">
                       <thead className="bg-surface-sidebar">
                         <tr>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">№</th>
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">ID</th>
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Дата</th>
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Время</th>
