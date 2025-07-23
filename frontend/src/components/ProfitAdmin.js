@@ -790,6 +790,7 @@ const ProfitAdmin = ({ user }) => {
                     <div className={`${
                       activeCategory === key
                         ? (category.color === 'green' ? 'text-green-400' :
+                           category.color === 'cyan' ? 'text-cyan-400' :
                            category.color === 'blue' ? 'text-blue-400' :
                            'text-purple-400')
                         : 'text-text-secondary'
