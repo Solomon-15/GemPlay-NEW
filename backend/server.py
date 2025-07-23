@@ -8543,7 +8543,7 @@ async def get_total_revenue_breakdown(
         revenue_breakdown = []
         
         # Get commission from bets
-        query = {"type": "BET_COMMISSION"}
+        query = {"entry_type": "BET_COMMISSION"}
         if start_date:
             query["created_at"] = {"$gte": start_date}
         
