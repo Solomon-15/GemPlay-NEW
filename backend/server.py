@@ -6323,7 +6323,7 @@ async def reset_all_games(current_admin: User = Depends(get_current_admin)):
                 total_gems_unfrozen += quantity
             
             # Unfreeze creator's commission
-            creator_commission = game_obj.bet_amount * 0.06
+            creator_commission = game_obj.bet_amount * 0.03
             await db.users.update_one(
                 {"id": game_obj.creator_id},
                 {
