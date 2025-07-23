@@ -182,8 +182,8 @@ const PlayerCard = ({
           {/* Action Button */}
           <div className="flex-shrink-0">
             {isMyBet ? (
-              // Если игра в процессе (ACTIVE status)
-              game.status === 'ACTIVE' ? (
+              // Если игра в процессе (ACTIVE или REVEAL status)
+              (game.status === 'ACTIVE' || game.status === 'REVEAL') ? (
                 <button
                   disabled
                   className="px-4 py-2 bg-gray-600 text-gray-400 font-rajdhani font-bold rounded-lg cursor-not-allowed"
@@ -198,6 +198,14 @@ const PlayerCard = ({
                   Cancel
                 </button>
               )
+            ) : isOngoing ? (
+              // Если это ongoing battle (для пользователя)
+              <button
+                disabled
+                className="px-4 py-2 bg-orange-600 text-white font-rajdhani font-bold rounded-lg cursor-not-allowed"
+              >
+                In the game
+              </button>
             ) : (
               <button
                 onClick={handleAcceptClick}
