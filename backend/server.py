@@ -8053,6 +8053,7 @@ async def get_profit_stats(current_admin: User = Depends(get_current_admin)):
         return {
             # Main metrics for new design
             "bet_commission": bet_commission,           # Комиссия от ставок
+            "human_bot_commission": human_bot_commission, # Комиссия от Human-ботов
             "gift_commission": gift_commission,         # Комиссия от подарков
             "bot_revenue": bot_revenue,                 # Доход от ботов
             "frozen_funds": frozen_funds,               # Замороженные средства
