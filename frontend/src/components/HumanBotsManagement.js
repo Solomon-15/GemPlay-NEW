@@ -253,6 +253,10 @@ const HumanBotsManagement = () => {
       }
       
       if (response.success !== false) {
+        const action = editingBot ? 'отредактирован' : 'создан';
+        const botName = createFormData.name || 'Human-бот';
+        addNotification(`Human-бот "${botName}" успешно ${action}`, 'success');
+        
         setShowCreateForm(false);
         setEditingBot(null);
         setCreateFormData({
