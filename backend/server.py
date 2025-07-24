@@ -141,6 +141,7 @@ class HumanBotSettingsRequest(BaseModel):
     auto_play_enabled: Optional[bool] = Field(default=False, description="Глобальное включение автоигры между Human-ботами")
     min_delay_seconds: Optional[int] = Field(default=1, ge=1, le=3600, description="Минимальная задержка между играми (секунды)")
     max_delay_seconds: Optional[int] = Field(default=3600, ge=1, le=3600, description="Максимальная задержка между играми (секунды)")
+    play_with_players_enabled: Optional[bool] = Field(default=False, description="Глобальное включение игры Human-ботов с живыми игроками")
 
 # Interface Settings model
 class InterfaceSettings(BaseModel):
