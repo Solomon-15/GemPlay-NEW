@@ -11014,16 +11014,17 @@ async def cancel_any_bet(
         if game_status == "WAITING":
             # Only creator has committed resources
             # Return creator's gems
-            for gem_type, quantity in bet_gems.items():
-                if quantity > 0:
-                    await db.user_gems.update_one(
-                        {"user_id": creator_id, "gem_type": gem_type},
-                        {
-                            "$inc": {"frozen_quantity": -quantity},
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
-                    gems_returned[gem_type] = gems_returned.get(gem_type, 0) + quantity
+            if isinstance(bet_gems, dict):
+                for gem_type, quantity in bet_gems.items():
+                    if quantity > 0:
+                        await db.user_gems.update_one(
+                            {"user_id": creator_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        gems_returned[gem_type] = gems_returned.get(gem_type, 0) + quantity
             
             # Return creator's commission
             commission_amount = bet_amount * 0.03
