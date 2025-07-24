@@ -39,6 +39,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
   useEffect(() => {
     fetchHumanBots();
     fetchStats();
+    fetchGlobalSettings();
   }, []);
 
   const fetchHumanBots = async () => {
