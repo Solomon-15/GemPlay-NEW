@@ -192,10 +192,10 @@ class BetManagementTester:
             # Purchase gems for users
             for i, token in enumerate(self.test_user_tokens):
                 headers = {"Authorization": f"Bearer {token}"}
-                response = self.make_request("POST", "/gems/buy", {
+                response = self.make_request("POST", "/gems/buy", None, headers, {
                     "gem_type": "Ruby",
                     "quantity": 20
-                }, headers)
+                })
                 if response.status_code == 200:
                     self.log(f"Purchased 20 Ruby gems for test user {i+1}", "SUCCESS")
                 else:
