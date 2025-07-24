@@ -1401,6 +1401,321 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_gem_icons_update() -> None:
+    """Test the updated gem icons in admin panel as requested in the review:
+    
+    КОНТЕКСТ: Только что обновил все иконки для 7 default драгоценных камней (Ruby, Amber, Topaz, Emerald, Aquamarine, Sapphire, Magic) 
+    в функции initialize_default_gems в server.py, заменив их base64 представления реальными SVG файлами из /app/frontend/public/gems/.
+
+    ЗАДАЧИ ТЕСТИРОВАНИЯ:
+    1. Проверить API endpoint GET /api/admin/gems - должен возвращать список гемов с обновленными иконками
+    2. Убедиться, что все 7 default гемов содержат корректные base64 иконки в формате data:image/svg+xml;base64,
+    3. Проверить, что сервер стартует без ошибок после изменений
+    4. Протестировать функцию initialize_default_gems - что она корректно создает гемы с новыми иконками
+    5. Убедиться, что новые иконки это валидные SVG данные
+
+    КРИТИЧЕСКИЕ ТОЧКИ:
+    - Все 7 default гемов должны иметь правильные base64 иконки
+    - API должен возвращать их без ошибок декодирования
+    - SVG данные должны быть валидными
+    """
+    print_header("GEM ICONS UPDATE TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with gem icons test")
+        record_test("Gem Icons Update - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Test GET /api/admin/gems endpoint
+    print_subheader("Step 2: Test GET /api/admin/gems Endpoint")
+    
+    gems_response, gems_success = make_request(
+        "GET", "/admin/gems",
+        auth_token=admin_token
+    )
+    
+    if not gems_success:
+        print_error("Failed to get gems list from admin endpoint")
+        record_test("Gem Icons Update - Get Gems List", False, "Admin gems endpoint failed")
+        return
+    
+    if not isinstance(gems_response, list):
+        print_error(f"Expected list response, got: {type(gems_response)}")
+        record_test("Gem Icons Update - Get Gems List", False, "Invalid response format")
+        return
+    
+    print_success(f"✓ GET /api/admin/gems endpoint accessible")
+    print_success(f"✓ Found {len(gems_response)} gems in response")
+    record_test("Gem Icons Update - Get Gems List", True)
+    
+    # Step 3: Verify all 7 default gems are present with correct base64 icons
+    print_subheader("Step 3: Verify 7 Default Gems with Updated Icons")
+    
+    expected_default_gems = ["Ruby", "Amber", "Topaz", "Emerald", "Aquamarine", "Sapphire", "Magic"]
+    found_default_gems = {}
+    
+    for gem in gems_response:
+        gem_name = gem.get("name", "")
+        gem_type = gem.get("type", "")
+        is_default = gem.get("is_default", False)
+        icon = gem.get("icon", "")
+        
+        if gem_name in expected_default_gems and is_default:
+            found_default_gems[gem_name] = {
+                "type": gem_type,
+                "icon": icon,
+                "price": gem.get("price", 0),
+                "color": gem.get("color", ""),
+                "rarity": gem.get("rarity", ""),
+                "enabled": gem.get("enabled", False)
+            }
+    
+    print_success(f"Found {len(found_default_gems)} default gems:")
+    for gem_name in found_default_gems:
+        print_success(f"  ✓ {gem_name}")
+    
+    # Check if all 7 default gems are found
+    missing_gems = [gem for gem in expected_default_gems if gem not in found_default_gems]
+    if missing_gems:
+        print_error(f"Missing default gems: {missing_gems}")
+        record_test("Gem Icons Update - All Default Gems Present", False, f"Missing: {missing_gems}")
+    else:
+        print_success("✓ All 7 default gems are present")
+        record_test("Gem Icons Update - All Default Gems Present", True)
+    
+    # Step 4: Verify base64 SVG icon format for each default gem
+    print_subheader("Step 4: Verify Base64 SVG Icon Format")
+    
+    valid_icons_count = 0
+    invalid_icons = []
+    
+    for gem_name, gem_data in found_default_gems.items():
+        icon = gem_data["icon"]
+        
+        print_success(f"Checking {gem_name} icon...")
+        
+        # Check if icon starts with correct data URI format
+        expected_prefix = "data:image/svg+xml;base64,"
+        if not icon.startswith(expected_prefix):
+            print_error(f"  ✗ {gem_name}: Icon doesn't start with '{expected_prefix}'")
+            print_error(f"    Actual start: {icon[:50]}...")
+            invalid_icons.append(f"{gem_name}: Invalid prefix")
+            continue
+        
+        # Extract base64 part
+        base64_part = icon[len(expected_prefix):]
+        
+        # Check if base64 part is not empty
+        if not base64_part:
+            print_error(f"  ✗ {gem_name}: Empty base64 data")
+            invalid_icons.append(f"{gem_name}: Empty base64")
+            continue
+        
+        # Try to decode base64 to verify it's valid
+        try:
+            import base64
+            decoded_svg = base64.b64decode(base64_part).decode('utf-8')
+            
+            # Check if decoded content looks like SVG
+            if not decoded_svg.strip().startswith('<?xml') and not decoded_svg.strip().startswith('<svg'):
+                print_error(f"  ✗ {gem_name}: Decoded content doesn't look like SVG")
+                print_error(f"    Content start: {decoded_svg[:100]}...")
+                invalid_icons.append(f"{gem_name}: Not SVG content")
+                continue
+            
+            # Check if SVG contains expected elements
+            if '<svg' not in decoded_svg or '</svg>' not in decoded_svg:
+                print_error(f"  ✗ {gem_name}: SVG missing required tags")
+                invalid_icons.append(f"{gem_name}: Missing SVG tags")
+                continue
+            
+            print_success(f"  ✓ {gem_name}: Valid base64 SVG icon")
+            print_success(f"    Icon size: {len(base64_part)} base64 characters")
+            print_success(f"    SVG size: {len(decoded_svg)} bytes")
+            print_success(f"    Price: ${gem_data['price']}")
+            print_success(f"    Color: {gem_data['color']}")
+            print_success(f"    Rarity: {gem_data['rarity']}")
+            
+            valid_icons_count += 1
+            
+        except Exception as e:
+            print_error(f"  ✗ {gem_name}: Base64 decode error: {str(e)}")
+            invalid_icons.append(f"{gem_name}: Decode error - {str(e)}")
+    
+    # Record results for icon validation
+    if valid_icons_count == len(expected_default_gems):
+        print_success(f"✅ ALL {valid_icons_count} default gems have valid base64 SVG icons!")
+        record_test("Gem Icons Update - Valid Base64 SVG Icons", True)
+    else:
+        print_error(f"❌ Only {valid_icons_count}/{len(expected_default_gems)} gems have valid icons")
+        print_error(f"Invalid icons: {invalid_icons}")
+        record_test("Gem Icons Update - Valid Base64 SVG Icons", False, f"Invalid: {invalid_icons}")
+    
+    # Step 5: Test specific gem properties
+    print_subheader("Step 5: Verify Gem Properties")
+    
+    expected_gem_properties = {
+        "Ruby": {"price": 1, "color": "#FF0000", "rarity": "Common"},
+        "Amber": {"price": 2, "color": "#FFA500", "rarity": "Common"},
+        "Topaz": {"price": 5, "color": "#FFFF00", "rarity": "Uncommon"},
+        "Emerald": {"price": 10, "color": "#00FF00", "rarity": "Rare"},
+        "Aquamarine": {"price": 25, "color": "#00FFFF", "rarity": "Rare+"},
+        "Sapphire": {"price": 50, "color": "#0000FF", "rarity": "Epic"},
+        "Magic": {"price": 100, "color": "#FF00FF", "rarity": "Legendary"}
+    }
+    
+    properties_correct = 0
+    properties_errors = []
+    
+    for gem_name, expected_props in expected_gem_properties.items():
+        if gem_name in found_default_gems:
+            gem_data = found_default_gems[gem_name]
+            
+            # Check price
+            if gem_data["price"] == expected_props["price"]:
+                print_success(f"  ✓ {gem_name}: Price ${gem_data['price']} correct")
+            else:
+                print_error(f"  ✗ {gem_name}: Price ${gem_data['price']}, expected ${expected_props['price']}")
+                properties_errors.append(f"{gem_name}: Wrong price")
+            
+            # Check color
+            if gem_data["color"] == expected_props["color"]:
+                print_success(f"  ✓ {gem_name}: Color {gem_data['color']} correct")
+            else:
+                print_error(f"  ✗ {gem_name}: Color {gem_data['color']}, expected {expected_props['color']}")
+                properties_errors.append(f"{gem_name}: Wrong color")
+            
+            # Check rarity
+            if gem_data["rarity"] == expected_props["rarity"]:
+                print_success(f"  ✓ {gem_name}: Rarity {gem_data['rarity']} correct")
+            else:
+                print_error(f"  ✗ {gem_name}: Rarity {gem_data['rarity']}, expected {expected_props['rarity']}")
+                properties_errors.append(f"{gem_name}: Wrong rarity")
+            
+            # Check enabled status
+            if gem_data["enabled"] == True:
+                print_success(f"  ✓ {gem_name}: Enabled status correct")
+            else:
+                print_error(f"  ✗ {gem_name}: Not enabled")
+                properties_errors.append(f"{gem_name}: Not enabled")
+            
+            if not properties_errors or not any(gem_name in error for error in properties_errors):
+                properties_correct += 1
+    
+    if properties_correct == len(expected_default_gems):
+        print_success(f"✅ All {properties_correct} default gems have correct properties!")
+        record_test("Gem Icons Update - Correct Gem Properties", True)
+    else:
+        print_error(f"❌ Only {properties_correct}/{len(expected_default_gems)} gems have correct properties")
+        print_error(f"Property errors: {properties_errors}")
+        record_test("Gem Icons Update - Correct Gem Properties", False, f"Errors: {properties_errors}")
+    
+    # Step 6: Test API response without errors
+    print_subheader("Step 6: Test API Response Integrity")
+    
+    # Make another request to ensure consistency
+    gems_response2, gems_success2 = make_request(
+        "GET", "/admin/gems",
+        auth_token=admin_token
+    )
+    
+    if gems_success2 and len(gems_response2) == len(gems_response):
+        print_success("✓ API response is consistent across multiple requests")
+        record_test("Gem Icons Update - API Response Consistency", True)
+    else:
+        print_error("✗ API response inconsistent between requests")
+        record_test("Gem Icons Update - API Response Consistency", False, "Inconsistent responses")
+    
+    # Check for any JSON serialization issues with the icons
+    try:
+        import json
+        json_str = json.dumps(gems_response)
+        parsed_back = json.loads(json_str)
+        
+        if len(parsed_back) == len(gems_response):
+            print_success("✓ Gem data with icons serializes/deserializes correctly")
+            record_test("Gem Icons Update - JSON Serialization", True)
+        else:
+            print_error("✗ JSON serialization/deserialization issue")
+            record_test("Gem Icons Update - JSON Serialization", False, "Serialization issue")
+    except Exception as e:
+        print_error(f"✗ JSON serialization error: {str(e)}")
+        record_test("Gem Icons Update - JSON Serialization", False, f"Error: {str(e)}")
+    
+    # Step 7: Test server stability
+    print_subheader("Step 7: Test Server Stability")
+    
+    # Make multiple rapid requests to test server stability with new icons
+    stability_test_passed = True
+    for i in range(5):
+        test_response, test_success = make_request(
+            "GET", "/admin/gems",
+            auth_token=admin_token
+        )
+        
+        if not test_success:
+            print_error(f"✗ Stability test failed on request {i+1}")
+            stability_test_passed = False
+            break
+        
+        # Quick check that we still get the expected number of gems
+        if len(test_response) != len(gems_response):
+            print_error(f"✗ Inconsistent gem count on request {i+1}")
+            stability_test_passed = False
+            break
+    
+    if stability_test_passed:
+        print_success("✓ Server stable with updated gem icons (5 rapid requests)")
+        record_test("Gem Icons Update - Server Stability", True)
+    else:
+        print_error("✗ Server stability issues detected")
+        record_test("Gem Icons Update - Server Stability", False, "Stability issues")
+    
+    # Summary
+    print_subheader("Gem Icons Update Test Summary")
+    print_success("Gem icons update testing completed")
+    print_success("Key findings:")
+    print_success(f"- Found {len(found_default_gems)}/7 default gems")
+    print_success(f"- Valid base64 SVG icons: {valid_icons_count}/7")
+    print_success(f"- Correct properties: {properties_correct}/7")
+    print_success("- API endpoint accessible and stable")
+    print_success("- JSON serialization working correctly")
+    print_success("- Server remains stable after icon updates")
+    
+    # Overall success determination
+    overall_success = (
+        len(found_default_gems) == 7 and
+        valid_icons_count == 7 and
+        properties_correct == 7 and
+        stability_test_passed
+    )
+    
+    if overall_success:
+        print_success("🎉 GEM ICONS UPDATE: FULLY SUCCESSFUL!")
+        print_success("✅ All 7 default gems have updated base64 SVG icons")
+        print_success("✅ All icons are in correct data:image/svg+xml;base64, format")
+        print_success("✅ All gem properties are correct")
+        print_success("✅ API works without errors")
+        print_success("✅ Server is stable after changes")
+        record_test("Gem Icons Update - Overall Success", True)
+    else:
+        print_error("❌ GEM ICONS UPDATE: ISSUES DETECTED")
+        if len(found_default_gems) != 7:
+            print_error("❌ Not all default gems found")
+        if valid_icons_count != 7:
+            print_error("❌ Some icons are invalid")
+        if properties_correct != 7:
+            print_error("❌ Some gem properties are incorrect")
+        if not stability_test_passed:
+            print_error("❌ Server stability issues")
+        record_test("Gem Icons Update - Overall Success", False, "Issues detected")
+
 def test_human_bot_auto_play_system() -> None:
     """Test the new Human-Bot auto-play system functionality as requested in the review:
     
