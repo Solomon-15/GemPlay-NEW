@@ -2295,14 +2295,15 @@ const RegularBotsManagement = () => {
                 <h4 className="font-rajdhani font-bold text-white mb-3">Диапазон ставок</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Минимальная ставка:</label>
+                    <label className="block text-text-secondary text-sm mb-1">Минимальная ставка (гемы):</label>
                     <input
                       type="number"
                       min="1"
                       max="10000"
+                      step="1"
                       value={botForm.min_bet_amount}
                       onChange={(e) => {
-                        const newForm = {...botForm, min_bet_amount: parseFloat(e.target.value) || 1.0};
+                        const newForm = {...botForm, min_bet_amount: parseInt(e.target.value) || 1};
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
                       }}
