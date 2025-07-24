@@ -2718,6 +2718,12 @@ async def process_human_bot_join_available_bets(active_human_bots: list, setting
                     if time_since_last < required_delay:
                         continue
                 
+                # Check concurrent games limit
+                max_concurrent = settings.get("max_concurrent_games", 3)
+                can_join_more = await check_human_bot_concurrent_games(bot.id, max_concurrent)
+                if not can_join_more:
+                    continue
+                
                 # Check bet limit
                 current_active_bets = await get_human_bot_active_bets_count(bot.id)
                 bot_limit = bot.bet_limit or 12
