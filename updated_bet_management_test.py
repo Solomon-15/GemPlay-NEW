@@ -126,16 +126,25 @@ class BetManagementTester:
             if response.status_code in [200, 201]:
                 self.log(f"Registered test user: {user_data['username']}", "SUCCESS")
                 
-                # Login user
-                token = self.login_user(user_data["email"], user_data["password"])
-                if token:
-                    # Get user ID
-                    headers = {"Authorization": f"Bearer {token}"}
-                    profile_response = self.make_request("GET", "/users/profile", headers=headers)
-                    if profile_response.status_code == 200:
-                        user_id = profile_response.json().get("id")
-                        self.log(f"Got user ID: {user_id}", "SUCCESS")
-                        return token, user_id
+                # Get user ID from registration response
+                reg_data = response.json()
+                user_id = reg_data.get("user_id")
+                
+                if user_id:
+                    # Use admin to verify the user's email
+                    admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
+                    verify_response = self.make_request("POST", f"/admin/users/{user_id}/verify-email", {}, admin_headers)
+                    
+                    if verify_response.status_code == 200:
+                        self.log(f"Admin verified user email: {user_data['username']}", "SUCCESS")
+                        
+                        # Now login user
+                        token = self.login_user(user_data["email"], user_data["password"])
+                        if token:
+                            self.log(f"Got user ID: {user_id}", "SUCCESS")
+                            return token, user_id
+                    else:
+                        self.log(f"Failed to verify user email: {verify_response.status_code}", "ERROR")
                         
             elif response.status_code == 400 and "already exists" in response.text.lower():
                 self.log(f"User {user_data['username']} already exists, trying to login", "WARNING")
