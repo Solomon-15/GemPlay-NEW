@@ -17514,12 +17514,12 @@ async def bulk_create_human_bots(
                 # Generate bet_limit within range
                 bet_limit = random.randint(bulk_data.bet_limit_range[0], bulk_data.bet_limit_range[1])
                 
-                # Create bot
+                # Create bot (с целыми значениями ставок)
                 human_bot = HumanBot(
                     name=bot_name,
                     character=bulk_data.character,
-                    min_bet=round(min_bet, 2),
-                    max_bet=round(max_bet, 2),
+                    min_bet=float(min_bet),  # Преобразуем в float для базы, но значение будет целым
+                    max_bet=float(max_bet),  # Преобразуем в float для базы, но значение будет целым
                     bet_limit=bet_limit,
                     win_percentage=bulk_data.win_percentage,
                     loss_percentage=bulk_data.loss_percentage,
