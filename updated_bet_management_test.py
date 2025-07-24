@@ -179,14 +179,14 @@ class BetManagementTester:
                     return False
                     
             # Add balance to users
-            admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
-            for i, user_id in enumerate(self.test_user_ids):
-                response = self.make_request("POST", f"/admin/users/{user_id}/add-balance", 
-                                           {"amount": 100.0}, admin_headers)
+            for i, token in enumerate(self.test_user_tokens):
+                headers = {"Authorization": f"Bearer {token}"}
+                response = self.make_request("POST", "/auth/add-balance", 
+                                           {"amount": 100.0}, headers)
                 if response.status_code == 200:
                     self.log(f"Added $100 balance to test user {i+1}", "SUCCESS")
                 else:
-                    self.log(f"Failed to add balance to test user {i+1}: {response.status_code}", "ERROR")
+                    self.log(f"Failed to add balance to test user {i+1}: {response.status_code} - {response.text}", "ERROR")
                     return False
                     
             # Purchase gems for users
