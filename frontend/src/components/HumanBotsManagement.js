@@ -307,6 +307,10 @@ const HumanBotsManagement = () => {
     try {
       const response = await executeOperation(`/admin/human-bots/${botId}/toggle-status`, 'POST');
       if (response.success !== false) {
+        const bot = humanBots.find(b => b.id === botId);
+        const botName = bot?.name || 'Human-бот';
+        const action = bot?.is_active ? 'деактивирован' : 'активирован';
+        addNotification(`Human-бот "${botName}" успешно ${action}`, 'success');
         fetchHumanBots();
         fetchStats();
       }
