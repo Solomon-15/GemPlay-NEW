@@ -414,9 +414,9 @@ class RussianReviewTester:
             self.log("✅ Bulk creation endpoint successful")
             
             # Check if created bots have whole number gem values
-            created_bots = response.get("bots", [])
+            created_bots = response.get("bots", []) or response.get("created_bots", [])
             if not created_bots:
-                self.log("❌ No bots returned in bulk creation response", "ERROR")
+                self.log(f"❌ No bots returned in bulk creation response: {response}", "ERROR")
                 return False
             
             self.log(f"Created {len(created_bots)} bots")
