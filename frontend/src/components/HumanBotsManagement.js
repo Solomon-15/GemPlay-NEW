@@ -29,6 +29,10 @@ const HumanBotsManagement = () => {
   // Состояние для настроек Human-ботов
   const [humanBotSettings, setHumanBotSettings] = useState({
     max_active_bets_human: 100,
+    auto_play_enabled: false,
+    min_delay_seconds: 1,
+    max_delay_seconds: 3600,
+    play_with_players_enabled: false,
     current_usage: {
       total_individual_limits: 0,
       max_limit: 100,
