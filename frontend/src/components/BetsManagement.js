@@ -651,11 +651,11 @@ const BetsManagement = () => {
                 </div>
                 <div>
                   <label className="text-text-secondary text-sm">Сумма ставки:</label>
-                  <div className="text-accent-primary font-bold">${selectedBet.bet_amount?.toFixed(2)}</div>
+                  <div className="text-accent-primary font-bold">{formatDollarsAsGems(selectedBet.bet_amount || 0)}</div>
                 </div>
                 <div>
                   <label className="text-text-secondary text-sm">Комиссия:</label>
-                  <div className="text-yellow-400 font-bold">${selectedBet.commission_amount?.toFixed(2)}</div>
+                  <div className="text-yellow-400 font-bold">{formatDollarsAsGems(selectedBet.commission_amount || 0)}</div>
                 </div>
                 <div>
                   <label className="text-text-secondary text-sm">Создана:</label>
