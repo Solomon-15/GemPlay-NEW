@@ -2328,7 +2328,7 @@ const RegularBotsManagement = () => {
                   </div>
                 </div>
                 <div className="text-xs text-text-secondary mt-1">
-                  Диапазон сумм ставок (1-10000)
+                  Диапазон сумм ставок в гемах (1-10000)
                 </div>
               </div>
 
