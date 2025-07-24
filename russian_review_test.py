@@ -286,9 +286,18 @@ class RussianReviewTester:
         
         # Register second user
         reg_status, reg_response = self.make_request("POST", "/auth/register", second_user)
-        if reg_status != 201:
+        if reg_status not in [201, 200]:
             self.log(f"❌ Second user registration failed: {reg_response}", "ERROR")
             return False
+        
+        # Verify email if needed
+        verification_token = reg_response.get("verification_token")
+        if verification_token:
+            verify_status, verify_response = self.make_request("POST", "/auth/verify-email", {
+                "token": verification_token
+            })
+            if verify_status == 200:
+                self.log("✅ Second user email verification successful")
         
         # Login second user
         login_status, login_response = self.make_request("POST", "/auth/login", {
