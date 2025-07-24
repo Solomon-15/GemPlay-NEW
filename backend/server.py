@@ -10292,42 +10292,36 @@ async def bot_join_game_automatically(bot: Bot):
             {"$set": {"last_game_time": datetime.utcnow()}}
         )
         
-        # For bot games, automatically trigger reveal and determine winner after a short delay
-        # This simulates the bot "revealing" immediately
+        # For bot games, automatically complete the game after 3 seconds
+        # This simulates both players joining and playing
         import asyncio
         
-        # Wait a short moment to ensure the game is properly updated
-        await asyncio.sleep(0.1)
+        # Automatically complete the game after 3 seconds
+        await auto_complete_game_after_delay(game_obj.id)
         
-        # Automatically complete the reveal phase for bot games
-        await auto_complete_bot_game_reveal(game_obj.id)
-        
-        logger.info(f"Bot {bot.name} joined game {game_obj.id} and moved to REVEAL phase")
+        logger.info(f"Bot {bot.name} joined game {game_obj.id} and game will complete after delay")
         
     except Exception as e:
         logger.error(f"Error in bot auto-join game: {e}")
 
-async def auto_complete_bot_game_reveal(game_id: str):
-    """Automatically complete the reveal phase for bot games."""
+async def auto_complete_game_after_delay(game_id: str):
+    """Automatically complete the game after 3 seconds when both players joined."""
     try:
-        # Update game status to ACTIVE (simulating successful reveal)
-        await db.games.update_one(
-            {"id": game_id},
-            {
-                "$set": {
-                    "status": GameStatus.ACTIVE,
-                    "reveal_deadline": None
-                }
-            }
-        )
+        # Wait 3 seconds
+        await asyncio.sleep(3)
         
-        # Determine winner
+        # Get the game
+        game = await db.games.find_one({"id": game_id})
+        if not game or game.get("status") != GameStatus.ACTIVE:
+            return  # Game no longer active or doesn't exist
+        
+        # Determine winner immediately
         await determine_game_winner(game_id)
         
-        logger.info(f"Automatically completed reveal for bot game {game_id}")
+        logger.info(f"Automatically completed game {game_id} after 3-second delay")
         
     except Exception as e:
-        logger.error(f"Error auto-completing bot game reveal: {e}")
+        logger.error(f"Error auto-completing game {game_id}: {e}")
 
 # ==============================================================================
 # ADMIN GAME MANAGEMENT
