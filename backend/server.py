@@ -1619,6 +1619,9 @@ async def human_bot_simulation_task():
             if auto_play_enabled:
                 await process_human_bot_auto_play(active_human_bots, settings)
             
+            # Process joining available bets (both bot and player bets)
+            await process_human_bot_join_available_bets(active_human_bots, settings)
+            
             # Wait before next cycle (shorter interval for human bots)
             await asyncio.sleep(15)  # Check every 15 seconds
             
