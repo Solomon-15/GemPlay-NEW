@@ -245,7 +245,7 @@ class RussianReviewTester:
             self.log("❌ No test user available for testing", "ERROR")
             return False
         
-        # First, add some balance to user for betting
+        # First, add some balance and gems to user for betting
         balance_status, balance_response = self.make_request(
             "POST", f"/admin/users/{self.test_user_id}/balance", 
             {"new_balance": 100.0}, 
@@ -256,6 +256,18 @@ class RussianReviewTester:
             self.log(f"⚠️ Could not add balance to test user: {balance_response}")
         else:
             self.log("✅ Added balance to test user")
+        
+        # Add gems to user
+        gem_status, gem_response = self.make_request(
+            "POST", f"/admin/users/{self.test_user_id}/gems", 
+            {"gem_type": "Ruby", "quantity": 10}, 
+            token=self.admin_token
+        )
+        
+        if gem_status != 200:
+            self.log(f"⚠️ Could not add gems to test user: {gem_response}")
+        else:
+            self.log("✅ Added gems to test user")
         
         # Create a game
         game_data = {
