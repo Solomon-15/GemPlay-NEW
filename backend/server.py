@@ -3370,6 +3370,226 @@ async def sell_gems(gem_type: GemType, quantity: int, current_user: User = Depen
         "new_balance": new_balance
     }
 
+# ==============================================================================
+# ADMIN GEM MANAGEMENT API ROUTES
+# ==============================================================================
+
+@api_router.get("/admin/gems", response_model=List[GemAdminResponse])
+async def get_gems_admin(current_admin: User = Depends(get_current_super_admin)):
+    """Get all gems for admin management."""
+    try:
+        gems = await db.gem_definitions.find({}).to_list(100)
+        result = []
+        for gem in gems:
+            result.append(GemAdminResponse(
+                id=gem.get("id", str(gem.get("_id"))),
+                type=gem["type"],
+                name=gem["name"],
+                price=int(gem["price"]),
+                color=gem["color"],
+                icon=gem["icon"],
+                rarity=gem["rarity"],
+                enabled=gem.get("enabled", True),
+                is_default=gem.get("is_default", False),
+                created_at=gem["created_at"]
+            ))
+        return result
+    except Exception as e:
+        logger.error(f"Error fetching gems for admin: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch gems"
+        )
+
+@api_router.post("/admin/gems", response_model=dict)
+async def create_gem_admin(
+    request: CreateGemRequest,
+    current_admin: User = Depends(get_current_super_admin)
+):
+    """Create a new gem type."""
+    try:
+        # Check for unique name
+        existing = await db.gem_definitions.find_one({"name": request.name})
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Gem name already exists"
+            )
+        
+        # Validate base64 image size (1MB limit)
+        if len(request.icon.encode('utf-8')) > 1024 * 1024:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Icon size exceeds 1MB limit"
+            )
+        
+        # Create new gem
+        new_gem = GemDefinition(
+            type=request.name.lower().replace(" ", "_"),  # Generate type from name
+            name=request.name,
+            price=request.price,
+            color=request.color,
+            icon=request.icon,
+            rarity=request.rarity,
+            enabled=True,
+            is_default=False
+        )
+        
+        await db.gem_definitions.insert_one(new_gem.dict())
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="CREATE_GEM",
+            target_type="gem",
+            target_id=new_gem.id,
+            details={
+                "name": request.name,
+                "price": request.price,
+                "color": request.color,
+                "rarity": request.rarity
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "Gem created successfully", "gem_id": new_gem.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating gem: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create gem"
+        )
+
+@api_router.put("/admin/gems/{gem_id}", response_model=dict)
+async def update_gem_admin(
+    gem_id: str,
+    request: UpdateGemRequest,
+    current_admin: User = Depends(get_current_super_admin)
+):
+    """Update an existing gem."""
+    try:
+        # Find gem
+        gem = await db.gem_definitions.find_one({"id": gem_id})
+        if not gem:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Gem not found"
+            )
+        
+        # Prepare update data
+        update_data = {"updated_at": datetime.utcnow()}
+        if request.name is not None:
+            # Check name uniqueness
+            existing = await db.gem_definitions.find_one({"name": request.name, "id": {"$ne": gem_id}})
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Gem name already exists"
+                )
+            update_data["name"] = request.name
+            
+        if request.price is not None:
+            update_data["price"] = request.price
+            
+        if request.color is not None:
+            update_data["color"] = request.color
+            
+        if request.icon is not None:
+            # Validate base64 image size (1MB limit)
+            if len(request.icon.encode('utf-8')) > 1024 * 1024:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Icon size exceeds 1MB limit"
+                )
+            update_data["icon"] = request.icon
+            
+        if request.rarity is not None:
+            update_data["rarity"] = request.rarity
+            
+        if request.enabled is not None:
+            update_data["enabled"] = request.enabled
+        
+        await db.gem_definitions.update_one(
+            {"id": gem_id},
+            {"$set": update_data}
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="UPDATE_GEM",
+            target_type="gem",
+            target_id=gem_id,
+            details={
+                "updated_fields": list(update_data.keys()),
+                "name": gem["name"]
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "Gem updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating gem: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update gem"
+        )
+
+@api_router.delete("/admin/gems/{gem_id}", response_model=dict)
+async def delete_gem_admin(
+    gem_id: str,
+    current_admin: User = Depends(get_current_super_admin)
+):
+    """Delete a gem (only non-default gems can be deleted)."""
+    try:
+        # Find gem
+        gem = await db.gem_definitions.find_one({"id": gem_id})
+        if not gem:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Gem not found"
+            )
+        
+        # Check if it's a default gem
+        if gem.get("is_default", False):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete default gems"
+            )
+        
+        # Delete gem
+        await db.gem_definitions.delete_one({"id": gem_id})
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="DELETE_GEM",
+            target_type="gem",
+            target_id=gem_id,
+            details={
+                "name": gem["name"],
+                "price": gem["price"]
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {"message": "Gem deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting gem: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete gem"
+        )
+
 @api_router.get("/notifications", response_model=List[dict])
 async def get_user_notifications(current_user: User = Depends(get_current_user)):
     """Get user notifications."""
