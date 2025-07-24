@@ -644,6 +644,7 @@ class UpdateHumanBotRequest(BaseModel):
     use_commit_reveal: Optional[bool] = None
     logging_level: Optional[str] = None
     can_play_with_other_bots: Optional[bool] = None
+    can_play_with_players: Optional[bool] = None
 
 class ToggleAutoPlayRequest(BaseModel):
     can_play_with_other_bots: bool
