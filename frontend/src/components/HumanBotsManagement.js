@@ -33,6 +33,7 @@ const HumanBotsManagement = () => {
     min_delay_seconds: 1,
     max_delay_seconds: 3600,
     play_with_players_enabled: false,
+    max_concurrent_games: 3,
     current_usage: {
       total_individual_limits: 0,
       max_limit: 100,
