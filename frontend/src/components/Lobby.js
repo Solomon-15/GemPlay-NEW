@@ -344,7 +344,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           <div className="flex justify-between">
             <span className="font-roboto text-text-secondary">Bet Amount:</span>
             <span className="font-rajdhani text-green-400 font-bold">
-              ${game.bet_amount}
+              {formatDollarsAsGems(game.bet_amount)}
             </span>
           </div>
           <div className="flex justify-between">
