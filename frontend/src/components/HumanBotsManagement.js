@@ -656,6 +656,36 @@ const HumanBotsManagement = () => {
                       </div>
                     </div>
 
+                    {/* Новый переключатель для игры с игроками */}
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <h4 className="font-rajdhani font-bold text-white mb-3">👥 Игра с живыми игроками</h4>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <label className="font-rajdhani font-bold text-white">
+                              Включить игру с Игроками
+                            </label>
+                            <p className="text-text-secondary text-sm">
+                              Позволяет Human-ботам играть с живыми игроками
+                            </p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={humanBotSettings.play_with_players_enabled || false}
+                              onChange={(e) => setHumanBotSettings({
+                                ...humanBotSettings,
+                                play_with_players_enabled: e.target.checked
+                              })}
+                              className="sr-only peer"
+                              disabled={settingsSaving}
+                            />
+                            <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-accent-primary peer-focus:ring-opacity-25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent-primary"></div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Настройка максимального лимита */}
                     <div className="space-y-4">
                       <div>
