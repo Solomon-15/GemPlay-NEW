@@ -71,7 +71,7 @@ class BetManagementTester:
         """Login user and return token."""
         try:
             response = self.make_request("POST", "/auth/login", {
-                "username": email,
+                "email": email,
                 "password": password
             })
             
