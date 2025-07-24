@@ -7,7 +7,7 @@ const API = `${BACKEND_URL}/api`;
 const MyBets = ({ user }) => {
   const [bets, setBets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('active'); // active, completed, cancelled
+  const [activeTab, setActiveTab] = useState('awaiting'); // awaiting, ongoing, wins, losses, draws, cancelled
   const [currentPage, setCurrentPage] = useState(1);
   
   const itemsPerPage = 10;
