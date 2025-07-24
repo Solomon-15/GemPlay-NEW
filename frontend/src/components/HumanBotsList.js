@@ -575,6 +575,9 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                 Играть друг с другом
               </th>
               <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Играть с Игроками  
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                 Действия
               </th>
             </tr>
