@@ -153,6 +153,29 @@ const BetsManagement = () => {
     }
   };
 
+  const deleteAllBets = async () => {
+    try {
+      setDeletingAll(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/bets/delete-all`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showSuccessRU(`${response.data.message}. Удалено: ${response.data.actual_database_deletions} ставок`);
+      setIsDeleteAllModalOpen(false);
+      await fetchStats();
+      await fetchBets();
+    } catch (error) {
+      console.error('Error deleting all bets:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при удалении всех ставок';
+      showErrorRU(errorMessage);
+    } finally {
+      setDeletingAll(false);
+    }
+  };
+
   const resetFractionalBets = async () => {
     try {
       setResettingFractional(true);
