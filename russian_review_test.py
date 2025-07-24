@@ -97,9 +97,24 @@ class RussianReviewTester:
         # Register user
         status, response = self.make_request("POST", "/auth/register", TEST_USER)
         
-        if status != 201:
+        if status not in [201, 200]:
             self.log(f"❌ User registration failed: {response}", "ERROR")
             return False
+        
+        # Get user ID and verification token from response
+        user_id = response.get("user_id")
+        verification_token = response.get("verification_token")
+        
+        if verification_token:
+            # Verify email using the token
+            verify_status, verify_response = self.make_request("POST", "/auth/verify-email", {
+                "token": verification_token
+            })
+            
+            if verify_status == 200:
+                self.log("✅ Email verification successful")
+            else:
+                self.log(f"⚠️ Email verification failed: {verify_response}")
             
         # Login user
         status, response = self.make_request("POST", "/auth/login", {
