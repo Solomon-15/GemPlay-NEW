@@ -396,7 +396,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
       await executeOperation(`/admin/human-bots/${bot.id}/toggle-play-with-players`, 'POST', {
         can_play_with_players: canPlay
       });
-      addNotification(`Human-бот ${bot.name} ${canPlay ? 'может' : 'не может'} играть с игроками`, 'success');
+      addNotification(`Настройки Human-бота "${bot.name}" изменены: игра с игроками ${canPlay ? 'включена' : 'отключена'}`, 'success');
       await fetchHumanBots();
       await fetchStats();
     } catch (error) {
