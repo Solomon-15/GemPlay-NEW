@@ -63,6 +63,11 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     fetchInterfaceSettings();
     fetchLobbyData();
     
+    // Preload gem prices
+    preloadGemPrices().then(() => {
+      getGemPrices().then(setGemPrices);
+    });
+    
     // Обновляем данные каждые 10 секунд
     const interval = setInterval(fetchLobbyData, 10000);
     
