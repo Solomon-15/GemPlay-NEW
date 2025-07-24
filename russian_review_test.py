@@ -271,9 +271,9 @@ class RussianReviewTester:
             self.log(f"❌ Game creation failed: {create_response}", "ERROR")
             return False
         
-        game_id = create_response.get("id")
+        game_id = create_response.get("game_id") or create_response.get("id")
         if not game_id:
-            self.log("❌ No game ID in create response", "ERROR")
+            self.log(f"❌ No game ID in create response: {create_response}", "ERROR")
             return False
         
         self.log(f"✅ Game created: {game_id}")
