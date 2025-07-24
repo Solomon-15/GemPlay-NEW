@@ -388,7 +388,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
   const handleTogglePlayWithPlayers = async (bot, canPlay) => {
     // Check if global setting allows play with players
     if (!globalSettings.play_with_players_enabled) {
-      addNotification('Игра с игроками отключена глобально в настройках', 'warning');
+      addNotification('Невозможно изменить настройку: игра с игроками отключена глобально в настройках системы', 'warning');
       return;
     }
     
