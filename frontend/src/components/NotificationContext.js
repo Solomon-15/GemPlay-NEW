@@ -13,6 +13,10 @@ export const useNotifications = () => {
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
 
+  const removeNotification = useCallback((id) => {
+    setNotifications(prev => prev.filter(notification => notification.id !== id));
+  }, []);
+
   // Support for both formats: addNotification({type, message}) and addNotification(message, type)
   const addNotification = useCallback((messageOrNotification, type = null) => {
     const notification = typeof messageOrNotification === 'string' 
@@ -38,10 +42,6 @@ export const NotificationProvider = ({ children }) => {
     
     return id;
   }, [removeNotification]);
-
-  const removeNotification = useCallback((id) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-  }, []);
 
   const clearAllNotifications = useCallback(() => {
     setNotifications([]);
