@@ -469,7 +469,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
       <div className="bg-surface-sidebar rounded-lg p-4 space-y-3">
         <div className="flex justify-between">
           <span className="text-text-secondary">Bet Amount:</span>
-          <span className="text-white font-rajdhani font-bold">{formatGemValue(totalGemValue)}</span>
+          <span className="text-white font-rajdhani font-bold">{formatDollarsAsGems(totalGemValue)}</span>
         </div>
         
         <div className="flex justify-between">
