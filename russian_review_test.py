@@ -338,6 +338,18 @@ class RussianReviewTester:
         else:
             self.log("✅ Added balance to second user")
         
+        # Add gems to second user
+        gem_status, gem_response = self.make_request(
+            "POST", f"/admin/users/{second_user_id}/gems", 
+            {"gem_type": "Ruby", "quantity": 10}, 
+            token=self.admin_token
+        )
+        
+        if gem_status != 200:
+            self.log(f"⚠️ Could not add gems to second user: {gem_response}")
+        else:
+            self.log("✅ Added gems to second user")
+        
         # Record start time
         start_time = time.time()
         
