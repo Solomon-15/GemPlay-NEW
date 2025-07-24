@@ -11412,6 +11412,221 @@ async def reset_all_bets(current_user: User = Depends(get_current_super_admin)):
             detail="Failed to reset all bets"
         )
 
+@api_router.post("/admin/bets/reset-fractional", response_model=dict)
+async def reset_fractional_gem_bets(current_user: User = Depends(get_current_super_admin)):
+    """Reset all bets with fractional gem amounts (SUPER_ADMIN only)."""
+    try:
+        # Find all games with fractional bet amounts using MongoDB aggregation
+        pipeline = [
+            {
+                "$match": {
+                    "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]},
+                    "bet_amount": {"$exists": True, "$ne": None}
+                }
+            },
+            {
+                "$addFields": {
+                    "is_fractional": {
+                        "$ne": [
+                            {"$mod": ["$bet_amount", 1]},
+                            0
+                        ]
+                    }
+                }
+            },
+            {
+                "$match": {
+                    "is_fractional": True
+                }
+            }
+        ]
+        
+        fractional_games = await db.games.aggregate(pipeline).to_list(10000)
+        
+        if not fractional_games:
+            return {
+                "success": True,
+                "message": "No bets with fractional gem amounts found",
+                "total_processed": 0,
+                "cancelled_games": [],
+                "total_gems_returned": {},
+                "total_commission_returned": 0,
+                "users_affected": [],
+                "bots_affected": []
+            }
+        
+        reset_results = {
+            "total_processed": 0,
+            "cancelled_games": [],
+            "total_gems_returned": {},
+            "total_commission_returned": 0,
+            "users_affected": set(),
+            "bots_affected": set()
+        }
+        
+        for game in fractional_games:
+            game_id = game.get("id")
+            game_status = game.get("status")
+            creator_id = game.get("creator_id")
+            opponent_id = game.get("opponent_id")
+            bet_amount = game.get("bet_amount", 0)
+            bet_gems = game.get("bet_gems", {})
+            opponent_gems = game.get("opponent_gems", {})
+            
+            # Cancel the game
+            await db.games.update_one(
+                {"id": game_id},
+                {
+                    "$set": {
+                        "status": "CANCELLED",
+                        "cancelled_at": datetime.utcnow(),
+                        "cancelled_by": "admin_reset_fractional",
+                        "cancel_reason": f"Reset fractional gem bet by admin {current_user.username}"
+                    }
+                }
+            )
+            
+            commission_returned = 0
+            
+            # Return resources based on game status
+            if game_status == "WAITING":
+                # Only creator has committed resources
+                # Return creator's gems
+                for gem_type, quantity in bet_gems.items():
+                    if quantity > 0:
+                        await db.users.update_one(
+                            {"id": creator_id},
+                            {
+                                "$inc": {"gems." + gem_type + ".quantity": quantity, "gems." + gem_type + ".frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
+                
+                # Return creator's commission
+                commission_amount = bet_amount * 0.03
+                creator_user = await db.users.find_one({"id": creator_id})
+                if creator_user:
+                    await db.users.update_one(
+                        {"id": creator_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+                    reset_results["users_affected"].add(creator_id)
+                else:
+                    reset_results["bots_affected"].add(creator_id)
+            
+            elif game_status in ["ACTIVE", "REVEAL"]:
+                # Both players have committed resources
+                # Return creator's gems
+                for gem_type, quantity in bet_gems.items():
+                    if quantity > 0:
+                        await db.users.update_one(
+                            {"id": creator_id},
+                            {
+                                "$inc": {"gems." + gem_type + ".quantity": quantity, "gems." + gem_type + ".frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
+                
+                # Return opponent's gems
+                for gem_type, quantity in opponent_gems.items():
+                    if quantity > 0:
+                        await db.users.update_one(
+                            {"id": opponent_id},
+                            {
+                                "$inc": {"gems." + gem_type + ".quantity": quantity, "gems." + gem_type + ".frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
+                
+                # Return commission to both players
+                commission_amount = bet_amount * 0.03
+                
+                # Return to creator
+                creator_user = await db.users.find_one({"id": creator_id})
+                if creator_user:
+                    await db.users.update_one(
+                        {"id": creator_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+                    reset_results["users_affected"].add(creator_id)
+                else:
+                    reset_results["bots_affected"].add(creator_id)
+                
+                # Return to opponent
+                if opponent_id:
+                    opponent_user = await db.users.find_one({"id": opponent_id})
+                    if opponent_user:
+                        await db.users.update_one(
+                            {"id": opponent_id},
+                            {
+                                "$inc": {
+                                    "virtual_balance": commission_amount,
+                                    "frozen_balance": -commission_amount
+                                },
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        commission_returned += commission_amount
+                        reset_results["users_affected"].add(opponent_id)
+                    else:
+                        reset_results["bots_affected"].add(opponent_id)
+            
+            reset_results["cancelled_games"].append({
+                "game_id": game_id,
+                "status": game_status,
+                "bet_amount": bet_amount,
+                "fractional_part": bet_amount % 1,
+                "created_at": game.get("created_at")
+            })
+            reset_results["total_commission_returned"] += commission_returned
+            reset_results["total_processed"] += 1
+        
+        # Convert sets to lists for JSON serialization
+        reset_results["users_affected"] = list(reset_results["users_affected"])
+        reset_results["bots_affected"] = list(reset_results["bots_affected"])
+        
+        # Log admin action
+        admin_log = {
+            "admin_id": current_user.id,
+            "admin_username": current_user.username,
+            "action": "reset_fractional_gem_bets",
+            "details": reset_results,
+            "timestamp": datetime.utcnow()
+        }
+        await db.admin_logs.insert_one(admin_log)
+        
+        return {
+            "success": True,
+            "message": f"Successfully reset {reset_results['total_processed']} bets with fractional gem amounts",
+            **reset_results
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting fractional gem bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset fractional gem bets"
+        )
+
 @api_router.post("/admin/users/{user_id}/reset-bets", response_model=dict)
 async def reset_user_bets(
     user_id: str,
