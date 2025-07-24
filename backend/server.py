@@ -16868,6 +16868,7 @@ async def get_human_bots_settings(current_admin: User = Depends(get_current_admi
                 "auto_play_enabled": settings.get("auto_play_enabled", False),
                 "min_delay_seconds": settings.get("min_delay_seconds", 1),
                 "max_delay_seconds": settings.get("max_delay_seconds", 3600),
+                "play_with_players_enabled": settings.get("play_with_players_enabled", False),
                 "current_usage": {
                     "total_individual_limits": total_individual_limits,
                     "max_limit": max_limit,
