@@ -247,13 +247,15 @@ class RussianReviewTester:
         
         # First, add some balance to user for betting
         balance_status, balance_response = self.make_request(
-            "POST", "/admin/users/add-balance", 
-            {"user_id": self.test_user_id, "amount": 100.0}, 
+            "POST", f"/admin/users/{self.test_user_id}/balance", 
+            {"new_balance": 100.0}, 
             token=self.admin_token
         )
         
         if balance_status != 200:
             self.log(f"⚠️ Could not add balance to test user: {balance_response}")
+        else:
+            self.log("✅ Added balance to test user")
         
         # Create a game
         game_data = {
