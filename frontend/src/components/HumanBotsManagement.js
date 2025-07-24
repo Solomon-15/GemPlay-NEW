@@ -645,6 +645,28 @@ const HumanBotsManagement = () => {
                           </div>
                         </div>
                         
+                        {/* Новое поле для максимального количества одновременных игр */}
+                        <div>
+                          <label className="block font-rajdhani font-bold text-white mb-2">
+                            Макс. одновременных игр
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="50"
+                            value={humanBotSettings.max_concurrent_games || 3}
+                            onChange={(e) => setHumanBotSettings({
+                              ...humanBotSettings,
+                              max_concurrent_games: parseInt(e.target.value) || 3
+                            })}
+                            className="w-full px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                            disabled={settingsSaving}
+                          />
+                          <p className="text-text-secondary text-xs mt-1">
+                            Максимальное количество игр, в которых Human-бот может участвовать одновременно
+                          </p>
+                        </div>
+                        
                         <div className="flex items-center space-x-4">
                           <div className="flex-1 text-text-secondary text-sm">
                             💡 Human-боты будут создавать игры друг с другом с случайной задержкой от {humanBotSettings.min_delay_seconds || 1} до {humanBotSettings.max_delay_seconds || 3600} секунд ({Math.round((humanBotSettings.max_delay_seconds || 3600) / 60)} минут)
