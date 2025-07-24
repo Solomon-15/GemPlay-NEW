@@ -2311,14 +2311,15 @@ const RegularBotsManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Максимальная ставка:</label>
+                    <label className="block text-text-secondary text-sm mb-1">Максимальная ставка (гемы):</label>
                     <input
                       type="number"
                       min="1"
                       max="10000"
+                      step="1"
                       value={botForm.max_bet_amount}
                       onChange={(e) => {
-                        const newForm = {...botForm, max_bet_amount: parseFloat(e.target.value) || 50.0};
+                        const newForm = {...botForm, max_bet_amount: parseInt(e.target.value) || 50};
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
                       }}
