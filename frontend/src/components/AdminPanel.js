@@ -633,7 +633,7 @@ const AdminPanel = ({ user, onClose }) => {
       case 'games':
         return <GamesContent />;
       case 'gems':
-        return <div className="text-white">Управление гемами (в разработке)</div>;
+        return <GemsManagement />;
       case 'sounds':
         return <SoundsAdmin user={user} />;
       case 'profit':
