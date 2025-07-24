@@ -4945,8 +4945,8 @@ async def debug_user_games(user_id: str, current_user: User = Depends(get_curren
         games_as_opponent = await db.games.find({"opponent_id": user_id}).to_list(100)
         
         # Filter active games
-        active_as_creator = [g for g in games_as_creator if g["status"] in ["ACTIVE", "REVEAL"]]
-        active_as_opponent = [g for g in games_as_opponent if g["status"] in ["ACTIVE", "REVEAL"]]
+        active_as_creator = [g for g in games_as_creator if g["status"] in ["ACTIVE"]]
+        active_as_opponent = [g for g in games_as_opponent if g["status"] in ["ACTIVE"]]
         
         # Filter waiting games
         waiting_as_creator = [g for g in games_as_creator if g["status"] == "WAITING"]
