@@ -79,6 +79,47 @@ const HumanBotActiveBetsModal = ({
     }
   };
 
+  const handleDeleteBetsHistory = async () => {
+    // Показать диалог подтверждения
+    const confirmed = window.confirm(
+      `Вы уверены, что хотите удалить всю историю завершённых ставок для Human-бота "${bot.name}"?\n\n` +
+      'Будут удалены только ставки со статусом "Завершена", "Отменена" и "Архивирована".\n' +
+      'Активные ставки останутся нетронутыми.\n\n' +
+      'Это действие необратимо!'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDeletingHistory(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.post(`${API}/admin/human-bots/${bot.id}/delete-completed-bets`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.data && response.data.success !== false) {
+        addNotification?.(`Удалено ${response.data.deleted_count || 0} завершённых ставок из истории`, 'success');
+        
+        // Перезагружаем данные
+        if (showAllBets) {
+          await fetchAllBets();
+        } else {
+          await fetchActiveBets();
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка удаления истории ставок:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка удаления истории ставок';
+      addNotification?.(errorMessage, 'error');
+    } finally {
+      setDeletingHistory(false);
+    }
+  };
+
   const handleClearCompletedBets = async () => {
     try {
       setClearing(true);
