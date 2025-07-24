@@ -127,7 +127,9 @@ const HumanBotsManagement = () => {
     min_delay: 30,
     max_delay: 120,
     use_commit_reveal: true,
-    logging_level: 'INFO'
+    logging_level: 'INFO',
+    can_play_with_other_bots: true,
+    can_play_with_players: true
   });
 
   const [bulkCreateData, setBulkCreateData] = useState({
