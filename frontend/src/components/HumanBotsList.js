@@ -494,7 +494,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     if (confirmed) {
       try {
         const response = await executeOperation(`/admin/human-bots/${bot.id}?force_delete=true`, 'DELETE');
-        addNotification(response.message || `Human-бот ${bot.name} принудительно удален`, 'success');
+        addNotification(response.message || `Human-бот "${bot.name}" принудительно удален со всеми активными играми`, 'warning');
         await fetchHumanBots();
         await fetchStats();
       } catch (forceError) {
