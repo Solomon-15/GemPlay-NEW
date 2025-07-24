@@ -404,6 +404,25 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     }
   };
 
+  const handleRecalculateBets = async (bot) => {
+    const confirmed = await confirm({
+      title: `Пересчёт ставок Human-бота`,
+      message: `Вы уверены, что хотите пересчитать ставки для Human-бота "${bot.name}"? Все активные ставки будут отменены.`,
+      type: "warning"
+    });
+
+    if (confirmed) {
+      try {
+        const response = await executeOperation(`/admin/human-bots/${bot.id}/recalculate-bets`, 'POST');
+        addNotification(`Ставки Human-бота ${bot.name} успешно пересчитаны. Отменено ставок: ${response.cancelled_bets}`, 'success');
+        await fetchHumanBots();
+        await fetchStats();
+      } catch (error) {
+        console.error('Ошибка пересчёта ставок:', error);
+      }
+    }
+  };
+
   const handleDeleteBot = async (bot) => {
     try {
       // First try normal delete
