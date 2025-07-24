@@ -151,6 +151,33 @@ const BetsManagement = () => {
     }
   };
 
+  const resetFractionalBets = async () => {
+    try {
+      setResettingFractional(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/bets/reset-fractional`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.total_processed > 0) {
+        showSuccessRU(`${response.data.message}. Обработано: ${response.data.total_processed} ставок`);
+      } else {
+        showSuccessRU('Ставки с дробными значениями гемов не найдены');
+      }
+      setIsResetFractionalModalOpen(false);
+      await fetchStats();
+      await fetchBets();
+    } catch (error) {
+      console.error('Error resetting fractional bets:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при сбросе ставок с дробными значениями';
+      showErrorRU(errorMessage);
+    } finally {
+      setResettingFractional(false);
+    }
+  };
+
   const resetSingleBet = async () => {
     try {
       const token = localStorage.getItem('token');
