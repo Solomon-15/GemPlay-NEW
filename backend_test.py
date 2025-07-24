@@ -4991,35 +4991,48 @@ def test_multiple_pvp_games_support() -> None:
     # TASK 2: Test multiple game creation for players (no restrictions)
     print_subheader("TASK 2: Test Multiple Game Creation for Players")
     
-    # Create test users for concurrent games testing
+    # Try to login existing test users first
     test_user_tokens = []
+    
+    # Try existing users first
     for i, user_data in enumerate(CONCURRENT_TEST_USERS):
-        # Register user
-        token, email, username = test_user_registration(user_data)
-        if token:
-            # Verify email
-            test_email_verification(token, username)
+        user_token = test_login(user_data["email"], user_data["password"], f"concurrent_user_{i+1}")
+        if user_token:
+            test_user_tokens.append(user_token)
+            print_success(f"✓ Logged in existing user: {user_data['username']}")
+    
+    # If we don't have enough users, create new ones with unique names
+    if len(test_user_tokens) < 2:
+        import time
+        timestamp = int(time.time())
+        
+        for i in range(2 - len(test_user_tokens)):
+            new_user_data = {
+                "username": f"pvp_test_user_{timestamp}_{i}",
+                "email": f"pvp_test_user_{timestamp}_{i}@test.com",
+                "password": "Test123!",
+                "gender": "male" if i % 2 == 0 else "female"
+            }
             
-            # Login user
-            user_token = test_login(email, user_data["password"], f"concurrent_user_{i+1}")
-            if user_token:
-                test_user_tokens.append(user_token)
+            # Register user
+            token, email, username = test_user_registration(new_user_data)
+            if token:
+                # Verify email
+                test_email_verification(token, username)
                 
-                # Add some balance for testing
-                balance_response, balance_success = make_request(
-                    "POST", "/admin/add-balance",
-                    data={"user_id": user_data["username"], "amount": 500.0},
-                    auth_token=admin_token
-                )
-                if balance_success:
-                    print_success(f"✓ Added $500 balance to {username}")
+                # Login user
+                user_token = test_login(email, new_user_data["password"], f"pvp_test_user_{i}")
+                if user_token:
+                    test_user_tokens.append(user_token)
+                    print_success(f"✓ Created and logged in new user: {username}")
     
     if len(test_user_tokens) < 2:
         print_error("✗ Failed to create enough test users for concurrent games testing")
         record_test("Multiple PvP Games - Test User Setup", False, "Insufficient users")
         return
     
-    print_success(f"✓ Created {len(test_user_tokens)} test users for concurrent games testing")
+    print_success(f"✓ Have {len(test_user_tokens)} test users for concurrent games testing")
+    record_test("Multiple PvP Games - Test User Setup", True)
     
     # Test creating multiple games with first user
     user1_token = test_user_tokens[0]
