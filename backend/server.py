@@ -266,14 +266,14 @@ class GemDefinition(BaseModel):
 class CreateGemRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
     price: int = Field(..., ge=1, le=10000)  # Only whole dollars
-    color: str = Field(..., regex=r'^#[0-9A-Fa-f]{6}$')  # HEX color
+    color: str = Field(..., pattern=r'^#[0-9A-Fa-f]{6}$')  # HEX color
     icon: str = Field(..., description="Base64 encoded image")
     rarity: str = Field(default="Common")
 
 class UpdateGemRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=50)
     price: Optional[int] = Field(None, ge=1, le=10000)
-    color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
+    color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
     icon: Optional[str] = None
     rarity: Optional[str] = None
     enabled: Optional[bool] = None
