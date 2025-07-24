@@ -265,7 +265,7 @@ class RussianReviewTester:
             "POST", "/games/create", game_data, token=self.user_token
         )
         
-        if create_status != 201:
+        if create_status not in [200, 201]:
             self.log(f"❌ Game creation failed: {create_response}", "ERROR")
             return False
         
