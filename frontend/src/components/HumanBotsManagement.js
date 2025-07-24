@@ -953,25 +953,25 @@ const HumanBotsManagement = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Диапазон мин. ставок ($)</label>
+                  <label>Диапазон мин. ставок (гемы)</label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     placeholder="От"
                     value={bulkCreateData.min_bet_range[0]}
                     onChange={(e) => setBulkCreateData({
                       ...bulkCreateData, 
-                      min_bet_range: [parseFloat(e.target.value), bulkCreateData.min_bet_range[1]]
+                      min_bet_range: [parseInt(e.target.value) || 1, bulkCreateData.min_bet_range[1]]
                     })}
                   />
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     placeholder="До"
                     value={bulkCreateData.min_bet_range[1]}
                     onChange={(e) => setBulkCreateData({
                       ...bulkCreateData, 
-                      min_bet_range: [bulkCreateData.min_bet_range[0], parseFloat(e.target.value)]
+                      min_bet_range: [bulkCreateData.min_bet_range[0], parseInt(e.target.value) || 1]
                     })}
                   />
                 </div>
