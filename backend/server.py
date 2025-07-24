@@ -18422,40 +18422,51 @@ async def delete_human_bot_completed_bets(
         
         bot_name = bot_data.get("name", f"Bot-{bot_id[:8]}")
         
-        # Count completed bets before deletion
+        # Count completed bets before hiding
         completed_statuses = ["COMPLETED", "CANCELLED", "ARCHIVED"]
         completed_count = await db.games.count_documents({
             "creator_id": bot_id,
-            "status": {"$in": completed_statuses}
+            "status": {"$in": completed_statuses},
+            "hidden": {"$ne": True}  # Не считаем уже скрытые
         })
         
-        # Delete only completed bets (preserve WAITING and ACTIVE)
-        delete_result = await db.games.delete_many({
-            "creator_id": bot_id,
-            "status": {"$in": completed_statuses}
-        })
+        # Hide only completed bets (preserve WAITING and ACTIVE), не удаляем
+        hide_result = await db.games.update_many(
+            {
+                "creator_id": bot_id,
+                "status": {"$in": completed_statuses},
+                "hidden": {"$ne": True}  # Только те, что ещё не скрыты
+            },
+            {
+                "$set": {
+                    "hidden": True,
+                    "hidden_at": datetime.utcnow(),
+                    "hidden_by": current_admin.id
+                }
+            }
+        )
         
         # Log admin action
         admin_log = AdminLog(
             admin_id=current_admin.id,
-            action="DELETE_HUMAN_BOT_COMPLETED_BETS",
+            action="HIDE_HUMAN_BOT_COMPLETED_BETS",
             target_type="human_bot",
             target_id=bot_id,
             details={
                 "name": bot_name,
-                "deleted_bets": delete_result.deleted_count,
-                "statuses_deleted": completed_statuses
+                "hidden_bets": hide_result.modified_count,
+                "statuses_hidden": completed_statuses
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        logger.info(f"Deleted {delete_result.deleted_count} completed bets for Human-bot {bot_id}")
+        logger.info(f"Hidden {hide_result.modified_count} completed bets for Human-bot {bot_id}")
         
         return {
             "success": True,
-            "message": f"Удалено {delete_result.deleted_count} завершённых ставок Human-бота {bot_name}",
+            "message": f"Скрыто {hide_result.modified_count} завершённых ставок Human-бота {bot_name}",
             "bot_id": bot_id,
-            "deleted_count": delete_result.deleted_count,
+            "hidden_count": hide_result.modified_count,
             "bot_name": bot_name,
             "preserved_active_bets": True
         }
