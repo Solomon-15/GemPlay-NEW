@@ -318,7 +318,7 @@ const BetsManagement = () => {
             <div className="ml-3">
               <p className="text-text-secondary text-sm font-rajdhani">Всего ставок</p>
               <p className="text-white text-lg font-rajdhani font-bold">{stats.total_bets}</p>
-              <p className="text-accent-primary text-xs">${stats.total_bets_value?.toFixed(2) || '0.00'}</p>
+              <p className="text-accent-primary text-xs">{formatDollarsAsGems(stats.total_bets_value || 0)}</p>
             </div>
           </div>
         </div>
