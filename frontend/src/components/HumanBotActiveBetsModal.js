@@ -275,6 +275,14 @@ const HumanBotActiveBetsModal = ({
                   {clearing ? '🔄 Очистка...' : '🗑️ Очистить завершенные'}
                 </button>
               )}
+
+              <button
+                onClick={handleDeleteBetsHistory}
+                disabled={deletingHistory || loading}
+                className="px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-colors disabled:opacity-50 font-roboto"
+              >
+                {deletingHistory ? '🔄 Удаление...' : '🗑️ Удалить всю историю ставок'}
+              </button>
             </div>
 
             {!activeBetsData?.bets || activeBetsData.bets.length === 0 ? (
