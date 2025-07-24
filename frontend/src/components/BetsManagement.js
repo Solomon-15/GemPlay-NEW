@@ -388,7 +388,7 @@ const BetsManagement = () => {
             </div>
             <div className="ml-3">
               <p className="text-text-secondary text-sm font-rajdhani">Средняя сумма</p>
-              <p className="text-white text-lg font-rajdhani font-bold">${stats.average_bet?.toFixed(2) || '0.00'}</p>
+              <p className="text-white text-lg font-rajdhani font-bold">{formatDollarsAsGems(stats.average_bet || 0)}</p>
             </div>
           </div>
         </div>
