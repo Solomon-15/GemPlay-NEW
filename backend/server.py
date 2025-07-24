@@ -319,7 +319,7 @@ class Game(BaseModel):
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
-    reveal_deadline: Optional[datetime] = None  # Крайний срок для reveal
+    active_deadline: Optional[datetime] = None  # Крайний срок для завершения активной игры (1 минута)
     is_bot_game: bool = False
     bot_id: Optional[str] = None
     bot_type: Optional[str] = None  # "REGULAR", "HUMAN"
