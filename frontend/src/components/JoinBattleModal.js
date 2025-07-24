@@ -108,46 +108,23 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       const result = await response.json();
       console.log('🎮 Join game response:', result);
       
-      let battleOutcome = null;
-      let gameData = null;
-      
-      // Новая логика: игра стартует со статусом ACTIVE и завершается через 3 секунды
-      if (result.status === 'ACTIVE') {
-        console.log('🎮 Game started, waiting for auto-completion...');
-        
-        // Показываем уведомление о старте
-        showSuccess('Игра началась! Результат будет определен через 3 секунды...');
-        
-        // Ожидаем завершения игры через polling
-        const completedGame = await waitForGameCompletion(bet.id);
-        
-        if (!completedGame) {
-          throw new Error('Игра не завершилась в ожидаемое время. Попробуйте обновить страницу.');
-        }
-        
-        // Определяем результат битвы из завершенной игры
-        battleOutcome = completedGame.winner_id === user.id ? 'win' : 
-                       (completedGame.winner_id ? 'lose' : 'draw');
-        gameData = completedGame;
-        
-      } else if (result.status === 'COMPLETED') {
-        // Случай мгновенного завершения (для совместимости)
+      // Игра должна завершиться мгновенно и вернуть COMPLETED статус
+      if (result.status === 'COMPLETED') {
         console.log('🎮 Game completed immediately');
         
-        battleOutcome = result.winner_id === user.id ? 'win' : 
-                       (result.winner_id ? 'lose' : 'draw');
-        gameData = result;
+        const battleOutcome = result.winner_id === user.id ? 'win' : 
+                             (result.winner_id ? 'lose' : 'draw');
+        
+        // Сохраняем результат битвы
+        setBattleResult({
+          result: battleOutcome,
+          opponentMove: result.creator_move,
+          gameData: result
+        });
         
       } else {
-        throw new Error(`Неожиданный статус игры: ${result.status}. Ожидался ACTIVE или COMPLETED.`);
+        throw new Error(`Неожиданный статус игры: ${result.status}. Ожидался COMPLETED.`);
       }
-      
-      // Сохраняем результат битвы
-      setBattleResult({
-        result: battleOutcome,
-        opponentMove: gameData.creator_move,
-        gameData: gameData
-      });
       
       // Обновляем инвентарь и данные пользователя
       await refreshInventory();
