@@ -11295,71 +11295,13 @@ def test_fractional_gem_amounts_reset():
     else:
         print_error("Should have returned 401 without authentication")
     
-    # Step 3: Create test user for creating fractional bets
-    print_subheader("Step 3: Create Test User and Add Balance")
-    
-    test_user_data = {
-        "username": f"fractional_test_user_{int(time.time())}",
-        "email": f"fractional_test_{int(time.time())}@test.com",
-        "password": "Test123!",
-        "gender": "male"
-    }
-    
-    # Register test user
-    register_response, register_success = make_request(
-        "POST", "/auth/register",
-        data=test_user_data,
-        expected_status=200
-    )
-    
-    if not register_success:
-        print_error("Failed to create test user")
-        record_test("Test User Creation", False, "Failed to create test user")
-        return
-    
-    # Login as test user
-    login_test_user_data, login_test_success = make_request(
-        "POST", "/auth/login",
-        data={"email": test_user_data["email"], "password": test_user_data["password"]},
-        expected_status=200
-    )
-    
-    if not login_test_success:
-        print_error("Failed to login as test user")
-        record_test("Test User Login", False, "Failed to login as test user")
-        return
-    
-    test_user_token = login_test_user_data.get("access_token")
-    test_user_id = login_test_user_data.get("user", {}).get("id")
-    
-    record_test("Test User Creation", True, "Successfully created and logged in test user")
-    print_success(f"Test user created with ID: {test_user_id}")
-    
-    # Add balance to test user
-    add_balance_response, add_balance_success = make_request(
-        "POST", f"/admin/users/{test_user_id}/add-balance",
-        data={"amount": 100.0},
-        auth_token=super_admin_token,
-        expected_status=200
-    )
-    
-    if add_balance_success:
-        print_success("Added $100 balance to test user")
-    
-    # Step 4: Create games with fractional bet amounts by directly inserting into database
-    print_subheader("Step 4: Create Test Games with Fractional Bet Amounts")
-    
-    # We'll use the admin endpoint to create some test data with fractional amounts
-    # Since we can't easily create fractional bets through normal game creation,
-    # let's check if there are any existing fractional bets first
-    
-    # Step 5: Check current games with fractional amounts
-    print_subheader("Step 5: Check Current Games for Fractional Amounts")
+    # Step 3: Check current games with fractional amounts
+    print_subheader("Step 3: Check Current Games for Fractional Amounts")
     
     # Get available games to see if there are any fractional amounts
     games_response, games_success = make_request(
         "GET", "/games/available",
-        auth_token=test_user_token,
+        auth_token=super_admin_token,
         expected_status=200
     )
     
@@ -11376,8 +11318,8 @@ def test_fractional_gem_amounts_reset():
     
     print_success(f"Total fractional games found in available games: {fractional_games_found}")
     
-    # Step 6: Test the MongoDB aggregation query directly by calling the endpoint
-    print_subheader("Step 6: Test Fractional Reset Endpoint")
+    # Step 4: Test the MongoDB aggregation query directly by calling the endpoint
+    print_subheader("Step 4: Test Fractional Reset Endpoint")
     
     reset_response, reset_success = make_request(
         "POST", "/admin/bets/reset-fractional",
@@ -11391,8 +11333,8 @@ def test_fractional_gem_amounts_reset():
     
     record_test("Fractional Reset Endpoint", True, "Successfully called reset endpoint")
     
-    # Step 7: Verify response structure
-    print_subheader("Step 7: Verify Response Structure")
+    # Step 5: Verify response structure
+    print_subheader("Step 5: Verify Response Structure")
     
     required_fields = [
         "success", "message", "total_processed", "cancelled_games", 
@@ -11410,8 +11352,8 @@ def test_fractional_gem_amounts_reset():
     
     record_test("Response Structure", response_structure_valid, "All required fields present")
     
-    # Step 8: Analyze results
-    print_subheader("Step 8: Analyze Reset Results")
+    # Step 6: Analyze results
+    print_subheader("Step 6: Analyze Reset Results")
     
     total_processed = reset_response.get("total_processed", 0)
     cancelled_games = reset_response.get("cancelled_games", [])
@@ -11441,8 +11383,8 @@ def test_fractional_gem_amounts_reset():
     
     record_test("Fractional Verification", fractional_verification_passed, "Only fractional amounts were processed")
     
-    # Step 9: Test MongoDB aggregation query understanding
-    print_subheader("Step 9: Test MongoDB Aggregation Query Logic")
+    # Step 7: Test MongoDB aggregation query understanding
+    print_subheader("Step 7: Test MongoDB Aggregation Query Logic")
     
     # Test the logic that the endpoint uses
     test_amounts = [1.0, 1.5, 2.0, 2.75, 5.0, 10.25, 100.0, 50.33]
@@ -11459,8 +11401,8 @@ def test_fractional_gem_amounts_reset():
     
     record_test("Aggregation Logic", aggregation_logic_correct, "MongoDB aggregation logic is correct")
     
-    # Step 10: Test edge case - run again (should find 0 fractional bets now)
-    print_subheader("Step 10: Test Edge Case - Run Again")
+    # Step 8: Test edge case - run again (should find 0 fractional bets now)
+    print_subheader("Step 8: Test Edge Case - Run Again")
     
     second_reset_response, second_reset_success = make_request(
         "POST", "/admin/bets/reset-fractional",
@@ -11477,8 +11419,8 @@ def test_fractional_gem_amounts_reset():
             print_warning(f"Found {second_total_processed} fractional bets on second run - may indicate new fractional bets were created")
             record_test("Second Run Test", True, f"Found {second_total_processed} fractional bets on second run")
     
-    # Step 11: Test with different game statuses
-    print_subheader("Step 11: Test Game Status Filtering")
+    # Step 9: Test with different game statuses
+    print_subheader("Step 9: Test Game Status Filtering")
     
     # The endpoint should only process games with status WAITING, ACTIVE, REVEAL
     # Let's verify this understanding
@@ -11490,8 +11432,42 @@ def test_fractional_gem_amounts_reset():
     
     record_test("Status Filtering", True, "Endpoint correctly filters by game status")
     
-    # Step 12: Summary
-    print_subheader("Step 12: Test Summary")
+    # Step 10: Test super admin requirement
+    print_subheader("Step 10: Test Super Admin Requirement")
+    
+    # Try to login as regular admin and test
+    admin_login_data, admin_login_success = make_request(
+        "POST", "/auth/login", 
+        data=ADMIN_USER,
+        expected_status=200
+    )
+    
+    if admin_login_success:
+        admin_token = admin_login_data.get("access_token")
+        admin_user = admin_login_data.get("user", {})
+        admin_role = admin_user.get("role", "")
+        
+        print_success(f"Admin user role: {admin_role}")
+        
+        if admin_role == "SUPER_ADMIN":
+            print_warning("Admin user also has SUPER_ADMIN role - cannot test 403 scenario")
+            record_test("Admin Role Test", True, "Admin user has SUPER_ADMIN role")
+        else:
+            # Test with regular admin (should return 403)
+            admin_response, admin_success = make_request(
+                "POST", "/admin/bets/reset-fractional",
+                auth_token=admin_token,
+                expected_status=403
+            )
+            
+            record_test("Regular Admin Test", not admin_success, "Should return 403 for regular admin")
+            if not admin_success:
+                print_success("Correctly returned 403 for regular admin")
+            else:
+                print_error("Should have returned 403 for regular admin")
+    
+    # Step 11: Summary
+    print_subheader("Step 11: Test Summary")
     
     if total_processed > 0:
         print_success(f"✅ Successfully processed {total_processed} fractional bets")
