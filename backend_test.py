@@ -15,6 +15,11 @@ ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
 }
+
+SUPER_ADMIN_USER = {
+    "email": "superadmin@gemplay.com",
+    "password": "SuperAdmin123!"
+}
 TEST_USERS = [
     {
         "username": "player1",
