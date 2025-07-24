@@ -209,7 +209,7 @@ const MyBets = ({ user }) => {
                 setActiveTab(tab.id);
                 setCurrentPage(1);
               }}
-              className={`flex-1 py-3 px-4 rounded-lg font-rajdhani font-bold transition-all duration-300 ${
+              className={`py-2 px-3 rounded-lg font-rajdhani font-bold text-sm transition-all duration-300 ${
                 activeTab === tab.id
                   ? 'bg-accent-primary text-white shadow-lg'
                   : 'text-text-secondary hover:text-white hover:bg-surface-card'
