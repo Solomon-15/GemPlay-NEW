@@ -1376,8 +1376,12 @@ async def get_current_super_admin(current_user: User = Depends(get_current_user)
 
 async def initialize_default_gems():
     """Initialize default gem definitions in the database."""
-    # Delete existing default gems to reinitialize with correct icons
-    await db.gem_definitions.delete_many({"is_default": True})
+    logger.info("Initializing default gems with updated icons...")
+    
+    # Delete existing gems with the same names to reinitialize with correct icons
+    default_gem_names = ["Ruby", "Amber", "Topaz", "Emerald", "Aquamarine", "Sapphire", "Magic"]
+    delete_result = await db.gem_definitions.delete_many({"name": {"$in": default_gem_names}})
+    logger.info(f"Deleted {delete_result.deleted_count} existing gems")
     
     default_gems = [
         {
