@@ -84,7 +84,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         console.log('🎮 Game started, waiting for auto-completion...');
         
         // Показываем уведомление о старте
-        showInfo('Игра началась! Результат будет определен через 3 секунды...');
+        showSuccess('Игра началась! Результат будет определен через 3 секунды...');
         
         // Ожидаем завершения игры через polling
         const completedGame = await waitForGameCompletion(bet.id);
