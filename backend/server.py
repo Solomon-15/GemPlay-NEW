@@ -650,6 +650,9 @@ class UpdateHumanBotRequest(BaseModel):
 class ToggleAutoPlayRequest(BaseModel):
     can_play_with_other_bots: bool
 
+class TogglePlayWithPlayersRequest(BaseModel):
+    can_play_with_players: bool
+
 class ToggleAllRequest(BaseModel):
     activate: bool
 
