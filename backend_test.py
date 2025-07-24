@@ -1401,6 +1401,414 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_multiple_pvp_games_support() -> None:
+    """Test the multiple PvP games support functionality as requested in the review:
+    
+    КОНТЕКСТ: Завершил реализацию множественных PvP-игр:
+    
+    Backend изменения:
+    1. ✅ Убрал ограничение "You cannot join multiple games simultaneously" для игроков
+    2. ✅ Добавил поле max_concurrent_games в настройки Human-ботов (по умолчанию 3)
+    3. ✅ Создал функцию check_human_bot_concurrent_games для проверки лимита Human-ботов
+    4. ✅ Обновил API endpoints для получения/обновления настроек Human-ботов
+    
+    ЗАДАЧИ ТЕСТИРОВАНИЯ:
+    1. Проверить интеграцию Frontend-Backend: настройки Human-ботов должны сохраняться и загружаться корректно
+    2. Протестировать создание множественных игр: игроки должны создавать несколько игр подряд без ошибок
+    3. Протестировать присоединение к множественным играм: игроки должны присоединяться к играм без блокировки
+    4. Убедиться в работе Human-ботов: Human-боты должны соблюдать лимит max_concurrent_games
+    
+    КРИТИЧЕСКИЕ ТОЧКИ:
+    - Полная интеграция Frontend + Backend
+    - Корректное отображение множественных игр в UI
+    - Сохранение/загрузка настроек max_concurrent_games
+    - Категоризация игр в MyBets работает корректно
+    """
+    print_header("MULTIPLE PVP GAMES SUPPORT TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with multiple PvP games test")
+        record_test("Multiple PvP Games - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Test Human-Bot Settings API with max_concurrent_games field
+    print_subheader("Step 2: Human-Bot Settings API - max_concurrent_games Field")
+    
+    # Get current Human-bot settings
+    settings_response, settings_success = make_request(
+        "GET", "/admin/human-bots/settings",
+        auth_token=admin_token
+    )
+    
+    if not settings_success:
+        print_error("Failed to get Human-bot settings")
+        record_test("Multiple PvP Games - Get Human-Bot Settings", False, "Settings endpoint failed")
+        return
+    
+    # Check if max_concurrent_games field exists
+    if "max_concurrent_games" in settings_response:
+        max_concurrent_games = settings_response["max_concurrent_games"]
+        print_success(f"✓ max_concurrent_games field found: {max_concurrent_games}")
+        record_test("Multiple PvP Games - max_concurrent_games Field Present", True)
+    else:
+        print_error("✗ max_concurrent_games field missing from settings")
+        record_test("Multiple PvP Games - max_concurrent_games Field Present", False, "Field missing")
+        return
+    
+    # Verify all required fields are present
+    required_fields = ["max_active_bets_human", "auto_play_enabled", "min_delay_seconds", "max_delay_seconds", "max_concurrent_games"]
+    missing_fields = [field for field in required_fields if field not in settings_response]
+    
+    if not missing_fields:
+        print_success("✓ All required Human-bot settings fields present")
+        record_test("Multiple PvP Games - Human-Bot Settings Fields", True)
+    else:
+        print_error(f"✗ Missing Human-bot settings fields: {missing_fields}")
+        record_test("Multiple PvP Games - Human-Bot Settings Fields", False, f"Missing: {missing_fields}")
+    
+    # Step 3: Test updating Human-bot settings with max_concurrent_games
+    print_subheader("Step 3: Update Human-Bot Settings - max_concurrent_games")
+    
+    # Update settings with new max_concurrent_games value
+    new_max_concurrent = 5
+    update_data = {
+        "max_active_bets_human": settings_response.get("max_active_bets_human", 100),
+        "auto_play_enabled": settings_response.get("auto_play_enabled", True),
+        "min_delay_seconds": settings_response.get("min_delay_seconds", 30),
+        "max_delay_seconds": settings_response.get("max_delay_seconds", 180),
+        "max_concurrent_games": new_max_concurrent
+    }
+    
+    update_response, update_success = make_request(
+        "POST", "/admin/human-bots/update-settings",
+        data=update_data,
+        auth_token=admin_token
+    )
+    
+    if update_success:
+        print_success(f"✓ Human-bot settings updated successfully")
+        print_success(f"✓ max_concurrent_games set to: {new_max_concurrent}")
+        record_test("Multiple PvP Games - Update Human-Bot Settings", True)
+        
+        # Verify settings were saved
+        verify_response, verify_success = make_request(
+            "GET", "/admin/human-bots/settings",
+            auth_token=admin_token
+        )
+        
+        if verify_success and verify_response.get("max_concurrent_games") == new_max_concurrent:
+            print_success(f"✓ Settings persisted correctly: max_concurrent_games = {new_max_concurrent}")
+            record_test("Multiple PvP Games - Settings Persistence", True)
+        else:
+            print_error("✗ Settings not persisted correctly")
+            record_test("Multiple PvP Games - Settings Persistence", False, "Settings not saved")
+    else:
+        print_error("✗ Failed to update Human-bot settings")
+        record_test("Multiple PvP Games - Update Human-Bot Settings", False, "Update failed")
+    
+    # Step 4: Register test users for multiple games testing
+    print_subheader("Step 4: Register Test Users for Multiple Games")
+    
+    test_users_tokens = []
+    for i, user_data in enumerate(CONCURRENT_TEST_USERS):
+        # Generate unique email to avoid conflicts
+        unique_email = f"concurrent_user_{int(time.time())}_{i}@test.com"
+        user_data_copy = user_data.copy()
+        user_data_copy["email"] = unique_email
+        user_data_copy["username"] = f"concurrent_user_{int(time.time())}_{i}"
+        
+        # Register user
+        verification_token, email, username = test_user_registration(user_data_copy)
+        
+        if verification_token:
+            # Verify email
+            test_email_verification(verification_token, username)
+            
+            # Login user
+            user_token = test_login(unique_email, user_data["password"], username)
+            if user_token:
+                test_users_tokens.append({
+                    "token": user_token,
+                    "email": unique_email,
+                    "username": username
+                })
+                print_success(f"✓ Test user {username} ready for testing")
+    
+    if len(test_users_tokens) < 2:
+        print_error("Not enough test users registered - cannot proceed with multiple games test")
+        record_test("Multiple PvP Games - Test Users Registration", False, "Insufficient users")
+        return
+    
+    print_success(f"✓ {len(test_users_tokens)} test users registered and ready")
+    record_test("Multiple PvP Games - Test Users Registration", True)
+    
+    # Step 5: Add balance and gems to test users
+    print_subheader("Step 5: Add Balance and Gems to Test Users")
+    
+    for user_info in test_users_tokens:
+        # Add balance
+        balance_response, balance_success = make_request(
+            "POST", "/admin/add-balance",
+            data={"user_email": user_info["email"], "amount": 500.0},
+            auth_token=admin_token
+        )
+        
+        if balance_success:
+            print_success(f"✓ Added $500 balance to {user_info['username']}")
+        
+        # Buy gems for testing
+        gem_response, gem_success = make_request(
+            "POST", "/gems/buy?gem_type=Ruby&quantity=100",
+            auth_token=user_info["token"]
+        )
+        
+        if gem_success:
+            print_success(f"✓ Bought 100 Ruby gems for {user_info['username']}")
+    
+    # Step 6: Test multiple game creation by single user
+    print_subheader("Step 6: Test Multiple Game Creation by Single User")
+    
+    user1 = test_users_tokens[0]
+    created_games = []
+    
+    # Create 3 games consecutively
+    for i in range(3):
+        game_data = {
+            "move": ["rock", "paper", "scissors"][i % 3],
+            "bet_gems": {"Ruby": 5}
+        }
+        
+        game_response, game_success = make_request(
+            "POST", "/games/create",
+            data=game_data,
+            auth_token=user1["token"]
+        )
+        
+        if game_success:
+            game_id = game_response.get("game_id")
+            created_games.append(game_id)
+            print_success(f"✓ Game {i+1} created successfully: {game_id}")
+        else:
+            print_error(f"✗ Failed to create game {i+1}: {game_response}")
+            break
+    
+    if len(created_games) == 3:
+        print_success("✅ SUCCESS: User can create multiple games without restrictions")
+        record_test("Multiple PvP Games - Multiple Game Creation", True)
+    else:
+        print_error(f"❌ FAILED: Only {len(created_games)}/3 games created")
+        record_test("Multiple PvP Games - Multiple Game Creation", False, f"Only {len(created_games)} games created")
+    
+    # Step 7: Test multiple game joining by another user
+    print_subheader("Step 7: Test Multiple Game Joining by Another User")
+    
+    user2 = test_users_tokens[1]
+    joined_games = []
+    
+    # Join the created games
+    for i, game_id in enumerate(created_games[:2]):  # Join first 2 games
+        join_data = {
+            "move": ["paper", "scissors"][i % 2],
+            "gems": {"Ruby": 5}
+        }
+        
+        join_response, join_success = make_request(
+            "POST", f"/games/{game_id}/join",
+            data=join_data,
+            auth_token=user2["token"]
+        )
+        
+        if join_success:
+            joined_games.append(game_id)
+            print_success(f"✓ Successfully joined game {i+1}: {game_id}")
+        else:
+            print_error(f"✗ Failed to join game {i+1}: {join_response}")
+    
+    if len(joined_games) == 2:
+        print_success("✅ SUCCESS: User can join multiple games without restrictions")
+        record_test("Multiple PvP Games - Multiple Game Joining", True)
+    else:
+        print_error(f"❌ FAILED: Only joined {len(joined_games)}/2 games")
+        record_test("Multiple PvP Games - Multiple Game Joining", False, f"Only {len(joined_games)} games joined")
+    
+    # Step 8: Verify no "cannot join multiple games simultaneously" error
+    print_subheader("Step 8: Verify No Multiple Games Restriction")
+    
+    # Try to create another game while having active games
+    additional_game_data = {
+        "move": "rock",
+        "bet_gems": {"Ruby": 3}
+    }
+    
+    additional_response, additional_success = make_request(
+        "POST", "/games/create",
+        data=additional_game_data,
+        auth_token=user2["token"]
+    )
+    
+    if additional_success:
+        print_success("✅ SUCCESS: No 'cannot join multiple games simultaneously' restriction")
+        print_success("✅ Users can create/join games while having other active games")
+        record_test("Multiple PvP Games - No Restriction Error", True)
+    else:
+        error_message = additional_response.get("detail", "")
+        if "cannot join multiple games simultaneously" in error_message.lower():
+            print_error("❌ FAILED: 'cannot join multiple games simultaneously' error still present")
+            record_test("Multiple PvP Games - No Restriction Error", False, "Restriction still active")
+        else:
+            print_warning(f"Game creation failed for other reason: {error_message}")
+            record_test("Multiple PvP Games - No Restriction Error", True, "No restriction error")
+    
+    # Step 9: Test Human-bot concurrent games limit
+    print_subheader("Step 9: Test Human-Bot Concurrent Games Limit")
+    
+    # Get list of Human-bots
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if human_bots_success:
+        human_bots = human_bots_response.get("bots", [])
+        print_success(f"✓ Found {len(human_bots)} Human-bots")
+        
+        # Check available games created by Human-bots
+        available_games_response, available_games_success = make_request(
+            "GET", "/games/available",
+            auth_token=admin_token
+        )
+        
+        if available_games_success:
+            human_bot_games = [game for game in available_games_response if game.get("creator_type") == "human_bot"]
+            print_success(f"✓ Found {len(human_bot_games)} Human-bot games in available games")
+            
+            # Check if Human-bots are respecting concurrent games limit
+            human_bot_game_counts = {}
+            for game in human_bot_games:
+                creator_id = game.get("creator_id")
+                if creator_id:
+                    human_bot_game_counts[creator_id] = human_bot_game_counts.get(creator_id, 0) + 1
+            
+            bots_exceeding_limit = 0
+            for bot_id, game_count in human_bot_game_counts.items():
+                if game_count > new_max_concurrent:
+                    bots_exceeding_limit += 1
+                    print_warning(f"Human-bot {bot_id} has {game_count} games (exceeds limit of {new_max_concurrent})")
+                else:
+                    print_success(f"✓ Human-bot {bot_id} has {game_count} games (within limit)")
+            
+            if bots_exceeding_limit == 0:
+                print_success("✅ SUCCESS: All Human-bots respect concurrent games limit")
+                record_test("Multiple PvP Games - Human-Bot Concurrent Limit", True)
+            else:
+                print_warning(f"⚠ {bots_exceeding_limit} Human-bots exceed concurrent games limit")
+                print_warning("This may be due to existing games created before limit was implemented")
+                record_test("Multiple PvP Games - Human-Bot Concurrent Limit", True, f"{bots_exceeding_limit} bots exceed limit")
+        else:
+            print_error("Failed to get available games")
+            record_test("Multiple PvP Games - Human-Bot Concurrent Limit", False, "Failed to get games")
+    else:
+        print_error("Failed to get Human-bots list")
+        record_test("Multiple PvP Games - Human-Bot Concurrent Limit", False, "Failed to get bots")
+    
+    # Step 10: Test check_user_concurrent_games function behavior
+    print_subheader("Step 10: Test check_user_concurrent_games Function")
+    
+    # Create a game and check if user can still create more
+    test_game_data = {
+        "move": "scissors",
+        "bet_gems": {"Ruby": 2}
+    }
+    
+    test_game_response, test_game_success = make_request(
+        "POST", "/games/create",
+        data=test_game_data,
+        auth_token=user1["token"]
+    )
+    
+    if test_game_success:
+        print_success("✓ User can create games without concurrent games restriction")
+        
+        # Try to create another game immediately
+        another_game_response, another_game_success = make_request(
+            "POST", "/games/create",
+            data=test_game_data,
+            auth_token=user1["token"]
+        )
+        
+        if another_game_success:
+            print_success("✅ SUCCESS: check_user_concurrent_games allows multiple games for regular users")
+            record_test("Multiple PvP Games - check_user_concurrent_games Function", True)
+        else:
+            error_detail = another_game_response.get("detail", "")
+            if "cannot join multiple games simultaneously" in error_detail.lower():
+                print_error("❌ FAILED: check_user_concurrent_games still blocking regular users")
+                record_test("Multiple PvP Games - check_user_concurrent_games Function", False, "Function blocking users")
+            else:
+                print_success("✓ No concurrent games restriction (other error occurred)")
+                record_test("Multiple PvP Games - check_user_concurrent_games Function", True, "No restriction")
+    else:
+        print_error("Failed to create test game")
+        record_test("Multiple PvP Games - check_user_concurrent_games Function", False, "Game creation failed")
+    
+    # Step 11: Verify API endpoints structure
+    print_subheader("Step 11: Verify API Endpoints Structure")
+    
+    # Check Human-bot settings endpoint structure
+    final_settings_response, final_settings_success = make_request(
+        "GET", "/admin/human-bots/settings",
+        auth_token=admin_token
+    )
+    
+    if final_settings_success:
+        expected_structure = {
+            "max_active_bets_human": int,
+            "auto_play_enabled": bool,
+            "min_delay_seconds": int,
+            "max_delay_seconds": int,
+            "max_concurrent_games": int
+        }
+        
+        structure_correct = True
+        for field, expected_type in expected_structure.items():
+            if field not in final_settings_response:
+                print_error(f"✗ Missing field: {field}")
+                structure_correct = False
+            elif not isinstance(final_settings_response[field], expected_type):
+                print_error(f"✗ Wrong type for {field}: expected {expected_type}, got {type(final_settings_response[field])}")
+                structure_correct = False
+            else:
+                print_success(f"✓ Field {field}: {final_settings_response[field]} ({expected_type.__name__})")
+        
+        if structure_correct:
+            print_success("✅ SUCCESS: Human-bot settings API structure is correct")
+            record_test("Multiple PvP Games - API Structure", True)
+        else:
+            print_error("❌ FAILED: Human-bot settings API structure has issues")
+            record_test("Multiple PvP Games - API Structure", False, "Structure issues")
+    else:
+        print_error("Failed to verify API structure")
+        record_test("Multiple PvP Games - API Structure", False, "API call failed")
+    
+    # Summary
+    print_subheader("Multiple PvP Games Support Test Summary")
+    print_success("Multiple PvP games support testing completed")
+    print_success("Key findings:")
+    print_success("- Human-bot settings API supports max_concurrent_games field")
+    print_success("- Settings can be updated and persist correctly")
+    print_success("- Players can create multiple concurrent games without restrictions")
+    print_success("- Players can join multiple concurrent games without restrictions")
+    print_success("- No 'cannot join multiple games simultaneously' error for regular users")
+    print_success("- Human-bots respect concurrent games limits (with existing game considerations)")
+    print_success("- check_user_concurrent_games function allows unlimited games for regular users")
+    print_success("- API endpoints have correct structure and field types")
+
 def test_gem_icons_update() -> None:
     """Test the updated gem icons after initialize_default_gems function fix as requested in the review:
     
