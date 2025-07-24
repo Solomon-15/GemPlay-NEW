@@ -260,6 +260,34 @@ class GemDefinition(BaseModel):
     enabled: bool = True
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+# Admin-specific gem models
+class CreateGemRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
+    price: int = Field(..., ge=1, le=10000)  # Only whole dollars
+    color: str = Field(..., regex=r'^#[0-9A-Fa-f]{6}$')  # HEX color
+    icon: str = Field(..., description="Base64 encoded image")
+    rarity: str = Field(default="Common")
+
+class UpdateGemRequest(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=50)
+    price: Optional[int] = Field(None, ge=1, le=10000)
+    color: Optional[str] = Field(None, regex=r'^#[0-9A-Fa-f]{6}$')
+    icon: Optional[str] = None
+    rarity: Optional[str] = None
+    enabled: Optional[bool] = None
+
+class GemAdminResponse(BaseModel):
+    id: str
+    type: str
+    name: str
+    price: int
+    color: str
+    icon: str
+    rarity: str
+    enabled: bool
+    is_default: bool  # Can't be deleted if True
+    created_at: datetime
+
 class UserGem(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
