@@ -170,11 +170,38 @@ const MyBets = ({ user }) => {
 
       {/* Tabs */}
       <div className="max-w-4xl mx-auto mb-8">
-        <div className="flex space-x-1 bg-surface-sidebar rounded-lg p-1">
+        <div className="flex flex-wrap gap-1 bg-surface-sidebar rounded-lg p-1">
           {[
-            { id: 'active', label: 'Active Bets', count: bets.filter(b => b && (b.status === 'WAITING' || b.status === 'ACTIVE')).length },
-            { id: 'completed', label: 'Completed', count: bets.filter(b => b && b.status === 'COMPLETED').length },
-            { id: 'cancelled', label: 'Cancelled', count: bets.filter(b => b && b.status === 'CANCELLED').length }
+            { 
+              id: 'awaiting', 
+              label: 'Awaiting Opponent', 
+              count: bets.filter(b => b && b.status === 'WAITING' && b.creator_id === user.id).length 
+            },
+            { 
+              id: 'ongoing', 
+              label: 'Ongoing Battles', 
+              count: bets.filter(b => b && (b.status === 'ACTIVE' || b.status === 'REVEAL')).length 
+            },
+            { 
+              id: 'wins', 
+              label: 'Wins', 
+              count: bets.filter(b => b && b.status === 'COMPLETED' && b.winner_id === user.id).length 
+            },
+            { 
+              id: 'losses', 
+              label: 'Losses', 
+              count: bets.filter(b => b && b.status === 'COMPLETED' && b.winner_id && b.winner_id !== user.id).length 
+            },
+            { 
+              id: 'draws', 
+              label: 'Draws', 
+              count: bets.filter(b => b && b.status === 'COMPLETED' && !b.winner_id).length 
+            },
+            { 
+              id: 'cancelled', 
+              label: 'Cancelled', 
+              count: bets.filter(b => b && (b.status === 'CANCELLED' || b.status === 'TIMEOUT')).length 
+            }
           ].map((tab) => (
             <button
               key={tab.id}
