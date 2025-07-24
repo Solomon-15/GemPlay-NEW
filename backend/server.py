@@ -17942,11 +17942,12 @@ async def get_human_bot_active_bets(
         if not bot:
             raise HTTPException(status_code=404, detail="Human bot not found")
         
-        # Get only active bets (WAITING, ACTIVE, REVEAL)
+        # Get only active bets (WAITING, ACTIVE, REVEAL) и не скрытые
         active_statuses = ["WAITING", "ACTIVE", "REVEAL"]
         active_bets_cursor = db.games.find({
             "creator_id": bot_id,
-            "status": {"$in": active_statuses}
+            "status": {"$in": active_statuses},
+            "hidden": {"$ne": True}  # Исключаем скрытые ставки
         }).sort("created_at", -1)
         
         active_bets_list = await active_bets_cursor.to_list(None)
