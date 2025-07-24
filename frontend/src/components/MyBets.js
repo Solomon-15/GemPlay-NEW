@@ -180,7 +180,7 @@ const MyBets = ({ user }) => {
             { 
               id: 'ongoing', 
               label: 'Ongoing Battles', 
-              count: bets.filter(b => b && (b.status === 'ACTIVE' || b.status === 'REVEAL')).length 
+              count: bets.filter(b => b && b.status === 'ACTIVE').length 
             },
             { 
               id: 'wins', 
