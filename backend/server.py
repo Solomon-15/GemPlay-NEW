@@ -5185,70 +5185,7 @@ async def join_game(
             detail=f"Failed to join game: {str(e)}"
         )
 
-@api_router.post("/games/{game_id}/reveal", response_model=dict)
-async def reveal_game(
-    request: Request,
-    game_id: str,
-    current_user: User = Depends(get_current_user_with_security)
-):
-    """Reveal moves and complete the game."""
-    try:
-        # Get the game
-        game = await db.games.find_one({"id": game_id})
-        if not game:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Game not found"
-            )
-        
-        game_obj = Game(**game)
-        
-        # Validate game state
-        if game_obj.status != GameStatus.REVEAL:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Game is not in reveal phase"
-            )
-        
-        # Check if user is part of this game
-        if current_user.id != game_obj.creator_id and current_user.id != game_obj.opponent_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You are not part of this game"
-            )
-        
-        # Check if reveal deadline has passed
-        if game_obj.reveal_deadline and datetime.utcnow() > game_obj.reveal_deadline:
-            await handle_game_timeout(game_id)
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Time is up. Your move was not made. The bet has been cancelled."
-            )
-        
-        # Complete the game
-        await db.games.update_one(
-            {"id": game_id},
-            {
-                "$set": {
-                    "status": GameStatus.ACTIVE,
-                    "reveal_deadline": None
-                }
-            }
-        )
-        
-        # Determine winner
-        result = await determine_game_winner(game_id)
-        
-        return result
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error revealing game: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to reveal game"
-        )
+# NOTE: reveal_game endpoint removed - games now complete automatically after 3 seconds
 
 @api_router.post("/admin/bots/{bot_id}/reset-bets", response_model=dict)
 async def reset_bot_bets(
