@@ -427,7 +427,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     try {
       // First try normal delete
       await executeOperation(`/admin/human-bots/${bot.id}`, 'DELETE');
-      addNotification(`Human-бот ${bot.name} успешно удален`, 'success');
+      addNotification(`Human-бот "${bot.name}" успешно удален из системы`, 'success');
       await fetchHumanBots();
       await fetchStats();
     } catch (error) {
