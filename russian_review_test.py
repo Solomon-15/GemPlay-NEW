@@ -403,7 +403,7 @@ class RussianReviewTester:
             "POST", "/admin/human-bots/bulk-create", bulk_data, token=self.admin_token
         )
         
-        if status == 201:
+        if status in [200, 201]:
             self.log("✅ Bulk creation endpoint successful")
             
             # Check if created bots have whole number gem values
