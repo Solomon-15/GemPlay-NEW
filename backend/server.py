@@ -17390,6 +17390,63 @@ async def toggle_human_bot_auto_play(
             detail="Failed to toggle human bot auto-play"
         )
 
+@api_router.post("/admin/human-bots/{bot_id}/toggle-play-with-players", response_model=dict)
+async def toggle_human_bot_play_with_players(
+    bot_id: str,
+    request: TogglePlayWithPlayersRequest,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Toggle human bot play with live players."""
+    try:
+        # Find bot
+        bot_data = await db.human_bots.find_one({"id": bot_id})
+        if not bot_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Human bot not found"
+            )
+        
+        # Update play with players setting
+        await db.human_bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "can_play_with_players": request.can_play_with_players,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="TOGGLE_HUMAN_BOT_PLAY_WITH_PLAYERS",
+            target_type="human_bot",
+            target_id=bot_id,
+            details={
+                "name": bot_data["name"],
+                "can_play_with_players": request.can_play_with_players
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Human bot {bot_id} play with players setting changed to {request.can_play_with_players}")
+        
+        return {
+            "success": True,
+            "message": f"Bot play with players {'enabled' if request.can_play_with_players else 'disabled'} successfully",
+            "can_play_with_players": request.can_play_with_players
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error toggling human bot play with players: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to toggle human bot play with players"
+        )
+
 
 
 # ==============================================================================
