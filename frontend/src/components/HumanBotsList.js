@@ -202,7 +202,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
           }
         }
 
-        addNotification(`${action} ${successCount} из ${selectedBots.size} Human-ботов`, 'success');
+        addNotification(`Успешно ${action} ${successCount} из ${selectedBots.size} Human-ботов`, 'success');
         clearSelection();
         await fetchHumanBots();
         await fetchStats();
