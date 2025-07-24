@@ -17424,6 +17424,8 @@ async def update_human_bots_settings(
             update_data["max_delay_seconds"] = settings.max_delay_seconds
         if settings.play_with_players_enabled is not None:
             update_data["play_with_players_enabled"] = settings.play_with_players_enabled
+        if settings.max_concurrent_games is not None:
+            update_data["max_concurrent_games"] = settings.max_concurrent_games
         
         await db.bot_settings.update_one(
             {"id": "bot_settings"},
