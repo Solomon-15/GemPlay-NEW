@@ -2532,6 +2532,183 @@ async def update_human_bot_stats_after_auto_play(bot1: HumanBot, bot2: HumanBot,
     except Exception as e:
         logger.error(f"Error updating human bot stats after auto-play: {e}")
 
+async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
+    """Find available bets that a human bot can join."""
+    try:
+        available_bets = []
+        play_with_players_globally_enabled = settings.get("play_with_players_enabled", False)
+        
+        # Get bot's play preferences
+        can_play_with_bots = bot.can_play_with_other_bots
+        can_play_with_players = bot.can_play_with_players and play_with_players_globally_enabled
+        
+        if not can_play_with_bots and not can_play_with_players:
+            return []
+        
+        # Find waiting games that bot can join
+        query_conditions = []
+        
+        if can_play_with_bots and can_play_with_players:
+            # Can play with both bots and players
+            query_conditions.append({
+                "status": "WAITING",
+                "creator_id": {"$ne": bot.id},  # Exclude own bets
+                "$or": [
+                    {"creator_type": "human_bot"},  # Other human bots
+                    {"creator_type": {"$ne": "human_bot"}}  # Live players
+                ]
+            })
+        elif can_play_with_bots:
+            # Only with other human bots
+            query_conditions.append({
+                "status": "WAITING",
+                "creator_type": "human_bot",
+                "creator_id": {"$ne": bot.id}  # Exclude own bets
+            })
+        elif can_play_with_players:
+            # Only with live players
+            query_conditions.append({
+                "status": "WAITING",
+                "creator_type": {"$ne": "human_bot"}  # Live players only
+            })
+        
+        if not query_conditions:
+            return []
+        
+        # Execute query
+        games_cursor = db.games.find({"$or": query_conditions})
+        available_games = await games_cursor.to_list(50)  # Limit to 50 games
+        
+        # Filter by bot constraints if any (currently none per requirements)
+        available_bets = available_games
+        
+        logger.debug(f"Found {len(available_bets)} available bets for bot {bot.name}")
+        return available_bets
+        
+    except Exception as e:
+        logger.error(f"Error finding available bets for bot {bot.id}: {e}")
+        return []
+
+async def process_human_bot_join_available_bets(active_human_bots: list, settings: dict):
+    """Process human bots joining available bets from other bots and players."""
+    try:
+        if not active_human_bots:
+            return
+        
+        # Get delay settings
+        min_delay = settings.get("min_delay_seconds", 1)
+        max_delay = settings.get("max_delay_seconds", 3600)
+        
+        logger.info(f"🎯 Processing available bet joining for {len(active_human_bots)} human bots")
+        
+        for bot_data in active_human_bots:
+            try:
+                bot = HumanBot(**bot_data)
+                
+                # Check if bot should look for available bets
+                if not (bot.can_play_with_other_bots or bot.can_play_with_players):
+                    continue
+                
+                # Check delay constraints
+                current_time = datetime.utcnow()
+                if bot.last_action_time:
+                    time_since_last = (current_time - bot.last_action_time).total_seconds()
+                    required_delay = random.randint(min_delay, max_delay)
+                    if time_since_last < required_delay:
+                        continue
+                
+                # Check bet limit
+                current_active_bets = await get_human_bot_active_bets_count(bot.id)
+                bot_limit = bot.bet_limit or 12
+                if current_active_bets >= bot_limit:
+                    continue
+                
+                # Find available bets
+                available_bets = await find_available_bets_for_bot(bot, settings)
+                if not available_bets:
+                    continue
+                
+                # Randomly select a bet to join
+                selected_bet = random.choice(available_bets)
+                
+                # Join the selected bet
+                await join_available_bet_as_human_bot(bot, selected_bet)
+                
+                logger.info(f"🤖 Human bot {bot.name} joined available bet {selected_bet['id']}")
+                
+            except Exception as e:
+                logger.error(f"Error processing available bet joining for bot {bot_data.get('id')}: {e}")
+                
+    except Exception as e:
+        logger.error(f"Error in process_human_bot_join_available_bets: {e}")
+
+async def join_available_bet_as_human_bot(bot: HumanBot, bet_game: dict):
+    """Join an available bet as a human bot."""
+    try:
+        game_id = bet_game["id"]
+        bet_amount = bet_game["bet_amount"]
+        
+        # Ensure bot has gems
+        await setup_human_bot_gems(bot.id)
+        
+        # Generate bot's move and gems
+        bot_move = HumanBotBehavior.get_move_choice(bot.character)
+        bot_gems = await generate_human_bot_gems_for_amount(bet_amount)
+        
+        # Update game with bot as opponent
+        await db.games.update_one(
+            {"id": game_id, "status": "WAITING"},
+            {
+                "$set": {
+                    "opponent_id": bot.id,
+                    "opponent_type": "human_bot",
+                    "opponent_move": bot_move,
+                    "opponent_gems": bot_gems,
+                    "status": GameStatus.ACTIVE,
+                    "joined_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Update bot's last action time
+        await db.human_bots.update_one(
+            {"id": bot.id},
+            {"$set": {"last_action_time": datetime.utcnow()}}
+        )
+        
+        # Log the action
+        await log_human_bot_action(
+            bot.id,
+            "JOIN_AVAILABLE_BET",
+            f"Joined available bet {game_id} with amount {bet_amount}",
+            game_id,
+            bet_amount,
+            bot_move,
+            bot_gems
+        )
+        
+        logger.info(f"Human bot {bot.name} successfully joined bet {game_id}")
+        
+    except Exception as e:
+        logger.error(f"Error joining available bet for bot {bot.id}: {e}")
+
+async def generate_human_bot_gems_for_amount(bet_amount: float) -> list:
+    """Generate gems for human bot based on bet amount."""
+    try:
+        # For human bots, we can generate unlimited gems
+        # Use existing gem generation logic but ensure we have enough value
+        from utils.gemCombinationAlgorithms import generate_combination_for_amount
+        
+        # Generate gems that sum to the bet amount
+        gems = generate_combination_for_amount(bet_amount)
+        return gems
+        
+    except Exception as e:
+        logger.error(f"Error generating gems for amount {bet_amount}: {e}")
+        # Fallback: create simple gem combination
+        return [{"name": "ruby", "count": int(bet_amount)}]
+
 # ==============================================================================
 # API ROUTES
 # ==============================================================================
