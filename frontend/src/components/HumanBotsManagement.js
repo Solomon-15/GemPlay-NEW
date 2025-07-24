@@ -761,7 +761,7 @@ const HumanBotsManagement = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Мин. ставка ($)</label>
+                  <label>Мин. ставка (гемы)</label>
                   <input
                     type="number"
                     step="0.01"
