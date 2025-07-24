@@ -723,18 +723,20 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
-                    <label className="relative inline-flex items-center cursor-pointer">
+                    <label className="relative inline-flex items-center cursor-pointer group">
                       <input 
                         type="checkbox" 
                         checked={bot.can_play_with_other_bots || false}
                         onChange={(e) => handleToggleAutoPlay(bot, e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent-primary peer-focus:ring-opacity-25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent-primary"></div>
+                      <div className="relative w-11 h-6 bg-gray-700 rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 peer-focus:ring-opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-300 peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent to-white opacity-20"></div>
+                      </div>
                     </label>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
-                    <label className={`relative inline-flex items-center ${globalSettings.play_with_players_enabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
+                    <label className={`relative inline-flex items-center group ${globalSettings.play_with_players_enabled ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
                       <input 
                         type="checkbox" 
                         checked={bot.can_play_with_players || false}
@@ -742,7 +744,9 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                         disabled={!globalSettings.play_with_players_enabled}
                         className="sr-only peer"
                       />
-                      <div className={`w-9 h-5 ${globalSettings.play_with_players_enabled ? 'bg-gray-600' : 'bg-gray-800'} peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent-primary peer-focus:ring-opacity-25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent-primary ${!globalSettings.play_with_players_enabled ? 'opacity-50' : ''}`}></div>
+                      <div className={`relative w-11 h-6 ${globalSettings.play_with_players_enabled ? 'bg-gray-700' : 'bg-gray-800'} rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-300 peer-focus:ring-opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-300 peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-emerald-600 shadow-lg ${globalSettings.play_with_players_enabled ? 'hover:shadow-xl transition-all duration-300 group-hover:scale-105' : ''} ${!globalSettings.play_with_players_enabled ? 'opacity-50' : ''}`}>
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent to-white opacity-20"></div>
+                      </div>
                     </label>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
