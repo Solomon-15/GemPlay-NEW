@@ -26,6 +26,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('live-players');
   const [showCreateBetModal, setShowCreateBetModal] = useState(false);
+  const [gemPrices, setGemPrices] = useState([]);
   
   // Состояние для фильтров Available Bets
   const [betFilters, setBetFilters] = useState({
