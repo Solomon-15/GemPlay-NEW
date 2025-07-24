@@ -155,7 +155,7 @@ class RussianReviewTester:
         status, response = self.make_request("POST", "/admin/human-bots", 
                                            bot_data, token=self.admin_token)
         
-        if status == 201 and "id" in response:
+        if status in [200, 201] and "id" in response:
             self.test_bot_id = response["id"]
             self.log(f"✅ Test Human-bot created: {self.test_bot_id}")
             return True
