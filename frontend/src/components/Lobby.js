@@ -293,9 +293,9 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
                 </div>
               )}
 
-              {/* Total Gems Value (no dollar sign, just number) */}
+              {/* Total Gems Value (displayed as gems, not dollars) */}
               <div className="text-green-400 font-rajdhani font-bold text-xl">
-                {Math.round(totalGemsValue)}
+                {formatDollarsAsGems(totalGemsValue)}
               </div>
 
               {/* Bot Status */}
