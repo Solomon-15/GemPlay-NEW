@@ -18331,6 +18331,87 @@ async def toggle_human_bot_play_with_players(
             detail="Failed to toggle human bot play with players"
         )
 
+@api_router.post("/admin/human-bots/{bot_id}/recalculate-bets", response_model=dict)
+async def recalculate_human_bot_bets(
+    bot_id: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Пересчитать ставки для Human-бота."""
+    try:
+        # Find the Human-bot
+        bot_data = await db.human_bots.find_one({"id": bot_id})
+        if not bot_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Human-бот не найден"
+            )
+        
+        bot_name = bot_data.get("name", f"Bot-{bot_id[:8]}")
+        
+        # Cancel existing active bets for this Human-bot
+        cancelled_result = await db.games.update_many(
+            {
+                "creator_id": bot_id,
+                "status": "WAITING"
+            },
+            {
+                "$set": {
+                    "status": "CANCELLED",
+                    "updated_at": datetime.utcnow(),
+                    "cancel_reason": "Human-bot bets recalculated by admin"
+                }
+            }
+        )
+        
+        # Delete cancelled games to clean up
+        await db.games.delete_many({
+            "creator_id": bot_id,
+            "status": "CANCELLED",
+            "cancel_reason": "Human-bot bets recalculated by admin"
+        })
+        
+        # Reset Human-bot statistics for new cycle
+        await db.human_bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="RECALCULATE_HUMAN_BOT_BETS",
+            target_type="human_bot",
+            target_id=bot_id,
+            details={
+                "name": bot_name,
+                "cancelled_bets": cancelled_result.modified_count
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Recalculated bets for Human-bot {bot_id}, cancelled {cancelled_result.modified_count} active bets")
+        
+        return {
+            "success": True,
+            "message": f"Ставки Human-бота {bot_name} успешно пересчитаны",
+            "bot_id": bot_id,
+            "cancelled_bets": cancelled_result.modified_count,
+            "bot_name": bot_name
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error recalculating human bot bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ошибка пересчета ставок Human-бота"
+        )
+
 
 
 # ==============================================================================
