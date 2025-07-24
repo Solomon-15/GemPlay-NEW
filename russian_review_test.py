@@ -316,10 +316,15 @@ class RussianReviewTester:
         
         # Add balance to second user
         balance_status, balance_response = self.make_request(
-            "POST", "/admin/users/add-balance", 
-            {"user_id": second_user_id, "amount": 100.0}, 
+            "POST", f"/admin/users/{second_user_id}/balance", 
+            {"new_balance": 100.0}, 
             token=self.admin_token
         )
+        
+        if balance_status != 200:
+            self.log(f"⚠️ Could not add balance to second user: {balance_response}")
+        else:
+            self.log("✅ Added balance to second user")
         
         # Record start time
         start_time = time.time()
