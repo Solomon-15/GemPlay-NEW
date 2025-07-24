@@ -67,6 +67,17 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     }
   };
 
+  const fetchGlobalSettings = async () => {
+    try {
+      const response = await executeOperation('/admin/human-bots/settings', 'GET');
+      if (response.success !== false) {
+        setGlobalSettings(response.settings || {});
+      }
+    } catch (error) {
+      console.error('Ошибка получения глобальных настроек:', error);
+    }
+  };
+
   // Helper function to execute API operations
   const executeOperation = async (endpoint, method = 'GET', data = null) => {
     try {
