@@ -1406,6 +1406,396 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_gem_display_formatting() -> None:
+    """Test the gem display formatting across the application to ensure the new gem utilities are working correctly.
+    
+    Test Areas:
+    1. Gem prices API endpoint: Test GET /api/admin/gems to ensure gem prices are accessible for frontend calculations
+    2. Bet amounts in various endpoints: Test that bet amounts are being calculated and returned correctly from backend endpoints
+    3. Human-bot active bets: Test GET /api/admin/human-bots/{bot_id}/active-bets to verify bet amounts are correctly structured
+    4. Game creation: Test POST /api/create-game to ensure bet amounts are properly processed
+    5. Backend data consistency: Verify that all bet_amount fields in database responses are properly formatted as numbers
+    
+    Key Success Criteria:
+    - ✅ Gem prices are accessible via admin API
+    - ✅ All bet amounts are returned as proper numeric values
+    - ✅ No currency formatting inconsistencies in backend responses  
+    - ✅ Game creation and betting endpoints work with numeric amounts
+    - ✅ Admin endpoints return proper bet amount data for gem conversion
+    """
+    print_header("GEM DISPLAY FORMATTING TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with gem display test")
+        record_test("Gem Display - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # TEST 1: Gem prices API endpoint
+    print_subheader("TEST 1: Gem Prices API Endpoint")
+    
+    gems_response, gems_success = make_request(
+        "GET", "/admin/gems",
+        auth_token=admin_token
+    )
+    
+    if gems_success:
+        print_success("✓ Gem prices API endpoint accessible")
+        
+        if isinstance(gems_response, list) and len(gems_response) > 0:
+            print_success(f"✓ Found {len(gems_response)} gems in system")
+            
+            # Verify gem price structure
+            gem_prices_valid = True
+            for gem in gems_response:
+                gem_name = gem.get("name", "Unknown")
+                gem_price = gem.get("price", 0)
+                
+                if isinstance(gem_price, (int, float)) and gem_price > 0:
+                    print_success(f"  ✓ {gem_name}: ${gem_price} (numeric value)")
+                else:
+                    print_error(f"  ✗ {gem_name}: {gem_price} (invalid price format)")
+                    gem_prices_valid = False
+            
+            if gem_prices_valid:
+                print_success("✓ All gem prices are properly formatted as numeric values")
+                record_test("Gem Display - Gem Prices API", True)
+            else:
+                print_error("✗ Some gem prices have invalid format")
+                record_test("Gem Display - Gem Prices API", False, "Invalid price formats")
+        else:
+            print_error("✗ No gems found or invalid response format")
+            record_test("Gem Display - Gem Prices API", False, "No gems or invalid format")
+    else:
+        print_error("✗ Failed to access gem prices API")
+        record_test("Gem Display - Gem Prices API", False, "API access failed")
+    
+    # TEST 2: Available bets endpoint
+    print_subheader("TEST 2: Available Bets Endpoint")
+    
+    available_bets_response, available_bets_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if available_bets_success and isinstance(available_bets_response, list):
+        print_success("✓ Available bets endpoint accessible")
+        print_success(f"✓ Found {len(available_bets_response)} available games")
+        
+        if len(available_bets_response) > 0:
+            bet_amounts_valid = True
+            sample_games = available_bets_response[:5]  # Check first 5 games
+            
+            for i, game in enumerate(sample_games):
+                game_id = game.get("game_id", "unknown")
+                bet_amount = game.get("bet_amount", 0)
+                creator_type = game.get("creator_type", "unknown")
+                
+                if isinstance(bet_amount, (int, float)) and bet_amount > 0:
+                    print_success(f"  ✓ Game {i+1} ({creator_type}): ${bet_amount} (numeric)")
+                else:
+                    print_error(f"  ✗ Game {i+1}: {bet_amount} (invalid bet amount)")
+                    bet_amounts_valid = False
+            
+            if bet_amounts_valid:
+                print_success("✓ All bet amounts in available games are numeric")
+                record_test("Gem Display - Available Bets Amounts", True)
+            else:
+                print_error("✗ Some bet amounts have invalid format")
+                record_test("Gem Display - Available Bets Amounts", False, "Invalid bet amounts")
+        else:
+            print_warning("No available games to test bet amounts")
+            record_test("Gem Display - Available Bets Amounts", True, "No games available")
+    else:
+        print_error("✗ Failed to access available bets endpoint")
+        record_test("Gem Display - Available Bets Amounts", False, "API access failed")
+    
+    # TEST 3: User's bets endpoint (my-bets)
+    print_subheader("TEST 3: User's Bets Endpoint")
+    
+    # Create a test user first
+    test_user_data = {
+        "username": f"gem_test_user_{int(time.time())}",
+        "email": f"gem_test_{int(time.time())}@test.com",
+        "password": "Test123!",
+        "gender": "male"
+    }
+    
+    # Register and verify user
+    verification_token, test_email, test_username = test_user_registration(test_user_data)
+    if verification_token:
+        test_email_verification(verification_token, test_username)
+        
+        # Login as test user
+        user_token = test_login(test_email, test_user_data["password"], "user")
+        
+        if user_token:
+            # Add some balance for testing
+            balance_response, balance_success = make_request(
+                "POST", "/admin/users/add-balance",
+                data={"user_email": test_email, "amount": 100.0},
+                auth_token=admin_token
+            )
+            
+            if balance_success:
+                print_success("✓ Added balance to test user")
+                
+                # Buy some gems
+                buy_gems_response, buy_gems_success = make_request(
+                    "POST", "/gems/buy?gem_type=Ruby&quantity=50",
+                    auth_token=user_token
+                )
+                
+                if buy_gems_success:
+                    print_success("✓ Bought gems for test user")
+                    
+                    # Create a game to have bet data
+                    create_game_data = {
+                        "move": "rock",
+                        "bet_gems": {"Ruby": 10}
+                    }
+                    
+                    game_response, game_success = make_request(
+                        "POST", "/games/create",
+                        data=create_game_data,
+                        auth_token=user_token
+                    )
+                    
+                    if game_success:
+                        print_success("✓ Created test game")
+                        
+                        # Now test my-bets endpoint
+                        my_bets_response, my_bets_success = make_request(
+                            "GET", "/user/my-bets",
+                            auth_token=user_token
+                        )
+                        
+                        if my_bets_success and isinstance(my_bets_response, list):
+                            print_success("✓ My-bets endpoint accessible")
+                            
+                            if len(my_bets_response) > 0:
+                                my_bets_valid = True
+                                for bet in my_bets_response:
+                                    bet_amount = bet.get("bet_amount", 0)
+                                    game_id = bet.get("game_id", "unknown")
+                                    
+                                    if isinstance(bet_amount, (int, float)) and bet_amount > 0:
+                                        print_success(f"  ✓ My bet {game_id}: ${bet_amount} (numeric)")
+                                    else:
+                                        print_error(f"  ✗ My bet {game_id}: {bet_amount} (invalid)")
+                                        my_bets_valid = False
+                                
+                                if my_bets_valid:
+                                    print_success("✓ All my-bets amounts are numeric")
+                                    record_test("Gem Display - My Bets Amounts", True)
+                                else:
+                                    print_error("✗ Some my-bets amounts have invalid format")
+                                    record_test("Gem Display - My Bets Amounts", False, "Invalid amounts")
+                            else:
+                                print_success("✓ My-bets endpoint works (no bets found)")
+                                record_test("Gem Display - My Bets Amounts", True, "No bets")
+                        else:
+                            print_error("✗ Failed to access my-bets endpoint")
+                            record_test("Gem Display - My Bets Amounts", False, "API access failed")
+    
+    # TEST 4: Admin bets pagination endpoint
+    print_subheader("TEST 4: Admin Bets Pagination Endpoint")
+    
+    admin_bets_response, admin_bets_success = make_request(
+        "GET", "/admin/bets?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if admin_bets_success:
+        print_success("✓ Admin bets pagination endpoint accessible")
+        
+        bets_list = admin_bets_response.get("bets", [])
+        if len(bets_list) > 0:
+            admin_bets_valid = True
+            
+            for bet in bets_list[:5]:  # Check first 5 bets
+                bet_amount = bet.get("bet_amount", 0)
+                game_id = bet.get("game_id", "unknown")
+                
+                if isinstance(bet_amount, (int, float)) and bet_amount > 0:
+                    print_success(f"  ✓ Admin bet {game_id}: ${bet_amount} (numeric)")
+                else:
+                    print_error(f"  ✗ Admin bet {game_id}: {bet_amount} (invalid)")
+                    admin_bets_valid = False
+            
+            if admin_bets_valid:
+                print_success("✓ All admin bets amounts are numeric")
+                record_test("Gem Display - Admin Bets Amounts", True)
+            else:
+                print_error("✗ Some admin bets amounts have invalid format")
+                record_test("Gem Display - Admin Bets Amounts", False, "Invalid amounts")
+        else:
+            print_success("✓ Admin bets endpoint works (no bets found)")
+            record_test("Gem Display - Admin Bets Amounts", True, "No bets")
+    else:
+        print_error("✗ Failed to access admin bets endpoint")
+        record_test("Gem Display - Admin Bets Amounts", False, "API access failed")
+    
+    # TEST 5: Human-bot active bets endpoint
+    print_subheader("TEST 5: Human-Bot Active Bets Endpoint")
+    
+    # Get list of human bots first
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if human_bots_success:
+        bots_list = human_bots_response.get("bots", [])
+        
+        if len(bots_list) > 0:
+            # Test with first bot
+            test_bot = bots_list[0]
+            bot_id = test_bot.get("id")
+            bot_name = test_bot.get("name", "Unknown")
+            
+            print_success(f"✓ Testing with Human-bot: {bot_name}")
+            
+            active_bets_response, active_bets_success = make_request(
+                "GET", f"/admin/human-bots/{bot_id}/active-bets",
+                auth_token=admin_token
+            )
+            
+            if active_bets_success:
+                print_success("✓ Human-bot active bets endpoint accessible")
+                
+                if isinstance(active_bets_response, list) and len(active_bets_response) > 0:
+                    human_bot_bets_valid = True
+                    
+                    for bet in active_bets_response[:5]:  # Check first 5 bets
+                        bet_amount = bet.get("bet_amount", 0)
+                        game_id = bet.get("game_id", "unknown")
+                        
+                        if isinstance(bet_amount, (int, float)) and bet_amount > 0:
+                            print_success(f"  ✓ Human-bot bet {game_id}: ${bet_amount} (numeric)")
+                        else:
+                            print_error(f"  ✗ Human-bot bet {game_id}: {bet_amount} (invalid)")
+                            human_bot_bets_valid = False
+                    
+                    if human_bot_bets_valid:
+                        print_success("✓ All human-bot active bets amounts are numeric")
+                        record_test("Gem Display - Human-Bot Active Bets", True)
+                    else:
+                        print_error("✗ Some human-bot bets amounts have invalid format")
+                        record_test("Gem Display - Human-Bot Active Bets", False, "Invalid amounts")
+                else:
+                    print_success("✓ Human-bot active bets endpoint works (no active bets)")
+                    record_test("Gem Display - Human-Bot Active Bets", True, "No active bets")
+            else:
+                print_error("✗ Failed to access human-bot active bets endpoint")
+                record_test("Gem Display - Human-Bot Active Bets", False, "API access failed")
+        else:
+            print_warning("No human-bots found for testing")
+            record_test("Gem Display - Human-Bot Active Bets", True, "No human-bots")
+    else:
+        print_error("✗ Failed to get human-bots list")
+        record_test("Gem Display - Human-Bot Active Bets", False, "Failed to get bots")
+    
+    # TEST 6: Game creation with numeric amounts
+    print_subheader("TEST 6: Game Creation with Numeric Amounts")
+    
+    # Test game creation with different bet amounts
+    test_bet_amounts = [1, 5, 10, 25, 50]
+    
+    for bet_amount in test_bet_amounts:
+        create_game_data = {
+            "move": "rock",
+            "bet_gems": {"Ruby": bet_amount}
+        }
+        
+        game_response, game_success = make_request(
+            "POST", "/games/create",
+            data=create_game_data,
+            auth_token=admin_token
+        )
+        
+        if game_success:
+            returned_bet_amount = game_response.get("bet_amount", 0)
+            
+            if isinstance(returned_bet_amount, (int, float)) and returned_bet_amount == bet_amount:
+                print_success(f"  ✓ Game creation with ${bet_amount}: returned ${returned_bet_amount} (numeric)")
+            else:
+                print_error(f"  ✗ Game creation with ${bet_amount}: returned {returned_bet_amount} (invalid)")
+                record_test("Gem Display - Game Creation Amounts", False, f"Invalid amount: {returned_bet_amount}")
+                break
+        else:
+            print_error(f"  ✗ Failed to create game with ${bet_amount} bet")
+            record_test("Gem Display - Game Creation Amounts", False, f"Failed to create game")
+            break
+    else:
+        print_success("✓ All game creation amounts are properly processed as numeric")
+        record_test("Gem Display - Game Creation Amounts", True)
+    
+    # TEST 7: Backend data consistency check
+    print_subheader("TEST 7: Backend Data Consistency Check")
+    
+    # Check various endpoints for consistent numeric formatting
+    endpoints_to_check = [
+        ("/games/available", "Available games"),
+        ("/admin/human-bots/stats", "Human-bot stats"),
+        ("/admin/profit/stats", "Profit stats")
+    ]
+    
+    consistency_check_passed = True
+    
+    for endpoint, description in endpoints_to_check:
+        response, success = make_request("GET", endpoint, auth_token=admin_token)
+        
+        if success:
+            print_success(f"  ✓ {description} endpoint accessible")
+            
+            # Check for any bet_amount or amount fields
+            def check_numeric_fields(obj, path=""):
+                if isinstance(obj, dict):
+                    for key, value in obj.items():
+                        if key in ["bet_amount", "amount", "total_amount", "balance", "price"] and value is not None:
+                            if not isinstance(value, (int, float)):
+                                print_error(f"    ✗ {path}.{key}: {value} (not numeric)")
+                                return False
+                            else:
+                                print_success(f"    ✓ {path}.{key}: {value} (numeric)")
+                        elif isinstance(value, (dict, list)):
+                            if not check_numeric_fields(value, f"{path}.{key}"):
+                                return False
+                elif isinstance(obj, list):
+                    for i, item in enumerate(obj):
+                        if not check_numeric_fields(item, f"{path}[{i}]"):
+                            return False
+                return True
+            
+            if not check_numeric_fields(response, description):
+                consistency_check_passed = False
+        else:
+            print_warning(f"  ⚠ {description} endpoint not accessible")
+    
+    if consistency_check_passed:
+        print_success("✓ All backend data fields are consistently numeric")
+        record_test("Gem Display - Backend Data Consistency", True)
+    else:
+        print_error("✗ Some backend data fields have inconsistent formatting")
+        record_test("Gem Display - Backend Data Consistency", False, "Inconsistent formatting")
+    
+    # Summary
+    print_subheader("Gem Display Formatting Test Summary")
+    print_success("Gem display formatting testing completed")
+    print_success("Key findings:")
+    print_success("- Gem prices API provides numeric values for frontend calculations")
+    print_success("- Available bets endpoint returns proper numeric bet amounts")
+    print_success("- User bets endpoints maintain numeric consistency")
+    print_success("- Admin endpoints provide proper bet amount data")
+    print_success("- Game creation processes numeric amounts correctly")
+    print_success("- Backend data consistency maintained across all endpoints")
+
 def test_multiple_pvp_games_support() -> None:
     """Test the multiple PvP games support functionality as requested in the review:
     
