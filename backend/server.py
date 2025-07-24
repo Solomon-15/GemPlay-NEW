@@ -11705,6 +11705,187 @@ async def reset_fractional_gem_bets(current_user: User = Depends(get_current_sup
             detail="Failed to reset fractional gem bets"
         )
 
+@api_router.post("/admin/bets/delete-all", response_model=dict)
+async def delete_all_bets(current_user: User = Depends(get_current_super_admin)):
+    """Physically delete ALL bets from the database (SUPER_ADMIN only)."""
+    try:
+        # Get all games before deletion for processing
+        all_games = await db.games.find({}).to_list(100000)  # Large limit to get all games
+        
+        delete_results = {
+            "total_deleted": 0,
+            "active_games_processed": 0,
+            "completed_games_deleted": 0,
+            "total_gems_returned": {},
+            "total_commission_returned": 0,
+            "users_affected": set(),
+            "bots_affected": set(),
+            "games_by_status": {}
+        }
+        
+        # Process active games - return resources before deletion
+        for game in all_games:
+            game_id = game.get("id")
+            game_status = game.get("status")
+            creator_id = game.get("creator_id")
+            opponent_id = game.get("opponent_id")
+            bet_amount = game.get("bet_amount", 0)
+            bet_gems = game.get("bet_gems", {})
+            opponent_gems = game.get("opponent_gems", {})
+            
+            # Count games by status
+            delete_results["games_by_status"][game_status] = delete_results["games_by_status"].get(game_status, 0) + 1
+            
+            commission_returned = 0
+            
+            # Return resources for active games
+            if game_status == "WAITING":
+                # Only creator has committed resources
+                delete_results["active_games_processed"] += 1
+                
+                # Return creator's gems
+                for gem_type, quantity in bet_gems.items():
+                    if quantity > 0:
+                        await db.user_gems.update_one(
+                            {"user_id": creator_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        delete_results["total_gems_returned"][gem_type] = delete_results["total_gems_returned"].get(gem_type, 0) + quantity
+                
+                # Return creator's commission
+                commission_amount = bet_amount * 0.03
+                creator_user = await db.users.find_one({"id": creator_id})
+                if creator_user:
+                    await db.users.update_one(
+                        {"id": creator_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+                    delete_results["users_affected"].add(creator_id)
+                else:
+                    delete_results["bots_affected"].add(creator_id)
+            
+            elif game_status in ["ACTIVE", "REVEAL"]:
+                # Both players have committed resources
+                delete_results["active_games_processed"] += 1
+                
+                # Return creator's gems
+                for gem_type, quantity in bet_gems.items():
+                    if quantity > 0:
+                        await db.user_gems.update_one(
+                            {"user_id": creator_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        delete_results["total_gems_returned"][gem_type] = delete_results["total_gems_returned"].get(gem_type, 0) + quantity
+                
+                # Return opponent's gems
+                for gem_type, quantity in opponent_gems.items():
+                    if quantity > 0:
+                        await db.user_gems.update_one(
+                            {"user_id": opponent_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        delete_results["total_gems_returned"][gem_type] = delete_results["total_gems_returned"].get(gem_type, 0) + quantity
+                
+                # Return commission to both players
+                commission_amount = bet_amount * 0.03
+                
+                # Return to creator
+                creator_user = await db.users.find_one({"id": creator_id})
+                if creator_user:
+                    await db.users.update_one(
+                        {"id": creator_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+                    delete_results["users_affected"].add(creator_id)
+                else:
+                    delete_results["bots_affected"].add(creator_id)
+                
+                # Return to opponent
+                if opponent_id:
+                    opponent_user = await db.users.find_one({"id": opponent_id})
+                    if opponent_user:
+                        await db.users.update_one(
+                            {"id": opponent_id},
+                            {
+                                "$inc": {
+                                    "virtual_balance": commission_amount,
+                                    "frozen_balance": -commission_amount
+                                },
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        commission_returned += commission_amount
+                        delete_results["users_affected"].add(opponent_id)
+                    else:
+                        delete_results["bots_affected"].add(opponent_id)
+            
+            else:
+                # COMPLETED, CANCELLED, TIMEOUT games - just count for deletion
+                delete_results["completed_games_deleted"] += 1
+            
+            delete_results["total_commission_returned"] += commission_returned
+            delete_results["total_deleted"] += 1
+        
+        # Now physically delete ALL games from the database
+        delete_result = await db.games.delete_many({})
+        actual_deleted = delete_result.deleted_count
+        
+        # Convert sets to lists for JSON serialization
+        delete_results["users_affected"] = list(delete_results["users_affected"])
+        delete_results["bots_affected"] = list(delete_results["bots_affected"])
+        
+        # Log admin action
+        admin_log = {
+            "admin_id": current_user.id,
+            "admin_username": current_user.username,
+            "action": "delete_all_bets",
+            "details": {
+                **delete_results,
+                "actual_database_deletions": actual_deleted
+            },
+            "timestamp": datetime.utcnow()
+        }
+        await db.admin_logs.insert_one(admin_log)
+        
+        return {
+            "success": True,
+            "message": f"Successfully deleted {actual_deleted} bets from database",
+            "actual_database_deletions": actual_deleted,
+            **delete_results
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting all bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete all bets"
+        )
+
 @api_router.post("/admin/users/{user_id}/reset-bets", response_model=dict)
 async def reset_user_bets(
     user_id: str,
