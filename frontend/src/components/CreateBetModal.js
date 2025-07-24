@@ -270,7 +270,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
             <div key={gem.type} className="flex items-center space-x-1 bg-surface-sidebar rounded-lg px-3 py-2 border border-opacity-30" style={{ borderColor: gem.color }}>
               <img src={gem.icon} alt={gem.name} className="w-5 h-5" />
               <span className="text-text-secondary text-xs font-rajdhani">x{gem.quantity}</span>
-              <span className="text-green-400 text-xs font-rajdhani font-bold">= {formatGemValue(gemTotal)}</span>
+              <span className="text-green-400 text-xs font-rajdhani font-bold">= {formatDollarsAsGems(gemTotal)}</span>
             </div>
           );
         })}
