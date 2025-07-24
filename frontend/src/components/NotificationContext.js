@@ -13,18 +13,31 @@ export const useNotifications = () => {
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
 
-  const addNotification = useCallback((notification) => {
+  // Support for both formats: addNotification({type, message}) and addNotification(message, type)
+  const addNotification = useCallback((messageOrNotification, type = null) => {
+    const notification = typeof messageOrNotification === 'string' 
+      ? { message: messageOrNotification, type: type || 'info' }
+      : messageOrNotification;
+      
     const id = Date.now() + Math.random();
-    const newNotification = {
+    const fullNotification = {
       id,
-      type: 'info',
-      duration: 5000,
-      ...notification,
+      type: notification.type || 'info',
+      message: notification.message || '',
+      duration: notification.duration || 5000,
+      isRussian: notification.isRussian || false,
+      ...notification
     };
     
-    setNotifications(prev => [...prev, newNotification]);
+    setNotifications(prev => [...prev, fullNotification]);
+    
+    // Auto-remove after duration
+    setTimeout(() => {
+      removeNotification(id);
+    }, fullNotification.duration);
+    
     return id;
-  }, []);
+  }, [removeNotification]);
 
   const removeNotification = useCallback((id) => {
     setNotifications(prev => prev.filter(notification => notification.id !== id));
