@@ -1927,7 +1927,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Human-Bot Bet Count Discrepancy Investigation - Root Cause Analysis"
+    - "Gem Icons Update Testing - Review Requirements"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
