@@ -311,7 +311,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
           }
         }
 
-        addNotification(`Удалено ${successCount} из ${selectedBots.size} Human-ботов`, 'success');
+        addNotification(`Успешно удалено ${successCount} из ${selectedBots.size} Human-ботов`, 'success');
         clearSelection();
         await fetchHumanBots();
         await fetchStats();
