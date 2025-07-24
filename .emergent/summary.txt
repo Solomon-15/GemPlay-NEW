@@ -1,22 +1,22 @@
 <analysis>
-The AI engineer's trajectory demonstrates a systematic approach to resolving identified bugs and implementing new features within the GemPlay application. Initially, it addressed a critical backend error preventing Human-bot display ( vs  and missing field in response model). This was followed by rectifying UI styling and fixing a state-saving bug in Human-bot auto-play settings, involving both frontend and backend adjustments. Subsequently, a major feature—Human-bot Play with Players functionality—was fully implemented across both frontend and backend, including new models, API endpoints, simulation logic, and UI elements. The final task, currently in progress, involves correcting default gem icons in the admin panel by converting SVG assets to base64 and updating the database initialization. Throughout, the engineer prioritizes user clarification, methodical debugging, and iterative testing.
+The AI engineer's trajectory chronicles a methodical progression through bug fixes and significant feature implementations for the GemPlay application. Initially, it addressed backend display issues and UI state saving. Major feature additions included Human-bot Play with Players functionality and a comprehensive Gem Management CRUD interface, requiring extensive backend (FastAPI, MongoDB) and frontend (React) modifications. A bug involving default gem icons displaying incorrectly was also resolved through base64 encoding and database re-initialization. Subsequently, the engineer transformed bot bet displays from dollar values to rounded gem values, impacting several frontend components. The most recent and complex task involved refactoring the game flow to allow multiple concurrent PvP games and simplifying the game lifecycle by removing the REVEAL status, enforcing a 1-minute ACTIVE phase with automatic resolution, and overhauling the My Bets UI categorization. The engineer consistently validated changes with backend testing and sought user confirmation for frontend testing.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting game designed to showcase platform revenue, featuring Human-bots with configurable settings, probabilistic outcomes, and a commission system. The primary goal is to provide a robust and engaging betting platform with clear financial metrics.
+The GemPlay application is an asynchronous PvP gem betting platform showcasing platform revenue, featuring configurable Human-bots and a commission system (3% on win/loss). Its goal is a robust betting experience with clear financial metrics.
 
-**Previously Implemented Requirements (by a previous engineer):**
-*   Styling, active bet modals, bet limits, an edit feature for bots, total bets statistics, a tabbed admin panel, global active bet limits, and bet sum generation based on bot character.
-*   **Commission System Overhaul**: Reduced commission from 6% to 3% for human players and Human-bots, retained on win/loss, returned on draw. Admin panel now displays separate Комиссия от ставок and Комиссия от Human-ботов tabs. UI texts mentioning 6% updated to 3%.
-*   **Bet Count Consistency**: Admin panel's Количество ставок for Human-bots and Available Bets in Lobby consistently display  status bets only.
+**Previously Implemented:** Styling, active bet modals, bot edit features, global bet limits, bet sum generation by bot character. Commission system revised to 3%, with admin panel tabs for Комиссия от ставок and Комиссия от Human-ботов. Bet counts (Human-bots, Lobby) consistently display  status bets.
 
-**New Requirements Implemented in This Trajectory:**
-1.  **UI Numbering**: Added a № (Number) column to Human bots and Regular bots lists in the Admin Panel, and to Active bets modals for both.
-2.  **Human-bot Total Bet Sum Fix**: Corrected Общая сумма (Total sum) in the Active bets modal for Human bots.
-3.  **Human-bot Auto-play (inter-bot)**: Implemented Human-bots randomly creating games with other Human-bots (1 sec - 1 hour delay, random bet amount within bot's range, unlimited funds, global toggle, individual checkbox, Играть друг с другом column).
-4.  **Human-bot Play with Players (new)**: Added a global toggle for Human-bots to play with live players, a checkbox in the creation modal, and a column (Играть с Игроками) in the Human-bot list. Logic: random selection from all available bets (human/bot), exclude own bets, global toggle disables individual settings.
-5.  **Gem Source CRUD Interface**: Admin panel section for managing 7 gem types (Ruby, Amber, Topaz, Emerald, Aquamarine, Sapphire, Magic) with Create, Read, Update, Delete (CRUD) functionality. Each gem has an icon (base64, max 1MB, PNG/SVG/JPG), name (English), price (-10000 whole dollars), and HEX color. Display as cards similar to the Shop section. Only SUPER_ADMIN can manage. Initial 7 gems cannot be deleted. New gems are immediately available in Shop/games.
-6.  **Fix Gem Icons**: Update default gem icons in the Admin panel to use proper SVG-to-base64 representations.
+**Newly Implemented (in this trajectory):**
+1.  **UI Numbering**: Added № column to bot lists and active bets modals.
+2.  **Human-bot Total Bet Sum Fix**: Corrected Общая сумма in active bets modal.
+3.  **Human-bot Auto-play**: Human-bots randomly create games with other Human-bots (1s-1hr delay, random bet amount, unlimited funds, global/individual toggles, Играть друг с другом column).
+4.  **Human-bot Play with Players**: Global toggle for Human-bots to join live player bets, creation modal checkbox, Играть с Игроками column.
+5.  **Gem Source CRUD**: Admin panel for 7 gem types (Ruby, Amber, Topaz, Emerald, Aquamarine, Sapphire, Magic). CRUD operations with icon (base64, max 1MB, PNG/SVG/JPG), name (English), price (-10000 whole dollars), HEX color. Display as cards, SUPER_ADMIN only. Initial 7 gems undeletable.
+6.  **Fix Gem Icons**: Update default gem icons in Admin panel to correct SVG-to-base64.
+7.  **Bet Display Conversion**: Convert bot bet amounts from dollars to rounded gem integers (e.g., 50) in UI (e.g., Мин: 15 , Макс: 50).  = 1 gem conversion. Affects display and input fields.
+8.  **Multiple Concurrent PvP Games**: Remove restriction on joining multiple games simultaneously. Human-bots have a  setting (default 3). My Bets section in UI to categorize bets: Awaiting Opponent, Ongoing Battles, Completed (Wins, Losses, Draws), Cancelled, and optional By Opponent Type filter.
+9.  **Simplified Game Flow**: Combine ACTIVE + REVEAL into a single 1-minute ACTIVE phase. Auto-reveal 3 seconds after both players make a move. Funds return if no move within 1 minute. Game card moves to Ongoing Battles on join, disappears after 1 min or completion, returns to Available Bets if not played.
 </product_requirements>
 
 <key_technical_concepts>
@@ -35,50 +35,56 @@ The application follows a MERN-stack variant, utilizing MongoDB, FastAPI (Python
 
 
 -   : The core FastAPI backend.
-    -   **Importance**: Handles all API routes, game logic, user/bot management, and now gem management.
-    -   **Changes**:
-        *   **Human-bot Fixes**: Corrected  to  in  and ensured  was included in .
-        *   **Human-bot Auto-play/Play with Players**: Added  to , , , and  models. Integrated  list for bot name generation. Updated  and  to handle new auto-play and play-with-players fields. Added  endpoint. Extended  to include logic for Human-bots to join player bets, excluding their own.
-        *   **Gem Management**: Defined new Pydantic models (, , ) for gem CRUD. Implemented  in  to create 7 default gems with base64 icons and  flag. Added API endpoints for , , , , including validation (icon size, price range, unique name) and protection for default gems. Updated  endpoint to align with the new structure.
-        *   **Bug Fixes**: Fixed Pydantic  to  syntax.
+    -   **Importance**: Handles all API routes, game logic, user/bot/gem management.
+    -   **Changes**: Corrected  to , ensured  in . Added  to Human-bot models and endpoints. Extended  for player bets. Implemented full CRUD for gems with  (base64 icons, default protection). Fixed Pydantic  syntax. Updated  to include UI numbering logic. Removed You cannot join multiple games simultaneously restriction by modifying  to return . Added  field to  and its update/retrieve logic. Updated  to respect  for Human-bots. Removed  from enum. Changed  model from  to . Modified  to set . Updated  and  to manage games in  status using . Modified game completion logic to include 3-second auto-reveal after a move. Removed  endpoint.
 -   : Manages global Human-bot settings and creation modal.
-    -   **Importance**: Central control for Human-bot behavior, now including Play with Players.
-    -   **Changes**: Updated  to correctly send all auto-play and  settings. Updated styling of input fields to  for dark theme consistency. Added new UI toggles for Play with Players in global settings and the Create Human-bot modal.
+    -   **Importance**: Central control for Human-bot behavior.
+    -   **Changes**: Updated  for auto-play and . Added UI toggles for Play with Players. Updated input styling. Added  input field and updated state management () and save logic to include this new field. Updated bet range input fields (, ) to display and accept gem values, and adjusted step/placeholder attributes for whole numbers.
 -   : Displays Human-bot list.
-    -   **Importance**: Admin view for Human-bots, now with new status column.
-    -   **Changes**: Added Играть с Игроками column with an interactive checkbox. Implemented  to interact with the new backend endpoint. Integrated logic to disable individual checkboxes based on the global Play with Players setting.
+    -   **Importance**: Admin view for Human-bots.
+    -   **Changes**: Added № and Играть с Игроками columns. Implemented  and logic to disable checkboxes based on global setting. Updated Диапазон ставок column to display bet ranges in gem format using  utility.
 -   : Main admin panel layout.
     -   **Importance**: Houses all admin sub-components.
-    -   **Changes**: Imported and integrated the new  component, replacing the under development placeholder for the Gems section.
--   : Displays gems available for purchase.
-    -   **Importance**: Reference for gem data structure and UI styling.
-    -   **Changes**: No direct changes, but its  API endpoint was modified on the backend to reflect new gem properties.
+    -   **Changes**: Imported and integrated .
 -    (NEW FILE): Dedicated component for managing gem definitions.
     -   **Importance**: Provides the CRUD interface for gem types in the admin panel.
-    -   **Changes**: Created to display gems as cards (similar to Shop), implement Create/Read/Update/Delete operations for gems, including file upload for icons (base64) and validation.
+    -   **Changes**: Created to display gems as cards, implement CRUD operations, including file upload for icons (base64) and validation.
 -   : Directory containing SVG icon files for gems.
-    -   **Importance**: Source of visual assets for gems.
-    -   **Changes**: Files from this directory are now read, base64 encoded, and stored in the database for gem definitions.
+    -   **Importance**: Source of visual assets.
+    -   **Changes**: Files from this directory are now read, base64 encoded, and stored in the database for gem definitions during initialization.
+-   : Frontend utility functions.
+    -   **Importance**: Handles currency formatting and conversions.
+    -   **Changes**: Added  function to convert and format dollar amounts into rounded gem integers.
+-   : Manages regular bot settings.
+    -   **Importance**: Displays and allows editing of regular bot parameters.
+    -   **Changes**: Updated input fields for bet ranges (, ) to display and accept gem values. Also updated the table column Диапазон ставок and Средняя сумма цикла to reflect gem values. Updated input  and  attributes.
+-   : Displays player's active and completed bets.
+    -   **Importance**: User interface for managing and viewing personal bets.
+    -   **Changes**: Significantly refactored to categorize bets into: , ,  (Wins, Losses, Draws), and  tabs. Updated filtering logic and UI structure to support these categories. Updated  tab to specifically show only  status games and correctly reflect their count.
 -   : Markdown file for tracking testing results.
     -   **Importance**: Records test outcomes and crucial user feedback.
-    -   **Changes**: Continuously updated to document fixes for Human-bot display, auto-play settings, and the new Play with Players functionality, as well as the complete testing of the Gem Management CRUD interface.
+    -   **Changes**: Continuously updated to document fixes for Human-bot display, auto-play settings, Play with Players, Gem Management CRUD, gem icon fixes, bet display conversion, multiple concurrent PvP games support, and simplified game logic.
 </code_architecture>
 
 <pending_tasks>
--   Currently, the task is to fix the icons for the default gems in the Gems Management section. This involves updating the base64 encoded icons for the 7 default gem types.
+-   Test frontend changes for the Simplified Game Flow (ACTIVE-only status, 1-minute deadline, card movement between Available Bets and Ongoing Battles).
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was tasked with fixing the display of gem icons in the Gems section of the admin panel. Previously, a comprehensive CRUD interface for managing gem types was implemented and successfully tested. However, the default 7 gem types were displaying placeholder icons.
+Immediately before this summary request, the AI engineer was finalizing the implementation and testing of the Simplified Game Flow feature. The core backend logic for this feature has been successfully implemented and tested.
 
-The current work involves:
-1.  **Locating Gem Icons**: Identifying the correct SVG icon files for each of the 7 default gems (, , etc.) within the  directory.
-2.  **Base64 Encoding**: Converting these SVG files into their Base64 string representations.
-3.  **Updating Initialization Logic**: Modifying the  function in  to embed these correct Base64 encoded icons when the default gems are first created or re-initialized in the database.
+The key changes revolved around:
+1.  **Removing the  game status**: The  enum in  was modified to no longer include .
+2.  **Introducing **: The  model in  was updated to use  instead of .
+3.  **Refactoring game join and timeout logic**:
+    *   The  function in  was modified to set the  when a game transitions from  to .
+    *   The  and  functions were updated to process games whose  has passed, ensuring funds return if a move isn't made within the 1-minute active period.
+4.  **Automating game reveal/completion**: The separate  endpoint was removed. The logic was changed so that once a player makes a move (or a bot makes a move), the game's outcome is determined automatically after a 3-second delay, eliminating the manual reveal phase.
+5.  **Frontend update for Ongoing Battles**: The  component was updated to filter the Ongoing Battles tab to only display games with an  status, and the count for this tab was adjusted accordingly.
 
-The engineer has already found the SVG files and started the conversion process. The next step, as indicated by the trajectory, is to fully integrate these base64 strings into the  function and then potentially re-trigger the initialization to apply the changes.
+The backend testing agent has confirmed that all these changes work correctly from the backend perspective. The engineer's last action was to ask the user if frontend testing was desired, indicating the backend part of this feature is complete.
 </current_work>
 
 <optional_next_step>
-The next step is to implement the re-initialization logic to ensure the updated gem icons are correctly saved and displayed.
+Ask the user to proceed with frontend testing for the Simplified Game Flow feature.
 </optional_next_step>
