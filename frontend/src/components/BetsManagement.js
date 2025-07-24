@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNotifications } from './NotificationContext';
 import Pagination from './Pagination';
 import usePagination from '../hooks/usePagination';
+import { formatDollarsAsGems } from '../utils/gemUtils';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
