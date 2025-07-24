@@ -35,12 +35,24 @@ const MyBets = ({ user }) => {
     const safeBets = bets.filter(bet => bet && bet.status); // Filter out any undefined/null bets
     
     switch (activeTab) {
-      case 'active':
-        return safeBets.filter(bet => bet.status === 'WAITING' || bet.status === 'ACTIVE');
-      case 'completed':
-        return safeBets.filter(bet => bet.status === 'COMPLETED');
+      case 'awaiting':
+        // Ставки, которые вы создали и ждут оппонента
+        return safeBets.filter(bet => bet.status === 'WAITING' && bet.creator_id === user.id);
+      case 'ongoing':
+        // Ставки, в которых вы участвуете (ход уже сделан, результат не определён)
+        return safeBets.filter(bet => bet.status === 'ACTIVE' || bet.status === 'REVEAL');
+      case 'wins':
+        // Ваши победы
+        return safeBets.filter(bet => bet.status === 'COMPLETED' && bet.winner_id === user.id);
+      case 'losses':
+        // Ваши поражения
+        return safeBets.filter(bet => bet.status === 'COMPLETED' && bet.winner_id && bet.winner_id !== user.id);
+      case 'draws':
+        // Ничьи
+        return safeBets.filter(bet => bet.status === 'COMPLETED' && !bet.winner_id);
       case 'cancelled':
-        return safeBets.filter(bet => bet.status === 'CANCELLED');
+        // Отмененные ставки
+        return safeBets.filter(bet => bet.status === 'CANCELLED' || bet.status === 'TIMEOUT');
       default:
         return safeBets;
     }
