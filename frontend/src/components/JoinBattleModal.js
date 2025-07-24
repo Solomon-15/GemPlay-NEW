@@ -45,6 +45,35 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     { id: 'scissors', name: 'Scissors', icon: '/Scissors.svg' }
   ];
 
+  // Функция ожидания завершения игры через polling
+  const waitForGameCompletion = async (gameId, maxAttempts = 20, interval = 500) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${gameId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.ok) {
+          const gameData = await response.json();
+          if (gameData.status === 'COMPLETED') {
+            console.log(`🎮 Game completed after ${attempt + 1} attempts`);
+            return gameData;
+          }
+        }
+        
+        // Ждем перед следующей попыткой
+        await new Promise(resolve => setTimeout(resolve, interval));
+      } catch (error) {
+        console.warn(`🎮 Attempt ${attempt + 1} failed:`, error);
+      }
+    }
+    
+    console.error('🎮 Game did not complete within expected time');
+    return null;
+  };
+
   // НОВАЯ АСИНХРОННАЯ ЛОГИКА ПРИСОЕДИНЕНИЯ К БИТВЕ
   const joinBattle = async () => {
     setLoading(true);
