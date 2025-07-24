@@ -18474,10 +18474,10 @@ async def delete_human_bot_completed_bets(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting human bot completed bets: {e}")
+        logger.error(f"Error hiding human bot completed bets: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Ошибка удаления завершённых ставок Human-бота"
+            detail="Ошибка скрытия завершённых ставок Human-бота"
         )
 
 
