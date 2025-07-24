@@ -10866,11 +10866,11 @@ def print_summary() -> None:
         print_error("❌ TESTING COMPLETED WITH FAILURES")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - GEM ICONS UPDATE")
+    print_header("GEMPLAY BACKEND API TESTING - MULTIPLE PVP GAMES SUPPORT")
     
     try:
         # Run the specific test requested in the review
-        test_gem_icons_update()
+        test_multiple_pvp_games_support()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
