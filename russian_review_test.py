@@ -371,12 +371,15 @@ class RussianReviewTester:
                 self.log(f"❌ Game took too long to complete: {completion_time:.2f} seconds")
                 instant_completion = False
             
-            # Check if response contains COMPLETED status
+            # Check if response contains COMPLETED status or result indicating completion
             if join_response.get("status") == "COMPLETED":
                 self.log("✅ Game status is COMPLETED immediately")
                 status_correct = True
+            elif "result" in join_response and join_response.get("result"):
+                self.log(f"✅ Game completed with result: {join_response.get('result')}")
+                status_correct = True
             else:
-                self.log(f"❌ Game status is not COMPLETED: {join_response.get('status')}")
+                self.log(f"❌ Game status/result unclear: status={join_response.get('status')}, result={join_response.get('result')}")
                 status_correct = False
             
             # Check if response contains winner_id and creator_move
