@@ -251,13 +251,15 @@ class User(BaseModel):
     total_amount_won: float = 0.0
 
 class GemDefinition(BaseModel):
-    type: GemType
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: str  # Changed from GemType to allow custom gem types
     name: str
-    price: float
+    price: int  # Changed to int for whole dollars only
     color: str
     icon: str
     rarity: str
     enabled: bool = True
+    is_default: bool = False  # For default 7 gems that can't be deleted
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 # Admin-specific gem models
