@@ -4802,6 +4802,32 @@ async def check_user_concurrent_games(user_id: str) -> bool:
         logger.error(f"Error in check_user_concurrent_games: {e}")
         return True  # Default to allowing join on error
 
+async def check_human_bot_concurrent_games(bot_id: str, max_concurrent: int = 3) -> bool:
+    """Check if Human-bot can join another game based on concurrent games limit."""
+    try:
+        # Count active games where the bot is participant
+        active_statuses = [GameStatus.ACTIVE, GameStatus.REVEAL]
+        
+        active_games_count = await db.games.count_documents({
+            "$or": [
+                {"creator_id": bot_id, "status": {"$in": active_statuses}},
+                {"opponent_id": bot_id, "status": {"$in": active_statuses}}
+            ]
+        })
+        
+        can_join = active_games_count < max_concurrent
+        
+        if not can_join:
+            logger.info(f"Human-bot {bot_id} cannot join game: {active_games_count}/{max_concurrent} concurrent games")
+        else:
+            logger.info(f"Human-bot {bot_id} can join game: {active_games_count}/{max_concurrent} concurrent games")
+        
+        return can_join
+        
+    except Exception as e:
+        logger.error(f"Error checking Human-bot concurrent games for {bot_id}: {e}")
+        return False  # Conservative approach for bots
+
 async def handle_game_timeout(game_id: str):
     """Handle game timeout - return funds and potentially recreate bet."""
     try:
