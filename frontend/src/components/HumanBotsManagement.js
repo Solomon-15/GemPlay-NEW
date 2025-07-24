@@ -349,6 +349,9 @@ const HumanBotsManagement = () => {
       try {
         const response = await executeOperation('/admin/human-bots/toggle-all', 'POST', { activate });
         if (response.success !== false) {
+          const action = activate ? 'активированы' : 'деактивированы';
+          const count = response.affected_count || 0;
+          addNotification(`Массовая операция завершена: ${count} Human-ботов ${action}`, 'success');
           fetchHumanBots();
           fetchStats();
           alert(`${activate ? 'Активировано' : 'Деактивировано'} ${response.affected_count} ботов`);
