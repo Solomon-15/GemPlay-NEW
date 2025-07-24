@@ -2036,7 +2036,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Gem Icons Update Testing - Review Requirements"
+    - "Russian Review Human-Bot Admin Panel Fixes Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
