@@ -5158,21 +5158,14 @@ async def join_game(
                 detail="Game is no longer available - another player may have joined it"
             )
         
-        # Start 3-second auto-completion timer
-        logger.info(f"Starting 3-second auto-completion timer for game {game_id}")
+        # Мгновенное завершение игры после присоединения второго игрока
+        logger.info(f"Completing game {game_id} immediately after join")
         
-        # Create background task for auto-completion
-        import asyncio
-        asyncio.create_task(auto_complete_game_after_delay(game_id))
+        # Определяем результат сразу
+        game_result = await determine_game_winner(game_id)
         
-        # Return immediate response (game will complete after 3 seconds)
-        return {
-            "success": True,
-            "game_id": game_id,
-            "status": "ACTIVE",
-            "message": "Game started! Result will be determined in 3 seconds.",
-            "auto_complete_in_seconds": 3
-        }
+        # Возвращаем завершённую игру
+        return game_result
         
     except HTTPException:
         raise
