@@ -4885,7 +4885,7 @@ async def handle_game_timeout(game_id: str):
                     "opponent_id": None,
                     "opponent_move": None,
                     "started_at": None,
-                    "reveal_deadline": None,
+                    "active_deadline": None,
                     "updated_at": datetime.utcnow()
                 }
             }
