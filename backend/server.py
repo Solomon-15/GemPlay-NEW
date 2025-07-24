@@ -5368,10 +5368,10 @@ async def timeout_checker_task():
         try:
             current_time = datetime.utcnow()
             
-            # Find games in REVEAL phase that have exceeded deadline
+            # Find games in ACTIVE phase that have exceeded 1-minute deadline
             expired_games = await db.games.find({
-                "status": GameStatus.REVEAL,
-                "reveal_deadline": {"$lt": current_time}
+                "status": GameStatus.ACTIVE,
+                "active_deadline": {"$lt": current_time}
             }).to_list(100)
             
             if expired_games:
