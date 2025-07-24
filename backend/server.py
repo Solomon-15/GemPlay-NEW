@@ -1951,7 +1951,7 @@ async def join_human_bot_bet(human_bot: HumanBot):
                     "opponent_id": human_bot.id,
                     "opponent_move": bot_move,
                     "opponent_gems": selected_game.bet_gems,  # Same gems as creator
-                    "status": GameStatus.REVEAL if selected_game.creator_move_hash else GameStatus.ACTIVE,
+                    "status": GameStatus.ACTIVE,
                     "started_at": datetime.utcnow(),
                     "reveal_deadline": datetime.utcnow() + timedelta(minutes=5) if selected_game.creator_move_hash else None
                 }
