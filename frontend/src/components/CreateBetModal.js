@@ -398,7 +398,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
                 <div className="text-center mb-2">
                   <img src={gem.icon} alt={gem.name} className="w-8 h-8 mx-auto mb-1" />
                   <div className="text-white font-rajdhani font-bold text-xs">{gem.name}</div>
-                  <div className="text-text-secondary text-xs">{formatGemValue(gem.price)}</div>
+                  <div className="text-text-secondary text-xs">{formatDollarsAsGems(gem.price)}</div>
                 </div>
                 
                 <div className="flex items-center justify-between space-x-1">
