@@ -18412,6 +18412,70 @@ async def recalculate_human_bot_bets(
             detail="Ошибка пересчета ставок Human-бота"
         )
 
+@api_router.post("/admin/human-bots/{bot_id}/delete-completed-bets", response_model=dict)
+async def delete_human_bot_completed_bets(
+    bot_id: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Удалить завершённые ставки Human-бота (только со статусом COMPLETED, CANCELLED, ARCHIVED)."""
+    try:
+        # Find the Human-bot
+        bot_data = await db.human_bots.find_one({"id": bot_id})
+        if not bot_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Human-бот не найден"
+            )
+        
+        bot_name = bot_data.get("name", f"Bot-{bot_id[:8]}")
+        
+        # Count completed bets before deletion
+        completed_statuses = ["COMPLETED", "CANCELLED", "ARCHIVED"]
+        completed_count = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": {"$in": completed_statuses}
+        })
+        
+        # Delete only completed bets (preserve WAITING and ACTIVE)
+        delete_result = await db.games.delete_many({
+            "creator_id": bot_id,
+            "status": {"$in": completed_statuses}
+        })
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="DELETE_HUMAN_BOT_COMPLETED_BETS",
+            target_type="human_bot",
+            target_id=bot_id,
+            details={
+                "name": bot_name,
+                "deleted_bets": delete_result.deleted_count,
+                "statuses_deleted": completed_statuses
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Deleted {delete_result.deleted_count} completed bets for Human-bot {bot_id}")
+        
+        return {
+            "success": True,
+            "message": f"Удалено {delete_result.deleted_count} завершённых ставок Human-бота {bot_name}",
+            "bot_id": bot_id,
+            "deleted_count": delete_result.deleted_count,
+            "bot_name": bot_name,
+            "preserved_active_bets": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting human bot completed bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ошибка удаления завершённых ставок Human-бота"
+        )
+
 
 
 # ==============================================================================
