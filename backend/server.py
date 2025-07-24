@@ -1375,13 +1375,69 @@ async def get_current_super_admin(current_user: User = Depends(get_current_user)
 async def initialize_default_gems():
     """Initialize default gem definitions in the database."""
     default_gems = [
-        {"type": GemType.RUBY, "name": "Ruby", "price": 1.0, "color": "#FF0000", "icon": "gem-red.svg", "rarity": "Common"},
-        {"type": GemType.AMBER, "name": "Amber", "price": 2.0, "color": "#FFA500", "icon": "gem-orange.svg", "rarity": "Common"},
-        {"type": GemType.TOPAZ, "name": "Topaz", "price": 5.0, "color": "#FFFF00", "icon": "gem-yellow.svg", "rarity": "Uncommon"},
-        {"type": GemType.EMERALD, "name": "Emerald", "price": 10.0, "color": "#00FF00", "icon": "gem-green.svg", "rarity": "Rare"},
-        {"type": GemType.AQUAMARINE, "name": "Aquamarine", "price": 25.0, "color": "#00FFFF", "icon": "gem-cyan.svg", "rarity": "Rare+"},
-        {"type": GemType.SAPPHIRE, "name": "Sapphire", "price": 50.0, "color": "#0000FF", "icon": "gem-blue.svg", "rarity": "Epic"},
-        {"type": GemType.MAGIC, "name": "Magic", "price": 100.0, "color": "#800080", "icon": "gem-purple.svg", "rarity": "Legendary"},
+        {
+            "type": GemType.RUBY, 
+            "name": "Ruby", 
+            "price": 1, 
+            "color": "#FF0000", 
+            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", 
+            "rarity": "Common",
+            "is_default": True
+        },
+        {
+            "type": GemType.AMBER, 
+            "name": "Amber", 
+            "price": 2, 
+            "color": "#FFA500", 
+            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", 
+            "rarity": "Common",
+            "is_default": True
+        },
+        {
+            "type": GemType.TOPAZ, 
+            "name": "Topaz", 
+            "price": 5, 
+            "color": "#FFFF00", 
+            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", 
+            "rarity": "Uncommon",
+            "is_default": True
+        },
+        {
+            "type": GemType.EMERALD, 
+            "name": "Emerald", 
+            "price": 10, 
+            "color": "#00FF00", 
+            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", 
+            "rarity": "Rare",
+            "is_default": True
+        },
+        {
+            "type": GemType.AQUAMARINE, 
+            "name": "Aquamarine", 
+            "price": 25, 
+            "color": "#00FFFF", 
+            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", 
+            "rarity": "Epic",
+            "is_default": True
+        },
+        {
+            "type": GemType.SAPPHIRE, 
+            "name": "Sapphire", 
+            "price": 50, 
+            "color": "#0000FF", 
+            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", 
+            "rarity": "Legendary",
+            "is_default": True
+        },
+        {
+            "type": GemType.MAGIC, 
+            "name": "Magic", 
+            "price": 100, 
+            "color": "#FF00FF", 
+            "icon": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", 
+            "rarity": "Mythic",
+            "is_default": True
+        },
     ]
     
     for gem_data in default_gems:
