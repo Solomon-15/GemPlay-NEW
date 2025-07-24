@@ -4911,7 +4911,7 @@ async def can_join_games(current_user: User = Depends(get_current_user)):
         
         active_as_creator = await db.games.find_one({
             "creator_id": current_user.id,
-            "status": {"$in": [GameStatus.ACTIVE, GameStatus.REVEAL]}
+            "status": {"$in": [GameStatus.ACTIVE]}
         })
         
         # Get waiting games count
