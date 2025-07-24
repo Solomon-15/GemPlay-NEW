@@ -112,7 +112,7 @@ const MyBets = ({ user }) => {
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <span className="font-roboto text-text-secondary text-sm">Bet Amount:</span>
-          <p className="font-rajdhani text-green-400 font-bold">${bet.bet_amount || '0'}</p>
+          <p className="font-rajdhani text-green-400 font-bold">{formatDollarsAsGems(bet.bet_amount || 0)}</p>
         </div>
         <div>
           <span className="font-roboto text-text-secondary text-sm">Opponent:</span>
