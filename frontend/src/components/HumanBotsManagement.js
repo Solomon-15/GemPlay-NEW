@@ -976,25 +976,25 @@ const HumanBotsManagement = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label>Диапазон макс. ставок ($)</label>
+                  <label>Диапазон макс. ставок (гемы)</label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     placeholder="От"
                     value={bulkCreateData.max_bet_range[0]}
                     onChange={(e) => setBulkCreateData({
                       ...bulkCreateData, 
-                      max_bet_range: [parseFloat(e.target.value), bulkCreateData.max_bet_range[1]]
+                      max_bet_range: [parseInt(e.target.value) || 1, bulkCreateData.max_bet_range[1]]
                     })}
                   />
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     placeholder="До"
                     value={bulkCreateData.max_bet_range[1]}
                     onChange={(e) => setBulkCreateData({
                       ...bulkCreateData, 
-                      max_bet_range: [bulkCreateData.max_bet_range[0], parseFloat(e.target.value)]
+                      max_bet_range: [bulkCreateData.max_bet_range[0], parseInt(e.target.value) || 1]
                     })}
                   />
                 </div>
