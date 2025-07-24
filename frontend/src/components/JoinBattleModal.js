@@ -81,8 +81,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       let battleOutcome = null;
       
-      // Игра должна завершиться мгновенно и вернуть COMPLETED статус
-      if (result.status === 'COMPLETED') {
+      // Игра завершается мгновенно, API возвращает результат игры напрямую
+      if (result.game_id && result.winner_id !== undefined) {
         console.log('🎮 Game completed immediately');
         
         battleOutcome = result.winner_id === user.id ? 'win' : 
@@ -96,7 +96,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         });
         
       } else {
-        throw new Error(`Неожиданный статус игры: ${result.status}. Ожидался COMPLETED.`);
+        throw new Error(`Неожиданная структура ответа API. Ожидались поля game_id и winner_id.`);
       }
       
       // Обновляем инвентарь и данные пользователя
