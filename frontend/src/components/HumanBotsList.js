@@ -777,7 +777,15 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                         }`}
                         title={bot.is_active ? 'Деактивировать' : 'Активировать'}
                       >
-                        {bot.is_active ? '⏸️' : '▶️'}
+                        {bot.is_active ? (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-7-3a9 9 0 1118 0 9 9 0 01-18 0z" />
+                          </svg>
+                        )}
                       </button>
                       <button
                         onClick={() => handleDeleteBot(bot)}
