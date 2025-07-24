@@ -297,7 +297,7 @@ const HumanBotActiveBetsModal = ({
                           </td>
                           <td className="px-4 py-3">
                             <div className="text-sm font-roboto font-bold text-accent-primary">
-                              ${bet.bet_amount || bet.total_bet_amount || 0}
+                              {formatDollarsAsGems(bet.bet_amount || bet.total_bet_amount || 0)}
                             </div>
                           </td>
                           <td className="px-4 py-3">
