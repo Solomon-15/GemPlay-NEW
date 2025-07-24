@@ -213,25 +213,18 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     
     // For bots, use unified styling similar to PlayerCard
     if (isBot || isActiveBotEntry) {
-      // Calculate total gems value (not in dollars, just gem quantity)
+      // Calculate total gems value using real gem prices
       const getTotalGemsValue = () => {
         if (!game.bet_gems || typeof game.bet_gems !== 'object') return 0;
         
-        // Define gem prices for calculation
-        const gemPrices = {
-          'Ruby': 1,
-          'Amber': 2, 
-          'Topaz': 5,
-          'Emerald': 10,
-          'Aquamarine': 25,
-          'Sapphire': 50,
-          'Magic': 100
-        };
-
-        return Object.entries(game.bet_gems).reduce((total, [gemType, quantity]) => {
-          const price = gemPrices[gemType] || 1;
-          return total + (price * quantity);
-        }, 0);
+        let total = 0;
+        Object.entries(game.bet_gems).forEach(([gemType, quantity]) => {
+          const gemInfo = gemPrices.find(gem => gem.name.toLowerCase() === gemType.toLowerCase());
+          const price = gemInfo ? gemInfo.price : 1; // fallback to $1 if gem not found
+          total += price * quantity;
+        });
+        
+        return total;
       };
 
       // Get sorted gems by price (ascending)
