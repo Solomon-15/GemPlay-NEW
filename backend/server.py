@@ -818,15 +818,88 @@ def generate_verification_token() -> str:
     """Generate email verification token."""
     return str(uuid.uuid4())
 
+# Human Bot Names List
+HUMAN_BOT_NAMES = [
+    "AssemSilnyy", "Aruzhan123", "DanelMax", "Roman777", "MadinaUmnyy", "Tatiana89", "DanaLuchshiy", "Irina",
+    "Samat123", "NataliaSilnyy", "NikitaPro", "AssemMax", "ErzhanLuchshiy", "YerlanSilnyy", "DanaSilnyy", "Alikhan777",
+    "Dmitry", "TatianaWin", "Erzhan89", "Nurgul89", "NurgulWin", "AlikhanWin", "RauanSilnyy", "RauanUmnyy",
+    "Rauan89", "SergeyMax", "Erzhan2024", "OlegSilnyy", "NurgulBogaty", "Aigerim2024", "Bekzat2024", "AlikhanZoloto",
+    "EgorBogaty", "AlexeyPro100", "MikhailWin", "ElenaSilnyy", "DanelBoss", "Aigerim89", "Nursultan2024", "AnnaZoloto",
+    "Madina777", "AigerimPro", "DmitryBoss", "AndreySilnyy", "NurayLuchshiy", "AndreyPro", "AidanaPro", "OlgaBoss",
+    "SvetlanaSilnyy", "AigerimTop", "Samat2024", "YuliaWin", "Alexey2024", "BaurzhanPro100", "Alikhan89", "Nuray007",
+    "EgorZoloto", "Rauan", "Ksenia777", "TatianaMax", "GaukharSilnyy", "Elena123", "Aidana89", "SergeyUmnyy",
+    "Danel777", "SamatPro100", "Aidana123", "Zarina007", "Tatiana007", "Temirlan89", "MariaMax", "Yulia777",
+    "KseniaSilnyy", "AlikhanBogaty", "AyanBoss", "MadinaSilnyy", "YerlanLuchshiy", "NursultanUmnyy", "MirasUmnyy",
+    "AluaTop", "Irina007", "NurgulUmnyy", "Anna777", "Yulia", "EgorWin", "Sergey2024", "AnnaPro", "NataliaUmnyy",
+    "NikitaBogaty", "RauanZoloto", "IrinaUmnyy", "Askar007", "OlgaLuchshiy", "MadiZoloto", "Dana89", "Oleg007",
+    "Yerlan89", "Aruzhan89", "AnnaLuchshiy", "ZhanelSilnyy", "MadinaWin", "Ksenia123", "Baurzhan89", "AlikhanMax",
+    "Anna007", "OlegPro", "BaurzhanSilnyy", "DmitryUmnyy", "Bekzat", "AlikhanTop", "Olga007", "Sergey777",
+    "Danel2024", "SergeyLuchshiy", "SergeyTop", "YerlanTop", "Alexey007", "IrinaTop", "ZhansayaSilnyy", "AidanaLuchshiy",
+    "TatianaSilnyy", "DmitryTop", "AnnaWin", "AluaBoss", "YerlanPro100", "Ksenia007", "Mikhail89", "IrinaLuchshiy",
+    "ElenaZoloto", "MadinaBogaty", "AidanaBoss", "ZarinaMax", "MariaUmnyy", "TatianaTop", "Dmitry2024", "AlexeySilnyy",
+    "GaukharUmnyy", "Nursultan89", "AlikhanPro100", "Zarina2024", "Egor2024", "Olga89", "TemirlanWin", "RomanLuchshiy",
+    "IvanTop", "NurayZoloto", "MadiBoss", "ZhansayaTop", "AruzhanZoloto", "Svetlana007", "YuliaPro100", "ElenaMax",
+    "DanelPro100", "AruzhanBogaty", "NurgulPro100", "KseniaUmnyy", "YerlanPro", "AskarZoloto", "AyanSilnyy", "ZarinaSilnyy",
+    "MadiMax", "Nuray89", "AruzhanSilnyy", "NataliaBoss", "MikhailZoloto", "ElenaUmnyy", "Zarina", "SvetlanaBogaty",
+    "AndreyWin", "Svetlana89", "GaukharPro", "SaniyaBogaty", "Zhanel2024", "Madi007", "Svetlana2024", "BaurzhanWin",
+    "Baurzhan123", "AlexeyTop", "Nurgul123", "SergeyPro", "MikhailPro100", "ElenaPro100", "AigerimSilnyy", "IvanPro",
+    "NurayWin", "OlegTop", "OlgaZoloto", "Nursultan123", "YuliaLuchshiy", "Nurgul777", "Svetlana123", "Gaukhar",
+    "DiasPro100", "DmitrySilnyy", "DanaBoss", "DiasBoss", "SaniyaBoss", "Miras89", "BaurzhanMax", "Maria2024",
+    "IvanWin", "ElenaPro", "OlgaPro", "Danel123", "Egor007", "Alua123", "AndreyBoss", "RomanBogaty", "BaurzhanUmnyy",
+    "Saniya89", "SvetlanaUmnyy", "Samat777", "YuliaUmnyy", "Samat007", "Zhansaya123", "TemirlanZoloto", "AlexeyWin",
+    "ZhansayaPro", "Anna2024", "YuliaBoss", "AruzhanLuchshiy", "Madina123", "Dias2024", "Dana", "GaukharPro100",
+    "AidanaMax", "RomanSilnyy", "DmitryWin", "Maria777", "NataliaTop", "Elena007", "MariaPro", "IvanZoloto",
+    "Gaukhar2024", "Alua007", "Ayan777", "ZhanelLuchshiy", "MadinaMax", "AskarLuchshiy", "OlegBoss", "AndreyUmnyy",
+    "AidanaTop", "ErzhanZoloto", "ElenaTop", "Zarina777", "AskarBogaty", "YuliaSilnyy", "SergeyWin", "Oleg89",
+    "SaniyaPro100", "DmitryMax", "ZhansayaLuchshiy", "ZhansayaBogaty", "MirasWin", "Zhansaya777", "MirasBoss",
+    "Nursultan007", "NikitaSilnyy", "Temirlan", "ZarinaPro100", "MikhailBogaty", "TatianaUmnyy", "Askar2024",
+    "AnnaTop", "Miras007", "Mikhail123", "Elena2024", "AidanaBogaty", "Andrey89", "Danel", "Miras777", "Alua",
+    "NurayUmnyy", "Yerlan123", "AruzhanTop", "ZarinaUmnyy", "Zhanel777", "Egor123", "OlegLuchshiy", "OlgaPro100",
+    "NurayTop", "OlegUmnyy", "Nikita777", "BekzatPro", "BekzatTop", "Natalia2024", "DiasSilnyy", "Maria89",
+    "DanaBogaty", "AyanZoloto", "Roman", "Zhanel007", "Zhanel123", "MariaBoss", "DiasBogaty", "Roman2024",
+    "MadiUmnyy", "RauanLuchshiy", "NursultanTop", "Madina89", "NurgulTop", "Dias007", "TatianaPro", "NursultanSilnyy",
+    "Yulia007", "ZhanelPro", "IrinaPro100", "AluaUmnyy", "AruzhanBoss", "Ivan", "NikitaTop", "MadiPro100",
+    "AruzhanPro100", "Madina", "AigerimMax", "AluaWin", "Tatiana123", "SaniyaSilnyy", "TatianaZoloto", "NurgulBoss",
+    "Dana777", "MikhailPro", "Ivan123", "TatianaBogaty", "RomanWin", "YerlanBogaty", "Samat89", "IvanUmnyy",
+    "NursultanBogaty", "SergeySilnyy", "DanelBogaty", "AigerimPro100", "NursultanPro100", "NikitaPro100", "NurayMax",
+    "OlgaSilnyy", "Danel89", "SamatSilnyy", "NataliaBogaty", "MirasPro100", "MadinaZoloto", "DanelPro", "AyanWin",
+    "AigerimBogaty", "GaukharBoss", "BekzatWin", "TemirlanSilnyy", "Rauan007", "Baurzhan777", "MadinaTop", "Mikhail",
+    "Natalia", "IvanPro100", "MariaZoloto", "SvetlanaWin", "Assem777", "MirasBogaty", "NursultanBoss", "BekzatMax",
+    "RauanTop", "AnnaSilnyy", "SergeyBoss", "Oleg", "TemirlanPro100", "Miras", "Gaukhar123", "NurgulMax",
+    "MariaBogaty", "AyanPro", "DmitryZoloto", "ElenaBogaty", "Anna", "MadiBogaty", "Madi89", "OlgaMax", "Aigerim007",
+    "ElenaLuchshiy", "ErzhanMax", "BekzatUmnyy", "ErzhanSilnyy", "Mikhail007", "Aigerim", "NikitaZoloto", "Nikita007",
+    "Dias", "TemirlanPro", "Natalia007", "NurgulPro", "TatianaPro100", "AskarUmnyy", "Sergey123", "Nikita",
+    "Zhansaya007", "Bekzat123", "SvetlanaZoloto", "Yulia89", "IrinaPro", "ZhansayaPro100", "MirasTop", "NikitaLuchshiy",
+    "Saniya2024", "AyanLuchshiy", "BekzatPro100", "SamatBogaty", "IvanBoss", "Ksenia", "MikhailUmnyy", "AlexeyUmnyy",
+    "ZhanelBogaty", "RauanWin", "Yerlan2024", "Dana007", "DanelWin", "NataliaMax", "MirasPro", "IrinaBogaty",
+    "TatianaLuchshiy", "TemirlanLuchshiy", "KseniaLuchshiy", "Zhansaya2024", "BaurzhanTop", "Askar123", "RomanTop",
+    "Dmitry777", "AskarPro100", "RomanBoss", "ZhanelPro100", "AndreyBogaty", "EgorPro", "AyanUmnyy", "DiasLuchshiy",
+    "GaukharLuchshiy", "BekzatZoloto", "NataliaLuchshiy", "Danel007", "OlegPro100", "Baurzhan", "AndreyTop",
+    "Gaukhar007", "RauanBogaty", "AigerimZoloto", "Alua2024", "AlikhanLuchshiy", "Temirlan123", "Andrey123",
+    "OlgaTop", "Natalia89", "IrinaBoss", "AskarTop", "ZarinaPro", "AyanMax", "Anna123", "AigerimLuchshiy",
+    "AnnaBogaty", "AnnaPro100", "Olga2024", "IvanMax", "AlexeyBogaty", "NursultanPro", "AluaLuchshiy"
+]
+
 async def generate_unique_human_bot_name() -> str:
-    """Generate unique human bot name in format Player1, Player2, etc."""
-    counter = 1
-    while True:
-        bot_name = f"Player{counter}"
-        existing_bot = await db.human_bots.find_one({"name": bot_name})
-        if not existing_bot:
-            return bot_name
-        counter += 1
+    """Generate unique human bot name from predefined list."""
+    # Get all existing Human-bot names
+    existing_bots = await db.human_bots.find({}, {"name": 1}).to_list(None)
+    existing_names = {bot["name"] for bot in existing_bots}
+    
+    # Find available names from the list
+    available_names = [name for name in HUMAN_BOT_NAMES if name not in existing_names]
+    
+    if available_names:
+        # Return random name from available ones
+        return random.choice(available_names)
+    else:
+        # If all names are used, fall back to Player format
+        counter = 1
+        while True:
+            bot_name = f"Player{counter}"
+            if bot_name not in existing_names:
+                return bot_name
+            counter += 1
 
 # ==============================================================================
 # HUMAN BOT BEHAVIOR ALGORITHMS
