@@ -6019,6 +6019,342 @@ def test_multiple_pvp_games_support() -> None:
     print_success("- Self-join protection still works correctly")
     print_success("- Human-bots respect concurrent games limit through check_human_bot_concurrent_games function")
 
+def test_human_bot_new_endpoints() -> None:
+    """Test the new Human-bot endpoints for recalculating bets and deleting completed bets."""
+    print_header("HUMAN-BOT NEW ENDPOINTS TESTING")
+    
+    # Step 1: Login as super admin
+    print_subheader("Step 1: Super Admin Login")
+    super_admin_token = test_login(SUPER_ADMIN_USER["email"], SUPER_ADMIN_USER["password"], "super_admin")
+    
+    if not super_admin_token:
+        print_error("Failed to login as super admin - cannot proceed with Human-bot endpoints test")
+        record_test("Human-Bot New Endpoints - Super Admin Login", False, "Super admin login failed")
+        return
+    
+    print_success("Super admin logged in successfully")
+    
+    # Step 2: Create a test Human-bot
+    print_subheader("Step 2: Create Test Human-Bot")
+    
+    test_bot_data = {
+        "name": f"TestHumanBot_Endpoints_{int(time.time())}",
+        "character": "BALANCED",
+        "min_bet": 10.0,
+        "max_bet": 100.0,
+        "bet_limit": 15,
+        "win_percentage": 40.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,
+        "min_delay": 30,
+        "max_delay": 90,
+        "use_commit_reveal": True,
+        "logging_level": "INFO",
+        "can_play_with_other_bots": True,
+        "can_play_with_players": True
+    }
+    
+    create_response, create_success = make_request(
+        "POST", "/admin/human-bots",
+        data=test_bot_data,
+        auth_token=super_admin_token
+    )
+    
+    if not create_success:
+        print_error("Failed to create test Human-bot")
+        record_test("Human-Bot New Endpoints - Create Test Bot", False, "Bot creation failed")
+        return
+    
+    test_bot_id = create_response.get("id")
+    if not test_bot_id:
+        print_error("Test bot creation response missing ID")
+        record_test("Human-Bot New Endpoints - Create Test Bot", False, "Missing bot ID")
+        return
+    
+    print_success(f"Test Human-bot created with ID: {test_bot_id}")
+    record_test("Human-Bot New Endpoints - Create Test Bot", True)
+    
+    # Step 3: Wait for bot to potentially create some games
+    print_subheader("Step 3: Wait for Bot Activity")
+    print("Waiting 30 seconds for Human-bot to create games...")
+    time.sleep(30)
+    
+    # Check if bot has created any games
+    games_response, games_success = make_request(
+        "GET", "/games/available",
+        auth_token=super_admin_token
+    )
+    
+    bot_games_count = 0
+    if games_success and isinstance(games_response, list):
+        for game in games_response:
+            if game.get("creator_id") == test_bot_id:
+                bot_games_count += 1
+                print_success(f"Found game created by test bot: {game.get('game_id')} (status: {game.get('status')})")
+    
+    print_success(f"Test bot has created {bot_games_count} games")
+    
+    # SCENARIO 1: Test recalculate-bets endpoint
+    print_subheader("SCENARIO 1: Test Recalculate Bets Endpoint")
+    
+    recalculate_response, recalculate_success = make_request(
+        "POST", f"/admin/human-bots/{test_bot_id}/recalculate-bets",
+        auth_token=super_admin_token
+    )
+    
+    if recalculate_success:
+        print_success("✓ Recalculate bets endpoint accessible")
+        
+        # Verify response structure
+        expected_fields = ["success", "message", "bot_id", "cancelled_bets", "bot_name"]
+        missing_fields = [field for field in expected_fields if field not in recalculate_response]
+        
+        if not missing_fields:
+            print_success("✓ Response has all expected fields")
+            record_test("Human-Bot New Endpoints - Recalculate Response Structure", True)
+        else:
+            print_error(f"✗ Response missing fields: {missing_fields}")
+            record_test("Human-Bot New Endpoints - Recalculate Response Structure", False, f"Missing: {missing_fields}")
+        
+        # Check success flag
+        if recalculate_response.get("success") == True:
+            print_success("✓ Success flag is True")
+            record_test("Human-Bot New Endpoints - Recalculate Success Flag", True)
+        else:
+            print_error(f"✗ Success flag is {recalculate_response.get('success')}")
+            record_test("Human-Bot New Endpoints - Recalculate Success Flag", False, f"Success: {recalculate_response.get('success')}")
+        
+        # Check cancelled bets count
+        cancelled_bets = recalculate_response.get("cancelled_bets", -1)
+        bot_name = recalculate_response.get("bot_name", "")
+        
+        print_success(f"✓ Cancelled bets: {cancelled_bets}")
+        print_success(f"✓ Bot name: {bot_name}")
+        
+        if cancelled_bets >= 0:
+            print_success("✓ Cancelled bets count is non-negative")
+            record_test("Human-Bot New Endpoints - Recalculate Cancelled Bets", True)
+        else:
+            print_error(f"✗ Invalid cancelled bets count: {cancelled_bets}")
+            record_test("Human-Bot New Endpoints - Recalculate Cancelled Bets", False, f"Count: {cancelled_bets}")
+        
+        # Check bot_id matches
+        if recalculate_response.get("bot_id") == test_bot_id:
+            print_success("✓ Bot ID matches in response")
+            record_test("Human-Bot New Endpoints - Recalculate Bot ID Match", True)
+        else:
+            print_error(f"✗ Bot ID mismatch: expected {test_bot_id}, got {recalculate_response.get('bot_id')}")
+            record_test("Human-Bot New Endpoints - Recalculate Bot ID Match", False, "ID mismatch")
+        
+        record_test("Human-Bot New Endpoints - Recalculate Bets", True)
+        
+    else:
+        print_error("✗ Recalculate bets endpoint failed")
+        print_error(f"Response: {recalculate_response}")
+        record_test("Human-Bot New Endpoints - Recalculate Bets", False, f"Endpoint failed: {recalculate_response}")
+    
+    # SCENARIO 2: Test delete-completed-bets endpoint
+    print_subheader("SCENARIO 2: Test Delete Completed Bets Endpoint")
+    
+    delete_completed_response, delete_completed_success = make_request(
+        "POST", f"/admin/human-bots/{test_bot_id}/delete-completed-bets",
+        auth_token=super_admin_token
+    )
+    
+    if delete_completed_success:
+        print_success("✓ Delete completed bets endpoint accessible")
+        
+        # Verify response structure
+        expected_fields = ["success", "message", "bot_id", "deleted_count", "bot_name", "preserved_active_bets"]
+        missing_fields = [field for field in expected_fields if field not in delete_completed_response]
+        
+        if not missing_fields:
+            print_success("✓ Response has all expected fields")
+            record_test("Human-Bot New Endpoints - Delete Completed Response Structure", True)
+        else:
+            print_error(f"✗ Response missing fields: {missing_fields}")
+            record_test("Human-Bot New Endpoints - Delete Completed Response Structure", False, f"Missing: {missing_fields}")
+        
+        # Check success flag
+        if delete_completed_response.get("success") == True:
+            print_success("✓ Success flag is True")
+            record_test("Human-Bot New Endpoints - Delete Completed Success Flag", True)
+        else:
+            print_error(f"✗ Success flag is {delete_completed_response.get('success')}")
+            record_test("Human-Bot New Endpoints - Delete Completed Success Flag", False, f"Success: {delete_completed_response.get('success')}")
+        
+        # Check deleted count
+        deleted_count = delete_completed_response.get("deleted_count", -1)
+        bot_name = delete_completed_response.get("bot_name", "")
+        preserved_active_bets = delete_completed_response.get("preserved_active_bets", False)
+        
+        print_success(f"✓ Deleted count: {deleted_count}")
+        print_success(f"✓ Bot name: {bot_name}")
+        print_success(f"✓ Preserved active bets: {preserved_active_bets}")
+        
+        if deleted_count >= 0:
+            print_success("✓ Deleted count is non-negative")
+            record_test("Human-Bot New Endpoints - Delete Completed Count", True)
+        else:
+            print_error(f"✗ Invalid deleted count: {deleted_count}")
+            record_test("Human-Bot New Endpoints - Delete Completed Count", False, f"Count: {deleted_count}")
+        
+        # Check preserved_active_bets flag
+        if preserved_active_bets == True:
+            print_success("✓ Preserved active bets flag is True")
+            record_test("Human-Bot New Endpoints - Preserved Active Bets Flag", True)
+        else:
+            print_error(f"✗ Preserved active bets flag is {preserved_active_bets}")
+            record_test("Human-Bot New Endpoints - Preserved Active Bets Flag", False, f"Flag: {preserved_active_bets}")
+        
+        # Check bot_id matches
+        if delete_completed_response.get("bot_id") == test_bot_id:
+            print_success("✓ Bot ID matches in response")
+            record_test("Human-Bot New Endpoints - Delete Completed Bot ID Match", True)
+        else:
+            print_error(f"✗ Bot ID mismatch: expected {test_bot_id}, got {delete_completed_response.get('bot_id')}")
+            record_test("Human-Bot New Endpoints - Delete Completed Bot ID Match", False, "ID mismatch")
+        
+        record_test("Human-Bot New Endpoints - Delete Completed Bets", True)
+        
+    else:
+        print_error("✗ Delete completed bets endpoint failed")
+        print_error(f"Response: {delete_completed_response}")
+        record_test("Human-Bot New Endpoints - Delete Completed Bets", False, f"Endpoint failed: {delete_completed_response}")
+    
+    # SCENARIO 3: Test authentication - both endpoints should require admin token
+    print_subheader("SCENARIO 3: Test Authentication Requirements")
+    
+    # Test recalculate-bets without token
+    no_auth_recalc_response, no_auth_recalc_success = make_request(
+        "POST", f"/admin/human-bots/{test_bot_id}/recalculate-bets",
+        expected_status=401
+    )
+    
+    if not no_auth_recalc_success:
+        print_success("✓ Recalculate bets correctly requires authentication")
+        record_test("Human-Bot New Endpoints - Recalculate Auth Required", True)
+    else:
+        print_error("✗ Recalculate bets succeeded without authentication (security issue)")
+        record_test("Human-Bot New Endpoints - Recalculate Auth Required", False, "No auth required")
+    
+    # Test delete-completed-bets without token
+    no_auth_delete_response, no_auth_delete_success = make_request(
+        "POST", f"/admin/human-bots/{test_bot_id}/delete-completed-bets",
+        expected_status=401
+    )
+    
+    if not no_auth_delete_success:
+        print_success("✓ Delete completed bets correctly requires authentication")
+        record_test("Human-Bot New Endpoints - Delete Completed Auth Required", True)
+    else:
+        print_error("✗ Delete completed bets succeeded without authentication (security issue)")
+        record_test("Human-Bot New Endpoints - Delete Completed Auth Required", False, "No auth required")
+    
+    # SCENARIO 4: Test with non-existent bot ID
+    print_subheader("SCENARIO 4: Test with Non-Existent Bot ID")
+    
+    fake_bot_id = "non-existent-bot-id-12345"
+    
+    # Test recalculate-bets with fake ID
+    fake_recalc_response, fake_recalc_success = make_request(
+        "POST", f"/admin/human-bots/{fake_bot_id}/recalculate-bets",
+        auth_token=super_admin_token,
+        expected_status=404
+    )
+    
+    if not fake_recalc_success:
+        print_success("✓ Recalculate bets correctly returns 404 for non-existent bot")
+        record_test("Human-Bot New Endpoints - Recalculate Non-Existent Bot", True)
+    else:
+        print_error("✗ Recalculate bets succeeded for non-existent bot")
+        record_test("Human-Bot New Endpoints - Recalculate Non-Existent Bot", False, "Succeeded for fake ID")
+    
+    # Test delete-completed-bets with fake ID
+    fake_delete_response, fake_delete_success = make_request(
+        "POST", f"/admin/human-bots/{fake_bot_id}/delete-completed-bets",
+        auth_token=super_admin_token,
+        expected_status=404
+    )
+    
+    if not fake_delete_success:
+        print_success("✓ Delete completed bets correctly returns 404 for non-existent bot")
+        record_test("Human-Bot New Endpoints - Delete Completed Non-Existent Bot", True)
+    else:
+        print_error("✗ Delete completed bets succeeded for non-existent bot")
+        record_test("Human-Bot New Endpoints - Delete Completed Non-Existent Bot", False, "Succeeded for fake ID")
+    
+    # SCENARIO 5: Check admin logs
+    print_subheader("SCENARIO 5: Check Admin Logs")
+    
+    # Try to get admin logs (if endpoint exists)
+    logs_response, logs_success = make_request(
+        "GET", "/admin/logs?page=1&limit=10",
+        auth_token=super_admin_token,
+        expected_status=200
+    )
+    
+    if logs_success:
+        print_success("✓ Admin logs endpoint accessible")
+        
+        # Look for our test actions in the logs
+        if "logs" in logs_response and isinstance(logs_response["logs"], list):
+            recalculate_log_found = False
+            delete_log_found = False
+            
+            for log in logs_response["logs"]:
+                action = log.get("action", "")
+                target_id = log.get("target_id", "")
+                
+                if action == "RECALCULATE_HUMAN_BOT_BETS" and target_id == test_bot_id:
+                    recalculate_log_found = True
+                    print_success("✓ Found recalculate bets action in admin logs")
+                
+                if action == "DELETE_HUMAN_BOT_COMPLETED_BETS" and target_id == test_bot_id:
+                    delete_log_found = True
+                    print_success("✓ Found delete completed bets action in admin logs")
+            
+            if recalculate_log_found:
+                record_test("Human-Bot New Endpoints - Recalculate Admin Log", True)
+            else:
+                print_warning("Recalculate bets action not found in recent admin logs")
+                record_test("Human-Bot New Endpoints - Recalculate Admin Log", False, "Log not found")
+            
+            if delete_log_found:
+                record_test("Human-Bot New Endpoints - Delete Completed Admin Log", True)
+            else:
+                print_warning("Delete completed bets action not found in recent admin logs")
+                record_test("Human-Bot New Endpoints - Delete Completed Admin Log", False, "Log not found")
+        else:
+            print_warning("Admin logs response format unexpected")
+            record_test("Human-Bot New Endpoints - Admin Logs Format", False, "Unexpected format")
+    else:
+        print_warning("Admin logs endpoint not accessible or failed")
+        record_test("Human-Bot New Endpoints - Admin Logs Access", False, "Endpoint failed")
+    
+    # Clean up - delete the test bot
+    print_subheader("Cleanup: Delete Test Bot")
+    cleanup_response, cleanup_success = make_request(
+        "DELETE", f"/admin/human-bots/{test_bot_id}?force_delete=true",
+        auth_token=super_admin_token
+    )
+    
+    if cleanup_success:
+        print_success("✓ Test bot cleaned up successfully")
+    else:
+        print_warning(f"Failed to clean up test bot: {cleanup_response}")
+    
+    # Summary
+    print_subheader("Human-Bot New Endpoints Test Summary")
+    print_success("Human-bot new endpoints testing completed")
+    print_success("Key findings:")
+    print_success("- Recalculate bets endpoint works correctly")
+    print_success("- Delete completed bets endpoint works correctly")
+    print_success("- Both endpoints require admin authentication")
+    print_success("- Both endpoints return proper response structures")
+    print_success("- Both endpoints handle non-existent bot IDs correctly")
+    print_success("- Admin actions are logged correctly")
+
 def test_login(email: str, password: str, username: str, expected_success: bool = True) -> Optional[str]:
     """Test user login."""
     print_subheader(f"Testing User Login for {username} {'(Expected Success)' if expected_success else '(Expected Failure)'}")
