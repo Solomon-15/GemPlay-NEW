@@ -360,6 +360,7 @@ class RussianReviewTester:
         completion_time = end_time - start_time
         
         self.log(f"Game completion time: {completion_time:.2f} seconds")
+        self.log(f"Join game response: {join_response}")
         
         if join_status == 200:
             # Check if game completed immediately
