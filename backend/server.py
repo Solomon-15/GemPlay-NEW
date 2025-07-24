@@ -17497,13 +17497,16 @@ async def bulk_create_human_bots(
                 # Generate unique name
                 bot_name = await generate_unique_human_bot_name()
                 
-                # Generate random values within ranges
-                min_bet = random.uniform(bulk_data.min_bet_range[0], bulk_data.min_bet_range[1])
-                max_bet = random.uniform(bulk_data.max_bet_range[0], bulk_data.max_bet_range[1])
+                # Generate random values within ranges (целые гемы)
+                min_bet = random.randint(int(bulk_data.min_bet_range[0]), int(bulk_data.min_bet_range[1]))
+                max_bet = random.randint(int(bulk_data.max_bet_range[0]), int(bulk_data.max_bet_range[1]))
                 
                 # Ensure min_bet < max_bet
                 if min_bet >= max_bet:
-                    min_bet, max_bet = max_bet * 0.5, max_bet
+                    # Поменяем местами если нужно, сохранив целые числа
+                    min_bet, max_bet = min(min_bet, max_bet), max(min_bet, max_bet)
+                    if min_bet == max_bet:
+                        max_bet = min_bet + 1  # Гарантируем разность в 1 гем
                 
                 min_delay = random.randint(bulk_data.delay_range[0], bulk_data.delay_range[1] // 2)
                 max_delay = random.randint(min_delay + 1, bulk_data.delay_range[1])
