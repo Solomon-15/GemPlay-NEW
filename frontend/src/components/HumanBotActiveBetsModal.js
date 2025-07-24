@@ -80,6 +80,8 @@ const HumanBotActiveBetsModal = ({
   };
 
   const handleDeleteBetsHistory = async () => {
+    console.log('🗑️ Starting delete bets history for bot:', bot.id);
+    
     // Показать диалог подтверждения
     const confirmed = window.confirm(
       `Вы уверены, что хотите удалить всю историю завершённых ставок для Human-бота "${bot.name}"?\n\n` +
@@ -88,12 +90,16 @@ const HumanBotActiveBetsModal = ({
       'Это действие необратимо!'
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      console.log('🗑️ User cancelled deletion');
+      return;
+    }
 
     try {
       setDeletingHistory(true);
       const token = localStorage.getItem('token');
       
+      console.log('🗑️ Making API call to delete completed bets');
       const response = await axios.post(`${API}/admin/human-bots/${bot.id}/delete-completed-bets`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -101,22 +107,32 @@ const HumanBotActiveBetsModal = ({
         }
       });
 
+      console.log('🗑️ API Response:', response.data);
+
       if (response.data && response.data.success !== false) {
-        addNotification?.(`Скрыто ${response.data.hidden_count || 0} завершённых ставок из истории`, 'success');
+        const hiddenCount = response.data.hidden_count || 0;
+        console.log('🗑️ Hidden count:', hiddenCount);
+        
+        addNotification?.(`Скрыто ${hiddenCount} завершённых ставок из истории`, 'success');
         
         // Перезагружаем данные
+        console.log('🗑️ Reloading bets data');
         if (showAllBets) {
           await fetchAllBets();
         } else {
           await fetchActiveBets();
         }
+      } else {
+        console.error('🗑️ API returned failure:', response.data);
+        addNotification?.('Операция не выполнена', 'error');
       }
     } catch (error) {
-      console.error('Ошибка удаления истории ставок:', error);
-      const errorMessage = error.response?.data?.detail || 'Ошибка удаления истории ставок';
+      console.error('🗑️ Error deleting history:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка скрытия истории ставок';
       addNotification?.(errorMessage, 'error');
     } finally {
       setDeletingHistory(false);
+      console.log('🗑️ Delete operation completed');
     }
   };
 
