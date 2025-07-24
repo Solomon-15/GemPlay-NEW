@@ -1797,7 +1797,7 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-accent-primary font-roboto text-sm">
-                        ${Math.round(((bot.min_bet_amount || bot.min_bet || 1) + (bot.max_bet_amount || bot.max_bet || 100)) / 2 * (bot.cycle_games || 12))}
+                        {Math.round(((bot.min_bet_amount || bot.min_bet || 1) + (bot.max_bet_amount || bot.max_bet || 100)) / 2 * (bot.cycle_games || 12))}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
