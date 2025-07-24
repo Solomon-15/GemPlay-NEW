@@ -461,8 +461,21 @@ class RussianReviewTester:
             min_max_correct = True
             
             for i, bot in enumerate(created_bots):
-                min_bet = bot.get("min_bet", 0)
-                max_bet = bot.get("max_bet", 0)
+                # Parse min_bet and max_bet from bet_range string like "$19.0-$55.0"
+                bet_range = bot.get("bet_range", "")
+                if bet_range:
+                    # Extract numbers from "$19.0-$55.0" format
+                    import re
+                    numbers = re.findall(r'\d+\.?\d*', bet_range)
+                    if len(numbers) >= 2:
+                        min_bet = float(numbers[0])
+                        max_bet = float(numbers[1])
+                    else:
+                        min_bet = bot.get("min_bet", 0)
+                        max_bet = bot.get("max_bet", 0)
+                else:
+                    min_bet = bot.get("min_bet", 0)
+                    max_bet = bot.get("max_bet", 0)
                 
                 self.log(f"Bot {i+1}: min_bet={min_bet}, max_bet={max_bet}")
                 
