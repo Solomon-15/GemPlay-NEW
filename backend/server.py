@@ -10273,9 +10273,9 @@ async def bot_join_game_automatically(bot: Bot):
                 "$set": {
                     "opponent_id": bot.id,
                     "opponent_move": bot_move,
-                    "status": GameStatus.REVEAL,  # Changed from ACTIVE to REVEAL
+                    "status": GameStatus.ACTIVE,  # Changed to ACTIVE
                     "started_at": datetime.utcnow(),
-                    "reveal_deadline": datetime.utcnow() + timedelta(minutes=1),  # Give 1 minute for reveal
+                    "active_deadline": datetime.utcnow() + timedelta(minutes=1),  # 1 minute to complete
                     # НЕ ПЕРЕЗАПИСЫВАЕМ is_regular_bot_game - оставляем как было при создании игры
                     "commission_returned": commission_returned  # Track returned commission
                 }
