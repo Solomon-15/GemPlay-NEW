@@ -323,29 +323,24 @@ class RussianReviewTester:
         second_user_token = login_response["access_token"]
         second_user_id = login_response["user"]["id"]
         
-        # Add balance to second user
-        balance_status, balance_response = self.make_request(
-            "POST", f"/admin/users/{second_user_id}/balance", 
-            {"new_balance": 100.0}, 
+        # Reset balance for second user
+        reset_status, reset_response = self.make_request(
+            "POST", f"/admin/users/{second_user_id}/reset-balance", 
             token=self.admin_token
         )
         
-        if balance_status != 200:
-            self.log(f"⚠️ Could not add balance to second user: {balance_response}")
+        if reset_status == 200:
+            self.log("✅ Reset second user balance to default")
         else:
-            self.log("✅ Added balance to second user")
-        
-        # Add gems to second user
-        gem_status, gem_response = self.make_request(
-            "POST", f"/admin/users/{second_user_id}/gems", 
-            {"gem_type": "Ruby", "quantity": 10}, 
-            token=self.admin_token
-        )
-        
-        if gem_status != 200:
-            self.log(f"⚠️ Could not add gems to second user: {gem_response}")
-        else:
-            self.log("✅ Added gems to second user")
+            self.log(f"⚠️ Could not reset second user balance: {reset_response}")
+            # Try alternative approach
+            balance_status, balance_response = self.make_request(
+                "POST", f"/admin/users/{second_user_id}/balance", 
+                {"new_balance": 1000.0}, 
+                token=self.admin_token
+            )
+            if balance_status == 200:
+                self.log("✅ Set high balance for second user")
         
         # Record start time
         start_time = time.time()
