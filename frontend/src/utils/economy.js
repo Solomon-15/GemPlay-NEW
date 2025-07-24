@@ -76,7 +76,7 @@ export const formatAsGems = (dollarAmount) => {
     return '0';
   }
   // Since $1 = 1 gem, we just remove the $ sign and format as integer
-  return Math.floor(dollarAmount).toString();
+  return Math.round(dollarAmount).toString();
 };
 
 /**
