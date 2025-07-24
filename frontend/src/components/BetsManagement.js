@@ -29,7 +29,8 @@ const BetsManagement = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [cancellingBet, setCancellingBet] = useState(null);
   const [resettingAll, setResettingAll] = useState(false);
-  const [resettingBet, setResettingBet] = useState(null);
+  const [isResetFractionalModalOpen, setIsResetFractionalModalOpen] = useState(false);
+  const [resettingFractional, setResettingFractional] = useState(false);
 
   // Пагинация
   const pagination = usePagination(1, 10);
