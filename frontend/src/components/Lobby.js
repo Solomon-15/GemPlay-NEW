@@ -227,28 +227,21 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         return total;
       };
 
-      // Get sorted gems by price (ascending)
+      // Get sorted gems by price (ascending) using real gem prices
       const getSortedGems = () => {
         if (!game.bet_gems || typeof game.bet_gems !== 'object') return [];
         
-        const gemDefinitions = {
-          'Ruby': { price: 1, icon: '/gems/gem-red.svg', color: '#ef4444' },
-          'Amber': { price: 2, icon: '/gems/gem-orange.svg', color: '#f97316' },
-          'Topaz': { price: 5, icon: '/gems/gem-yellow.svg', color: '#eab308' },
-          'Emerald': { price: 10, icon: '/gems/gem-green.svg', color: '#22c55e' },
-          'Aquamarine': { price: 25, icon: '/gems/gem-cyan.svg', color: '#06b6d4' },
-          'Sapphire': { price: 50, icon: '/gems/gem-blue.svg', color: '#3b82f6' },
-          'Magic': { price: 100, icon: '/gems/gem-purple.svg', color: '#a855f7' }
-        };
-
         return Object.entries(game.bet_gems)
-          .map(([gemType, quantity]) => ({
-            type: gemType,
-            quantity: quantity,
-            price: gemDefinitions[gemType]?.price || 1,
-            icon: gemDefinitions[gemType]?.icon || '/gems/gem-red.svg',
-            color: gemDefinitions[gemType]?.color || '#ef4444'
-          }))
+          .map(([gemType, quantity]) => {
+            const gemInfo = gemPrices.find(gem => gem.name.toLowerCase() === gemType.toLowerCase());
+            return {
+              type: gemType,
+              quantity: quantity,
+              price: gemInfo ? gemInfo.price : 1,
+              icon: `/gems/gem-${gemType.toLowerCase()}.svg`,
+              color: gemInfo ? gemInfo.color : '#ef4444'
+            };
+          })
           .filter(gem => gem.quantity > 0)
           .sort((a, b) => a.price - b.price); // Sort by price ascending
       };
