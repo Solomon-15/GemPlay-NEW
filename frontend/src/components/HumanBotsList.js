@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNotifications } from './NotificationContext';
+import { formatAsGems } from '../utils/economy';
 import useConfirmation from '../hooks/useConfirmation';
 import useInput from '../hooks/useInput';
 import ConfirmationModal from './ConfirmationModal';
