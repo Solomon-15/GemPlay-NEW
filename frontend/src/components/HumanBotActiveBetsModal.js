@@ -102,7 +102,7 @@ const HumanBotActiveBetsModal = ({
       });
 
       if (response.data && response.data.success !== false) {
-        addNotification?.(`Удалено ${response.data.deleted_count || 0} завершённых ставок из истории`, 'success');
+        addNotification?.(`Скрыто ${response.data.hidden_count || 0} завершённых ставок из истории`, 'success');
         
         // Перезагружаем данные
         if (showAllBets) {
