@@ -545,10 +545,10 @@ const BetsManagement = () => {
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="text-accent-primary font-rajdhani font-bold">
-                          ${bet.bet_amount?.toFixed(2) || '0.00'}
+                          {formatDollarsAsGems(bet.bet_amount || 0)}
                         </div>
                         <div className="text-yellow-400 text-xs">
-                          Комиссия: ${bet.commission_amount?.toFixed(2) || '0.00'}
+                          Комиссия: {formatDollarsAsGems(bet.commission_amount || 0)}
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
