@@ -67,6 +67,19 @@ export const formatInteger = (amount) => {
 };
 
 /**
+ * Format dollar amount as gem count (convert $ to gems for display)
+ * @param {number} dollarAmount - Dollar amount to convert
+ * @returns {string} Formatted gem count as integer
+ */
+export const formatAsGems = (dollarAmount) => {
+  if (typeof dollarAmount !== 'number' || isNaN(dollarAmount)) {
+    return '0';
+  }
+  // Since $1 = 1 gem, we just remove the $ sign and format as integer
+  return Math.floor(dollarAmount).toString();
+};
+
+/**
  * Calculate commission amount
  * @param {number} amount - Base amount
  * @param {number} percentage - Commission percentage (e.g., 3 for 3%)
