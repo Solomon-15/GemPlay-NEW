@@ -764,10 +764,10 @@ const HumanBotsManagement = () => {
                   <label>Мин. ставка (гемы)</label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     min="1"
                     value={createFormData.min_bet}
-                    onChange={(e) => setCreateFormData({...createFormData, min_bet: parseFloat(e.target.value)})}
+                    onChange={(e) => setCreateFormData({...createFormData, min_bet: parseInt(e.target.value) || 1})}
                   />
                 </div>
                 <div className="form-group">
