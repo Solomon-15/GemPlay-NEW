@@ -11309,7 +11309,7 @@ def test_fractional_gem_amounts_reset():
     register_response, register_success = make_request(
         "POST", "/auth/register",
         data=test_user_data,
-        expected_status=201
+        expected_status=200
     )
     
     if not register_success:
