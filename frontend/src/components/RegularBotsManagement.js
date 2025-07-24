@@ -2970,13 +2970,14 @@ const RegularBotsManagement = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Макс. ставка ($):</label>
+                    <label className="block text-text-secondary text-sm mb-1">Макс. ставка (гемы):</label>
                     <input
                       type="number"
                       min="1"
-                      max="100"
+                      max="10000"
+                      step="1"
                       value={editingBot.max_bet_amount}
-                      onChange={(e) => setEditingBot({...editingBot, max_bet_amount: parseFloat(e.target.value) || 100})}
+                      onChange={(e) => setEditingBot({...editingBot, max_bet_amount: parseInt(e.target.value) || 100})}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
                     />
                   </div>
