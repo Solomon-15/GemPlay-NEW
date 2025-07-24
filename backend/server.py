@@ -5723,6 +5723,10 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
         
         # Автоматическое создание новой ставки для бота при принятии существующей
         # await maintain_bot_active_bets(game)  # УДАЛЕНО - заменено на новую систему
+        
+        # Возвращаем обновлённую игру
+        updated_game = await db.games.find_one({"id": game.id})
+        return Game(**updated_game).dict()
             
     except Exception as e:
         logger.error(f"Error distributing game rewards: {e}")
