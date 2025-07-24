@@ -683,8 +683,8 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
                     <div className="text-accent-primary font-roboto text-xs">
-                      <div>Min: ${bot.min_bet}</div>
-                      <div>Max: ${bot.max_bet}</div>
+                      <div>Мин: {formatAsGems(bot.min_bet)}</div>
+                      <div>Макс: {formatAsGems(bot.max_bet)}</div>
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
