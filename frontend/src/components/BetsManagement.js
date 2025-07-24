@@ -287,6 +287,14 @@ const BetsManagement = () => {
             🗑️ Сбросить все ставки
           </button>
           
+          {/* Delete all bets button (SUPER_ADMIN only) */}
+          <button
+            onClick={() => setIsDeleteAllModalOpen(true)}
+            className="px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 font-rajdhani font-bold transition-colors"
+          >
+            💥 Удалить все ставки
+          </button>
+          
           {/* Reset fractional bets button (SUPER_ADMIN only) */}
           <button
             onClick={() => setIsResetFractionalModalOpen(true)}
