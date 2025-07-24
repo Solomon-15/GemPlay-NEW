@@ -5120,6 +5120,7 @@ async def join_game(
                     "opponent_gems": join_data.gems,  # Save opponent's gem combination
                     "started_at": datetime.utcnow(),
                     "status": "ACTIVE",  # Mark as active immediately
+                    "active_deadline": datetime.utcnow() + timedelta(minutes=1),  # 1 minute to complete
                     "is_regular_bot_game": is_regular_bot_game  # Mark if this is a regular bot game
                 }
             }
