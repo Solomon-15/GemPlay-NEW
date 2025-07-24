@@ -364,7 +364,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
   const handleToggleStatus = async (bot) => {
     try {
       await executeOperation(`/admin/human-bots/${bot.id}/toggle-status`, 'POST');
-      addNotification(`Human-бот ${bot.name} ${bot.is_active ? 'деактивирован' : 'активирован'}`, 'success');
+      addNotification(`Human-бот "${bot.name}" ${bot.is_active ? 'успешно деактивирован' : 'успешно активирован'}`, 'success');
       await fetchHumanBots();
       await fetchStats();
     } catch (error) {
