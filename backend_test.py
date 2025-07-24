@@ -1402,24 +1402,25 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
 def test_gem_icons_update() -> None:
-    """Test the updated gem icons in admin panel as requested in the review:
+    """Test the updated gem icons after initialize_default_gems function fix as requested in the review:
     
-    КОНТЕКСТ: Только что обновил все иконки для 7 default драгоценных камней (Ruby, Amber, Topaz, Emerald, Aquamarine, Sapphire, Magic) 
-    в функции initialize_default_gems в server.py, заменив их base64 представления реальными SVG файлами из /app/frontend/public/gems/.
+    КОНТЕКСТ: После первого тестирования обнаружилась проблема - функция initialize_default_gems удаляла только гемы с is_default: true, 
+    но существующие гемы имели is_default: false. Это было исправлено - теперь функция удаляет гемы по именам 
+    ("Ruby", "Amber", "Topaz", "Emerald", "Aquamarine", "Sapphire", "Magic"). Бэкенд был перезапущен, и логи показывают: "Deleted 7 existing gems".
 
     ЗАДАЧИ ТЕСТИРОВАНИЯ:
-    1. Проверить API endpoint GET /api/admin/gems - должен возвращать список гемов с обновленными иконками
-    2. Убедиться, что все 7 default гемов содержат корректные base64 иконки в формате data:image/svg+xml;base64,
-    3. Проверить, что сервер стартует без ошибок после изменений
-    4. Протестировать функцию initialize_default_gems - что она корректно создает гемы с новыми иконками
-    5. Убедиться, что новые иконки это валидные SVG данные
+    1. Проверить API endpoint GET /api/admin/gems - должен возвращать список с обновленными иконками
+    2. Убедиться, что все 7 default гемов теперь содержат корректные base64 иконки в формате data:image/svg+xml;base64,
+    3. Проверить, что все гемы имеют is_default: true
+    4. Убедиться, что SVG данные валидны и можно декодировать
+    5. Проверить соответствие цен, цветов и редкости для каждого гема
 
-    КРИТИЧЕСКИЕ ТОЧКИ:
-    - Все 7 default гемов должны иметь правильные base64 иконки
-    - API должен возвращать их без ошибок декодирования
-    - SVG данные должны быть валидными
+    ОЖИДАЕМЫЙ РЕЗУЛЬТАТ:
+    - Все 7 гемов должны иметь правильные base64 SVG иконки
+    - Все should have is_default: true
+    - Иконки должны начинаться с "data:image/svg+xml;base64," и содержать валидные SVG данные
     """
-    print_header("GEM ICONS UPDATE TESTING")
+    print_header("GEM ICONS UPDATE TESTING - ПОВТОРНОЕ ТЕСТИРОВАНИЕ ПОСЛЕ ИСПРАВЛЕНИЯ")
     
     # Step 1: Login as admin user
     print_subheader("Step 1: Admin Login")
