@@ -16139,6 +16139,7 @@ async def list_human_bots(
                 use_commit_reveal=bot["use_commit_reveal"],
                 logging_level=bot["logging_level"],
                 can_play_with_other_bots=bot.get("can_play_with_other_bots", True),  # Add missing field
+                can_play_with_players=bot.get("can_play_with_players", True),  # Add new field
                 total_games_played=bot.get("total_games_played", 0),
                 total_games_won=bot.get("total_games_won", 0),
                 total_amount_wagered=bot.get("total_amount_wagered", 0.0),
