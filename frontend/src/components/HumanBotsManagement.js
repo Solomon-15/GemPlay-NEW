@@ -205,7 +205,8 @@ const HumanBotsManagement = () => {
         max_active_bets_human: humanBotSettings.max_active_bets_human,
         auto_play_enabled: humanBotSettings.auto_play_enabled || false,
         min_delay_seconds: humanBotSettings.min_delay_seconds || 1,
-        max_delay_seconds: humanBotSettings.max_delay_seconds || 3600
+        max_delay_seconds: humanBotSettings.max_delay_seconds || 3600,
+        play_with_players_enabled: humanBotSettings.play_with_players_enabled || false
       });
       
       if (response.success !== false) {
