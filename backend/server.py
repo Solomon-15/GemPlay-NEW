@@ -726,6 +726,7 @@ class HumanBotResponse(BaseModel):
     use_commit_reveal: bool
     logging_level: str
     can_play_with_other_bots: bool
+    can_play_with_players: bool
     total_games_played: int
     total_games_won: int
     total_amount_wagered: float
