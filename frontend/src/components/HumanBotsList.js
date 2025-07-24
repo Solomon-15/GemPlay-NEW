@@ -648,8 +648,10 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                       <div>Игр: {bot.total_games_played || 0}</div>
                       <div>Побед: {bot.total_games_won || 0}</div>
                       <div>Win rate: {bot.win_percentage}%</div>
-                      <div className={`${((bot.total_amount_won || 0) - (bot.total_amount_wagered || 0)) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        Чистая прибыль: ${((bot.total_amount_won || 0) - (bot.total_amount_wagered || 0)).toFixed(2)}
+                      <div>
+                        <span className={((bot.total_amount_won || 0) - (bot.total_amount_wagered || 0)) >= 0 ? 'text-green-400' : 'text-red-400'}>
+                          Чистая прибыль: ${((bot.total_amount_won || 0) - (bot.total_amount_wagered || 0)).toFixed(2)}
+                        </span>
                       </div>
                     </div>
                   </td>
