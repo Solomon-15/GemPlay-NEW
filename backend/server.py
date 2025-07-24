@@ -18024,9 +18024,10 @@ async def get_human_bot_all_bets(
         if not bot:
             raise HTTPException(status_code=404, detail="Human bot not found")
         
-        # Get all bets
+        # Get all bets (исключая скрытые)
         all_bets_cursor = db.games.find({
-            "creator_id": bot_id
+            "creator_id": bot_id,
+            "hidden": {"$ne": True}  # Исключаем скрытые ставки
         }).sort("created_at", -1)
         
         all_bets_list = await all_bets_cursor.to_list(None)
