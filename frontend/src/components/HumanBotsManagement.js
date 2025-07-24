@@ -13,6 +13,7 @@ const API = `${BACKEND_URL}/api`;
 const HumanBotsManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { addNotification } = useNotifications();
   const { confirm, confirmationModal } = useConfirmation();
   const { prompt, inputModal } = useInput();
   const [humanBots, setHumanBots] = useState([]);
