@@ -10971,7 +10971,7 @@ async def cancel_any_bet(
     cancel_data: dict,
     current_user: User = Depends(get_current_admin)
 ):
-    """Cancel any bet in the system (admin only)."""
+    """Reset/cancel any bet in the system regardless of status (admin only)."""
     try:
         # Find the bet/game
         game = await db.games.find_one({"id": bet_id})
@@ -10981,89 +10981,167 @@ async def cancel_any_bet(
                 detail="Bet not found"
             )
         
-        # Check if bet can be cancelled (only WAITING games can be cancelled)
-        if game.get("status") not in ["WAITING"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Cannot cancel bet with status: {game.get('status')}. Only WAITING bets can be cancelled."
-            )
-        
-        cancel_reason = cancel_data.get("reason", f"Cancelled by admin {current_user.username}")
-        
-        # Cancel the game
-        await db.games.update_one(
-            {"id": bet_id},
-            {
-                "$set": {
-                    "status": "CANCELLED",
-                    "cancelled_at": datetime.utcnow(),
-                    "cancelled_by": "admin",
-                    "cancel_reason": cancel_reason
-                }
-            }
-        )
-        
-        # Return gems to the creator (since it's a WAITING game, only creator has bet)
+        game_status = game.get("status")
         creator_id = game.get("creator_id")
+        opponent_id = game.get("opponent_id")
+        bet_amount = game.get("bet_amount", 0)
         bet_gems = game.get("bet_gems", {})
+        opponent_gems = game.get("opponent_gems", {})
         
-        for gem_type, quantity in bet_gems.items():
-            await db.user_gems.update_one(
-                {"user_id": creator_id, "gem_type": gem_type},
-                {
-                    "$inc": {"frozen_quantity": -quantity},
-                    "$set": {"updated_at": datetime.utcnow()}
-                }
-            )
+        cancel_reason = cancel_data.get("reason", f"Reset by admin {current_user.username}")
         
-        # Return commission balance (only if creator is a user, not a bot)
-        commission_amount = game.get("bet_amount", 0) * 0.03
-        creator_user = await db.users.find_one({"id": creator_id})
-        if creator_user:
-            await db.users.update_one(
-                {"id": creator_id},
-                {
-                    "$inc": {
-                        "virtual_balance": commission_amount,
-                        "frozen_balance": -commission_amount
-                    },
-                    "$set": {"updated_at": datetime.utcnow()}
-                }
-            )
+        # Update game status
+        update_data = {
+            "cancelled_at": datetime.utcnow(),
+            "cancelled_by": "admin_reset",
+            "cancel_reason": cancel_reason
+        }
+        
+        # For already completed/cancelled games, just add admin reset info
+        if game_status in ["COMPLETED", "CANCELLED", "TIMEOUT"]:
+            update_data["admin_reset"] = True
+            update_data["admin_reset_reason"] = cancel_reason
+        else:
+            # For active games, change status to cancelled
+            update_data["status"] = "CANCELLED"
+        
+        await db.games.update_one({"id": bet_id}, {"$set": update_data})
+        
+        gems_returned = {}
+        commission_returned = 0
+        
+        # Return resources based on game status
+        if game_status == "WAITING":
+            # Only creator has committed resources
+            # Return creator's gems
+            for gem_type, quantity in bet_gems.items():
+                if quantity > 0:
+                    await db.user_gems.update_one(
+                        {"user_id": creator_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    gems_returned[gem_type] = gems_returned.get(gem_type, 0) + quantity
+            
+            # Return creator's commission
+            commission_amount = bet_amount * 0.03
+            creator_user = await db.users.find_one({"id": creator_id})
+            if creator_user:
+                await db.users.update_one(
+                    {"id": creator_id},
+                    {
+                        "$inc": {
+                            "virtual_balance": commission_amount,
+                            "frozen_balance": -commission_amount
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                commission_returned += commission_amount
+        
+        elif game_status in ["ACTIVE", "REVEAL"]:
+            # Both players have committed resources
+            # Return creator's gems
+            for gem_type, quantity in bet_gems.items():
+                if quantity > 0:
+                    await db.user_gems.update_one(
+                        {"user_id": creator_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    gems_returned[gem_type] = gems_returned.get(gem_type, 0) + quantity
+            
+            # Return opponent's gems
+            for gem_type, quantity in opponent_gems.items():
+                if quantity > 0:
+                    await db.user_gems.update_one(
+                        {"user_id": opponent_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    gems_returned[gem_type] = gems_returned.get(gem_type, 0) + quantity
+            
+            # Return commission to both players
+            commission_amount = bet_amount * 0.03
+            
+            # Return to creator
+            creator_user = await db.users.find_one({"id": creator_id})
+            if creator_user:
+                await db.users.update_one(
+                    {"id": creator_id},
+                    {
+                        "$inc": {
+                            "virtual_balance": commission_amount,
+                            "frozen_balance": -commission_amount
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                commission_returned += commission_amount
+            
+            # Return to opponent
+            if opponent_id:
+                opponent_user = await db.users.find_one({"id": opponent_id})
+                if opponent_user:
+                    await db.users.update_one(
+                        {"id": opponent_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_amount,
+                                "frozen_balance": -commission_amount
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    commission_returned += commission_amount
+        
+        # For COMPLETED, CANCELLED, TIMEOUT - no resources to return as they were already processed
         
         # Log admin action
         admin_log = {
             "admin_id": current_user.id,
             "admin_username": current_user.username,
-            "action": "cancel_bet",
+            "action": "reset_bet",
             "target_bet_id": bet_id,
             "details": {
-                "bet_amount": game.get("bet_amount"),
-                "bet_status": game.get("status"),
+                "original_status": game_status,
+                "bet_amount": bet_amount,
                 "creator_id": creator_id,
-                "gems_returned": bet_gems,
-                "commission_returned": commission_amount if creator_user else 0,
+                "opponent_id": opponent_id,
+                "gems_returned": gems_returned,
+                "commission_returned": commission_returned,
                 "reason": cancel_reason
             },
             "timestamp": datetime.utcnow()
         }
         await db.admin_logs.insert_one(admin_log)
         
+        action_message = "Bet reset successfully"
+        if game_status in ["COMPLETED", "CANCELLED", "TIMEOUT"]:
+            action_message = f"Bet marked as admin reset (was {game_status})"
+        
         return {
             "success": True,
-            "message": f"Bet cancelled successfully",
+            "message": action_message,
             "bet_id": bet_id,
-            "gems_returned": bet_gems,
-            "commission_returned": commission_amount if creator_user else 0
+            "original_status": game_status,
+            "gems_returned": gems_returned,
+            "commission_returned": commission_returned
         }
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error cancelling bet: {e}")
+        logger.error(f"Error resetting bet: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to cancel bet"
+            detail="Failed to reset bet"
         )
 
 @api_router.post("/admin/bets/cleanup-stuck", response_model=dict)
