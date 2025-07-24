@@ -414,7 +414,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     if (confirmed) {
       try {
         const response = await executeOperation(`/admin/human-bots/${bot.id}/recalculate-bets`, 'POST');
-        addNotification(`Ставки Human-бота ${bot.name} успешно пересчитаны. Отменено ставок: ${response.cancelled_bets}`, 'success');
+        addNotification(`Пересчёт ставок завершён: Human-бот "${bot.name}" - отменено ${response.cancelled_bets} активных ставок`, 'success');
         await fetchHumanBots();
         await fetchStats();
       } catch (error) {
