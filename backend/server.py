@@ -11780,28 +11780,30 @@ async def delete_all_bets(current_user: User = Depends(get_current_super_admin))
                 delete_results["active_games_processed"] += 1
                 
                 # Return creator's gems
-                for gem_type, quantity in bet_gems.items():
-                    if quantity > 0:
-                        await db.user_gems.update_one(
-                            {"user_id": creator_id, "gem_type": gem_type},
-                            {
-                                "$inc": {"frozen_quantity": -quantity},
-                                "$set": {"updated_at": datetime.utcnow()}
-                            }
-                        )
-                        delete_results["total_gems_returned"][gem_type] = delete_results["total_gems_returned"].get(gem_type, 0) + quantity
+                if isinstance(bet_gems, dict):
+                    for gem_type, quantity in bet_gems.items():
+                        if quantity > 0:
+                            await db.user_gems.update_one(
+                                {"user_id": creator_id, "gem_type": gem_type},
+                                {
+                                    "$inc": {"frozen_quantity": -quantity},
+                                    "$set": {"updated_at": datetime.utcnow()}
+                                }
+                            )
+                            delete_results["total_gems_returned"][gem_type] = delete_results["total_gems_returned"].get(gem_type, 0) + quantity
                 
                 # Return opponent's gems
-                for gem_type, quantity in opponent_gems.items():
-                    if quantity > 0:
-                        await db.user_gems.update_one(
-                            {"user_id": opponent_id, "gem_type": gem_type},
-                            {
-                                "$inc": {"frozen_quantity": -quantity},
-                                "$set": {"updated_at": datetime.utcnow()}
-                            }
-                        )
-                        delete_results["total_gems_returned"][gem_type] = delete_results["total_gems_returned"].get(gem_type, 0) + quantity
+                if isinstance(opponent_gems, dict):
+                    for gem_type, quantity in opponent_gems.items():
+                        if quantity > 0:
+                            await db.user_gems.update_one(
+                                {"user_id": opponent_id, "gem_type": gem_type},
+                                {
+                                    "$inc": {"frozen_quantity": -quantity},
+                                    "$set": {"updated_at": datetime.utcnow()}
+                                }
+                            )
+                            delete_results["total_gems_returned"][gem_type] = delete_results["total_gems_returned"].get(gem_type, 0) + quantity
                 
                 # Return commission to both players
                 commission_amount = bet_amount * 0.03
