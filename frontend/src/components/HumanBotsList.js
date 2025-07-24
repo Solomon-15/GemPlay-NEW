@@ -371,6 +371,19 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     }
   };
 
+  const handleTogglePlayWithPlayers = async (bot, canPlay) => {
+    try {
+      await executeOperation(`/admin/human-bots/${bot.id}/toggle-play-with-players`, 'POST', {
+        can_play_with_players: canPlay
+      });
+      addNotification(`Human-бот ${bot.name} ${canPlay ? 'может' : 'не может'} играть с игроками`, 'success');
+      await fetchHumanBots();
+      await fetchStats();
+    } catch (error) {
+      console.error('Ошибка переключения игры с игроками:', error);
+    }
+  };
+
   const handleDeleteBot = async (bot) => {
     try {
       // First try normal delete
