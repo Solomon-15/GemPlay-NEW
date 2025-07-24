@@ -108,12 +108,14 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       const result = await response.json();
       console.log('🎮 Join game response:', result);
       
+      let battleOutcome = null;
+      
       // Игра должна завершиться мгновенно и вернуть COMPLETED статус
       if (result.status === 'COMPLETED') {
         console.log('🎮 Game completed immediately');
         
-        const battleOutcome = result.winner_id === user.id ? 'win' : 
-                             (result.winner_id ? 'lose' : 'draw');
+        battleOutcome = result.winner_id === user.id ? 'win' : 
+                       (result.winner_id ? 'lose' : 'draw');
         
         // Сохраняем результат битвы
         setBattleResult({
