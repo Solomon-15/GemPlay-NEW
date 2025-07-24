@@ -126,17 +126,19 @@ class BetManagementTester:
             if response.status_code in [200, 201]:
                 self.log(f"Registered test user: {user_data['username']}", "SUCCESS")
                 
-                # Get user ID from registration response
+                # Get user ID and verification token from registration response
                 reg_data = response.json()
                 user_id = reg_data.get("user_id")
+                verification_token = reg_data.get("verification_token")
                 
-                if user_id:
-                    # Use admin to verify the user's email
-                    admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
-                    verify_response = self.make_request("POST", f"/admin/users/{user_id}/verify-email", {}, admin_headers)
+                if user_id and verification_token:
+                    # Verify email using the token
+                    verify_response = self.make_request("POST", "/auth/verify-email", {
+                        "token": verification_token
+                    })
                     
                     if verify_response.status_code == 200:
-                        self.log(f"Admin verified user email: {user_data['username']}", "SUCCESS")
+                        self.log(f"Verified user email: {user_data['username']}", "SUCCESS")
                         
                         # Now login user
                         token = self.login_user(user_data["email"], user_data["password"])
@@ -144,7 +146,7 @@ class BetManagementTester:
                             self.log(f"Got user ID: {user_id}", "SUCCESS")
                             return token, user_id
                     else:
-                        self.log(f"Failed to verify user email: {verify_response.status_code}", "ERROR")
+                        self.log(f"Failed to verify user email: {verify_response.status_code} - {verify_response.text}", "ERROR")
                         
             elif response.status_code == 400 and "already exists" in response.text.lower():
                 self.log(f"User {user_data['username']} already exists, trying to login", "WARNING")
