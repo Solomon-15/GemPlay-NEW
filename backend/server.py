@@ -428,6 +428,7 @@ class HumanBot(BaseModel):
     
     # Auto-play settings
     can_play_with_other_bots: bool = Field(default=True)  # Can play with other bots automatically
+    can_play_with_players: bool = Field(default=True)  # Can play with live players
     
     # Статистика
     total_games_played: int = 0
