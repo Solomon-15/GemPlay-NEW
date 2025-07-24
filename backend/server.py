@@ -16849,6 +16849,7 @@ async def get_human_bots_settings(current_admin: User = Depends(get_current_admi
                 "auto_play_enabled": False,
                 "min_delay_seconds": 1,
                 "max_delay_seconds": 3600,
+                "play_with_players_enabled": False,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }
