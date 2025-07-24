@@ -39,8 +39,8 @@ const MyBets = ({ user }) => {
         // Ставки, которые вы создали и ждут оппонента
         return safeBets.filter(bet => bet.status === 'WAITING' && bet.creator_id === user.id);
       case 'ongoing':
-        // Ставки, в которых вы участвуете (ход уже сделан, результат не определён)
-        return safeBets.filter(bet => bet.status === 'ACTIVE' || bet.status === 'REVEAL');
+        // Ставки, в которых вы участвуете (только ACTIVE статус, так как REVEAL больше нет)
+        return safeBets.filter(bet => bet.status === 'ACTIVE');
       case 'wins':
         // Ваши победы
         return safeBets.filter(bet => bet.status === 'COMPLETED' && bet.winner_id === user.id);
