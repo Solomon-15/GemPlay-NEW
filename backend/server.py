@@ -4789,44 +4789,18 @@ async def create_game(
         )
 
 async def check_user_concurrent_games(user_id: str) -> bool:
-    """Check if user can join another game (no active games as creator or opponent)."""
+    """Check if user can join another game. Now allows multiple concurrent games for players."""
     try:
-        # Only consider truly active statuses: ACTIVE and REVEAL
-        # WAITING games don't prevent joining others (users can create and join simultaneously)
-        # COMPLETED, CANCELLED, TIMEOUT games are finished and don't block joining
-        active_statuses = [GameStatus.ACTIVE, GameStatus.REVEAL]
+        # REMOVED: Multiple game restriction for regular users
+        # Players can now participate in unlimited concurrent games
+        # Only the self-join protection remains (handled elsewhere)
         
-        # Check if user is already in an active game as opponent
-        active_as_opponent = await db.games.find_one({
-            "opponent_id": user_id,
-            "status": {"$in": active_statuses}
-        })
-        
-        # Check if user is already in an active game as creator
-        active_as_creator = await db.games.find_one({
-            "creator_id": user_id,
-            "status": {"$in": active_statuses}
-        })
-        
-        # User can join if they have no truly active games
-        can_join = active_as_opponent is None and active_as_creator is None
-        
-        # Detailed logging for debugging
-        if not can_join:
-            logger.warning(f"User {user_id} blocked from joining games:")
-            if active_as_opponent:
-                logger.warning(f"  - Has active game as opponent: {active_as_opponent.get('id')} (status: {active_as_opponent.get('status')})")
-            if active_as_creator:
-                logger.warning(f"  - Has active game as creator: {active_as_creator.get('id')} (status: {active_as_creator.get('status')})")
-        else:
-            logger.info(f"User {user_id} can join games - no active games found")
-        
-        return can_join
+        logger.info(f"User {user_id} allowed to join multiple games - restriction removed")
+        return True  # Always allow joining for regular users
         
     except Exception as e:
-        logger.error(f"Error checking concurrent games for user {user_id}: {e}")
-        # In case of error, be conservative and allow joining
-        return True
+        logger.error(f"Error in check_user_concurrent_games: {e}")
+        return True  # Default to allowing join on error
 
 async def handle_game_timeout(game_id: str):
     """Handle game timeout - return funds and potentially recreate bet."""
