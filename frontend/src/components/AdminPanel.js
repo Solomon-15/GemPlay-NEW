@@ -9,6 +9,7 @@ import BotSettings from './BotSettings';
 import BotAnalytics from './BotAnalytics';
 import InterfaceSettings from './InterfaceSettings';
 import SoundsAdmin from './SoundsAdmin';
+import GemsManagement from './GemsManagement';
 import NotificationContainer from './NotificationContainer';
 import { useNotifications } from './NotificationContext';
 
