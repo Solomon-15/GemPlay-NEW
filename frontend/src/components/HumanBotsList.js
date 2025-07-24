@@ -19,6 +19,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
   const [humanBots, setHumanBots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
+  const [globalSettings, setGlobalSettings] = useState({}); // Global settings state
   
   // Multiple selection states
   const [selectedBots, setSelectedBots] = useState(new Set());
