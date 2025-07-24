@@ -627,6 +627,7 @@ class CreateHumanBotRequest(BaseModel):
     use_commit_reveal: bool = True
     logging_level: str = Field(default="INFO")
     can_play_with_other_bots: bool = Field(default=True, description="Can play with other bots automatically")
+    can_play_with_players: bool = Field(default=True, description="Can play with live players")
 
 class UpdateHumanBotRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=50)
