@@ -245,29 +245,26 @@ class RussianReviewTester:
             self.log("❌ No test user available for testing", "ERROR")
             return False
         
-        # First, add some balance and gems to user for betting
-        balance_status, balance_response = self.make_request(
-            "POST", f"/admin/users/{self.test_user_id}/balance", 
-            {"new_balance": 100.0}, 
+        # First, reset user balance to give them enough funds
+        reset_status, reset_response = self.make_request(
+            "POST", f"/admin/users/{self.test_user_id}/reset-balance", 
             token=self.admin_token
         )
         
-        if balance_status != 200:
-            self.log(f"⚠️ Could not add balance to test user: {balance_response}")
+        if reset_status == 200:
+            self.log("✅ Reset user balance to default (should include gems)")
         else:
-            self.log("✅ Added balance to test user")
-        
-        # Add gems to user
-        gem_status, gem_response = self.make_request(
-            "POST", f"/admin/users/{self.test_user_id}/gems", 
-            {"gem_type": "Ruby", "quantity": 10}, 
-            token=self.admin_token
-        )
-        
-        if gem_status != 200:
-            self.log(f"⚠️ Could not add gems to test user: {gem_response}")
-        else:
-            self.log("✅ Added gems to test user")
+            self.log(f"⚠️ Could not reset user balance: {reset_response}")
+            # Try alternative approach - set high balance
+            balance_status, balance_response = self.make_request(
+                "POST", f"/admin/users/{self.test_user_id}/balance", 
+                {"new_balance": 1000.0}, 
+                token=self.admin_token
+            )
+            if balance_status == 200:
+                self.log("✅ Set high balance for test user")
+            else:
+                self.log(f"⚠️ Could not set balance: {balance_response}")
         
         # Create a game
         game_data = {
