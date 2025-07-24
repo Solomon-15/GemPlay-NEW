@@ -4811,7 +4811,7 @@ async def check_human_bot_concurrent_games(bot_id: str, max_concurrent: int = 3)
     """Check if Human-bot can join another game based on concurrent games limit."""
     try:
         # Count active games where the bot is participant
-        active_statuses = [GameStatus.ACTIVE, GameStatus.REVEAL]
+        active_statuses = [GameStatus.ACTIVE]
         
         active_games_count = await db.games.count_documents({
             "$or": [
