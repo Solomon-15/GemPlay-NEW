@@ -385,6 +385,12 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
   };
 
   const handleTogglePlayWithPlayers = async (bot, canPlay) => {
+    // Check if global setting allows play with players
+    if (!globalSettings.play_with_players_enabled) {
+      addNotification('Игра с игроками отключена глобально в настройках', 'warning');
+      return;
+    }
+    
     try {
       await executeOperation(`/admin/human-bots/${bot.id}/toggle-play-with-players`, 'POST', {
         can_play_with_players: canPlay
