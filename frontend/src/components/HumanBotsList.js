@@ -377,7 +377,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
       await executeOperation(`/admin/human-bots/${bot.id}/toggle-auto-play`, 'POST', {
         can_play_with_other_bots: canPlay
       });
-      addNotification(`Human-бот ${bot.name} ${canPlay ? 'может' : 'не может'} играть с другими ботами`, 'success');
+      addNotification(`Настройки Human-бота "${bot.name}" изменены: автоигра с другими ботами ${canPlay ? 'включена' : 'отключена'}`, 'success');
       await fetchHumanBots();
       await fetchStats();
     } catch (error) {
