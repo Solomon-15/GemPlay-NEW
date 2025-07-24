@@ -15,6 +15,15 @@ const HumanBotActiveBetsModal = ({
   const [activeBetsData, setActiveBetsData] = useState(null);
   const [showAllBets, setShowAllBets] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [gemPrices, setGemPrices] = useState([]);
+
+  // Загрузка цен гемов при открытии модального окна
+  useEffect(() => {
+    const loadGemPrices = async () => {
+      await preloadGemPrices();
+    };
+    loadGemPrices();
+  }, []);
 
   // Загрузка активных ставок при открытии модального окна
   useEffect(() => {
