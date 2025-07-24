@@ -292,6 +292,7 @@ const HumanBotsManagement = () => {
     try {
       const response = await executeOperation('/admin/human-bots/bulk-create', 'POST', bulkCreateData);
       if (response.success !== false) {
+        addNotification(`Массовое создание завершено: создано ${bulkCreateData.count} Human-ботов`, 'success');
         setShowBulkCreateForm(false);
         fetchHumanBots();
         fetchStats();
