@@ -14094,6 +14094,51 @@ async def create_individual_bot(
             detail="Failed to create individual bot"
         )
 
+@api_router.get("/admin/bots", response_model=dict)
+async def get_regular_bots_simple(
+    page: int = 1,
+    limit: int = 100,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get regular bots list (simplified version)."""
+    try:
+        # Validate pagination parameters
+        if page < 1:
+            page = 1
+        if limit < 1 or limit > 1000:
+            limit = 100
+        
+        # Calculate offset
+        offset = (page - 1) * limit
+        
+        # Get total count
+        total_count = await db.bots.count_documents({
+            "bot_type": "REGULAR"
+        })
+        
+        # Get bots with pagination and sorting
+        bots = await db.bots.find({
+            "bot_type": "REGULAR"
+        }).sort("created_at", -1).skip(offset).limit(limit).to_list(limit)
+        
+        # Calculate total pages
+        total_pages = (total_count + limit - 1) // limit
+        
+        return {
+            "bots": bots,
+            "total": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": total_pages
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching regular bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch regular bots"
+        )
+
 @api_router.get("/admin/bots/regular/list", response_model=dict)
 async def get_regular_bots_list(
     page: int = 1,
