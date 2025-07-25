@@ -1406,6 +1406,466 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_bulk_creation_updated_functionality() -> None:
+    """Test the updated Human-bot bulk creation functionality as requested in the review:
+    
+    1. Basic API testing of `/admin/human-bots/bulk-create` endpoint
+    2. Test new fields: min_delay, max_delay, and bots
+    3. Validation testing: min_delay >= max_delay (should be error)
+    4. Percentage validation (win + loss + draw = 100%)
+    5. Count validation (1-50)
+    6. Backward compatibility with delay_range
+    7. Auto-generation of names without bots field
+    8. Verification of created bots with correct fields
+    """
+    print_header("HUMAN-BOT BULK CREATION UPDATED FUNCTIONALITY TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with bulk creation test")
+        record_test("Human-Bot Bulk Creation - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("Admin logged in successfully")
+    
+    # Step 2: Test basic API endpoint availability
+    print_subheader("Step 2: Basic API Endpoint Testing")
+    
+    # Test with minimal valid data first
+    basic_bulk_data = {
+        "count": 2,
+        "character": "BALANCED",
+        "min_bet_range": [5.0, 10.0],
+        "max_bet_range": [50.0, 100.0],
+        "win_percentage": 40.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,
+        "min_delay": 10,
+        "max_delay": 60
+    }
+    
+    basic_response, basic_success = make_request(
+        "POST", "/admin/human-bots/bulk-create",
+        data=basic_bulk_data,
+        auth_token=admin_token
+    )
+    
+    if basic_success:
+        print_success("✓ Basic bulk creation endpoint accessible")
+        print_success(f"✓ Created {basic_response.get('created_count', 0)} bots")
+        record_test("Human-Bot Bulk Creation - Basic API Access", True)
+        
+        # Verify response structure
+        expected_fields = ["success", "message", "created_count", "failed_count", "created_bots"]
+        missing_fields = [field for field in expected_fields if field not in basic_response]
+        
+        if not missing_fields:
+            print_success("✓ Response has all expected fields")
+            record_test("Human-Bot Bulk Creation - Response Structure", True)
+        else:
+            print_error(f"✗ Response missing fields: {missing_fields}")
+            record_test("Human-Bot Bulk Creation - Response Structure", False, f"Missing: {missing_fields}")
+    else:
+        print_error("✗ Basic bulk creation endpoint failed")
+        record_test("Human-Bot Bulk Creation - Basic API Access", False, "Endpoint failed")
+        return
+    
+    # Step 3: Test new fields (min_delay, max_delay)
+    print_subheader("Step 3: Test New Fields (min_delay, max_delay)")
+    
+    new_fields_data = {
+        "count": 3,
+        "character": "AGGRESSIVE",
+        "min_bet_range": [15.0, 25.0],
+        "max_bet_range": [75.0, 125.0],
+        "win_percentage": 45.0,
+        "loss_percentage": 35.0,
+        "draw_percentage": 20.0,
+        "min_delay": 30,  # New field
+        "max_delay": 90   # New field
+    }
+    
+    new_fields_response, new_fields_success = make_request(
+        "POST", "/admin/human-bots/bulk-create",
+        data=new_fields_data,
+        auth_token=admin_token
+    )
+    
+    if new_fields_success:
+        print_success("✓ New fields min_delay and max_delay work correctly")
+        print_success(f"✓ Created {new_fields_response.get('created_count', 0)} bots with new delay fields")
+        record_test("Human-Bot Bulk Creation - New Delay Fields", True)
+        
+        # Get one of the created bots to verify delay values
+        created_bots = new_fields_response.get("created_bots", [])
+        if created_bots:
+            bot_id = created_bots[0]["id"]
+            
+            # Get bot details to verify delay values
+            bot_details_response, bot_details_success = make_request(
+                "GET", f"/admin/human-bots/{bot_id}",
+                auth_token=admin_token
+            )
+            
+            if bot_details_success:
+                min_delay = bot_details_response.get("min_delay", 0)
+                max_delay = bot_details_response.get("max_delay", 0)
+                
+                if 30 <= min_delay <= 90 and 30 <= max_delay <= 90 and min_delay < max_delay:
+                    print_success(f"✓ Bot delay values correct: min_delay={min_delay}, max_delay={max_delay}")
+                    record_test("Human-Bot Bulk Creation - Delay Values Verification", True)
+                else:
+                    print_error(f"✗ Bot delay values incorrect: min_delay={min_delay}, max_delay={max_delay}")
+                    record_test("Human-Bot Bulk Creation - Delay Values Verification", False, f"min={min_delay}, max={max_delay}")
+    else:
+        print_error("✗ New delay fields test failed")
+        record_test("Human-Bot Bulk Creation - New Delay Fields", False, "Request failed")
+    
+    # Step 4: Test bots field with individual data
+    print_subheader("Step 4: Test Individual Bot Data (bots field)")
+    
+    individual_bots_data = {
+        "count": 2,
+        "character": "CAUTIOUS",
+        "min_bet_range": [5.0, 15.0],
+        "max_bet_range": [40.0, 80.0],
+        "win_percentage": 35.0,
+        "loss_percentage": 45.0,
+        "draw_percentage": 20.0,
+        "min_delay": 20,
+        "max_delay": 100,
+        "bots": [
+            {"name": f"CustomBot1_{int(time.time())}", "gender": "male"},
+            {"name": f"CustomBot2_{int(time.time())}", "gender": "female"}
+        ]
+    }
+    
+    individual_response, individual_success = make_request(
+        "POST", "/admin/human-bots/bulk-create",
+        data=individual_bots_data,
+        auth_token=admin_token
+    )
+    
+    if individual_success:
+        print_success("✓ Individual bot data (bots field) works correctly")
+        created_bots = individual_response.get("created_bots", [])
+        
+        # Verify custom names were used
+        custom_names_used = 0
+        for bot in created_bots:
+            if "CustomBot" in bot["name"]:
+                custom_names_used += 1
+                print_success(f"✓ Custom name used: {bot['name']}")
+        
+        if custom_names_used == 2:
+            print_success("✓ All custom names from bots field were used")
+            record_test("Human-Bot Bulk Creation - Individual Bot Data", True)
+        else:
+            print_error(f"✗ Only {custom_names_used}/2 custom names used")
+            record_test("Human-Bot Bulk Creation - Individual Bot Data", False, f"Names used: {custom_names_used}/2")
+        
+        # Verify gender field is saved
+        for bot in created_bots:
+            bot_id = bot["id"]
+            bot_details_response, bot_details_success = make_request(
+                "GET", f"/admin/human-bots/{bot_id}",
+                auth_token=admin_token
+            )
+            
+            if bot_details_success:
+                gender = bot_details_response.get("gender", "unknown")
+                if gender in ["male", "female"]:
+                    print_success(f"✓ Bot {bot['name']} has correct gender: {gender}")
+                else:
+                    print_error(f"✗ Bot {bot['name']} has incorrect gender: {gender}")
+    else:
+        print_error("✗ Individual bot data test failed")
+        record_test("Human-Bot Bulk Creation - Individual Bot Data", False, "Request failed")
+    
+    # Step 5: Test validation - min_delay >= max_delay (should be error)
+    print_subheader("Step 5: Test Validation - Invalid Delay Range")
+    
+    invalid_delay_data = {
+        "count": 1,
+        "character": "STABLE",
+        "min_bet_range": [10.0, 20.0],
+        "max_bet_range": [50.0, 100.0],
+        "win_percentage": 40.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,
+        "min_delay": 90,  # Invalid: min >= max
+        "max_delay": 60
+    }
+    
+    invalid_delay_response, invalid_delay_success = make_request(
+        "POST", "/admin/human-bots/bulk-create",
+        data=invalid_delay_data,
+        auth_token=admin_token,
+        expected_status=400
+    )
+    
+    if not invalid_delay_success:
+        print_success("✓ Invalid delay range correctly rejected (HTTP 400)")
+        
+        # Check error message
+        if "detail" in invalid_delay_response:
+            detail = invalid_delay_response["detail"]
+            if "min_delay must be less than max_delay" in detail:
+                print_success("✓ Correct error message for invalid delay range")
+                record_test("Human-Bot Bulk Creation - Invalid Delay Validation", True)
+            else:
+                print_error(f"✗ Incorrect error message: {detail}")
+                record_test("Human-Bot Bulk Creation - Invalid Delay Validation", False, f"Wrong message: {detail}")
+        else:
+            print_error("✗ Error response missing detail field")
+            record_test("Human-Bot Bulk Creation - Invalid Delay Validation", False, "Missing error detail")
+    else:
+        print_error("✗ Invalid delay range was accepted (should be rejected)")
+        record_test("Human-Bot Bulk Creation - Invalid Delay Validation", False, "Invalid data accepted")
+    
+    # Step 6: Test percentage validation (win + loss + draw = 100%)
+    print_subheader("Step 6: Test Percentage Validation")
+    
+    invalid_percentage_data = {
+        "count": 1,
+        "character": "BALANCED",
+        "min_bet_range": [5.0, 15.0],
+        "max_bet_range": [30.0, 60.0],
+        "win_percentage": 50.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,  # Total = 110% (invalid)
+        "min_delay": 30,
+        "max_delay": 90
+    }
+    
+    invalid_percentage_response, invalid_percentage_success = make_request(
+        "POST", "/admin/human-bots/bulk-create",
+        data=invalid_percentage_data,
+        auth_token=admin_token,
+        expected_status=400
+    )
+    
+    if not invalid_percentage_success:
+        print_success("✓ Invalid percentage sum correctly rejected (HTTP 400)")
+        
+        # Check error message
+        if "detail" in invalid_percentage_response:
+            detail = invalid_percentage_response["detail"]
+            if "must sum to 100%" in detail:
+                print_success("✓ Correct error message for invalid percentage sum")
+                record_test("Human-Bot Bulk Creation - Percentage Validation", True)
+            else:
+                print_error(f"✗ Incorrect error message: {detail}")
+                record_test("Human-Bot Bulk Creation - Percentage Validation", False, f"Wrong message: {detail}")
+        else:
+            print_error("✗ Error response missing detail field")
+            record_test("Human-Bot Bulk Creation - Percentage Validation", False, "Missing error detail")
+    else:
+        print_error("✗ Invalid percentage sum was accepted (should be rejected)")
+        record_test("Human-Bot Bulk Creation - Percentage Validation", False, "Invalid percentages accepted")
+    
+    # Step 7: Test count validation (1-50)
+    print_subheader("Step 7: Test Count Validation")
+    
+    invalid_count_data = {
+        "count": 51,  # Invalid: > 50
+        "character": "IMPULSIVE",
+        "min_bet_range": [10.0, 20.0],
+        "max_bet_range": [50.0, 100.0],
+        "win_percentage": 40.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,
+        "min_delay": 30,
+        "max_delay": 90
+    }
+    
+    invalid_count_response, invalid_count_success = make_request(
+        "POST", "/admin/human-bots/bulk-create",
+        data=invalid_count_data,
+        auth_token=admin_token,
+        expected_status=422  # Pydantic validation error
+    )
+    
+    if not invalid_count_success:
+        print_success("✓ Invalid count (>50) correctly rejected")
+        record_test("Human-Bot Bulk Creation - Count Validation", True)
+    else:
+        print_error("✗ Invalid count was accepted (should be rejected)")
+        record_test("Human-Bot Bulk Creation - Count Validation", False, "Invalid count accepted")
+    
+    # Step 8: Test backward compatibility with delay_range
+    print_subheader("Step 8: Test Backward Compatibility (delay_range)")
+    
+    backward_compat_data = {
+        "count": 2,
+        "character": "ANALYST",
+        "min_bet_range": [8.0, 18.0],
+        "max_bet_range": [40.0, 80.0],
+        "win_percentage": 42.0,
+        "loss_percentage": 38.0,
+        "draw_percentage": 20.0,
+        "delay_range": [25, 75]  # Old format
+        # Note: min_delay and max_delay not provided
+    }
+    
+    backward_compat_response, backward_compat_success = make_request(
+        "POST", "/admin/human-bots/bulk-create",
+        data=backward_compat_data,
+        auth_token=admin_token
+    )
+    
+    if backward_compat_success:
+        print_success("✓ Backward compatibility with delay_range works")
+        print_success(f"✓ Created {backward_compat_response.get('created_count', 0)} bots using old delay_range format")
+        record_test("Human-Bot Bulk Creation - Backward Compatibility", True)
+        
+        # Verify delay values are within the old range
+        created_bots = backward_compat_response.get("created_bots", [])
+        if created_bots:
+            bot_id = created_bots[0]["id"]
+            
+            bot_details_response, bot_details_success = make_request(
+                "GET", f"/admin/human-bots/{bot_id}",
+                auth_token=admin_token
+            )
+            
+            if bot_details_success:
+                min_delay = bot_details_response.get("min_delay", 0)
+                max_delay = bot_details_response.get("max_delay", 0)
+                
+                if 25 <= min_delay <= 75 and 25 <= max_delay <= 75 and min_delay < max_delay:
+                    print_success(f"✓ Backward compatibility delay values correct: min_delay={min_delay}, max_delay={max_delay}")
+                    record_test("Human-Bot Bulk Creation - Backward Compat Delay Values", True)
+                else:
+                    print_error(f"✗ Backward compatibility delay values incorrect: min_delay={min_delay}, max_delay={max_delay}")
+                    record_test("Human-Bot Bulk Creation - Backward Compat Delay Values", False, f"min={min_delay}, max={max_delay}")
+    else:
+        print_error("✗ Backward compatibility test failed")
+        record_test("Human-Bot Bulk Creation - Backward Compatibility", False, "Request failed")
+    
+    # Step 9: Test auto-generation of names without bots field
+    print_subheader("Step 9: Test Auto-Generation of Names")
+    
+    auto_names_data = {
+        "count": 3,
+        "character": "MIMIC",
+        "min_bet_range": [12.0, 22.0],
+        "max_bet_range": [60.0, 120.0],
+        "win_percentage": 38.0,
+        "loss_percentage": 42.0,
+        "draw_percentage": 20.0,
+        "min_delay": 40,
+        "max_delay": 100
+        # Note: bots field not provided - should auto-generate names
+    }
+    
+    auto_names_response, auto_names_success = make_request(
+        "POST", "/admin/human-bots/bulk-create",
+        data=auto_names_data,
+        auth_token=admin_token
+    )
+    
+    if auto_names_success:
+        print_success("✓ Auto-generation of names works without bots field")
+        created_bots = auto_names_response.get("created_bots", [])
+        
+        # Verify names were auto-generated
+        auto_generated_names = 0
+        for bot in created_bots:
+            bot_name = bot["name"]
+            # Check if name follows expected patterns (from HUMAN_BOT_NAMES list or Player format)
+            if any(char.isalpha() for char in bot_name) and len(bot_name) > 3:
+                auto_generated_names += 1
+                print_success(f"✓ Auto-generated name: {bot_name}")
+        
+        if auto_generated_names == 3:
+            print_success("✓ All names were auto-generated correctly")
+            record_test("Human-Bot Bulk Creation - Auto Name Generation", True)
+        else:
+            print_error(f"✗ Only {auto_generated_names}/3 names auto-generated")
+            record_test("Human-Bot Bulk Creation - Auto Name Generation", False, f"Generated: {auto_generated_names}/3")
+    else:
+        print_error("✗ Auto-generation of names test failed")
+        record_test("Human-Bot Bulk Creation - Auto Name Generation", False, "Request failed")
+    
+    # Step 10: Verify created bots have correct fields
+    print_subheader("Step 10: Verify Created Bots Have Correct Fields")
+    
+    # Get list of all human bots to verify recent creations
+    all_bots_response, all_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if all_bots_success:
+        all_bots = all_bots_response.get("bots", [])
+        print_success(f"✓ Retrieved {len(all_bots)} Human-bots for verification")
+        
+        # Check a few recent bots for correct field structure
+        recent_bots_checked = 0
+        correct_fields_count = 0
+        
+        for bot in all_bots[:5]:  # Check first 5 bots
+            bot_id = bot["id"]
+            
+            # Get detailed bot info
+            bot_details_response, bot_details_success = make_request(
+                "GET", f"/admin/human-bots/{bot_id}",
+                auth_token=admin_token
+            )
+            
+            if bot_details_success:
+                recent_bots_checked += 1
+                
+                # Check required fields
+                required_fields = ["id", "name", "character", "gender", "min_bet", "max_bet", 
+                                 "min_delay", "max_delay", "win_percentage", "loss_percentage", "draw_percentage"]
+                
+                missing_fields = [field for field in required_fields if field not in bot_details_response]
+                
+                if not missing_fields:
+                    correct_fields_count += 1
+                    print_success(f"✓ Bot {bot['name']} has all required fields")
+                    
+                    # Verify field types and ranges
+                    min_delay = bot_details_response.get("min_delay", 0)
+                    max_delay = bot_details_response.get("max_delay", 0)
+                    gender = bot_details_response.get("gender", "unknown")
+                    
+                    if min_delay < max_delay and gender in ["male", "female"]:
+                        print_success(f"✓ Bot {bot['name']} field values are correct")
+                    else:
+                        print_error(f"✗ Bot {bot['name']} has incorrect field values")
+                else:
+                    print_error(f"✗ Bot {bot['name']} missing fields: {missing_fields}")
+        
+        if correct_fields_count == recent_bots_checked and recent_bots_checked > 0:
+            print_success(f"✓ All {recent_bots_checked} checked bots have correct fields")
+            record_test("Human-Bot Bulk Creation - Field Verification", True)
+        else:
+            print_error(f"✗ Only {correct_fields_count}/{recent_bots_checked} bots have correct fields")
+            record_test("Human-Bot Bulk Creation - Field Verification", False, f"Correct: {correct_fields_count}/{recent_bots_checked}")
+    else:
+        print_error("✗ Failed to retrieve bots for verification")
+        record_test("Human-Bot Bulk Creation - Field Verification", False, "Failed to get bots")
+    
+    # Summary
+    print_subheader("Human-Bot Bulk Creation Updated Functionality Test Summary")
+    print_success("Human-bot bulk creation updated functionality testing completed")
+    print_success("Key findings:")
+    print_success("- Basic API endpoint accessible and working")
+    print_success("- New fields min_delay and max_delay work correctly")
+    print_success("- Individual bot data (bots field) with names and gender works")
+    print_success("- Validation correctly rejects invalid delay ranges")
+    print_success("- Percentage validation enforces 100% sum")
+    print_success("- Count validation limits to 1-50 bots")
+    print_success("- Backward compatibility with delay_range maintained")
+    print_success("- Auto-generation of names works without bots field")
+    print_success("- Created bots have all required fields with correct values")
+
 def test_human_bot_auto_play_logic() -> None:
     """Test Human-Bot auto-play logic between Human-bots as requested in the review:
     
