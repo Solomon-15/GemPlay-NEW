@@ -639,13 +639,13 @@ const HumanBotsManagement = () => {
                         </div>
                         <div className="text-center">
                           <div className="text-green-400 font-bold text-lg">
-                            {humanBotSettings.current_usage?.available || 0}
+                            {Math.max(0, (humanBotSettings.current_usage?.max_limit || 100) - (stats.total_bets || 0))}
                           </div>
                           <div className="text-text-secondary text-sm">Доступно</div>
                         </div>
                         <div className="text-center">
                           <div className="text-orange-400 font-bold text-lg">
-                            {humanBotSettings.current_usage?.usage_percentage || 0}%
+                            {Math.round(((stats.total_bets || 0) / (humanBotSettings.current_usage?.max_limit || 100)) * 100)}%
                           </div>
                           <div className="text-text-secondary text-sm">Использование</div>
                         </div>
