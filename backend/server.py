@@ -4833,6 +4833,79 @@ async def check_human_bot_concurrent_games(bot_id: str, max_concurrent: int = 3)
         logger.error(f"Error checking Human-bot concurrent games for {bot_id}: {e}")
         return False  # Conservative approach for bots
 
+async def handle_human_bot_game_completion(game_id: str):
+    """Auto-complete Human-bot games after 1 minute with random moves."""
+    try:
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            return
+            
+        game_obj = Game(**game)
+        
+        # Only handle ACTIVE games for Human-bots
+        if game_obj.status != GameStatus.ACTIVE:
+            return
+            
+        # Check if at least 1 minute has passed since game started
+        if game_obj.started_at:
+            time_elapsed = (datetime.utcnow() - game_obj.started_at).total_seconds()
+            if time_elapsed < 60:  # Less than 1 minute
+                return
+        
+        # Check if game involves Human-bot
+        creator = await db.users.find_one({"id": game_obj.creator_id})
+        opponent = await db.users.find_one({"id": game_obj.opponent_id})
+        
+        if not creator or not opponent:
+            return
+        
+        # Check if at least one player is a Human-bot
+        creator_is_human_bot = await db.human_bots.find_one({"id": game_obj.creator_id})
+        opponent_is_human_bot = await db.human_bots.find_one({"id": game_obj.opponent_id})
+        
+        if not creator_is_human_bot and not opponent_is_human_bot:
+            return
+        
+        # Generate random moves for Human-bots
+        possible_moves = [GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
+        
+        creator_move = game_obj.creator_move
+        opponent_move = game_obj.opponent_move
+        
+        # Generate random move for Human-bot creator if not set
+        if creator_is_human_bot and not creator_move:
+            creator_move = random.choice(possible_moves)
+            
+        # Generate random move for Human-bot opponent if not set
+        if opponent_is_human_bot and not opponent_move:
+            opponent_move = random.choice(possible_moves)
+            
+        # If both moves are still None, generate random moves
+        if not creator_move:
+            creator_move = random.choice(possible_moves)
+        if not opponent_move:
+            opponent_move = random.choice(possible_moves)
+        
+        # Update game with moves
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "creator_move": creator_move,
+                    "opponent_move": opponent_move,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Determine winner and complete the game using existing function
+        await determine_game_winner(game_id)
+        
+        logger.info(f"Human-bot game {game_id} auto-completed after 1 minute")
+        
+    except Exception as e:
+        logger.error(f"Error auto-completing Human-bot game {game_id}: {e}")
+
 async def handle_game_timeout(game_id: str):
     """Handle game timeout - return funds and potentially recreate bet."""
     try:
