@@ -90,7 +90,21 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       const response = await axios.get(`${API}/admin/interface-settings`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setInterfaceSettings(response.data);
+      
+      // Override server settings to show all items without limits
+      const overriddenSettings = {
+        live_players: {
+          my_bets: 10000,  // Show all bets
+          available_bets: 10000,  // Show all bets
+          ongoing_battles: 10000  // Show all battles
+        },
+        bot_players: {
+          available_bots: 10000,  // Show all bots
+          ongoing_bot_battles: 10000  // Show all bot battles
+        }
+      };
+      
+      setInterfaceSettings(overriddenSettings);
     } catch (error) {
       console.error('Error fetching interface settings:', error);
       // Используем дефолтные значения при ошибке
