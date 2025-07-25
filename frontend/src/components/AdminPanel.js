@@ -12,6 +12,8 @@ import SoundsAdmin from './SoundsAdmin';
 import GemsManagement from './GemsManagement';
 import NotificationContainer from './NotificationContainer';
 import { useNotifications } from './NotificationContext';
+import useConfirmation from '../hooks/useConfirmation';
+import ConfirmationModal from './ConfirmationModal';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
