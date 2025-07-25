@@ -412,8 +412,8 @@ def test_rock_paper_scissors_logic_fix() -> None:
                 )
                 
                 if join_success:
-                    if "result_status" in join_response:
-                        result = join_response["result_status"]
+                    if "result" in join_response:
+                        result = join_response["result"]
                         creator_move = join_response.get("creator_move", "unknown")
                         opponent_move = join_response.get("opponent_move", "unknown")
                         
@@ -448,8 +448,8 @@ def test_rock_paper_scissors_logic_fix() -> None:
                         
                         human_bot_tests += 1
                     else:
-                        print_error("Human-bot game join response missing result_status")
-                        record_test(f"RPS Logic - Human-Bot Test {human_bot_tests + 1}", False, "Missing result_status")
+                        print_error("Human-bot game join response missing result")
+                        record_test(f"RPS Logic - Human-Bot Test {human_bot_tests + 1}", False, "Missing result")
                 else:
                     print_error(f"Failed to join Human-bot game: {join_response}")
                     record_test(f"RPS Logic - Human-Bot Test {human_bot_tests + 1}", False, "Join failed")
