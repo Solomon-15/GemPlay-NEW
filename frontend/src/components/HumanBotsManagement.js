@@ -469,11 +469,11 @@ const HumanBotsManagement = () => {
                   <div className="stat-value">{stats.active_games || 0}</div>
                 </div>
                 <div className="stat-card">
-                  <h3>Игр за 24ч</h3>
+                  <h3>Всего Игр</h3>
                   <div className="stat-value">{stats.total_games_24h || 0}</div>
                 </div>
                 <div className="stat-card">
-                  <h3>Доход за 24ч</h3>
+                  <h3>Доход за Период</h3>
                   <div className="stat-value">{formatCurrency(stats.total_revenue_24h || 0)}</div>
                 </div>
               </div>
