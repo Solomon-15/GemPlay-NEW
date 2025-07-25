@@ -465,6 +465,26 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     }
   };
 
+  const handleResetStats = async (bot) => {
+    const confirmed = await confirm({
+      title: `Сброс статистики Human-бота`,
+      message: `Вы уверены, что хотите сбросить всю статистику для Human-бота "${bot.name}"? Это действие нельзя отменить.`,
+      type: "warning"
+    });
+
+    if (confirmed) {
+      try {
+        const response = await executeOperation(`/admin/human-bots/${bot.id}/reset-stats`, 'POST');
+        addNotification(`Статистика Human-бота "${bot.name}" успешно сброшена`, 'success');
+        await fetchHumanBots();
+        await fetchStats();
+      } catch (error) {
+        console.error('Ошибка сброса статистики:', error);
+        addNotification(`Ошибка при сбросе статистики: ${error.message}`, 'error');
+      }
+    }
+  };
+
   const handleDeleteBot = async (bot) => {
     try {
       // First try normal delete
