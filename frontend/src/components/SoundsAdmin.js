@@ -32,6 +32,7 @@ const SoundsAdmin = ({ user }) => {
   });
 
   const { showSuccessRU, showErrorRU } = useNotifications();
+  const { confirm, confirmationModal } = useConfirmation();
 
   useEffect(() => {
     loadSounds();
