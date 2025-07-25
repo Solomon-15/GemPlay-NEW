@@ -6138,7 +6138,7 @@ class RegularBotSystem:
             bet_params = await self.generate_bet_parameters(bot)
             
             # 4. Создание Commit-Reveal данных
-            initial_move = random.choice(["ROCK", "PAPER", "SCISSORS"])
+            initial_move = random.choice(["rock", "paper", "scissors"])
             salt = secrets.token_hex(32)
             move_hash = hashlib.sha256(f"{initial_move}{salt}".encode()).hexdigest()
             
