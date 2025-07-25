@@ -5456,19 +5456,14 @@ async def determine_game_winner(game_id: str) -> dict:
         
         # For Human bot games, apply their outcome logic
         if has_human_bot:
-            # Check if we need to apply Human bot outcome override
-            human_bot_override = await apply_human_bot_outcome(game_obj)
-            if human_bot_override:
-                winner_id = human_bot_override["winner_id"]
-                result_status = human_bot_override["result_status"]
-            else:
-                # Apply normal rock-paper-scissors logic
-                if not game_obj.creator_move or not game_obj.opponent_move:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Missing move data for Human bot game"
-                    )
-                winner_id, result_status = determine_rps_winner(game_obj.creator_move, game_obj.opponent_move, game_obj.creator_id, game_obj.opponent_id)
+            # Apply normal rock-paper-scissors logic for Human-bots too
+            # Human-bots should follow RPS rules, not predetermined outcomes
+            if not game_obj.creator_move or not game_obj.opponent_move:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Missing move data for Human bot game"
+                )
+            winner_id, result_status = determine_rps_winner(game_obj.creator_move, game_obj.opponent_move, game_obj.creator_id, game_obj.opponent_id)
         else:
             # Apply normal rock-paper-scissors logic
             if not game_obj.creator_move or not game_obj.opponent_move:
