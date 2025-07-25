@@ -47,6 +47,15 @@ const BetsManagement = () => {
     fetchBets();
   }, [statusFilter, userFilter, pagination.currentPage]);
 
+  // Живой счетчик для обновления времени каждую секунду
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
