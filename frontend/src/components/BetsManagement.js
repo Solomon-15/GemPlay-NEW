@@ -229,6 +229,18 @@ const BetsManagement = () => {
     return new Date(dateString).toLocaleString('ru-RU');
   };
 
+  const formatTimeAge = (createdAt) => {
+    const now = new Date();
+    const created = new Date(createdAt);
+    const diffInSeconds = Math.floor((now - created) / 1000);
+    
+    const hours = Math.floor(diffInSeconds / 3600);
+    const minutes = Math.floor((diffInSeconds % 3600) / 60);
+    const seconds = diffInSeconds % 60;
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   const getStatusBadge = (status) => {
     const statusMap = {
       'COMPLETED': { color: 'bg-green-600', text: 'Завершена' },
