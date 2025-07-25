@@ -707,7 +707,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                   <td className="px-4 py-4 whitespace-nowrap text-center">
                     <div className="text-accent-primary font-roboto text-xs">
                       <div>Игр: {bot.actual_games_played || 0}</div>
-                      <div>{(bot.total_games_won || 0)}/{(bot.losses || 0)}/{(bot.draws || 0)}</div>
+                      <div>{(bot.actual_wins || 0)}/{(bot.losses || 0)}/{(bot.draws || 0)}</div>
                       <div>
                         <button
                           onClick={() => handleCommissionModal(bot)}
