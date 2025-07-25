@@ -156,9 +156,26 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       
       // Ongoing battles should include ACTIVE and REVEAL statuses
       // These are games where user is actively participating
-      setOngoingBattles(userGames.filter(game => 
+      const userOngoingBattles = userGames.filter(game => 
         game.status === 'ACTIVE' || game.status === 'REVEAL'
-      ));
+      );
+      
+      // Get active Human-bot games for display in ongoing battles
+      try {
+        const humanBotGamesResponse = await api.get('/admin/games', {
+          human_bot_only: true,
+          status: 'ACTIVE'
+        });
+        
+        const humanBotGames = humanBotGamesResponse.data?.games || [];
+        
+        // Combine user ongoing battles with Human-bot games
+        const allOngoingBattles = [...userOngoingBattles, ...humanBotGames];
+        setOngoingBattles(allOngoingBattles);
+      } catch (error) {
+        console.error('Error fetching Human-bot games:', error);
+        setOngoingBattles(userOngoingBattles);
+      }
       
       setOngoingBotBattles(userGames.filter(game => 
         (game.status === 'ACTIVE' || game.status === 'REVEAL') && game.is_bot_game
