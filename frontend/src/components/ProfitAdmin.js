@@ -397,7 +397,7 @@ const ProfitAdmin = ({ user }) => {
           
         case 'human_bot_commission':
           // Загружаем данные о комиссиях от Human-ботов
-          const humanBotCommissionResponse = await axios.get(`${API}/admin/profit/human-bot-commission-breakdown?period=${period}`, {
+          const humanBotCommissionResponse = await axios.get(`${API}/admin/human-bots-total-commission?page=1&limit=100`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setModalData(humanBotCommissionResponse.data);
