@@ -13491,11 +13491,11 @@ def print_summary() -> None:
         print_error("❌ TESTING COMPLETED WITH FAILURES")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT COMMISSION ENDPOINTS")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT STATISTICS WITH DRAWS SUPPORT")
     
     try:
         # Run the specific test requested in the review
-        test_human_bot_commission_endpoints()
+        test_human_bot_statistics_with_draws_support()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
