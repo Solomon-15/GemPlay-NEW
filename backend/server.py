@@ -7667,7 +7667,7 @@ async def get_game_history(
                 query["created_at"] = {"$gte": start_of_month}
         
         # Get games
-        games = await db.games.find(query).sort("created_at", -1).limit(200).to_list(200)
+        games = await db.games.find(query).sort("created_at", -1).to_list(None)  # Removed limit to show all game history
         
         # Process games and determine results from user perspective
         processed_games = []
