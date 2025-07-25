@@ -283,6 +283,15 @@ const HumanBotActiveBetsModal = ({
                   Поражений
                 </div>
               </div>
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-sm">Ничья</div>
+                <div className="text-yellow-400 text-2xl font-rajdhani font-bold">
+                  {activeBetsData?.draws || 0}
+                </div>
+                <div className="text-text-secondary text-xs">
+                  Ничьих
+                </div>
+              </div>
             </div>
 
             {/* Кнопки управления */}
