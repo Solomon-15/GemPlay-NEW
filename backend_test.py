@@ -15339,11 +15339,11 @@ def print_summary() -> None:
         print_error("❌ TESTING COMPLETED WITH FAILURES")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT AUTO-PLAY LOGIC")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT BULK CREATION UPDATED FUNCTIONALITY")
     
     try:
-        # Run the Human-bot auto-play logic test as requested in the review
-        test_human_bot_auto_play_logic()
+        # Run the Human-bot bulk creation updated functionality test as requested in the review
+        test_human_bot_bulk_creation_updated_functionality()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
