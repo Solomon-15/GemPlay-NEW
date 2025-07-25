@@ -2115,6 +2115,18 @@ backend:
       - working: true
         agent: "testing"
 
+  - task: "Human-Bot Statistics with Draws Support"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "HUMAN-BOT STATISTICS WITH DRAWS SUPPORT TESTING COMPLETED SUCCESSFULLY: Conducted comprehensive testing of the Human-Bot statistics with draws support as requested in the review. CRITICAL FINDINGS: ✅ 1. GET /admin/human-bots ENDPOINT FULLY FUNCTIONAL - Successfully tested endpoint returns all required fields for each bot: draws (количество ничьих), losses (количество поражений), actual_games_played (количество только завершенных игр). Found 10 Human-bots with proper draws statistics: Nurgul89 (draws: 1), ZhansayaLuchshiy (draws: 1), others (draws: 0). All fields present and correctly calculated. ✅ 2. GET /admin/human-bots/{bot_id}/active-bets ENDPOINT WORKING - Successfully tested active bets endpoint returns draws, botWins, playerWins fields as required. Test bot 'Nurgul89' shows: draws: 1, botWins: 0, playerWins: 0. Endpoint accessible and returns proper JSON structure with all required statistics fields. ✅ 3. GET /admin/human-bots/{bot_id}/all-bets ENDPOINT FUNCTIONAL - Successfully tested all bets endpoint returns draws, botWins, playerWins fields as required. Test bot 'Nurgul89' shows: draws: 1, botWins: 0, playerWins: 0, completedBetsCount: 1. All required fields present in response structure. ✅ 4. DRAWS LOGIC VERIFICATION SUCCESSFUL - Verified draws are counted only for completed games where winner_id is None. Found actual draw game: Game b1f16292 with status='COMPLETED', winner_id=null, result='Ничья', moves='scissors vs scissors'. Logic correctly identifies draws: draws + botWins + playerWins = completedBetsCount (1 + 0 + 0 = 1). ✅ 5. ENDPOINT CONSISTENCY VERIFIED - Tested consistency between endpoints for draws statistics. Human-bots list endpoint and all-bets endpoint return identical draws counts: Nurgul89 (1 draw), AruzhanZoloto (0 draws). Data consistency maintained across different API endpoints. ✅ 6. ADMIN AUTHENTICATION WORKING - Successfully logged in as admin@gemplay.com with proper token generation. All protected endpoints correctly validate admin permissions and return proper data structures. TECHNICAL VERIFICATION: All endpoints return proper JSON responses with success flags, draws field correctly calculated from completed games with winner_id=null, actual_games_played field represents only completed games (not total games), statistics are mathematically consistent across endpoints. CONCLUSION: The Human-Bot statistics with draws support is FULLY FUNCTIONAL and working correctly. All three required endpoints (GET /admin/human-bots, GET /admin/human-bots/{bot_id}/active-bets, GET /admin/human-bots/{bot_id}/all-bets) return the required draws, losses, and actual_games_played fields. The draws logic correctly counts only completed games where winner_id is None, and statistics are consistent between different endpoints. The implementation successfully meets all requirements from the review request."
+
   - task: "Human-Bot Auto-Completion Testing"
     implemented: true
     working: false
