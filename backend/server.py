@@ -18982,6 +18982,90 @@ async def reset_human_bot_stats(
             detail="Failed to reset Human-bot statistics"
         )
 
+@api_router.post("/admin/human-bots/reset-total-games")
+async def reset_total_games_counter(
+    current_admin: User = Depends(get_current_admin)
+):
+    """Reset the independent total games counter."""
+    try:
+        # Reset the total games counter
+        await db.human_bot_counters.update_one(
+            {"type": "global"},
+            {
+                "$set": {
+                    "total_games_played": 0,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="RESET_TOTAL_GAMES_COUNTER",
+            target_type="counter",
+            target_id="global",
+            details={"counter_type": "total_games_played"}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Admin {current_admin.username} reset total games counter")
+        
+        return {
+            "success": True,
+            "message": "Total games counter reset successfully"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error resetting total games counter: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to reset total games counter"
+        )
+
+@api_router.post("/admin/human-bots/reset-period-revenue")
+async def reset_period_revenue_counter(
+    current_admin: User = Depends(get_current_admin)
+):
+    """Reset the independent period revenue counter."""
+    try:
+        # Reset the period revenue counter
+        await db.human_bot_counters.update_one(
+            {"type": "global"},
+            {
+                "$set": {
+                    "period_revenue": 0.0,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="RESET_PERIOD_REVENUE_COUNTER",
+            target_type="counter",
+            target_id="global",
+            details={"counter_type": "period_revenue"}
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Admin {current_admin.username} reset period revenue counter")
+        
+        return {
+            "success": True,
+            "message": "Period revenue counter reset successfully"
+        }
+    
+    except Exception as e:
+        logger.error(f"Error resetting period revenue counter: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to reset period revenue counter"
+        )
+
 @api_router.get("/admin/human-bots-total-commission", response_model=dict)
 async def get_human_bots_total_commission(
     page: int = Query(1, ge=1),
