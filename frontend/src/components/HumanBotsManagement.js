@@ -305,13 +305,49 @@ const HumanBotsManagement = () => {
     }
 
     try {
-      const response = await executeOperation('/admin/human-bots/bulk-create', 'POST', bulkCreateData);
+      // Подготовим данные для отправки
+      const payload = {
+        ...bulkCreateData,
+        // Сохраним обратную совместимость для delay_range
+        delay_range: [bulkCreateData.min_delay || 30, bulkCreateData.max_delay || 120],
+        // Отправим и отдельные поля для задержки
+        min_delay: bulkCreateData.min_delay || 30,
+        max_delay: bulkCreateData.max_delay || 120,
+        // Отправим данные ботов
+        bots: bulkCreateData.bots || []
+      };
+
+      const response = await executeOperation('/admin/human-bots/bulk-create', 'POST', payload);
       if (response.success !== false) {
-        addNotification(`Массовое создание завершено: создано ${bulkCreateData.count} Human-ботов`, 'success');
+        addNotification(`Массовое создание завершено: создано ${response.created_count || bulkCreateData.count} Human-ботов`, 'success');
         setShowBulkCreateForm(false);
         fetchHumanBots();
         fetchStats();
-        alert(`Создано ${response.created_count} ботов${response.failed_count > 0 ? `, не удалось создать: ${response.failed_count}` : ''}`);
+        
+        // Показать детали создания
+        if (response.failed_count && response.failed_count > 0) {
+          alert(`Создано ${response.created_count} ботов, не удалось создать: ${response.failed_count}`);
+        } else {
+          alert(`Успешно создано ${response.created_count} ботов`);
+        }
+        
+        // Сбросить форму
+        setBulkCreateData({
+          count: 10,
+          character: 'BALANCED',
+          min_bet_range: [1, 50],
+          max_bet_range: [50, 200],
+          bet_limit_range: [12, 12],
+          win_percentage: 40,
+          loss_percentage: 40,
+          draw_percentage: 20,
+          delay_range: [30, 120],
+          min_delay: 30,
+          max_delay: 120,
+          use_commit_reveal: true,
+          logging_level: 'INFO',
+          bots: []
+        });
       }
     } catch (error) {
       console.error('Ошибка массового создания Human-ботов:', error);
