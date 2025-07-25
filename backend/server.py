@@ -18299,9 +18299,12 @@ async def get_human_bot_all_bets(
         if not bot:
             raise HTTPException(status_code=404, detail="Human bot not found")
         
-        # Get all bets (исключая скрытые)
+        # Get all bets (исключая скрытые) где бот участвует как создатель ИЛИ как оппонент
         all_bets_cursor = db.games.find({
-            "creator_id": bot_id,
+            "$or": [
+                {"creator_id": bot_id},  # Бот является создателем
+                {"opponent_id": bot_id}  # Бот является оппонентом
+            ],
             "hidden": {"$ne": True}  # Исключаем скрытые ставки
         }).sort("created_at", -1)
         
