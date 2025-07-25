@@ -146,8 +146,11 @@ const HumanBotsManagement = () => {
     loss_percentage: 40,
     draw_percentage: 20,
     delay_range: [30, 120],
+    min_delay: 30,
+    max_delay: 120,
     use_commit_reveal: true,
-    logging_level: 'INFO'
+    logging_level: 'INFO',
+    bots: []
   });
 
   const [showCreateForm, setShowCreateForm] = useState(false);
