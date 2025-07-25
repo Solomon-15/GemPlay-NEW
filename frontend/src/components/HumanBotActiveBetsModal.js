@@ -36,6 +36,19 @@ const HumanBotActiveBetsModal = ({
     }
   }, [isOpen, bot]);
 
+  const getMoveIcon = (move) => {
+    switch (move?.toUpperCase()) {
+      case 'ROCK':
+        return '🪨 Камень';
+      case 'PAPER':
+        return '📄 Бумага';
+      case 'SCISSORS':
+        return '✂️ Ножницы';
+      default:
+        return '—';
+    }
+  };
+
   const fetchActiveBets = async () => {
     try {
       setLoading(true);
