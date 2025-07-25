@@ -18198,6 +18198,7 @@ async def get_human_bot_active_bets(
         
         bot_wins = sum(1 for game in completed_games_list if game.get('winner_id') == bot_id)
         player_wins = sum(1 for game in completed_games_list if game.get('winner_id') and game.get('winner_id') != bot_id)
+        draws = sum(1 for game in completed_games_list if game.get('winner_id') is None)
         
         # Format active bets for display
         formatted_bets = []
