@@ -121,6 +121,7 @@ const HumanBotsManagement = () => {
   const [createFormData, setCreateFormData] = useState({
     name: '',
     character: 'BALANCED',
+    gender: 'male',
     min_bet: 1,
     max_bet: 100,
     bet_limit: 12,
