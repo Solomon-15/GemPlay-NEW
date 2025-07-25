@@ -17266,6 +17266,7 @@ async def list_human_bots(
             response_bot_dict = response_bot.model_dump()  # Updated method name
             response_bot_dict["active_bets_count"] = active_bets_count
             response_bot_dict["draws"] = draws
+            response_bot_dict["losses"] = losses
             response_bots.append(response_bot_dict)
         
         # Calculate pagination
