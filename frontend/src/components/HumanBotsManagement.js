@@ -162,6 +162,17 @@ const HumanBotsManagement = () => {
     fetchStats();
   }, [currentPage, filters]);
 
+  // Инициализация списка ботов при изменении количества или открытии модального окна
+  useEffect(() => {
+    if (showBulkCreateForm && bulkCreateData.bots.length !== bulkCreateData.count) {
+      const bots = initializeBots(bulkCreateData.count);
+      setBulkCreateData(prev => ({
+        ...prev,
+        bots: bots
+      }));
+    }
+  }, [showBulkCreateForm, bulkCreateData.count]);
+
   const fetchHumanBots = async () => {
     try {
       const params = new URLSearchParams({
