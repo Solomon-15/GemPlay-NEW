@@ -18638,6 +18638,67 @@ async def recalculate_human_bot_bets(
             detail="Ошибка пересчета ставок Human-бота"
         )
 
+@api_router.get("/admin/human-bots-total-commission", response_model=dict)
+async def get_human_bots_total_commission(
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=100),
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get total commission from all Human-bots with optional bot breakdown."""
+    try:
+        # Get all Human-bots
+        all_bots = await db.human_bots.find({}).to_list(None)
+        
+        # Calculate total commission across all Human-bots
+        total_commission = 0.0
+        bot_commissions = []
+        
+        for bot in all_bots:
+            bot_commission = bot.get("total_commission_paid", 0.0)
+            total_commission += bot_commission
+            
+            if bot_commission > 0:  # Only include bots that have paid commission
+                bot_commissions.append({
+                    "id": bot["id"],
+                    "name": bot["name"],
+                    "character": bot["character"],
+                    "total_commission_paid": bot_commission,
+                    "is_active": bot.get("is_active", True),
+                    "total_games_played": bot.get("total_games_played", 0),
+                    "total_games_won": bot.get("total_games_won", 0)
+                })
+        
+        # Sort by commission paid (descending)
+        bot_commissions.sort(key=lambda x: x["total_commission_paid"], reverse=True)
+        
+        # Apply pagination
+        skip = (page - 1) * limit
+        paginated_bots = bot_commissions[skip:skip + limit]
+        total_pages = (len(bot_commissions) + limit - 1) // limit
+        
+        return {
+            "success": True,
+            "total_commission": total_commission,
+            "total_bots": len(all_bots),
+            "bots_with_commission": len(bot_commissions),
+            "bot_commissions": paginated_bots,
+            "pagination": {
+                "current_page": page,
+                "total_pages": total_pages,
+                "per_page": limit,
+                "total_items": len(bot_commissions),
+                "has_next": page < total_pages,
+                "has_prev": page > 1
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching Human-bots total commission: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch commission data: {str(e)}"
+        )
+
 @api_router.get("/admin/human-bots/{bot_id}/commission-details", response_model=dict)
 async def get_human_bot_commission_details(
     bot_id: str,
