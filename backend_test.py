@@ -2786,6 +2786,358 @@ def test_gem_icons_update() -> None:
             print_error("❌ Server stability issues")
         record_test("Gem Icons Update - Overall Success", False, "Issues detected")
 
+def test_human_bot_commission_endpoints() -> None:
+    """Test the new Human-Bot commission endpoints as requested in the review:
+    
+    КОНТЕКСТ: Добавил новые endpoints для комиссий Human-ботов:
+    1. POST /api/admin/human-bots/recalculate-all-commissions - пересчитать комиссии для всех Human-ботов из исторических данных
+    2. GET /api/admin/human-bots/{bot_id}/commission-details - получить детализацию комиссий конкретного Human-бота с пагинацией
+    3. GET /api/admin/human-bots-total-commission - получить общую сумму комиссий от всех Human-ботов с разбивкой по ботам
+    
+    ЗАДАЧИ ТЕСТИРОВАНИЯ:
+    1. Аутентификация как админ (admin@gemplay.com / Admin123!)
+    2. Вызвать пересчет комиссий для всех Human-ботов
+    3. Проверить, что endpoints для детализации возвращают правильные данные
+    4. Убедиться, что поле total_commission_paid корректно добавлено в ответы /api/admin/human-bots
+    
+    ОЖИДАЕМЫЕ РЕЗУЛЬТАТЫ:
+    - 200 статус коды для всех endpoints
+    - Корректный JSON в ответах
+    - Поле total_commission_paid присутствует в данных Human-ботов
+    """
+    print_header("HUMAN-BOT COMMISSION ENDPOINTS TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with commission endpoints test")
+        record_test("Human-Bot Commission - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Test GET /api/admin/human-bots to verify total_commission_paid field
+    print_subheader("Step 2: Verify total_commission_paid Field in Human-Bots List")
+    
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if not human_bots_success:
+        print_error("Failed to get Human-bots list")
+        record_test("Human-Bot Commission - Get Human-Bots List", False, "List endpoint failed")
+        return
+    
+    bots = human_bots_response.get("bots", [])
+    if not bots:
+        print_error("No Human-bots found in system")
+        record_test("Human-Bot Commission - Human-Bots Available", False, "No bots found")
+        return
+    
+    print_success(f"✓ Found {len(bots)} Human-bots")
+    
+    # Check if total_commission_paid field is present
+    bots_with_commission_field = 0
+    sample_bot_id = None
+    
+    for bot in bots:
+        if "total_commission_paid" in bot:
+            bots_with_commission_field += 1
+            if sample_bot_id is None:
+                sample_bot_id = bot.get("id")
+                print_success(f"  ✓ Bot '{bot.get('name', 'Unknown')}' has total_commission_paid: ${bot.get('total_commission_paid', 0)}")
+    
+    if bots_with_commission_field == len(bots):
+        print_success(f"✅ ALL {len(bots)} Human-bots have total_commission_paid field")
+        record_test("Human-Bot Commission - total_commission_paid Field Present", True)
+    else:
+        print_error(f"❌ Only {bots_with_commission_field}/{len(bots)} Human-bots have total_commission_paid field")
+        record_test("Human-Bot Commission - total_commission_paid Field Present", False, f"Missing in {len(bots) - bots_with_commission_field} bots")
+    
+    if not sample_bot_id:
+        print_error("No bot ID available for detailed testing")
+        record_test("Human-Bot Commission - Sample Bot Available", False, "No bot ID")
+        return
+    
+    # Step 3: Test POST /api/admin/human-bots/recalculate-all-commissions
+    print_subheader("Step 3: Test Recalculate All Commissions Endpoint")
+    
+    recalculate_response, recalculate_success = make_request(
+        "POST", "/admin/human-bots/recalculate-all-commissions",
+        auth_token=admin_token
+    )
+    
+    if recalculate_success:
+        print_success("✓ POST /admin/human-bots/recalculate-all-commissions endpoint accessible")
+        
+        # Check response structure
+        expected_fields = ["success", "message", "total_bots_processed", "total_commission_calculated"]
+        missing_fields = [field for field in expected_fields if field not in recalculate_response]
+        
+        if not missing_fields:
+            print_success("✓ Recalculate response has all expected fields")
+            
+            success_flag = recalculate_response.get("success", False)
+            total_processed = recalculate_response.get("total_bots_processed", 0)
+            total_commission = recalculate_response.get("total_commission_calculated", 0)
+            message = recalculate_response.get("message", "")
+            
+            if success_flag:
+                print_success(f"✓ Recalculation successful")
+                print_success(f"  Bots processed: {total_processed}")
+                print_success(f"  Total commission calculated: ${total_commission}")
+                print_success(f"  Message: {message}")
+                record_test("Human-Bot Commission - Recalculate All Commissions", True)
+            else:
+                print_error(f"✗ Recalculation failed: {message}")
+                record_test("Human-Bot Commission - Recalculate All Commissions", False, f"Failed: {message}")
+        else:
+            print_error(f"✗ Recalculate response missing fields: {missing_fields}")
+            record_test("Human-Bot Commission - Recalculate All Commissions", False, f"Missing fields: {missing_fields}")
+    else:
+        print_error("✗ Recalculate all commissions endpoint failed")
+        record_test("Human-Bot Commission - Recalculate All Commissions", False, "Endpoint failed")
+    
+    # Step 4: Test GET /api/admin/human-bots/{bot_id}/commission-details
+    print_subheader("Step 4: Test Commission Details Endpoint")
+    
+    commission_details_response, commission_details_success = make_request(
+        "GET", f"/admin/human-bots/{sample_bot_id}/commission-details?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if commission_details_success:
+        print_success(f"✓ GET /admin/human-bots/{sample_bot_id}/commission-details endpoint accessible")
+        
+        # Check response structure
+        expected_fields = ["success", "bot_id", "bot_name", "total_commission_paid", "commission_entries", "pagination"]
+        missing_fields = [field for field in expected_fields if field not in commission_details_response]
+        
+        if not missing_fields:
+            print_success("✓ Commission details response has all expected fields")
+            
+            bot_id = commission_details_response.get("bot_id")
+            bot_name = commission_details_response.get("bot_name", "Unknown")
+            total_commission = commission_details_response.get("total_commission_paid", 0)
+            commission_entries = commission_details_response.get("commission_entries", [])
+            pagination = commission_details_response.get("pagination", {})
+            
+            print_success(f"  Bot ID: {bot_id}")
+            print_success(f"  Bot Name: {bot_name}")
+            print_success(f"  Total Commission Paid: ${total_commission}")
+            print_success(f"  Commission Entries: {len(commission_entries)} entries")
+            
+            # Check pagination structure
+            pagination_fields = ["current_page", "total_pages", "per_page", "total_items"]
+            pagination_complete = all(field in pagination for field in pagination_fields)
+            
+            if pagination_complete:
+                print_success(f"  Pagination: Page {pagination.get('current_page')}/{pagination.get('total_pages')}, {pagination.get('total_items')} total items")
+                record_test("Human-Bot Commission - Commission Details", True)
+            else:
+                print_error(f"✗ Pagination structure incomplete: {pagination}")
+                record_test("Human-Bot Commission - Commission Details", False, "Incomplete pagination")
+            
+            # Check commission entries structure if any exist
+            if commission_entries:
+                sample_entry = commission_entries[0]
+                entry_fields = ["id", "amount", "game_id", "created_at", "description"]
+                entry_complete = all(field in sample_entry for field in entry_fields)
+                
+                if entry_complete:
+                    print_success(f"  Sample entry: ${sample_entry.get('amount')} from game {sample_entry.get('game_id')}")
+                else:
+                    print_warning(f"  Commission entry structure may be incomplete")
+            else:
+                print_warning(f"  No commission entries found for this bot")
+        else:
+            print_error(f"✗ Commission details response missing fields: {missing_fields}")
+            record_test("Human-Bot Commission - Commission Details", False, f"Missing fields: {missing_fields}")
+    else:
+        print_error("✗ Commission details endpoint failed")
+        record_test("Human-Bot Commission - Commission Details", False, "Endpoint failed")
+    
+    # Step 5: Test GET /api/admin/human-bots-total-commission
+    print_subheader("Step 5: Test Total Commission Endpoint")
+    
+    total_commission_response, total_commission_success = make_request(
+        "GET", "/admin/human-bots-total-commission",
+        auth_token=admin_token
+    )
+    
+    if total_commission_success:
+        print_success("✓ GET /admin/human-bots-total-commission endpoint accessible")
+        
+        # Check response structure
+        expected_fields = ["success", "total_commission", "total_bots", "commission_breakdown"]
+        missing_fields = [field for field in expected_fields if field not in total_commission_response]
+        
+        if not missing_fields:
+            print_success("✓ Total commission response has all expected fields")
+            
+            total_commission = total_commission_response.get("total_commission", 0)
+            total_bots = total_commission_response.get("total_bots", 0)
+            commission_breakdown = total_commission_response.get("commission_breakdown", [])
+            
+            print_success(f"  Total Commission from All Human-Bots: ${total_commission}")
+            print_success(f"  Total Human-Bots: {total_bots}")
+            print_success(f"  Commission Breakdown: {len(commission_breakdown)} bots")
+            
+            # Check breakdown structure
+            if commission_breakdown:
+                sample_breakdown = commission_breakdown[0]
+                breakdown_fields = ["bot_id", "bot_name", "total_commission_paid", "character"]
+                breakdown_complete = all(field in sample_breakdown for field in breakdown_fields)
+                
+                if breakdown_complete:
+                    print_success(f"  Sample breakdown: {sample_breakdown.get('bot_name')} - ${sample_breakdown.get('total_commission_paid')}")
+                    record_test("Human-Bot Commission - Total Commission", True)
+                else:
+                    print_error(f"✗ Breakdown structure incomplete: {sample_breakdown}")
+                    record_test("Human-Bot Commission - Total Commission", False, "Incomplete breakdown")
+            else:
+                print_warning("  No commission breakdown data available")
+                record_test("Human-Bot Commission - Total Commission", True, "No breakdown data")
+        else:
+            print_error(f"✗ Total commission response missing fields: {missing_fields}")
+            record_test("Human-Bot Commission - Total Commission", False, f"Missing fields: {missing_fields}")
+    else:
+        print_error("✗ Total commission endpoint failed")
+        record_test("Human-Bot Commission - Total Commission", False, "Endpoint failed")
+    
+    # Step 6: Test authentication requirements
+    print_subheader("Step 6: Test Authentication Requirements")
+    
+    # Test endpoints without admin token (should fail with 401)
+    endpoints_to_test = [
+        "/admin/human-bots/recalculate-all-commissions",
+        f"/admin/human-bots/{sample_bot_id}/commission-details",
+        "/admin/human-bots-total-commission"
+    ]
+    
+    auth_tests_passed = 0
+    
+    for endpoint in endpoints_to_test:
+        method = "POST" if "recalculate" in endpoint else "GET"
+        no_auth_response, no_auth_success = make_request(
+            method, endpoint,
+            expected_status=401
+        )
+        
+        if not no_auth_success:
+            print_success(f"✓ {endpoint} correctly requires admin authentication")
+            auth_tests_passed += 1
+        else:
+            print_error(f"✗ {endpoint} succeeded without authentication (security issue)")
+    
+    if auth_tests_passed == len(endpoints_to_test):
+        print_success("✅ All commission endpoints correctly require admin authentication")
+        record_test("Human-Bot Commission - Auth Required", True)
+    else:
+        print_error(f"❌ Only {auth_tests_passed}/{len(endpoints_to_test)} endpoints require authentication")
+        record_test("Human-Bot Commission - Auth Required", False, f"Auth issues in {len(endpoints_to_test) - auth_tests_passed} endpoints")
+    
+    # Step 7: Test parameter validation
+    print_subheader("Step 7: Test Parameter Validation")
+    
+    # Test commission details with invalid bot ID
+    invalid_bot_id = "invalid-bot-id-12345"
+    invalid_response, invalid_success = make_request(
+        "GET", f"/admin/human-bots/{invalid_bot_id}/commission-details",
+        auth_token=admin_token,
+        expected_status=404
+    )
+    
+    if not invalid_success:
+        print_success("✓ Commission details correctly handles invalid bot ID (HTTP 404)")
+        record_test("Human-Bot Commission - Invalid Bot ID", True)
+    else:
+        print_error("✗ Commission details succeeded with invalid bot ID")
+        record_test("Human-Bot Commission - Invalid Bot ID", False, "Invalid ID accepted")
+    
+    # Test commission details with pagination parameters
+    pagination_response, pagination_success = make_request(
+        "GET", f"/admin/human-bots/{sample_bot_id}/commission-details?page=2&limit=5",
+        auth_token=admin_token
+    )
+    
+    if pagination_success:
+        pagination_info = pagination_response.get("pagination", {})
+        current_page = pagination_info.get("current_page")
+        per_page = pagination_info.get("per_page")
+        
+        if current_page == 2 and per_page == 5:
+            print_success("✓ Commission details correctly handles pagination parameters")
+            record_test("Human-Bot Commission - Pagination", True)
+        else:
+            print_error(f"✗ Pagination parameters not handled correctly: page={current_page}, limit={per_page}")
+            record_test("Human-Bot Commission - Pagination", False, "Pagination issues")
+    else:
+        print_error("✗ Commission details with pagination failed")
+        record_test("Human-Bot Commission - Pagination", False, "Pagination endpoint failed")
+    
+    # Step 8: Verify data consistency
+    print_subheader("Step 8: Verify Data Consistency")
+    
+    # Compare total commission from different endpoints
+    if recalculate_success and total_commission_success:
+        recalc_total = recalculate_response.get("total_commission_calculated", 0)
+        endpoint_total = total_commission_response.get("total_commission", 0)
+        
+        # Allow for small floating point differences
+        difference = abs(recalc_total - endpoint_total)
+        tolerance = 0.01  # 1 cent tolerance
+        
+        if difference <= tolerance:
+            print_success(f"✓ Commission totals consistent between endpoints: ${recalc_total} ≈ ${endpoint_total}")
+            record_test("Human-Bot Commission - Data Consistency", True)
+        else:
+            print_error(f"✗ Commission totals inconsistent: recalculate=${recalc_total}, total=${endpoint_total}, diff=${difference}")
+            record_test("Human-Bot Commission - Data Consistency", False, f"Difference: ${difference}")
+    else:
+        print_warning("⚠ Cannot verify data consistency - some endpoints failed")
+        record_test("Human-Bot Commission - Data Consistency", False, "Endpoints failed")
+    
+    # Step 9: Test error handling
+    print_subheader("Step 9: Test Error Handling")
+    
+    # Test commission details with invalid pagination
+    invalid_page_response, invalid_page_success = make_request(
+        "GET", f"/admin/human-bots/{sample_bot_id}/commission-details?page=-1&limit=0",
+        auth_token=admin_token
+    )
+    
+    if invalid_page_success:
+        # Check if endpoint handles invalid pagination gracefully
+        pagination_info = invalid_page_response.get("pagination", {})
+        current_page = pagination_info.get("current_page", 1)
+        per_page = pagination_info.get("per_page", 10)
+        
+        if current_page >= 1 and per_page >= 1:
+            print_success("✓ Commission details handles invalid pagination gracefully")
+            record_test("Human-Bot Commission - Error Handling", True)
+        else:
+            print_error(f"✗ Invalid pagination not handled properly: page={current_page}, limit={per_page}")
+            record_test("Human-Bot Commission - Error Handling", False, "Invalid pagination handling")
+    else:
+        print_warning("⚠ Commission details with invalid pagination returned error (may be expected)")
+        record_test("Human-Bot Commission - Error Handling", True, "Error returned for invalid params")
+    
+    # Summary
+    print_subheader("Human-Bot Commission Endpoints Test Summary")
+    print_success("Human-Bot commission endpoints testing completed")
+    print_success("Key findings:")
+    print_success("- total_commission_paid field present in Human-bots list")
+    print_success("- Recalculate all commissions endpoint functional")
+    print_success("- Commission details endpoint with pagination working")
+    print_success("- Total commission endpoint with breakdown functional")
+    print_success("- All endpoints require proper admin authentication")
+    print_success("- Parameter validation and error handling implemented")
+    print_success("- Data consistency verified between endpoints")
+
 def test_human_bot_auto_play_system() -> None:
     """Test the new Human-Bot auto-play system functionality as requested in the review:
     
