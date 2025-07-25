@@ -17876,11 +17876,19 @@ async def bulk_create_human_bots(
                 detail="Invalid bet limit range"
             )
         
-        if bulk_data.delay_range[0] >= bulk_data.delay_range[1]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid delay range"
-            )
+        # Validate delay range - use separate fields if provided, otherwise use delay_range
+        if bulk_data.min_delay is not None and bulk_data.max_delay is not None:
+            if bulk_data.min_delay >= bulk_data.max_delay:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid delay range: min_delay must be less than max_delay"
+                )
+        else:
+            if bulk_data.delay_range[0] >= bulk_data.delay_range[1]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid delay range"
+                )
         
         # Validate total bet_limit against global limit
         # Get global settings for max limit
