@@ -701,8 +701,11 @@ class BulkCreateHumanBotsRequest(BaseModel):
     loss_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     draw_percentage: float = Field(default=20.0, ge=0.0, le=100.0)
     delay_range: List[int] = Field(default=[30, 120], min_length=2, max_length=2)  # [min, max] секунды
+    min_delay: Optional[int] = Field(default=30, ge=1, le=3600)  # Минимальная задержка
+    max_delay: Optional[int] = Field(default=120, ge=1, le=3600)  # Максимальная задержка
     use_commit_reveal: bool = True
     logging_level: str = Field(default="INFO")
+    bots: Optional[List[dict]] = Field(default=None)  # Данные отдельных ботов
 
 class CreateSoundRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
