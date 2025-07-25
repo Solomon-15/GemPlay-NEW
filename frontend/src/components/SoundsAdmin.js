@@ -557,6 +557,9 @@ const SoundsAdmin = ({ user }) => {
           </div>
         </div>
       )}
+      
+      {/* Confirmation Modal */}
+      <ConfirmationModal {...confirmationModal} />
     </div>
   );
 };
