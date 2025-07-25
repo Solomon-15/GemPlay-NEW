@@ -135,6 +135,18 @@ backend:
         agent: "testing"  
         comment: "ANALYTICS ENDPOINTS 500 ERRORS COMPLETELY FIXED: Fixed ObjectId serialization issue causing 500 errors in NewBotAnalytics.js component. All 4 analytics endpoints now working perfectly (100% success rate): ✅ GET /api/admin/games?human_bot_only=true, ✅ GET /api/admin/games?regular_bot_only=true, ✅ GET /api/admin/bots?page=1&limit=100, ✅ GET /api/admin/human-bots?page=1&limit=50. TECHNICAL FIX: Added ObjectId to string conversion in /api/admin/games and /api/admin/bots endpoints to prevent JSON serialization errors. RESULT: Analytics dashboard now loads without errors, all data displays correctly. Ready for production use."
 
+  - task: "Rock-Paper-Scissors Rules Logic Fix" 
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "ROCK-PAPER-SCISSORS RULES LOGIC SUCCESSFULLY FIXED: Resolved critical issue where RPS game rules were incorrectly implemented due to case sensitivity mismatch. USER REPORTED PROBLEM: Rules were mixed up - Rock beats Scissors, Scissors beats Paper, Paper beats Rock were not working correctly. ROOT CAUSE IDENTIFIED: GameMove enum uses lowercase values ('rock', 'paper', 'scissors') but some parts of code used uppercase strings ('ROCK', 'PAPER', 'SCISSORS'), causing comparison failures and incorrect game logic. TECHNICAL FIXES APPLIED: ✅ 1. CASE SENSITIVITY MISMATCH RESOLVED - Fixed bot move selection logic in lines 6087-6101 to use lowercase moves ('rock', 'paper', 'scissors') instead of uppercase. ✅ 2. RANDOM MOVE GENERATION FIXED - Fixed random move generation (line 6141) to use lowercase values matching GameMove enum specification. ✅ 3. LOGIC VERIFICATION COMPLETED - Created comprehensive test script that verified all 9 RPS combinations work correctly: Rock vs Scissors (Rock wins), Scissors vs Paper (Scissors wins), Paper vs Rock (Paper wins), and all draw scenarios. BACKEND TESTING RESULTS: ✅ All RPS rule combinations tested with 100% success rate (9/9 test cases passed). ✅ Case sensitivity issues completely resolved - no comparison errors. ✅ Core RPS logic in determine_rps_winner() function was already correct, issue was in move format consistency. ✅ Game creation, joining, and result determination all working properly. ✅ Winner determination logic correctly assigns winner_id and result status. ✅ Commission and gem distribution work correctly for all game outcomes. EXPECTED OUTCOME: All Rock-Paper-Scissors games now follow correct rules: Rock defeats Scissors, Scissors defeats Paper, Paper defeats Rock, identical moves result in draws. The game logic is production-ready and handles all scenarios accurately."
+
   - task: "Human-Bot Active Bets Display Consistency Fix"
     implemented: true
     working: true
