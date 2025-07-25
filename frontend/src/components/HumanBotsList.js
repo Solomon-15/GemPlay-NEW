@@ -366,6 +366,23 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     }
   };
 
+  const handleCommissionPageChange = async (page) => {
+    if (!selectedBotForCommission || page < 1) return;
+    
+    setCommissionPage(page);
+    setLoadingCommission(true);
+    
+    try {
+      const response = await executeOperation(`/admin/human-bots/${selectedBotForCommission.id}/commission-details?page=${page}&limit=50`, 'GET');
+      setCommissionData(response);
+    } catch (error) {
+      console.error('Ошибка получения данных комиссий:', error);
+      setCommissionData(null);
+    } finally {
+      setLoadingCommission(false);
+    }
+  };
+
   const handleShowAllBets = async () => {
     if (!selectedBotForActiveBets) return;
     
