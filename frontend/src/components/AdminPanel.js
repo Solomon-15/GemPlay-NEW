@@ -401,7 +401,15 @@ const AdminPanel = ({ user, onClose }) => {
   );
 
   const resetAllBets = async () => {
-    if (!window.confirm('Вы уверены, что хотите сбросить все ставки? Это действие нельзя отменить.')) {
+    const confirmed = await confirm({
+      title: 'Сброс всех ставок',
+      message: 'Вы уверены, что хотите сбросить все ставки? Это действие нельзя отменить.',
+      confirmText: 'Сбросить все ставки',
+      cancelText: 'Отмена',
+      type: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
     
