@@ -15,6 +15,7 @@ const UserManagement = ({ user: currentUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [currentTime, setCurrentTime] = useState(new Date()); // Для живого счетчика
   
   // Пагинация
   const pagination = usePagination(1, 10);
