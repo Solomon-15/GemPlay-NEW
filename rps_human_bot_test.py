@@ -178,10 +178,10 @@ def create_test_users(admin_token: str) -> List[Dict[str, Any]]:
                 )
                 
                 if login_success and "access_token" in login_response:
-                    # Add balance and gems for testing
+                    # Add balance using correct admin endpoint
                     balance_response, balance_success = make_request(
-                        "POST", "/admin/users/add-balance",
-                        data={"user_id": login_response["user"]["id"], "amount": 1000},
+                        "POST", f"/admin/users/{login_response['user']['id']}/balance",
+                        data={"balance": 2000},
                         auth_token=admin_token
                     )
                     
