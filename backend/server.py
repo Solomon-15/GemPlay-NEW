@@ -17222,6 +17222,17 @@ async def list_human_bots(
             # Get active bets count
             active_bets_count = await get_human_bot_active_bets_count(bot["id"])
             
+            # Calculate draws from completed games
+            completed_games = await db.games.find({
+                "$or": [
+                    {"creator_id": bot["id"]},
+                    {"opponent_id": bot["id"]}
+                ],
+                "status": "COMPLETED"
+            }).to_list(None)
+            
+            draws = sum(1 for game in completed_games if game.get('winner_id') is None)
+            
             response_bot = HumanBotResponse(
                 id=bot["id"],
                 name=bot["name"],
@@ -17250,9 +17261,10 @@ async def list_human_bots(
                 updated_at=bot["updated_at"]
             )
             
-            # Add active bets count as additional field
+            # Add active bets count and draws as additional fields
             response_bot_dict = response_bot.model_dump()  # Updated method name
             response_bot_dict["active_bets_count"] = active_bets_count
+            response_bot_dict["draws"] = draws
             response_bots.append(response_bot_dict)
         
         # Calculate pagination
