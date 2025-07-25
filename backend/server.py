@@ -789,6 +789,7 @@ class HumanBotLogResponse(BaseModel):
 class HumanBotsStatsResponse(BaseModel):
     total_bots: int
     active_bots: int
+    active_games: int  # Add active games count
     total_games_24h: int
     total_bets: int
     total_revenue_24h: float
