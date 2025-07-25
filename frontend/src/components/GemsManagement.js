@@ -9,6 +9,7 @@ const API = `${BACKEND_URL}/api`;
 
 const GemsManagement = () => {
   const { showSuccess, showError } = useNotifications();
+  const { confirm, confirmationModal } = useConfirmation();
   
   // States
   const [gems, setGems] = useState([]);
