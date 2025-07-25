@@ -1596,7 +1596,14 @@ const HumanBotsManagement = () => {
                       min="1"
                       max="3600"
                       value={bulkCreateData.max_delay || 120}
-                      onChange={(e) => setBulkCreateData({...bulkCreateData, max_delay: parseInt(e.target.value)})}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 120;
+                        setBulkCreateData({
+                          ...bulkCreateData, 
+                          max_delay: value,
+                          delay_range: [bulkCreateData.min_delay || 30, value]
+                        });
+                      }}
                       placeholder="120"
                     />
                   </div>
