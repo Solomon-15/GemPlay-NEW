@@ -7115,7 +7115,7 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
                 {"creator_id": current_user.id},
                 {"opponent_id": current_user.id}
             ]
-        }).sort("created_at", -1).limit(20).to_list(20)
+        }).sort("created_at", -1).to_list(None)  # Removed limit to show all user bets
         
         result = []
         for game in games:
