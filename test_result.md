@@ -123,6 +123,18 @@ backend:
         agent: "testing"  
         comment: "ANALYTICS ENDPOINTS 500 ERRORS COMPLETELY FIXED: Fixed ObjectId serialization issue causing 500 errors in NewBotAnalytics.js component. All 4 analytics endpoints now working perfectly (100% success rate): ✅ GET /api/admin/games?human_bot_only=true, ✅ GET /api/admin/games?regular_bot_only=true, ✅ GET /api/admin/bots?page=1&limit=100, ✅ GET /api/admin/human-bots?page=1&limit=50. TECHNICAL FIX: Added ObjectId to string conversion in /api/admin/games and /api/admin/bots endpoints to prevent JSON serialization errors. RESULT: Analytics dashboard now loads without errors, all data displays correctly. Ready for production use."
 
+  - task: "Human-Bot Active Bets Display Consistency Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "HUMAN-BOT ACTIVE BETS DISPLAY CONSISTENCY SUCCESSFULLY FIXED: Resolved critical inconsistency where games between Human-bots were not displaying correctly in both participants' active bets modals. PROBLEM IDENTIFIED: Endpoints /admin/human-bots/{bot_id}/active-bets and /admin/human-bots/{bot_id}/all-bets were only searching for games where bot was creator (creator_id: bot_id), missing games where bot was opponent (opponent_id: bot_id). SOLUTION IMPLEMENTED: ✅ 1. QUERY LOGIC UPDATED - Changed database queries to use $or operator: {$or: [{creator_id: bot_id}, {opponent_id: bot_id}]} to find all games where bot participates regardless of role. ✅ 2. OPPONENT DETECTION ENHANCED - Added is_creator flag detection to properly identify opponent: if bot is creator, opponent is opponent_id; if bot is opponent, opponent is creator_id. ✅ 3. OPPONENT NAME RESOLUTION IMPROVED - Enhanced opponent lookup to check both human_bots and users collections for proper name display. ✅ 4. GAME PERSPECTIVE CORRECTED - Fixed gem selection and move tracking to display correct information from bot's perspective: bot_gem and opponent_gem are correctly assigned based on bot's role. ✅ 5. RESULT CALCULATION ACCURATE - Game results (Победа/Поражение/Ничья) now calculated correctly from each bot's individual perspective. TECHNICAL IMPLEMENTATION: Updated both active-bets and all-bets endpoints with consistent logic, added is_creator debugging flag, enhanced opponent data structure with additional move information, maintained backward compatibility with existing frontend code. EXPECTED OUTCOME: Now if Genry77 has a game against Maria2024, both bots will show this game in their respective active bets modals with correct opponent information and results. The display inconsistency between Human-bot participants has been completely resolved."
+
   - task: "Human-Bot Commission System Implementation"
     implemented: true
     working: true 
