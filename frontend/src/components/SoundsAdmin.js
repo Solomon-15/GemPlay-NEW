@@ -118,7 +118,18 @@ const SoundsAdmin = ({ user }) => {
   };
 
   const handleDeleteSound = async (soundId) => {
-    if (!window.confirm('Вы уверены, что хотите удалить этот звук?')) {
+    const sound = sounds.find(s => s.id === soundId);
+    const soundName = sound ? sound.name : 'звук';
+    
+    const confirmed = await confirm({
+      title: 'Удаление звука',
+      message: `Вы уверены, что хотите удалить звук "${soundName}"?`,
+      confirmText: 'Удалить',
+      cancelText: 'Отмена',
+      type: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
     
