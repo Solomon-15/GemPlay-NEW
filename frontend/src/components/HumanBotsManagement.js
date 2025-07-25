@@ -1299,7 +1299,7 @@ const HumanBotsManagement = () => {
                       min="1"
                       max="50"
                       value={bulkCreateData.count}
-                      onChange={(e) => setBulkCreateData({...bulkCreateData, count: parseInt(e.target.value)})}
+                      onChange={(e) => updateBotCount(parseInt(e.target.value) || 1)}
                       placeholder="10"
                     />
                     <small className="form-help">Максимум 50 ботов за раз</small>
