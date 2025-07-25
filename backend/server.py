@@ -18054,6 +18054,11 @@ async def get_human_bots_stats(current_admin: User = Depends(get_current_admin))
             "status": "WAITING"  # Only count WAITING bets (available for joining)
         })
         
+        # Count active games with status "ACTIVE"
+        active_games = await db.games.count_documents({
+            "status": "ACTIVE"  # All games with ACTIVE status
+        })
+        
         # Calculate character distribution
         character_distribution = {}
         total_games_24h = 0
