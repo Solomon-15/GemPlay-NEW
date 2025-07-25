@@ -205,7 +205,7 @@ const PlayerCard = ({
                 disabled
                 className="px-4 py-2 bg-orange-600 text-white font-rajdhani font-bold rounded-lg cursor-not-allowed"
               >
-                In the game
+                Busy
               </button>
             ) : (
               <button
