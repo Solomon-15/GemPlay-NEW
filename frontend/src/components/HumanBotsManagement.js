@@ -466,7 +466,7 @@ const HumanBotsManagement = () => {
                 </div>
                 <div className="stat-card">
                   <h3>Активные</h3>
-                  <div className="stat-value">{stats.active_bots || 0}</div>
+                  <div className="stat-value">{stats.active_games || 0}</div>
                 </div>
                 <div className="stat-card">
                   <h3>Игр за 24ч</h3>
