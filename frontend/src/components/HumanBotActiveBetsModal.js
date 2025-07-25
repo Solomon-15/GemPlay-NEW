@@ -437,6 +437,9 @@ const HumanBotActiveBetsModal = ({
           </button>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal {...confirmationModal} />
     </div>
   );
 };
