@@ -718,13 +718,13 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                         </button>
                       </div>
                       <div>
-                        <span className={((bot.total_amount_won || 0) - (bot.total_amount_wagered || 0)) >= 0 ? 'text-green-400' : 'text-red-400'}>
-                          Прибыль: ${((bot.total_amount_won || 0) - (bot.total_amount_wagered || 0)).toFixed(2)}
+                        <span className={((bot.correct_profit || 0)) >= 0 ? 'text-green-400' : 'text-red-400'}>
+                          Прибыль: ${(bot.correct_profit || 0).toFixed(2)}
                         </span>
                       </div>
                       <div>
-                        <span className={((bot.total_amount_won || 0) - (bot.total_amount_wagered || 0) - (bot.total_commission_paid || 0)) >= 0 ? 'text-green-400' : 'text-red-400'}>
-                          Чистая прибыль: ${((bot.total_amount_won || 0) - (bot.total_amount_wagered || 0) - (bot.total_commission_paid || 0)).toFixed(2)}
+                        <span className={((bot.correct_profit || 0) - (bot.total_commission_paid || 0)) >= 0 ? 'text-green-400' : 'text-red-400'}>
+                          Чистая прибыль: ${((bot.correct_profit || 0) - (bot.total_commission_paid || 0)).toFixed(2)}
                         </span>
                       </div>
                     </div>
