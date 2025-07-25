@@ -18638,6 +18638,98 @@ async def recalculate_human_bot_bets(
             detail="Ошибка пересчета ставок Human-бота"
         )
 
+@api_router.get("/admin/human-bots/{bot_id}/commission-details", response_model=dict)
+async def get_human_bot_commission_details(
+    bot_id: str,
+    page: int = Query(1, ge=1),
+    limit: int = Query(100, ge=1, le=500),
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get detailed commission breakdown for a specific Human-bot."""
+    try:
+        # Check if Human-bot exists
+        bot = await db.human_bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Human-bot not found"
+            )
+        
+        skip = (page - 1) * limit
+        
+        # Get commission entries for this Human-bot
+        commission_entries_cursor = db.profit_entries.find({
+            "source_user_id": bot_id,
+            "entry_type": "HUMAN_BOT_COMMISSION"
+        }).sort("created_at", -1).skip(skip).limit(limit)
+        
+        commission_entries = await commission_entries_cursor.to_list(length=limit)
+        
+        # Get total count
+        total_entries = await db.profit_entries.count_documents({
+            "source_user_id": bot_id,
+            "entry_type": "HUMAN_BOT_COMMISSION"
+        })
+        
+        # Format response with game details
+        formatted_entries = []
+        for entry in commission_entries:
+            # Get game details if reference_id exists
+            game_details = None
+            if entry.get("reference_id"):
+                game = await db.games.find_one({"id": entry["reference_id"]})
+                if game:
+                    # Get opponent info
+                    opponent_id = game.get("opponent_id") if game.get("creator_id") == bot_id else game.get("creator_id")
+                    opponent = None
+                    if opponent_id:
+                        opponent = await get_player_info(opponent_id)
+                    
+                    game_details = {
+                        "game_id": game["id"],
+                        "bet_amount": game.get("bet_amount", 0),
+                        "status": game.get("status"),
+                        "winner_id": game.get("winner_id"),
+                        "completed_at": game.get("completed_at"),
+                        "opponent": opponent,
+                        "result": "win" if game.get("winner_id") == bot_id else "loss" if game.get("winner_id") else "draw"
+                    }
+            
+            formatted_entries.append({
+                "id": entry["id"],
+                "amount": entry["amount"],
+                "description": entry["description"],
+                "created_at": entry["created_at"],
+                "game_details": game_details
+            })
+        
+        total_pages = (total_entries + limit - 1) // limit
+        
+        return {
+            "success": True,
+            "bot_id": bot_id,
+            "bot_name": bot["name"],
+            "total_commission_paid": bot.get("total_commission_paid", 0.0),
+            "commission_entries": formatted_entries,
+            "pagination": {
+                "current_page": page,
+                "total_pages": total_pages,
+                "per_page": limit,
+                "total_items": total_entries,
+                "has_next": page < total_pages,
+                "has_prev": page > 1
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching commission details for Human-bot {bot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch commission details: {str(e)}"
+        )
+
 @api_router.post("/admin/human-bots/recalculate-all-commissions", response_model=dict)
 async def recalculate_all_human_bot_commissions(current_admin: User = Depends(get_current_admin)):
     """Recalculate commission totals for all Human-bots from historical games."""
