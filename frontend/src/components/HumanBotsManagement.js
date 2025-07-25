@@ -695,7 +695,7 @@ const HumanBotsManagement = () => {
                         
                         <div className="flex items-center space-x-4">
                           <div className="flex-1 text-text-secondary text-sm">
-                            💡 Human-боты будут создавать игры друг с другом с случайной задержкой от {humanBotSettings.min_delay_seconds || 1} до {humanBotSettings.max_delay_seconds || 3600} секунд ({Math.round((humanBotSettings.max_delay_seconds || 3600) / 60)} минут)
+                            💡 Human-боты будут присоединяться к доступным ставкам с случайной задержкой от {humanBotSettings.min_delay_seconds || 1} до {humanBotSettings.max_delay_seconds || 3600} секунд ({Math.round((humanBotSettings.max_delay_seconds || 3600) / 60)} минут)
                           </div>
                           <button
                             onClick={handleSaveSettings}
