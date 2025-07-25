@@ -6,7 +6,7 @@ import BetsManagement from './BetsManagement';
 import RegularBotsManagement from './RegularBotsManagement';
 import HumanBotsManagement from './HumanBotsManagement';
 import BotSettings from './BotSettings';
-import BotAnalytics from './BotAnalytics';
+import NewBotAnalytics from './NewBotAnalytics';
 import InterfaceSettings from './InterfaceSettings';
 import SoundsAdmin from './SoundsAdmin';
 import GemsManagement from './GemsManagement';
