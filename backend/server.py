@@ -14214,6 +14214,11 @@ async def get_regular_bots_simple(
         }).sort("created_at", -1).skip(offset).limit(limit)
         bots = await bots_cursor.to_list(length=limit)
         
+        # Convert ObjectId to string for JSON serialization
+        for bot in bots:
+            if "_id" in bot:
+                bot["_id"] = str(bot["_id"])
+        
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
         
