@@ -390,18 +390,22 @@ const HumanBotActiveBetsModal = ({
                                   <div className="flex items-center space-x-2">
                                     <span className="text-accent-primary font-bold">Бот:</span>
                                     <span className="text-white">
-                                      {bet.creator_id === bot.id ? 
+                                      {bet.bot_move ? getMoveIcon(bet.bot_move) : 
+                                       (bet.creator_id === bot.id ? 
                                         (bet.creator_move ? getMoveIcon(bet.creator_move) : '—') : 
                                         (bet.opponent_move ? getMoveIcon(bet.opponent_move) : '—')
+                                       )
                                       }
                                     </span>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <span className="text-orange-400 font-bold">Соперник:</span>
                                     <span className="text-white">
-                                      {bet.creator_id === bot.id ? 
+                                      {bet.opponent_move_actual ? getMoveIcon(bet.opponent_move_actual) :
+                                       (bet.creator_id === bot.id ? 
                                         (bet.opponent_move ? getMoveIcon(bet.opponent_move) : '—') : 
                                         (bet.creator_move ? getMoveIcon(bet.creator_move) : '—')
+                                       )
                                       }
                                     </span>
                                   </div>
