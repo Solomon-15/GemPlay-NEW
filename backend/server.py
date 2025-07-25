@@ -18121,7 +18121,9 @@ async def get_human_bots_stats(current_admin: User = Depends(get_current_admin))
         return HumanBotsStatsResponse(
             total_bots=total_bots,
             active_bots=active_bots,
-            active_games=active_games,  # Add active games count
+            active_games=active_games,
+            total_games_played=total_games_played,  # Independent counter
+            period_revenue=period_revenue,  # Independent counter
             total_games_24h=total_games_24h,
             total_bets=total_bets,
             total_revenue_24h=total_revenue_24h,
