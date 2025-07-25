@@ -18060,6 +18060,22 @@ async def get_human_bots_stats(current_admin: User = Depends(get_current_admin))
             "status": "ACTIVE"  # All games with ACTIVE status
         })
         
+        # Get independent counters (stored separately)
+        counters = await db.human_bot_counters.find_one({"type": "global"})
+        if not counters:
+            # Initialize counters if they don't exist
+            counters = {
+                "type": "global",
+                "total_games_played": 0,
+                "period_revenue": 0.0,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            await db.human_bot_counters.insert_one(counters)
+        
+        total_games_played = counters.get("total_games_played", 0)
+        period_revenue = counters.get("period_revenue", 0.0)
+        
         # Calculate character distribution
         character_distribution = {}
         total_games_24h = 0
