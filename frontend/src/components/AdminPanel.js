@@ -757,6 +757,9 @@ const AdminPanel = ({ user, onClose }) => {
       
       {/* Notification Container */}
       <NotificationContainer />
+      
+      {/* Confirmation Modal */}
+      <ConfirmationModal {...confirmationModal} />
     </div>
   );
 };
