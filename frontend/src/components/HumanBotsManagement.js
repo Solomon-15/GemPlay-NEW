@@ -657,7 +657,7 @@ const HumanBotsManagement = () => {
                           <div 
                             className="bg-accent-primary h-full transition-all duration-300"
                             style={{ 
-                              width: `${Math.min(humanBotSettings.current_usage?.usage_percentage || 0, 100)}%` 
+                              width: `${Math.min(Math.round(((stats.total_bets || 0) / (humanBotSettings.current_usage?.max_limit || 100)) * 100), 100)}%` 
                             }}
                           />
                         </div>
