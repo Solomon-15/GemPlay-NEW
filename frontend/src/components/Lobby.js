@@ -49,13 +49,13 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   // Настройки интерфейса для пагинации
   const [interfaceSettings, setInterfaceSettings] = useState({
     live_players: {
-      my_bets: 10,
-      available_bets: 10,
-      ongoing_battles: 10
+      my_bets: 10000,  // Increased from 10 to show all bets
+      available_bets: 10000,  // Increased from 10 to show all bets
+      ongoing_battles: 10000  // Increased from 10 to show all battles
     },
     bot_players: {
-      available_bots: 10,
-      ongoing_bot_battles: 10
+      available_bots: 10000,  // Increased from 10 to show all bots
+      ongoing_bot_battles: 10000  // Increased from 10 to show all bot battles
     }
   });
 
