@@ -240,13 +240,15 @@ const BetsManagement = () => {
   };
 
   const formatTimeAge = (createdAt) => {
-    const now = new Date();
     const created = new Date(createdAt);
-    const diffInSeconds = Math.floor((now - created) / 1000);
+    const diffInSeconds = Math.floor((currentTime - created) / 1000);
     
-    const hours = Math.floor(diffInSeconds / 3600);
-    const minutes = Math.floor((diffInSeconds % 3600) / 60);
-    const seconds = diffInSeconds % 60;
+    // Обеспечиваем, что счетчик начинается с 0 секунд
+    const totalSeconds = Math.max(0, diffInSeconds);
+    
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
     
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
