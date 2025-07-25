@@ -58,14 +58,16 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
         <div className="flex items-center space-x-6">
           <div className="w-20 h-20 bg-gradient-accent rounded-full flex items-center justify-center">
-            <span className="font-russo text-white text-2xl">
-              {user.username.charAt(0).toUpperCase()}
-            </span>
+            <img 
+              src={user.gender === 'female' ? '/Women.svg' : '/Men.svg'} 
+              alt={user.gender === 'female' ? 'Female' : 'Male'}
+              className="w-12 h-12"
+            />
           </div>
           <div className="flex-1">
             <h2 className="font-russo text-2xl text-white mb-2">{user.username}</h2>
             <p className="font-roboto text-text-secondary mb-1">{user.email}</p>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 mb-2">
               <span className={`px-3 py-1 rounded-full text-xs font-rajdhani font-bold ${
                 user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' 
                   ? 'bg-red-600 text-red-100' 
@@ -76,6 +78,16 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
               <span className="px-3 py-1 bg-green-600 text-green-100 rounded-full text-xs font-rajdhani font-bold">
                 {user.status}
               </span>
+            </div>
+            <div 
+              className="font-roboto text-text-secondary text-sm cursor-pointer hover:text-accent-primary transition-colors"
+              onClick={() => {
+                navigator.clipboard.writeText(user.id);
+                alert('User ID copied to clipboard!');
+              }}
+              title="Click to copy User ID"
+            >
+              ID: {user.id}
             </div>
           </div>
         </div>
