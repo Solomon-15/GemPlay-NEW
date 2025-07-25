@@ -379,6 +379,44 @@ const HumanBotsManagement = () => {
     return `${value.toFixed(1)}%`;
   };
 
+  const handleResetTotalGames = async () => {
+    const confirmed = await confirm({
+      title: 'Сброс счетчика всего игр',
+      message: 'Вы уверены, что хотите сбросить счетчик всего игр Human-ботов? Это действие нельзя отменить.',
+      type: 'warning'
+    });
+
+    if (confirmed) {
+      try {
+        await executeOperation('/admin/human-bots/reset-total-games', 'POST');
+        addNotification('Счетчик всего игр успешно сброшен', 'success');
+        await fetchStats();
+      } catch (error) {
+        console.error('Ошибка сброса счетчика всего игр:', error);
+        addNotification(`Ошибка при сбросе счетчика: ${error.message}`, 'error');
+      }
+    }
+  };
+
+  const handleResetPeriodRevenue = async () => {
+    const confirmed = await confirm({
+      title: 'Сброс дохода за период',
+      message: 'Вы уверены, что хотите сбросить доход за период? Это действие нельзя отменить.',
+      type: 'warning'
+    });
+
+    if (confirmed) {
+      try {
+        await executeOperation('/admin/human-bots/reset-period-revenue', 'POST');
+        addNotification('Доход за период успешно сброшен', 'success');
+        await fetchStats();
+      } catch (error) {
+        console.error('Ошибка сброса дохода за период:', error);
+        addNotification(`Ошибка при сбросе дохода: ${error.message}`, 'error');
+      }
+    }
+  };
+
   return (
     <div className="human-bots-management">
       <div className="bots-header">
