@@ -17233,6 +17233,7 @@ async def list_human_bots(
             
             draws = sum(1 for game in completed_games if game.get('winner_id') is None)
             losses = sum(1 for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot["id"])
+            actual_games_played = len(completed_games)  # Only count completed games
             
             response_bot = HumanBotResponse(
                 id=bot["id"],
