@@ -122,7 +122,7 @@ const PlayerCard = ({
           <div className="flex-shrink-0">
             {isBot ? (
               <div className="w-14 h-14 rounded-full bg-blue-700 flex items-center justify-center text-white text-lg">
-                🤖
+                🤖 
               </div>
             ) : (
               <img 
