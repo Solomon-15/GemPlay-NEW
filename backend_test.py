@@ -1567,20 +1567,35 @@ def test_human_bot_bulk_creation_updated_functionality() -> None:
             print_error(f"✗ Only {custom_names_used}/2 custom names used")
             record_test("Human-Bot Bulk Creation - Individual Bot Data", False, f"Names used: {custom_names_used}/2")
         
-        # Verify gender field is saved
-        for bot in created_bots:
-            bot_id = bot["id"]
-            bot_details_response, bot_details_success = make_request(
-                "GET", f"/admin/human-bots/{bot_id}",
-                auth_token=admin_token
-            )
+        # Verify gender field is saved by checking the main list
+        all_bots_response, all_bots_success = make_request(
+            "GET", "/admin/human-bots?page=1&limit=50",
+            auth_token=admin_token
+        )
+        
+        if all_bots_success and "bots" in all_bots_response:
+            all_bots = all_bots_response["bots"]
             
-            if bot_details_success:
-                gender = bot_details_response.get("gender", "unknown")
-                if gender in ["male", "female"]:
-                    print_success(f"✓ Bot {bot['name']} has correct gender: {gender}")
+            # Find our created bots by name
+            for bot in created_bots:
+                bot_name = bot["name"]
+                found_bot = None
+                
+                for listed_bot in all_bots:
+                    if listed_bot["name"] == bot_name:
+                        found_bot = listed_bot
+                        break
+                
+                if found_bot:
+                    gender = found_bot.get("gender", "unknown")
+                    if gender in ["male", "female"]:
+                        print_success(f"✓ Bot {bot_name} has correct gender: {gender}")
+                    else:
+                        print_error(f"✗ Bot {bot_name} has incorrect gender: {gender}")
                 else:
-                    print_error(f"✗ Bot {bot['name']} has incorrect gender: {gender}")
+                    print_error(f"✗ Bot {bot_name} not found in list")
+        else:
+            print_error("✗ Failed to get bot list for gender verification")
     else:
         print_error("✗ Individual bot data test failed")
         record_test("Human-Bot Bulk Creation - Individual Bot Data", False, "Request failed")
