@@ -93,9 +93,16 @@ const LoginForm = ({ onLogin }) => {
   return (
     <div className="min-h-screen bg-gradient-primary flex items-center justify-center p-8">
       <div className="bg-surface-card border border-border-primary rounded-xl p-8 max-w-md w-full">
-        <h1 className="font-russo text-3xl text-accent-primary text-center mb-2">
-          GemPlay
-        </h1>
+        <div className="flex flex-col items-center mb-2">
+          <img 
+            src="/gems/gem-green.svg" 
+            alt="GemPlay Logo" 
+            className="w-16 h-16 mb-4"
+          />
+          <h1 className="font-russo text-3xl text-accent-primary text-center">
+            GemPlay
+          </h1>
+        </div>
         <p className="font-roboto text-text-secondary text-center mb-6">
           PvP NFT Gem Battle Game
         </p>
