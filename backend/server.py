@@ -5927,6 +5927,9 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 )
                 await db.transactions.insert_one(transaction.dict())
         
+        # Update independent counters for Human-bot games
+        await update_independent_counters(game, winner_id, commission_amount)
+        
         # Автоматическое создание новой ставки для бота при принятии существующей
         # await maintain_bot_active_bets(game)  # УДАЛЕНО - заменено на новую систему
         
@@ -5937,6 +5940,51 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
     except Exception as e:
         logger.error(f"Error distributing game rewards: {e}")
         raise
+
+async def update_independent_counters(game: Game, winner_id: str, commission_amount: float):
+    """Update independent counters for Human-bot statistics."""
+    try:
+        # Check if any Human-bot is involved in this game
+        creator_is_human_bot = await is_human_bot_user(game.creator_id)
+        opponent_is_human_bot = await is_human_bot_user(game.opponent_id)
+        
+        if creator_is_human_bot or opponent_is_human_bot:
+            # Update total games counter
+            await db.human_bot_counters.update_one(
+                {"type": "global"},
+                {
+                    "$inc": {"total_games_played": 1},
+                    "$set": {"updated_at": datetime.utcnow()}
+                },
+                upsert=True
+            )
+            
+            # Update period revenue counter if there was commission
+            if commission_amount > 0:
+                # For Human-bot games, we charge commission from both winner and loser
+                total_commission = commission_amount
+                
+                # If both players are Human-bots, double the commission
+                if creator_is_human_bot and opponent_is_human_bot:
+                    total_commission *= 2
+                elif winner_id:  # Not a draw
+                    # One Human-bot, one regular player - commission from both
+                    total_commission *= 2
+                
+                await db.human_bot_counters.update_one(
+                    {"type": "global"},
+                    {
+                        "$inc": {"period_revenue": total_commission},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    },
+                    upsert=True
+                )
+                
+        logger.info(f"Updated independent counters for game {game.id}")
+        
+    except Exception as e:
+        logger.error(f"Error updating independent counters: {e}")
+        # Don't raise - this is a non-critical operation
 
 # ==============================================================================
 # НОВАЯ СИСТЕМА ОБЫЧНЫХ БОТОВ
