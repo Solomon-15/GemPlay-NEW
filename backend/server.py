@@ -17414,6 +17414,7 @@ async def list_human_bots(
                 id=bot["id"],
                 name=bot["name"],
                 character=bot["character"],
+                gender=bot.get("gender", "male"),  # Default to male if missing
                 is_active=bot["is_active"],
                 min_bet=bot["min_bet"],
                 max_bet=bot["max_bet"],
