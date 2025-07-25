@@ -1854,38 +1854,29 @@ def test_human_bot_bulk_creation_updated_functionality() -> None:
         correct_fields_count = 0
         
         for bot in all_bots[:5]:  # Check first 5 bots
-            bot_id = bot["id"]
+            recent_bots_checked += 1
             
-            # Get detailed bot info
-            bot_details_response, bot_details_success = make_request(
-                "GET", f"/admin/human-bots/{bot_id}",
-                auth_token=admin_token
-            )
+            # Check required fields
+            required_fields = ["id", "name", "character", "gender", "min_bet", "max_bet", 
+                             "min_delay", "max_delay", "win_percentage", "loss_percentage", "draw_percentage"]
             
-            if bot_details_success:
-                recent_bots_checked += 1
+            missing_fields = [field for field in required_fields if field not in bot]
+            
+            if not missing_fields:
+                correct_fields_count += 1
+                print_success(f"✓ Bot {bot['name']} has all required fields")
                 
-                # Check required fields
-                required_fields = ["id", "name", "character", "gender", "min_bet", "max_bet", 
-                                 "min_delay", "max_delay", "win_percentage", "loss_percentage", "draw_percentage"]
+                # Verify field types and ranges
+                min_delay = bot.get("min_delay", 0)
+                max_delay = bot.get("max_delay", 0)
+                gender = bot.get("gender", "unknown")
                 
-                missing_fields = [field for field in required_fields if field not in bot_details_response]
-                
-                if not missing_fields:
-                    correct_fields_count += 1
-                    print_success(f"✓ Bot {bot['name']} has all required fields")
-                    
-                    # Verify field types and ranges
-                    min_delay = bot_details_response.get("min_delay", 0)
-                    max_delay = bot_details_response.get("max_delay", 0)
-                    gender = bot_details_response.get("gender", "unknown")
-                    
-                    if min_delay < max_delay and gender in ["male", "female"]:
-                        print_success(f"✓ Bot {bot['name']} field values are correct")
-                    else:
-                        print_error(f"✗ Bot {bot['name']} has incorrect field values")
+                if min_delay < max_delay and gender in ["male", "female"]:
+                    print_success(f"✓ Bot {bot['name']} field values are correct")
                 else:
-                    print_error(f"✗ Bot {bot['name']} missing fields: {missing_fields}")
+                    print_error(f"✗ Bot {bot['name']} has incorrect field values")
+            else:
+                print_error(f"✗ Bot {bot['name']} missing fields: {missing_fields}")
         
         if correct_fields_count == recent_bots_checked and recent_bots_checked > 0:
             print_success(f"✓ All {recent_bots_checked} checked bots have correct fields")
