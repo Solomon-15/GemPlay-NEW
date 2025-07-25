@@ -8377,7 +8377,6 @@ async def get_games_stats(current_user: User = Depends(get_current_admin)):
             "active": active_games,
             "waiting": waiting_games,
             "completed": completed_games,
-            "today": games_today
         }
         
     except Exception as e:
@@ -8385,6 +8384,69 @@ async def get_games_stats(current_user: User = Depends(get_current_admin)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch games stats"
+        )
+
+@api_router.get("/admin/games", response_model=dict)
+async def get_games_list(
+    page: int = 1,
+    limit: int = 50,
+    human_bot_only: Optional[bool] = None,
+    regular_bot_only: Optional[bool] = None,
+    status: Optional[str] = None,
+    current_user: User = Depends(get_current_admin)
+):
+    """Get games list with pagination and filtering."""
+    try:
+        # Validate pagination parameters
+        if page < 1:
+            page = 1
+        if limit < 1 or limit > 1000:
+            limit = 50
+        
+        # Calculate offset
+        offset = (page - 1) * limit
+        
+        # Build query
+        query = {}
+        
+        # Filter by status if provided
+        if status:
+            query["status"] = status
+        
+        # Filter by bot type if provided
+        if human_bot_only:
+            # Get all human bot IDs
+            human_bots = await db.human_bots.find({}).to_list(None)
+            human_bot_ids = [bot["id"] for bot in human_bots]
+            query["creator_id"] = {"$in": human_bot_ids}
+        elif regular_bot_only:
+            # Get all regular bot IDs
+            regular_bots = await db.bots.find({"bot_type": "REGULAR"}).to_list(None)
+            regular_bot_ids = [bot["id"] for bot in regular_bots]
+            query["creator_id"] = {"$in": regular_bot_ids}
+        
+        # Get total count
+        total_count = await db.games.count_documents(query)
+        
+        # Get games with pagination and sorting
+        games = await db.games.find(query).sort("created_at", -1).skip(offset).limit(limit).to_list(limit)
+        
+        # Calculate total pages
+        total_pages = (total_count + limit - 1) // limit
+        
+        return {
+            "games": games,
+            "total": total_count,
+            "page": page,
+            "limit": limit,
+            "total_pages": total_pages
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching games list: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch games list"
         )
 
 GEM_PRICES = {
