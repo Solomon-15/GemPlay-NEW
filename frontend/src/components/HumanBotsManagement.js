@@ -469,12 +469,34 @@ const HumanBotsManagement = () => {
                   <div className="stat-value">{stats.active_games || 0}</div>
                 </div>
                 <div className="stat-card">
-                  <h3>Всего Игр</h3>
-                  <div className="stat-value">{stats.total_games_24h || 0}</div>
+                  <div className="flex justify-between items-center">
+                    <h3>Всего Игр</h3>
+                    <button
+                      onClick={() => handleResetTotalGames()}
+                      className="p-1 bg-red-600 text-white rounded hover:bg-red-700"
+                      title="Сбросить счетчик всего игр"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="stat-value">{stats.total_games_played || 0}</div>
                 </div>
                 <div className="stat-card">
-                  <h3>Доход за Период</h3>
-                  <div className="stat-value">{formatCurrency(stats.total_revenue_24h || 0)}</div>
+                  <div className="flex justify-between items-center">
+                    <h3>Доход за Период</h3>
+                    <button
+                      onClick={() => handleResetPeriodRevenue()}
+                      className="p-1 bg-red-600 text-white rounded hover:bg-red-700"
+                      title="Сбросить доход за период"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="stat-value">{formatCurrency(stats.period_revenue || 0)}</div>
                 </div>
               </div>
 
