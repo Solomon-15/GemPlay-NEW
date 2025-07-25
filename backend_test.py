@@ -1406,6 +1406,316 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_list_error_fix() -> None:
+    """Test that the 'Failed to list human bots' error is fixed as requested in the review:
+    
+    1. Login as admin@gemplay.com / Admin123!
+    2. Test GET /admin/human-bots endpoint
+    3. Check that response is correct without errors
+    4. Verify gender field is present and has correct values
+    5. Test pagination with GET /admin/human-bots?page=1&limit=10
+    6. Check all fields are present in response
+    7. Verify gender field has "male" or "female" values
+    8. Test GET /admin/human-bots/stats endpoint
+    """
+    print_header("HUMAN-BOT LIST ERROR FIX TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with human-bot list test")
+        record_test("Human-Bot List Fix - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("✅ Admin logged in successfully as admin@gemplay.com")
+    
+    # Step 2: Test GET /admin/human-bots endpoint
+    print_subheader("Step 2: Test GET /admin/human-bots Endpoint")
+    
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots",
+        auth_token=admin_token
+    )
+    
+    if not human_bots_success:
+        print_error("❌ Failed to get human-bots list - ERROR NOT FIXED")
+        print_error(f"Response: {human_bots_response}")
+        record_test("Human-Bot List Fix - Basic Endpoint", False, "Endpoint failed")
+        return
+    
+    print_success("✅ GET /admin/human-bots endpoint accessible without errors")
+    
+    # Check response structure
+    if "bots" not in human_bots_response:
+        print_error("❌ Response missing 'bots' field")
+        record_test("Human-Bot List Fix - Response Structure", False, "Missing bots field")
+        return
+    
+    bots_list = human_bots_response["bots"]
+    print_success(f"✅ Found {len(bots_list)} human-bots in response")
+    
+    if len(bots_list) == 0:
+        print_warning("⚠️ No human-bots found - creating test bot for verification")
+        
+        # Create a test human-bot
+        test_bot_data = {
+            "name": f"TestBot_ListFix_{int(time.time())}",
+            "character": "BALANCED",
+            "min_bet": 5.0,
+            "max_bet": 50.0,
+            "bet_limit": 12,
+            "win_percentage": 40.0,
+            "loss_percentage": 40.0,
+            "draw_percentage": 20.0,
+            "min_delay": 30,
+            "max_delay": 90,
+            "use_commit_reveal": True,
+            "logging_level": "INFO"
+        }
+        
+        create_response, create_success = make_request(
+            "POST", "/admin/human-bots",
+            data=test_bot_data,
+            auth_token=admin_token
+        )
+        
+        if create_success:
+            print_success("✅ Test human-bot created successfully")
+            
+            # Re-fetch the list
+            human_bots_response, human_bots_success = make_request(
+                "GET", "/admin/human-bots",
+                auth_token=admin_token
+            )
+            
+            if human_bots_success:
+                bots_list = human_bots_response["bots"]
+                print_success(f"✅ Updated list now has {len(bots_list)} human-bots")
+            else:
+                print_error("❌ Failed to re-fetch human-bots after creation")
+                record_test("Human-Bot List Fix - Basic Endpoint", False, "Re-fetch failed")
+                return
+        else:
+            print_error("❌ Failed to create test human-bot")
+            record_test("Human-Bot List Fix - Basic Endpoint", False, "Test bot creation failed")
+            return
+    
+    record_test("Human-Bot List Fix - Basic Endpoint", True)
+    
+    # Step 3: Verify gender field is present and has correct values
+    print_subheader("Step 3: Verify Gender Field")
+    
+    gender_field_present = True
+    gender_values_correct = True
+    gender_stats = {"male": 0, "female": 0, "other": 0, "missing": 0}
+    
+    for i, bot in enumerate(bots_list):
+        bot_name = bot.get("name", f"Bot_{i}")
+        
+        if "gender" not in bot:
+            print_error(f"❌ Bot '{bot_name}' missing gender field")
+            gender_field_present = False
+            gender_stats["missing"] += 1
+        else:
+            gender = bot["gender"]
+            if gender in ["male", "female"]:
+                gender_stats[gender] += 1
+                print_success(f"✅ Bot '{bot_name}': gender = '{gender}' (valid)")
+            else:
+                print_error(f"❌ Bot '{bot_name}': gender = '{gender}' (invalid - should be 'male' or 'female')")
+                gender_values_correct = False
+                gender_stats["other"] += 1
+    
+    print_success(f"Gender field statistics:")
+    print_success(f"  Male: {gender_stats['male']}")
+    print_success(f"  Female: {gender_stats['female']}")
+    print_success(f"  Other/Invalid: {gender_stats['other']}")
+    print_success(f"  Missing: {gender_stats['missing']}")
+    
+    if gender_field_present and gender_values_correct:
+        print_success("✅ All bots have gender field with correct values ('male' or 'female')")
+        record_test("Human-Bot List Fix - Gender Field", True)
+    else:
+        print_error("❌ Gender field issues detected")
+        record_test("Human-Bot List Fix - Gender Field", False, f"Missing: {gender_stats['missing']}, Invalid: {gender_stats['other']}")
+    
+    # Step 4: Test pagination with GET /admin/human-bots?page=1&limit=10
+    print_subheader("Step 4: Test Pagination")
+    
+    paginated_response, paginated_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if not paginated_success:
+        print_error("❌ Pagination request failed")
+        record_test("Human-Bot List Fix - Pagination", False, "Pagination failed")
+    else:
+        print_success("✅ Pagination request successful")
+        
+        # Check pagination structure
+        if "pagination" in paginated_response:
+            pagination = paginated_response["pagination"]
+            required_pagination_fields = ["current_page", "total_pages", "per_page", "total_items", "has_next", "has_prev"]
+            missing_pagination_fields = [field for field in required_pagination_fields if field not in pagination]
+            
+            if not missing_pagination_fields:
+                print_success("✅ Pagination structure complete")
+                print_success(f"  Current page: {pagination['current_page']}")
+                print_success(f"  Total pages: {pagination['total_pages']}")
+                print_success(f"  Per page: {pagination['per_page']}")
+                print_success(f"  Total items: {pagination['total_items']}")
+                print_success(f"  Has next: {pagination['has_next']}")
+                print_success(f"  Has prev: {pagination['has_prev']}")
+                record_test("Human-Bot List Fix - Pagination", True)
+            else:
+                print_error(f"❌ Pagination missing fields: {missing_pagination_fields}")
+                record_test("Human-Bot List Fix - Pagination", False, f"Missing fields: {missing_pagination_fields}")
+        else:
+            print_error("❌ Response missing pagination field")
+            record_test("Human-Bot List Fix - Pagination", False, "Missing pagination field")
+    
+    # Step 5: Check all required fields are present in response
+    print_subheader("Step 5: Verify All Required Fields")
+    
+    required_bot_fields = [
+        "id", "name", "character", "gender", "is_active", "min_bet", "max_bet", 
+        "bet_limit", "win_percentage", "loss_percentage", "draw_percentage",
+        "min_delay", "max_delay", "total_games_played", "total_games_won",
+        "total_amount_wagered", "total_amount_won", "created_at", "updated_at"
+    ]
+    
+    all_fields_present = True
+    field_stats = {field: 0 for field in required_bot_fields}
+    
+    for i, bot in enumerate(bots_list):
+        bot_name = bot.get("name", f"Bot_{i}")
+        missing_fields = []
+        
+        for field in required_bot_fields:
+            if field in bot:
+                field_stats[field] += 1
+            else:
+                missing_fields.append(field)
+                all_fields_present = False
+        
+        if missing_fields:
+            print_error(f"❌ Bot '{bot_name}' missing fields: {missing_fields}")
+        else:
+            print_success(f"✅ Bot '{bot_name}' has all required fields")
+    
+    print_success(f"Field presence statistics (out of {len(bots_list)} bots):")
+    for field, count in field_stats.items():
+        status = "✅" if count == len(bots_list) else "❌"
+        print_success(f"  {field}: {count}/{len(bots_list)} {status}")
+    
+    if all_fields_present:
+        print_success("✅ All bots have all required fields")
+        record_test("Human-Bot List Fix - Required Fields", True)
+    else:
+        print_error("❌ Some bots missing required fields")
+        record_test("Human-Bot List Fix - Required Fields", False, "Missing fields detected")
+    
+    # Step 6: Test GET /admin/human-bots/stats endpoint
+    print_subheader("Step 6: Test Human-Bot Statistics Endpoint")
+    
+    stats_response, stats_success = make_request(
+        "GET", "/admin/human-bots/stats",
+        auth_token=admin_token
+    )
+    
+    if not stats_success:
+        print_error("❌ Human-bot stats endpoint failed")
+        record_test("Human-Bot List Fix - Stats Endpoint", False, "Stats endpoint failed")
+    else:
+        print_success("✅ Human-bot stats endpoint accessible")
+        
+        # Check stats structure
+        required_stats_fields = ["total_bots", "active_bots", "total_bets", "total_games_played"]
+        missing_stats_fields = [field for field in required_stats_fields if field not in stats_response]
+        
+        if not missing_stats_fields:
+            print_success("✅ Stats response has all required fields")
+            print_success(f"  Total bots: {stats_response['total_bots']}")
+            print_success(f"  Active bots: {stats_response['active_bots']}")
+            print_success(f"  Total bets: {stats_response['total_bets']}")
+            print_success(f"  Total games played: {stats_response['total_games_played']}")
+            record_test("Human-Bot List Fix - Stats Endpoint", True)
+        else:
+            print_error(f"❌ Stats response missing fields: {missing_stats_fields}")
+            record_test("Human-Bot List Fix - Stats Endpoint", False, f"Missing fields: {missing_stats_fields}")
+    
+    # Step 7: Test error handling and serialization
+    print_subheader("Step 7: Test Error Handling and Serialization")
+    
+    # Test with invalid parameters
+    invalid_params_response, invalid_params_success = make_request(
+        "GET", "/admin/human-bots?page=0&limit=1000",  # Invalid page and limit
+        auth_token=admin_token,
+        expected_status=422  # Validation error expected
+    )
+    
+    if not invalid_params_success:
+        print_success("✅ Invalid parameters correctly rejected")
+        record_test("Human-Bot List Fix - Error Handling", True)
+    else:
+        print_warning("⚠️ Invalid parameters accepted (might be handled gracefully)")
+        record_test("Human-Bot List Fix - Error Handling", False, "Invalid params accepted")
+    
+    # Step 8: Verify no ObjectId serialization errors
+    print_subheader("Step 8: Verify No ObjectId Serialization Errors")
+    
+    serialization_errors = False
+    
+    # Check if any field contains ObjectId-like strings that weren't converted
+    for bot in bots_list:
+        for field_name, field_value in bot.items():
+            if isinstance(field_value, str) and field_value.startswith("ObjectId("):
+                print_error(f"❌ ObjectId serialization error in bot '{bot.get('name')}', field '{field_name}': {field_value}")
+                serialization_errors = True
+    
+    if not serialization_errors:
+        print_success("✅ No ObjectId serialization errors detected")
+        record_test("Human-Bot List Fix - Serialization", True)
+    else:
+        print_error("❌ ObjectId serialization errors found")
+        record_test("Human-Bot List Fix - Serialization", False, "ObjectId errors found")
+    
+    # Final Summary
+    print_subheader("Human-Bot List Error Fix Test Summary")
+    
+    all_tests_passed = all([
+        human_bots_success,
+        gender_field_present and gender_values_correct,
+        paginated_success,
+        all_fields_present,
+        stats_success,
+        not serialization_errors
+    ])
+    
+    if all_tests_passed:
+        print_success("🎉 HUMAN-BOT LIST ERROR FIX VERIFICATION: SUCCESS")
+        print_success("✅ 'Failed to list human bots' error has been FIXED")
+        print_success("✅ GET /admin/human-bots endpoint works correctly")
+        print_success("✅ Gender field is present with correct values")
+        print_success("✅ Pagination works correctly")
+        print_success("✅ All required fields are present")
+        print_success("✅ Statistics endpoint works correctly")
+        print_success("✅ No ObjectId serialization errors")
+        print_success("✅ Error is RESOLVED and ready for production")
+        
+        record_test("Human-Bot List Fix - Overall Success", True)
+    else:
+        print_error("❌ HUMAN-BOT LIST ERROR FIX VERIFICATION: ISSUES FOUND")
+        print_error("❌ Some issues still exist with the human-bots list functionality")
+        print_error("❌ Additional fixes may be required")
+        
+        record_test("Human-Bot List Fix - Overall Success", False, "Issues still exist")
+    
+    print_success("Human-bot list error fix testing completed")
+
 def test_human_bot_bulk_creation_updated_functionality() -> None:
     """Test the updated Human-bot bulk creation functionality as requested in the review:
     
