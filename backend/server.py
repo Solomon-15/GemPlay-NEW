@@ -18896,6 +18896,65 @@ async def recalculate_human_bot_bets(
             detail="Ошибка пересчета ставок Human-бота"
         )
 
+@api_router.post("/admin/human-bots/{bot_id}/reset-stats")
+async def reset_human_bot_stats(
+    bot_id: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Reset all statistics for a specific Human-bot."""
+    try:
+        # Check if bot exists
+        bot = await db.human_bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(status_code=404, detail="Human-bot not found")
+        
+        bot_name = bot.get("name", f"Bot-{bot_id[:8]}")
+        
+        # Reset all statistics to zero
+        await db.human_bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "total_games_played": 0,
+                    "total_games_won": 0,
+                    "total_amount_wagered": 0.0,
+                    "total_amount_won": 0.0,
+                    "total_commission_paid": 0.0,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="RESET_HUMAN_BOT_STATS",
+            target_type="human_bot",
+            target_id=bot_id,
+            details={
+                "name": bot_name
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Reset statistics for Human-bot {bot_id}")
+        
+        return {
+            "success": True,
+            "message": f"Statistics reset for Human-bot {bot_name}",
+            "bot_id": bot_id,
+            "bot_name": bot_name
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting Human-bot stats: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to reset Human-bot statistics"
+        )
+
 @api_router.get("/admin/human-bots-total-commission", response_model=dict)
 async def get_human_bots_total_commission(
     page: int = Query(1, ge=1),
