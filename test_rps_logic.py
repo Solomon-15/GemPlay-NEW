@@ -166,7 +166,7 @@ def test_login(email: str, password: str, user_type: str = "user") -> Optional[s
     print_subheader(f"Testing {user_type.title()} Login")
     
     response, success = make_request("POST", "/auth/login", data={
-        "username": email,  # FastAPI OAuth2PasswordRequestForm uses 'username' field
+        "email": email,  # Use email field for login
         "password": password
     })
     
