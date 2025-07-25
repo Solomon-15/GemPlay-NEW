@@ -186,6 +186,7 @@ class GameStatus(str, Enum):
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
     TIMEOUT = "TIMEOUT"  # Игра завершена по таймауту
+    FROZEN = "FROZEN"  # Игра заморожена (бот деактивирован)
 
 class GameMove(str, Enum):
     ROCK = "rock"
