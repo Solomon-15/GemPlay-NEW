@@ -18207,26 +18207,63 @@ async def get_human_bot_active_bets(
         # Format active bets for display
         formatted_bets = []
         for game in active_bets_list:
-            # Get opponent info
-            opponent_id = game.get('opponent_id', '')
+            # Determine opponent info based on bot's role
+            is_creator = game.get('creator_id') == bot_id
+            
+            if is_creator:
+                # Бот является создателем игры
+                opponent_id = game.get('opponent_id', '')
+                bot_gem = game.get("creator_gem", "")
+                opponent_gem = game.get("opponent_gem", "")
+            else:
+                # Бот является оппонентом
+                opponent_id = game.get('creator_id', '')
+                bot_gem = game.get("opponent_gem", "")
+                opponent_gem = game.get("creator_gem", "")
+            
+            # Get opponent name
             opponent_name = '—'
             if opponent_id:
-                opponent = await db.users.find_one({"id": opponent_id})
+                # First check if opponent is a Human-bot
+                opponent = await db.human_bots.find_one({"id": opponent_id})
                 if opponent:
-                    opponent_name = opponent.get('username', opponent.get('email', opponent_id))
+                    opponent_name = opponent.get('name', opponent_id)
+                else:
+                    # Check regular users
+                    opponent = await db.users.find_one({"id": opponent_id})
+                    if opponent:
+                        opponent_name = opponent.get('username', opponent.get('email', opponent_id))
+            
+            # Determine game result from bot's perspective
+            result = ""
+            if game.get("status") == "COMPLETED":
+                winner_id = game.get('winner_id')
+                if winner_id == bot_id:
+                    result = "Победа"
+                elif winner_id and winner_id != bot_id:
+                    result = "Поражение"
+                else:
+                    result = "Ничья"
             
             formatted_bets.append({
                 "id": game.get("id", ""),
                 "created_at": game.get("created_at").isoformat() if game.get("created_at") else "",
                 "bet_amount": game.get("bet_amount", 0),
                 "total_bet_amount": game.get("bet_amount", 0),
-                "creator_gem": game.get("creator_gem", ""),
-                "selected_gem": game.get("creator_gem", ""),
+                "creator_gem": bot_gem,  # Гем бота
+                "selected_gem": bot_gem,  # Для совместимости
+                "opponent_gem": opponent_gem,  # Гем оппонента
                 "status": game.get("status", ""),
                 "opponent_id": opponent_id,
                 "opponent_name": opponent_name,
                 "winner_id": game.get("winner_id", ""),
-                "result": game.get("result", "")
+                "result": result,
+                "is_creator": is_creator,  # Добавляем флаг для отладки
+                # Добавляем информацию о ходах для завершенных игр
+                "creator_move": game.get("creator_move", ""),
+                "opponent_move": game.get("opponent_move", ""),
+                "bot_move": game.get("creator_move" if is_creator else "opponent_move", ""),
+                "opponent_move_actual": game.get("opponent_move" if is_creator else "creator_move", "")
             })
         
         return {
