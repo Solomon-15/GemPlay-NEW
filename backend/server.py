@@ -8474,7 +8474,7 @@ async def get_active_bot_games(current_user: User = Depends(get_current_user)):
         bot_games = await db.games.find({
             "creator_id": {"$in": bot_ids},
             "status": "WAITING"
-        }).sort("created_at", -1).to_list(max_bots_limit)
+        }).sort("created_at", -1).to_list(None)  # Removed limit to show all bot games
         
         result = []
         for game in bot_games:
