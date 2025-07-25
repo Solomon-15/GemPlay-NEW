@@ -12590,11 +12590,11 @@ def print_summary() -> None:
         print_error("❌ TESTING COMPLETED WITH FAILURES")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - FRACTIONAL GEM AMOUNTS RESET")
+    print_header("GEMPLAY BACKEND API TESTING - NEW ANALYTICS ENDPOINTS")
     
     try:
         # Run the specific test requested in the review
-        test_fractional_gem_amounts_reset()
+        test_new_analytics_endpoints()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
@@ -12603,5 +12603,4 @@ if __name__ == "__main__":
         import traceback
         traceback.print_exc()
     finally:
-        print_summary()
         print_summary()
