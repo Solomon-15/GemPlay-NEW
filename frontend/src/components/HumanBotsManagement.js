@@ -1448,6 +1448,57 @@ const HumanBotsManagement = () => {
                 </div>
               </div>
 
+              {/* Настройки задержки */}
+              <div className="form-section">
+                <div className="section-header">
+                  <svg className="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h4>Настройки задержки</h4>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>
+                      <svg className="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+                      </svg>
+                      Мин. задержка (сек)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="3600"
+                      value={bulkCreateData.min_delay || 30}
+                      onChange={(e) => setBulkCreateData({...bulkCreateData, min_delay: parseInt(e.target.value)})}
+                      placeholder="30"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>
+                      <svg className="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                      </svg>
+                      Макс. задержка (сек)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="3600"
+                      value={bulkCreateData.max_delay || 120}
+                      onChange={(e) => setBulkCreateData({...bulkCreateData, max_delay: parseInt(e.target.value)})}
+                      placeholder="120"
+                    />
+                  </div>
+                </div>
+                <div className="form-help-block">
+                  <svg className="help-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Задержка между действиями Human-ботов (от 1 секунды до 1 часа)
+                </div>
+              </div>
+
               {/* Предпросмотр */}
               <div className="form-section">
                 <div className="section-header">
