@@ -383,6 +383,59 @@ const HumanBotsManagement = () => {
     return `${value.toFixed(1)}%`;
   };
 
+  // Функция для генерации случайных имен
+  const generateRandomName = () => {
+    const maleNames = ['Александр', 'Дмитрий', 'Максим', 'Андрей', 'Сергей', 'Алексей', 'Владимир', 'Павел', 'Роман', 'Артем'];
+    const femaleNames = ['Анна', 'Мария', 'Елена', 'Наталья', 'Ольга', 'Татьяна', 'Ирина', 'Светлана', 'Екатерина', 'Виктория'];
+    const surnames = ['Иванов', 'Петров', 'Сидоров', 'Смирнов', 'Кузнецов', 'Попов', 'Васильев', 'Соколов', 'Михайлов', 'Новиков'];
+    
+    const gender = Math.random() > 0.5 ? 'male' : 'female';
+    const firstName = gender === 'male' ? 
+      maleNames[Math.floor(Math.random() * maleNames.length)] : 
+      femaleNames[Math.floor(Math.random() * femaleNames.length)];
+    const surname = surnames[Math.floor(Math.random() * surnames.length)];
+    
+    return { 
+      name: `${firstName} ${surname}`, 
+      gender 
+    };
+  };
+
+  // Функция для инициализации данных ботов
+  const initializeBots = (count) => {
+    const bots = [];
+    for (let i = 0; i < count; i++) {
+      const randomBot = generateRandomName();
+      bots.push({
+        id: i,
+        name: randomBot.name,
+        gender: randomBot.gender
+      });
+    }
+    return bots;
+  };
+
+  // Обновляем количество ботов и инициализируем их данные
+  const updateBotCount = (count) => {
+    const bots = initializeBots(count);
+    setBulkCreateData({
+      ...bulkCreateData,
+      count: count,
+      bots: bots
+    });
+  };
+
+  // Обновляем данные конкретного бота
+  const updateBotData = (botId, field, value) => {
+    const updatedBots = bulkCreateData.bots.map(bot => 
+      bot.id === botId ? { ...bot, [field]: value } : bot
+    );
+    setBulkCreateData({
+      ...bulkCreateData,
+      bots: updatedBots
+    });
+  };
+
   const handleResetTotalGames = async () => {
     const confirmed = await confirm({
       title: 'Сброс счетчика всего игр',
