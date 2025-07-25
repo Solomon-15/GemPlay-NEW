@@ -14094,7 +14094,7 @@ async def create_individual_bot(
             detail="Failed to create individual bot"
         )
 
-@api_router.get("/admin/bots", response_model=dict)
+@api_router.get("/admin/bots")
 async def get_regular_bots_simple(
     page: int = 1,
     limit: int = 100,
