@@ -675,7 +675,7 @@ const BetsManagement = () => {
                 </div>
                 <div>
                   <label className="text-text-secondary text-sm">Возраст:</label>
-                  <div className="text-white">{selectedBet.age_hours} часов</div>
+                  <div className="text-white">{formatTimeAge(selectedBet.created_at)}</div>
                 </div>
               </div>
 
