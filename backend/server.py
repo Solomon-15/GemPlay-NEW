@@ -10130,7 +10130,7 @@ async def bot_automation_task():
     while True:
         try:
             # Get active bots
-            active_bots = await db.bots.find({"is_active": True}).to_list(100)
+            active_bots = await db.bots.find({"is_active": True}).to_list(None)  # Removed limit to get all active bots
             
             for bot in active_bots:
                 bot_obj = Bot(**bot)
