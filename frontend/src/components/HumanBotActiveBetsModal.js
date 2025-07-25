@@ -372,7 +372,30 @@ const HumanBotActiveBetsModal = ({
                           </td>
                           <td className="px-4 py-3">
                             <div className="text-sm font-roboto text-white">
-                              {bet.creator_gem || bet.selected_gem || '—'}
+                              {bet.status === 'COMPLETED' ? (
+                                <div className="space-y-1">
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-accent-primary font-bold">Бот:</span>
+                                    <span className="text-white">
+                                      {bet.creator_id === bot.id ? 
+                                        (bet.creator_move ? getMoveIcon(bet.creator_move) : '—') : 
+                                        (bet.opponent_move ? getMoveIcon(bet.opponent_move) : '—')
+                                      }
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-orange-400 font-bold">Соперник:</span>
+                                    <span className="text-white">
+                                      {bet.creator_id === bot.id ? 
+                                        (bet.opponent_move ? getMoveIcon(bet.opponent_move) : '—') : 
+                                        (bet.creator_move ? getMoveIcon(bet.creator_move) : '—')
+                                      }
+                                    </span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-text-secondary">—</span>
+                              )}
                             </div>
                           </td>
                           <td className="px-4 py-3">
