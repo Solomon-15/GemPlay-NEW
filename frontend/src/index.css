@@ -188,6 +188,48 @@ button {
   font-size: 0.9rem;
 }
 
+/* Стилизованные кнопки для Human-ботов */
+.styled-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  font-family: 'Rajdhani', sans-serif;
+  text-decoration: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.styled-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.styled-btn:active {
+  transform: translateY(0);
+}
+
+.styled-btn:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.styled-btn:hover:before {
+  left: 100%;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, #4A90E2, #357ABD);
   color: white;
