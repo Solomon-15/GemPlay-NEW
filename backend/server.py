@@ -17235,6 +17235,17 @@ async def list_human_bots(
             losses = sum(1 for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot["id"])
             actual_games_played = len(completed_games)  # Only count completed games
             
+            # Calculate correct profit: (sum of bets in won games) - (sum of bets in lost games)
+            won_games = [game for game in completed_games if game.get('winner_id') == bot["id"]]
+            lost_games = [game for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot["id"]]
+            
+            # Calculate total bet amounts for won and lost games
+            total_bet_amount_won = sum(game.get('bet_amount', 0.0) for game in won_games)
+            total_bet_amount_lost = sum(game.get('bet_amount', 0.0) for game in lost_games)
+            
+            # Correct profit calculation
+            correct_profit = total_bet_amount_won - total_bet_amount_lost
+            
             response_bot = HumanBotResponse(
                 id=bot["id"],
                 name=bot["name"],
