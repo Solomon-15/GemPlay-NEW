@@ -18191,9 +18191,12 @@ async def get_human_bot_active_bets(
         total_active_bets = len(active_bets_list)
         total_bet_amount = sum(game.get('bet_amount', 0) for game in active_bets_list)
         
-        # Get win/loss statistics from all completed games
+        # Get win/loss statistics from all completed games where bot participated
         completed_games_cursor = db.games.find({
-            "creator_id": bot_id,
+            "$or": [
+                {"creator_id": bot_id},  # Бот является создателем
+                {"opponent_id": bot_id}  # Бот является оппонентом
+            ],
             "status": "COMPLETED"
         })
         completed_games_list = await completed_games_cursor.to_list(None)
