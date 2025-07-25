@@ -2793,7 +2793,7 @@ async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
         
         # Execute query
         games_cursor = db.games.find({"$or": query_conditions})
-        available_games = await games_cursor.to_list(50)  # Limit to 50 games
+        available_games = await games_cursor.to_list(None)  # Removed limit to show all available games
         
         # Filter by bot constraints if any (currently none per requirements)
         available_bets = available_games
