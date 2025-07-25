@@ -128,7 +128,7 @@ const PlayerCard = ({
               <img 
                 src={getAvatarIcon()} 
                 alt="Player Avatar" 
-                className="w-10 h-14 rounded-full bg-surface-sidebar p-1"
+                className="w-10 h-10 rounded-full bg-surface-sidebar p-1"
               />
             )}
           </div>
