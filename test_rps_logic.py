@@ -337,8 +337,8 @@ def test_rock_paper_scissors_logic_fix() -> None:
         print_success(f"Game joined successfully")
         
         # Check game result
-        if "result_status" in join_response:
-            actual_result = join_response["result_status"]
+        if "result" in join_response:
+            actual_result = join_response["result"]
             expected_result = test_case["expected"]
             
             print_success(f"Creator move: {test_case['creator_move']}")
@@ -354,8 +354,8 @@ def test_rock_paper_scissors_logic_fix() -> None:
                 print_error(f"❌ INCORRECT: Expected {expected_result}, got {actual_result}")
                 record_test(f"RPS Logic - Test Case {i+1}", False, f"Expected {expected_result}, got {actual_result}")
         else:
-            print_error(f"Game join response missing result_status for test case {i+1}")
-            record_test(f"RPS Logic - Test Case {i+1}", False, "Missing result_status")
+            print_error(f"Game join response missing result for test case {i+1}")
+            record_test(f"RPS Logic - Test Case {i+1}", False, "Missing result")
         
         # Small delay between tests
         time.sleep(1)
