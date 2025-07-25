@@ -6881,6 +6881,9 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                 # Try to find as human bot
                 human_bot = await db.human_bots.find_one({"id": game["creator_id"]})
                 if human_bot:
+                    # Skip games from inactive human bots
+                    if not human_bot.get("is_active", False):
+                        continue
                     creator = {
                         "id": human_bot["id"],
                         "username": human_bot["name"],
