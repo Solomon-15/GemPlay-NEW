@@ -162,9 +162,16 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       
       // Get active Human-bot games for display in ongoing battles
       try {
-        const humanBotGamesResponse = await api.get('/admin/games', {
-          human_bot_only: true,
-          status: 'ACTIVE'
+        const token = localStorage.getItem('token');
+        const humanBotGamesResponse = await axios.get(`${API}/admin/games`, {
+          params: {
+            human_bot_only: true,
+            status: 'ACTIVE'
+          },
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
         
         const humanBotGames = humanBotGamesResponse.data?.games || [];
