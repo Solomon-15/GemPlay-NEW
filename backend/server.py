@@ -8429,7 +8429,8 @@ async def get_games_list(
         total_count = await db.games.count_documents(query)
         
         # Get games with pagination and sorting
-        games = await db.games.find(query).sort("created_at", -1).skip(offset).limit(limit).to_list(limit)
+        games_cursor = db.games.find(query).sort("created_at", -1).skip(offset).limit(limit)
+        games = await games_cursor.to_list(length=limit)
         
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
