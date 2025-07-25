@@ -121,7 +121,15 @@ const GemsManagement = () => {
       return;
     }
 
-    if (!window.confirm(`Вы уверены, что хотите удалить гем "${gem.name}"?`)) {
+    const confirmed = await confirm({
+      title: 'Удаление гема',
+      message: `Вы уверены, что хотите удалить гем "${gem.name}"?`,
+      confirmText: 'Удалить',
+      cancelText: 'Отмена',
+      type: 'danger'
+    });
+
+    if (!confirmed) {
       return;
     }
 
