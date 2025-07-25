@@ -1377,79 +1377,89 @@ const ProfitAdmin = ({ user }) => {
                       <div className="bg-surface-sidebar rounded-lg p-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                           <div>
-                            <span className="text-sm text-text-secondary">Общая сумма:</span>
+                            <span className="text-sm text-text-secondary">Общая сумма комиссий:</span>
                             <div className="text-2xl font-bold text-cyan-400">
-                              {formatCurrencyWithSymbol(modalData.total_amount || 0, true)}
+                              {formatCurrencyWithSymbol(modalData.total_commission || 0, true)}
                             </div>
-                            <div className="text-xs text-cyan-300 mt-1">
-                              {modalData.period === 'day' && 'за день'}
-                              {modalData.period === 'week' && 'за неделю'}
-                              {modalData.period === 'month' && 'за месяц'}
-                              {modalData.period === 'all' && 'за все время'}
-                            </div>
+                            <div className="text-xs text-cyan-300 mt-1">от всех Human-ботов</div>
                           </div>
                           <div>
-                            <span className="text-sm text-text-secondary">Всего транзакций:</span>
-                            <div className="text-2xl font-bold text-cyan-400">{modalData.total_transactions || 0}</div>
-                            <div className="text-xs text-cyan-300 mt-1">комиссионных операций</div>
+                            <span className="text-sm text-text-secondary">Всего Human-ботов:</span>
+                            <div className="text-2xl font-bold text-cyan-400">{modalData.total_bots || 0}</div>
+                            <div className="text-xs text-cyan-300 mt-1">в системе</div>
                           </div>
                           <div>
-                            <span className="text-sm text-text-secondary">Средняя комиссия:</span>
-                            <div className="text-2xl font-bold text-cyan-400">
-                              {formatCurrencyWithSymbol(modalData.avg_per_transaction || 0, true)}
-                            </div>
-                            <div className="text-xs text-cyan-300 mt-1">за транзакцию</div>
+                            <span className="text-sm text-text-secondary">Активных ботов:</span>
+                            <div className="text-2xl font-bold text-cyan-400">{modalData.bots_with_commission || 0}</div>
+                            <div className="text-xs text-cyan-300 mt-1">с оплаченной комиссией</div>
                           </div>
                         </div>
                         <div className="text-xs text-cyan-300">
-                          Активных Human-ботов: {modalData.unique_bots || 0} • Ставка комиссии: {modalData.summary?.commission_rate || '3%'}
+                          Ставка комиссии: 3% с побед и поражений (ничьи без комиссии)
                         </div>
                       </div>
 
-                      {modalData.breakdown && modalData.breakdown.length > 0 ? (
+                      {modalData.bot_commissions && modalData.bot_commissions.length > 0 ? (
                         <div className="space-y-3">
                           <h5 className="font-rajdhani text-sm font-bold text-cyan-400 mb-2">Комиссии по Human-ботам:</h5>
-                          {modalData.breakdown.map((bot, index) => (
-                            <div key={index} className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
+                          {modalData.bot_commissions.map((bot, index) => (
+                            <div key={bot.id || index} className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
                               <div className="flex justify-between items-center mb-2">
                                 <div>
-                                  <span className="text-sm font-medium text-cyan-400">{bot.bot_name}</span>
-                                  <div className="text-xs text-text-secondary">ID: {bot.bot_id}</div>
+                                  <span className="text-sm font-medium text-cyan-400">{bot.name}</span>
+                                  <div className="text-xs text-text-secondary">
+                                    Характер: {bot.character} • 
+                                    {bot.is_active ? (
+                                      <span className="text-green-400"> Активен</span>
+                                    ) : (
+                                      <span className="text-red-400"> Неактивен</span>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="text-right">
                                   <div className="text-lg font-bold text-cyan-400">
-                                    {formatCurrencyWithSymbol(bot.amount || 0, true)}
+                                    {formatCurrencyWithSymbol(bot.total_commission_paid || 0, true)}
                                   </div>
-                                  <div className="text-xs text-cyan-300">{bot.transactions} игр</div>
+                                  <div className="text-xs text-cyan-300">{bot.total_games_played || 0} игр всего</div>
                                 </div>
                               </div>
                               <div className="text-xs text-text-secondary">
-                                Средняя комиссия: {formatCurrencyWithSymbol(bot.avg_per_transaction || 0, true)} за игру
+                                Побед: {bot.total_games_won || 0} • 
+                                Средняя комиссия за игру: {formatCurrencyWithSymbol(
+                                  (bot.total_games_played > 0) ? (bot.total_commission_paid / bot.total_games_played) : 0, true
+                                )}
                               </div>
                             </div>
                           ))}
+                          
+                          {/* Pagination controls */}
+                          {modalData.pagination && modalData.pagination.total_pages > 1 && (
+                            <div className="flex justify-center items-center space-x-2 mt-4">
+                              <button
+                                onClick={() => loadHumanBotCommissionPage(modalData.pagination.current_page - 1)}
+                                disabled={!modalData.pagination.has_prev}
+                                className="px-3 py-1 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                ← Назад
+                              </button>
+                              <span className="text-sm text-text-secondary">
+                                Страница {modalData.pagination.current_page} из {modalData.pagination.total_pages}
+                              </span>
+                              <button
+                                onClick={() => loadHumanBotCommissionPage(modalData.pagination.current_page + 1)}
+                                disabled={!modalData.pagination.has_next}
+                                className="px-3 py-1 bg-cyan-600 text-white text-sm rounded hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Вперед →
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="text-center py-8">
                           <div className="text-4xl mb-4">🤖</div>
                           <h4 className="font-rajdhani text-lg font-bold mb-2 text-cyan-400">Нет данных</h4>
-                          <p className="text-sm text-text-secondary">За выбранный период Human-боты не генерировали комиссий</p>
-                        </div>
-                      )}
-
-                      {modalData.summary && modalData.summary.top_earning_bot && (
-                        <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
-                          <h5 className="font-rajdhani text-sm font-bold text-cyan-400 mb-2">Статистика:</h5>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="flex justify-between">
-                              <span className="text-cyan-300">Топ-бот по доходу:</span>
-                              <span className="text-cyan-400">{modalData.summary.top_earning_bot}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-cyan-300">Лучший результат:</span>
-                              <span className="text-cyan-400">{formatCurrencyWithSymbol(modalData.summary.top_earning_amount || 0, true)}</span>
-                            </div>
-                          </div>
+                          <p className="text-sm text-text-secondary">Human-боты еще не генерировали комиссий</p>
                         </div>
                       )}
                     </>
