@@ -8463,7 +8463,7 @@ async def get_active_bot_games(current_user: User = Depends(get_current_user)):
             max_bots_limit = settings_doc["display_limits"].get("bot_players", {}).get("max_available_bots", 100)
         
         # Find active bots to get their IDs
-        active_bots = await db.bots.find({"is_active": True}).to_list(100)
+        active_bots = await db.bots.find({"is_active": True}).to_list(None)  # Removed limit to get all active bots
         bot_ids = [bot["id"] for bot in active_bots]
         
         if not bot_ids:
