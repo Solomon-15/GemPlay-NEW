@@ -615,7 +615,7 @@ const HumanBotsManagement = () => {
                               Включить автоигру между Human-ботами
                             </label>
                             <p className="text-text-secondary text-sm">
-                              Позволяет Human-ботам играть друг с другом автоматически
+                              Позволяет Human-ботам автоматически присоединяться к ставкам других Human-ботов и игроков
                             </p>
                           </div>
                           <label className="relative inline-flex items-center cursor-pointer">
