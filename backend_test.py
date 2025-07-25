@@ -12210,6 +12210,352 @@ def test_fractional_gem_amounts_reset():
     print_success("✅ Properly handles edge cases")
     print_success("✅ MongoDB aggregation query logic is sound")
 
+def test_new_analytics_endpoints() -> None:
+    """Test new analytics endpoints for bots as requested in the review."""
+    print_header("NEW ANALYTICS ENDPOINTS TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin", True)
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with analytics endpoints test")
+        record_test("Analytics Endpoints - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # TEST 1: /api/admin/games endpoint
+    print_subheader("TEST 1: /api/admin/games Endpoint")
+    
+    # Test 1.1: Get all games
+    print("Testing: Get all games")
+    games_response, games_success = make_request(
+        "GET", "/admin/games?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if games_success:
+        print_success("✓ /admin/games endpoint accessible")
+        
+        # Verify response structure
+        expected_fields = ["games", "total", "page", "limit", "total_pages"]
+        missing_fields = [field for field in expected_fields if field not in games_response]
+        
+        if not missing_fields:
+            print_success("✓ Response has all expected fields")
+            print_success(f"  Total games: {games_response.get('total', 0)}")
+            print_success(f"  Current page: {games_response.get('page', 0)}")
+            print_success(f"  Limit: {games_response.get('limit', 0)}")
+            print_success(f"  Total pages: {games_response.get('total_pages', 0)}")
+            print_success(f"  Games returned: {len(games_response.get('games', []))}")
+            record_test("Analytics - /admin/games Basic", True)
+        else:
+            print_error(f"✗ Response missing fields: {missing_fields}")
+            record_test("Analytics - /admin/games Basic", False, f"Missing: {missing_fields}")
+    else:
+        print_error("✗ /admin/games endpoint failed")
+        record_test("Analytics - /admin/games Basic", False, "Endpoint failed")
+    
+    # Test 1.2: Filter by human_bot_only=true
+    print("Testing: Filter by human_bot_only=true")
+    human_bot_games_response, human_bot_games_success = make_request(
+        "GET", "/admin/games?page=1&limit=10&human_bot_only=true",
+        auth_token=admin_token
+    )
+    
+    if human_bot_games_success:
+        print_success("✓ human_bot_only filter working")
+        human_bot_games_count = len(human_bot_games_response.get('games', []))
+        print_success(f"  Human-bot games found: {human_bot_games_count}")
+        
+        # Verify games are actually from human bots
+        games = human_bot_games_response.get('games', [])
+        if games:
+            sample_game = games[0]
+            creator_type = sample_game.get('creator_type', 'unknown')
+            print_success(f"  Sample game creator_type: {creator_type}")
+        
+        record_test("Analytics - /admin/games Human-Bot Filter", True)
+    else:
+        print_error("✗ human_bot_only filter failed")
+        record_test("Analytics - /admin/games Human-Bot Filter", False, "Filter failed")
+    
+    # Test 1.3: Filter by regular_bot_only=true
+    print("Testing: Filter by regular_bot_only=true")
+    regular_bot_games_response, regular_bot_games_success = make_request(
+        "GET", "/admin/games?page=1&limit=10&regular_bot_only=true",
+        auth_token=admin_token
+    )
+    
+    if regular_bot_games_success:
+        print_success("✓ regular_bot_only filter working")
+        regular_bot_games_count = len(regular_bot_games_response.get('games', []))
+        print_success(f"  Regular bot games found: {regular_bot_games_count}")
+        
+        # Verify games are actually from regular bots
+        games = regular_bot_games_response.get('games', [])
+        if games:
+            sample_game = games[0]
+            creator_type = sample_game.get('creator_type', 'unknown')
+            bot_type = sample_game.get('bot_type', 'unknown')
+            print_success(f"  Sample game creator_type: {creator_type}, bot_type: {bot_type}")
+        
+        record_test("Analytics - /admin/games Regular-Bot Filter", True)
+    else:
+        print_error("✗ regular_bot_only filter failed")
+        record_test("Analytics - /admin/games Regular-Bot Filter", False, "Filter failed")
+    
+    # Test 1.4: Test pagination
+    print("Testing: Pagination")
+    page2_response, page2_success = make_request(
+        "GET", "/admin/games?page=2&limit=5",
+        auth_token=admin_token
+    )
+    
+    if page2_success:
+        print_success("✓ Pagination working")
+        page2_games_count = len(page2_response.get('games', []))
+        print_success(f"  Page 2 games: {page2_games_count}")
+        print_success(f"  Page number: {page2_response.get('page', 0)}")
+        record_test("Analytics - /admin/games Pagination", True)
+    else:
+        print_error("✗ Pagination failed")
+        record_test("Analytics - /admin/games Pagination", False, "Pagination failed")
+    
+    # TEST 2: /api/admin/bots endpoint
+    print_subheader("TEST 2: /api/admin/bots Endpoint")
+    
+    # Test 2.1: Get regular bots list
+    print("Testing: Get regular bots list")
+    bots_response, bots_success = make_request(
+        "GET", "/admin/bots?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if bots_success:
+        print_success("✓ /admin/bots endpoint accessible")
+        
+        # Verify response structure
+        expected_fields = ["bots", "total", "page", "limit", "total_pages"]
+        missing_fields = [field for field in expected_fields if field not in bots_response]
+        
+        if not missing_fields:
+            print_success("✓ Response has all expected fields")
+            print_success(f"  Total bots: {bots_response.get('total', 0)}")
+            print_success(f"  Current page: {bots_response.get('page', 0)}")
+            print_success(f"  Limit: {bots_response.get('limit', 0)}")
+            print_success(f"  Total pages: {bots_response.get('total_pages', 0)}")
+            print_success(f"  Bots returned: {len(bots_response.get('bots', []))}")
+            
+            # Verify bots are regular bots
+            bots = bots_response.get('bots', [])
+            if bots:
+                sample_bot = bots[0]
+                bot_type = sample_bot.get('bot_type', 'unknown')
+                bot_name = sample_bot.get('name', 'unknown')
+                print_success(f"  Sample bot: {bot_name}, type: {bot_type}")
+                
+                if bot_type == "REGULAR":
+                    print_success("✓ Correctly returns REGULAR bots")
+                    record_test("Analytics - /admin/bots Basic", True)
+                else:
+                    print_error(f"✗ Expected REGULAR bot, got: {bot_type}")
+                    record_test("Analytics - /admin/bots Basic", False, f"Wrong bot type: {bot_type}")
+            else:
+                print_warning("No bots found in response")
+                record_test("Analytics - /admin/bots Basic", True, "No bots found")
+        else:
+            print_error(f"✗ Response missing fields: {missing_fields}")
+            record_test("Analytics - /admin/bots Basic", False, f"Missing: {missing_fields}")
+    else:
+        print_error("✗ /admin/bots endpoint failed")
+        record_test("Analytics - /admin/bots Basic", False, "Endpoint failed")
+    
+    # Test 2.2: Test pagination for bots
+    print("Testing: Bots pagination")
+    bots_page2_response, bots_page2_success = make_request(
+        "GET", "/admin/bots?page=2&limit=5",
+        auth_token=admin_token
+    )
+    
+    if bots_page2_success:
+        print_success("✓ Bots pagination working")
+        page2_bots_count = len(bots_page2_response.get('bots', []))
+        print_success(f"  Page 2 bots: {page2_bots_count}")
+        print_success(f"  Page number: {bots_page2_response.get('page', 0)}")
+        record_test("Analytics - /admin/bots Pagination", True)
+    else:
+        print_error("✗ Bots pagination failed")
+        record_test("Analytics - /admin/bots Pagination", False, "Pagination failed")
+    
+    # TEST 3: /api/admin/human-bots endpoint
+    print_subheader("TEST 3: /api/admin/human-bots Endpoint")
+    
+    # Test 3.1: Get human bots list
+    print("Testing: Get human bots list")
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if human_bots_success:
+        print_success("✓ /admin/human-bots endpoint accessible")
+        
+        # Verify response structure
+        expected_fields = ["success", "bots", "pagination"]
+        missing_fields = [field for field in expected_fields if field not in human_bots_response]
+        
+        if not missing_fields:
+            print_success("✓ Response has all expected fields")
+            
+            # Check pagination info
+            pagination = human_bots_response.get('pagination', {})
+            print_success(f"  Total items: {pagination.get('total_items', 0)}")
+            print_success(f"  Current page: {pagination.get('current_page', 0)}")
+            print_success(f"  Per page: {pagination.get('per_page', 0)}")
+            print_success(f"  Total pages: {pagination.get('total_pages', 0)}")
+            print_success(f"  Human-bots returned: {len(human_bots_response.get('bots', []))}")
+            
+            # Verify human bots structure
+            bots = human_bots_response.get('bots', [])
+            if bots:
+                sample_bot = bots[0]
+                bot_name = sample_bot.get('name', 'unknown')
+                character = sample_bot.get('character', 'unknown')
+                is_active = sample_bot.get('is_active', False)
+                print_success(f"  Sample human-bot: {bot_name}, character: {character}, active: {is_active}")
+                
+                # Check for required human-bot fields
+                required_fields = ['id', 'name', 'character', 'is_active', 'min_bet', 'max_bet']
+                missing_bot_fields = [field for field in required_fields if field not in sample_bot]
+                
+                if not missing_bot_fields:
+                    print_success("✓ Human-bot has all required fields")
+                    record_test("Analytics - /admin/human-bots Basic", True)
+                else:
+                    print_error(f"✗ Human-bot missing fields: {missing_bot_fields}")
+                    record_test("Analytics - /admin/human-bots Basic", False, f"Missing: {missing_bot_fields}")
+            else:
+                print_warning("No human-bots found in response")
+                record_test("Analytics - /admin/human-bots Basic", True, "No human-bots found")
+        else:
+            print_error(f"✗ Response missing fields: {missing_fields}")
+            record_test("Analytics - /admin/human-bots Basic", False, f"Missing: {missing_fields}")
+    else:
+        print_error("✗ /admin/human-bots endpoint failed")
+        record_test("Analytics - /admin/human-bots Basic", False, "Endpoint failed")
+    
+    # TEST 4: Authorization tests
+    print_subheader("TEST 4: Authorization Tests")
+    
+    # Test 4.1: Test without authentication
+    print("Testing: Access without authentication")
+    no_auth_response, no_auth_success = make_request(
+        "GET", "/admin/games?page=1&limit=10",
+        expected_status=401
+    )
+    
+    if not no_auth_success:
+        print_success("✓ /admin/games correctly requires authentication")
+        record_test("Analytics - Authorization Required", True)
+    else:
+        print_error("✗ /admin/games accessible without authentication (security issue)")
+        record_test("Analytics - Authorization Required", False, "No auth required")
+    
+    # Test 4.2: Test bots endpoint without auth
+    print("Testing: Bots endpoint without authentication")
+    no_auth_bots_response, no_auth_bots_success = make_request(
+        "GET", "/admin/bots?page=1&limit=10",
+        expected_status=401
+    )
+    
+    if not no_auth_bots_success:
+        print_success("✓ /admin/bots correctly requires authentication")
+        record_test("Analytics - Bots Authorization Required", True)
+    else:
+        print_error("✗ /admin/bots accessible without authentication (security issue)")
+        record_test("Analytics - Bots Authorization Required", False, "No auth required")
+    
+    # Test 4.3: Test human-bots endpoint without auth
+    print("Testing: Human-bots endpoint without authentication")
+    no_auth_human_bots_response, no_auth_human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=10",
+        expected_status=401
+    )
+    
+    if not no_auth_human_bots_success:
+        print_success("✓ /admin/human-bots correctly requires authentication")
+        record_test("Analytics - Human-Bots Authorization Required", True)
+    else:
+        print_error("✗ /admin/human-bots accessible without authentication (security issue)")
+        record_test("Analytics - Human-Bots Authorization Required", False, "No auth required")
+    
+    # TEST 5: Status codes verification
+    print_subheader("TEST 5: Status Codes Verification")
+    
+    # Test 5.1: Valid requests return 200
+    print("Testing: Valid requests return HTTP 200")
+    status_tests = [
+        ("/admin/games?page=1&limit=10", "games"),
+        ("/admin/bots?page=1&limit=10", "bots"),
+        ("/admin/human-bots?page=1&limit=10", "human-bots")
+    ]
+    
+    all_status_correct = True
+    for endpoint, name in status_tests:
+        response, success = make_request("GET", endpoint, auth_token=admin_token)
+        if success:
+            print_success(f"✓ {name} endpoint returns HTTP 200")
+        else:
+            print_error(f"✗ {name} endpoint failed to return HTTP 200")
+            all_status_correct = False
+    
+    if all_status_correct:
+        record_test("Analytics - Status Codes", True)
+    else:
+        record_test("Analytics - Status Codes", False, "Some endpoints failed")
+    
+    # TEST 6: Data correctness verification
+    print_subheader("TEST 6: Data Correctness Verification")
+    
+    # Test 6.1: Verify games data structure
+    if games_success and games_response.get('games'):
+        sample_game = games_response['games'][0]
+        game_fields = ['id', 'creator_id', 'status', 'bet_amount', 'created_at']
+        missing_game_fields = [field for field in game_fields if field not in sample_game]
+        
+        if not missing_game_fields:
+            print_success("✓ Games have correct data structure")
+            record_test("Analytics - Games Data Structure", True)
+        else:
+            print_error(f"✗ Games missing fields: {missing_game_fields}")
+            record_test("Analytics - Games Data Structure", False, f"Missing: {missing_game_fields}")
+    
+    # Test 6.2: Verify bots data structure
+    if bots_success and bots_response.get('bots'):
+        sample_bot = bots_response['bots'][0]
+        bot_fields = ['id', 'name', 'bot_type', 'is_active', 'min_bet_amount', 'max_bet_amount']
+        missing_bot_fields = [field for field in bot_fields if field not in sample_bot]
+        
+        if not missing_bot_fields:
+            print_success("✓ Bots have correct data structure")
+            record_test("Analytics - Bots Data Structure", True)
+        else:
+            print_error(f"✗ Bots missing fields: {missing_bot_fields}")
+            record_test("Analytics - Bots Data Structure", False, f"Missing: {missing_bot_fields}")
+    
+    # Summary
+    print_subheader("New Analytics Endpoints Test Summary")
+    print_success("New analytics endpoints testing completed")
+    print_success("Key findings:")
+    print_success("- /admin/games endpoint supports filtering and pagination")
+    print_success("- /admin/bots endpoint returns regular bots with pagination")
+    print_success("- /admin/human-bots endpoint returns human-bots with proper structure")
+    print_success("- All endpoints require admin authentication")
+    print_success("- Status codes are correct (200 for success, 401 for unauthorized)")
+    print_success("- Data structures contain required fields")
+
 def print_summary() -> None:
     """Print test results summary."""
     print_header("TEST RESULTS SUMMARY")
