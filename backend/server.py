@@ -249,6 +249,7 @@ class User(BaseModel):
     total_games_won: int = 0
     total_amount_wagered: float = 0.0
     total_amount_won: float = 0.0
+    total_commission_paid: float = 0.0  # Общая сумма комиссий, оплаченных ботом
 
 class GemDefinition(BaseModel):
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
