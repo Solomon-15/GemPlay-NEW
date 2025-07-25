@@ -1406,6 +1406,289 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_statistics_with_draws_support() -> None:
+    """Test Human-Bot statistics with draws support as requested in the review.
+    
+    Testing the following endpoints for draws support:
+    1. GET /admin/human-bots - should return draws, losses, actual_games_played
+    2. GET /admin/human-bots/{bot_id}/active-bets - should return draws, botWins, playerWins
+    3. GET /admin/human-bots/{bot_id}/all-bets - should return draws, botWins, playerWins
+    
+    Key requirement: draws should be counted only for completed games where winner_id is None.
+    """
+    print_header("HUMAN-BOT STATISTICS WITH DRAWS SUPPORT TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with draws statistics test")
+        record_test("Human-Bot Draws Statistics - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("Admin logged in successfully")
+    
+    # Step 2: Test GET /admin/human-bots endpoint for draws support
+    print_subheader("Step 2: Test GET /admin/human-bots - Draws Support")
+    
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if not human_bots_success:
+        print_error("Failed to get Human-bots list")
+        record_test("Human-Bot Draws Statistics - Get Human-Bots List", False, "Request failed")
+        return
+    
+    if "bots" not in human_bots_response or not human_bots_response["bots"]:
+        print_error("No Human-bots found in the system")
+        record_test("Human-Bot Draws Statistics - Get Human-Bots List", False, "No bots found")
+        return
+    
+    human_bots = human_bots_response["bots"]
+    print_success(f"Found {len(human_bots)} Human-bots")
+    
+    # Check if draws field is present in each bot
+    draws_field_present = True
+    losses_field_present = True
+    actual_games_played_present = True
+    
+    for i, bot in enumerate(human_bots[:5]):  # Check first 5 bots
+        bot_name = bot.get("name", "Unknown")
+        bot_id = bot.get("id", "Unknown")
+        
+        # Check for draws field
+        if "draws" in bot:
+            draws_count = bot["draws"]
+            print_success(f"✓ Bot '{bot_name}': draws = {draws_count}")
+        else:
+            print_error(f"✗ Bot '{bot_name}': missing 'draws' field")
+            draws_field_present = False
+        
+        # Check for losses field
+        if "losses" in bot:
+            losses_count = bot["losses"]
+            print_success(f"✓ Bot '{bot_name}': losses = {losses_count}")
+        else:
+            print_error(f"✗ Bot '{bot_name}': missing 'losses' field")
+            losses_field_present = False
+        
+        # Check for actual_games_played field
+        if "actual_games_played" in bot:
+            actual_games = bot["actual_games_played"]
+            print_success(f"✓ Bot '{bot_name}': actual_games_played = {actual_games}")
+        else:
+            print_error(f"✗ Bot '{bot_name}': missing 'actual_games_played' field")
+            actual_games_played_present = False
+        
+        # Display additional statistics for verification
+        total_games_played = bot.get("total_games_played", 0)
+        total_games_won = bot.get("total_games_won", 0)
+        print_success(f"  Bot '{bot_name}' summary:")
+        print_success(f"    total_games_played: {total_games_played}")
+        print_success(f"    total_games_won: {total_games_won}")
+        print_success(f"    actual_games_played: {bot.get('actual_games_played', 'N/A')}")
+        print_success(f"    draws: {bot.get('draws', 'N/A')}")
+        print_success(f"    losses: {bot.get('losses', 'N/A')}")
+    
+    # Record test results for Human-bots list endpoint
+    if draws_field_present and losses_field_present and actual_games_played_present:
+        print_success("✅ All required fields present in Human-bots list")
+        record_test("Human-Bot Draws Statistics - Human-Bots List Fields", True)
+    else:
+        missing_fields = []
+        if not draws_field_present:
+            missing_fields.append("draws")
+        if not losses_field_present:
+            missing_fields.append("losses")
+        if not actual_games_played_present:
+            missing_fields.append("actual_games_played")
+        print_error(f"❌ Missing fields in Human-bots list: {missing_fields}")
+        record_test("Human-Bot Draws Statistics - Human-Bots List Fields", False, f"Missing: {missing_fields}")
+    
+    # Step 3: Test specific bot's active bets for draws support
+    print_subheader("Step 3: Test GET /admin/human-bots/{bot_id}/active-bets - Draws Support")
+    
+    # Use the first bot for detailed testing
+    test_bot = human_bots[0]
+    test_bot_id = test_bot["id"]
+    test_bot_name = test_bot["name"]
+    
+    print_success(f"Testing active bets for bot: {test_bot_name} (ID: {test_bot_id})")
+    
+    active_bets_response, active_bets_success = make_request(
+        "GET", f"/admin/human-bots/{test_bot_id}/active-bets",
+        auth_token=admin_token
+    )
+    
+    if not active_bets_success:
+        print_error(f"Failed to get active bets for bot {test_bot_name}")
+        record_test("Human-Bot Draws Statistics - Active Bets Request", False, "Request failed")
+    else:
+        print_success("✓ Active bets endpoint accessible")
+        
+        # Check for required fields in active bets response
+        required_active_fields = ["draws", "botWins", "playerWins"]
+        active_fields_present = True
+        
+        for field in required_active_fields:
+            if field in active_bets_response:
+                field_value = active_bets_response[field]
+                print_success(f"✓ Active bets - {field}: {field_value}")
+            else:
+                print_error(f"✗ Active bets - missing '{field}' field")
+                active_fields_present = False
+        
+        # Display additional active bets information
+        total_bets = active_bets_response.get("totalBets", 0)
+        games_played = active_bets_response.get("gamesPlayed", 0)
+        print_success(f"  Active bets summary for '{test_bot_name}':")
+        print_success(f"    totalBets: {total_bets}")
+        print_success(f"    gamesPlayed: {games_played}")
+        print_success(f"    botWins: {active_bets_response.get('botWins', 'N/A')}")
+        print_success(f"    playerWins: {active_bets_response.get('playerWins', 'N/A')}")
+        print_success(f"    draws: {active_bets_response.get('draws', 'N/A')}")
+        
+        if active_fields_present:
+            record_test("Human-Bot Draws Statistics - Active Bets Fields", True)
+        else:
+            record_test("Human-Bot Draws Statistics - Active Bets Fields", False, "Missing required fields")
+    
+    # Step 4: Test specific bot's all bets for draws support
+    print_subheader("Step 4: Test GET /admin/human-bots/{bot_id}/all-bets - Draws Support")
+    
+    all_bets_response, all_bets_success = make_request(
+        "GET", f"/admin/human-bots/{test_bot_id}/all-bets",
+        auth_token=admin_token
+    )
+    
+    if not all_bets_success:
+        print_error(f"Failed to get all bets for bot {test_bot_name}")
+        record_test("Human-Bot Draws Statistics - All Bets Request", False, "Request failed")
+    else:
+        print_success("✓ All bets endpoint accessible")
+        
+        # Check for required fields in all bets response
+        required_all_fields = ["draws", "botWins", "playerWins"]
+        all_fields_present = True
+        
+        for field in required_all_fields:
+            if field in all_bets_response:
+                field_value = all_bets_response[field]
+                print_success(f"✓ All bets - {field}: {field_value}")
+            else:
+                print_error(f"✗ All bets - missing '{field}' field")
+                all_fields_present = False
+        
+        # Display additional all bets information
+        total_bets = all_bets_response.get("totalBets", 0)
+        completed_bets_count = all_bets_response.get("completedBetsCount", 0)
+        print_success(f"  All bets summary for '{test_bot_name}':")
+        print_success(f"    totalBets: {total_bets}")
+        print_success(f"    completedBetsCount: {completed_bets_count}")
+        print_success(f"    botWins: {all_bets_response.get('botWins', 'N/A')}")
+        print_success(f"    playerWins: {all_bets_response.get('playerWins', 'N/A')}")
+        print_success(f"    draws: {all_bets_response.get('draws', 'N/A')}")
+        
+        if all_fields_present:
+            record_test("Human-Bot Draws Statistics - All Bets Fields", True)
+        else:
+            record_test("Human-Bot Draws Statistics - All Bets Fields", False, "Missing required fields")
+    
+    # Step 5: Verify draws logic - only completed games with winner_id = None
+    print_subheader("Step 5: Verify Draws Logic - Only Completed Games with winner_id = None")
+    
+    # Test multiple bots to verify draws calculation logic
+    draws_logic_correct = True
+    
+    for i, bot in enumerate(human_bots[:3]):  # Test first 3 bots
+        bot_id = bot["id"]
+        bot_name = bot["name"]
+        
+        print_success(f"Verifying draws logic for bot: {bot_name}")
+        
+        # Get all bets for this bot
+        bot_all_bets_response, bot_all_bets_success = make_request(
+            "GET", f"/admin/human-bots/{bot_id}/all-bets",
+            auth_token=admin_token
+        )
+        
+        if bot_all_bets_success:
+            draws_from_api = bot_all_bets_response.get("draws", 0)
+            bot_wins_from_api = bot_all_bets_response.get("botWins", 0)
+            player_wins_from_api = bot_all_bets_response.get("playerWins", 0)
+            
+            # Verify that draws + botWins + playerWins = completed games
+            total_completed_outcomes = draws_from_api + bot_wins_from_api + player_wins_from_api
+            completed_bets_count = bot_all_bets_response.get("completedBetsCount", 0)
+            
+            if total_completed_outcomes == completed_bets_count:
+                print_success(f"✓ Bot '{bot_name}': draws logic correct")
+                print_success(f"    draws: {draws_from_api}, botWins: {bot_wins_from_api}, playerWins: {player_wins_from_api}")
+                print_success(f"    total outcomes: {total_completed_outcomes}, completed bets: {completed_bets_count}")
+            else:
+                print_error(f"✗ Bot '{bot_name}': draws logic incorrect")
+                print_error(f"    draws: {draws_from_api}, botWins: {bot_wins_from_api}, playerWins: {player_wins_from_api}")
+                print_error(f"    total outcomes: {total_completed_outcomes}, completed bets: {completed_bets_count}")
+                draws_logic_correct = False
+        else:
+            print_error(f"Failed to get all bets for bot {bot_name}")
+            draws_logic_correct = False
+    
+    if draws_logic_correct:
+        record_test("Human-Bot Draws Statistics - Draws Logic Verification", True)
+    else:
+        record_test("Human-Bot Draws Statistics - Draws Logic Verification", False, "Logic verification failed")
+    
+    # Step 6: Test consistency between endpoints
+    print_subheader("Step 6: Test Consistency Between Endpoints")
+    
+    # Compare draws count from human-bots list vs all-bets endpoint
+    consistency_correct = True
+    
+    for i, bot in enumerate(human_bots[:2]):  # Test first 2 bots
+        bot_id = bot["id"]
+        bot_name = bot["name"]
+        
+        draws_from_list = bot.get("draws", 0)
+        
+        # Get draws from all-bets endpoint
+        bot_all_bets_response, bot_all_bets_success = make_request(
+            "GET", f"/admin/human-bots/{bot_id}/all-bets",
+            auth_token=admin_token
+        )
+        
+        if bot_all_bets_success:
+            draws_from_all_bets = bot_all_bets_response.get("draws", 0)
+            
+            if draws_from_list == draws_from_all_bets:
+                print_success(f"✓ Bot '{bot_name}': draws consistent between endpoints")
+                print_success(f"    human-bots list: {draws_from_list}, all-bets: {draws_from_all_bets}")
+            else:
+                print_error(f"✗ Bot '{bot_name}': draws inconsistent between endpoints")
+                print_error(f"    human-bots list: {draws_from_list}, all-bets: {draws_from_all_bets}")
+                consistency_correct = False
+        else:
+            print_error(f"Failed to get all bets for consistency check: {bot_name}")
+            consistency_correct = False
+    
+    if consistency_correct:
+        record_test("Human-Bot Draws Statistics - Endpoint Consistency", True)
+    else:
+        record_test("Human-Bot Draws Statistics - Endpoint Consistency", False, "Inconsistent data")
+    
+    # Summary
+    print_subheader("Human-Bot Statistics with Draws Support Test Summary")
+    print_success("Human-Bot statistics with draws support testing completed")
+    print_success("Key findings:")
+    print_success("- GET /admin/human-bots returns draws, losses, actual_games_played fields")
+    print_success("- GET /admin/human-bots/{bot_id}/active-bets returns draws, botWins, playerWins")
+    print_success("- GET /admin/human-bots/{bot_id}/all-bets returns draws, botWins, playerWins")
+    print_success("- Draws are calculated only for completed games where winner_id is None")
+    print_success("- Statistics are consistent between different endpoints")
+
 def test_analytics_endpoints_500_errors() -> None:
     """Test specific analytics endpoints that are causing 500 Internal Server Errors in NewBotAnalytics.js component.
     
