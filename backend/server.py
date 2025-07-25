@@ -8518,6 +8518,11 @@ async def get_games_list(
         games_cursor = db.games.find(query).sort("created_at", -1).skip(offset).limit(limit)
         games = await games_cursor.to_list(length=limit)
         
+        # Convert ObjectId to string for JSON serialization
+        for game in games:
+            if "_id" in game:
+                game["_id"] = str(game["_id"])
+        
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
         
