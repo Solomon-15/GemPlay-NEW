@@ -789,7 +789,9 @@ class HumanBotLogResponse(BaseModel):
 class HumanBotsStatsResponse(BaseModel):
     total_bots: int
     active_bots: int
-    active_games: int  # Add active games count
+    active_games: int
+    total_games_played: int  # Independent counter for "Всего Игр"
+    period_revenue: float  # Independent counter for "Доход за Период"
     total_games_24h: int
     total_bets: int
     total_revenue_24h: float
