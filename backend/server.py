@@ -18638,7 +18638,51 @@ async def recalculate_human_bot_bets(
             detail="Ошибка пересчета ставок Human-бота"
         )
 
-@api_router.post("/admin/human-bots/{bot_id}/delete-completed-bets", response_model=dict)
+@api_router.post("/admin/human-bots/recalculate-all-commissions", response_model=dict)
+async def recalculate_all_human_bot_commissions(current_admin: User = Depends(get_current_admin)):
+    """Recalculate commission totals for all Human-bots from historical games."""
+    try:
+        # Get all Human-bots
+        all_bots = await db.human_bots.find({}).to_list(None)
+        updated_bots = 0
+        
+        for bot in all_bots:
+            bot_id = bot["id"]
+            
+            # Get all commission entries for this Human-bot
+            commission_entries = await db.profit_entries.find({
+                "source_user_id": bot_id,
+                "entry_type": "HUMAN_BOT_COMMISSION"
+            }).to_list(None)
+            
+            # Calculate total commission
+            total_commission = sum(entry.get("amount", 0) for entry in commission_entries)
+            
+            # Update Human-bot record
+            await db.human_bots.update_one(
+                {"id": bot_id},
+                {
+                    "$set": {
+                        "total_commission_paid": total_commission,
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            updated_bots += 1
+        
+        return {
+            "success": True,
+            "message": f"Commission totals recalculated for {updated_bots} Human-bots",
+            "updated_bots": updated_bots
+        }
+        
+    except Exception as e:
+        logger.error(f"Error recalculating Human-bot commissions: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to recalculate commissions: {str(e)}"
+        )
+
 async def delete_human_bot_completed_bets(
     bot_id: str,
     current_admin: User = Depends(get_current_admin)
