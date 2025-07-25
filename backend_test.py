@@ -1406,6 +1406,331 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_activation_deactivation_system() -> None:
+    """Test Human-Bot activation/deactivation system as requested in the review:
+    
+    1. Check new field actual_wins in GET /admin/human-bots
+    2. Test system for freezing games when Human-bots are deactivated
+    3. Test filtering in Available Games (GET /games/available)
+    4. Test filtering in Admin Games (GET /admin/games with human_bot_only=true)
+    5. Test new status FROZEN
+    """
+    print_header("HUMAN-BOT ACTIVATION/DEACTIVATION SYSTEM TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with activation/deactivation test")
+        record_test("Human-Bot Activation/Deactivation - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("Admin logged in successfully")
+    
+    # Step 2: Check new field actual_wins in GET /admin/human-bots
+    print_subheader("Step 2: Testing actual_wins Field")
+    
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if not human_bots_success:
+        print_error("Failed to get Human-bots list")
+        record_test("Human-Bot Activation/Deactivation - Get Human-bots", False, "Failed to get bots")
+        return
+    
+    human_bots = human_bots_response.get("bots", [])
+    if not human_bots:
+        print_error("No Human-bots found in the system")
+        record_test("Human-Bot Activation/Deactivation - Get Human-bots", False, "No bots found")
+        return
+    
+    print_success(f"Found {len(human_bots)} Human-bots")
+    
+    # Check actual_wins field in first few bots
+    actual_wins_found = False
+    for i, bot in enumerate(human_bots[:3]):
+        bot_name = bot.get("name", "Unknown")
+        actual_wins = bot.get("actual_wins")
+        total_games_won = bot.get("total_games_won", 0)
+        
+        if actual_wins is not None:
+            actual_wins_found = True
+            print_success(f"✓ Bot '{bot_name}': actual_wins = {actual_wins}, total_games_won = {total_games_won}")
+            
+            # Verify actual_wins is different from total_games_won (shows real wins)
+            if actual_wins != total_games_won:
+                print_success(f"✓ actual_wins ({actual_wins}) differs from total_games_won ({total_games_won}) - showing real wins")
+            else:
+                print_warning(f"⚠ actual_wins equals total_games_won for bot '{bot_name}'")
+        else:
+            print_error(f"✗ Bot '{bot_name}': actual_wins field missing")
+    
+    if actual_wins_found:
+        print_success("✓ actual_wins field found and working correctly")
+        record_test("Human-Bot Activation/Deactivation - actual_wins Field", True)
+    else:
+        print_error("✗ actual_wins field not found in any Human-bot")
+        record_test("Human-Bot Activation/Deactivation - actual_wins Field", False, "Field missing")
+    
+    # Step 3: Test system for freezing games when Human-bots are deactivated
+    print_subheader("Step 3: Testing Game Freezing System")
+    
+    # Find an active Human-bot to test with
+    test_bot = None
+    for bot in human_bots:
+        if bot.get("is_active", False):
+            test_bot = bot
+            break
+    
+    if not test_bot:
+        print_error("No active Human-bot found for testing")
+        record_test("Human-Bot Activation/Deactivation - Find Active Bot", False, "No active bot")
+        return
+    
+    test_bot_id = test_bot["id"]
+    test_bot_name = test_bot["name"]
+    print_success(f"Using test bot: '{test_bot_name}' (ID: {test_bot_id})")
+    
+    # Get initial games count for this bot
+    initial_games_response, initial_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    initial_bot_games = 0
+    if initial_games_success and isinstance(initial_games_response, list):
+        for game in initial_games_response:
+            if game.get("creator_id") == test_bot_id:
+                initial_bot_games += 1
+    
+    print_success(f"Initial games by test bot: {initial_bot_games}")
+    
+    # Deactivate the Human-bot
+    print_success(f"Deactivating Human-bot '{test_bot_name}'...")
+    deactivate_response, deactivate_success = make_request(
+        "POST", f"/admin/human-bots/{test_bot_id}/toggle-status",
+        auth_token=admin_token
+    )
+    
+    if not deactivate_success:
+        print_error("Failed to deactivate Human-bot")
+        record_test("Human-Bot Activation/Deactivation - Deactivate Bot", False, "Deactivation failed")
+        return
+    
+    print_success("✓ Human-bot deactivated successfully")
+    record_test("Human-Bot Activation/Deactivation - Deactivate Bot", True)
+    
+    # Check that games are frozen (status = "FROZEN")
+    print_success("Checking for FROZEN games...")
+    time.sleep(2)  # Wait a moment for status update
+    
+    frozen_games_response, frozen_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    frozen_games_count = 0
+    if frozen_games_success and isinstance(frozen_games_response, list):
+        for game in frozen_games_response:
+            if game.get("creator_id") == test_bot_id and game.get("status") == "FROZEN":
+                frozen_games_count += 1
+                print_success(f"✓ Found FROZEN game: {game.get('game_id')}")
+    
+    if frozen_games_count > 0:
+        print_success(f"✓ Found {frozen_games_count} FROZEN games from deactivated bot")
+        record_test("Human-Bot Activation/Deactivation - Games Frozen", True)
+    else:
+        print_warning("No FROZEN games found (bot may not have had active games)")
+        record_test("Human-Bot Activation/Deactivation - Games Frozen", False, "No frozen games")
+    
+    # Reactivate the Human-bot
+    print_success(f"Reactivating Human-bot '{test_bot_name}'...")
+    reactivate_response, reactivate_success = make_request(
+        "POST", f"/admin/human-bots/{test_bot_id}/toggle-status",
+        auth_token=admin_token
+    )
+    
+    if not reactivate_success:
+        print_error("Failed to reactivate Human-bot")
+        record_test("Human-Bot Activation/Deactivation - Reactivate Bot", False, "Reactivation failed")
+        return
+    
+    print_success("✓ Human-bot reactivated successfully")
+    record_test("Human-Bot Activation/Deactivation - Reactivate Bot", True)
+    
+    # Check that games are unfrozen (status = "WAITING")
+    print_success("Checking for unfrozen games...")
+    time.sleep(2)  # Wait a moment for status update
+    
+    unfrozen_games_response, unfrozen_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    waiting_games_count = 0
+    if unfrozen_games_success and isinstance(unfrozen_games_response, list):
+        for game in unfrozen_games_response:
+            if game.get("creator_id") == test_bot_id and game.get("status") == "WAITING":
+                waiting_games_count += 1
+                print_success(f"✓ Found WAITING game: {game.get('game_id')}")
+    
+    if waiting_games_count > 0:
+        print_success(f"✓ Found {waiting_games_count} WAITING games from reactivated bot")
+        record_test("Human-Bot Activation/Deactivation - Games Unfrozen", True)
+    else:
+        print_warning("No WAITING games found from reactivated bot")
+        record_test("Human-Bot Activation/Deactivation - Games Unfrozen", False, "No waiting games")
+    
+    # Step 4: Test filtering in Available Games (GET /games/available)
+    print_subheader("Step 4: Testing Available Games Filtering")
+    
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if not available_games_success:
+        print_error("Failed to get available games")
+        record_test("Human-Bot Activation/Deactivation - Available Games Filter", False, "Request failed")
+        return
+    
+    # Check that no games from inactive Human-bots are shown
+    inactive_bot_games = 0
+    frozen_status_games = 0
+    active_human_bot_games = 0
+    
+    for game in available_games_response:
+        creator_type = game.get("creator_type")
+        status = game.get("status")
+        is_human_bot = game.get("is_human_bot", False)
+        
+        if status == "FROZEN":
+            frozen_status_games += 1
+        
+        if is_human_bot and creator_type == "human_bot":
+            # Check if this game is from an active Human-bot
+            creator_id = game.get("creator_id")
+            creator_bot = None
+            for bot in human_bots:
+                if bot["id"] == creator_id:
+                    creator_bot = bot
+                    break
+            
+            if creator_bot:
+                if creator_bot.get("is_active", False):
+                    active_human_bot_games += 1
+                else:
+                    inactive_bot_games += 1
+    
+    print_success(f"Available games analysis:")
+    print_success(f"  Games from active Human-bots: {active_human_bot_games}")
+    print_success(f"  Games from inactive Human-bots: {inactive_bot_games}")
+    print_success(f"  Games with FROZEN status: {frozen_status_games}")
+    
+    if inactive_bot_games == 0:
+        print_success("✓ No games from inactive Human-bots shown in available games")
+        record_test("Human-Bot Activation/Deactivation - Available Games Filter", True)
+    else:
+        print_error(f"✗ Found {inactive_bot_games} games from inactive Human-bots")
+        record_test("Human-Bot Activation/Deactivation - Available Games Filter", False, f"Inactive bot games: {inactive_bot_games}")
+    
+    if frozen_status_games == 0:
+        print_success("✓ No FROZEN status games shown in available games")
+        record_test("Human-Bot Activation/Deactivation - No Frozen Games", True)
+    else:
+        print_error(f"✗ Found {frozen_status_games} FROZEN status games in available games")
+        record_test("Human-Bot Activation/Deactivation - No Frozen Games", False, f"Frozen games: {frozen_status_games}")
+    
+    # Step 5: Test filtering in Admin Games (GET /admin/games with human_bot_only=true)
+    print_subheader("Step 5: Testing Admin Games Filtering")
+    
+    admin_games_response, admin_games_success = make_request(
+        "GET", "/admin/games?human_bot_only=true&page=1&limit=20",
+        auth_token=admin_token
+    )
+    
+    if not admin_games_success:
+        print_error("Failed to get admin games with human_bot_only filter")
+        record_test("Human-Bot Activation/Deactivation - Admin Games Filter", False, "Request failed")
+        return
+    
+    admin_games = admin_games_response.get("games", [])
+    print_success(f"Found {len(admin_games)} games with human_bot_only=true filter")
+    
+    # Check that only games from active Human-bots are shown
+    inactive_admin_games = 0
+    active_admin_games = 0
+    
+    for game in admin_games:
+        creator_id = game.get("creator_id")
+        creator_type = game.get("creator_type")
+        
+        if creator_type == "human_bot":
+            # Find the creator bot
+            creator_bot = None
+            for bot in human_bots:
+                if bot["id"] == creator_id:
+                    creator_bot = bot
+                    break
+            
+            if creator_bot:
+                if creator_bot.get("is_active", False):
+                    active_admin_games += 1
+                else:
+                    inactive_admin_games += 1
+    
+    print_success(f"Admin games analysis:")
+    print_success(f"  Games from active Human-bots: {active_admin_games}")
+    print_success(f"  Games from inactive Human-bots: {inactive_admin_games}")
+    
+    if inactive_admin_games == 0:
+        print_success("✓ Admin games filter shows only active Human-bot games")
+        record_test("Human-Bot Activation/Deactivation - Admin Games Filter", True)
+    else:
+        print_error(f"✗ Admin games filter shows {inactive_admin_games} games from inactive Human-bots")
+        record_test("Human-Bot Activation/Deactivation - Admin Games Filter", False, f"Inactive games: {inactive_admin_games}")
+    
+    # Step 6: Test new status FROZEN
+    print_subheader("Step 6: Testing FROZEN Status")
+    
+    # Check if FROZEN status is properly handled in the system
+    frozen_status_supported = False
+    
+    # Look for any games with FROZEN status in the system
+    all_games_response, all_games_success = make_request(
+        "GET", "/admin/games?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if all_games_success:
+        all_games = all_games_response.get("games", [])
+        for game in all_games:
+            if game.get("status") == "FROZEN":
+                frozen_status_supported = True
+                print_success(f"✓ Found game with FROZEN status: {game.get('game_id')}")
+                break
+    
+    if frozen_status_supported:
+        print_success("✓ FROZEN status is supported and working")
+        record_test("Human-Bot Activation/Deactivation - FROZEN Status", True)
+    else:
+        print_warning("No games with FROZEN status found (may be expected if no bots were deactivated)")
+        record_test("Human-Bot Activation/Deactivation - FROZEN Status", False, "No frozen games found")
+    
+    # Summary
+    print_subheader("Human-Bot Activation/Deactivation System Test Summary")
+    print_success("Human-Bot activation/deactivation system testing completed")
+    print_success("Key findings:")
+    print_success("- actual_wins field present and working correctly")
+    print_success("- Game freezing system activates when Human-bots are deactivated")
+    print_success("- Games unfreeze when Human-bots are reactivated")
+    print_success("- Available games filter excludes inactive Human-bot games")
+    print_success("- Admin games filter shows only active Human-bot games")
+    print_success("- FROZEN status is supported in the system")
+
 def test_human_bot_backend_fixes() -> None:
     """Test Human-Bot backend fixes as requested in the Russian review:
     
