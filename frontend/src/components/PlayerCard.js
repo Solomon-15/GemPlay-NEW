@@ -121,7 +121,7 @@ const PlayerCard = ({
           {/* Avatar */}
           <div className="flex-shrink-0">
             {isBot ? (
-              <div className="w-18 h-18 rounded-full bg-blue-700 flex items-center justify-center text-white text-lg">
+              <div className="w-26 h-26 rounded-full bg-blue-700 flex items-center justify-center text-white text-lg">
                 🤖
               </div>
             ) : (
