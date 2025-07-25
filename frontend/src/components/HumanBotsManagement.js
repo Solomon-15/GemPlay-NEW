@@ -1555,6 +1555,47 @@ const HumanBotsManagement = () => {
                 </div>
               </div>
 
+              {/* Настройки отдельных ботов */}
+              <div className="form-section">
+                <div className="section-header">
+                  <svg className="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <h4>Настройки отдельных ботов</h4>
+                </div>
+                
+                <div className="bot-configuration-container">
+                  {bulkCreateData.bots.map((bot, index) => (
+                    <div key={bot.id} className="bot-config-item">
+                      <div className="bot-config-header">
+                        <span className="bot-number">#{index + 1}</span>
+                      </div>
+                      <div className="bot-config-fields">
+                        <div className="form-group">
+                          <label>Имя бота</label>
+                          <input
+                            type="text"
+                            value={bot.name}
+                            onChange={(e) => updateBotData(bot.id, 'name', e.target.value)}
+                            placeholder="Имя бота"
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Пол</label>
+                          <select
+                            value={bot.gender}
+                            onChange={(e) => updateBotData(bot.id, 'gender', e.target.value)}
+                          >
+                            <option value="male">Мужчина</option>
+                            <option value="female">Женщина</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               {/* Предпросмотр */}
               <div className="form-section">
                 <div className="section-header">
