@@ -627,7 +627,7 @@ const HumanBotsManagement = () => {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="text-center">
                           <div className="text-accent-primary font-bold text-lg">
-                            {humanBotSettings.current_usage?.total_individual_limits || 0}
+                            {stats.total_bets || 0}
                           </div>
                           <div className="text-text-secondary text-sm">Использовано</div>
                         </div>
