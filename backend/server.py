@@ -8518,8 +8518,8 @@ async def get_games_list(
         
         # Filter by bot type if provided
         if human_bot_only:
-            # Get all human bot IDs
-            human_bots = await db.human_bots.find({}).to_list(None)
+            # Get all active human bot IDs (only active bots)
+            human_bots = await db.human_bots.find({"is_active": True}).to_list(None)
             human_bot_ids = [bot["id"] for bot in human_bots]
             query["creator_id"] = {"$in": human_bot_ids}
         elif regular_bot_only:
