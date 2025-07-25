@@ -581,6 +581,7 @@ class UserResponse(BaseModel):
     total_games_won: int
     total_amount_wagered: float
     total_amount_won: float
+    total_commission_paid: float  # Общая сумма комиссий, оплаченных ботом
 
 class Token(BaseModel):
     access_token: str
