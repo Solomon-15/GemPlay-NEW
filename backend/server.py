@@ -17918,8 +17918,10 @@ async def bulk_create_human_bots(
         
         for i in range(bulk_data.count):
             try:
-                # Generate unique name
-                bot_name = await generate_unique_human_bot_name()
+                # Use individual bot data if provided, otherwise generate
+                bot_data = bulk_data.bots[i] if bulk_data.bots and i < len(bulk_data.bots) else {}
+                bot_name = bot_data.get('name') if bot_data.get('name') else await generate_unique_human_bot_name()
+                bot_gender = bot_data.get('gender', 'male')
                 
                 # Generate random values within ranges (целые гемы)
                 min_bet = random.randint(int(bulk_data.min_bet_range[0]), int(bulk_data.min_bet_range[1]))
@@ -17932,8 +17934,13 @@ async def bulk_create_human_bots(
                     if min_bet == max_bet:
                         max_bet = min_bet + 1  # Гарантируем разность в 1 гем
                 
-                min_delay = random.randint(bulk_data.delay_range[0], bulk_data.delay_range[1] // 2)
-                max_delay = random.randint(min_delay + 1, bulk_data.delay_range[1])
+                # Use separate delay fields if provided, otherwise use delay_range
+                if bulk_data.min_delay is not None and bulk_data.max_delay is not None:
+                    min_delay = random.randint(bulk_data.min_delay, bulk_data.max_delay // 2)
+                    max_delay = random.randint(min_delay + 1, bulk_data.max_delay)
+                else:
+                    min_delay = random.randint(bulk_data.delay_range[0], bulk_data.delay_range[1] // 2)
+                    max_delay = random.randint(min_delay + 1, bulk_data.delay_range[1])
                 
                 # Generate bet_limit within range
                 bet_limit = random.randint(bulk_data.bet_limit_range[0], bulk_data.bet_limit_range[1])
@@ -17942,6 +17949,7 @@ async def bulk_create_human_bots(
                 human_bot = HumanBot(
                     name=bot_name,
                     character=bulk_data.character,
+                    gender=bot_gender,
                     min_bet=float(min_bet),  # Преобразуем в float для базы, но значение будет целым
                     max_bet=float(max_bet),  # Преобразуем в float для базы, но значение будет целым
                     bet_limit=bet_limit,
@@ -17959,12 +17967,14 @@ async def bulk_create_human_bots(
                     "id": human_bot.id,
                     "name": human_bot.name,
                     "character": human_bot.character,
+                    "gender": human_bot.gender,
                     "bet_range": f"${human_bot.min_bet}-${human_bot.max_bet}"
                 })
                 
             except Exception as e:
                 failed_bots.append({
                     "index": i,
+                    "name": bot_data.get('name', f'Bot_{i}') if bulk_data.bots and i < len(bulk_data.bots) else f'Bot_{i}',
                     "error": str(e)
                 })
         
