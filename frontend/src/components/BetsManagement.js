@@ -573,7 +573,7 @@ const BetsManagement = () => {
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="text-white font-roboto text-sm">
-                          {bet.age_hours}ч
+                          {formatTimeAge(bet.created_at)}
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
