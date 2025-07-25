@@ -14118,9 +14118,10 @@ async def get_regular_bots_simple(
         })
         
         # Get bots with pagination and sorting
-        bots = await db.bots.find({
+        bots_cursor = db.bots.find({
             "bot_type": "REGULAR"
-        }).sort("created_at", -1).skip(offset).limit(limit).to_list(limit)
+        }).sort("created_at", -1).skip(offset).limit(limit)
+        bots = await bots_cursor.to_list(length=limit)
         
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
