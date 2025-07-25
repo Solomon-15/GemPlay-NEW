@@ -1406,6 +1406,272 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_analytics_endpoints_500_errors() -> None:
+    """Test specific analytics endpoints that are causing 500 Internal Server Errors in NewBotAnalytics.js component.
+    
+    The user reported 500 errors in analytics endpoints used by the NewBotAnalytics.js component.
+    We need to test these specific endpoints:
+    
+    1. GET /api/admin/games?page=1&limit=1000&human_bot_only=true 
+    2. GET /api/admin/games?page=1&limit=1000&regular_bot_only=true
+    3. GET /api/admin/bots?page=1&limit=100
+    4. GET /api/admin/human-bots?page=1&limit=50
+    
+    Expected: All should return 200 status codes with proper JSON data, no 500 errors.
+    """
+    print_header("ANALYTICS ENDPOINTS 500 ERRORS TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with analytics endpoints test")
+        record_test("Analytics Endpoints - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    record_test("Analytics Endpoints - Admin Login", True)
+    
+    # Step 2: Test GET /api/admin/games?page=1&limit=1000&human_bot_only=true
+    print_subheader("Step 2: Test Human-Bot Games Endpoint")
+    
+    human_bot_games_response, human_bot_games_success = make_request(
+        "GET", "/admin/games?page=1&limit=1000&human_bot_only=true",
+        auth_token=admin_token
+    )
+    
+    if human_bot_games_success:
+        print_success("✅ GET /api/admin/games?human_bot_only=true - SUCCESS (200)")
+        
+        # Verify response structure
+        if isinstance(human_bot_games_response, dict):
+            games_list = human_bot_games_response.get("games", [])
+            total_count = human_bot_games_response.get("total", 0)
+            
+            print_success(f"  Response structure: dict with 'games' and 'total' fields")
+            print_success(f"  Total human-bot games: {total_count}")
+            print_success(f"  Games in response: {len(games_list)}")
+            
+            # Check if games are actually human-bot games
+            human_bot_count = 0
+            for game in games_list[:5]:  # Check first 5 games
+                creator_type = game.get("creator_type", "unknown")
+                is_human_bot = game.get("is_human_bot", False)
+                if creator_type == "human_bot" or is_human_bot:
+                    human_bot_count += 1
+            
+            if human_bot_count > 0:
+                print_success(f"  ✅ Found {human_bot_count} human-bot games in sample")
+            else:
+                print_warning(f"  ⚠️ No human-bot games found in sample (may be empty)")
+            
+            record_test("Analytics Endpoints - Human-Bot Games", True)
+        else:
+            print_error(f"  ❌ Unexpected response format: {type(human_bot_games_response)}")
+            record_test("Analytics Endpoints - Human-Bot Games", False, "Unexpected response format")
+    else:
+        print_error("❌ GET /api/admin/games?human_bot_only=true - FAILED (500 or other error)")
+        print_error(f"  Response: {human_bot_games_response}")
+        record_test("Analytics Endpoints - Human-Bot Games", False, "500 error or request failed")
+    
+    # Step 3: Test GET /api/admin/games?page=1&limit=1000&regular_bot_only=true
+    print_subheader("Step 3: Test Regular Bot Games Endpoint")
+    
+    regular_bot_games_response, regular_bot_games_success = make_request(
+        "GET", "/admin/games?page=1&limit=1000&regular_bot_only=true",
+        auth_token=admin_token
+    )
+    
+    if regular_bot_games_success:
+        print_success("✅ GET /api/admin/games?regular_bot_only=true - SUCCESS (200)")
+        
+        # Verify response structure
+        if isinstance(regular_bot_games_response, dict):
+            games_list = regular_bot_games_response.get("games", [])
+            total_count = regular_bot_games_response.get("total", 0)
+            
+            print_success(f"  Response structure: dict with 'games' and 'total' fields")
+            print_success(f"  Total regular bot games: {total_count}")
+            print_success(f"  Games in response: {len(games_list)}")
+            
+            # Check if games are actually regular bot games
+            regular_bot_count = 0
+            for game in games_list[:5]:  # Check first 5 games
+                creator_type = game.get("creator_type", "unknown")
+                bot_type = game.get("bot_type", None)
+                if creator_type == "bot" and bot_type == "REGULAR":
+                    regular_bot_count += 1
+            
+            if regular_bot_count > 0:
+                print_success(f"  ✅ Found {regular_bot_count} regular bot games in sample")
+            else:
+                print_warning(f"  ⚠️ No regular bot games found in sample (may be empty)")
+            
+            record_test("Analytics Endpoints - Regular Bot Games", True)
+        else:
+            print_error(f"  ❌ Unexpected response format: {type(regular_bot_games_response)}")
+            record_test("Analytics Endpoints - Regular Bot Games", False, "Unexpected response format")
+    else:
+        print_error("❌ GET /api/admin/games?regular_bot_only=true - FAILED (500 or other error)")
+        print_error(f"  Response: {regular_bot_games_response}")
+        record_test("Analytics Endpoints - Regular Bot Games", False, "500 error or request failed")
+    
+    # Step 4: Test GET /api/admin/bots?page=1&limit=100
+    print_subheader("Step 4: Test Regular Bots List Endpoint")
+    
+    regular_bots_response, regular_bots_success = make_request(
+        "GET", "/admin/bots?page=1&limit=100",
+        auth_token=admin_token
+    )
+    
+    if regular_bots_success:
+        print_success("✅ GET /api/admin/bots?page=1&limit=100 - SUCCESS (200)")
+        
+        # Verify response structure
+        if isinstance(regular_bots_response, dict):
+            bots_list = regular_bots_response.get("bots", [])
+            total_count = regular_bots_response.get("total", 0)
+            
+            print_success(f"  Response structure: dict with 'bots' and 'total' fields")
+            print_success(f"  Total regular bots: {total_count}")
+            print_success(f"  Bots in response: {len(bots_list)}")
+            
+            # Check bot structure
+            if bots_list:
+                sample_bot = bots_list[0]
+                bot_fields = ["id", "name", "bot_type", "is_active", "min_bet_amount", "max_bet_amount"]
+                missing_fields = [field for field in bot_fields if field not in sample_bot]
+                
+                if not missing_fields:
+                    print_success(f"  ✅ Bot structure contains expected fields")
+                else:
+                    print_warning(f"  ⚠️ Bot missing fields: {missing_fields}")
+            
+            record_test("Analytics Endpoints - Regular Bots List", True)
+        else:
+            print_error(f"  ❌ Unexpected response format: {type(regular_bots_response)}")
+            record_test("Analytics Endpoints - Regular Bots List", False, "Unexpected response format")
+    else:
+        print_error("❌ GET /api/admin/bots?page=1&limit=100 - FAILED (500 or other error)")
+        print_error(f"  Response: {regular_bots_response}")
+        record_test("Analytics Endpoints - Regular Bots List", False, "500 error or request failed")
+    
+    # Step 5: Test GET /api/admin/human-bots?page=1&limit=50
+    print_subheader("Step 5: Test Human-Bots List Endpoint")
+    
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if human_bots_success:
+        print_success("✅ GET /api/admin/human-bots?page=1&limit=50 - SUCCESS (200)")
+        
+        # Verify response structure
+        if isinstance(human_bots_response, dict):
+            bots_list = human_bots_response.get("bots", [])
+            pagination = human_bots_response.get("pagination", {})
+            
+            print_success(f"  Response structure: dict with 'bots' and 'pagination' fields")
+            print_success(f"  Human-bots in response: {len(bots_list)}")
+            
+            if pagination:
+                total_items = pagination.get("total_items", 0)
+                current_page = pagination.get("current_page", 1)
+                total_pages = pagination.get("total_pages", 1)
+                print_success(f"  Pagination: page {current_page}/{total_pages}, total items: {total_items}")
+            
+            # Check human-bot structure
+            if bots_list:
+                sample_bot = bots_list[0]
+                bot_fields = ["id", "name", "character", "is_active", "min_bet", "max_bet", "total_games_played"]
+                missing_fields = [field for field in bot_fields if field not in sample_bot]
+                
+                if not missing_fields:
+                    print_success(f"  ✅ Human-bot structure contains expected fields")
+                else:
+                    print_warning(f"  ⚠️ Human-bot missing fields: {missing_fields}")
+            
+            record_test("Analytics Endpoints - Human-Bots List", True)
+        else:
+            print_error(f"  ❌ Unexpected response format: {type(human_bots_response)}")
+            record_test("Analytics Endpoints - Human-Bots List", False, "Unexpected response format")
+    else:
+        print_error("❌ GET /api/admin/human-bots?page=1&limit=50 - FAILED (500 or other error)")
+        print_error(f"  Response: {human_bots_response}")
+        record_test("Analytics Endpoints - Human-Bots List", False, "500 error or request failed")
+    
+    # Step 6: Database Structure Verification (if any endpoints failed)
+    print_subheader("Step 6: Database Structure Analysis")
+    
+    failed_endpoints = []
+    if not human_bot_games_success:
+        failed_endpoints.append("human-bot games")
+    if not regular_bot_games_success:
+        failed_endpoints.append("regular bot games")
+    if not regular_bots_success:
+        failed_endpoints.append("regular bots list")
+    if not human_bots_success:
+        failed_endpoints.append("human-bots list")
+    
+    if failed_endpoints:
+        print_error(f"❌ Failed endpoints: {', '.join(failed_endpoints)}")
+        print_error("Potential issues to check:")
+        print_error("- Database collections (games, bots, human_bots) may be missing or corrupted")
+        print_error("- Query parameters validation may be failing")
+        print_error("- Pagination logic may have bugs")
+        print_error("- Database indexes may be missing")
+        
+        record_test("Analytics Endpoints - Database Structure", False, f"Failed endpoints: {failed_endpoints}")
+    else:
+        print_success("✅ All endpoints working - database structure appears healthy")
+        record_test("Analytics Endpoints - Database Structure", True)
+    
+    # Step 7: Summary and Recommendations
+    print_subheader("Step 7: Summary and Recommendations")
+    
+    total_endpoints = 4
+    successful_endpoints = sum([
+        human_bot_games_success,
+        regular_bot_games_success,
+        regular_bots_success,
+        human_bots_success
+    ])
+    
+    success_rate = (successful_endpoints / total_endpoints) * 100
+    
+    print_success(f"Analytics Endpoints Test Results:")
+    print_success(f"  Successful endpoints: {successful_endpoints}/{total_endpoints} ({success_rate:.1f}%)")
+    
+    if success_rate == 100:
+        print_success("🎉 ALL ANALYTICS ENDPOINTS WORKING CORRECTLY")
+        print_success("✅ No 500 Internal Server Errors found")
+        print_success("✅ NewBotAnalytics.js component should work properly")
+        print_success("✅ All endpoints return proper JSON data structures")
+        
+        record_test("Analytics Endpoints - Overall Success", True)
+    elif success_rate >= 75:
+        print_warning("⚠️ MOST ANALYTICS ENDPOINTS WORKING")
+        print_warning(f"Some endpoints may need attention: {failed_endpoints}")
+        
+        record_test("Analytics Endpoints - Overall Success", False, f"Partial success: {success_rate:.1f}%")
+    else:
+        print_error("❌ MULTIPLE ANALYTICS ENDPOINTS FAILING")
+        print_error("NewBotAnalytics.js component will likely have issues")
+        print_error("Immediate attention required for backend endpoints")
+        
+        record_test("Analytics Endpoints - Overall Success", False, f"Low success rate: {success_rate:.1f}%")
+    
+    # Recommendations
+    if failed_endpoints:
+        print_subheader("Recommendations for Failed Endpoints")
+        print_success("1. Check backend server logs for detailed error messages")
+        print_success("2. Verify database collections exist and have proper indexes")
+        print_success("3. Test query parameter validation logic")
+        print_success("4. Check pagination implementation for edge cases")
+        print_success("5. Verify admin authentication and permissions")
+
 def test_gem_display_formatting() -> None:
     """Test the gem display formatting across the application to ensure the new gem utilities are working correctly.
     
