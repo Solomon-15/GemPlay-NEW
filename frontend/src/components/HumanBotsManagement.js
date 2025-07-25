@@ -432,9 +432,9 @@ const HumanBotsManagement = () => {
 
   // Функция для генерации случайных имен
   const generateRandomName = () => {
-    const maleNames = ['Александр', 'Дмитрий', 'Максим', 'Андрей', 'Сергей', 'Алексей', 'Владимир', 'Павел', 'Роман', 'Артем'];
-    const femaleNames = ['Анна', 'Мария', 'Елена', 'Наталья', 'Ольга', 'Татьяна', 'Ирина', 'Светлана', 'Екатерина', 'Виктория'];
-    const surnames = ['Иванов', 'Петров', 'Сидоров', 'Смирнов', 'Кузнецов', 'Попов', 'Васильев', 'Соколов', 'Михайлов', 'Новиков'];
+    const maleNames = ['Alikhan', 'Nurzhan', 'Ayan', 'Ruslan', 'Bekzat','Yerlan', 'Zhanibek', 'Omir', 'Azamat', 'Temirlan',   'Aleksandr', 'Dmitriy', 'Maksim', 'Andrey', 'Sergey', 'Aleksey', 'Vladimir', 'Pavel', 'Roman', 'Artem'];
+    const femaleNames = ['Aigerim', 'Gulnara', 'Aizhan', 'Sabina', 'Saule', 'Dilnaz', 'Madina', 'Zhanar', 'Aruzhan', 'Gulzhana', 'Anna', 'Mariya', 'Elena', 'Natalya', 'Olga', 'Tatyana', 'Irina', 'Svetlana', 'Ekaterina', 'Viktoriya'];
+    const surnames = [];
     
     const gender = Math.random() > 0.5 ? 'male' : 'female';
     const firstName = gender === 'male' ? 
@@ -912,7 +912,7 @@ const HumanBotsManagement = () => {
                           <input
                             type="number"
                             min="1"
-                            max="1000"
+                            max="1000000"
                             value={humanBotSettings.max_active_bets_human || 100}
                             onChange={(e) => setHumanBotSettings({
                               ...humanBotSettings,

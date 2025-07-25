@@ -137,12 +137,12 @@ class BotSettingsRequest(BaseModel):
 
 # Human Bot Settings Request model - новая модель для настроек Human-ботов
 class HumanBotSettingsRequest(BaseModel):
-    max_active_bets_human: int = Field(ge=1, le=1000, description="Максимальное количество активных ставок для всех Human ботов")
+    max_active_bets_human: int = Field(ge=1, le=1000000, description="Максимальное количество активных ставок для всех Human ботов")
     auto_play_enabled: Optional[bool] = Field(default=False, description="Глобальное включение автоигры между Human-ботами")
     min_delay_seconds: Optional[int] = Field(default=1, ge=1, le=3600, description="Минимальная задержка между играми (секунды)")
     max_delay_seconds: Optional[int] = Field(default=3600, ge=1, le=3600, description="Максимальная задержка между играми (секунды)")
     play_with_players_enabled: Optional[bool] = Field(default=False, description="Глобальное включение игры Human-ботов с живыми игроками")
-    max_concurrent_games: Optional[int] = Field(default=3, ge=1, le=50, description="Максимальное количество одновременных игр для Human-ботов")
+    max_concurrent_games: Optional[int] = Field(default=3, ge=1, le=1000000, description="Максимальное количество одновременных игр для Human-ботов")
 
 # Interface Settings model
 class InterfaceSettings(BaseModel):
@@ -6051,8 +6051,8 @@ class RegularBotSystem:
             # Создаем дефолтные настройки если их нет
             default_settings = {
                 "id": "bot_settings",
-                "max_active_bets_regular": 50,
-                "max_active_bets_human": 30,
+                "max_active_bets_regular": 1000000,
+                "max_active_bets_human": 1000000,
                 "auto_queue_activation": True,
                 "priority_system_enabled": True,
                 "default_pause_between_games": 5,
@@ -6679,8 +6679,8 @@ async def maintain_bot_active_bets(game: Game):
         # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
         # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
-        max_active_bets_human = bot_settings.get("max_active_bets_human", 30) if bot_settings else 30
+        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
+        max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
         
         # Определяем тип бота
         bot_type = bot.get("bot_type", "REGULAR")
@@ -9334,13 +9334,13 @@ async def get_interface_settings(current_admin: User = Depends(get_current_admin
                 }),
                 "display_limits": settings_doc.get("display_limits", {
                     "live_players": {
-                        "max_my_bets": 50,
-                        "max_available_bets": 50,
-                        "max_ongoing_battles": 50
+                        "max_my_bets": 1000000,
+                        "max_available_bets": 1000000,
+                        "max_ongoing_battles": 1000000
                     },
                     "bot_players": {
-                        "max_available_bots": 100,
-                        "max_ongoing_bot_battles": 100
+                        "max_available_bots": 1000000,
+                        "max_ongoing_bot_battles": 1000000
                     }
                 })
             }
@@ -9358,13 +9358,13 @@ async def get_interface_settings(current_admin: User = Depends(get_current_admin
                 },
                 "display_limits": {
                     "live_players": {
-                        "max_my_bets": 50,
-                        "max_available_bets": 50,
-                        "max_ongoing_battles": 50
+                        "max_my_bets": 1000000,
+                        "max_available_bets": 1000000,
+                        "max_ongoing_battles": 1000000
                     },
                     "bot_players": {
-                        "max_available_bots": 100,
-                        "max_ongoing_bot_battles": 100
+                        "max_available_bots": 1000000,
+                        "max_ongoing_bot_battles": 1000000
                     }
                 }
             }
@@ -10173,8 +10173,8 @@ async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
         # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
         # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
-        max_active_bets_human = bot_settings.get("max_active_bets_human", 30) if bot_settings else 30
+        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
+        max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
         
         # Получаем информацию о боте
         bot = await db.bots.find_one({"id": bot_id})
@@ -10302,8 +10302,8 @@ async def bot_create_game_automatically(bot: Bot):
         # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
         # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
-        max_active_bets_human = bot_settings.get("max_active_bets_human", 30) if bot_settings else 30
+        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
+        max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
         
         # Определяем тип бота
         bot_doc = await db.bots.find_one({"id": bot.id})
@@ -13620,7 +13620,7 @@ async def start_regular_bots(
     try:
         # Получаем настройки ботов
         settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets = settings.get("max_active_bets_regular", 50) if settings else 50
+        max_active_bets = settings.get("max_active_bets_regular", 1000000) if settings else 1000000
         
         # Проверяем текущее количество активных ставок обычных ботов
         current_active_bets = await db.games.count_documents({
@@ -13651,7 +13651,7 @@ async def start_regular_bots(
         if not active_bots:
             # Создаем ботов если их нет
             await create_regular_bots(
-                {"count": 5, "min_bet_amount": 1.0, "max_bet_amount": 50.0},
+                {"count": 5, "min_bet_amount": 1.0, "max_bet_amount": 1000000.0},
                 current_user
             )
             active_bots = await db.bots.find({
@@ -13769,8 +13769,8 @@ async def create_bot_bet(bot: Bot) -> bool:
         # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
         # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
-        max_active_bets_human = bot_settings.get("max_active_bets_human", 30) if bot_settings else 30
+        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
+        max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
         
         # Получаем информацию о боте из базы данных для режима создания ставок
         bot_doc = await db.bots.find_one({"id": bot.id})
@@ -13906,7 +13906,7 @@ async def get_next_bot_in_queue() -> dict:
     try:
         # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
+        max_active_bets = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
         
         # Проверяем текущие активные ставки
         current_active_bets = await db.games.count_documents({
@@ -13989,8 +13989,8 @@ async def get_bot_global_settings_old(current_user: User = Depends(get_current_a
             # Create default settings if not exists
             default_settings = {
                 "id": "bot_settings",
-                "max_active_bets_regular": 50,
-                "max_active_bets_human": 30,
+                "max_active_bets_regular": 1000000,
+                "max_active_bets_human": 1000000,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }
@@ -13998,8 +13998,8 @@ async def get_bot_global_settings_old(current_user: User = Depends(get_current_a
             settings = default_settings
         
         return {
-            "max_active_bets_regular": settings.get("max_active_bets_regular", 50),
-            "max_active_bets_human": settings.get("max_active_bets_human", 30)
+            "max_active_bets_regular": settings.get("max_active_bets_regular", 1000000),
+            "max_active_bets_human": settings.get("max_active_bets_human", 1000000)
         }
         
     except Exception as e:
@@ -14022,7 +14022,7 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
         
         # Получаем настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets = bot_settings.get("max_active_bets_regular", 50) if bot_settings else 50
+        max_active_bets = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
         
         # Получаем всех активных ботов
         all_bots = await db.bots.find({
@@ -14095,15 +14095,15 @@ async def update_bot_global_settings_old(
 ):
     """Update bot settings."""
     try:
-        max_active_bets_regular = settings_data.get("max_active_bets_regular", 50)
-        max_active_bets_human = settings_data.get("max_active_bets_human", 30)
+        max_active_bets_regular = settings_data.get("max_active_bets_regular", 1000000)
+        max_active_bets_human = settings_data.get("max_active_bets_human", 1000000)
         
         # Validation
-        if max_active_bets_regular < 0 or max_active_bets_regular > 1000:
-            raise HTTPException(status_code=400, detail="Max active bets for regular bots must be between 0 and 1000")
+        if max_active_bets_regular < 0 or max_active_bets_regular > 1000000:
+            raise HTTPException(status_code=400, detail="Max active bets for regular bots must be between 0 and 1000000")
         
-        if max_active_bets_human < 0 or max_active_bets_human > 1000:
-            raise HTTPException(status_code=400, detail="Max active bets for human bots must be between 0 and 1000")
+        if max_active_bets_human < 0 or max_active_bets_human > 1000000:
+            raise HTTPException(status_code=400, detail="Max active bets for human bots must be between 0 and 1000000")
         
         # Update settings
         await db.bot_settings.update_one(
@@ -14166,21 +14166,21 @@ async def get_active_bets_stats(current_user: User = Depends(get_current_admin))
         
         # Get current settings
         settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_regular = settings.get("max_active_bets_regular", 50) if settings else 50
-        max_human = settings.get("max_active_bets_human", 30) if settings else 30
+        max_regular = settings.get("max_active_bets_regular", 1000000) if settings else 1000000
+        max_human = settings.get("max_active_bets_human", 1000000) if settings else 1000000
         
         return {
             "regular_bots": {
                 "current": regular_bots_active_bets,
                 "max": max_regular,
                 "available": max(0, max_regular - regular_bots_active_bets),
-                "percentage": round((regular_bots_active_bets / max_regular * 100), 1) if max_regular > 0 else 0
+                "percentage": round((regular_bots_active_bets / max_regular * 1000000), 1) if max_regular > 0 else 0
             },
             "human_bots": {
                 "current": human_bots_active_bets,
                 "max": max_human,
                 "available": max(0, max_human - human_bots_active_bets),
-                "percentage": round((human_bots_active_bets / max_human * 100), 1) if max_human > 0 else 0
+                "percentage": round((human_bots_active_bets / max_human * 1000000), 1) if max_human > 0 else 0
             }
         }
         
@@ -14373,7 +14373,7 @@ async def get_regular_bots_simple(
         # Validate pagination parameters
         if page < 1:
             page = 1
-        if limit < 1 or limit > 1000:
+        if limit < 1 or limit > 1000000:
             limit = 100
         
         # Calculate offset
@@ -16241,8 +16241,8 @@ async def get_bot_settings_v2(current_user: User = Depends(get_current_admin)):
             # Create default settings if not exists
             default_settings = {
                 "id": "bot_settings",
-                "globalMaxActiveBets": 50,
-                "globalMaxHumanBots": 30,
+                "globalMaxActiveBets": 1000000,
+                "globalMaxHumanBots": 1000000,
                 "paginationSize": 10,
                 "autoActivateFromQueue": True,
                 "priorityType": "order",
@@ -16255,8 +16255,8 @@ async def get_bot_settings_v2(current_user: User = Depends(get_current_admin)):
         return {
             "success": True,
             "settings": {
-                "globalMaxActiveBets": settings.get("globalMaxActiveBets", settings.get("max_active_bets_regular", 50)),
-                "globalMaxHumanBots": settings.get("globalMaxHumanBots", settings.get("max_active_bets_human", 30)),
+                "globalMaxActiveBets": settings.get("globalMaxActiveBets", settings.get("max_active_bets_regular", 1000000)),
+                "globalMaxHumanBots": settings.get("globalMaxHumanBots", settings.get("max_active_bets_human", 1000000)),
                 "paginationSize": settings.get("paginationSize", 10),
                 "autoActivateFromQueue": settings.get("autoActivateFromQueue", True),
                 "priorityType": settings.get("priorityType", "order")
@@ -16349,7 +16349,7 @@ async def get_bot_queue_stats(current_user: User = Depends(get_current_admin)):
         
         # Get bot settings for max limits
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_regular_bets = bot_settings.get("globalMaxActiveBets", 50) if bot_settings else 50
+        max_regular_bets = bot_settings.get("globalMaxActiveBets", 1000000) if bot_settings else 1000000
         
         # Calculate queued bets (this is a simplified calculation)
         total_queued_bets = max(0, active_regular_bets - max_regular_bets)
@@ -16382,15 +16382,15 @@ async def update_bot_limit(
         max_individual_bets = limit_data.get('maxIndividualBets', 12)
         
         # Validate limit
-        if max_individual_bets < 1 or max_individual_bets > 50:
+        if max_individual_bets < 1 or max_individual_bets > 1000000:
             raise HTTPException(
                 status_code=400,
-                detail="Individual bot limit must be between 1 and 50"
+                detail="Individual bot limit must be between 1 and 1000000"
             )
         
         # Get global settings
         global_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        global_max = global_settings.get("globalMaxActiveBets", 50) if global_settings else 50
+        global_max = global_settings.get("globalMaxActiveBets", 1000000) if global_settings else 1000000
         
         # Get all other active bots to check global limit
         other_bots = await db.bots.find({
@@ -16684,7 +16684,7 @@ async def get_bot_analytics(
             
             # Get bot settings for max capacity
             bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-            max_capacity = bot_settings.get("globalMaxActiveBets", 50) if bot_settings else 50
+            max_capacity = bot_settings.get("globalMaxActiveBets", 1000000) if bot_settings else 1000000
             
             current_active_bets = await db.games.count_documents({
                 "status": "waiting",
@@ -17012,7 +17012,7 @@ async def generate_bot_utilization_report(start_time: datetime, end_time: dateti
         
         # Calculate utilization metrics
         total_capacity = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_capacity = total_capacity.get("globalMaxActiveBets", 50) if total_capacity else 50
+        max_capacity = total_capacity.get("globalMaxActiveBets", 1000000) if total_capacity else 1000000
         
         current_usage = await db.games.count_documents({
             "status": "waiting",

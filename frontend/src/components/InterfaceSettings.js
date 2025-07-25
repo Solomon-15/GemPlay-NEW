@@ -18,13 +18,13 @@ const InterfaceSettings = () => {
     },
     display_limits: {
       live_players: {
-        max_my_bets: 50,
-        max_available_bets: 50,
-        max_ongoing_battles: 50
+        max_my_bets: 1000000,
+        max_available_bets: 1000000,
+        max_ongoing_battles: 1000000
       },
       bot_players: {
-        max_available_bots: 100,
-        max_ongoing_bot_battles: 100
+        max_available_bots: 1000000,
+        max_ongoing_bot_battles: 1000000
       }
     }
   });
@@ -74,10 +74,10 @@ const InterfaceSettings = () => {
     let minVal, maxVal;
     if (field.startsWith('max_')) {
       minVal = 10;
-      maxVal = 500;
+      maxVal = 1000000;
     } else {
       minVal = 5;
-      maxVal = 100;
+      maxVal = 1000000;
     }
     
     if (numValue < minVal || numValue > maxVal) return;
@@ -93,7 +93,7 @@ const InterfaceSettings = () => {
 
   const handleDisplayLimitChange = (section, field, value) => {
     const numValue = parseInt(value);
-    if (numValue < 10 || numValue > 500) return;
+    if (numValue < 10 || numValue > 1000000) return;
 
     setSettings(prev => ({
       ...prev,
@@ -120,13 +120,13 @@ const InterfaceSettings = () => {
       },
       display_limits: {
         live_players: {
-          max_my_bets: 50,
-          max_available_bets: 50,
-          max_ongoing_battles: 50
+          max_my_bets: 1000000,
+          max_available_bets: 1000000,
+          max_ongoing_battles: 1000000
         },
         bot_players: {
-          max_available_bots: 100,
-          max_ongoing_bot_battles: 100
+          max_available_bots: 1000000,
+          max_ongoing_bot_battles: 1000000
         }
       }
     });
@@ -167,12 +167,12 @@ const InterfaceSettings = () => {
             <input
               type="number"
               min="5"
-              max="100"
+              max="1000"
               value={settings.live_players.my_bets}
               onChange={(e) => handleChange('live_players', 'my_bets', e.target.value)}
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
             />
-            <p className="text-xs text-text-secondary mt-1">От 5 до 100 элементов</p>
+            <p className="text-xs text-text-secondary mt-1">От 5 до 1000 элементов</p>
           </div>
           
           <div>
@@ -182,12 +182,12 @@ const InterfaceSettings = () => {
             <input
               type="number"
               min="5"
-              max="100"
+              max="1000000"
               value={settings.live_players.available_bets}
               onChange={(e) => handleChange('live_players', 'available_bets', e.target.value)}
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
             />
-            <p className="text-xs text-text-secondary mt-1">От 5 до 100 элементов</p>
+            <p className="text-xs text-text-secondary mt-1">От 5 до 1 000 000 элементов</p>
           </div>
           
           <div>
@@ -197,12 +197,12 @@ const InterfaceSettings = () => {
             <input
               type="number"
               min="5"
-              max="100"
+              max="1000000"
               value={settings.live_players.ongoing_battles}
               onChange={(e) => handleChange('live_players', 'ongoing_battles', e.target.value)}
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
             />
-            <p className="text-xs text-text-secondary mt-1">От 5 до 100 элементов</p>
+            <p className="text-xs text-text-secondary mt-1">От 5 до 1 000 000 элементов</p>
           </div>
         </div>
       </div>
@@ -224,12 +224,12 @@ const InterfaceSettings = () => {
             <input
               type="number"
               min="5"
-              max="100"
+              max="1000000"
               value={settings.bot_players.available_bots}
               onChange={(e) => handleChange('bot_players', 'available_bots', e.target.value)}
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
             />
-            <p className="text-xs text-text-secondary mt-1">От 5 до 100 элементов</p>
+            <p className="text-xs text-text-secondary mt-1">От 5 до 1 000 000 элементов</p>
           </div>
           
           <div>
@@ -239,12 +239,12 @@ const InterfaceSettings = () => {
             <input
               type="number"
               min="5"
-              max="100"
+              max="1000000"
               value={settings.bot_players.ongoing_bot_battles}
               onChange={(e) => handleChange('bot_players', 'ongoing_bot_battles', e.target.value)}
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
             />
-            <p className="text-xs text-text-secondary mt-1">От 5 до 100 элементов</p>
+            <p className="text-xs text-text-secondary mt-1">От 5 до 1 000 000 элементов</p>
           </div>
         </div>
       </div>
@@ -268,12 +268,12 @@ const InterfaceSettings = () => {
               <input
                 type="number"
                 min="10"
-                max="500"
-                value={settings.display_limits?.live_players?.max_my_bets || 50}
+                max="1000000"
+                value={settings.display_limits?.live_players?.max_my_bets || 1000000}
                 onChange={(e) => handleDisplayLimitChange('live_players', 'max_my_bets', e.target.value)}
                 className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
               />
-              <p className="text-xs text-text-secondary mt-1">От 10 до 500 элементов</p>
+              <p className="text-xs text-text-secondary mt-1">От 10 до 1 000 000 элементов</p>
             </div>
             
             <div>
@@ -283,12 +283,12 @@ const InterfaceSettings = () => {
               <input
                 type="number"
                 min="10"
-                max="500"
-                value={settings.display_limits?.live_players?.max_available_bets || 50}
+                max="1000000"
+                value={settings.display_limits?.live_players?.max_available_bets || 1000000}
                 onChange={(e) => handleDisplayLimitChange('live_players', 'max_available_bets', e.target.value)}
                 className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
               />
-              <p className="text-xs text-text-secondary mt-1">От 10 до 500 элементов</p>
+              <p className="text-xs text-text-secondary mt-1">От 10 до 1 000 000 элементов</p>
             </div>
             
             <div>
@@ -298,12 +298,12 @@ const InterfaceSettings = () => {
               <input
                 type="number"
                 min="10"
-                max="500"
-                value={settings.display_limits?.live_players?.max_ongoing_battles || 50}
+                max="1000000"
+                value={settings.display_limits?.live_players?.max_ongoing_battles || 1000000}
                 onChange={(e) => handleDisplayLimitChange('live_players', 'max_ongoing_battles', e.target.value)}
                 className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
               />
-              <p className="text-xs text-text-secondary mt-1">От 10 до 500 элементов</p>
+              <p className="text-xs text-text-secondary mt-1">От 10 до 1 000 000 элементов</p>
             </div>
           </div>
         </div>
@@ -318,12 +318,12 @@ const InterfaceSettings = () => {
               <input
                 type="number"
                 min="10"
-                max="500"
-                value={settings.display_limits?.bot_players?.max_available_bots || 100}
+                max="1000000"
+                value={settings.display_limits?.bot_players?.max_available_bots || 1000000}
                 onChange={(e) => handleDisplayLimitChange('bot_players', 'max_available_bots', e.target.value)}
                 className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
               />
-              <p className="text-xs text-text-secondary mt-1">От 10 до 500 элементов</p>
+              <p className="text-xs text-text-secondary mt-1">От 10 до 1 000 000 элементов</p>
             </div>
             
             <div>
@@ -333,12 +333,12 @@ const InterfaceSettings = () => {
               <input
                 type="number"
                 min="10"
-                max="500"
-                value={settings.display_limits?.bot_players?.max_ongoing_bot_battles || 100}
+                max="1000000"
+                value={settings.display_limits?.bot_players?.max_ongoing_bot_battles || 1000000}
                 onChange={(e) => handleDisplayLimitChange('bot_players', 'max_ongoing_bot_battles', e.target.value)}
                 className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
               />
-              <p className="text-xs text-text-secondary mt-1">От 10 до 500 элементов</p>
+              <p className="text-xs text-text-secondary mt-1">От 10 до 1 000 000 элементов</p>
             </div>
           </div>
         </div>
