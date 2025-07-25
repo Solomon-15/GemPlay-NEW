@@ -35,6 +35,7 @@ const BetsManagement = () => {
   const [resettingFractional, setResettingFractional] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date()); // Для живого счетчика
 
   // Пагинация
   const pagination = usePagination(1, 10);
