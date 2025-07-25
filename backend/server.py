@@ -4695,7 +4695,7 @@ async def get_economy_balance(current_user: User = Depends(get_current_user)):
 
 @api_router.get("/transactions/history", response_model=List[Transaction])
 async def get_transaction_history(
-    limit: int = 50,
+    limit: int = 1000,  # Increased default limit to 1000
     current_user: User = Depends(get_current_user)
 ):
     """Get user's transaction history."""
