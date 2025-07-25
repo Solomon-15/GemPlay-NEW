@@ -18394,6 +18394,7 @@ async def get_human_bot_all_bets(
             "totalBetAmount": total_bet_amount,
             "botWins": bot_wins,
             "playerWins": player_wins,
+            "draws": draws,
             "completedBetsCount": len(completed_bets),
             "bets": formatted_bets
         }
