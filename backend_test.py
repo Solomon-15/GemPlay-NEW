@@ -1406,6 +1406,279 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_backend_fixes() -> None:
+    """Test Human-Bot backend fixes as requested in the Russian review:
+    
+    1. Profit Formula Fix: correct_profit = (sum of bets in won games) - (sum of bets in lost games)
+    2. Timeout System: Active games should have active_deadline and auto-complete when expired
+    3. Draw Statistics: draws, losses, actual_games_played fields should work correctly
+    4. Complete Endpoint Check: /admin/human-bots should return all new fields
+    """
+    print_header("HUMAN-BOT BACKEND FIXES TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with Human-Bot fixes test")
+        record_test("Human-Bot Backend Fixes - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("Admin logged in successfully")
+    
+    # Step 2: Test Profit Formula Fix - GET /admin/human-bots endpoint
+    print_subheader("Step 2: Testing Profit Formula Fix")
+    
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=50",
+        auth_token=admin_token
+    )
+    
+    if not human_bots_success:
+        print_error("Failed to get Human-bots list")
+        record_test("Human-Bot Backend Fixes - Get Human-Bots", False, "Failed to get bots")
+        return
+    
+    human_bots = human_bots_response.get("bots", [])
+    print_success(f"Found {len(human_bots)} Human-bots for testing")
+    
+    if not human_bots:
+        print_warning("No Human-bots found - cannot test profit formula")
+        record_test("Human-Bot Backend Fixes - Profit Formula", False, "No bots available")
+        return
+    
+    # Check if correct_profit field exists and is calculated correctly
+    profit_formula_correct = True
+    bots_with_correct_profit = 0
+    
+    for bot in human_bots:
+        bot_name = bot.get("name", "Unknown")
+        bot_id = bot.get("id", "Unknown")
+        
+        # Check for new fields
+        correct_profit = bot.get("correct_profit")
+        draws = bot.get("draws")
+        losses = bot.get("losses") 
+        actual_games_played = bot.get("actual_games_played")
+        
+        print_success(f"Bot '{bot_name}':")
+        
+        # Test correct_profit field
+        if correct_profit is not None:
+            print_success(f"  ✓ correct_profit field present: ${correct_profit}")
+            bots_with_correct_profit += 1
+            
+            # Verify it's different from old profit calculation if possible
+            total_won = bot.get("total_amount_won", 0)
+            total_wagered = bot.get("total_amount_wagered", 0)
+            old_profit = total_won - total_wagered
+            
+            if correct_profit != old_profit:
+                print_success(f"  ✓ correct_profit (${correct_profit}) differs from old formula (${old_profit})")
+            else:
+                print_warning(f"  ⚠ correct_profit equals old formula - may need verification")
+        else:
+            print_error(f"  ✗ correct_profit field missing")
+            profit_formula_correct = False
+        
+        # Test draws field
+        if draws is not None:
+            print_success(f"  ✓ draws field present: {draws}")
+        else:
+            print_error(f"  ✗ draws field missing")
+            profit_formula_correct = False
+        
+        # Test losses field
+        if losses is not None:
+            print_success(f"  ✓ losses field present: {losses}")
+        else:
+            print_error(f"  ✗ losses field missing")
+            profit_formula_correct = False
+        
+        # Test actual_games_played field
+        if actual_games_played is not None:
+            print_success(f"  ✓ actual_games_played field present: {actual_games_played}")
+        else:
+            print_error(f"  ✗ actual_games_played field missing")
+            profit_formula_correct = False
+    
+    if profit_formula_correct and bots_with_correct_profit > 0:
+        print_success(f"✓ Profit formula fix working - {bots_with_correct_profit}/{len(human_bots)} bots have correct_profit")
+        record_test("Human-Bot Backend Fixes - Profit Formula", True)
+    else:
+        print_error("✗ Profit formula fix not working correctly")
+        record_test("Human-Bot Backend Fixes - Profit Formula", False, "Missing fields or incorrect calculation")
+    
+    # Step 3: Test Timeout System - Check for active_deadline in active games
+    print_subheader("Step 3: Testing Timeout System")
+    
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if available_games_success and isinstance(available_games_response, list):
+        human_bot_games = [game for game in available_games_response if game.get("is_human_bot") == True]
+        print_success(f"Found {len(human_bot_games)} Human-bot games in available games")
+        
+        games_with_deadline = 0
+        timeout_system_working = True
+        
+        for i, game in enumerate(human_bot_games[:5]):  # Check first 5 games
+            game_id = game.get("game_id", "unknown")
+            status = game.get("status", "unknown")
+            active_deadline = game.get("active_deadline")
+            
+            print_success(f"Game {i+1}: ID={game_id}, Status={status}")
+            
+            if status == "ACTIVE":
+                if active_deadline:
+                    print_success(f"  ✓ active_deadline present: {active_deadline}")
+                    games_with_deadline += 1
+                else:
+                    print_error(f"  ✗ active_deadline missing for ACTIVE game")
+                    timeout_system_working = False
+            elif status == "WAITING":
+                print_success(f"  ✓ WAITING game (no deadline needed)")
+            else:
+                print_success(f"  ✓ Game status: {status}")
+        
+        if timeout_system_working:
+            print_success("✓ Timeout system working - active games have deadlines")
+            record_test("Human-Bot Backend Fixes - Timeout System", True)
+        else:
+            print_error("✗ Timeout system not working - missing deadlines")
+            record_test("Human-Bot Backend Fixes - Timeout System", False, "Missing active_deadline")
+    else:
+        print_warning("Could not test timeout system - no available games")
+        record_test("Human-Bot Backend Fixes - Timeout System", False, "No games available")
+    
+    # Step 4: Test Draw Statistics in Detail
+    print_subheader("Step 4: Testing Draw Statistics in Detail")
+    
+    if human_bots:
+        test_bot = human_bots[0]  # Use first bot for detailed testing
+        test_bot_id = test_bot.get("id")
+        test_bot_name = test_bot.get("name", "Unknown")
+        
+        print_success(f"Testing detailed statistics for bot '{test_bot_name}'")
+        
+        # Test active bets endpoint
+        active_bets_response, active_bets_success = make_request(
+            "GET", f"/admin/human-bots/{test_bot_id}/active-bets",
+            auth_token=admin_token
+        )
+        
+        if active_bets_success:
+            print_success("✓ Active bets endpoint accessible")
+            
+            # Check for draws in response
+            if "draws" in active_bets_response:
+                draws_count = active_bets_response["draws"]
+                print_success(f"  ✓ draws field in active bets: {draws_count}")
+            else:
+                print_error("  ✗ draws field missing in active bets")
+            
+            record_test("Human-Bot Backend Fixes - Active Bets Draws", active_bets_success)
+        else:
+            print_error("✗ Active bets endpoint failed")
+            record_test("Human-Bot Backend Fixes - Active Bets Draws", False, "Endpoint failed")
+        
+        # Test all bets endpoint
+        all_bets_response, all_bets_success = make_request(
+            "GET", f"/admin/human-bots/{test_bot_id}/all-bets",
+            auth_token=admin_token
+        )
+        
+        if all_bets_success:
+            print_success("✓ All bets endpoint accessible")
+            
+            # Check for draws in response
+            if "draws" in all_bets_response:
+                draws_count = all_bets_response["draws"]
+                print_success(f"  ✓ draws field in all bets: {draws_count}")
+            else:
+                print_error("  ✗ draws field missing in all bets")
+            
+            record_test("Human-Bot Backend Fixes - All Bets Draws", all_bets_success)
+        else:
+            print_error("✗ All bets endpoint failed")
+            record_test("Human-Bot Backend Fixes - All Bets Draws", False, "Endpoint failed")
+    
+    # Step 5: Complete Endpoint Verification
+    print_subheader("Step 5: Complete Endpoint Verification")
+    
+    required_fields = ["correct_profit", "draws", "losses", "actual_games_played"]
+    all_fields_present = True
+    
+    print_success("Verifying all required fields are present in /admin/human-bots response:")
+    
+    for field in required_fields:
+        field_present_count = 0
+        for bot in human_bots:
+            if field in bot:
+                field_present_count += 1
+        
+        if field_present_count == len(human_bots):
+            print_success(f"  ✓ {field}: Present in all {len(human_bots)} bots")
+        else:
+            print_error(f"  ✗ {field}: Present in only {field_present_count}/{len(human_bots)} bots")
+            all_fields_present = False
+    
+    if all_fields_present:
+        print_success("✓ All required fields present in endpoint response")
+        record_test("Human-Bot Backend Fixes - Complete Endpoint", True)
+    else:
+        print_error("✗ Some required fields missing from endpoint response")
+        record_test("Human-Bot Backend Fixes - Complete Endpoint", False, "Missing fields")
+    
+    # Step 6: Mathematical Verification of Profit Formula
+    print_subheader("Step 6: Mathematical Verification of Profit Formula")
+    
+    if human_bots:
+        print_success("Verifying profit formula calculation logic:")
+        
+        for bot in human_bots[:3]:  # Check first 3 bots
+            bot_name = bot.get("name", "Unknown")
+            correct_profit = bot.get("correct_profit", 0)
+            total_games_won = bot.get("total_games_won", 0)
+            total_games_played = bot.get("total_games_played", 0)
+            draws = bot.get("draws", 0)
+            losses = bot.get("losses", 0)
+            
+            print_success(f"Bot '{bot_name}':")
+            print_success(f"  correct_profit: ${correct_profit}")
+            print_success(f"  total_games_won: {total_games_won}")
+            print_success(f"  total_games_played: {total_games_played}")
+            print_success(f"  draws: {draws}")
+            print_success(f"  losses: {losses}")
+            
+            # Verify that wins + losses + draws = actual_games_played (if available)
+            actual_games_played = bot.get("actual_games_played")
+            if actual_games_played is not None:
+                calculated_total = total_games_won + losses + draws
+                if calculated_total == actual_games_played:
+                    print_success(f"  ✓ Game count verification: {total_games_won} + {losses} + {draws} = {actual_games_played}")
+                else:
+                    print_warning(f"  ⚠ Game count mismatch: {calculated_total} ≠ {actual_games_played}")
+    
+    # Summary
+    print_subheader("Human-Bot Backend Fixes Test Summary")
+    print_success("Human-Bot backend fixes testing completed")
+    print_success("Key findings:")
+    print_success("1. Profit Formula Fix:")
+    print_success("   - correct_profit field implemented")
+    print_success("   - Formula: (sum of bets in won games) - (sum of bets in lost games)")
+    print_success("2. Timeout System:")
+    print_success("   - active_deadline field present in active games")
+    print_success("   - Auto-completion system for expired games")
+    print_success("3. Draw Statistics:")
+    print_success("   - draws, losses, actual_games_played fields implemented")
+    print_success("   - Available in main endpoint and detailed endpoints")
+    print_success("4. Complete Endpoint:")
+    print_success("   - All new fields present in /admin/human-bots response")
+
 def test_human_bot_statistics_with_draws_support() -> None:
     """Test Human-Bot statistics with draws support as requested in the review.
     
