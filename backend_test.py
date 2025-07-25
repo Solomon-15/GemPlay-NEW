@@ -1499,27 +1499,42 @@ def test_human_bot_bulk_creation_updated_functionality() -> None:
         print_success(f"✓ Created {new_fields_response.get('created_count', 0)} bots with new delay fields")
         record_test("Human-Bot Bulk Creation - New Delay Fields", True)
         
-        # Get one of the created bots to verify delay values
+        # Get one of the created bots to verify delay values from the main list
         created_bots = new_fields_response.get("created_bots", [])
         if created_bots:
-            bot_id = created_bots[0]["id"]
+            bot_name = created_bots[0]["name"]
             
-            # Get bot details to verify delay values
-            bot_details_response, bot_details_success = make_request(
-                "GET", f"/admin/human-bots/{bot_id}",
+            # Get bot details from main list to verify delay values
+            all_bots_response, all_bots_success = make_request(
+                "GET", "/admin/human-bots?page=1&limit=50",
                 auth_token=admin_token
             )
             
-            if bot_details_success:
-                min_delay = bot_details_response.get("min_delay", 0)
-                max_delay = bot_details_response.get("max_delay", 0)
+            if all_bots_success and "bots" in all_bots_response:
+                all_bots = all_bots_response["bots"]
+                found_bot = None
                 
-                if 30 <= min_delay <= 90 and 30 <= max_delay <= 90 and min_delay < max_delay:
-                    print_success(f"✓ Bot delay values correct: min_delay={min_delay}, max_delay={max_delay}")
-                    record_test("Human-Bot Bulk Creation - Delay Values Verification", True)
+                for listed_bot in all_bots:
+                    if listed_bot["name"] == bot_name:
+                        found_bot = listed_bot
+                        break
+                
+                if found_bot:
+                    min_delay = found_bot.get("min_delay", 0)
+                    max_delay = found_bot.get("max_delay", 0)
+                    
+                    if 30 <= min_delay <= 90 and 30 <= max_delay <= 90 and min_delay < max_delay:
+                        print_success(f"✓ Bot delay values correct: min_delay={min_delay}, max_delay={max_delay}")
+                        record_test("Human-Bot Bulk Creation - Delay Values Verification", True)
+                    else:
+                        print_error(f"✗ Bot delay values incorrect: min_delay={min_delay}, max_delay={max_delay}")
+                        record_test("Human-Bot Bulk Creation - Delay Values Verification", False, f"min={min_delay}, max={max_delay}")
                 else:
-                    print_error(f"✗ Bot delay values incorrect: min_delay={min_delay}, max_delay={max_delay}")
-                    record_test("Human-Bot Bulk Creation - Delay Values Verification", False, f"min={min_delay}, max={max_delay}")
+                    print_error(f"✗ Bot {bot_name} not found in list")
+                    record_test("Human-Bot Bulk Creation - Delay Values Verification", False, "Bot not found")
+            else:
+                print_error("✗ Failed to get bot list for delay verification")
+                record_test("Human-Bot Bulk Creation - Delay Values Verification", False, "Failed to get list")
     else:
         print_error("✗ New delay fields test failed")
         record_test("Human-Bot Bulk Creation - New Delay Fields", False, "Request failed")
