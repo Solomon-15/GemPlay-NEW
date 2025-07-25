@@ -457,6 +457,9 @@ const GemsManagement = () => {
           </div>
         </div>
       )}
+      
+      {/* Confirmation Modal */}
+      <ConfirmationModal {...confirmationModal} />
     </div>
   );
 };
