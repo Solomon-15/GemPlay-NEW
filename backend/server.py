@@ -753,6 +753,7 @@ class HumanBotResponse(BaseModel):
     id: str
     name: str
     character: HumanBotCharacter
+    gender: str  # male/female for avatar
     is_active: bool
     min_bet: float
     max_bet: float
