@@ -61,7 +61,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
             <img 
               src={user.gender === 'female' ? '/Women.svg' : '/Men.svg'} 
               alt={user.gender === 'female' ? 'Female' : 'Male'}
-              className="w-22 h-12"
+              className="w-22 h-22"
             />
           </div>
           <div className="flex-1">
