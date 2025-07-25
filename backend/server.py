@@ -6084,21 +6084,21 @@ class RegularBotSystem:
         
         if win_decision["should_win"]:
             # Выбираем выигрышный ход
-            if player_move == "ROCK":
-                bot_move = "PAPER"
-            elif player_move == "PAPER":
-                bot_move = "SCISSORS"
-            else:  # SCISSORS
-                bot_move = "ROCK"
+            if player_move == "rock":
+                bot_move = "paper"
+            elif player_move == "paper":
+                bot_move = "scissors"
+            else:  # scissors
+                bot_move = "rock"
             result = "WIN"
         else:
             # Выбираем проигрышный ход
-            if player_move == "ROCK":
-                bot_move = "SCISSORS"
-            elif player_move == "PAPER":
-                bot_move = "ROCK"
-            else:  # SCISSORS
-                bot_move = "PAPER"
+            if player_move == "rock":
+                bot_move = "scissors"
+            elif player_move == "paper":
+                bot_move = "rock"
+            else:  # scissors
+                bot_move = "paper"
             result = "LOSE"
         
         # Логируем решение для админов
