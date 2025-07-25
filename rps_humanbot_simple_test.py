@@ -317,7 +317,12 @@ def test_available_human_bot_games(admin_token: str) -> None:
     )
     
     if available_success:
-        games = available_response.get("games", [])
+        # Handle both list and dict response formats
+        if isinstance(available_response, list):
+            games = available_response
+        else:
+            games = available_response.get("games", [])
+            
         human_bot_games = [g for g in games if g.get("is_human_bot", False)]
         
         print_success(f"Total available games: {len(games)}")
