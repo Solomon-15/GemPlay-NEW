@@ -17861,6 +17861,44 @@ async def toggle_human_bot_status(
             }
         )
         
+        # Handle game freezing/unfreezing based on status
+        if new_status:
+            # Activating bot - unfreeze games
+            unfrozen_count = await db.games.update_many(
+                {
+                    "$or": [
+                        {"creator_id": bot_id},
+                        {"opponent_id": bot_id}
+                    ],
+                    "status": "FROZEN"
+                },
+                {
+                    "$set": {
+                        "status": "WAITING",
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            logger.info(f"Unfroze {unfrozen_count.modified_count} games for bot {bot_id}")
+        else:
+            # Deactivating bot - freeze games
+            frozen_count = await db.games.update_many(
+                {
+                    "$or": [
+                        {"creator_id": bot_id},
+                        {"opponent_id": bot_id}
+                    ],
+                    "status": {"$in": ["WAITING", "ACTIVE"]}
+                },
+                {
+                    "$set": {
+                        "status": "FROZEN",
+                        "updated_at": datetime.utcnow()
+                    }
+                }
+            )
+            logger.info(f"Froze {frozen_count.modified_count} games for bot {bot_id}")
+        
         # Log admin action
         admin_log = AdminLog(
             admin_id=current_admin.id,
