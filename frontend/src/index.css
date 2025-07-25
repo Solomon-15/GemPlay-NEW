@@ -949,3 +949,122 @@ button {
     flex-direction: column;
   }
 }
+
+/* Bot Configuration Container */
+.bot-configuration-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(64, 224, 208, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.bot-config-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(64, 224, 208, 0.2);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.bot-config-item:hover {
+  background: rgba(64, 224, 208, 0.08);
+  border-color: rgba(64, 224, 208, 0.3);
+}
+
+.bot-config-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #24d363, #1e9f52);
+  border-radius: 50%;
+  color: white;
+  font-weight: bold;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(64, 224, 208, 0.3);
+}
+
+.bot-number {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: bold;
+}
+
+.bot-config-fields {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  flex: 1;
+}
+
+.bot-config-fields .form-group {
+  margin-bottom: 0;
+}
+
+.bot-config-fields .form-group label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+
+.bot-config-fields .form-group input,
+.bot-config-fields .form-group select {
+  padding: 0.6rem;
+  font-size: 0.9rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(64, 224, 208, 0.2);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.bot-config-fields .form-group input:focus,
+.bot-config-fields .form-group select:focus {
+  border-color: #24d363;
+  box-shadow: 0 0 0 2px rgba(64, 224, 208, 0.2);
+}
+
+/* Scrollbar для bot-configuration-container */
+.bot-configuration-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bot-configuration-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.bot-configuration-container::-webkit-scrollbar-thumb {
+  background: rgba(64, 224, 208, 0.3);
+  border-radius: 4px;
+}
+
+.bot-configuration-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(64, 224, 208, 0.5);
+}
+
+/* Responsive стили для bot config */
+@media (max-width: 768px) {
+  .bot-config-fields {
+    grid-template-columns: 1fr;
+  }
+  
+  .bot-config-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .bot-config-header {
+    align-self: center;
+    margin-bottom: 1rem;
+  }
+}
