@@ -2603,6 +2603,60 @@ async def create_auto_play_game_between_bots(bot1: HumanBot, bot2: HumanBot):
     except Exception as e:
         logger.error(f"Error creating auto-play game between bots: {e}")
 
+async def join_human_bot_to_existing_bet(bot: HumanBot, bet: dict):
+    """Join a Human-bot to an existing bet."""
+    try:
+        bet_id = bet["id"]
+        bet_amount = bet["bet_amount"]
+        
+        # Ensure bot has gems
+        await setup_human_bot_gems(bot.id)
+        
+        # Generate gem combination for the bot
+        bot_gems, _ = await generate_human_bot_gem_combination_and_amount(
+            bot.character, bet_amount, bet_amount
+        )
+        
+        # Generate move for the bot
+        bot_move = HumanBotBehavior.get_move_choice(bot.character)
+        
+        # Update the game with opponent data
+        update_result = await db.games.update_one(
+            {"id": bet_id, "status": "WAITING", "opponent_id": None},
+            {
+                "$set": {
+                    "opponent_id": bot.id,
+                    "opponent_gems": bot_gems,
+                    "opponent_move": bot_move,
+                    "status": "ACTIVE",
+                    "started_at": datetime.utcnow(),
+                    "active_deadline": datetime.utcnow() + timedelta(minutes=1),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        if update_result.modified_count == 0:
+            logger.warning(f"Failed to join bet {bet_id} - bet may have been taken by another player")
+            return
+        
+        # Log the action
+        await log_human_bot_action(
+            bot.id,
+            "JOIN_BET",
+            f"Joined bet {bet_id} via auto-play",
+            bet_id,
+            bet_amount,
+            None,
+            bot_move.value
+        )
+        
+        logger.info(f"✅ Human-bot {bot.name} successfully joined bet {bet_id}")
+        
+    except Exception as e:
+        logger.error(f"Error joining Human-bot to bet: {e}")
+        raise
+
 async def update_human_bot_stats_after_auto_play(bot1: HumanBot, bot2: HumanBot, game: Game):
     """Update human bot statistics after auto-play game."""
     try:
