@@ -37,6 +37,13 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
   const [allBetsData, setAllBetsData] = useState(null);
   const [allBetsPage, setAllBetsPage] = useState(1);
 
+  // Commission modal states
+  const [isCommissionModalOpen, setIsCommissionModalOpen] = useState(false);
+  const [selectedBotForCommission, setSelectedBotForCommission] = useState(null);
+  const [commissionData, setCommissionData] = useState(null);
+  const [loadingCommission, setLoadingCommission] = useState(false);
+  const [commissionPage, setCommissionPage] = useState(1);
+
   useEffect(() => {
     fetchHumanBots();
     fetchStats();
