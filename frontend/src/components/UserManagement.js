@@ -1071,8 +1071,18 @@ const UserManagement = ({ user: currentUser }) => {
                         )}
                         <div className="text-text-secondary">
                           <span className="text-white">Возраст:</span> {
-                            Math.round((new Date() - new Date(bet.created_at)) / (1000 * 60 * 60))
-                          }ч
+                            (() => {
+                              const now = new Date();
+                              const created = new Date(bet.created_at);
+                              const diffInSeconds = Math.floor((now - created) / 1000);
+                              
+                              const hours = Math.floor(diffInSeconds / 3600);
+                              const minutes = Math.floor((diffInSeconds % 3600) / 60);
+                              const seconds = diffInSeconds % 60;
+                              
+                              return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                            })()
+                          }
                         </div>
                       </div>
 
