@@ -17281,6 +17281,7 @@ async def list_human_bots(
             response_bot_dict["draws"] = draws
             response_bot_dict["losses"] = losses
             response_bot_dict["actual_games_played"] = actual_games_played
+            response_bot_dict["actual_wins"] = wins
             response_bot_dict["correct_profit"] = correct_profit
             response_bots.append(response_bot_dict)
         
