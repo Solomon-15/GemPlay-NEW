@@ -166,7 +166,8 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         const humanBotGamesResponse = await axios.get(`${API}/admin/games`, {
           params: {
             human_bot_only: true,
-            status: 'ACTIVE'
+            status: 'ACTIVE',
+            limit: 10000  // Increased limit to show all active battles
           },
           headers: {
             'Authorization': `Bearer ${token}`,
