@@ -7028,7 +7028,7 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
         # For regular user games: exclude current user's own games
         games = await db.games.find({
             "status": GameStatus.WAITING  # Only waiting games, not frozen
-        }).sort("created_at", -1).to_list(500)  # Increased limit to show all Human-bot games
+        }).sort("created_at", -1).to_list(None)  # Removed limit to show all available games
         
         result = []
         for game in games:
