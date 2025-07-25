@@ -8651,7 +8651,7 @@ async def get_games_stats(current_user: User = Depends(get_current_admin)):
 @api_router.get("/admin/games")
 async def get_games_list(
     page: int = 1,
-    limit: int = 50,
+    limit: int = 1000,  # Increased default limit to 1000
     human_bot_only: Optional[bool] = None,
     regular_bot_only: Optional[bool] = None,
     status: Optional[str] = None,
