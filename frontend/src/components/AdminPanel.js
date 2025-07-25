@@ -28,6 +28,7 @@ const AdminPanel = ({ user, onClose }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const { showSuccessRU, showErrorRU } = useNotifications();
+  const { confirm, confirmationModal } = useConfirmation();
 
   // Проверка прав доступа
   useEffect(() => {
