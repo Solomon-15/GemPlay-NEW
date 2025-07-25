@@ -434,6 +434,7 @@ class HumanBot(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str  # Уникальное имя бота
     character: HumanBotCharacter  # Тип характера (1 из 7)
+    gender: str = "male"  # male/female for avatar
     is_active: bool = True
     
     # Диапазон ставок
