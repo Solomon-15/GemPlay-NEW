@@ -417,28 +417,40 @@ const HumanBotsManagement = () => {
               {/* Действия для ботов */}
               <div className="flex flex-wrap gap-3 mb-6">
                 <button
-                  className="btn-primary"
+                  className="styled-btn btn-primary"
                   onClick={() => setShowCreateForm(true)}
                 >
-                  + Создать бота
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Создать бота
                 </button>
                 <button
-                  className="btn-secondary"
+                  className="styled-btn btn-secondary"
                   onClick={() => setShowBulkCreateForm(true)}
                 >
-                  📦 Массовое создание
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                  Массовое создание
                 </button>
                 <button
-                  className="btn-success"
+                  className="styled-btn btn-success"
                   onClick={() => handleToggleAll(true)}
                 >
-                  ✅ Активировать всех
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Активировать всех
                 </button>
                 <button
-                  className="btn-warning"
+                  className="styled-btn btn-warning"
                   onClick={() => handleToggleAll(false)}
                 >
-                  ⏸️ Деактивировать всех
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Деактивировать всех
                 </button>
               </div>
 
