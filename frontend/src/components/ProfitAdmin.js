@@ -461,6 +461,25 @@ const ProfitAdmin = ({ user }) => {
     }
   };
 
+  // Функция для смены страницы в модальном окне Human-bot комиссий
+  const loadHumanBotCommissionPage = async (page) => {
+    if (page < 1) return;
+    
+    setModalLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/human-bots-total-commission?page=${page}&limit=100`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setModalData(response.data);
+    } catch (error) {
+      console.error('Error loading Human-bot commission page:', error);
+      setModalError('Ошибка при загрузке страницы');
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
   const getModalTitle = (modalType) => {
     const titles = {
       'bet_commission': 'Комиссия от ставок',
