@@ -874,6 +874,21 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
         addNotification={addNotification}
       />
 
+      {/* Commission Modal */}
+      <HumanBotCommissionModal
+        isOpen={isCommissionModalOpen}
+        onClose={() => {
+          setIsCommissionModalOpen(false);
+          setSelectedBotForCommission(null);
+          setCommissionData(null);
+          setCommissionPage(1);
+        }}
+        bot={selectedBotForCommission}
+        data={commissionData}
+        loading={loadingCommission}
+        onPageChange={handleCommissionPageChange}
+      />
+
       {/* Modals */}
       <ConfirmationModal {...confirmationModal} />
     </div>
