@@ -17708,11 +17708,11 @@ def test_quick_admin_login() -> None:
         print_error("Token authentication system may not be working")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - QUICK ADMIN LOGIN TEST")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT CREATION TEST")
     
     try:
-        # Run the quick admin login test as requested by the user
-        test_quick_admin_login()
+        # Run the Human-bot creation test as specifically requested by the user
+        test_human_bot_creation_functionality()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
