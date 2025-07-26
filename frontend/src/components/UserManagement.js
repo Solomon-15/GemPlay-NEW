@@ -17,6 +17,12 @@ const UserManagement = ({ user: currentUser }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date()); // Для живого счетчика
   
+  // Multiple selection states
+  const [selectedUsers, setSelectedUsers] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  
   // Пагинация
   const pagination = usePagination(1, 10);
   
