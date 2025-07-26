@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Dict, List, Any
 
 # Test configuration
-BACKEND_URL = "https://629f70b8-18fb-40e8-982a-1f9a2bdf94c1.preview.emergentagent.com/api"
+BACKEND_URL = "https://6ecb15c3-9770-4c2e-96a2-d8a9ad3f417f.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gemplay.com"
 ADMIN_PASSWORD = "Admin123!"
 
