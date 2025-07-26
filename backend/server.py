@@ -14631,8 +14631,8 @@ async def get_regular_bots_simple(
         # Validate pagination parameters
         if page < 1:
             page = 1
-        if limit < 1 or limit > 1000000:
-            limit = 100
+        if limit < 1:
+            limit = 10000  # Default to showing all items
         
         # Calculate offset
         offset = (page - 1) * limit
