@@ -521,7 +521,7 @@ const AdminPanel = ({ user, onClose }) => {
           {/* 5. Активных игр Обычных ботов */}
           <StatCard
             title="Активных игр Обычных ботов"
-            value={formatNumber(dashboardStats.active_regular_bots)}
+            value={formatNumber(dashboardStats.active_games)}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

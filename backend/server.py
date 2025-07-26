@@ -8769,8 +8769,9 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
             if user_online_status == "ONLINE":
                 online_users_count += 1
         
-        # Get active games (WAITING + ACTIVE) - активные ставки со статусами Ожидание и Активна
+        # Get active games (WAITING + ACTIVE) - активные ставки обычных ботов со статусами Ожидание и Активна
         active_games = await db.games.count_documents({
+            "creator_id": {"$in": regular_bot_ids},
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
