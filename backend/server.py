@@ -8875,8 +8875,8 @@ async def get_games_list(
         # Validate pagination parameters
         if page < 1:
             page = 1
-        if limit < 1 or limit > 10000:  # Increased limit to 10000 to show more games
-            limit = 1000  # Default to 1000 instead of 50
+        if limit < 1:
+            limit = 10000  # Default to showing all games
         
         # Calculate offset
         offset = (page - 1) * limit
