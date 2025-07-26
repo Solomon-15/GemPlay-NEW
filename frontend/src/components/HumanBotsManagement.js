@@ -313,6 +313,10 @@ const HumanBotsManagement = () => {
         can_play_with_players: true
       });
       
+      // Trigger global lobby refresh to update avatars if gender was changed
+      const { triggerGlobalRefresh } = await import('../hooks/useLobbyRefresh');
+      triggerGlobalRefresh();
+      
       await fetchHumanBots();
     } catch (error) {
       console.error('Ошибка создания/редактирования Human-бота:', error);
