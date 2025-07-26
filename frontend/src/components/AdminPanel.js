@@ -11,6 +11,8 @@ import InterfaceSettings from './InterfaceSettings';
 import SoundsAdmin from './SoundsAdmin';
 import GemsManagement from './GemsManagement';
 import NotificationContainer from './NotificationContainer';
+import NotificationDemo from './NotificationDemo';
+import SecurityMonitoring from './SecurityMonitoring';
 import { useNotifications } from './NotificationContext';
 import useConfirmation from '../hooks/useConfirmation';
 import ConfirmationModal from './ConfirmationModal';
