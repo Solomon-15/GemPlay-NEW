@@ -49,13 +49,13 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   // Настройки интерфейса для пагинации
   const [interfaceSettings, setInterfaceSettings] = useState({
     live_players: {
-      my_bets: 10000,  // Increased from 10 to show all bets
-      available_bets: 10000,  // Increased from 10 to show all bets
-      ongoing_battles: 10000  // Increased from 10 to show all battles
+      my_bets: 8,  // Increased from 10 to show all bets
+      available_bets: 12,  // Increased from 10 to show all bets
+      ongoing_battles: 8  // Increased from 10 to show all battles
     },
     bot_players: {
-      available_bots: 10000,  // Increased from 10 to show all bots
-      ongoing_bot_battles: 10000  // Increased from 10 to show all bot battles
+      available_bots: 12,  // Increased from 10 to show all bots
+      ongoing_bot_battles: 8  // Increased from 10 to show all bot battles
     }
   });
 
@@ -94,13 +94,13 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       // Override server settings to show all items without limits
       const overriddenSettings = {
         live_players: {
-          my_bets: 10000,  // Show all bets
-          available_bets: 10000,  // Show all bets
-          ongoing_battles: 10000  // Show all battles
+          my_bets: 8,  // Show all bets
+          available_bets: 12,  // Show all bets
+          ongoing_battles: 8  // Show all battles
         },
         bot_players: {
-          available_bots: 10000,  // Show all bots
-          ongoing_bot_battles: 10000  // Show all bot battles
+          available_bots: 12,  // Show all bots
+          ongoing_bot_battles: 8  // Show all bot battles
         }
       };
       
