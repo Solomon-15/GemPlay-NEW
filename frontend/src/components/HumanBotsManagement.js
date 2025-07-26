@@ -352,9 +352,9 @@ const HumanBotsManagement = () => {
         
         // Показать детали создания
         if (response.failed_count && response.failed_count > 0) {
-          alert(`Создано ${response.created_count} ботов, не удалось создать: ${response.failed_count}`);
+          addNotification(`Создано ${response.created_count} ботов, не удалось создать: ${response.failed_count}`, 'warning');
         } else {
-          alert(`Успешно создано ${response.created_count} ботов`);
+          addNotification(`Успешно создано ${response.created_count} ботов`, 'success');
         }
         
         // Сбросить форму
