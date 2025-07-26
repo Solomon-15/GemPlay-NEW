@@ -1949,7 +1949,10 @@ async def join_human_bot_bet(human_bot: HumanBot):
         available_games = await db.games.find({
             "status": GameStatus.WAITING,
             "creator_id": {"$ne": human_bot.id},  # Don't join own games
-            "bet_amount": {"$gte": human_bot.min_bet, "$lte": human_bot.max_bet},
+            "bet_amount": {
+                "$gte": human_bot.min_bet, 
+                "$lte": min(human_bot.max_bet, human_bot.bet_limit_amount)  # Respect bet_limit_amount
+            },
             # Human bots can join both human and regular bot games
         }).to_list(20)
         
