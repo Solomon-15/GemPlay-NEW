@@ -769,6 +769,7 @@ class HumanBotResponse(BaseModel):
     min_bet: float
     max_bet: float
     bet_limit: int
+    bet_limit_amount: float  # Maximum bet amount this bot can participate in as opponent
     win_percentage: float
     loss_percentage: float
     draw_percentage: float
