@@ -260,7 +260,7 @@ const HumanBotsManagement = () => {
     }
 
     if (createFormData.win_percentage + createFormData.loss_percentage + createFormData.draw_percentage !== 100) {
-      alert('Сумма процентов должна равняться 100%');
+      addNotification('Сумма процентов должна равняться 100%', 'error');
       return;
     }
 
@@ -270,7 +270,7 @@ const HumanBotsManagement = () => {
         bot.name.toLowerCase() === createFormData.name.toLowerCase()
       );
       if (existingBot) {
-        alert(`Бот с именем "${createFormData.name}" уже существует. Пожалуйста, выберите другое имя.`);
+        addNotification(`Бот с именем "${createFormData.name}" уже существует. Пожалуйста, выберите другое имя.`, 'error');
         return;
       }
     }
