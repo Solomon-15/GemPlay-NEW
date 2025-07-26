@@ -1409,14 +1409,16 @@ def test_is_human_bot_flag_logic_fix() -> None:
 def test_human_bot_commission_return_on_draw() -> None:
     """Test Human-Bot commission return on draw logic fix as requested in the review.
     
-    Key areas to test:
-    1. Draw Outcome Commission Return for Human player vs Human-bot, Human-bot vs Human-bot, Human player vs Human player
-    2. Human-bot User Profile Creation - Test that Human-bots who haven't played before get their user profiles created automatically
-    3. Balance Updates - Verify frozen_balance decreases and virtual_balance increases by commission amount
-    4. Commission Amounts - Test with different bet amounts to ensure 3% calculation is correct
-    5. Existing Functionality - Ensure win/loss scenarios still work correctly
+    Key areas to test after the fix:
+    1. Data Type Handling - verify system handles games where bet_gems or opponent_gems might be stored as lists instead of dicts
+    2. Draw Commission Return - test commission is properly returned in draw scenarios
+    3. Error Prevention - confirm the "'list' object has no attribute 'items'" error no longer occurs
+    4. Balance Updates - verify proper balance management during draws
+    5. Logging - check proper logging occurs
+    
+    The fixes were applied to distribute_game_rewards function around lines 5827-5885 to add type checking and conversion for bet_gems and opponent_gems data structures.
     """
-    print_header("HUMAN-BOT COMMISSION RETURN ON DRAW LOGIC TESTING")
+    print_header("HUMAN-BOT COMMISSION RETURN ON DRAW LOGIC FIX TESTING")
     
     # Step 1: Admin Authentication
     print_subheader("Step 1: Admin Authentication")
