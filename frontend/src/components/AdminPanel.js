@@ -402,46 +402,115 @@ const AdminPanel = ({ user, onClose }) => {
   const DashboardContent = () => (
     <div className="space-y-8">
       <div>
-        <h2 className="font-russo text-2xl text-white mb-6">Обзор системы</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="font-russo text-2xl text-white">Обзор системы</h2>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={refreshStats}
+              className="p-2 bg-surface-sidebar border border-border-primary rounded-lg text-accent-primary hover:bg-surface-card transition-colors duration-200"
+              title="Обновить статистику"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+            <div className="flex items-center space-x-2">
+              <span className="text-text-secondary text-sm">Автообновление:</span>
+              <button
+                onClick={() => setAutoRefresh(!autoRefresh)}
+                className={`w-12 h-6 rounded-full transition-colors duration-200 flex items-center ${
+                  autoRefresh ? 'bg-green-500' : 'bg-gray-600'
+                }`}
+              >
+                <div
+                  className={`w-5 h-5 bg-white rounded-full transition-transform duration-200 ${
+                    autoRefresh ? 'translate-x-6' : 'translate-x-0.5'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Новые плитки статистики */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 1. Активных Human ботов */}
           <StatCard
-            title="Всего пользователей"
-            value={stats.users?.total || '—'}
+            title="Активных Human ботов"
+            value={formatNumber(dashboardStats.active_human_bots)}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             }
+            color="text-blue-400"
           />
+          
+          {/* 2. Активных Обычных ботов */}
           <StatCard
-            title="Активных ботов"
-            value={stats.bots || '—'}
+            title="Активных Обычных ботов"
+            value={formatNumber(dashboardStats.active_regular_bots)}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             }
-            color="text-blue-400"
+            color="text-cyan-400"
           />
+          
+          {/* 3. Активных пользователей */}
           <StatCard
-            title="Всего игр"
-            value={stats.games?.total || '—'}
+            title="Активных пользователей"
+            value={formatNumber(dashboardStats.online_users)}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
               </svg>
             }
-            color="text-purple-400"
+            color="text-green-400"
           />
+          
+          {/* 4. Активных игр */}
           <StatCard
             title="Активных игр"
-            value={stats.games?.active || '—'}
+            value={formatNumber(dashboardStats.active_games)}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             }
             color="text-orange-400"
+          />
+          
+          {/* 5. Объём ставок */}
+          <StatCardWithAction
+            title="Объём ставок"
+            value={formatNumber(dashboardStats.total_bet_volume)}
+            icon={
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            }
+            color="text-yellow-400"
+            onAction={resetBetVolume}
+            actionIcon={
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            }
+            actionTitle="Сброс"
+          />
+          
+          {/* 6. Объём ставок онлайн */}
+          <StatCard
+            title="Объём ставок онлайн"
+            value={formatNumber(dashboardStats.online_bet_volume)}
+            icon={
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            }
+            color="text-purple-400"
           />
         </div>
       </div>
@@ -457,10 +526,10 @@ const AdminPanel = ({ user, onClose }) => {
               👥 User Management
             </button>
             <button
-              onClick={() => setActiveSection('bots')}
+              onClick={() => setActiveSection('human-bots')}
               className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity text-left"
             >
-              🤖 Bot Management
+              🤖 Human Bot Management
             </button>
             <button
               onClick={() => setActiveSection('games')}
@@ -490,6 +559,12 @@ const AdminPanel = ({ user, onClose }) => {
               <span>Last Login:</span>
               <span className="text-white">
                 {user.last_login ? new Date(user.last_login).toLocaleDateString('en-US') : 'Not specified'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Auto-Refresh:</span>
+              <span className={autoRefresh ? "text-green-400" : "text-red-400"}>
+                {autoRefresh ? "Включено (5с)" : "Отключено"}
               </span>
             </div>
           </div>
