@@ -389,7 +389,7 @@ const HumanBotActiveBetsModal = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border-primary">
-                    {activeBetsData.bets.map((bet, index) => {
+                    {getFilteredBets().map((bet, index) => {
                       const betDate = new Date(bet.created_at);
                       const dateStr = betDate.toLocaleDateString('ru-RU');
                       const timeStr = betDate.toLocaleTimeString('ru-RU');
@@ -429,6 +429,13 @@ const HumanBotActiveBetsModal = ({
                           <td className="px-4 py-3">
                             <div className="text-sm font-roboto font-bold text-accent-primary">
                               {formatDollarsAsGems(bet.bet_amount || bet.total_bet_amount || 0)}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className={`text-sm font-roboto font-bold ${
+                              bet.is_creator ? 'text-blue-400' : 'text-orange-400'
+                            }`}>
+                              {getCreatorName(bet)}
                             </div>
                           </td>
                           <td className="px-4 py-3">
