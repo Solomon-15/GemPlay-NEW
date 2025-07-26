@@ -679,6 +679,7 @@ class UpdateHumanBotRequest(BaseModel):
     min_bet: Optional[float] = Field(None, ge=1.0, le=10000.0)
     max_bet: Optional[float] = Field(None, ge=1.0, le=10000.0)
     bet_limit: Optional[int] = Field(None, ge=1, le=100)
+    bet_limit_amount: Optional[float] = Field(None, ge=1.0, le=100000.0)  # Maximum bet amount limit
     win_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
     loss_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
     draw_percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
