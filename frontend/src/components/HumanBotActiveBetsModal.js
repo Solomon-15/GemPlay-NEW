@@ -19,6 +19,7 @@ const HumanBotActiveBetsModal = ({
   const [clearing, setClearing] = useState(false);
   const [deletingHistory, setDeletingHistory] = useState(false);
   const [gemPrices, setGemPrices] = useState([]);
+  const [creatorFilter, setCreatorFilter] = useState('all'); // 'all', 'me', 'opponent'
   const { confirm, confirmationModal } = useConfirmation();
 
   // Загрузка цен гемов при открытии модального окна
