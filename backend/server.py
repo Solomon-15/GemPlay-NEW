@@ -8663,6 +8663,100 @@ async def get_games_stats(current_user: User = Depends(get_current_admin)):
             detail="Failed to fetch games stats"
         )
 
+@api_router.get("/admin/dashboard/stats", response_model=dict)
+async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
+    """Get comprehensive dashboard statistics for admin panel."""
+    try:
+        # Get active Human bots in game
+        human_bots = await db.human_bots.find({"is_active": True}).to_list(None)
+        human_bot_ids = [bot["id"] for bot in human_bots]
+        active_human_bots_in_game = await db.games.count_documents({
+            "creator_id": {"$in": human_bot_ids},
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Get active regular bots in game  
+        regular_bots = await db.bots.find({"is_active": True}).to_list(None)
+        regular_bot_ids = [bot["id"] for bot in regular_bots]
+        active_regular_bots_in_game = await db.games.count_documents({
+            "creator_id": {"$in": regular_bot_ids},
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Get online users count (users with status "ONLINE")
+        online_users = await db.users.count_documents({"status": "ONLINE"})
+        
+        # Get active games (WAITING + ACTIVE)
+        active_games = await db.games.count_documents({
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Get total bet volume (sum of all bet_amount from all games)
+        total_bet_volume_pipeline = [
+            {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+        ]
+        total_bet_volume_result = await db.games.aggregate(total_bet_volume_pipeline).to_list(1)
+        total_bet_volume = total_bet_volume_result[0]["total"] if total_bet_volume_result else 0
+        
+        # Get online bet volume (sum of bet_amount from WAITING + ACTIVE games)
+        online_bet_volume_pipeline = [
+            {"$match": {"status": {"$in": ["WAITING", "ACTIVE"]}}},
+            {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+        ]
+        online_bet_volume_result = await db.games.aggregate(online_bet_volume_pipeline).to_list(1)
+        online_bet_volume = online_bet_volume_result[0]["total"] if online_bet_volume_result else 0
+        
+        return {
+            "active_human_bots": active_human_bots_in_game,
+            "active_regular_bots": active_regular_bots_in_game,
+            "online_users": online_users,
+            "active_games": active_games,
+            "total_bet_volume": total_bet_volume,
+            "online_bet_volume": online_bet_volume
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching dashboard stats: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch dashboard stats"
+        )
+
+@api_router.post("/admin/dashboard/reset-bet-volume", response_model=dict)
+async def reset_total_bet_volume(current_user: User = Depends(get_current_admin)):
+    """Reset total bet volume by removing all games from database (DANGEROUS)."""
+    try:
+        # Count current games before deletion
+        games_count = await db.games.count_documents({})
+        
+        # Delete all games (this resets the total bet volume)
+        await db.games.delete_many({})
+        
+        # Log the action
+        admin_log = AdminLog(
+            admin_id=str(current_user.id),
+            admin_username=current_user.username,
+            action="RESET_BET_VOLUME",
+            details=f"Reset total bet volume by deleting {games_count} games",
+            ip_address="system"
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.warning(f"Admin {current_user.username} reset bet volume by deleting {games_count} games")
+        
+        return {
+            "success": True,
+            "message": f"Total bet volume reset successfully. Deleted {games_count} games.",
+            "deleted_games": games_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error resetting bet volume: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset bet volume"
+        )
+
 @api_router.get("/admin/games")
 async def get_games_list(
     page: int = 1,
