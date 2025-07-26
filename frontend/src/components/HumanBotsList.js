@@ -238,8 +238,9 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
       );
       
       // Trigger global lobby refresh to update avatars in real-time
-      const { triggerGlobalRefresh } = await import('../hooks/useLobbyRefresh');
-      triggerGlobalRefresh();
+      const { getGlobalLobbyRefresh } = await import('../hooks/useLobbyRefresh');
+      const globalRefresh = getGlobalLobbyRefresh();
+      globalRefresh.triggerLobbyRefresh();
       
       addNotification(`Пол Human-бота изменен на ${newGender === 'male' ? 'мужский' : 'женский'}`, 'success');
     } catch (error) {
