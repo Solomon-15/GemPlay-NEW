@@ -16306,11 +16306,11 @@ def print_summary() -> None:
         print_error("❌ TESTING COMPLETED WITH FAILURES")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT GENDER FUNCTIONALITY")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT TIMEOUT SYSTEM")
     
     try:
-        # Run the Human-bot Gender functionality test as requested in the review
-        test_human_bot_gender_functionality()
+        # Run the Human-bot timeout system test as requested in the review
+        test_human_bot_timeout_system()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
