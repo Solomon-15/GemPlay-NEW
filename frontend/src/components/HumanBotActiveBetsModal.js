@@ -332,6 +332,20 @@ const HumanBotActiveBetsModal = ({
                 {showAllBets ? '📋 Показать только активные' : '📜 Показать все ставки'}
               </button>
               
+              {/* Фильтр по создателю */}
+              <div className="flex items-center space-x-2">
+                <span className="text-text-secondary text-sm">Фильтр:</span>
+                <select 
+                  value={creatorFilter} 
+                  onChange={(e) => setCreatorFilter(e.target.value)}
+                  className="px-3 py-2 bg-surface-sidebar text-white rounded-lg border border-border-primary focus:border-accent-primary transition-colors"
+                >
+                  <option value="all">Все ставки</option>
+                  <option value="me">Мои ставки</option>
+                  <option value="opponent">Ставки оппонентов</option>
+                </select>
+              </div>
+              
               {showAllBets && (
                 <button
                   onClick={handleClearCompletedBets}
