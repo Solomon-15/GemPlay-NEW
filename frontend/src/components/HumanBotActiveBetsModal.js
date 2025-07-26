@@ -366,10 +366,15 @@ const HumanBotActiveBetsModal = ({
               </button>
             </div>
 
-            {!activeBetsData?.bets || activeBetsData.bets.length === 0 ? (
+            {!activeBetsData?.bets || getFilteredBets().length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-text-secondary text-lg">
-                  {showAllBets ? 'У бота нет ставок' : 'У бота нет активных ставок в данный момент'}
+                  {creatorFilter === 'all' 
+                    ? (showAllBets ? 'У бота нет ставок' : 'У бота нет активных ставок в данный момент')
+                    : creatorFilter === 'me' 
+                    ? 'У бота нет ставок, созданных им'
+                    : 'У бота нет ставок от оппонентов'
+                  }
                 </div>
               </div>
             ) : (
