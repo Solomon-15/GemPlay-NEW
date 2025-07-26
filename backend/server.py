@@ -5996,9 +5996,23 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
             # Draw - return frozen commissions to both players (only if commission was charged)
             if not is_regular_bot_game:
                 for player_id in [game.creator_id, game.opponent_id]:
+                    # Check if player exists in users collection
                     player = await db.users.find_one({"id": player_id})
-                    if player:  # Only process human players
+                    
+                    # If player not found, check if it's a Human-bot and create user profile
+                    if not player:
+                        human_bot = await db.human_bots.find_one({"id": player_id})
+                        if human_bot:
+                            # Create user profile for Human-bot if needed
+                            await create_human_bot_user_profile(human_bot)
+                            player = await db.users.find_one({"id": player_id})
+                            logger.info(f"Created user profile for Human-bot {human_bot['name']} during draw commission return")
+                    
+                    # Process commission return for both human players and Human-bots
+                    if player:
                         commission_to_return = game.bet_amount * 0.03
+                        
+                        logger.info(f"DRAW - Returning {commission_to_return} commission to player {player_id} (virtual_balance: {player.get('virtual_balance', 0)} -> {player.get('virtual_balance', 0) + commission_to_return})")
                         
                         # ПРАВИЛЬНАЯ ЛОГИКА: При ничьей возвращаем комиссию из frozen_balance в virtual_balance
                         await db.users.update_one(
