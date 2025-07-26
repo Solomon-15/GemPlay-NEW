@@ -778,6 +778,7 @@ class HumanBotResponse(BaseModel):
     total_games_played: int
     total_games_won: int
     total_amount_wagered: float
+    average_bet_amount: float  # Average amount from active bets
     total_amount_won: float
     total_commission_paid: float  # Общая сумма комиссий, оплаченных ботом
     win_rate: float  # Calculated field
