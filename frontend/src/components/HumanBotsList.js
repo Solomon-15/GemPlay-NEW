@@ -823,7 +823,7 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                     <div className="text-accent-primary font-roboto text-xs">
                       <div>Мин: {formatAsGems(bot.min_bet)}</div>
                       <div>Макс: {formatAsGems(bot.max_bet)}</div>
-                      <div>Средний: {formatAsGems((bot.total_games_played && bot.total_games_played > 0) ? (bot.total_amount_wagered || 0) / bot.total_games_played : 0)}</div>
+                      <div>Средний: {formatAsGems(bot.average_bet_amount || 0)}</div>
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
