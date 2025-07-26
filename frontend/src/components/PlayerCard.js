@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useGems } from './GemsContext';
 import { formatCurrencyWithSymbol, formatDollarAmount } from '../utils/economy';
 import { formatDollarsAsGems } from '../utils/gemUtils';
 
-const PlayerCard = ({ 
+const PlayerCard = React.memo(({ 
   game, 
   isMyBet = false, 
   isOngoing = false,
@@ -19,12 +19,11 @@ const PlayerCard = ({
   // Убираем локальное состояние модального окна
   // const [showAcceptModal, setShowAcceptModal] = useState(false);
 
-  // ВРЕМЕННЫЙ ЛОГ ДЛЯ ОТЛАДКИ
-  console.log('🔄 PlayerCard render:', {
-    gameId: game.game_id || game.id,
-    // showAcceptModal,
-    timestamp: new Date().toISOString()
-  });
+  // УБИРАЕМ ВРЕМЕННЫЙ ЛОГ ДЛЯ ОТЛАДКИ - он вызывает лишние рендеры
+  // console.log('🔄 PlayerCard render:', {
+  //   gameId: game.game_id || game.id,
+  //   timestamp: new Date().toISOString()
+  // });
 
   // Get time remaining for auto-cancel (24 hours format)
   const getTimeRemaining = () => {
