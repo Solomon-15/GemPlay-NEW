@@ -57,11 +57,17 @@ const PlayerCard = React.memo(({
     return `${baseBackground} border-[#23d364] border-opacity-30 hover:border-opacity-50`;
   }, [isMyBet, game.status]);
 
-  // Format username to max 15 characters
-  const formatUsername = (username) => {
+  // Мемоизируем функцию форматирования имени пользователя
+  const formatUsername = useCallback((username) => {
     if (!username) return 'Player';
     return username.length > 15 ? username.substring(0, 15) + '...' : username;
-  };
+  }, []);
+
+  // Мемоизируем отформатированное имя
+  const formattedUsername = useMemo(() => 
+    formatUsername(game.creator?.username || 'Player'), 
+    [game.creator?.username, formatUsername]
+  );
 
   // Calculate total bet amount
   const getTotalBetAmount = () => {
