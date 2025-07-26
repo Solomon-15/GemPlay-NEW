@@ -750,6 +750,23 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <div className="flex items-center justify-center">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={bot.gender === 'female'}
+                          onChange={() => handleGenderToggle(bot.id, bot.gender)}
+                          className="sr-only"
+                        />
+                        <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-pink-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all">
+                        </div>
+                        <span className="ml-2 text-xs text-white">
+                          {bot.gender === 'male' ? 'M' : 'F'}
+                        </span>
+                      </label>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
                     <div className="text-accent-primary font-roboto text-xs">
                       <div>Игр: {bot.actual_games_played || 0}</div>
                       <div>{(bot.actual_wins || 0)}/{(bot.losses || 0)}/{(bot.draws || 0)}</div>
