@@ -660,6 +660,7 @@ class CreateHumanBotRequest(BaseModel):
     min_bet: float = Field(..., ge=1.0, le=10000.0)
     max_bet: float = Field(..., ge=1.0, le=10000.0)
     bet_limit: int = Field(default=12, ge=1, le=100)
+    bet_limit_amount: float = Field(default=300.0, ge=1.0, le=100000.0)  # Maximum bet amount limit
     win_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     loss_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     draw_percentage: float = Field(default=20.0, ge=0.0, le=100.0)
