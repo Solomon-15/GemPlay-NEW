@@ -8,7 +8,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://6ecb15c3-9770-4c2e-96a2-d8a9ad3f417f.preview.emergentagent.com/api"
+BASE_URL = "https://5b210331-e91e-492d-9ad7-fc8bba99d393.preview.emergentagent.com/api"
 TEST_USER1 = {
     "username": "testuser_economy1",
     "email": "testuser_economy1@example.com",
