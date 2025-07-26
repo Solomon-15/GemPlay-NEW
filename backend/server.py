@@ -17874,10 +17874,15 @@ async def update_human_bot(
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
+        # Calculate additional fields needed for response
+        win_rate = (updated_bot.total_games_won / updated_bot.total_games_played * 100) if updated_bot.total_games_played > 0 else 0
+        average_bet_amount = await get_human_bot_average_bet_amount(bot_id)
+        
         # Return response
         response = HumanBotResponse(
             **updated_bot.dict(),
-            win_rate=(updated_bot.total_games_won / updated_bot.total_games_played * 100) if updated_bot.total_games_played > 0 else 0
+            win_rate=win_rate,
+            average_bet_amount=average_bet_amount
         )
         
         logger.info(f"Human bot updated: {bot_id}")
