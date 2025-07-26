@@ -126,7 +126,7 @@ const PlayerCard = React.memo(({
 
   return (
     <>
-      <div className={`${getCardBackground()} border rounded-lg p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}>
+      <div className={`${cardBackground} border rounded-lg p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg`}>
         <div className="flex items-center space-x-4">
           {/* Avatar */}
           <div className="flex-shrink-0">
