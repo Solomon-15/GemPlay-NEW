@@ -1489,6 +1489,14 @@ const UserManagement = ({ user: currentUser }) => {
           </p>
         </div>
         <div className="flex space-x-3">
+          {/* Unfreeze stuck commission button (SUPER_ADMIN only) */}
+          <button
+            onClick={() => setIsUnfreezeCommissionModalOpen(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-rajdhani font-bold transition-colors"
+          >
+            🔓 Разморозить всю зависшую комиссию
+          </button>
+          
           {/* Reset all balances button (SUPER_ADMIN only) */}
           <button
             onClick={() => setIsResetBalancesModalOpen(true)}
