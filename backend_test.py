@@ -17349,11 +17349,11 @@ def print_summary() -> None:
         print_error("❌ TESTING COMPLETED WITH FAILURES")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - BOT REVENUE LOGIC FIX")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT GENDER UPDATE SYSTEM")
     
     try:
-        # Run the bot revenue logic fix test as requested in the review
-        test_bot_revenue_logic_fix()
+        # Run the Human-Bot gender update system test as requested in the review
+        test_human_bot_gender_update_system()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
