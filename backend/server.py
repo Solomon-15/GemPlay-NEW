@@ -655,6 +655,7 @@ class JoinGameRequest(BaseModel):
 class CreateHumanBotRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
     character: HumanBotCharacter
+    gender: str = Field(default="male", pattern="^(male|female)$")  # Add gender field
     min_bet: float = Field(..., ge=1.0, le=10000.0)
     max_bet: float = Field(..., ge=1.0, le=10000.0)
     bet_limit: int = Field(default=12, ge=1, le=100)
