@@ -399,6 +399,30 @@ const AdminPanel = ({ user, onClose }) => {
     </div>
   );
 
+  // Компонент StatCard с дополнительной кнопкой действия
+  const StatCardWithAction = ({ title, value, icon, color = 'text-accent-primary', onAction, actionIcon, actionTitle }) => (
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 hover:border-green-500 transition-colors duration-200">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-roboto text-text-secondary text-sm">{title}</p>
+          <p className={`font-rajdhani text-3xl font-bold ${color}`}>{value}</p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={onAction}
+            className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+            title={actionTitle}
+          >
+            {actionIcon}
+          </button>
+          <div className={`${color} opacity-60`}>
+            {icon}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   const DashboardContent = () => (
     <div className="space-y-8">
       <div>
