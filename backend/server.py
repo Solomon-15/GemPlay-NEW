@@ -5875,24 +5875,27 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
         
         if winner_id:
             # Winner gets all gems (double the bet)
-            for gem_type, quantity in game.bet_gems.items():
-                await db.user_gems.update_one(
-                    {"user_id": winner_id, "gem_type": gem_type},
-                    {
-                        "$inc": {"quantity": quantity},  # Winner keeps their gems + gets opponent's
-                        "$set": {"updated_at": datetime.utcnow()}
-                    }
-                )
-                
-                # Remove gems from loser
-                loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
-                await db.user_gems.update_one(
-                    {"user_id": loser_id, "gem_type": gem_type},
-                    {
-                        "$inc": {"quantity": -quantity},
-                        "$set": {"updated_at": datetime.utcnow()}
-                    }
-                )
+            if isinstance(game.bet_gems, dict):
+                for gem_type, quantity in game.bet_gems.items():
+                    await db.user_gems.update_one(
+                        {"user_id": winner_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"quantity": quantity},  # Winner keeps their gems + gets opponent's
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    
+                    # Remove gems from loser
+                    loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
+                    await db.user_gems.update_one(
+                        {"user_id": loser_id, "gem_type": gem_type},
+                        {
+                            "$inc": {"quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+            else:
+                logger.error(f"Game {game.id} has invalid bet_gems format for winner distribution: {type(game.bet_gems)}")
             
             # Handle commission for winner
             winner = await db.users.find_one({"id": winner_id})
