@@ -18065,11 +18065,11 @@ def test_dashboard_endpoints() -> None:
     print_success("- Performance is acceptable for admin dashboard usage")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT CREATION TEST")
+    print_header("GEMPLAY BACKEND API TESTING - DASHBOARD ENDPOINTS TEST")
     
     try:
-        # Run the Human-bot creation test as specifically requested by the user
-        test_human_bot_creation_functionality()
+        # Run the dashboard endpoints test as specifically requested by the user
+        test_dashboard_endpoints()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
