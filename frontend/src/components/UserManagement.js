@@ -1620,7 +1620,7 @@ const UserManagement = ({ user: currentUser }) => {
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        {getUserStatusBadge(user.status)}
+                        {getUserOnlineStatusBadge(user)}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         {getUserRoleBadge(user.role)}
