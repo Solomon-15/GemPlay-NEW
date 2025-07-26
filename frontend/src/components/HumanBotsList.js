@@ -237,7 +237,11 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
         )
       );
       
-      addNotification(`Пол Human-бота изменен на ${newGender === 'male' ? 'мужской' : 'женский'}`, 'success');
+      // Trigger global lobby refresh to update avatars in real-time
+      const { triggerGlobalRefresh } = await import('../hooks/useLobbyRefresh');
+      triggerGlobalRefresh();
+      
+      addNotification(`Пол Human-бота изменен на ${newGender === 'male' ? 'мужский' : 'женский'}`, 'success');
     } catch (error) {
       console.error('Ошибка изменения пола Human-бота:', error);
       addNotification('Ошибка изменения пола Human-бота', 'error');
