@@ -671,6 +671,12 @@ const AdminPanel = ({ user, onClose }) => {
         return <ProfitAdmin user={user} />;
       case 'settings':
         return <InterfaceSettings />;
+      case 'logs':
+        return <div className="text-white">Логи системы (в разработке)</div>;
+      case 'notification-demo':
+        return <NotificationDemo />;
+      case 'monitoring':
+        return <SecurityMonitoring />;
       default:
         return <DashboardContent />;
     }
