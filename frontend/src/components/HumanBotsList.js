@@ -705,6 +705,9 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                 Диапазон ставок
               </th>
               <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                Ограничение
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                 Процент побед
               </th>
               <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
