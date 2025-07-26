@@ -641,7 +641,7 @@ const BetsManagement = () => {
               <tbody className="divide-y divide-border-primary">
                 {bets.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-4 py-8 text-center text-text-secondary">
+                    <td colSpan="9" className="px-4 py-8 text-center text-text-secondary">
                       Нет данных для отображения
                     </td>
                   </tr>
