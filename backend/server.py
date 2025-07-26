@@ -668,6 +668,7 @@ class CreateHumanBotRequest(BaseModel):
 class UpdateHumanBotRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=50)
     character: Optional[HumanBotCharacter] = None
+    gender: Optional[str] = Field(None, regex="^(male|female)$")  # Add gender field
     is_active: Optional[bool] = None
     min_bet: Optional[float] = Field(None, ge=1.0, le=10000.0)
     max_bet: Optional[float] = Field(None, ge=1.0, le=10000.0)
