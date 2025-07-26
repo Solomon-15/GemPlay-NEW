@@ -11420,8 +11420,8 @@ async def get_all_bets(
         # Validate pagination parameters
         if page < 1:
             page = 1
-        if limit < 1 or limit > 100:
-            limit = 10
+        if limit < 1:
+            limit = 10000  # Default to showing all bets
         
         # Build query
         query = {}
