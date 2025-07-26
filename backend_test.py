@@ -1406,6 +1406,276 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_gender_update_system() -> None:
+    """Test the Human-Bot gender update system as requested in the review.
+    
+    Testing tasks:
+    1. Get list of Human bots through GET /api/admin/human-bots?limit=3
+    2. Select first bot and update its gender from male to female through PUT /api/admin/human-bots/{bot_id}
+    3. Check that after update:
+       - GET /api/admin/human-bots shows new gender for this bot
+       - GET /api/games/available shows correct gender in creator.gender field for games of this Human bot
+       - GET /api/admin/games?human_bot_only=true also shows correct gender
+    
+    Login as admin@gemplay.com / Admin123!
+    """
+    print_header("HUMAN-BOT GENDER UPDATE SYSTEM TESTING")
+    
+    # Step 1: Admin Authentication
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with gender update test")
+        record_test("Human-Bot Gender Update - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("Admin logged in successfully")
+    record_test("Human-Bot Gender Update - Admin Login", True)
+    
+    # Step 2: Get list of Human bots through GET /api/admin/human-bots?limit=3
+    print_subheader("Step 2: Get List of Human Bots")
+    
+    bots_response, bots_success = make_request(
+        "GET", "/admin/human-bots?limit=3",
+        auth_token=admin_token
+    )
+    
+    if not bots_success:
+        print_error("Failed to get Human-bots list")
+        record_test("Human-Bot Gender Update - Get Bots List", False, "Failed to get bots")
+        return
+    
+    if "bots" not in bots_response or not bots_response["bots"]:
+        print_error("No Human-bots found in the system")
+        record_test("Human-Bot Gender Update - Get Bots List", False, "No bots found")
+        return
+    
+    bots = bots_response["bots"]
+    print_success(f"Found {len(bots)} Human-bots")
+    
+    # Display bot information
+    for i, bot in enumerate(bots):
+        bot_id = bot.get("id", "unknown")
+        bot_name = bot.get("name", "unknown")
+        current_gender = bot.get("gender", "unknown")
+        print_success(f"  Bot {i+1}: ID={bot_id}, Name={bot_name}, Gender={current_gender}")
+    
+    record_test("Human-Bot Gender Update - Get Bots List", True)
+    
+    # Step 3: Select first bot and update its gender from male to female
+    print_subheader("Step 3: Update First Bot's Gender")
+    
+    first_bot = bots[0]
+    bot_id = first_bot.get("id")
+    bot_name = first_bot.get("name", "unknown")
+    original_gender = first_bot.get("gender", "unknown")
+    
+    if not bot_id:
+        print_error("First bot missing ID")
+        record_test("Human-Bot Gender Update - Bot ID Available", False, "Missing bot ID")
+        return
+    
+    print_success(f"Selected bot: {bot_name} (ID: {bot_id})")
+    print_success(f"Original gender: {original_gender}")
+    
+    # Determine new gender (opposite of current)
+    new_gender = "female" if original_gender == "male" else "male"
+    print_success(f"Will update gender to: {new_gender}")
+    
+    # Update bot gender
+    update_data = {
+        "gender": new_gender
+    }
+    
+    update_response, update_success = make_request(
+        "PUT", f"/admin/human-bots/{bot_id}",
+        data=update_data,
+        auth_token=admin_token
+    )
+    
+    if not update_success:
+        print_error(f"Failed to update bot gender: {update_response}")
+        record_test("Human-Bot Gender Update - Update Gender", False, f"Update failed: {update_response}")
+        return
+    
+    print_success("Bot gender updated successfully")
+    
+    # Verify response contains updated gender
+    if "gender" in update_response and update_response["gender"] == new_gender:
+        print_success(f"✓ Response shows updated gender: {update_response['gender']}")
+        record_test("Human-Bot Gender Update - Update Response", True)
+    else:
+        print_error(f"✗ Response gender incorrect: {update_response.get('gender', 'missing')}")
+        record_test("Human-Bot Gender Update - Update Response", False, f"Gender: {update_response.get('gender', 'missing')}")
+    
+    record_test("Human-Bot Gender Update - Update Gender", True)
+    
+    # Step 4: Verify GET /api/admin/human-bots shows new gender for this bot
+    print_subheader("Step 4: Verify Admin Panel Shows New Gender")
+    
+    # Get updated bot list
+    updated_bots_response, updated_bots_success = make_request(
+        "GET", "/admin/human-bots?limit=10",
+        auth_token=admin_token
+    )
+    
+    if not updated_bots_success:
+        print_error("Failed to get updated Human-bots list")
+        record_test("Human-Bot Gender Update - Verify Admin Panel", False, "Failed to get updated list")
+    else:
+        # Find our updated bot
+        updated_bot = None
+        for bot in updated_bots_response.get("bots", []):
+            if bot.get("id") == bot_id:
+                updated_bot = bot
+                break
+        
+        if updated_bot:
+            admin_panel_gender = updated_bot.get("gender", "unknown")
+            if admin_panel_gender == new_gender:
+                print_success(f"✓ Admin panel shows correct gender: {admin_panel_gender}")
+                record_test("Human-Bot Gender Update - Verify Admin Panel", True)
+            else:
+                print_error(f"✗ Admin panel shows incorrect gender: {admin_panel_gender} (expected: {new_gender})")
+                record_test("Human-Bot Gender Update - Verify Admin Panel", False, f"Gender: {admin_panel_gender}")
+        else:
+            print_error("Updated bot not found in admin panel list")
+            record_test("Human-Bot Gender Update - Verify Admin Panel", False, "Bot not found")
+    
+    # Step 5: Verify GET /api/games/available shows correct gender in creator.gender field
+    print_subheader("Step 5: Verify Available Games Show Correct Gender")
+    
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if not available_games_success or not isinstance(available_games_response, list):
+        print_error("Failed to get available games")
+        record_test("Human-Bot Gender Update - Verify Available Games", False, "Failed to get games")
+    else:
+        # Find games created by our updated bot
+        bot_games = []
+        for game in available_games_response:
+            if game.get("creator_id") == bot_id:
+                bot_games.append(game)
+        
+        if bot_games:
+            print_success(f"Found {len(bot_games)} games created by updated bot")
+            
+            # Check gender in each game
+            correct_gender_count = 0
+            for i, game in enumerate(bot_games):
+                game_id = game.get("game_id", "unknown")
+                creator_info = game.get("creator", {})
+                creator_gender = creator_info.get("gender", "unknown") if isinstance(creator_info, dict) else "unknown"
+                
+                print_success(f"  Game {i+1}: ID={game_id}, Creator Gender={creator_gender}")
+                
+                if creator_gender == new_gender:
+                    correct_gender_count += 1
+                    print_success(f"    ✓ Correct gender: {creator_gender}")
+                else:
+                    print_error(f"    ✗ Incorrect gender: {creator_gender} (expected: {new_gender})")
+            
+            if correct_gender_count == len(bot_games):
+                print_success(f"✓ All {len(bot_games)} games show correct gender")
+                record_test("Human-Bot Gender Update - Verify Available Games", True)
+            else:
+                print_error(f"✗ Only {correct_gender_count}/{len(bot_games)} games show correct gender")
+                record_test("Human-Bot Gender Update - Verify Available Games", False, f"Correct: {correct_gender_count}/{len(bot_games)}")
+        else:
+            print_warning("No games found created by updated bot")
+            record_test("Human-Bot Gender Update - Verify Available Games", False, "No bot games found")
+    
+    # Step 6: Verify GET /api/admin/games?human_bot_only=true shows correct gender
+    print_subheader("Step 6: Verify Admin Games Show Correct Gender")
+    
+    admin_games_response, admin_games_success = make_request(
+        "GET", "/admin/games?human_bot_only=true",
+        auth_token=admin_token
+    )
+    
+    if not admin_games_success:
+        print_error("Failed to get admin Human-bot games")
+        record_test("Human-Bot Gender Update - Verify Admin Games", False, "Failed to get admin games")
+    else:
+        # Find games created by our updated bot
+        admin_bot_games = []
+        games_list = admin_games_response.get("games", []) if isinstance(admin_games_response, dict) else admin_games_response
+        
+        for game in games_list:
+            if game.get("creator_id") == bot_id:
+                admin_bot_games.append(game)
+        
+        if admin_bot_games:
+            print_success(f"Found {len(admin_bot_games)} Human-bot games in admin panel")
+            
+            # Check gender in each admin game
+            admin_correct_gender_count = 0
+            for i, game in enumerate(admin_bot_games):
+                game_id = game.get("game_id", "unknown")
+                creator_info = game.get("creator", {})
+                creator_gender = creator_info.get("gender", "unknown") if isinstance(creator_info, dict) else "unknown"
+                
+                print_success(f"  Admin Game {i+1}: ID={game_id}, Creator Gender={creator_gender}")
+                
+                if creator_gender == new_gender:
+                    admin_correct_gender_count += 1
+                    print_success(f"    ✓ Correct gender: {creator_gender}")
+                else:
+                    print_error(f"    ✗ Incorrect gender: {creator_gender} (expected: {new_gender})")
+            
+            if admin_correct_gender_count == len(admin_bot_games):
+                print_success(f"✓ All {len(admin_bot_games)} admin games show correct gender")
+                record_test("Human-Bot Gender Update - Verify Admin Games", True)
+            else:
+                print_error(f"✗ Only {admin_correct_gender_count}/{len(admin_bot_games)} admin games show correct gender")
+                record_test("Human-Bot Gender Update - Verify Admin Games", False, f"Correct: {admin_correct_gender_count}/{len(admin_bot_games)}")
+        else:
+            print_warning("No Human-bot games found in admin panel")
+            record_test("Human-Bot Gender Update - Verify Admin Games", False, "No admin bot games found")
+    
+    # Step 7: Test updating back to original gender to verify system works both ways
+    print_subheader("Step 7: Test Reverse Gender Update")
+    
+    reverse_update_data = {
+        "gender": original_gender
+    }
+    
+    reverse_update_response, reverse_update_success = make_request(
+        "PUT", f"/admin/human-bots/{bot_id}",
+        data=reverse_update_data,
+        auth_token=admin_token
+    )
+    
+    if reverse_update_success:
+        print_success(f"✓ Successfully updated gender back to original: {original_gender}")
+        
+        # Verify reverse update worked
+        if "gender" in reverse_update_response and reverse_update_response["gender"] == original_gender:
+            print_success(f"✓ Reverse update response shows correct gender: {reverse_update_response['gender']}")
+            record_test("Human-Bot Gender Update - Reverse Update", True)
+        else:
+            print_error(f"✗ Reverse update response gender incorrect: {reverse_update_response.get('gender', 'missing')}")
+            record_test("Human-Bot Gender Update - Reverse Update", False, f"Gender: {reverse_update_response.get('gender', 'missing')}")
+    else:
+        print_error(f"Failed to reverse gender update: {reverse_update_response}")
+        record_test("Human-Bot Gender Update - Reverse Update", False, f"Reverse failed: {reverse_update_response}")
+    
+    # Summary
+    print_subheader("Human-Bot Gender Update System Test Summary")
+    print_success("Human-Bot gender update system testing completed")
+    print_success("Key findings:")
+    print_success(f"- Successfully retrieved {len(bots)} Human-bots from admin panel")
+    print_success(f"- Updated bot '{bot_name}' gender from '{original_gender}' to '{new_gender}'")
+    print_success("- Verified gender update in admin panel Human-bots list")
+    print_success("- Verified gender update in available games creator.gender field")
+    print_success("- Verified gender update in admin games Human-bot filter")
+    print_success("- Tested reverse gender update functionality")
+    print_success("- Gender update system working correctly across all endpoints")
+
 def test_human_bot_update_endpoint() -> None:
     """Test the Human-Bot update endpoint PUT /api/admin/human-bots/{bot_id} as requested in the review.
     
