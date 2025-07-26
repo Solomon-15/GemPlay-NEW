@@ -222,6 +222,28 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     }
   };
 
+  const handleGenderToggle = async (botId, currentGender) => {
+    const newGender = currentGender === 'male' ? 'female' : 'male';
+    
+    try {
+      const response = await executeOperation(`/admin/human-bots/${botId}`, 'PUT', {
+        gender: newGender
+      });
+      
+      // Update local state
+      setHumanBots(prevBots => 
+        prevBots.map(bot => 
+          bot.id === botId ? { ...bot, gender: newGender } : bot
+        )
+      );
+      
+      addNotification(`Пол Human-бота изменен на ${newGender === 'male' ? 'мужской' : 'женский'}`, 'success');
+    } catch (error) {
+      console.error('Ошибка изменения пола Human-бота:', error);
+      addNotification('Ошибка изменения пола Human-бота', 'error');
+    }
+  };
+
   const handleBulkDelete = async () => {
     if (selectedBots.size === 0) return;
 
