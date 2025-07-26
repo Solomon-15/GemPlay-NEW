@@ -8769,7 +8769,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
             if user_online_status == "ONLINE":
                 online_users_count += 1
         
-        # Get active games (WAITING + ACTIVE)
+        # Get active games (WAITING + ACTIVE) - активные ставки со статусами Ожидание и Активна
         active_games = await db.games.count_documents({
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
