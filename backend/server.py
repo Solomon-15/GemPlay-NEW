@@ -16268,6 +16268,120 @@ async def reset_all_bets_admin(current_user: User = Depends(get_current_admin)):
             detail="Failed to reset all bets"
         )
 
+@api_router.delete("/admin/games/{game_id}", response_model=dict)
+async def delete_game_admin(
+    game_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Delete a specific game/bet (admin only)."""
+    try:
+        # Find the game
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Game not found"
+            )
+        
+        game_obj = Game(**game)
+        
+        # If game is active or waiting, refund gems and balance
+        if game_obj.status in [GameStatus.WAITING, GameStatus.ACTIVE]:
+            # Refund creator's gems
+            for gem_type, quantity in game_obj.bet_gems.items():
+                await db.user_gems.update_one(
+                    {"user_id": game_obj.creator_id, "gem_type": gem_type},
+                    {
+                        "$inc": {"frozen_quantity": -quantity},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+            
+            # Refund creator's commission
+            creator = await db.users.find_one({"id": game_obj.creator_id})
+            if creator:
+                commission_to_return = game_obj.bet_amount * 0.06
+                await db.users.update_one(
+                    {"id": game_obj.creator_id},
+                    {
+                        "$inc": {
+                            "virtual_balance": commission_to_return,
+                            "frozen_balance": -commission_to_return
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+            
+            # If game has opponent, refund opponent's gems too
+            if game_obj.opponent_id and game_obj.opponent_gems:
+                if isinstance(game_obj.opponent_gems, list):
+                    # Handle list format
+                    for gem_dict in game_obj.opponent_gems:
+                        await db.user_gems.update_one(
+                            {"user_id": game_obj.opponent_id, "gem_type": gem_dict["name"]},
+                            {
+                                "$inc": {"frozen_quantity": -gem_dict["count"]},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                else:
+                    # Handle dict format
+                    for gem_type, quantity in game_obj.opponent_gems.items():
+                        await db.user_gems.update_one(
+                            {"user_id": game_obj.opponent_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                
+                # Refund opponent's commission
+                opponent = await db.users.find_one({"id": game_obj.opponent_id})
+                if opponent:
+                    commission_to_return = game_obj.bet_amount * 0.06
+                    await db.users.update_one(
+                        {"id": game_obj.opponent_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_to_return,
+                                "frozen_balance": -commission_to_return
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+        
+        # Delete the game
+        await db.games.delete_one({"id": game_id})
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="DELETE_GAME",
+            target_type="games",
+            target_id=game_id,
+            details={
+                "game_status": game_obj.status,
+                "bet_amount": game_obj.bet_amount,
+                "creator_id": game_obj.creator_id,
+                "opponent_id": game_obj.opponent_id
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        return {
+            "message": "Game deleted successfully",
+            "game_id": game_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting game {game_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete game"
+        )
+
 # Start NEW bot automation background task
 async def start_bot_automation():
     """Start the NEW bot automation background task."""
