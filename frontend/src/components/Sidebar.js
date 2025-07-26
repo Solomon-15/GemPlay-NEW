@@ -277,7 +277,7 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
                 {user.username}
               </p>
               <p className="font-roboto text-sm text-green-400">
-                ${user.virtual_balance?.toFixed(2) || '0.00'}
+                ${totalBalance.toFixed(2) || '0.00'}
               </p>
             </div>
           </div>
