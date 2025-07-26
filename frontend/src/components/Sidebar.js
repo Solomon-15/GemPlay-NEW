@@ -3,49 +3,6 @@ import NotificationBell from './NotificationBell';
 import axios from 'axios';
 
 const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapsed, onOpenAdminPanel, onLogout }) => {
-  const [totalBalance, setTotalBalance] = useState(0);
-  const API = process.env.REACT_APP_BACKEND_URL;
-
-  // Функция для получения общего баланса (Total)
-  const fetchTotalBalance = async () => {
-    try {
-      if (!user) return;
-      
-      const token = localStorage.getItem('token');
-      
-      // Получаем баланс
-      const balanceResponse = await axios.get(`${API}/api/economy/balance`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const balance = balanceResponse.data;
-      
-      // Вычисляем Total = virtual_balance + frozen_balance + total_gem_value
-      const total = (balance.virtual_balance || 0) + (balance.frozen_balance || 0) + (balance.total_gem_value || 0);
-      setTotalBalance(total);
-      
-    } catch (error) {
-      console.error('Error fetching total balance:', error);
-      setTotalBalance(0);
-    }
-  };
-
-  // Загружаем Total при монтировании и изменении пользователя
-  useEffect(() => {
-    if (user) {
-      fetchTotalBalance();
-    }
-  }, [user]);
-
-  // Обновляем Total каждые 10 секунд
-  useEffect(() => {
-    if (!user) return;
-    
-    const interval = setInterval(fetchTotalBalance, 10000);
-    return () => clearInterval(interval);
-  }, [user]);
-
-const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapsed, onOpenAdminPanel, onLogout }) => {
   const menuItems = [
     {
       id: 'lobby',
