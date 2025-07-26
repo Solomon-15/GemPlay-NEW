@@ -431,7 +431,7 @@ const HumanBotsManagement = () => {
           addNotification(`Массовая операция завершена: ${count} Human-ботов ${action}`, 'success');
           fetchHumanBots();
           fetchStats();
-          alert(`${activate ? 'Активировано' : 'Деактивировано'} ${response.affected_count} ботов`);
+          addNotification(`${activate ? 'Активировано' : 'Деактивировано'} ${response.affected_count} ботов`, 'success');
         }
       } catch (error) {
         console.error('Ошибка массового переключения статуса:', error);
