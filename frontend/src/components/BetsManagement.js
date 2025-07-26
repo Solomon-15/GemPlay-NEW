@@ -37,6 +37,12 @@ const BetsManagement = () => {
   const [deletingAll, setDeletingAll] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date()); // Для живого счетчика
 
+  // Multiple selection states
+  const [selectedBets, setSelectedBets] = useState(new Set());
+  const [selectAll, setSelectAll] = useState(false);
+  const [showBulkActions, setShowBulkActions] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
   // Пагинация
   const pagination = usePagination(1, 10);
 
