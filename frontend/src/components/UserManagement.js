@@ -483,6 +483,98 @@ const UserManagement = ({ user: currentUser }) => {
     }
   };
 
+  // Multiple selection functions
+  const handleUserSelect = (userId) => {
+    const newSelected = new Set(selectedUsers);
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId);
+    } else {
+      newSelected.add(userId);
+    }
+    setSelectedUsers(newSelected);
+    setShowBulkActions(newSelected.size > 0);
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedUsers(new Set());
+      setShowBulkActions(false);
+    } else {
+      const allUserIds = new Set(users.map(user => user.id));
+      setSelectedUsers(allUserIds);
+      setShowBulkActions(true);
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const clearSelection = () => {
+    setSelectedUsers(new Set());
+    setSelectAll(false);
+    setShowBulkActions(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.size === 0) return;
+
+    if (currentUser?.role !== 'SUPER_ADMIN') {
+      showErrorRU('Только SUPER_ADMIN может удалять аккаунты');
+      return;
+    }
+
+    const reason = prompt('Укажите причину массового удаления:');
+    if (!reason || !reason.trim()) {
+      showWarningRU('Причина удаления обязательна');
+      return;
+    }
+
+    // Check if any selected users are admins
+    const selectedUserObjects = users.filter(user => selectedUsers.has(user.id));
+    const adminUsers = selectedUserObjects.filter(user => user.role === 'ADMIN' || user.role === 'SUPER_ADMIN');
+    
+    if (adminUsers.length > 0) {
+      showErrorRU(`Нельзя удалить администраторов: ${adminUsers.map(u => u.username).join(', ')}`);
+      return;
+    }
+
+    const confirmed = window.confirm(`Вы уверены, что хотите удалить ${selectedUsers.size} выбранных пользователей? Это действие необратимо!`);
+    if (!confirmed) return;
+
+    setBulkActionLoading(true);
+    const selectedUserIds = Array.from(selectedUsers);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      for (const userId of selectedUserIds) {
+        try {
+          await axios.delete(`${API}/admin/users/${userId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+            data: { reason: reason }
+          });
+          successCount++;
+        } catch (error) {
+          console.error(`Ошибка удаления пользователя ${userId}:`, error);
+          errorCount++;
+        }
+      }
+
+      showSuccessRU(`Успешно удалено ${successCount} из ${selectedUsers.size} пользователей`);
+      if (errorCount > 0) {
+        showWarningRU(`Не удалось удалить ${errorCount} пользователей`);
+      }
+
+      clearSelection();
+      fetchUsers();
+    } catch (error) {
+      console.error('Ошибка массового удаления:', error);
+      showErrorRU('Ошибка при массовом удалении');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   // Gem management functions
   const handleFreezeGems = async (gemType, quantity, reason) => {
     try {
