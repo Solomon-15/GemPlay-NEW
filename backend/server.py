@@ -8800,7 +8800,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
             "active_regular_bots": active_regular_bots_in_game,
             "total_users": total_users_count,  # Общее число пользователей
             "online_users": online_users_count,
-            "active_games": active_games,
+            "active_games": active_regular_bots_games,  # Активные игры обычных ботов
             "total_bet_volume": total_bet_volume,
             "online_bet_volume": online_bet_volume
         }
