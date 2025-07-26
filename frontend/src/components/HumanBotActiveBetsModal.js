@@ -50,6 +50,29 @@ const HumanBotActiveBetsModal = ({
     }
   };
 
+  const getCreatorName = (bet) => {
+    if (bet.is_creator) {
+      return 'Я'; // Бот создал эту ставку
+    } else {
+      // Ставку создал оппонент
+      return bet.opponent_name || 'Оппонент';
+    }
+  };
+
+  const getFilteredBets = () => {
+    if (!activeBetsData?.bets) return [];
+    
+    if (creatorFilter === 'all') {
+      return activeBetsData.bets;
+    } else if (creatorFilter === 'me') {
+      return activeBetsData.bets.filter(bet => bet.is_creator);
+    } else if (creatorFilter === 'opponent') {
+      return activeBetsData.bets.filter(bet => !bet.is_creator);
+    }
+    
+    return activeBetsData.bets;
+  };
+
   const fetchActiveBets = async () => {
     try {
       setLoading(true);
