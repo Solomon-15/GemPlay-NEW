@@ -8756,8 +8756,15 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
-        # Get online users count (users with status "ONLINE")
-        online_users = await db.users.count_documents({"status": "ONLINE"})
+        # Get online users count - подсчет пользователей с онлайн статусом
+        all_users = await db.users.find({}).to_list(None)
+        online_users_count = 0
+        total_users_count = len(all_users)
+        
+        for user in all_users:
+            user_online_status = get_user_online_status(user)
+            if user_online_status == "ONLINE":
+                online_users_count += 1
         
         # Get active games (WAITING + ACTIVE)
         active_games = await db.games.count_documents({
@@ -8782,7 +8789,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
         return {
             "active_human_bots": active_human_bots_in_game,
             "active_regular_bots": active_regular_bots_in_game,
-            "online_users": online_users,
+            "online_users": online_users_count,
             "active_games": active_games,
             "total_bet_volume": total_bet_volume,
             "online_bet_volume": online_bet_volume
