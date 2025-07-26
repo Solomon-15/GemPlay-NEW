@@ -843,7 +843,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           totalItems={ongoingBotBattles.length}
           onPageChange={handlePageChange}
           section="ongoingBotBattles"
-          itemsPerPage={interfaceSettings.bot_players.ongoing_bot_battles}
+          itemsPerPage={8}
         />
       </SectionBlock>
     </div>
