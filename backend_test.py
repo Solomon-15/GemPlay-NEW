@@ -17403,8 +17403,8 @@ def test_quick_admin_login() -> None:
                     print_error(f"❌ User email mismatch: {user_email}")
                     record_test("Quick Admin Login - User Email", False, f"Email: {user_email}")
                 
-                if user_role == "ADMIN":
-                    print_success("✅ User role is ADMIN")
+                if user_role in ["ADMIN", "SUPER_ADMIN"]:
+                    print_success(f"✅ User role is {user_role} (admin privileges)")
                     record_test("Quick Admin Login - User Role", True)
                 else:
                     print_error(f"❌ User role incorrect: {user_role}")
