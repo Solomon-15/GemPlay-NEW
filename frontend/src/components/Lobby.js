@@ -800,7 +800,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           totalItems={availableBots.length}
           onPageChange={handlePageChange}
           section="availableBots"
-          itemsPerPage={interfaceSettings.bot_players.available_bots}
+          itemsPerPage={12}
         />
       </SectionBlock>
 
