@@ -8740,13 +8740,8 @@ async def get_games_stats(current_user: User = Depends(get_current_admin)):
 async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
     """Get comprehensive dashboard statistics for admin panel."""
     try:
-        # Get active Human bots in game
-        human_bots = await db.human_bots.find({"is_active": True}).to_list(None)
-        human_bot_ids = [bot["id"] for bot in human_bots]
-        active_human_bots_in_game = await db.games.count_documents({
-            "creator_id": {"$in": human_bot_ids},
-            "status": {"$in": ["WAITING", "ACTIVE"]}
-        })
+        # Get active Human bots - используем ту же логику что и в Human боты разделе
+        active_human_bots_count = await db.human_bots.count_documents({"is_active": True})
         
         # Get active regular bots in game  
         regular_bots = await db.bots.find({"is_active": True}).to_list(None)
@@ -8787,7 +8782,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
         online_bet_volume = online_bet_volume_result[0]["total"] if online_bet_volume_result else 0
         
         return {
-            "active_human_bots": active_human_bots_in_game,
+            "active_human_bots": active_human_bots_count,
             "active_regular_bots": active_regular_bots_in_game,
             "total_users": total_users_count,  # Общее число пользователей
             "online_users": online_users_count,
