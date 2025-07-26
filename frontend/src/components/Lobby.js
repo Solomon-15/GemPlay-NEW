@@ -627,7 +627,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           totalItems={myBets.length}
           onPageChange={handlePageChange}
           section="myBets"
-          itemsPerPage={interfaceSettings.live_players.my_bets}
+          itemsPerPage={8}
         />
       </SectionBlock>
 
