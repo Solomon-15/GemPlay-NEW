@@ -178,6 +178,25 @@ const UserManagement = ({ user: currentUser }) => {
     );
   };
 
+  // Новая функция для отображения онлайн статуса
+  const getUserOnlineStatusBadge = (user) => {
+    const onlineStatus = user.online_status;
+    
+    const statusMap = {
+      'ONLINE': { color: 'bg-green-500', text: 'Онлайн' },
+      'OFFLINE': { color: 'bg-yellow-500', text: 'Офлайн' },
+      'BANNED': { color: 'bg-red-500', text: 'BANNED' }
+    };
+    
+    const statusInfo = statusMap[onlineStatus] || { color: 'bg-gray-500', text: onlineStatus };
+    
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold ${statusInfo.color}`}>
+        {statusInfo.text}
+      </span>
+    );
+  };
+
   const getUserRoleBadge = (role) => {
     const roleMap = {
       'USER': { color: 'bg-blue-600', text: 'Игрок' },
