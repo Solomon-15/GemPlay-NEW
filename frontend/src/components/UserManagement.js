@@ -1563,7 +1563,7 @@ const UserManagement = ({ user: currentUser }) => {
                     Пользователь
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    Статус
+                    Онлайн статус
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Роль
