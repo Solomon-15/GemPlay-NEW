@@ -6,6 +6,7 @@ import useInput from '../hooks/useInput';
 import InputModal from './InputModal';
 import ConfirmationModal from './ConfirmationModal';
 import HumanBotsList from './HumanBotsList';
+import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
