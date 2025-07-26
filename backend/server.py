@@ -127,6 +127,46 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ==============================================================================
+# UTILITY FUNCTIONS
+# ==============================================================================
+
+def get_user_online_status(user_data):
+    """
+    Определяет онлайн статус пользователя на основе времени последней активности.
+    
+    Args:
+        user_data: Данные пользователя из базы данных
+        
+    Returns:
+        str: 'ONLINE', 'OFFLINE', или 'BANNED'
+    """
+    # Если пользователь забанен, всегда возвращаем BANNED
+    if user_data.get("status") == "BANNED":
+        return "BANNED"
+    
+    # Получаем время последней активности
+    last_activity = user_data.get("last_activity")
+    
+    if not last_activity:
+        return "OFFLINE"
+    
+    # Если last_activity это строка, конвертируем в datetime
+    if isinstance(last_activity, str):
+        try:
+            last_activity = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
+        except ValueError:
+            return "OFFLINE"
+    
+    # Проверяем, была ли активность в последние 5 минут
+    current_time = datetime.utcnow()
+    five_minutes_ago = current_time - timedelta(minutes=5)
+    
+    if last_activity >= five_minutes_ago:
+        return "ONLINE"
+    else:
+        return "OFFLINE"
+
+# ==============================================================================
 # ENUMS
 # ==============================================================================
 
