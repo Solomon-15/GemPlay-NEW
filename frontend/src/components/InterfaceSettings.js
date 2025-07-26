@@ -91,22 +91,6 @@ const InterfaceSettings = () => {
     }));
   };
 
-  const handleDisplayLimitChange = (section, field, value) => {
-    const numValue = parseInt(value);
-    if (numValue < 10 || numValue > 1000000) return;
-
-    setSettings(prev => ({
-      ...prev,
-      display_limits: {
-        ...prev.display_limits,
-        [section]: {
-          ...prev.display_limits[section],
-          [field]: numValue
-        }
-      }
-    }));
-  };
-
   const handleReset = () => {
     setSettings({
       live_players: {
