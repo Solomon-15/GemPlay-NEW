@@ -315,7 +315,6 @@ const HumanBotsManagement = () => {
       });
       
       // Trigger global lobby refresh to update avatars if gender was changed
-      const { getGlobalLobbyRefresh } = await import('../hooks/useLobbyRefresh');
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       
