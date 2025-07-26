@@ -220,6 +220,7 @@ const HumanBotActiveBetsModal = ({
   const handleClose = () => {
     setActiveBetsData(null);
     setShowAllBets(false);
+    setCreatorFilter('all');
     onClose();
   };
 
