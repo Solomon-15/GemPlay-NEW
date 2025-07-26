@@ -227,6 +227,8 @@ const PlayerCard = React.memo(({
       </div>
     </>
   );
-};
+});
+
+PlayerCard.displayName = 'PlayerCard';
 
 export default PlayerCard;
