@@ -648,8 +648,16 @@ const BetsManagement = () => {
                 ) : (
                   bets.map((bet) => (
                     <tr key={bet.id} className={`hover:bg-surface-sidebar hover:bg-opacity-50 ${
-                      bet.is_stuck ? 'bg-yellow-900 bg-opacity-20' : ''
-                    }`}>
+                      bet.status === 'CANCELLED' ? 'opacity-60' : ''
+                    } ${bet.is_stuck ? 'bg-yellow-900 bg-opacity-20' : ''}`}>
+                      <td className="px-4 py-4 whitespace-nowrap text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedBets.has(bet.id)}
+                          onChange={() => handleBetSelect(bet.id)}
+                          className="rounded border-border-primary text-accent-primary focus:ring-accent-primary"
+                        />
+                      </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="text-white font-roboto text-sm font-mono">
                           {bet.id ? bet.id.substring(0, 8) : 'N/A'}...
