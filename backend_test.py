@@ -1465,18 +1465,8 @@ def test_human_bot_creation_functionality() -> None:
         "POST", "/admin/human-bots",
         data=human_bot_data,
         auth_token=admin_token,
-        expected_status=201  # Expecting HTTP 201 for creation
+        expected_status=200  # Expecting HTTP 200 for creation
     )
-    
-    # If 201 fails, try 200
-    if not create_success:
-        print_warning("HTTP 201 failed, trying HTTP 200...")
-        create_response, create_success = make_request(
-            "POST", "/admin/human-bots",
-            data=human_bot_data,
-            auth_token=admin_token,
-            expected_status=200
-        )
     
     if not create_success:
         print_error("Failed to create Human-bot")
