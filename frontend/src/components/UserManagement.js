@@ -423,6 +423,31 @@ const UserManagement = ({ user: currentUser }) => {
     }
   };
 
+  const unfreezeStuckCommission = async () => {
+    try {
+      setUnfreezingCommission(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/admin/users/unfreeze-stuck-commission`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        const { message, total_amount_unfrozen, total_users_affected } = response.data;
+        showSuccessRU(`${message}. Разморожено: $${total_amount_unfrozen} для ${total_users_affected} пользователей`);
+        setIsUnfreezeCommissionModalOpen(false);
+        await fetchUsers(); // Refresh user data to show updated balances
+      }
+    } catch (error) {
+      console.error('Error unfreezing stuck commission:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при разморозке зависшей комиссии';
+      showErrorRU(errorMessage);
+    } finally {
+      setUnfreezingCommission(false);
+    }
+  };
+
   const resetUserBets = async (user) => {
     try {
       setResettingUserBets(user.id);
