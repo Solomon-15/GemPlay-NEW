@@ -43,8 +43,8 @@ const PlayerCard = React.memo(({
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
-  // Get card background color based on game status and type
-  const getCardBackground = () => {
+  // Мемоизируем функцию получения фона карточки
+  const cardBackground = useMemo(() => {
     // Основной фон для всех карточек - тёмно-синий мистический
     const baseBackground = 'bg-[#09295e]';
     
@@ -55,7 +55,7 @@ const PlayerCard = React.memo(({
     
     // Стандартное оформление с зелёной рамкой
     return `${baseBackground} border-[#23d364] border-opacity-30 hover:border-opacity-50`;
-  };
+  }, [isMyBet, game.status]);
 
   // Format username to max 15 characters
   const formatUsername = (username) => {
