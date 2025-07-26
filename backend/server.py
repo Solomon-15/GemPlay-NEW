@@ -7047,7 +7047,7 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                     creator = {
                         "id": human_bot["id"],
                         "username": human_bot["name"],
-                        "gender": "male"  # Default gender for human bots
+                        "gender": human_bot.get("gender", "male")  # Use bot's actual gender
                     }
                     is_human_bot_game = True
                 else:
