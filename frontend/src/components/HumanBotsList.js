@@ -751,18 +751,15 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
                     <div className="flex items-center justify-center">
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label className="gender-toggle">
                         <input
                           type="checkbox"
                           checked={bot.gender === 'female'}
                           onChange={() => handleGenderToggle(bot.id, bot.gender)}
-                          className="sr-only"
                         />
-                        <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-checked:bg-pink-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all">
-                        </div>
-                        <span className="ml-2 text-xs text-white">
-                          {bot.gender === 'male' ? 'M' : 'F'}
-                        </span>
+                        <span className="gender-slider"></span>
+                        <span className="gender-label male">M</span>
+                        <span className="gender-label female">F</span>
                       </label>
                     </div>
                   </td>
