@@ -14682,8 +14682,8 @@ async def get_regular_bots_list(
         # Validate pagination parameters
         if page < 1:
             page = 1
-        if limit < 1 or limit > 100:
-            limit = 10
+        if limit < 1:
+            limit = 10000  # Default to showing all bots
         
         # Calculate offset
         offset = (page - 1) * limit
