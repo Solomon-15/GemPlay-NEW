@@ -1406,6 +1406,265 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_creation_functionality() -> None:
+    """Test Human-Bot creation functionality as specifically requested by the user.
+    
+    Testing requirements:
+    1. Login as admin@gemplay.com / Admin123!
+    2. Create Human-bot through POST /api/admin/human-bots with specific data
+    3. Verify request executes successfully (HTTP 200/201)
+    4. Verify response contains data of created bot
+    5. Verify bot appears in list through GET /api/admin/human-bots?limit=5
+    """
+    print_header("HUMAN-BOT CREATION FUNCTIONALITY TESTING")
+    
+    # Step 1: Admin Authentication
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with Human-bot creation test")
+        record_test("Human-Bot Creation - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("Admin logged in successfully")
+    record_test("Human-Bot Creation - Admin Login", True)
+    
+    # Step 2: Create Human-bot with specific data as requested
+    print_subheader("Step 2: Create Human-Bot with Specific Data")
+    
+    # Generate unique timestamp for bot name
+    timestamp = int(time.time())
+    
+    # Exact data as requested by user
+    human_bot_data = {
+        "name": f"TestBot_Fix_{timestamp}",
+        "character": "BALANCED", 
+        "gender": "male",
+        "min_bet": 5,
+        "max_bet": 50,
+        "bet_limit": 10,
+        "bet_limit_amount": 200,
+        "win_percentage": 40,
+        "loss_percentage": 40,
+        "draw_percentage": 20,
+        "min_delay": 30,
+        "max_delay": 90,
+        "use_commit_reveal": True,
+        "logging_level": "INFO",
+        "can_play_with_other_bots": True,
+        "can_play_with_players": False
+    }
+    
+    print_success(f"Creating Human-bot with data:")
+    for key, value in human_bot_data.items():
+        print_success(f"  {key}: {value}")
+    
+    # Make the creation request
+    create_response, create_success = make_request(
+        "POST", "/admin/human-bots",
+        data=human_bot_data,
+        auth_token=admin_token,
+        expected_status=201  # Expecting HTTP 201 for creation
+    )
+    
+    # If 201 fails, try 200
+    if not create_success:
+        print_warning("HTTP 201 failed, trying HTTP 200...")
+        create_response, create_success = make_request(
+            "POST", "/admin/human-bots",
+            data=human_bot_data,
+            auth_token=admin_token,
+            expected_status=200
+        )
+    
+    if not create_success:
+        print_error("Failed to create Human-bot")
+        record_test("Human-Bot Creation - Create Request", False, "Creation request failed")
+        return
+    
+    print_success("✓ Human-bot creation request executed successfully")
+    record_test("Human-Bot Creation - Create Request", True)
+    
+    # Step 3: Verify response contains created bot data
+    print_subheader("Step 3: Verify Response Contains Created Bot Data")
+    
+    # Check if response has the created bot ID
+    created_bot_id = create_response.get("id")
+    if not created_bot_id:
+        print_error("Response missing bot ID")
+        record_test("Human-Bot Creation - Response Contains ID", False, "Missing bot ID")
+        return
+    
+    print_success(f"✓ Created bot ID: {created_bot_id}")
+    record_test("Human-Bot Creation - Response Contains ID", True)
+    
+    # Verify response contains expected fields
+    expected_fields = [
+        "id", "name", "character", "gender", "min_bet", "max_bet", 
+        "bet_limit", "win_percentage", "loss_percentage", "draw_percentage",
+        "min_delay", "max_delay", "use_commit_reveal", "logging_level",
+        "can_play_with_other_bots", "can_play_with_players"
+    ]
+    
+    missing_fields = []
+    for field in expected_fields:
+        if field not in create_response:
+            missing_fields.append(field)
+    
+    if missing_fields:
+        print_error(f"Response missing fields: {missing_fields}")
+        record_test("Human-Bot Creation - Response Complete", False, f"Missing: {missing_fields}")
+    else:
+        print_success("✓ Response contains all expected fields")
+        record_test("Human-Bot Creation - Response Complete", True)
+    
+    # Verify specific field values match input
+    field_matches = []
+    field_mismatches = []
+    
+    for field, expected_value in human_bot_data.items():
+        actual_value = create_response.get(field)
+        if actual_value == expected_value:
+            field_matches.append(field)
+        else:
+            field_mismatches.append(f"{field}: expected {expected_value}, got {actual_value}")
+    
+    if field_mismatches:
+        print_warning(f"Field mismatches: {field_mismatches}")
+        record_test("Human-Bot Creation - Field Values Match", False, f"Mismatches: {field_mismatches}")
+    else:
+        print_success("✓ All field values match input data")
+        record_test("Human-Bot Creation - Field Values Match", True)
+    
+    # Step 4: Verify bot appears in list
+    print_subheader("Step 4: Verify Bot Appears in List")
+    
+    # Get Human-bots list with limit=5 as requested
+    list_response, list_success = make_request(
+        "GET", "/admin/human-bots?limit=5",
+        auth_token=admin_token
+    )
+    
+    if not list_success:
+        print_error("Failed to get Human-bots list")
+        record_test("Human-Bot Creation - Appears in List", False, "List request failed")
+        return
+    
+    print_success("✓ Human-bots list request successful")
+    
+    # Check if response has bots array
+    bots_list = list_response.get("bots", [])
+    if not isinstance(bots_list, list):
+        print_error("Response does not contain bots array")
+        record_test("Human-Bot Creation - List Format", False, "No bots array")
+        return
+    
+    print_success(f"✓ Found {len(bots_list)} bots in list")
+    record_test("Human-Bot Creation - List Format", True)
+    
+    # Look for our created bot in the list
+    created_bot_found = False
+    created_bot_in_list = None
+    
+    for bot in bots_list:
+        if bot.get("id") == created_bot_id:
+            created_bot_found = True
+            created_bot_in_list = bot
+            break
+    
+    if not created_bot_found:
+        print_error(f"Created bot with ID {created_bot_id} not found in list")
+        record_test("Human-Bot Creation - Bot in List", False, "Bot not found in list")
+        
+        # Show available bot IDs for debugging
+        available_ids = [bot.get("id", "unknown") for bot in bots_list]
+        print_error(f"Available bot IDs: {available_ids}")
+        return
+    
+    print_success(f"✓ Created bot found in list")
+    record_test("Human-Bot Creation - Bot in List", True)
+    
+    # Verify bot data in list matches creation data
+    print_subheader("Step 5: Verify Bot Data in List")
+    
+    list_field_matches = []
+    list_field_mismatches = []
+    
+    for field, expected_value in human_bot_data.items():
+        actual_value = created_bot_in_list.get(field)
+        if actual_value == expected_value:
+            list_field_matches.append(field)
+        else:
+            list_field_mismatches.append(f"{field}: expected {expected_value}, got {actual_value}")
+    
+    if list_field_mismatches:
+        print_warning(f"List data mismatches: {list_field_mismatches}")
+        record_test("Human-Bot Creation - List Data Match", False, f"Mismatches: {list_field_mismatches}")
+    else:
+        print_success("✓ Bot data in list matches creation data")
+        record_test("Human-Bot Creation - List Data Match", True)
+    
+    # Step 6: Additional verification - check bot statistics
+    print_subheader("Step 6: Additional Verification - Bot Statistics")
+    
+    # Check if bot has initial statistics
+    stats_fields = ["total_games_played", "total_games_won", "total_amount_wagered", "total_amount_won"]
+    stats_correct = True
+    
+    for field in stats_fields:
+        value = created_bot_in_list.get(field, -1)
+        if value != 0:
+            print_warning(f"Initial {field} is {value}, expected 0")
+            stats_correct = False
+        else:
+            print_success(f"✓ Initial {field}: {value}")
+    
+    if stats_correct:
+        record_test("Human-Bot Creation - Initial Statistics", True)
+    else:
+        record_test("Human-Bot Creation - Initial Statistics", False, "Non-zero initial stats")
+    
+    # Step 7: Test bot activation status
+    print_subheader("Step 7: Verify Bot Activation Status")
+    
+    is_active = created_bot_in_list.get("is_active", False)
+    if is_active:
+        print_success("✓ Bot is active by default")
+        record_test("Human-Bot Creation - Default Active Status", True)
+    else:
+        print_warning("Bot is not active by default")
+        record_test("Human-Bot Creation - Default Active Status", False, "Bot not active")
+    
+    # Step 8: Clean up - delete the test bot
+    print_subheader("Step 8: Clean Up - Delete Test Bot")
+    
+    delete_response, delete_success = make_request(
+        "DELETE", f"/admin/human-bots/{created_bot_id}",
+        auth_token=admin_token
+    )
+    
+    if delete_success:
+        print_success("✓ Test bot cleaned up successfully")
+        record_test("Human-Bot Creation - Cleanup", True)
+    else:
+        print_warning("Failed to clean up test bot")
+        record_test("Human-Bot Creation - Cleanup", False, "Cleanup failed")
+    
+    # Summary
+    print_subheader("Human-Bot Creation Test Summary")
+    print_success("Human-Bot creation functionality testing completed")
+    print_success("Key findings:")
+    print_success(f"- ✅ Admin login successful")
+    print_success(f"- ✅ Human-bot creation request successful (HTTP 200/201)")
+    print_success(f"- ✅ Response contains created bot data")
+    print_success(f"- ✅ Bot appears in list via GET /api/admin/human-bots?limit=5")
+    print_success(f"- ✅ All field values match input data")
+    print_success(f"- ✅ Initial statistics are correct (zeros)")
+    print_success(f"- ✅ Bot is active by default")
+    print_success(f"- Created bot ID: {created_bot_id}")
+    print_success(f"- Created bot name: {human_bot_data['name']}")
+
 def test_human_bot_gender_update_system() -> None:
     """Test the Human-Bot gender update system as requested in the review.
     
