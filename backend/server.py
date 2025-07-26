@@ -8789,6 +8789,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
         return {
             "active_human_bots": active_human_bots_in_game,
             "active_regular_bots": active_regular_bots_in_game,
+            "total_users": total_users_count,  # Общее число пользователей
             "online_users": online_users_count,
             "active_games": active_games,
             "total_bet_volume": total_bet_volume,
