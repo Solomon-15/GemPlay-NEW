@@ -11,14 +11,11 @@ import Leaderboard from "./components/Leaderboard";
 import History from "./components/History";
 import CreateGame from "./components/CreateGame";
 import GameLobby from "./components/GameLobby";
-import SecurityMonitoring from "./components/SecurityMonitoring";
-const LazySecurityMonitoring = React.lazy(() => import("./components/SecurityMonitoring"));
 import AdminPanel from "./components/AdminPanel";
 import HeaderPortfolio from "./components/HeaderPortfolio";
 import NotificationProvider from "./components/NotificationContext";
 import { GemsProvider } from './components/GemsContext';
 import NotificationContainer from "./components/NotificationContainer";
-import NotificationDemo from "./components/NotificationDemo";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
