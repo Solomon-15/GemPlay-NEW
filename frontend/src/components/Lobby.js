@@ -84,33 +84,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     };
   }, []);
 
-  const fetchInterfaceSettings = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/interface-settings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Override server settings to show all items without limits
-      const overriddenSettings = {
-        live_players: {
-          my_bets: 8,  // Show all bets
-          available_bets: 12,  // Show all bets
-          ongoing_battles: 8  // Show all battles
-        },
-        bot_players: {
-          available_bots: 12,  // Show all bots
-          ongoing_bot_battles: 8  // Show all bot battles
-        }
-      };
-      
-      setInterfaceSettings(overriddenSettings);
-    } catch (error) {
-      console.error('Error fetching interface settings:', error);
-      // Используем дефолтные значения при ошибке
-    }
-  };
-
   const fetchLobbyData = async () => {
     try {
       const token = localStorage.getItem('token');
