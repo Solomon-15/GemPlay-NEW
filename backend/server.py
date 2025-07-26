@@ -2878,8 +2878,18 @@ async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
         games_cursor = db.games.find({"$or": query_conditions})
         available_games = await games_cursor.to_list(None)  # Removed limit to show all available games
         
-        # Filter by bot constraints if any (currently none per requirements)
-        available_bets = available_games
+        # Filter by bot constraints - remove bets exceeding bet_limit_amount
+        filtered_bets = []
+        for game in available_games:
+            bet_amount = game.get("bet_amount", 0)
+            
+            # Check if bet amount exceeds bot's limit
+            if bet_amount <= bot.bet_limit_amount:
+                filtered_bets.append(game)
+            else:
+                logger.debug(f"Bot {bot.name} cannot join bet {game.get('id')} - bet amount {bet_amount} exceeds limit {bot.bet_limit_amount}")
+        
+        available_bets = filtered_bets
         
         logger.debug(f"Found {len(available_bets)} available bets for bot {bot.name}")
         return available_bets
