@@ -17526,6 +17526,27 @@ async def get_human_bot_active_bets_count(bot_id: str) -> int:
         logger.error(f"Error counting active bets for human bot {bot_id}: {e}")
         return 0
 
+async def get_human_bot_average_bet_amount(bot_id: str) -> float:
+    """Get average bet amount for a human bot from active bets only."""
+    try:
+        # Get all active bets created by this bot
+        active_bets = await db.games.find({
+            "creator_id": bot_id,
+            "status": "WAITING"
+        }).to_list(None)
+        
+        if not active_bets:
+            return 0.0
+        
+        # Calculate average bet amount
+        total_bet_amount = sum(bet.get('bet_amount', 0.0) for bet in active_bets)
+        average_bet_amount = total_bet_amount / len(active_bets)
+        
+        return round(average_bet_amount)  # Round to whole number
+    except Exception as e:
+        logger.error(f"Error calculating average bet amount for human bot {bot_id}: {e}")
+        return 0.0
+
 @api_router.get("/admin/human-bots", response_model=HumanBotsListResponse)
 async def list_human_bots(
     page: int = Query(1, ge=1),
