@@ -470,7 +470,31 @@ const AdminPanel = ({ user, onClose }) => {
             color="text-indigo-400"
           />
      
-          {/* 1. Активных пользователей */}
+          {/* 4. Активных игр Human ботов */}
+          <StatCard
+            title="Активных игр Human ботов"
+            value={formatNumber(dashboardStats.active_human_bots_games)}
+            icon={
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            }
+            color="text-indigo-400"
+          />
+          
+          {/* 5. Активных игр Обычных ботов */}
+          <StatCard
+            title="Активных игр Обычных ботов"
+            value={formatNumber(dashboardStats.active_regular_bots_games)}
+            icon={
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            }
+            color="text-orange-400"
+          />
+          
+          {/* 6. Активных пользователей */}
           <StatCard
             title="Активных пользователей"
             value={formatNumber(dashboardStats.online_users)}
