@@ -293,6 +293,77 @@ const BetsManagement = () => {
     setIsResetBetModalOpen(true);
   };
 
+  // Multiple selection functions
+  const handleBetSelect = (betId) => {
+    const newSelected = new Set(selectedBets);
+    if (newSelected.has(betId)) {
+      newSelected.delete(betId);
+    } else {
+      newSelected.add(betId);
+    }
+    setSelectedBets(newSelected);
+    setShowBulkActions(newSelected.size > 0);
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedBets(new Set());
+      setShowBulkActions(false);
+    } else {
+      const allBetIds = new Set(bets.map(bet => bet.id));
+      setSelectedBets(allBetIds);
+      setShowBulkActions(true);
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const clearSelection = () => {
+    setSelectedBets(new Set());
+    setSelectAll(false);
+    setShowBulkActions(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedBets.size === 0) return;
+
+    const confirmed = window.confirm(`Вы уверены, что хотите удалить ${selectedBets.size} выбранных ставок? Это действие необратимо!`);
+    if (!confirmed) return;
+
+    setBulkActionLoading(true);
+    const selectedBetIds = Array.from(selectedBets);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      for (const betId of selectedBetIds) {
+        try {
+          await axios.delete(`${API}/admin/games/${betId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          successCount++;
+        } catch (error) {
+          console.error(`Ошибка удаления ставки ${betId}:`, error);
+          errorCount++;
+        }
+      }
+
+      showSuccessRU(`Успешно удалено ${successCount} из ${selectedBets.size} ставок`);
+      if (errorCount > 0) {
+        showWarningRU(`Не удалось удалить ${errorCount} ставок`);
+      }
+
+      clearSelection();
+      fetchBets();
+    } catch (error) {
+      console.error('Ошибка массового удаления:', error);
+      showErrorRU('Ошибка при массовом удалении');
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
