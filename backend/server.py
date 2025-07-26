@@ -8743,13 +8743,21 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
         # Get active Human bots - используем ту же логику что и в Human боты разделе
         active_human_bots_count = await db.human_bots.count_documents({"is_active": True})
         
-        # Get active regular bots in game  
+        # Get active regular bots in game - подсчет уникальных ботов в активных играх
         regular_bots = await db.bots.find({"is_active": True}).to_list(None)
         regular_bot_ids = [bot["id"] for bot in regular_bots]
-        active_regular_bots_in_game = await db.games.count_documents({
-            "creator_id": {"$in": regular_bot_ids},
-            "status": {"$in": ["WAITING", "ACTIVE"]}
-        })
+        
+        # Находим уникальных ботов в активных играх (WAITING или ACTIVE)
+        active_regular_bots_pipeline = [
+            {"$match": {
+                "creator_id": {"$in": regular_bot_ids},
+                "status": {"$in": ["WAITING", "ACTIVE"]}
+            }},
+            {"$group": {"_id": "$creator_id"}},
+            {"$count": "unique_bots"}
+        ]
+        active_regular_bots_result = await db.games.aggregate(active_regular_bots_pipeline).to_list(1)
+        active_regular_bots_in_game = active_regular_bots_result[0]["unique_bots"] if active_regular_bots_result else 0
         
         # Get online users count - подсчет пользователей с онлайн статусом
         all_users = await db.users.find({}).to_list(None)

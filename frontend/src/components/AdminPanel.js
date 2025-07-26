@@ -469,32 +469,8 @@ const AdminPanel = ({ user, onClose }) => {
             }
             color="text-indigo-400"
           />
-          
-          {/* 1. Активных Human ботов */}
-          <StatCard
-            title="Активных Human ботов"
-            value={formatNumber(dashboardStats.active_human_bots)}
-            icon={
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            }
-            color="text-blue-400"
-          />
-          
-          {/* 2. Активных Обычных ботов */}
-          <StatCard
-            title="Активных Обычных ботов"
-            value={formatNumber(dashboardStats.active_regular_bots)}
-            icon={
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-            }
-            color="text-cyan-400"
-          />
-          
-          {/* 3. Активных пользователей */}
+     
+          {/* 1. Активных пользователей */}
           <StatCard
             title="Активных пользователей"
             value={formatNumber(dashboardStats.online_users)}
@@ -505,10 +481,22 @@ const AdminPanel = ({ user, onClose }) => {
             }
             color="text-green-400"
           />
-          
-          {/* 4. Активных игр */}
+              
+          {/* 2. Активных Human ботов */}
           <StatCard
-            title="Активных игр"
+            title="Активных Human ботов"
+            value={formatNumber(dashboardStats.active_human_bots)}
+            icon={
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            }
+            color="text-blue-400"
+          />
+       
+          {/* 3. Активных игр Human ботов */}
+          <StatCard
+            title="Активных игр Human ботов"
             value={formatNumber(dashboardStats.active_games)}
             icon={
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -517,13 +505,37 @@ const AdminPanel = ({ user, onClose }) => {
             }
             color="text-orange-400"
           />
-          
-          {/* 5. Объём ставок */}
+              
+          {/* 4. Активных Обычных ботов */}
+          <StatCard
+            title="Активных Обычных ботов"
+            value={formatNumber(dashboardStats.active_regular_bots)}
+            icon={
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            }
+            color="text-cyan-400"
+          />
+       
+          {/* 5. Активных игр Обычных ботов */}
+          <StatCard
+            title="Активных игр Обычных ботов"
+            value={formatNumber(dashboardStats.active_regular_bots)}
+            icon={
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            }
+            color="text-orange-400"
+          />
+              
+          {/* 6. Объём ставок */}
           <StatCardWithAction
             title="Объём ставок"
             value={formatNumber(dashboardStats.total_bet_volume)}
             icon={
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
               </svg>
             }
@@ -537,7 +549,7 @@ const AdminPanel = ({ user, onClose }) => {
             actionTitle="Сброс"
           />
           
-          {/* 6. Объём ставок онлайн */}
+          {/* 7. Объём ставок онлайн */}
           <StatCard
             title="Объём ставок онлайн"
             value={formatNumber(dashboardStats.online_bet_volume)}
