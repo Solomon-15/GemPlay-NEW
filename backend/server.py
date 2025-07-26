@@ -86,6 +86,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Middleware для обновления last_activity пользователей
+@app.middleware("http")
+async def update_user_activity(request: Request, call_next):
+    response = await call_next(request)
+    
+    # Обновляем last_activity только для аутентифицированных запросов
+    if request.url.path.startswith("/api/") and "Authorization" in request.headers:
+        try:
+            # Извлекаем токен из заголовка
+            auth_header = request.headers.get("Authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header.split(" ")[1]
+                
+                # Декодируем токен для получения user_id
+                try:
+                    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+                    user_id = payload.get("sub")
+                    
+                    if user_id:
+                        # Обновляем last_activity для пользователя
+                        await db.users.update_one(
+                            {"id": user_id},
+                            {"$set": {"last_activity": datetime.utcnow()}}
+                        )
+                except JWTError:
+                    # Если токен невалидный, ничего не делаем
+                    pass
+        except Exception as e:
+            # Логируем ошибку, но не блокируем запрос
+            logger.warning(f"Failed to update user activity: {e}")
+    
+    return response
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
