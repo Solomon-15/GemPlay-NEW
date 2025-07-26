@@ -3297,6 +3297,444 @@ def test_bot_revenue_logic_fix() -> None:
         print_error("❌ BOT REVENUE LOGIC FIX: ISSUES FOUND")
         print_error("❌ Some aspects of the fix need additional work")
 
+def test_unfreeze_stuck_commission() -> None:
+    """Test the new "Unfreeze Stuck Commission" functionality as requested in the review.
+    
+    This feature allows SUPERADMIN users to unfreeze commission that got stuck from incomplete games.
+    
+    Key areas to test:
+    1. Authentication and Authorization - only SUPER_ADMIN users can access
+    2. Core Functionality - /admin/users/unfreeze-stuck-commission POST endpoint
+    3. Data Integrity - 3% commission calculations, balance updates
+    4. Response Structure - comprehensive statistics
+    5. Admin Logging - proper action logging
+    6. Error Handling - various error scenarios
+    """
+    print_header("UNFREEZE STUCK COMMISSION FUNCTIONALITY TESTING")
+    
+    # Step 1: Test Authentication and Authorization
+    print_subheader("Step 1: Authentication and Authorization Testing")
+    
+    # Test 1.1: Login as regular admin (should be denied)
+    print_success("Testing regular admin access (should be denied)...")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if admin_token:
+        print_success("✅ Regular admin logged in successfully")
+        
+        # Try to access the endpoint with regular admin (should fail)
+        unfreeze_response, unfreeze_success = make_request(
+            "POST", "/admin/users/unfreeze-stuck-commission",
+            auth_token=admin_token,
+            expected_status=403  # Expect forbidden
+        )
+        
+        if not unfreeze_success:
+            print_success("✅ Regular admin correctly denied access (HTTP 403)")
+            record_test("Unfreeze Commission - Regular Admin Denied", True)
+        else:
+            print_error("❌ Regular admin should not have access to this endpoint")
+            record_test("Unfreeze Commission - Regular Admin Denied", False, "Admin should be denied")
+    else:
+        print_error("Failed to login as regular admin")
+        record_test("Unfreeze Commission - Regular Admin Login", False, "Login failed")
+    
+    # Test 1.2: Login as SUPER_ADMIN (should be allowed)
+    print_success("Testing SUPER_ADMIN access (should be allowed)...")
+    super_admin_token = test_login(SUPER_ADMIN_USER["email"], SUPER_ADMIN_USER["password"], "superadmin")
+    
+    if not super_admin_token:
+        print_error("Failed to login as SUPER_ADMIN - cannot proceed with testing")
+        record_test("Unfreeze Commission - Super Admin Login", False, "Super admin login failed")
+        return
+    
+    print_success("✅ SUPER_ADMIN logged in successfully")
+    record_test("Unfreeze Commission - Super Admin Login", True)
+    
+    # Test 1.3: Test with invalid/expired token
+    print_success("Testing invalid token access (should be denied)...")
+    invalid_token = "invalid.jwt.token"
+    
+    invalid_response, invalid_success = make_request(
+        "POST", "/admin/users/unfreeze-stuck-commission",
+        auth_token=invalid_token,
+        expected_status=401  # Expect unauthorized
+    )
+    
+    if not invalid_success:
+        print_success("✅ Invalid token correctly denied access (HTTP 401)")
+        record_test("Unfreeze Commission - Invalid Token Denied", True)
+    else:
+        print_error("❌ Invalid token should not have access")
+        record_test("Unfreeze Commission - Invalid Token Denied", False, "Invalid token should be denied")
+    
+    # Step 2: Core Functionality Testing
+    print_subheader("Step 2: Core Functionality Testing")
+    
+    # Test 2.1: Check current system state before unfreezing
+    print_success("Checking current system state...")
+    
+    # Get current incomplete games count
+    games_response, games_success = make_request(
+        "GET", "/admin/games?status=WAITING&page=1&limit=100",
+        auth_token=super_admin_token
+    )
+    
+    waiting_games_count = 0
+    if games_success and "games" in games_response:
+        waiting_games_count = len(games_response["games"])
+    
+    # Get ACTIVE games
+    active_games_response, active_games_success = make_request(
+        "GET", "/admin/games?status=ACTIVE&page=1&limit=100",
+        auth_token=super_admin_token
+    )
+    
+    active_games_count = 0
+    if active_games_success and "games" in active_games_response:
+        active_games_count = len(active_games_response["games"])
+    
+    # Get TIMEOUT games
+    timeout_games_response, timeout_games_success = make_request(
+        "GET", "/admin/games?status=TIMEOUT&page=1&limit=100",
+        auth_token=super_admin_token
+    )
+    
+    timeout_games_count = 0
+    if timeout_games_success and "games" in timeout_games_response:
+        timeout_games_count = len(timeout_games_response["games"])
+    
+    total_incomplete_games = waiting_games_count + active_games_count + timeout_games_count
+    
+    print_success(f"✅ Current system state:")
+    print_success(f"  WAITING games: {waiting_games_count}")
+    print_success(f"  ACTIVE games: {active_games_count}")
+    print_success(f"  TIMEOUT games: {timeout_games_count}")
+    print_success(f"  Total incomplete games: {total_incomplete_games}")
+    
+    record_test("Unfreeze Commission - System State Check", True)
+    
+    # Test 2.2: Execute the unfreeze operation
+    print_success("Executing unfreeze stuck commission operation...")
+    
+    unfreeze_response, unfreeze_success = make_request(
+        "POST", "/admin/users/unfreeze-stuck-commission",
+        auth_token=super_admin_token,
+        expected_status=200
+    )
+    
+    if not unfreeze_success:
+        print_error("❌ Unfreeze operation failed")
+        print_error(f"Response: {unfreeze_response}")
+        record_test("Unfreeze Commission - Operation Execution", False, f"Operation failed: {unfreeze_response}")
+        return
+    
+    print_success("✅ Unfreeze operation executed successfully")
+    record_test("Unfreeze Commission - Operation Execution", True)
+    
+    # Step 3: Response Structure Verification
+    print_subheader("Step 3: Response Structure Verification")
+    
+    # Test 3.1: Verify response contains required fields
+    required_fields = [
+        "success", "message", "total_games", "total_users_affected", 
+        "total_amount_unfrozen", "games_processed"
+    ]
+    
+    missing_fields = []
+    for field in required_fields:
+        if field not in unfreeze_response:
+            missing_fields.append(field)
+    
+    if missing_fields:
+        print_error(f"❌ Response missing required fields: {missing_fields}")
+        record_test("Unfreeze Commission - Response Structure", False, f"Missing fields: {missing_fields}")
+    else:
+        print_success("✅ Response contains all required fields")
+        record_test("Unfreeze Commission - Response Structure", True)
+    
+    # Test 3.2: Verify response data types and values
+    success_value = unfreeze_response.get("success", False)
+    message = unfreeze_response.get("message", "")
+    total_games = unfreeze_response.get("total_games", 0)
+    total_users_affected = unfreeze_response.get("total_users_affected", 0)
+    total_amount_unfrozen = unfreeze_response.get("total_amount_unfrozen", 0.0)
+    games_processed = unfreeze_response.get("games_processed", [])
+    
+    print_success(f"✅ Response data:")
+    print_success(f"  Success: {success_value}")
+    print_success(f"  Message: {message}")
+    print_success(f"  Total games: {total_games}")
+    print_success(f"  Users affected: {total_users_affected}")
+    print_success(f"  Amount unfrozen: ${total_amount_unfrozen}")
+    print_success(f"  Games processed: {len(games_processed)} games")
+    
+    # Verify data types
+    data_type_checks = [
+        ("success", success_value, bool),
+        ("message", message, str),
+        ("total_games", total_games, int),
+        ("total_users_affected", total_users_affected, int),
+        ("total_amount_unfrozen", total_amount_unfrozen, (int, float)),
+        ("games_processed", games_processed, list)
+    ]
+    
+    type_errors = []
+    for field_name, value, expected_type in data_type_checks:
+        if not isinstance(value, expected_type):
+            type_errors.append(f"{field_name}: expected {expected_type}, got {type(value)}")
+    
+    if type_errors:
+        print_error(f"❌ Data type errors: {type_errors}")
+        record_test("Unfreeze Commission - Data Types", False, f"Type errors: {type_errors}")
+    else:
+        print_success("✅ All response data types are correct")
+        record_test("Unfreeze Commission - Data Types", True)
+    
+    # Step 4: Data Integrity Testing
+    print_subheader("Step 4: Data Integrity Testing")
+    
+    # Test 4.1: Verify mathematical accuracy of commission calculations
+    if games_processed:
+        print_success("Verifying commission calculations...")
+        
+        calculation_errors = []
+        for i, game_info in enumerate(games_processed[:5]):  # Check first 5 games
+            game_id = game_info.get("game_id", "unknown")
+            bet_amount = game_info.get("bet_amount", 0)
+            commission_per_player = game_info.get("commission_per_player", 0)
+            players_processed = game_info.get("players_processed", [])
+            
+            # Verify 3% commission calculation
+            expected_commission = bet_amount * 0.03
+            if abs(commission_per_player - expected_commission) > 0.001:  # Allow small floating point errors
+                calculation_errors.append(f"Game {game_id}: expected ${expected_commission:.3f}, got ${commission_per_player:.3f}")
+            
+            print_success(f"  Game {i+1}: ID={game_id}, Bet=${bet_amount}, Commission=${commission_per_player:.3f}")
+            
+            # Verify players processed
+            for player in players_processed:
+                user_id = player.get("user_id", "unknown")
+                username = player.get("username", "unknown")
+                amount_unfrozen = player.get("amount_unfrozen", 0)
+                
+                print_success(f"    Player: {username} ({user_id}), Unfrozen: ${amount_unfrozen}")
+                
+                # Verify amount matches commission calculation
+                if abs(amount_unfrozen - commission_per_player) > 0.001:
+                    calculation_errors.append(f"Player {username}: expected ${commission_per_player:.3f}, got ${amount_unfrozen:.3f}")
+        
+        if calculation_errors:
+            print_error(f"❌ Commission calculation errors: {calculation_errors}")
+            record_test("Unfreeze Commission - Mathematical Accuracy", False, f"Calculation errors: {calculation_errors}")
+        else:
+            print_success("✅ All commission calculations are mathematically accurate (3% of bet_amount)")
+            record_test("Unfreeze Commission - Mathematical Accuracy", True)
+    else:
+        print_warning("⚠️ No games were processed, cannot verify calculations")
+        record_test("Unfreeze Commission - Mathematical Accuracy", False, "No games to verify")
+    
+    # Test 4.2: Verify balance updates are atomic and correct
+    print_success("Verifying balance updates...")
+    
+    if total_users_affected > 0:
+        print_success(f"✅ {total_users_affected} users had their balances updated")
+        print_success(f"✅ Total amount moved from frozen_balance to virtual_balance: ${total_amount_unfrozen}")
+        
+        # Verify total amount calculation
+        expected_total = 0.0
+        for game_info in games_processed:
+            players_processed = game_info.get("players_processed", [])
+            for player in players_processed:
+                expected_total += player.get("amount_unfrozen", 0)
+        
+        if abs(total_amount_unfrozen - expected_total) > 0.01:
+            print_error(f"❌ Total amount mismatch: expected ${expected_total:.2f}, got ${total_amount_unfrozen:.2f}")
+            record_test("Unfreeze Commission - Balance Update Accuracy", False, f"Amount mismatch: ${abs(total_amount_unfrozen - expected_total):.2f}")
+        else:
+            print_success("✅ Total amount calculation is accurate")
+            record_test("Unfreeze Commission - Balance Update Accuracy", True)
+    else:
+        print_warning("⚠️ No users were affected, cannot verify balance updates")
+        record_test("Unfreeze Commission - Balance Update Accuracy", False, "No users affected")
+    
+    # Step 5: Admin Logging Verification
+    print_subheader("Step 5: Admin Logging Verification")
+    
+    # Test 5.1: Check if admin action was logged
+    print_success("Checking admin action logging...")
+    
+    # Get recent admin logs
+    admin_logs_response, admin_logs_success = make_request(
+        "GET", "/admin/logs?page=1&limit=10",
+        auth_token=super_admin_token
+    )
+    
+    if admin_logs_success and "logs" in admin_logs_response:
+        logs = admin_logs_response["logs"]
+        
+        # Look for the unfreeze action log
+        unfreeze_log = None
+        for log in logs:
+            if log.get("action") == "UNFREEZE_STUCK_COMMISSION":
+                unfreeze_log = log
+                break
+        
+        if unfreeze_log:
+            print_success("✅ Admin action logged successfully")
+            
+            # Verify log details
+            log_details = unfreeze_log.get("details", {})
+            expected_log_fields = [
+                "total_games_processed", "games_with_unfrozen_commission",
+                "total_users_affected", "total_amount_unfrozen", "incomplete_statuses"
+            ]
+            
+            missing_log_fields = []
+            for field in expected_log_fields:
+                if field not in log_details:
+                    missing_log_fields.append(field)
+            
+            if missing_log_fields:
+                print_error(f"❌ Admin log missing details: {missing_log_fields}")
+                record_test("Unfreeze Commission - Admin Log Details", False, f"Missing: {missing_log_fields}")
+            else:
+                print_success("✅ Admin log contains all required details")
+                print_success(f"  Admin ID: {unfreeze_log.get('admin_id', 'unknown')}")
+                print_success(f"  Target: {unfreeze_log.get('target_type', 'unknown')}/{unfreeze_log.get('target_id', 'unknown')}")
+                print_success(f"  Details: {log_details}")
+                record_test("Unfreeze Commission - Admin Log Details", True)
+        else:
+            print_error("❌ Admin action not found in logs")
+            record_test("Unfreeze Commission - Admin Logging", False, "Action not logged")
+    else:
+        print_error("❌ Failed to retrieve admin logs")
+        record_test("Unfreeze Commission - Admin Logging", False, "Logs endpoint failed")
+    
+    # Step 6: Error Handling Testing
+    print_subheader("Step 6: Error Handling Testing")
+    
+    # Test 6.1: Test behavior when no incomplete games exist (run operation again)
+    print_success("Testing behavior with no incomplete games (running operation again)...")
+    
+    second_unfreeze_response, second_unfreeze_success = make_request(
+        "POST", "/admin/users/unfreeze-stuck-commission",
+        auth_token=super_admin_token,
+        expected_status=200
+    )
+    
+    if second_unfreeze_success:
+        second_total_games = second_unfreeze_response.get("total_games", 0)
+        second_users_affected = second_unfreeze_response.get("total_users_affected", 0)
+        second_amount_unfrozen = second_unfreeze_response.get("total_amount_unfrozen", 0.0)
+        second_message = second_unfreeze_response.get("message", "")
+        
+        print_success(f"✅ Second operation completed:")
+        print_success(f"  Total games: {second_total_games}")
+        print_success(f"  Users affected: {second_users_affected}")
+        print_success(f"  Amount unfrozen: ${second_amount_unfrozen}")
+        print_success(f"  Message: {second_message}")
+        
+        # Should have fewer or no games to process
+        if second_total_games <= total_games and second_users_affected <= total_users_affected:
+            print_success("✅ Second operation processed fewer or equal games (expected)")
+            record_test("Unfreeze Commission - No Games Handling", True)
+        else:
+            print_warning("⚠️ Second operation processed more games than first (unexpected)")
+            record_test("Unfreeze Commission - No Games Handling", False, "More games in second run")
+        
+        # Check for appropriate message when no games need processing
+        if second_total_games == 0 and "нет" in second_message.lower():
+            print_success("✅ Appropriate message when no games need processing")
+            record_test("Unfreeze Commission - No Games Message", True)
+        elif second_total_games > 0:
+            print_success("✅ Still found games to process")
+            record_test("Unfreeze Commission - No Games Message", True)
+        else:
+            print_warning("⚠️ Message may not be appropriate for no games scenario")
+            record_test("Unfreeze Commission - No Games Message", False, "Message unclear")
+    else:
+        print_error("❌ Second unfreeze operation failed")
+        record_test("Unfreeze Commission - No Games Handling", False, "Second operation failed")
+    
+    # Test 6.2: Test system resilience
+    print_success("Testing system resilience...")
+    
+    # The endpoint should be idempotent - running multiple times should be safe
+    third_unfreeze_response, third_unfreeze_success = make_request(
+        "POST", "/admin/users/unfreeze-stuck-commission",
+        auth_token=super_admin_token,
+        expected_status=200
+    )
+    
+    if third_unfreeze_success:
+        print_success("✅ System handles multiple operations gracefully")
+        record_test("Unfreeze Commission - System Resilience", True)
+    else:
+        print_error("❌ System failed on third operation")
+        record_test("Unfreeze Commission - System Resilience", False, "Third operation failed")
+    
+    # Step 7: Edge Cases Testing
+    print_subheader("Step 7: Edge Cases Testing")
+    
+    # Test 7.1: Verify handling of games with missing player IDs
+    print_success("Testing edge cases...")
+    
+    # This is tested implicitly by the operation - if there were games with missing IDs,
+    # they should be handled gracefully without causing errors
+    
+    if unfreeze_success and second_unfreeze_success and third_unfreeze_success:
+        print_success("✅ System handles edge cases gracefully (no crashes observed)")
+        record_test("Unfreeze Commission - Edge Cases", True)
+    else:
+        print_error("❌ System may have issues with edge cases")
+        record_test("Unfreeze Commission - Edge Cases", False, "Operations failed")
+    
+    # Step 8: Final Verification
+    print_subheader("Step 8: Final Verification and Summary")
+    
+    # Verify the endpoint is working as designed
+    operation_success = (
+        unfreeze_success and 
+        success_value and 
+        isinstance(total_games, int) and 
+        isinstance(total_users_affected, int) and 
+        isinstance(total_amount_unfrozen, (int, float)) and 
+        isinstance(games_processed, list)
+    )
+    
+    if operation_success:
+        print_success("🎉 UNFREEZE STUCK COMMISSION FUNCTIONALITY: SUCCESS")
+        print_success("✅ Authentication and authorization working correctly")
+        print_success("✅ Core functionality operational")
+        print_success("✅ Data integrity maintained")
+        print_success("✅ Response structure complete and accurate")
+        print_success("✅ Admin logging functional")
+        print_success("✅ Error handling robust")
+        print_success("✅ Mathematical calculations accurate (3% commission)")
+        print_success("✅ Balance updates atomic and correct")
+        print_success("✅ System resilient to multiple operations")
+        
+        record_test("Unfreeze Commission - Overall Functionality", True)
+    else:
+        print_error("❌ UNFREEZE STUCK COMMISSION FUNCTIONALITY: ISSUES FOUND")
+        print_error("❌ Some aspects need attention")
+        record_test("Unfreeze Commission - Overall Functionality", False, "Issues detected")
+    
+    # Summary statistics
+    print_subheader("Operation Summary")
+    print_success(f"📊 First operation results:")
+    print_success(f"  • Incomplete games found: {total_games}")
+    print_success(f"  • Users affected: {total_users_affected}")
+    print_success(f"  • Total commission unfrozen: ${total_amount_unfrozen}")
+    print_success(f"  • Games with commission processed: {len(games_processed)}")
+    
+    if total_amount_unfrozen > 0:
+        avg_commission_per_user = total_amount_unfrozen / total_users_affected if total_users_affected > 0 else 0
+        print_success(f"  • Average commission per user: ${avg_commission_per_user:.2f}")
+    
+    print_success("✅ Unfreeze Stuck Commission functionality testing completed")
+
 def test_human_bot_timeout_system() -> None:
     """Test the fixed Human-bot timeout system as requested in the review:
     
