@@ -111,6 +111,18 @@ frontend:
         comment: "VARIANT B - HUMAN-BOT LOBBY FIX TESTING COMPLETED SUCCESSFULLY: Conducted comprehensive testing of Variant B fix as specifically requested in the review - showing ALL Human-bot games in lobby. CRITICAL FINDINGS: ✅ 1. ADMIN PANEL TOTAL_BETS VERIFIED - GET /api/admin/human-bots/stats returns total_bets: 124 (expected ~124). Admin panel statistics endpoint accessible with 12 total Human-bots, 12 active Human-bots. ✅ 2. LOBBY WITHOUT RESTRICTIONS - GET /api/games/available now shows 125 total available games with 124 Human-bot games (is_human_bot=true), 0 regular bot games, and 1 user game. All Human-bot games properly displayed without exclusions or limits. ✅ 3. NUMBERS ARE IDENTICAL - CRITICAL SUCCESS: Admin Panel total_bets (124) = Lobby Human-bot games (124). The numbers are now IDENTICAL after Variant B fix! ✅ 4. ALL WAITING HUMAN-BOT GAMES SHOWN - System now displays ALL WAITING Human-bot games without restrictions. No exclusions or limits applied to Human-bot games display. ✅ 5. PROPER FIELD MAPPING - All Human-bot games show correct fields: creator_type='human_bot', is_bot_game=True, bot_type='HUMAN', is_human_bot=True. Field mapping working perfectly. ✅ 6. USER GAMES PROPERLY EXCLUDED - Regular user games still properly handled (1 user game shown), while Human-bot games show without exclusions. ✅ 7. EXAMPLES VERIFIED - Showed 5 examples of Human-bot games with complete field information: all have creator_type='human_bot', is_bot_game=True, bot_type='HUMAN', is_human_bot=True, status='WAITING'. ✅ 8. TOTAL GAMES INCREASED - Total available games increased to 125 (124 Human-bot + 1 user), confirming that more games are now visible in lobby. CONCLUSION: VARIANT B - HUMAN-BOT LOBBY FIX IS FULLY SUCCESSFUL! The fix correctly shows ALL Human-bot games in lobby, numbers are identical (124 = 124), exclusions and limits for Human-bot games have been removed, and the system now displays all WAITING Human-bot games as requested. The goal of making admin panel total_bets identical to lobby Human-bot games count has been achieved."
 
 backend:
+  - task: "Balance Total Field Fix"
+    implemented: true
+    working: "pending_test"
+    file: "/app/frontend/src/components/Inventory.js, /app/frontend/src/components/HeaderPortfolio.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "BALANCE TOTAL FIELD FIX COMPLETED: Fixed logic so Total field shows virtual_balance + gem_value without including frozen_balance (commission). TECHNICAL IMPLEMENTATION: ✅ 1. INVENTORY COMPONENT FIX - Modified getPortfolioData() to calculate total as virtualBalance + balance.total_gem_value instead of balance.total_value ✅ 2. HEADER PORTFOLIO COMPONENT FIX - Applied same calculation logic for consistency across all balance displays ✅ 3. PRESERVED BALANCE BREAKDOWN - Balance section still shows Total/Frozen/Available correctly but Total field now excludes frozen commission ✅ 4. MATHEMATICAL ACCURACY - Total = virtual_balance + total_gem_value (all gems including frozen gems but excluding frozen balance/commission) ROOT CAUSE: Previously Total field was using backend's total_value which included frozen_balance causing commission to reduce Total display. EXPECTED BEHAVIOR: When user has virtual_balance=$994, frozen_balance=$3, gems=$865 then Total should show $1,859 ($994 + $865) without the $3 frozen commission."
+
   - task: "Unfreeze Stuck Commission Functionality"
     implemented: true
     working: true
