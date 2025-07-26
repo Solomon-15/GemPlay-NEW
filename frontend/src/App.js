@@ -16,6 +16,7 @@ import HeaderPortfolio from "./components/HeaderPortfolio";
 import NotificationProvider from "./components/NotificationContext";
 import { GemsProvider } from './components/GemsContext';
 import NotificationContainer from "./components/NotificationContainer";
+import './utils/metamask-blocker'; // Блокировка MetaMask
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
