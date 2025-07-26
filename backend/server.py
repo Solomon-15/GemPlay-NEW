@@ -8735,9 +8735,14 @@ async def reset_total_bet_volume(current_user: User = Depends(get_current_admin)
         # Log the action
         admin_log = AdminLog(
             admin_id=str(current_user.id),
-            admin_username=current_user.username,
             action="RESET_BET_VOLUME",
-            details=f"Reset total bet volume by deleting {games_count} games",
+            target_type="system",
+            target_id="games_collection",
+            details={
+                "action": "reset_bet_volume",
+                "deleted_games": games_count,
+                "description": f"Reset total bet volume by deleting {games_count} games"
+            },
             ip_address="system"
         )
         await db.admin_logs.insert_one(admin_log.dict())
