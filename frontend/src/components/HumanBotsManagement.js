@@ -261,12 +261,13 @@ const HumanBotsManagement = () => {
       return;
     }
 
+    // Валидация процентов
     if (createFormData.win_percentage + createFormData.loss_percentage + createFormData.draw_percentage !== 100) {
       addNotification('Сумма процентов должна равняться 100%', 'error');
       return;
     }
 
-    // Проверяем уникальность имени для нового бота
+    // Проверка уникальности имени для нового бота
     if (!editingBot) {
       const existingBot = humanBots.find(bot => 
         bot.name.toLowerCase() === createFormData.name.toLowerCase()
@@ -277,57 +278,72 @@ const HumanBotsManagement = () => {
       }
     }
 
-    setLoading(true);
     try {
       let response;
+      const isCreating = !editingBot;
+      
       if (editingBot) {
-        // Edit existing bot
+        // Редактирование существующего бота
         response = await executeOperation(`/admin/human-bots/${editingBot.id}`, 'PUT', createFormData);
       } else {
-        // Create new bot
+        // Создание нового бота
         response = await executeOperation('/admin/human-bots', 'POST', createFormData);
       }
       
-      // Если дошли до этой точки, значит запрос успешен
-      const action = editingBot ? 'отредактирован' : 'создан';
+      // Успешное выполнение операции
       const botName = createFormData.name || 'Human-бот';
-      addNotification(`Human-бот "${botName}" успешно ${action}`, 'success');
       
+      if (isCreating) {
+        addNotification(`Human-бот "${botName}" успешно создан`, 'success');
+      } else {
+        addNotification(`Human-бот "${botName}" успешно отредактирован`, 'success');
+      }
+      
+      // Закрытие модального окна
       setShowCreateForm(false);
       setEditingBot(null);
-      setCreateFormData({
-        name: '',
-        character: 'BALANCED',
-        gender: 'male',
-        min_bet: 1,
-        max_bet: 100,
-        bet_limit: 12,
-        bet_limit_amount: 300,
-        win_percentage: 40,
-        loss_percentage: 40,
-        draw_percentage: 20,
-        min_delay: 30,
-        max_delay: 120,
-        use_commit_reveal: true,
-        logging_level: 'INFO',
-        can_play_with_other_bots: true,
-        can_play_with_players: true
-      });
       
-      // Trigger global lobby refresh to update avatars if gender was changed
+      // Сброс формы только при создании (согласно требованиям - форму не сбрасывать)
+      // Но нужно сбросить editingBot состояние
+      if (isCreating) {
+        setCreateFormData({
+          name: '',
+          character: 'BALANCED',
+          gender: 'male',
+          min_bet: 1,
+          max_bet: 100,
+          bet_limit: 12,
+          bet_limit_amount: 300,
+          win_percentage: 40,
+          loss_percentage: 40,
+          draw_percentage: 20,
+          min_delay: 30,
+          max_delay: 120,
+          use_commit_reveal: true,
+          logging_level: 'INFO',
+          can_play_with_other_bots: true,
+          can_play_with_players: true
+        });
+      }
+      
+      // Обновление Lobby для актуализации аватарок
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       
+      // Обновление списка Human-ботов
       await fetchHumanBots();
+      
     } catch (error) {
       console.error('Ошибка создания/редактирования Human-бота:', error);
+      
+      // Обработка специфических ошибок
       if (error.message.includes('Bot name already exists')) {
         addNotification(`Бот с именем "${createFormData.name}" уже существует. Пожалуйста, выберите другое имя.`, 'error');
       } else {
-        addNotification('Ошибка при создании/редактировании бота. Попробуйте еще раз.', 'error');
+        // Разные сообщения для создания и редактирования
+        const operation = editingBot ? 'редактировании' : 'создании';
+        addNotification(`Ошибка при ${operation} бота. Попробуйте еще раз.`, 'error');
       }
-    } finally {
-      setLoading(false);
     }
   };
 
