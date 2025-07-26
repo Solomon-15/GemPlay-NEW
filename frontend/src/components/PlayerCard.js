@@ -103,23 +103,26 @@ const PlayerCard = React.memo(({
     return gender === 'female' ? '/Women.svg' : '/Men.svg';
   };
 
-  const handleAcceptClick = () => {
+  // Мемоизируем функции-обработчики
+  const handleAcceptClick = useCallback(() => {
     if (onAccept) {
       onAccept(game.game_id || game.id); // Передаем ID игры, а не объект
     } else if (onOpenJoinBattle) {
       onOpenJoinBattle(game); // Передаем весь объект игры
     }
-  };
+  }, [onAccept, onOpenJoinBattle, game.game_id, game.id, game]);
 
-  const handleCancelClick = () => {
+  const handleCancelClick = useCallback(() => {
     if (onCancel) {
       onCancel(game.game_id || game.id);
     }
-  };
+  }, [onCancel, game.game_id, game.id]);
 
-  const totalAmount = getTotalBetAmount();
-  const timeRemaining = getTimeRemaining();
-  const sortedGems = getSortedGems();
+  // Мемоизируем вычисления
+  const totalAmount = useMemo(() => getTotalBetAmount(), [game.bet_amount, game.gems, gemsDefinitions]);
+  const timeRemaining = useMemo(() => getTimeRemaining(), [game.created_at, currentTime]);
+  const sortedGems = useMemo(() => getSortedGems(), [game.gems, gemsDefinitions]);
+  const avatarIcon = useMemo(() => getAvatarIcon(), [game.is_human_bot, game.creator_type, game.bot_type, game.creator?.gender, isBot]);
 
   return (
     <>
