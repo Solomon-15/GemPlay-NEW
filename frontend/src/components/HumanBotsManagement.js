@@ -326,7 +326,7 @@ const HumanBotsManagement = () => {
 
   const handleBulkCreate = async () => {
     if (bulkCreateData.win_percentage + bulkCreateData.loss_percentage + bulkCreateData.draw_percentage !== 100) {
-      alert('Сумма процентов должна равняться 100%');
+      addNotification('Сумма процентов должна равняться 100%', 'error');
       return;
     }
 
