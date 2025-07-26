@@ -60,7 +60,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   });
 
   useEffect(() => {
-    fetchInterfaceSettings();
     fetchLobbyData();
     
     // Preload gem prices
