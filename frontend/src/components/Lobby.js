@@ -753,7 +753,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           totalItems={ongoingBattles.length}
           onPageChange={handlePageChange}
           section="ongoingBattles"
-          itemsPerPage={interfaceSettings.live_players.ongoing_battles}
+          itemsPerPage={8}
         />
       </SectionBlock>
     </div>
