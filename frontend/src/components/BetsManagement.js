@@ -604,6 +604,14 @@ const BetsManagement = () => {
             <table className="w-full">
               <thead className="bg-surface-sidebar">
                 <tr>
+                  <th className="px-4 py-3 text-center text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="rounded border-border-primary text-accent-primary focus:ring-accent-primary"
+                    />
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     ID Ставки
                   </th>
