@@ -830,6 +830,16 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
+                    <input
+                      type="number"
+                      value={bot.bet_limit_amount || 300}
+                      onChange={(e) => handleBetLimitAmountChange(bot, parseFloat(e.target.value) || 300)}
+                      className="w-20 px-2 py-1 bg-surface-sidebar text-white rounded border border-border-primary focus:border-accent-primary text-center text-sm"
+                      min="1"
+                      max="100000"
+                    />
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-center">
                     <div className="text-orange-400 font-roboto text-sm">
                       {bot.win_percentage}%
                     </div>
