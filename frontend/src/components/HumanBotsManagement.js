@@ -1116,6 +1116,23 @@ const HumanBotsManagement = () => {
                     />
                     <small className="form-help">Макс. количество одновременных ставок (1-100)</small>
                   </div>
+                  <div className="form-group">
+                    <label>
+                      <svg className="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                      Ограничение суммы ставок
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100000"
+                      value={createFormData.bet_limit_amount}
+                      onChange={(e) => setCreateFormData({...createFormData, bet_limit_amount: parseFloat(e.target.value) || 300})}
+                      placeholder="300"
+                    />
+                    <small className="form-help">Макс. сумма ставки для участия как оппонент (1-100000)</small>
+                  </div>
                 </div>
               </div>
 
