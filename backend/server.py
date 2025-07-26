@@ -8695,10 +8695,53 @@ async def get_games_list(
         games_cursor = db.games.find(query).sort("created_at", -1).skip(offset).limit(limit)
         games = await games_cursor.to_list(length=limit)
         
-        # Convert ObjectId to string for JSON serialization
+        # Enrich games with creator information
         for game in games:
             if "_id" in game:
                 game["_id"] = str(game["_id"])
+            
+            # Get creator info
+            creator_id = game.get("creator_id")
+            if creator_id:
+                # Try to find as user first
+                creator = await db.users.find_one({"id": creator_id})
+                if creator:
+                    game["creator"] = {
+                        "id": creator["id"],
+                        "username": creator["username"],
+                        "gender": creator.get("gender", "male")
+                    }
+                else:
+                    # Try to find as human bot
+                    human_bot = await db.human_bots.find_one({"id": creator_id})
+                    if human_bot:
+                        game["creator"] = {
+                            "id": human_bot["id"],
+                            "username": human_bot["name"],
+                            "gender": human_bot.get("gender", "male")
+                        }
+                        game["is_human_bot"] = True
+            
+            # Get opponent info if present
+            opponent_id = game.get("opponent_id")
+            if opponent_id:
+                # Try to find as user first
+                opponent = await db.users.find_one({"id": opponent_id})
+                if opponent:
+                    game["opponent"] = {
+                        "id": opponent["id"],
+                        "username": opponent["username"],
+                        "gender": opponent.get("gender", "male")
+                    }
+                else:
+                    # Try to find as human bot
+                    human_bot = await db.human_bots.find_one({"id": opponent_id})
+                    if human_bot:
+                        game["opponent"] = {
+                            "id": human_bot["id"],
+                            "username": human_bot["name"],
+                            "gender": human_bot.get("gender", "male")
+                        }
         
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
