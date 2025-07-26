@@ -231,7 +231,7 @@ const HumanBotsManagement = () => {
       });
       
       if (response.success !== false) {
-        alert(response.message || 'Настройки сохранены успешно');
+        addNotification(response.message || 'Настройки сохранены успешно', 'success');
         // Обновить настройки после сохранения
         await fetchHumanBotSettings();
         // Обновить список ботов если были изменения
