@@ -706,16 +706,20 @@ const HumanBotsManagement = () => {
                   setCreateFormData({
                     name: bot.name || '',
                     character: bot.character || 'BALANCED',
+                    gender: bot.gender || 'male',
                     min_bet: bot.min_bet || 1,
                     max_bet: bot.max_bet || 100,
                     bet_limit: bot.bet_limit || 12,
+                    bet_limit_amount: bot.bet_limit_amount || 300,
                     win_percentage: bot.win_percentage || 40,
                     loss_percentage: bot.loss_percentage || 40,
                     draw_percentage: bot.draw_percentage || 20,
                     min_delay: bot.min_delay || 30,
                     max_delay: bot.max_delay || 120,
                     use_commit_reveal: bot.use_commit_reveal !== undefined ? bot.use_commit_reveal : true,
-                    logging_level: bot.logging_level || 'INFO'
+                    logging_level: bot.logging_level || 'INFO',
+                    can_play_with_other_bots: bot.can_play_with_other_bots !== undefined ? bot.can_play_with_other_bots : true,
+                    can_play_with_players: bot.can_play_with_players !== undefined ? bot.can_play_with_players : true
                   });
                   setShowCreateForm(true);
                 }}
