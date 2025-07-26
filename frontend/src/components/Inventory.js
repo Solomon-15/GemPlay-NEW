@@ -156,7 +156,8 @@ const Inventory = ({ user, onUpdateUser }) => {
     const frozenGemsCount = gems.reduce((sum, gem) => sum + gem.frozen_quantity, 0);
     const availableGemValue = balance.available_gem_value;
     const frozenGemValue = balance.total_gem_value - balance.available_gem_value;
-    const totalValue = balance.total_value;
+    // ИСПРАВЛЕНИЕ: Total = virtual_balance + стоимость всех гемов (без frozen_balance)
+    const totalValue = virtualBalance + balance.total_gem_value;
 
     return {
       balance: {
@@ -172,7 +173,7 @@ const Inventory = ({ user, onUpdateUser }) => {
         availableValue: availableGemValue
       },
       total: {
-        value: totalValue
+        value: totalValue  // virtual_balance + total_gem_value (без frozen_balance)
       }
     };
   };
