@@ -110,8 +110,8 @@ const AdminPanel = ({ user, onClose }) => {
         return;
       }
       
-      // Получаем статистику для дашборда
-      const [usersResponse, botsResponse, gamesResponse] = await Promise.allSettled([
+      // Получаем старую статистику для дашборда (для совместимости)
+      const [usersResponse, botsResponse, gamesResponse, dashboardResponse] = await Promise.allSettled([
         axios.get(`${API}/admin/users/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
@@ -120,20 +120,41 @@ const AdminPanel = ({ user, onClose }) => {
         }),
         axios.get(`${API}/admin/games/stats`, {
           headers: { Authorization: `Bearer ${token}` }
+        }),
+        // Новый endpoint для расширенной статистики
+        axios.get(`${API}/admin/dashboard/stats`, {
+          headers: { Authorization: `Bearer ${token}` }
         })
       ]);
 
       console.log('✅ AdminPanel: Dashboard stats responses:', {
         users: usersResponse.status,
         bots: botsResponse.status,
-        games: gamesResponse.status
+        games: gamesResponse.status,
+        dashboard: dashboardResponse.status
       });
 
+      // Устанавливаем старую статистику (для совместимости с существующими компонентами)
       setStats({
         users: usersResponse.status === 'fulfilled' ? usersResponse.value.data : { total: '—', active: '—', banned: '—' },
         bots: botsResponse.status === 'fulfilled' ? botsResponse.value.data.length : '—',
         games: gamesResponse.status === 'fulfilled' ? gamesResponse.value.data : { total: '—', active: '—', completed: '—' }
       });
+      
+      // Устанавливаем новую расширенную статистику для dashboard
+      if (dashboardResponse.status === 'fulfilled') {
+        setDashboardStats(dashboardResponse.value.data);
+      } else {
+        console.error('❌ Failed to fetch dashboard stats:', dashboardResponse.reason);
+        setDashboardStats({
+          active_human_bots: '—',
+          active_regular_bots: '—', 
+          online_users: '—',
+          active_games: '—',
+          total_bet_volume: '—',
+          online_bet_volume: '—'
+        });
+      }
       
       setLoading(false);
     } catch (error) {
