@@ -154,7 +154,7 @@ const PlayerCard = React.memo(({
             {/* Username */}
             <div className="flex items-center space-x-2 mb-1">
               <h3 className="text-white font-rajdhani font-bold text-lg truncate">
-                {isBot ? 'Bot' : formatUsername(game.creator?.username || 'Player')}
+                {isBot ? 'Bot' : formattedUsername}
               </h3>
               {isMyBet && (
                 <span className="bg-blue-600 text-white text-xs font-rajdhani font-bold px-2 py-1 rounded">
