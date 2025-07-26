@@ -17574,6 +17574,9 @@ async def list_human_bots(
             # Get active bets count
             active_bets_count = await get_human_bot_active_bets_count(bot["id"])
             
+            # Get average bet amount from active bets
+            average_bet_amount = await get_human_bot_average_bet_amount(bot["id"])
+            
             # Calculate draws from completed games
             completed_games = await db.games.find({
                 "$or": [
