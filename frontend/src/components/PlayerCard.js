@@ -136,7 +136,7 @@ const PlayerCard = React.memo(({
               </div>
             ) : (
               <img 
-                src={getAvatarIcon()} 
+                src={avatarIcon} 
                 alt="Player Avatar" 
                 className="w-14 h-14 rounded-full bg-surface-sidebar p-1"
               />
