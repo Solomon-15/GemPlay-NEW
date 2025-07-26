@@ -171,6 +171,60 @@ const AdminPanel = ({ user, onClose }) => {
     }
   };
 
+  // Функция для форматирования чисел в формате 1,234,567
+  const formatNumber = (num) => {
+    if (num === '—' || num === undefined || num === null) return '—';
+    return Number(num).toLocaleString('en-US');
+  };
+
+  // Функция для сброса объёма ставок
+  const resetBetVolume = async () => {
+    const confirmed = await confirm({
+      title: 'Сброс объёма ставок',
+      message: 'Вы уверены, что хотите сбросить общий объём ставок? Это действие удалит все игры и нельзя отменить.',
+      confirmText: 'Сбросить объём ставок',
+      cancelText: 'Отмена',
+      type: 'danger'
+    });
+
+    if (!confirmed) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/admin/dashboard/reset-bet-volume`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showSuccessRU('Объём ставок успешно сброшен');
+      await fetchDashboardStats(); // Обновляем статистику
+    } catch (error) {
+      console.error('Ошибка при сбросе объёма ставок:', error);
+      showErrorRU('Ошибка при сбросе объёма ставок: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  // Функция для ручного обновления статистики
+  const refreshStats = async () => {
+    await fetchDashboardStats();
+    showSuccessRU('Статистика обновлена');
+  };
+
+  // Настройка автообновления
+  useEffect(() => {
+    if (autoRefresh && activeSection === 'dashboard') {
+      const interval = setInterval(fetchDashboardStats, 5000); // Обновление каждые 5 секунд
+      setRefreshInterval(interval);
+      return () => clearInterval(interval);
+    } else if (refreshInterval) {
+      clearInterval(refreshInterval);
+      setRefreshInterval(null);
+    }
+  }, [autoRefresh, activeSection]);
+
   const adminSections = [
     {
       id: 'dashboard',
