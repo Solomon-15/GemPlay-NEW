@@ -5826,26 +5826,52 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
         
         # Unfreeze gems for both players using their respective gem combinations
         
+        # Ensure bet_gems is a dict, not a list (handle data inconsistency)
+        if isinstance(game.bet_gems, list):
+            logger.warning(f"Game {game.id} has bet_gems as list, converting to dict")
+            # Convert list to dict if needed - assume it's [{"gem_type": "Ruby", "quantity": 10}] format
+            bet_gems_dict = {}
+            for item in game.bet_gems:
+                if isinstance(item, dict) and "gem_type" in item and "quantity" in item:
+                    bet_gems_dict[item["gem_type"]] = item["quantity"]
+            game.bet_gems = bet_gems_dict
+        
         # Unfreeze creator's gems
-        for gem_type, quantity in game.bet_gems.items():
-            await db.user_gems.update_one(
-                {"user_id": game.creator_id, "gem_type": gem_type},
-                {
-                    "$inc": {"frozen_quantity": -quantity},
-                    "$set": {"updated_at": datetime.utcnow()}
-                }
-            )
+        if isinstance(game.bet_gems, dict):
+            for gem_type, quantity in game.bet_gems.items():
+                await db.user_gems.update_one(
+                    {"user_id": game.creator_id, "gem_type": gem_type},
+                    {
+                        "$inc": {"frozen_quantity": -quantity},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+        else:
+            logger.error(f"Game {game.id} has invalid bet_gems format: {type(game.bet_gems)}")
         
         # Unfreeze opponent's gems (use opponent_gems if available, otherwise bet_gems)
         opponent_gems = game.opponent_gems if game.opponent_gems else game.bet_gems
-        for gem_type, quantity in opponent_gems.items():
-            await db.user_gems.update_one(
-                {"user_id": game.opponent_id, "gem_type": gem_type},
-                {
-                    "$inc": {"frozen_quantity": -quantity},
-                    "$set": {"updated_at": datetime.utcnow()}
-                }
-            )
+        
+        # Ensure opponent_gems is a dict, not a list
+        if isinstance(opponent_gems, list):
+            logger.warning(f"Game {game.id} has opponent_gems as list, converting to dict")
+            opponent_gems_dict = {}
+            for item in opponent_gems:
+                if isinstance(item, dict) and "gem_type" in item and "quantity" in item:
+                    opponent_gems_dict[item["gem_type"]] = item["quantity"]
+            opponent_gems = opponent_gems_dict
+        
+        if isinstance(opponent_gems, dict):
+            for gem_type, quantity in opponent_gems.items():
+                await db.user_gems.update_one(
+                    {"user_id": game.opponent_id, "gem_type": gem_type},
+                    {
+                        "$inc": {"frozen_quantity": -quantity},
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+        else:
+            logger.error(f"Game {game.id} has invalid opponent_gems format: {type(opponent_gems)}")
         
         if winner_id:
             # Winner gets all gems (double the bet)
