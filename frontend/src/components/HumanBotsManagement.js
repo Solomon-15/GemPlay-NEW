@@ -286,39 +286,38 @@ const HumanBotsManagement = () => {
         response = await executeOperation('/admin/human-bots', 'POST', createFormData);
       }
       
-      if (response.success !== false) {
-        const action = editingBot ? 'отредактирован' : 'создан';
-        const botName = createFormData.name || 'Human-бот';
-        addNotification(`Human-бот "${botName}" успешно ${action}`, 'success');
-        
-        setShowCreateForm(false);
-        setEditingBot(null);
-        setCreateFormData({
-          name: '',
-          character: 'BALANCED',
-          gender: 'male',
-          min_bet: 1,
-          max_bet: 100,
-          bet_limit: 12,
-          win_percentage: 40,
-          loss_percentage: 40,
-          draw_percentage: 20,
-          min_delay: 30,
-          max_delay: 120,
-          use_commit_reveal: true,
-          logging_level: 'INFO',
-          can_play_with_other_bots: true,
-          can_play_with_players: true
-        });
-        
-        await fetchHumanBots();
-      }
+      // Если дошли до этой точки, значит запрос успешен
+      const action = editingBot ? 'отредактирован' : 'создан';
+      const botName = createFormData.name || 'Human-бот';
+      addNotification(`Human-бот "${botName}" успешно ${action}`, 'success');
+      
+      setShowCreateForm(false);
+      setEditingBot(null);
+      setCreateFormData({
+        name: '',
+        character: 'BALANCED',
+        gender: 'male',
+        min_bet: 1,
+        max_bet: 100,
+        bet_limit: 12,
+        win_percentage: 40,
+        loss_percentage: 40,
+        draw_percentage: 20,
+        min_delay: 30,
+        max_delay: 120,
+        use_commit_reveal: true,
+        logging_level: 'INFO',
+        can_play_with_other_bots: true,
+        can_play_with_players: true
+      });
+      
+      await fetchHumanBots();
     } catch (error) {
       console.error('Ошибка создания/редактирования Human-бота:', error);
       if (error.message.includes('Bot name already exists')) {
-        alert(`Бот с именем "${createFormData.name}" уже существует. Пожалуйста, выберите другое имя.`);
+        addNotification(`Бот с именем "${createFormData.name}" уже существует. Пожалуйста, выберите другое имя.`, 'error');
       } else {
-        alert('Ошибка при создании/редактировании бота. Попробуйте еще раз.');
+        addNotification('Ошибка при создании/редактировании бота. Попробуйте еще раз.', 'error');
       }
     } finally {
       setLoading(false);
