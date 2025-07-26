@@ -289,7 +289,7 @@ const AdminPanel = ({ user, onClose }) => {
     },
     {
       id: 'notification-demo',
-      title: 'Notification System Demo',
+      title: 'Notification',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5V12h-5l5-5 5 5h-5v5zM4 4h16v2H4V4zM4 8h16v2H4V8zM4 12h16v2H4v-2z" />
