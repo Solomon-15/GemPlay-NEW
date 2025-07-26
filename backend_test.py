@@ -1406,6 +1406,400 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_human_bot_update_endpoint() -> None:
+    """Test the Human-Bot update endpoint PUT /api/admin/human-bots/{bot_id} as requested in the review.
+    
+    Context: Previous engineer added bet_limit_amount field to human bots, but when trying to update 
+    existing bot through API, getting "Failed to update human bot" error with HTTP 500.
+    
+    Testing tasks:
+    1. First get list of existing human bots via GET /api/admin/human-bots?limit=3
+    2. Select first bot from list and try to update bet_limit_amount via PUT request
+    3. Also try to update other fields like name or character
+    4. Check that bet_limit_amount field is present in model and correctly handled
+    5. If there are errors, analyze them in detail and show what exactly is not working
+    
+    Login as admin@gemplay.com / Admin123!
+    """
+    print_header("HUMAN-BOT UPDATE ENDPOINT TESTING")
+    
+    # Step 1: Admin Authentication
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with human bot update test")
+        record_test("Human-Bot Update - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("✅ Admin logged in successfully")
+    record_test("Human-Bot Update - Admin Login", True)
+    
+    # Step 2: Get list of existing human bots via GET /api/admin/human-bots?limit=3
+    print_subheader("Step 2: Get List of Existing Human Bots")
+    
+    bots_response, bots_success = make_request(
+        "GET", "/admin/human-bots?limit=3",
+        auth_token=admin_token
+    )
+    
+    if not bots_success:
+        print_error("Failed to get human bots list")
+        record_test("Human-Bot Update - Get Bots List", False, "Failed to get bots")
+        return
+    
+    if "bots" not in bots_response or not bots_response["bots"]:
+        print_error("No human bots found in the system")
+        record_test("Human-Bot Update - Get Bots List", False, "No bots found")
+        return
+    
+    bots = bots_response["bots"]
+    print_success(f"✅ Found {len(bots)} human bots")
+    
+    # Display bot information
+    for i, bot in enumerate(bots):
+        print_success(f"  Bot {i+1}: {bot.get('name', 'Unknown')} (ID: {bot.get('id', 'Unknown')})")
+        print_success(f"    Character: {bot.get('character', 'Unknown')}")
+        print_success(f"    bet_limit_amount: {bot.get('bet_limit_amount', 'Missing')}")
+        print_success(f"    Min bet: ${bot.get('min_bet', 'Unknown')}")
+        print_success(f"    Max bet: ${bot.get('max_bet', 'Unknown')}")
+    
+    record_test("Human-Bot Update - Get Bots List", True)
+    
+    # Step 3: Select first bot and test bet_limit_amount update
+    print_subheader("Step 3: Test bet_limit_amount Update")
+    
+    first_bot = bots[0]
+    bot_id = first_bot.get("id")
+    original_name = first_bot.get("name")
+    original_character = first_bot.get("character")
+    original_bet_limit_amount = first_bot.get("bet_limit_amount", 300.0)
+    
+    if not bot_id:
+        print_error("First bot missing ID field")
+        record_test("Human-Bot Update - Bot ID Available", False, "Missing bot ID")
+        return
+    
+    print_success(f"✅ Selected bot: {original_name} (ID: {bot_id})")
+    print_success(f"  Original bet_limit_amount: {original_bet_limit_amount}")
+    
+    # Test updating bet_limit_amount
+    new_bet_limit_amount = 500.0
+    update_data = {
+        "bet_limit_amount": new_bet_limit_amount
+    }
+    
+    print_success(f"Attempting to update bet_limit_amount to: {new_bet_limit_amount}")
+    
+    update_response, update_success = make_request(
+        "PUT", f"/admin/human-bots/{bot_id}",
+        data=update_data,
+        auth_token=admin_token
+    )
+    
+    if update_success:
+        print_success("✅ bet_limit_amount update successful")
+        
+        # Verify the response contains updated data
+        if "bet_limit_amount" in update_response:
+            returned_amount = update_response["bet_limit_amount"]
+            if returned_amount == new_bet_limit_amount:
+                print_success(f"✅ Response contains correct bet_limit_amount: {returned_amount}")
+                record_test("Human-Bot Update - bet_limit_amount Update", True)
+            else:
+                print_error(f"❌ Response bet_limit_amount incorrect: expected {new_bet_limit_amount}, got {returned_amount}")
+                record_test("Human-Bot Update - bet_limit_amount Update", False, f"Incorrect value: {returned_amount}")
+        else:
+            print_warning("⚠️ Response missing bet_limit_amount field")
+            record_test("Human-Bot Update - bet_limit_amount Response", False, "Missing field in response")
+        
+        # Verify the update persisted by fetching the bot again
+        print_success("Verifying update persisted...")
+        verify_response, verify_success = make_request(
+            "GET", f"/admin/human-bots?limit=50",
+            auth_token=admin_token
+        )
+        
+        if verify_success and "bots" in verify_response:
+            updated_bot = None
+            for bot in verify_response["bots"]:
+                if bot.get("id") == bot_id:
+                    updated_bot = bot
+                    break
+            
+            if updated_bot:
+                persisted_amount = updated_bot.get("bet_limit_amount")
+                if persisted_amount == new_bet_limit_amount:
+                    print_success(f"✅ Update persisted correctly: {persisted_amount}")
+                    record_test("Human-Bot Update - bet_limit_amount Persistence", True)
+                else:
+                    print_error(f"❌ Update not persisted: expected {new_bet_limit_amount}, got {persisted_amount}")
+                    record_test("Human-Bot Update - bet_limit_amount Persistence", False, f"Not persisted: {persisted_amount}")
+            else:
+                print_error("❌ Could not find updated bot in list")
+                record_test("Human-Bot Update - bet_limit_amount Persistence", False, "Bot not found")
+        else:
+            print_error("❌ Failed to verify update persistence")
+            record_test("Human-Bot Update - bet_limit_amount Persistence", False, "Verification failed")
+    
+    else:
+        print_error("❌ bet_limit_amount update FAILED")
+        print_error(f"Response: {update_response}")
+        record_test("Human-Bot Update - bet_limit_amount Update", False, f"Update failed: {update_response}")
+        
+        # Analyze the error in detail
+        if isinstance(update_response, dict):
+            if "detail" in update_response:
+                detail = update_response["detail"]
+                print_error(f"Error detail: {detail}")
+                
+                # Check for common error patterns
+                if "validation" in str(detail).lower():
+                    print_error("❌ VALIDATION ERROR detected")
+                elif "500" in str(detail) or "internal server error" in str(detail).lower():
+                    print_error("❌ INTERNAL SERVER ERROR (HTTP 500) detected")
+                elif "field" in str(detail).lower():
+                    print_error("❌ FIELD-related error detected")
+                
+            if "status_code" in update_response:
+                status_code = update_response["status_code"]
+                print_error(f"HTTP Status Code: {status_code}")
+    
+    # Step 4: Test updating other fields (name and character)
+    print_subheader("Step 4: Test Updating Other Fields (name and character)")
+    
+    # Test name update
+    new_name = f"{original_name}_Updated_{int(time.time())}"
+    name_update_data = {
+        "name": new_name
+    }
+    
+    print_success(f"Attempting to update name to: {new_name}")
+    
+    name_update_response, name_update_success = make_request(
+        "PUT", f"/admin/human-bots/{bot_id}",
+        data=name_update_data,
+        auth_token=admin_token
+    )
+    
+    if name_update_success:
+        print_success("✅ Name update successful")
+        if "name" in name_update_response and name_update_response["name"] == new_name:
+            print_success(f"✅ Name correctly updated to: {name_update_response['name']}")
+            record_test("Human-Bot Update - Name Update", True)
+        else:
+            print_error(f"❌ Name update response incorrect")
+            record_test("Human-Bot Update - Name Update", False, "Incorrect response")
+    else:
+        print_error("❌ Name update FAILED")
+        print_error(f"Response: {name_update_response}")
+        record_test("Human-Bot Update - Name Update", False, f"Update failed: {name_update_response}")
+    
+    # Test character update
+    new_character = "AGGRESSIVE" if original_character != "AGGRESSIVE" else "BALANCED"
+    character_update_data = {
+        "character": new_character
+    }
+    
+    print_success(f"Attempting to update character from {original_character} to: {new_character}")
+    
+    character_update_response, character_update_success = make_request(
+        "PUT", f"/admin/human-bots/{bot_id}",
+        data=character_update_data,
+        auth_token=admin_token
+    )
+    
+    if character_update_success:
+        print_success("✅ Character update successful")
+        if "character" in character_update_response and character_update_response["character"] == new_character:
+            print_success(f"✅ Character correctly updated to: {character_update_response['character']}")
+            record_test("Human-Bot Update - Character Update", True)
+        else:
+            print_error(f"❌ Character update response incorrect")
+            record_test("Human-Bot Update - Character Update", False, "Incorrect response")
+    else:
+        print_error("❌ Character update FAILED")
+        print_error(f"Response: {character_update_response}")
+        record_test("Human-Bot Update - Character Update", False, f"Update failed: {character_update_response}")
+    
+    # Step 5: Test multiple field update
+    print_subheader("Step 5: Test Multiple Field Update")
+    
+    multi_update_data = {
+        "bet_limit_amount": 750.0,
+        "min_bet": 10.0,
+        "max_bet": 200.0
+    }
+    
+    print_success(f"Attempting to update multiple fields:")
+    for key, value in multi_update_data.items():
+        print_success(f"  {key}: {value}")
+    
+    multi_update_response, multi_update_success = make_request(
+        "PUT", f"/admin/human-bots/{bot_id}",
+        data=multi_update_data,
+        auth_token=admin_token
+    )
+    
+    if multi_update_success:
+        print_success("✅ Multiple field update successful")
+        
+        # Verify all fields were updated
+        all_fields_correct = True
+        for key, expected_value in multi_update_data.items():
+            if key in multi_update_response:
+                actual_value = multi_update_response[key]
+                if actual_value == expected_value:
+                    print_success(f"✅ {key} correctly updated to: {actual_value}")
+                else:
+                    print_error(f"❌ {key} incorrect: expected {expected_value}, got {actual_value}")
+                    all_fields_correct = False
+            else:
+                print_error(f"❌ {key} missing from response")
+                all_fields_correct = False
+        
+        if all_fields_correct:
+            record_test("Human-Bot Update - Multiple Fields Update", True)
+        else:
+            record_test("Human-Bot Update - Multiple Fields Update", False, "Some fields incorrect")
+    else:
+        print_error("❌ Multiple field update FAILED")
+        print_error(f"Response: {multi_update_response}")
+        record_test("Human-Bot Update - Multiple Fields Update", False, f"Update failed: {multi_update_response}")
+    
+    # Step 6: Test validation errors
+    print_subheader("Step 6: Test Validation Errors")
+    
+    # Test invalid bet_limit_amount (negative value)
+    invalid_update_data = {
+        "bet_limit_amount": -100.0
+    }
+    
+    print_success("Testing invalid bet_limit_amount (negative value)...")
+    
+    invalid_update_response, invalid_update_success = make_request(
+        "PUT", f"/admin/human-bots/{bot_id}",
+        data=invalid_update_data,
+        auth_token=admin_token,
+        expected_status=422  # Expect validation error
+    )
+    
+    if not invalid_update_success:
+        print_success("✅ Validation correctly rejected negative bet_limit_amount")
+        record_test("Human-Bot Update - Validation Negative bet_limit_amount", True)
+    else:
+        print_error("❌ Validation failed to reject negative bet_limit_amount")
+        record_test("Human-Bot Update - Validation Negative bet_limit_amount", False, "Validation not working")
+    
+    # Test invalid character
+    invalid_character_data = {
+        "character": "INVALID_CHARACTER"
+    }
+    
+    print_success("Testing invalid character...")
+    
+    invalid_character_response, invalid_character_success = make_request(
+        "PUT", f"/admin/human-bots/{bot_id}",
+        data=invalid_character_data,
+        auth_token=admin_token,
+        expected_status=422  # Expect validation error
+    )
+    
+    if not invalid_character_success:
+        print_success("✅ Validation correctly rejected invalid character")
+        record_test("Human-Bot Update - Validation Invalid Character", True)
+    else:
+        print_error("❌ Validation failed to reject invalid character")
+        record_test("Human-Bot Update - Validation Invalid Character", False, "Validation not working")
+    
+    # Step 7: Test non-existent bot update
+    print_subheader("Step 7: Test Non-Existent Bot Update")
+    
+    fake_bot_id = "non-existent-bot-id-12345"
+    fake_update_data = {
+        "bet_limit_amount": 400.0
+    }
+    
+    print_success(f"Testing update of non-existent bot: {fake_bot_id}")
+    
+    fake_update_response, fake_update_success = make_request(
+        "PUT", f"/admin/human-bots/{fake_bot_id}",
+        data=fake_update_data,
+        auth_token=admin_token,
+        expected_status=404  # Expect not found
+    )
+    
+    if not fake_update_success:
+        print_success("✅ Correctly returned 404 for non-existent bot")
+        record_test("Human-Bot Update - Non-Existent Bot", True)
+    else:
+        print_error("❌ Failed to return 404 for non-existent bot")
+        record_test("Human-Bot Update - Non-Existent Bot", False, "Should return 404")
+    
+    # Step 8: Check bet_limit_amount field presence in model
+    print_subheader("Step 8: Verify bet_limit_amount Field in Model")
+    
+    # Get the updated bot to check all fields
+    final_check_response, final_check_success = make_request(
+        "GET", f"/admin/human-bots?limit=50",
+        auth_token=admin_token
+    )
+    
+    if final_check_success and "bots" in final_check_response:
+        test_bot = None
+        for bot in final_check_response["bots"]:
+            if bot.get("id") == bot_id:
+                test_bot = bot
+                break
+        
+        if test_bot:
+            print_success("✅ Found test bot in final check")
+            
+            # Check for bet_limit_amount field
+            if "bet_limit_amount" in test_bot:
+                bet_limit_amount_value = test_bot["bet_limit_amount"]
+                print_success(f"✅ bet_limit_amount field present: {bet_limit_amount_value}")
+                record_test("Human-Bot Update - bet_limit_amount Field Present", True)
+            else:
+                print_error("❌ bet_limit_amount field MISSING from model")
+                record_test("Human-Bot Update - bet_limit_amount Field Present", False, "Field missing")
+            
+            # Check other important fields
+            important_fields = ["id", "name", "character", "min_bet", "max_bet", "bet_limit", "bet_limit_amount"]
+            missing_fields = []
+            
+            for field in important_fields:
+                if field not in test_bot:
+                    missing_fields.append(field)
+                else:
+                    print_success(f"✅ {field}: {test_bot[field]}")
+            
+            if not missing_fields:
+                print_success("✅ All important fields present in model")
+                record_test("Human-Bot Update - Model Fields Complete", True)
+            else:
+                print_error(f"❌ Missing fields in model: {missing_fields}")
+                record_test("Human-Bot Update - Model Fields Complete", False, f"Missing: {missing_fields}")
+        else:
+            print_error("❌ Could not find test bot in final check")
+            record_test("Human-Bot Update - Final Check", False, "Bot not found")
+    else:
+        print_error("❌ Failed to perform final check")
+        record_test("Human-Bot Update - Final Check", False, "Request failed")
+    
+    # Summary
+    print_subheader("Human-Bot Update Endpoint Test Summary")
+    print_success("Human-Bot update endpoint testing completed")
+    print_success("Key findings:")
+    print_success("- Admin authentication working")
+    print_success("- Human-bots list retrieval working")
+    print_success("- bet_limit_amount field update testing completed")
+    print_success("- Other field updates (name, character) tested")
+    print_success("- Multiple field updates tested")
+    print_success("- Validation error handling tested")
+    print_success("- Non-existent bot handling tested")
+    print_success("- Model field presence verified")
+
 def test_bot_revenue_logic_fix() -> None:
     """Test the corrected bot revenue logic as requested in the review:
     
