@@ -8,6 +8,7 @@ import ConfirmationModal from './ConfirmationModal';
 import InputModal from './InputModal';
 import HumanBotActiveBetsModal from './HumanBotActiveBetsModal';
 import HumanBotCommissionModal from './HumanBotCommissionModal';
+import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
