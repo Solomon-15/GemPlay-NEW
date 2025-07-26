@@ -306,13 +306,14 @@ class Game(BaseModel):
     creator_id: str
     creator_type: str = "user"  # "user", "bot", "human_bot"
     opponent_id: Optional[str] = None
+    opponent_type: Optional[str] = None  # "user", "bot", "human_bot"
     creator_move: Optional[GameMove] = None
     opponent_move: Optional[GameMove] = None
     creator_move_hash: Optional[str] = None  # Для commit-reveal схемы
     creator_salt: Optional[str] = None
     bet_amount: float
     bet_gems: Dict[str, int]  # {"Ruby": 5, "Emerald": 2} - Creator's gems
-    opponent_gems: Optional[Dict[str, int]] = None  # {"Ruby": 3, "Sapphire": 1} - Opponent's gems
+    opponent_gems: Optional[Union[Dict[str, int], List[Dict[str, Any]]]] = None  # Support both formats
     status: GameStatus = GameStatus.WAITING
     winner_id: Optional[str] = None
     commission_amount: float = 0.0
@@ -321,6 +322,8 @@ class Game(BaseModel):
     completed_at: Optional[datetime] = None
     cancelled_at: Optional[datetime] = None
     active_deadline: Optional[datetime] = None  # Крайний срок для завершения активной игры (1 минута)
+    joined_at: Optional[datetime] = None  # When opponent joined the game
+    updated_at: Optional[datetime] = None
     is_bot_game: bool = False
     bot_id: Optional[str] = None
     bot_type: Optional[str] = None  # "REGULAR", "HUMAN"
