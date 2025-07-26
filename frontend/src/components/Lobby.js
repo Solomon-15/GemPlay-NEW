@@ -46,19 +46,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     ongoingBotBattles: 1
   });
 
-  // Настройки интерфейса для пагинации
-  const [interfaceSettings, setInterfaceSettings] = useState({
-    live_players: {
-      my_bets: 8,  // Increased from 10 to show all bets
-      available_bets: 12,  // Increased from 10 to show all bets
-      ongoing_battles: 8  // Increased from 10 to show all battles
-    },
-    bot_players: {
-      available_bots: 12,  // Increased from 10 to show all bots
-      ongoing_bot_battles: 8  // Increased from 10 to show all bot battles
-    }
-  });
-
   useEffect(() => {
     fetchLobbyData();
     
