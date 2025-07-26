@@ -8743,6 +8743,14 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
         # Get active Human bots - используем ту же логику что и в Human боты разделе
         active_human_bots_count = await db.human_bots.count_documents({"is_active": True})
         
+        # Get active Human bots games - активные ставки Human ботов
+        human_bots = await db.human_bots.find({"is_active": True}).to_list(None)
+        human_bot_ids = [bot["id"] for bot in human_bots]
+        active_human_bots_games = await db.games.count_documents({
+            "creator_id": {"$in": human_bot_ids},
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
         # Get active regular bots in game - подсчет уникальных ботов в активных играх
         regular_bots = await db.bots.find({"is_active": True}).to_list(None)
         regular_bot_ids = [bot["id"] for bot in regular_bots]
