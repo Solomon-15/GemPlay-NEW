@@ -111,6 +111,18 @@ frontend:
         comment: "VARIANT B - HUMAN-BOT LOBBY FIX TESTING COMPLETED SUCCESSFULLY: Conducted comprehensive testing of Variant B fix as specifically requested in the review - showing ALL Human-bot games in lobby. CRITICAL FINDINGS: ✅ 1. ADMIN PANEL TOTAL_BETS VERIFIED - GET /api/admin/human-bots/stats returns total_bets: 124 (expected ~124). Admin panel statistics endpoint accessible with 12 total Human-bots, 12 active Human-bots. ✅ 2. LOBBY WITHOUT RESTRICTIONS - GET /api/games/available now shows 125 total available games with 124 Human-bot games (is_human_bot=true), 0 regular bot games, and 1 user game. All Human-bot games properly displayed without exclusions or limits. ✅ 3. NUMBERS ARE IDENTICAL - CRITICAL SUCCESS: Admin Panel total_bets (124) = Lobby Human-bot games (124). The numbers are now IDENTICAL after Variant B fix! ✅ 4. ALL WAITING HUMAN-BOT GAMES SHOWN - System now displays ALL WAITING Human-bot games without restrictions. No exclusions or limits applied to Human-bot games display. ✅ 5. PROPER FIELD MAPPING - All Human-bot games show correct fields: creator_type='human_bot', is_bot_game=True, bot_type='HUMAN', is_human_bot=True. Field mapping working perfectly. ✅ 6. USER GAMES PROPERLY EXCLUDED - Regular user games still properly handled (1 user game shown), while Human-bot games show without exclusions. ✅ 7. EXAMPLES VERIFIED - Showed 5 examples of Human-bot games with complete field information: all have creator_type='human_bot', is_bot_game=True, bot_type='HUMAN', is_human_bot=True, status='WAITING'. ✅ 8. TOTAL GAMES INCREASED - Total available games increased to 125 (124 Human-bot + 1 user), confirming that more games are now visible in lobby. CONCLUSION: VARIANT B - HUMAN-BOT LOBBY FIX IS FULLY SUCCESSFUL! The fix correctly shows ALL Human-bot games in lobby, numbers are identical (124 = 124), exclusions and limits for Human-bot games have been removed, and the system now displays all WAITING Human-bot games as requested. The goal of making admin panel total_bets identical to lobby Human-bot games count has been achieved."
 
 backend:
+  - task: "Human-Bot bet_limit_amount Update Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "HUMAN-BOT UPDATE ENDPOINT bet_limit_amount FIX COMPLETED SUCCESSFULLY: Resolved critical issue causing HTTP 500 'Failed to update human bot' error when updating existing Human-bots' bet_limit_amount field. ROOT CAUSE IDENTIFIED: The update endpoint was missing calculation of the average_bet_amount field required by HumanBotResponse model, causing serialization failures during response creation. TECHNICAL FIX: Added missing average_bet_amount calculation using existing get_human_bot_average_bet_amount() function in the update_human_bot endpoint response generation. TESTING RESULTS: ✅ Human-Bot Update Endpoint FULLY FUNCTIONAL - All update operations working correctly, ✅ bet_limit_amount field update working perfectly (tested 750.0 → 500.0), ✅ Other field updates (name, character) working correctly, ✅ Database persistence verified - all updates properly saved, ✅ Response structure complete with all required fields, ✅ Model field presence confirmed - bet_limit_amount properly handled. PRODUCTION READY: The core issue with Human-bot updates has been completely resolved. Administrators can now successfully modify bet_limit_amount and other fields through the admin interface without encountering HTTP 500 errors."
+
   - task: "Human-Bot Update Endpoint PUT /api/admin/human-bots/{bot_id} Testing"
     implemented: true
     working: true
