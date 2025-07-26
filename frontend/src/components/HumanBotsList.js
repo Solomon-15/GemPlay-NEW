@@ -244,6 +244,31 @@ const HumanBotsList = ({ onEditBot, onCreateBot }) => {
     }
   };
 
+  const handleBetLimitAmountChange = async (bot, newAmount) => {
+    if (isNaN(newAmount) || newAmount < 1 || newAmount > 100000) {
+      addNotification('Ограничение должно быть от 1 до 100000', 'error');
+      return;
+    }
+
+    try {
+      const response = await executeOperation(`/admin/human-bots/${bot.id}`, 'PUT', {
+        bet_limit_amount: newAmount
+      });
+      
+      // Update local state
+      setHumanBots(prevBots => 
+        prevBots.map(b => 
+          b.id === bot.id ? { ...b, bet_limit_amount: newAmount } : b
+        )
+      );
+      
+      addNotification(`Ограничение Human-бота "${bot.name}" изменено на ${newAmount}`, 'success');
+    } catch (error) {
+      console.error('Ошибка изменения ограничения Human-бота:', error);
+      addNotification('Ошибка изменения ограничения Human-бота', 'error');
+    }
+  };
+
   const handleBulkDelete = async () => {
     if (selectedBots.size === 0) return;
 
