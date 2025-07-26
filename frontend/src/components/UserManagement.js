@@ -1579,6 +1579,14 @@ const UserManagement = ({ user: currentUser }) => {
                   
                   return (
                     <tr key={user.id} className="hover:bg-surface-sidebar transition-colors">
+                      <td className="px-4 py-4 whitespace-nowrap text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.has(user.id)}
+                          onChange={() => handleUserSelect(user.id)}
+                          className="rounded border-border-primary text-accent-primary focus:ring-accent-primary"
+                        />
+                      </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
