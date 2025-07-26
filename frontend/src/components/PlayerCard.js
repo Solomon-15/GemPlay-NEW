@@ -89,9 +89,17 @@ const PlayerCard = ({
 
   // Determine avatar based on gender or bot type
   const getAvatarIcon = () => {
+    // Проверяем, является ли это Human-ботом
+    if (game.is_human_bot || game.creator_type === 'human_bot' || game.bot_type === 'HUMAN') {
+      // Для Human-ботов используем аватарки по полу
+      const gender = game.creator?.gender || 'male';
+      return gender === 'female' ? '/Women.svg' : '/Men.svg';
+    }
+    // Для обычных ботов используем эмодзи робота
     if (isBot) {
       return '🤖'; // Bot emoji
     }
+    // Для обычных пользователей используем аватарки по полу
     const gender = game.creator?.gender || 'male';
     return gender === 'female' ? '/Women.svg' : '/Men.svg';
   };
