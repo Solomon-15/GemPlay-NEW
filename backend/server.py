@@ -17747,9 +17747,11 @@ async def create_human_bot(
         await db.admin_logs.insert_one(admin_log.dict())
         
         # Return response
+        average_bet_amount = await get_human_bot_average_bet_amount(human_bot.id)
         response = HumanBotResponse(
             **human_bot.dict(),
-            win_rate=0.0  # New bot has no games yet
+            win_rate=0.0,  # New bot has no games yet
+            average_bet_amount=average_bet_amount
         )
         
         logger.info(f"Human bot created: {human_bot.name} ({human_bot.character})")
