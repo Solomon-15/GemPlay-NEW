@@ -5841,13 +5841,16 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                             {"$inc": {"total_commission_paid": commission_amount}}
                         )
             
-            # Check if this is a bot game and record bot revenue
+            # Check if this is a bot game and record bot revenue (exclude Human-bots)
             if game.is_bot_game:
                 loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
                 loser = await db.users.find_one({"id": loser_id})
                 
-                # If human player lost to bot, record this as bot revenue
-                if loser and winner_id != loser_id:
+                # Check if winner is a Human-bot - exclude from BOT_REVENUE if so
+                is_winner_human_bot = await is_human_bot_user(winner_id)
+                
+                # If human player lost to REGULAR bot (not Human-bot), record this as bot revenue
+                if loser and winner_id != loser_id and not is_winner_human_bot:
                     bot_revenue = game.bet_amount  # Bot wins the full bet amount
                     
                     profit_entry = ProfitEntry(
@@ -5855,7 +5858,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         amount=bot_revenue,
                         source_user_id=loser_id,
                         reference_id=game.id,
-                        description=f"Bot victory revenue: ${bot_revenue} from player {loser.get('username', 'Unknown')}"
+                        description=f"Regular bot victory revenue: ${bot_revenue} from player {loser.get('username', 'Unknown')}"
                     )
                     await db.profit_entries.insert_one(profit_entry.dict())
             
