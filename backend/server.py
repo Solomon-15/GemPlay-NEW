@@ -17615,6 +17615,7 @@ async def list_human_bots(
                 min_bet=bot["min_bet"],
                 max_bet=bot["max_bet"],
                 bet_limit=bot.get("bet_limit", 12),  # Default to 12 if missing
+                bet_limit_amount=bot.get("bet_limit_amount", 300.0),  # Default to 300 if missing
                 win_percentage=bot["win_percentage"],
                 loss_percentage=bot["loss_percentage"],
                 draw_percentage=bot["draw_percentage"],
