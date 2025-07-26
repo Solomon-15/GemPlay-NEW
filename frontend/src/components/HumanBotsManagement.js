@@ -254,11 +254,28 @@ const HumanBotsManagement = () => {
   }, [activeTab]);
 
   const handleCreateBot = async () => {
+    // Проверяем, что форма не отправляется уже
+    if (loading) {
+      return;
+    }
+
     if (createFormData.win_percentage + createFormData.loss_percentage + createFormData.draw_percentage !== 100) {
       alert('Сумма процентов должна равняться 100%');
       return;
     }
 
+    // Проверяем уникальность имени для нового бота
+    if (!editingBot) {
+      const existingBot = humanBots.find(bot => 
+        bot.name.toLowerCase() === createFormData.name.toLowerCase()
+      );
+      if (existingBot) {
+        alert(`Бот с именем "${createFormData.name}" уже существует. Пожалуйста, выберите другое имя.`);
+        return;
+      }
+    }
+
+    setLoading(true);
     try {
       let response;
       if (editingBot) {
@@ -293,11 +310,18 @@ const HumanBotsManagement = () => {
           can_play_with_other_bots: true,
           can_play_with_players: true
         });
-        fetchHumanBots();
-        fetchStats();
+        
+        await fetchHumanBots();
       }
     } catch (error) {
       console.error('Ошибка создания/редактирования Human-бота:', error);
+      if (error.message.includes('Bot name already exists')) {
+        alert(`Бот с именем "${createFormData.name}" уже существует. Пожалуйста, выберите другое имя.`);
+      } else {
+        alert('Ошибка при создании/редактировании бота. Попробуйте еще раз.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
