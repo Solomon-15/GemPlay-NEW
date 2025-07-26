@@ -28,7 +28,9 @@ const AdminPanel = ({ user, onClose }) => {
   const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState({});
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(null);
   const { showSuccessRU, showErrorRU } = useNotifications();
   const { confirm, confirmationModal } = useConfirmation();
 
