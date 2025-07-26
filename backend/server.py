@@ -19721,6 +19721,150 @@ async def delete_human_bot_completed_bets(
             detail="Ошибка скрытия завершённых ставок Human-бота"
         )
 
+@api_router.post("/admin/users/unfreeze-stuck-commission", response_model=dict)
+async def unfreeze_stuck_commission(current_admin: User = Depends(get_current_admin)):
+    """Unfreeze stuck commission from incomplete games for all users (SUPERADMIN only)."""
+    try:
+        # Check if user is SUPER_ADMIN
+        if current_admin.role != UserRole.SUPER_ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only SUPER_ADMIN can unfreeze stuck commission"
+            )
+        
+        logger.info(f"🔓 SUPERADMIN {current_admin.username} initiated stuck commission unfreeze operation")
+        
+        # Find all incomplete games (WAITING, ACTIVE, TIMEOUT)
+        incomplete_statuses = [GameStatus.WAITING, GameStatus.ACTIVE, GameStatus.TIMEOUT]
+        incomplete_games = await db.games.find({
+            "status": {"$in": incomplete_statuses}
+        }).to_list(None)
+        
+        logger.info(f"Found {len(incomplete_games)} incomplete games")
+        
+        if not incomplete_games:
+            return {
+                "success": True,
+                "message": "Нет зависших комиссий для разморозки",
+                "total_games": 0,
+                "total_users_affected": 0,
+                "total_amount_unfrozen": 0.0,
+                "games_processed": []
+            }
+        
+        # Track unfrozen amounts and affected users
+        total_unfrozen = 0.0
+        affected_users = set()
+        processed_games = []
+        
+        # Process each incomplete game
+        for game in incomplete_games:
+            game_id = game["id"]
+            bet_amount = game.get("bet_amount", 0)
+            commission_per_player = bet_amount * 0.03  # 3% commission per player
+            
+            creator_id = game.get("creator_id")
+            opponent_id = game.get("opponent_id")
+            
+            # Track game processing
+            game_info = {
+                "game_id": game_id,
+                "status": game["status"],
+                "bet_amount": bet_amount,
+                "commission_per_player": commission_per_player,
+                "players_processed": []
+            }
+            
+            # Process creator's commission
+            if creator_id:
+                creator = await db.users.find_one({"id": creator_id})
+                if creator and creator.get("frozen_balance", 0) >= commission_per_player:
+                    # Unfreeze commission - move from frozen_balance to virtual_balance
+                    await db.users.update_one(
+                        {"id": creator_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_per_player,
+                                "frozen_balance": -commission_per_player
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    total_unfrozen += commission_per_player
+                    affected_users.add(creator_id)
+                    game_info["players_processed"].append({
+                        "user_id": creator_id,
+                        "username": creator.get("username", "Unknown"),
+                        "amount_unfrozen": commission_per_player
+                    })
+                    logger.info(f"Unfroze ${commission_per_player} commission for creator {creator_id} from game {game_id}")
+            
+            # Process opponent's commission
+            if opponent_id:
+                opponent = await db.users.find_one({"id": opponent_id})
+                if opponent and opponent.get("frozen_balance", 0) >= commission_per_player:
+                    # Unfreeze commission - move from frozen_balance to virtual_balance
+                    await db.users.update_one(
+                        {"id": opponent_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": commission_per_player,
+                                "frozen_balance": -commission_per_player
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    total_unfrozen += commission_per_player
+                    affected_users.add(opponent_id)
+                    game_info["players_processed"].append({
+                        "user_id": opponent_id,
+                        "username": opponent.get("username", "Unknown"),
+                        "amount_unfrozen": commission_per_player
+                    })
+                    logger.info(f"Unfroze ${commission_per_player} commission for opponent {opponent_id} from game {game_id}")
+            
+            if game_info["players_processed"]:
+                processed_games.append(game_info)
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="UNFREEZE_STUCK_COMMISSION",
+            target_type="system",
+            target_id="all_users",
+            details={
+                "total_games_processed": len(incomplete_games),
+                "games_with_unfrozen_commission": len(processed_games),
+                "total_users_affected": len(affected_users),
+                "total_amount_unfrozen": round(total_unfrozen, 2),
+                "incomplete_statuses": incomplete_statuses
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        # Detailed success message
+        success_message = f"Разморожено ${round(total_unfrozen, 2)}$ комиссии для {len(affected_users)} пользователей из {len(processed_games)} игр"
+        
+        logger.info(f"🔓 Stuck commission unfreeze completed: ${total_unfrozen} unfrozen for {len(affected_users)} users")
+        
+        return {
+            "success": True,
+            "message": success_message,
+            "total_games": len(incomplete_games),
+            "games_with_commission": len(processed_games),
+            "total_users_affected": len(affected_users),
+            "total_amount_unfrozen": round(total_unfrozen, 2),
+            "games_processed": processed_games[:5]  # Return first 5 games for preview
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error unfreezing stuck commission: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to unfreeze stuck commission"
+        )
 
 
 # ==============================================================================
