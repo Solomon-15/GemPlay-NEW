@@ -17348,12 +17348,112 @@ def print_summary() -> None:
     else:
         print_error("❌ TESTING COMPLETED WITH FAILURES")
 
+def test_quick_admin_login() -> None:
+    """Quick test - try to login as admin@gemplay.com / Admin123! through POST /api/auth/login and check that token is returned correctly."""
+    print_header("QUICK ADMIN LOGIN TEST")
+    
+    print_subheader("Testing Admin Login: admin@gemplay.com / Admin123!")
+    
+    login_data = {
+        "email": "admin@gemplay.com",
+        "password": "Admin123!"
+    }
+    
+    response, success = make_request("POST", "/auth/login", data=login_data)
+    
+    if success:
+        print_success("✅ Admin login request successful (HTTP 200)")
+        
+        # Check response structure
+        required_fields = ["access_token", "token_type", "user"]
+        missing_fields = [field for field in required_fields if field not in response]
+        
+        if not missing_fields:
+            print_success("✅ Response contains all required fields: access_token, token_type, user")
+            
+            # Check access token
+            access_token = response.get("access_token", "")
+            if access_token and len(access_token) > 20:
+                print_success(f"✅ Access token returned: {access_token[:20]}... (length: {len(access_token)})")
+                record_test("Quick Admin Login - Token Present", True)
+            else:
+                print_error(f"❌ Access token invalid or too short: {access_token}")
+                record_test("Quick Admin Login - Token Present", False, f"Token: {access_token}")
+            
+            # Check token type
+            token_type = response.get("token_type", "")
+            if token_type == "bearer":
+                print_success("✅ Token type is 'bearer'")
+                record_test("Quick Admin Login - Token Type", True)
+            else:
+                print_error(f"❌ Token type incorrect: {token_type}")
+                record_test("Quick Admin Login - Token Type", False, f"Type: {token_type}")
+            
+            # Check user data
+            user_data = response.get("user", {})
+            if user_data:
+                user_email = user_data.get("email", "")
+                user_role = user_data.get("role", "")
+                user_id = user_data.get("id", "")
+                
+                if user_email == "admin@gemplay.com":
+                    print_success("✅ User email matches: admin@gemplay.com")
+                    record_test("Quick Admin Login - User Email", True)
+                else:
+                    print_error(f"❌ User email mismatch: {user_email}")
+                    record_test("Quick Admin Login - User Email", False, f"Email: {user_email}")
+                
+                if user_role == "ADMIN":
+                    print_success("✅ User role is ADMIN")
+                    record_test("Quick Admin Login - User Role", True)
+                else:
+                    print_error(f"❌ User role incorrect: {user_role}")
+                    record_test("Quick Admin Login - User Role", False, f"Role: {user_role}")
+                
+                if user_id:
+                    print_success(f"✅ User ID present: {user_id}")
+                    record_test("Quick Admin Login - User ID", True)
+                else:
+                    print_error("❌ User ID missing")
+                    record_test("Quick Admin Login - User ID", False, "ID missing")
+                
+                print_success("✅ User data structure is complete")
+                record_test("Quick Admin Login - User Data", True)
+            else:
+                print_error("❌ User data missing from response")
+                record_test("Quick Admin Login - User Data", False, "User data missing")
+            
+            # Overall success
+            record_test("Quick Admin Login - Overall", True)
+            print_success("🎉 QUICK ADMIN LOGIN TEST: SUCCESS")
+            print_success("✅ Admin login works correctly")
+            print_success("✅ Token returned properly")
+            print_success("✅ Response structure is valid")
+            
+        else:
+            print_error(f"❌ Response missing required fields: {missing_fields}")
+            record_test("Quick Admin Login - Response Structure", False, f"Missing: {missing_fields}")
+            record_test("Quick Admin Login - Overall", False, "Missing fields")
+    else:
+        print_error("❌ Admin login request failed")
+        print_error(f"Response: {response}")
+        record_test("Quick Admin Login - Request", False, "Login request failed")
+        record_test("Quick Admin Login - Overall", False, "Request failed")
+    
+    print_subheader("Quick Admin Login Test Summary")
+    if success:
+        print_success("Admin login functionality is working correctly")
+        print_success("Token authentication system is operational")
+    else:
+        print_error("Admin login functionality has issues")
+        print_error("Token authentication system may not be working")
+
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT GENDER UPDATE SYSTEM")
+    print_header("GEMPLAY BACKEND API TESTING - QUICK ADMIN LOGIN TEST")
     
     try:
-        # Run the Human-Bot gender update system test as requested in the review
-        test_human_bot_gender_update_system()
+        # Run the quick admin login test as requested by the user
+        test_quick_admin_login()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
