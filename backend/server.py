@@ -9028,6 +9028,7 @@ async def get_all_users(
                 "email": user.get("email"),
                 "role": user.get("role"),
                 "status": user.get("status"),
+                "online_status": get_user_online_status(user),  # Новое поле для онлайн статуса
                 "gender": user.get("gender"),
                 "virtual_balance": user.get("virtual_balance", 0),
                 "total_games_played": total_games_played,
@@ -9039,6 +9040,7 @@ async def get_all_users(
                 "active_bets_count": active_bets_count,
                 "created_at": user.get("created_at"),
                 "last_login": user.get("last_login"),
+                "last_activity": user.get("last_activity"),  # Добавляем last_activity для отладки
                 "ban_reason": user.get("ban_reason"),
                 "ban_until": user.get("ban_until")
             }
