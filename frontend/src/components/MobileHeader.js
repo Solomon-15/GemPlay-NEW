@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import NotificationBell from './NotificationBell';
+import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onLogout, totalBalance }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [balance, setBalance] = useState(null);
+  const [gems, setGems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const profileMenuItems = [
     {
