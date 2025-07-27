@@ -37,8 +37,11 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
 
   return (
     <div className="md:hidden bg-surface-sidebar border-b border-border-primary p-4 flex items-center justify-between">
-      {/* Left side - Logo */}
+      {/* Left side - Notifications Bell and Logo */}
       <div className="flex items-center space-x-3">
+        {/* Notifications Bell */}
+        <NotificationBell isCollapsed={false} />
+        
         <div className="w-8 h-8 flex items-center justify-center">
           <img 
             src="/gems/gem-green.svg" 
@@ -49,11 +52,8 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
         <span className="font-russo text-lg text-accent-primary">GemPLAY</span>
       </div>
 
-      {/* Right side - Profile dropdown and notifications */}
+      {/* Right side - Profile dropdown */}
       <div className="flex items-center space-x-4">
-        {/* Notifications Bell */}
-        <NotificationBell isCollapsed={false} />
-
         {/* Profile Dropdown */}
         <div className="relative">
           <button
