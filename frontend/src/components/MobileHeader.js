@@ -130,26 +130,86 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
   ];
 
   return (
-    <div className="md:hidden bg-surface-sidebar border-b border-border-primary flex items-center justify-between px-4 py-3">
-      {/* Left side - Notifications Bell and Logo */}
-      <div className="flex items-center space-x-3">
-        {/* Notifications Bell */}
-        <NotificationBell isCollapsed={false} />
-        
-        <div className="w-17 h-18 flex items-center justify-center">
-          <img 
-            src="/gems/gem-green.svg" 
-            alt="GemPlay" 
-            className="w-12 h-12 object-contain"
-          />
-        </div>
-        <span className="font-russo text-3xl text-accent-primary">GemPLAY</span>
-      </div>
+    <div className="md:hidden bg-surface-sidebar border-b border-border-primary sticky top-0 z-50">
+      {/* Balance, Gems, Total tiles row */}
+      {portfolioData && !loading && (
+        <div className="flex space-x-2 px-4 py-2 border-b border-border-primary">
+          {/* Balance Block */}
+          <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
+            <div className="text-center">
+              <h3 className="font-rajdhani text-xs font-semibold text-white mb-1">Balance</h3>
+              <div className="font-rajdhani text-sm font-bold text-green-400 break-words whitespace-nowrap">
+                ${formatNumber(portfolioData.balance.total)}
+              </div>
+              {portfolioData.balance.frozen > 0 && (
+                <div className="text-xs text-orange-400">
+                  Frozen: ${formatNumber(portfolioData.balance.frozen)}
+                </div>
+              )}
+              <div className="text-xs text-text-secondary">
+                ${formatNumber(portfolioData.balance.available)}
+              </div>
+            </div>
+          </div>
 
-      {/* Right side - Profile dropdown */}
-      <div className="flex items-center space-x-4">
-        {/* Profile Dropdown */}
-        <div className="relative">
+          {/* Gems Block */}
+          <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
+            <div className="text-center">
+              <h3 className="font-rajdhani text-xs font-semibold text-white mb-1">Gems</h3>
+              <div className="font-rajdhani text-sm font-bold text-purple-400 break-words whitespace-nowrap">
+                {formatNumber(portfolioData.gems.totalCount)}/{formatNumber(portfolioData.gems.totalValue)}
+              </div>
+              {portfolioData.gems.frozenCount > 0 && (
+                <div className="text-xs text-orange-400">
+                  Frozen: {formatNumber(portfolioData.gems.frozenCount)}/{formatNumber(portfolioData.gems.frozenValue)}
+                </div>
+              )}
+              <div className="text-xs text-text-secondary">
+                ${formatNumber(portfolioData.gems.availableValue)}
+              </div>
+            </div>
+          </div>
+
+          {/* Total Block */}
+          <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
+            <div className="text-center">
+              <h3 className="font-rajdhani text-xs font-semibold text-white mb-1">Total</h3>
+              <div className="font-rajdhani text-sm font-bold text-accent-primary break-words whitespace-nowrap">
+                ${formatNumber(portfolioData.total.value)}
+              </div>
+              <div className="text-xs text-text-secondary">
+                ${(() => {
+                  const totalFrozen = portfolioData.balance.frozen + portfolioData.gems.frozenValue;
+                  const totalAvailable = portfolioData.total.value - totalFrozen;
+                  return `${formatNumber(totalAvailable)}`;
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header content */}
+      <div className="flex items-center justify-between px-4 py-3">
+        {/* Left side - Notifications Bell and Logo */}
+        <div className="flex items-center space-x-3">
+          {/* Notifications Bell */}
+          <NotificationBell isCollapsed={false} />
+          
+          <div className="w-17 h-18 flex items-center justify-center">
+            <img 
+              src="/gems/gem-green.svg" 
+              alt="GemPlay" 
+              className="w-12 h-12 object-contain"
+            />
+          </div>
+          <span className="font-russo text-3xl text-accent-primary">GemPLAY</span>
+        </div>
+
+        {/* Right side - Profile dropdown */}
+        <div className="flex items-center space-x-4">
+          {/* Profile Dropdown */}
+          <div className="relative">
           <button
             onClick={() => setShowProfileDropdown(!showProfileDropdown)}
             className="flex items-center space-x-2 px-3 py-2 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg hover:border-opacity-50 transition-colors"
