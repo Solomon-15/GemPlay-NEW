@@ -292,13 +292,11 @@ function App() {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-h-screen">
-              {/* Top Bar - Sticky Header (hidden on mobile for profile page) */}
-              <nav className={`sticky top-0 z-40 bg-surface-sidebar border-b border-border-primary p-4 flex-shrink-0 ${
-                currentView === 'profile' ? 'hidden md:block' : ''
-              }`}>
+              {/* Top Bar - Sticky Header (hidden on mobile) */}
+              <nav className="sticky top-0 z-40 bg-surface-sidebar border-b border-border-primary p-4 flex-shrink-0 hidden md:block">
                 <div className="flex items-center justify-between">
                   {/* Desktop: Page Title Only */}
-                  <div className="hidden md:block">
+                  <div className="block">
                     <h1 className="text-xl font-russo text-text-primary capitalize">
                       {currentView === 'my-bets' ? 'My Bets' : 
                        currentView === 'game-lobby' ? 'Game Lobby' : 
@@ -307,28 +305,9 @@ function App() {
                     </h1>
                   </div>
 
-                  {/* Mobile: Empty space */}
-                  <div className="md:hidden"></div>
-
-                  {/* Header Portfolio - Visible on all devices */}
+                  {/* Header Portfolio - Desktop only */}
                   <div className="block">
                     <HeaderPortfolio user={user} />
-                  </div>
-
-                  {/* Mobile: Profile Avatar */}
-                  <div className="md:hidden ml-2">
-                    <button
-                      onClick={() => setCurrentView('profile')}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
-                        currentView === 'profile' 
-                          ? 'bg-gradient-to-r from-green-600 to-green-700 ring-2 ring-accent-primary' 
-                          : 'bg-gradient-to-r from-green-600 to-green-700 hover:ring-2 hover:ring-accent-primary/50'
-                      }`}
-                    >
-                      <span className="font-russo text-white text-sm">
-                        {user.username.charAt(0).toUpperCase()}
-                      </span>
-                    </button>
                   </div>
                 </div>
               </nav>
