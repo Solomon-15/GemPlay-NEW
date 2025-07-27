@@ -117,7 +117,7 @@ def add_balance_to_user(token: str, amount: float = 1000.0) -> bool:
     headers = {"Authorization": f"Bearer {token}"}
     data = {"amount": amount}
     
-    response = make_request("POST", "/users/add-balance", data, headers)
+    response = make_request("POST", "/auth/add-balance", data, headers)
     if response["success"]:
         print(f"✅ Added ${amount} to user balance")
         return True
