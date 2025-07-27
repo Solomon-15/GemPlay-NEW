@@ -287,27 +287,19 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
             <div className="flex justify-between">
               <span className="font-roboto text-text-secondary">Member Since:</span>
               <span className="font-rajdhani text-white">
-                {new Date(user.created_at).toLocaleDateString()}
+                {formatTimeWithOffset(user.created_at, user.timezone_offset || 0)}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="font-roboto text-text-secondary">Last Login:</span>
               <span className="font-rajdhani text-white">
-                {user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}
+                {user.last_login ? formatTimeWithOffset(user.last_login, user.timezone_offset || 0) : 'Never'}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="font-roboto text-text-secondary">Email Verified:</span>
-              <span className={`font-rajdhani font-bold ${
-                user.email_verified ? 'text-green-400' : 'text-red-400'
-              }`}>
-                {user.email_verified ? 'Yes' : 'No'}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="font-roboto text-text-secondary">Gender:</span>
-              <span className="font-rajdhani text-white capitalize">
-                {user.gender}
+              <span className="font-roboto text-text-secondary">Timezone:</span>
+              <span className="font-rajdhani text-white">
+                UTC{user.timezone_offset >= 0 ? '+' : ''}{user.timezone_offset || 0}
               </span>
             </div>
           </div>
