@@ -147,7 +147,7 @@ def get_user_balance(token: str) -> Dict:
     """Get user balance and gem information"""
     headers = {"Authorization": f"Bearer {token}"}
     
-    response = make_request("GET", "/users/balance", headers=headers)
+    response = make_request("GET", "/auth/me", headers=headers)
     if response["success"]:
         return response["data"]
     else:
