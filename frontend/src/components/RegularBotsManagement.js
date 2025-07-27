@@ -3380,7 +3380,6 @@ const RegularBotsManagement = () => {
                   <span className="text-red-400">*</span> Причина удаления:
                 </label>
                 <textarea
-                  key={`delete-reason-${deletingBot.id}`}
                   value={deleteReason}
                   onChange={(e) => setDeleteReason(e.target.value)}
                   placeholder="Укажите причину удаления бота (например: неисправность, нарушение правил, плановая замена...)"
