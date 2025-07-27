@@ -217,6 +217,57 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     await joinBattle();
   };
 
+  // Функция для выхода из игры
+  const leaveGame = async () => {
+    if (!hasJoinedGame) return; // Не выходим, если не присоединились
+    
+    try {
+      console.log('🚪 Leaving game:', bet.id);
+      
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error leaving game:', errorData);
+        return; // Не показываем ошибку пользователю при выходе
+      }
+      
+      const result = await response.json();
+      console.log('🚪 Leave game response:', result);
+      
+      // Обновляем данные пользователя
+      await refreshInventory();
+      if (onUpdateUser) {
+        onUpdateUser();
+      }
+      
+      // Обновляем лобби
+      const globalRefresh = getGlobalLobbyRefresh();
+      globalRefresh.triggerLobbyRefresh();
+      
+      showSuccess('Successfully left the game');
+      
+    } catch (error) {
+      console.error('🚨 Error leaving game:', error);
+      // Не показываем ошибку при выходе
+    }
+  };
+
+  // Обработчик закрытия модального окна
+  const handleClose = async () => {
+    if (hasJoinedGame && currentStep < 3) {
+      // Если игрок присоединился, но игра не завершена - выходим из игры
+      await leaveGame();
+    }
+    onClose();
+  };
+
   // Таймер автозакрытия (1 минута) - только на первых двух шагах
   useEffect(() => {
     if (currentStep >= 3) {
@@ -228,7 +279,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
           // Время истекло - закрываем модальное окно
-          onClose();
+          handleClose();
           return 0;
         }
         return prev - 1;
@@ -236,7 +287,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentStep, onClose]);
+  }, [currentStep, hasJoinedGame]);
 
   // Обработчик стратегий - NEW FRONTEND IMPLEMENTATION
   const handleStrategySelect = (strategy) => {
