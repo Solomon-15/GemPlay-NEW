@@ -7385,6 +7385,97 @@ async def cancel_game(game_id: str, current_user: User = Depends(get_current_use
             detail="Failed to cancel game"
         )
 
+@api_router.post("/games/{game_id}/leave", response_model=dict)
+async def leave_game(game_id: str, current_user: User = Depends(get_current_user)):
+    """Leave an active game as opponent."""
+    try:
+        # Get the game
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Game not found"
+            )
+        
+        game_obj = Game(**game)
+        
+        # Validate that user is the opponent
+        if game_obj.opponent_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only the opponent can leave the game"
+            )
+        
+        # Validate that game is active
+        if game_obj.status != GameStatus.ACTIVE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Can only leave active games"
+            )
+        
+        # Unfreeze opponent's gems
+        if game_obj.opponent_gems:
+            for gem_type, quantity in game_obj.opponent_gems.items():
+                if quantity > 0:
+                    await db.user_gems.update_one(
+                        {"user_id": current_user.id, "gem_type": gem_type},
+                        {
+                            "$inc": {"frozen_quantity": -quantity},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+        
+        # Return opponent's commission (only if not a regular bot game)
+        commission_to_return = 0.0
+        if not game_obj.is_regular_bot_game:
+            commission_to_return = game_obj.bet_amount * 0.03
+            
+            # Return commission from frozen_balance to virtual_balance
+            await db.users.update_one(
+                {"id": current_user.id},
+                {
+                    "$inc": {
+                        "virtual_balance": commission_to_return,
+                        "frozen_balance": -commission_to_return
+                    },
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+        
+        # Reset game to WAITING status and clear opponent data
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "status": GameStatus.WAITING,
+                    "opponent_id": None,
+                    "opponent_move": None,
+                    "opponent_gems": None,
+                    "started_at": None,
+                    "active_deadline": None,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"🚪 User {current_user.id} left game {game_id}, returned to WAITING")
+        
+        return {
+            "success": True,
+            "message": "Successfully left the game",
+            "gems_returned": game_obj.opponent_gems or {},
+            "commission_returned": commission_to_return
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error leaving game: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to leave game"
+        )
+
 # ==============================================================================
 # ADMIN SECURITY MONITORING API
 # ==============================================================================
