@@ -72,9 +72,9 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
       if (onUpdateUser) {
         onUpdateUser();
       }
-      alert(response.data.message);
+      showSuccess(response.data.message);
     } catch (error) {
-      alert(error.response?.data?.detail || 'Error adding balance');
+      showError(error.response?.data?.detail || 'Error adding balance');
     } finally {
       setDepositing(false);
     }
@@ -83,25 +83,33 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
   // Handle profile update
   const handleUpdateProfile = async () => {
     if (!editForm.username.trim()) {
-      alert('Username cannot be empty');
+      showError('Username cannot be empty');
       return;
     }
     
     setUpdating(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // Log the request data for debugging
+      console.log('🔄 Updating profile with data:', editForm);
+      
       const response = await axios.put(`${API}/auth/profile`, editForm, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('✅ Profile update response:', response.data);
       
       if (onUpdateUser) {
         onUpdateUser();
       }
       
       setIsEditing(false);
-      alert('Profile updated successfully');
+      showSuccessRU('Профиль успешно обновлен');
     } catch (error) {
-      alert(error.response?.data?.detail || 'Error updating profile');
+      console.error('❌ Profile update error:', error);
+      console.error('Error response:', error.response?.data);
+      showErrorRU(error.response?.data?.detail || 'Ошибка при обновлении профиля');
     } finally {
       setUpdating(false);
     }
