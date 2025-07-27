@@ -517,7 +517,17 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
 
   return (
     <div className="min-h-screen bg-gradient-primary">
-      {/* Mobile: Balance Display at top */}
+      {/* Mobile Header */}
+      <MobileHeader 
+        currentView="profile"
+        setCurrentView={setCurrentView}
+        user={user}
+        onOpenAdminPanel={onOpenAdminPanel}
+        onLogout={onLogout}
+        totalBalance={totalBalance}
+      />
+
+      {/* Mobile: Balance Display at top - now hidden to avoid duplication */}
       <div className="md:hidden sticky top-0 z-30 bg-surface-sidebar border-b border-border-primary p-4">
         <HeaderPortfolio user={user} />
       </div>
