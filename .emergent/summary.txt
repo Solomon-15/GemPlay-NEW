@@ -1,23 +1,26 @@
 <analysis>
-The previous AI engineer demonstrated an iterative and detailed approach to enhancing the GemPlay application. The trajectory began with a critical fix to ensure frozen commissions are returned to players in case of a draw, followed by debugging a persistent issue where this fix didn't fully work due to an . Subsequently, the engineer implemented a significant new feature: an Unfreeze all stuck commission button in the admin panel, requiring backend API development and frontend UI integration. The work then shifted to several frontend display fixes: first, correcting the Total balance calculation in the portfolio (Inventory and HeaderPortfolio components) to include , , and . This was followed by a comprehensive cache clearing operation across the system. Finally, the engineer tackled displaying the full Total balance (including frozen balance and gem value) near the Logout button in the Sidebar, which involved fetching user balance data within the Sidebar component itself due to limited initial props. Each phase involved understanding user clarifications, implementing changes, and verifying results.
+The previous AI engineer meticulously progressed through several critical updates for the GemPlay application. Initially, the focus was on core financial logic, ensuring frozen commissions and bets were returned upon a game draw or player exit, which involved significant backend adjustments. Subsequently, the engineer implemented a new admin feature for unfreezing stuck commissions and addressed frontend display inconsistencies, specifically correcting Total balance calculations across various UI components (Inventory, HeaderPortfolio, Sidebar).
+
+The work then shifted to enhancing the user profile section. This included adding an Edit Profile button, enabling modifications to username, gender (with avatar updates), displaying a shortened user ID with copy functionality, and allowing UTC offset editing. A key challenge involved refactoring the frontend to properly handle input fields (cursor issue) and mobile header display, leading to the creation of a global  component. The engineer demonstrated strong debugging skills, particularly in identifying and resolving backend API issues related to profile updates and consistently testing frontend visual fidelity across various screen sizes. The final completed task involved a comprehensive refactoring of the mobile header to ensure full-width responsiveness and proper display of financial tiles, replacing older header versions. The trajectory concludes with a re-opened cursor issue across multiple text fields.
 </analysis>
 
 <product_requirements>
 The GemPlay application is an asynchronous PvP gem betting platform with Human-bots and a 3% commission system. The primary goal is to provide robust betting, accurate financial metrics, and comprehensive admin controls. The previous engineer implemented:
-1.  **Commission Return on Draw**: In cases of a draw, frozen commission should be automatically returned to participants' balances, proportional to their original contribution.
-2.  **Unfreeze All Stuck Commission Feature**: An admin button in User Management to unfreeze commissions from games that did not finish correctly for all users (human bots, regular bots, players). This involves moving funds from  to , requiring confirmation, superadmin access, and logging.
-3.  **Correct Total Balance Calculation**: The Total balance displayed in the Balance block (Inventory and HeaderPortfolio) and near the LOGOUT button in the Sidebar should be the sum of , , and the total value of all gems (including frozen gems). It should not deduct commission or gem costs upon freezing.
+1.  **Commission & Bet Return on Player Exit/Draw**: Ensure that when a player joins a bet and then exits (e.g., closes modal) without making a move, or in case of a game draw, the full frozen amount (initial bet + 3% commission) is returned to their virtual balance, and the game returns to the lobby.
+2.  **Unfreeze All Stuck Commission Feature**: An admin button in User Management to unfreeze commissions from incorrectly ended games, moving funds from  to , requiring confirmation and logging.
+3.  **Correct Total Balance Calculation**: The Total balance in Balance block (Inventory, HeaderPortfolio) and near the LOGOUT button (Sidebar) must be .
+4.  **Profile Editing Feature**: In the Profile interface, add an Edit Profile button to allow users to modify their username, gender (with avatar update), display a shortened/copyable user ID, and edit/display time in UTC format.
+5.  **Mobile Header Refactoring**: Replace the first version of the mobile header (Header-01) with the second version (Header-02) globally across the application, ensuring it stretches to full screen width without padding and includes a notification bell icon. Additionally, address UI/UX inconsistencies in mobile views (e.g., removing duplicate balance tiles, reorganizing profile sections).
 </product_requirements>
 
 <key_technical_concepts>
-- **React.js**: Frontend for UI components.
-- **FastAPI**: Python backend for API endpoints.
-- **MongoDB**: NoSQL database for data storage.
-- **Pydantic**: Data validation for FastAPI models.
-- **Supervisor**: Process manager for frontend/backend services.
-- **Axios**: HTTP client for frontend API calls.
-- **React Hooks**: ,  for component state and side effects.
-- **Middleware**: Backend for request processing (e.g., ).
+-   **React.js**: Frontend UI, state management (, ), event handling ().
+-   **FastAPI**: Python backend for API endpoints, data models (Pydantic).
+-   **MongoDB**: NoSQL database.
+-   **Axios**: HTTP client for frontend-backend communication.
+-   **Supervisor**: Process manager for services.
+-   **Tailwind CSS**: For responsive UI design and styling.
+-   **Clipboard API**: For copying text (identified as a security-blocked feature).
 </key_technical_concepts>
 
 <code_architecture>
@@ -25,46 +28,95 @@ The application utilizes a MERN-stack variant (React.js, FastAPI, MongoDB) struc
 
 
 
-- :
-    - **Importance**: Core backend logic for API routes, database, game logic. Handles commission unfreezing on draw, and the new unfreeze all stuck commission API.
-    - **Changes Made**:
-        - Modified  to handle draw outcomes, ensuring  and  are returned to both players by explicitly calling .
-        - Added a new admin API endpoint  to identify and unfreeze commissions from incorrectly ended games.
-- :
-    - **Importance**: Admin panel for managing users. Now includes the Unfreeze all stuck commission button.
-    - **Changes Made**:
-        - Added a Разморозить всю зависшую комиссию button.
-        - Implemented a confirmation modal () for the new feature.
-        - Integrated  function to call the new backend API.
-- :
-    - **Importance**: Displays user's inventory and balance details.
-    - **Changes Made**:
-        - Modified the  function to correctly calculate  (Total) as , ensuring frozen amounts are included.
-- :
-    - **Importance**: Displays a summary of the user's portfolio in the header.
-    - **Changes Made**:
-        - Modified the  function to correctly calculate  (Total) as , aligning with the user's requirement.
-- :
-    - **Importance**: Main navigation sidebar, now displays the overall Total balance.
-    - **Changes Made**:
-        - Added  and  imports.
-        - Implemented  function to fetch balance data from  every 10 seconds.
-        - Calculated  as .
-        - Replaced the display of  near the LOGOUT button with .
+-   :
+    -   **Importance**: Core backend logic for API routes, database, game logic. Handles commission unfreezing on draw/exit, and user profile updates.
+    -   **Changes Made**:
+        -   Modified  to return  and  on draw using .
+        -   Added admin API .
+        -   Modified  endpoint logic to return full bet + commission and revert game status to  for creator, moving game back to Available Bets for others and My Bets for creator.
+        -   Added  endpoint for user profile updates (username, gender, timezone_offset).
+        -   Updated  and  Pydantic models to include  and  (to prevent errors during response serialization).
+        -   Added detailed logging for profile update endpoint.
+-   :
+    -   **Importance**: Admin panel for managing users. Now includes the Unfreeze all stuck commission button.
+    -   **Changes Made**:
+        -   Added Разморозить всю зависшую комиссию button with confirmation modal.
+        -   Fixed cursor issue in Причина удаления textarea by removing dynamic  prop.
+        -   Similar  prop fixes applied to other input fields related to bot management.
+-   :
+    -   **Importance**: Displays user's inventory and balance details.
+    -   **Changes Made**:
+        -    function now correctly calculates  as .
+-   :
+    -   **Importance**: Displays a summary of the user's portfolio in the header.
+    -   **Changes Made**:
+        -    function calculates  as .
+        -   Adjusted CSS classes (, ) for responsive display of balance tiles in mobile view, including showing all three lines of data.
+        -   Fixed  sign display for Total available balance.
+-   :
+    -   **Importance**: Main navigation sidebar, now displays the overall Total balance.
+    -   **Changes Made**:
+        -   Implemented  to fetch data from  and display  () near Logout.
+-   :
+    -   **Importance**: Modal for players to join existing bets. Crucial for handling player exit logic.
+    -   **Changes Made**:
+        -   Integrated backend  call on modal close (via 'X' button) for the joining player.
+-   :
+    -   **Importance**: User profile management interface.
+    -   **Changes Made**:
+        -   Added Edit Profile button.
+        -   Implemented in-component editing for username, gender, and timezone offset.
+        -   Used  to synchronize  state with  props to fix cursor focus loss.
+        -   Modified ID display to show shortened ID (first 3, last 3 chars) with copy-to-clipboard functionality (later changed to select-on-click due to browser policy).
+        -   Integrated  for success/error messages.
+        -   Removed duplicate balance tiles for mobile view.
+        -   Removed  import and related code after global refactor.
+        -   Implemented  for input change handlers to prevent re-renders and cursor issues.
+-   :
+    -   **Importance**: Provides a global context for displaying stylized notifications.
+    -   **Changes Made**:
+        -   Used for displaying Profile updated successfully and other system messages, replacing native .
+-   :
+    -   **Importance**: Displays available bets and includes filtering options.
+    -   **Changes Made**:
+        -   Implemented  for  and specific input change handlers (, ) to fix cursor disappearance issue in filter input fields.
+-   :
+    -   **Importance**: New component created to manage the responsive header for mobile devices.
+    -   **Changes Made**:
+        -   Designed to include notification bell (left), GemPLAY logo (center), and profile dropdown (right) with links to Profile, History, Admin.
+        -   Adjusted padding () to ensure full-width stretch without external margins.
+        -   Sound button hidden on mobile.
+-   :
+    -   **Importance**: Main application component, orchestrates routing and global layout.
+    -   **Changes Made**:
+        -   Integrated  as a global component for all mobile views, replacing previous mobile header versions.
+        -   Removed old, duplicated mobile header code.
+        -   Passed  and  props to .
+-   , , :
+    -   **Importance**: New Python test scripts created to verify backend API changes for game exit scenarios and user profile updates.
+    -   **Changes Made**:
+        -   These files were created for targeted backend API testing and debugging, simulating user actions like joining, canceling games, and updating profile data.
 </code_architecture>
 
 <pending_tasks>
-- There are no explicitly pending tasks from the provided trajectory. The last described task was successfully completed.
+-   **Cursor Disappearance Issue**: The problem where the cursor disappears after entering/deleting a single character in certain text fields (e.g., Profile Username, Lobby min/max sum, Admin Panel Delete User reason) persists in specific components. While  and  inputs were addressed with , the issue remains in  and other similar fields as per the user.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer successfully completed the implementation of two key fixes requested by the user.
+Immediately before this summary, the AI engineer successfully completed a comprehensive refactoring and aesthetic update of the application's mobile header and related UI elements.
 
-First, the Total balance display logic was corrected across the frontend. Initially, the user reported that the  balance in the Balance block was incorrectly deducting frozen commission and gem costs. The AI engineer clarified the requirement, determining that  should always represent . This was addressed by modifying the  function in  and  to sum these three components.
+The primary goal was to completely remove an older mobile header version (Header-01.png) and standardize on the newer, more visually appealing Header-02.png across the entire mobile application, ensuring it stretched full-width without any external padding.
 
-Second, the display of the user's balance near the LOGOUT button in the Sidebar was updated. The user requested that this display, previously showing only , should now reflect the comprehensive  balance. To achieve this, the AI engineer modified . Since the  component initially only received a  prop without detailed balance or gem information, the engineer implemented a new  function within . This function now uses  and  to fetch the complete balance data from the  endpoint every 10 seconds. The  is then calculated () and displayed, replacing the previous  display. This ensures consistency and correctness across all relevant UI elements. Both tasks are confirmed as completed based on the trajectory.
+The work involved:
+1.  **Header Component Consolidation**: A dedicated  component was introduced and integrated globally into . This replaced previous fragmented mobile header implementations, particularly the one in  and a sticky header in .
+2.  **Layout Refinements**: The  was styled with  to eliminate external margins and achieve full-width stretching.
+3.  **UI Element Placement**: The notification bell icon was repositioned to the left corner of the mobile header as requested.
+4.  **Responsive Tile Display**: The Balance, Gems, and Total tiles within the  component were adjusted to dynamically stretch to full width on mobile devices, displaying all three lines of relevant financial information (main value, frozen funds, available balance) without additional labels.
+5.  **Desktop Preservation**: Care was taken to ensure the desktop version of the header and its features remained unchanged.
+
+The final verification confirmed that the new global  functions correctly across all mobile views, displays financial data as specified, and maintains the intended desktop layout. The last remaining, re-confirmed issue is the cursor disappearance in various input fields, despite previous attempts to fix it in some areas.
 </current_work>
 
 <optional_next_step>
-There are no explicit next steps requested by the user in the provided trajectory, as the last task was completed.
+Address the persistent cursor disappearance issue in the  Причина удаления textarea and other similar fields.
 </optional_next_step>
