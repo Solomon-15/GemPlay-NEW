@@ -5,7 +5,7 @@ import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onLogout, totalBalance }) => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const [balance, setBalance] = useState(null);
+  const [portfolioBalance, setPortfolioBalance] = useState(null);
   const [gems, setGems] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +17,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
       const response = await axios.get(`${API}/api/economy/balance`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setBalance(response.data);
+      setPortfolioBalance(response.data);
     } catch (error) {
       console.error('Error fetching balance:', error);
     }
@@ -59,15 +59,15 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
 
   // Calculate portfolio data
   const getPortfolioData = () => {
-    if (!balance) return null;
+    if (!portfolioBalance) return null;
     
-    const virtualBalance = balance.virtual_balance;
-    const frozenBalance = balance.frozen_balance;
+    const virtualBalance = portfolioBalance.virtual_balance;
+    const frozenBalance = portfolioBalance.frozen_balance;
     const totalGemsCount = gems.reduce((sum, gem) => sum + gem.quantity, 0);
     const frozenGemsCount = gems.reduce((sum, gem) => sum + gem.frozen_quantity, 0);
-    const availableGemValue = balance.available_gem_value;
-    const frozenGemValue = balance.total_gem_value - balance.available_gem_value;
-    const totalValue = virtualBalance + frozenBalance + balance.total_gem_value;
+    const availableGemValue = portfolioBalance.available_gem_value;
+    const frozenGemValue = portfolioBalance.total_gem_value - portfolioBalance.available_gem_value;
+    const totalValue = virtualBalance + frozenBalance + portfolioBalance.total_gem_value;
 
     return {
       balance: {
@@ -77,7 +77,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
       },
       gems: {
         totalCount: totalGemsCount,
-        totalValue: balance.total_gem_value,
+        totalValue: portfolioBalance.total_gem_value,
         frozenCount: frozenGemsCount,
         frozenValue: frozenGemValue,
         availableValue: availableGemValue
