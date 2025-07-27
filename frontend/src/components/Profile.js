@@ -125,11 +125,25 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
     setIsEditing(false);
   };
   
-  // Handle ID click (show full ID and copy)
+  // Handle ID click (show full ID and copy via text selection)
   const handleIdClick = () => {
     setShowFullId(!showFullId);
-    navigator.clipboard.writeText(user.id);
-    alert('User ID copied to clipboard!');
+    
+    // Create a temporary element to select text
+    const tempElement = document.createElement('textarea');
+    tempElement.value = user.id;
+    document.body.appendChild(tempElement);
+    tempElement.select();
+    tempElement.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+      document.execCommand('copy');
+      showSuccessRU('ID скопирован в буфер обмена!');
+    } catch (err) {
+      showErrorRU('Не удалось скопировать ID');
+    } finally {
+      document.body.removeChild(tempElement);
+    }
   };
   
   const ProfileOverview = () => (
