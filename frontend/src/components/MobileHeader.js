@@ -212,7 +212,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Header content */}
       <div className="flex items-center justify-between px-4 py-3">
