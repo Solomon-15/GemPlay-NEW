@@ -323,11 +323,6 @@ function App() {
                 totalBalance={user ? (user.virtual_balance || 0) + (user.frozen_balance || 0) : 0}
               />
 
-              {/* Mobile: HeaderPortfolio */}
-              <div className="md:hidden">
-                <HeaderPortfolio user={user} />
-              </div>
-
               {/* Page Content */}
               <div className="flex-1 overflow-auto pb-20 md:pb-0">
                 {/* Mobile responsive wrapper */}
