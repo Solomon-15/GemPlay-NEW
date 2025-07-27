@@ -30,12 +30,23 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
   // Edit profile states
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
-    username: user.username || '',
-    gender: user.gender || 'male',
-    timezone_offset: user.timezone_offset || 0
+    username: '',
+    gender: 'male',
+    timezone_offset: 0
   });
   const [updating, setUpdating] = useState(false);
   const [showFullId, setShowFullId] = useState(false);
+  
+  // Sync editForm with user data
+  useEffect(() => {
+    if (user) {
+      setEditForm({
+        username: user.username || '',
+        gender: user.gender || 'male',
+        timezone_offset: user.timezone_offset || 0
+      });
+    }
+  }, [user.username, user.gender, user.timezone_offset]);
   
   // Notification system
   const { showSuccess, showError, showSuccessRU, showErrorRU } = useNotifications();
