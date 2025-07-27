@@ -2185,19 +2185,23 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Regular Bots Management New Parameters Testing"
-    - "Shop Component"
-    - "Inventory Component"
-    - "Profile Component"
-  stuck_tasks:
-    - "Regular Bots Management New Parameters Testing"
-    - "Shop Component"
-    - "Inventory Component"
-    - "Profile Component"
   test_all: false
   test_priority: "high_first"
 
+backend:
+  - task: "Opponent Game Exit Functionality Fix"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "OPPONENT GAME EXIT FUNCTIONALITY IMPLEMENTED SUCCESSFULLY: Created new endpoint POST /api/games/{game_id}/leave for opponent to exit active games. TECHNICAL IMPLEMENTATION: ✅ 1. PERMISSION VALIDATION - Only opponent (not creator) can leave games, proper user ID validation against game.opponent_id ✅ 2. GAME STATUS VALIDATION - Only ACTIVE games can be left (not WAITING, COMPLETED, CANCELLED) ✅ 3. OPPONENT FUND RETURN - Unfreezes opponent's gems (from frozen_quantity), returns opponent's commission (from frozen_balance to virtual_balance) ✅ 4. CREATOR FUND PRESERVATION - Creator's frozen gems and commission remain intact, creator's ставка returns to My Bets section ✅ 5. GAME STATE RESET - Status changed back to WAITING, opponent fields cleared (opponent_id, opponent_move, opponent_gems, started_at, active_deadline) ✅ 6. ERROR HANDLING - HTTP 403 for non-opponents, HTTP 400 for non-ACTIVE games, HTTP 404 for missing games ✅ 7. LOGGING AND RESPONSE - Comprehensive logging for debugging, detailed response with returned gems and commission amounts ROOT CAUSE: No mechanism existed for opponent to exit after joining but before game completion, causing frozen funds to remain stuck when games failed to complete properly. EXPECTED BEHAVIOR: Opponent can exit active game, funds returned, creator's bet remains available for other players."
+
+frontend:
   - task: "Human-Bot Game Exit Functionality in JoinBattleModal"
     implemented: true
     working: true
