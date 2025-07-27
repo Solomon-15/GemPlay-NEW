@@ -198,14 +198,29 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
             </div>
             <div 
               className="font-roboto text-text-secondary text-sm cursor-pointer hover:text-accent-primary transition-colors"
-              onClick={() => {
-                navigator.clipboard.writeText(user.id);
-                alert('User ID copied to clipboard!');
-              }}
-              title="Click to copy User ID"
+              onClick={handleIdClick}
+              title="Click to show full ID and copy"
             >
-              ID: {user.id}
+              ID: {showFullId ? user.id : formatShortId(user.id)}
             </div>
+            {isEditing && (
+              <div className="flex space-x-2 mt-3">
+                <button
+                  onClick={handleUpdateProfile}
+                  disabled={updating}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-rajdhani font-bold hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  {updating ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  disabled={updating}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-rajdhani font-bold hover:bg-gray-700 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
