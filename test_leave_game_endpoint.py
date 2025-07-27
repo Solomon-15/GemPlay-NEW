@@ -133,7 +133,7 @@ def purchase_gems(token: str, gem_type: str, quantity: int) -> bool:
         "quantity": quantity
     }
     
-    response = make_request("POST", "/gems/purchase", data, headers)
+    response = make_request("POST", "/gems/buy", data, headers)
     if response["success"]:
         print(f"✅ Purchased {quantity} {gem_type} gems")
         return True
