@@ -145,7 +145,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
   ];
 
   return (
-    <div className="md:hidden bg-surface-sidebar border- border-border-primary sticky top-0 z-50">
+    <div className="md:hidden bg-surface-sidebar border-b border-border-primary sticky top-0 z-50">
       {/* Header content */}
       <div className="flex items-center justify-between px-7 py-2">
         {/* Left side - Notifications Bell and Logo */}
