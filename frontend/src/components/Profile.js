@@ -225,7 +225,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
                   <label className="block font-roboto text-text-secondary text-sm mb-1">Gender</label>
                   <select
                     value={editForm.gender}
-                    onChange={(e) => setEditForm({...editForm, gender: e.target.value})}
+                    onChange={handleGenderChange}
                     className="w-full px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani focus:outline-none focus:border-accent-primary"
                   >
                     <option value="male">Male</option>
