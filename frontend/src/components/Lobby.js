@@ -554,7 +554,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   };
 
   // Обработчики для фильтров
-  const handleFilterChange = (field, value) => {
+  const handleFilterChange = useCallback((field, value) => {
     setBetFilters(prev => ({
       ...prev,
       [field]: value
@@ -565,9 +565,9 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       ...prev,
       availableBets: 1
     }));
-  };
+  }, []);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setBetFilters({
       minAmount: '',
       maxAmount: ''
@@ -576,7 +576,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       ...prev,
       availableBets: 1
     }));
-  };
+  }, []);
 
   if (loading) {
     return (
