@@ -33,6 +33,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const [selectedGems, setSelectedGems] = useState({});
   const [selectedMove, setSelectedMove] = useState('');
   const [battleResult, setBattleResult] = useState(null);
+  const [hasJoinedGame, setHasJoinedGame] = useState(false); // Отслеживаем, присоединился ли игрок
 
   // Контексты
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
