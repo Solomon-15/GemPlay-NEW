@@ -132,7 +132,32 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
   return (
     <div className="md:hidden bg-surface-sidebar border- border-border-primary sticky top-0 z-50">
       {/* Balance, Gems, Total tiles row */}
-      {portfolioData && !loading && (
+      {loading ? (
+        // Loading skeleton for tiles
+        <div className="flex space-x-2 px-4 py-2 border-b border-border-primary">
+          <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
+            <div className="text-center">
+              <div className="h-3 w-12 bg-gray-700 rounded animate-pulse mb-1 mx-auto"></div>
+              <div className="h-4 w-16 bg-gray-600 rounded animate-pulse mb-1 mx-auto"></div>
+              <div className="h-3 w-14 bg-gray-700 rounded animate-pulse mx-auto"></div>
+            </div>
+          </div>
+          <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
+            <div className="text-center">
+              <div className="h-3 w-8 bg-gray-700 rounded animate-pulse mb-1 mx-auto"></div>
+              <div className="h-4 w-20 bg-gray-600 rounded animate-pulse mb-1 mx-auto"></div>
+              <div className="h-3 w-12 bg-gray-700 rounded animate-pulse mx-auto"></div>
+            </div>
+          </div>
+          <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
+            <div className="text-center">
+              <div className="h-3 w-10 bg-gray-700 rounded animate-pulse mb-1 mx-auto"></div>
+              <div className="h-4 w-18 bg-gray-600 rounded animate-pulse mb-1 mx-auto"></div>
+              <div className="h-3 w-16 bg-gray-700 rounded animate-pulse mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      ) : portfolioData ? (
         <div className="flex space-x-2 px-4 py-2 border-b border-border-primary">
           {/* Balance Block */}
           <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
