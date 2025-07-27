@@ -49,9 +49,9 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
   };
 
   useEffect(() => {
+    fetchData();
+    
     if (user?.id) {
-      fetchData();
-      
       // Subscribe to global updates
       const globalRefresh = getGlobalLobbyRefresh();
       const unregister = globalRefresh.registerRefreshCallback(() => {
