@@ -115,50 +115,50 @@ const HeaderPortfolio = ({ user }) => {
   return (
     <>
       <div className="flex space-x-1 sm:space-x-2 md:space-x-4 overflow-x-auto">
-      {/* Balance Block - Compact for Header */}
-      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-green-500/20 hover:border-green-500/40 transition-colors duration-200 min-w-0 flex-shrink-0 shadow-sm">
+      {/* Balance Block - Mobile and Desktop */}
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-green-500/20 hover:border-green-500/40 transition-colors duration-200 min-w-0 flex-1 md:flex-shrink-0 shadow-sm">
         <div className="text-center">
-          <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Balance</h3>
+          <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1 md:block hidden">Balance</h3>
           <div className="font-rajdhani text-xs sm:text-sm md:text-lg font-bold text-green-400 break-words whitespace-nowrap">
             ${formatNumber(portfolioData.balance.total)}
           </div>
           {portfolioData.balance.frozen > 0 && (
-            <div className="text-xs text-orange-400 hidden sm:block">
+            <div className="text-xs text-orange-400 block md:block">
               Frozen: ${formatNumber(portfolioData.balance.frozen)}
             </div>
           )}
-          <div className="text-xs text-text-secondary hidden md:block">
+          <div className="text-xs text-text-secondary block md:block">
             ${formatNumber(portfolioData.balance.available)}
           </div>
         </div>
       </div>
 
-      {/* Gems Block - Compact for Header */}
-      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-green-500/20 hover:border-green-500/40 transition-colors duration-200 min-w-0 flex-shrink-0 shadow-sm">
+      {/* Gems Block - Mobile and Desktop */}
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-green-500/20 hover:border-green-500/40 transition-colors duration-200 min-w-0 flex-1 md:flex-shrink-0 shadow-sm">
         <div className="text-center">
-          <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Gems</h3>
+          <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1 md:block hidden">Gems</h3>
           <div className="font-rajdhani text-xs sm:text-sm md:text-lg font-bold text-purple-400 break-words whitespace-nowrap">
             {formatNumber(portfolioData.gems.totalCount)}/{formatNumber(portfolioData.gems.totalValue)}
           </div>
           {portfolioData.gems.frozenCount > 0 && (
-            <div className="text-xs text-orange-400 hidden sm:block">
+            <div className="text-xs text-orange-400 block md:block">
               Frozen: {formatNumber(portfolioData.gems.frozenCount)}/{formatNumber(portfolioData.gems.frozenValue)}
             </div>
           )}
-          <div className="text-xs text-text-secondary hidden md:block">
+          <div className="text-xs text-text-secondary block md:block">
             ${formatNumber(portfolioData.gems.availableValue)}
           </div>
         </div>
       </div>
 
-      {/* Total Block - Compact for Header */}
-      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-green-500/20 hover:border-green-500/40 transition-colors duration-200 min-w-0 flex-shrink-0 shadow-sm">
+      {/* Total Block - Mobile and Desktop */}
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-green-500/20 hover:border-green-500/40 transition-colors duration-200 min-w-0 flex-1 md:flex-shrink-0 shadow-sm">
         <div className="text-center">
-          <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1">Total</h3>
+          <h3 className="font-rajdhani text-xs md:text-sm font-semibold text-white mb-1 md:block hidden">Total</h3>
           <div className="font-rajdhani text-xs sm:text-sm md:text-lg font-bold text-accent-primary break-words whitespace-nowrap">
             ${formatNumber(portfolioData.total.value)}
           </div>
-          <div className="text-xs text-text-secondary hidden md:block">
+          <div className="text-xs text-text-secondary block md:block">
             {(() => {
               const totalFrozen = portfolioData.balance.frozen + portfolioData.gems.frozenValue;
               const totalAvailable = portfolioData.total.value - totalFrozen;
@@ -169,8 +169,8 @@ const HeaderPortfolio = ({ user }) => {
         </div>
       </div>
 
-      {/* Sound Settings Button */}
-      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-blue-500/20 hover:border-blue-500/40 transition-colors duration-200 min-w-0 flex-shrink-0 shadow-sm">
+      {/* Sound Settings Button - Hidden on mobile */}
+      <div className="bg-surface-card rounded-lg px-2 py-2 md:px-3 md:py-2 border border-blue-500/20 hover:border-blue-500/40 transition-colors duration-200 min-w-0 flex-shrink-0 shadow-sm hidden md:block">
         <button
           onClick={() => {
             ui.modalOpen();
