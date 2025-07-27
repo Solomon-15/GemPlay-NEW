@@ -119,7 +119,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
   };
   
   // Handle profile update
-  const handleUpdateProfile = async () => {
+  const handleUpdateProfile = useCallback(async () => {
     if (!editForm.username.trim()) {
       showError('Username cannot be empty');
       return;
@@ -151,17 +151,30 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
     } finally {
       setUpdating(false);
     }
-  };
-  
+  }, [editForm, onUpdateUser, showError, showSuccessRU, showErrorRU]);
+
   // Handle cancel edit
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditForm({
       username: user.username || '',
       gender: user.gender || 'male',
       timezone_offset: user.timezone_offset || 0
     });
     setIsEditing(false);
-  };
+  }, [user.username, user.gender, user.timezone_offset]);
+
+  // Handle form input changes
+  const handleUsernameChange = useCallback((e) => {
+    setEditForm(prev => ({ ...prev, username: e.target.value }));
+  }, []);
+
+  const handleGenderChange = useCallback((e) => {
+    setEditForm(prev => ({ ...prev, gender: e.target.value }));
+  }, []);
+
+  const handleTimezoneChange = useCallback((e) => {
+    setEditForm(prev => ({ ...prev, timezone_offset: parseInt(e.target.value) }));
+  }, []);
   
   // Handle ID click (show full ID and copy via text selection)
   const handleIdClick = () => {
