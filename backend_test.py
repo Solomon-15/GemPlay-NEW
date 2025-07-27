@@ -1406,6 +1406,471 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_profile_update_endpoint() -> None:
+    """Test the PUT /api/auth/profile endpoint for updating user profiles as requested in the review.
+    
+    Tests the following functionality:
+    1. Username updates (success, uniqueness validation, length validation)
+    2. Gender updates (male/female switching, invalid values)
+    3. Timezone offset updates (valid range -12 to +12, invalid values)
+    4. Combined updates (multiple fields at once)
+    5. Error scenarios (no token, invalid token, no fields)
+    6. Response validation (updated UserResponse, updated_at field)
+    """
+    print_header("PROFILE UPDATE ENDPOINT TESTING")
+    
+    # Step 1: Create test users for profile update testing
+    print_subheader("Step 1: Create Test Users")
+    
+    test_users_data = [
+        {
+            "username": f"profile_test_user1_{int(time.time())}",
+            "email": f"profile_test1_{int(time.time())}@test.com",
+            "password": "Test123!",
+            "gender": "male"
+        },
+        {
+            "username": f"profile_test_user2_{int(time.time())}",
+            "email": f"profile_test2_{int(time.time())}@test.com", 
+            "password": "Test123!",
+            "gender": "female"
+        },
+        {
+            "username": f"profile_test_user3_{int(time.time())}",
+            "email": f"profile_test3_{int(time.time())}@test.com",
+            "password": "Test123!",
+            "gender": "male"
+        }
+    ]
+    
+    created_users = []
+    
+    for i, user_data in enumerate(test_users_data):
+        print(f"Creating test user {i+1}: {user_data['username']}")
+        
+        # Register user
+        register_response, register_success = make_request(
+            "POST", "/auth/register", 
+            data=user_data
+        )
+        
+        if not register_success:
+            print_error(f"Failed to register test user {i+1}")
+            continue
+            
+        verification_token = register_response.get("verification_token")
+        if not verification_token:
+            print_error(f"No verification token for test user {i+1}")
+            continue
+            
+        # Verify email
+        verify_response, verify_success = make_request(
+            "POST", "/auth/verify-email",
+            data={"token": verification_token}
+        )
+        
+        if not verify_success:
+            print_error(f"Failed to verify email for test user {i+1}")
+            continue
+            
+        # Login user
+        login_response, login_success = make_request(
+            "POST", "/auth/login",
+            data={"email": user_data["email"], "password": user_data["password"]}
+        )
+        
+        if not login_success:
+            print_error(f"Failed to login test user {i+1}")
+            continue
+            
+        access_token = login_response.get("access_token")
+        user_info = login_response.get("user", {})
+        
+        if access_token:
+            created_users.append({
+                "username": user_data["username"],
+                "email": user_data["email"],
+                "token": access_token,
+                "user_id": user_info.get("id"),
+                "original_data": user_info
+            })
+            print_success(f"✓ Test user {i+1} created and logged in: {user_data['username']}")
+    
+    if len(created_users) < 2:
+        print_error("Failed to create sufficient test users for profile testing")
+        record_test("Profile Update - Test User Creation", False, "Insufficient users created")
+        return
+        
+    print_success(f"✓ Created {len(created_users)} test users for profile testing")
+    record_test("Profile Update - Test User Creation", True)
+    
+    # Step 2: Test username updates
+    print_subheader("Step 2: Username Update Tests")
+    
+    user1 = created_users[0]
+    user2 = created_users[1]
+    
+    # Test 2.1: Successful username update
+    print("Test 2.1: Successful username update")
+    new_username = f"updated_username_{int(time.time())}"
+    
+    update_response, update_success = make_request(
+        "PUT", "/auth/profile",
+        data={"username": new_username},
+        auth_token=user1["token"]
+    )
+    
+    if update_success:
+        if update_response.get("username") == new_username:
+            print_success(f"✓ Username successfully updated to: {new_username}")
+            record_test("Profile Update - Username Success", True)
+            user1["username"] = new_username  # Update for future tests
+        else:
+            print_error(f"✗ Username not updated in response: {update_response.get('username')}")
+            record_test("Profile Update - Username Success", False, "Username not updated in response")
+    else:
+        print_error(f"✗ Username update failed: {update_response}")
+        record_test("Profile Update - Username Success", False, f"Update failed: {update_response}")
+    
+    # Test 2.2: Username uniqueness validation
+    print("Test 2.2: Username uniqueness validation")
+    
+    duplicate_response, duplicate_success = make_request(
+        "PUT", "/auth/profile",
+        data={"username": user2["username"]},  # Try to use user2's username
+        auth_token=user1["token"],
+        expected_status=400
+    )
+    
+    if not duplicate_success:
+        if "already exists" in str(duplicate_response.get("detail", "")).lower():
+            print_success("✓ Username uniqueness validation working correctly")
+            record_test("Profile Update - Username Uniqueness", True)
+        else:
+            print_error(f"✗ Wrong error message for duplicate username: {duplicate_response}")
+            record_test("Profile Update - Username Uniqueness", False, f"Wrong error: {duplicate_response}")
+    else:
+        print_error("✗ Duplicate username was allowed")
+        record_test("Profile Update - Username Uniqueness", False, "Duplicate allowed")
+    
+    # Test 2.3: Username length validation (minimum 3 characters)
+    print("Test 2.3: Username length validation")
+    
+    short_username_response, short_username_success = make_request(
+        "PUT", "/auth/profile",
+        data={"username": "ab"},  # Only 2 characters
+        auth_token=user1["token"],
+        expected_status=422  # Validation error
+    )
+    
+    if not short_username_success:
+        print_success("✓ Username length validation working correctly")
+        record_test("Profile Update - Username Length Validation", True)
+    else:
+        print_error("✗ Short username was allowed")
+        record_test("Profile Update - Username Length Validation", False, "Short username allowed")
+    
+    # Step 3: Test gender updates
+    print_subheader("Step 3: Gender Update Tests")
+    
+    # Test 3.1: Switch from male to female
+    print("Test 3.1: Switch gender from male to female")
+    
+    original_gender = user1["original_data"].get("gender", "male")
+    new_gender = "female" if original_gender == "male" else "male"
+    
+    gender_update_response, gender_update_success = make_request(
+        "PUT", "/auth/profile",
+        data={"gender": new_gender},
+        auth_token=user1["token"]
+    )
+    
+    if gender_update_success:
+        if gender_update_response.get("gender") == new_gender:
+            print_success(f"✓ Gender successfully updated from {original_gender} to {new_gender}")
+            record_test("Profile Update - Gender Switch", True)
+        else:
+            print_error(f"✗ Gender not updated in response: {gender_update_response.get('gender')}")
+            record_test("Profile Update - Gender Switch", False, "Gender not updated in response")
+    else:
+        print_error(f"✗ Gender update failed: {gender_update_response}")
+        record_test("Profile Update - Gender Switch", False, f"Update failed: {gender_update_response}")
+    
+    # Test 3.2: Switch back to original gender
+    print("Test 3.2: Switch gender back to original")
+    
+    gender_back_response, gender_back_success = make_request(
+        "PUT", "/auth/profile",
+        data={"gender": original_gender},
+        auth_token=user1["token"]
+    )
+    
+    if gender_back_success and gender_back_response.get("gender") == original_gender:
+        print_success(f"✓ Gender successfully switched back to {original_gender}")
+        record_test("Profile Update - Gender Switch Back", True)
+    else:
+        print_error("✗ Failed to switch gender back")
+        record_test("Profile Update - Gender Switch Back", False, "Switch back failed")
+    
+    # Test 3.3: Invalid gender value
+    print("Test 3.3: Invalid gender value validation")
+    
+    invalid_gender_response, invalid_gender_success = make_request(
+        "PUT", "/auth/profile",
+        data={"gender": "invalid_gender"},
+        auth_token=user1["token"],
+        expected_status=422  # Validation error
+    )
+    
+    if not invalid_gender_success:
+        print_success("✓ Invalid gender validation working correctly")
+        record_test("Profile Update - Invalid Gender Validation", True)
+    else:
+        print_error("✗ Invalid gender was allowed")
+        record_test("Profile Update - Invalid Gender Validation", False, "Invalid gender allowed")
+    
+    # Step 4: Test timezone offset updates
+    print_subheader("Step 4: Timezone Offset Update Tests")
+    
+    # Test 4.1: Valid timezone offsets
+    print("Test 4.1: Valid timezone offset updates")
+    
+    valid_offsets = [-12, -5, 0, 3, 8, 12]
+    
+    for offset in valid_offsets:
+        offset_response, offset_success = make_request(
+            "PUT", "/auth/profile",
+            data={"timezone_offset": offset},
+            auth_token=user1["token"]
+        )
+        
+        if offset_success and offset_response.get("timezone_offset") == offset:
+            print_success(f"✓ Timezone offset {offset} updated successfully")
+        else:
+            print_error(f"✗ Failed to update timezone offset to {offset}")
+            record_test(f"Profile Update - Timezone Offset {offset}", False, "Update failed")
+            break
+    else:
+        print_success("✓ All valid timezone offsets updated successfully")
+        record_test("Profile Update - Valid Timezone Offsets", True)
+    
+    # Test 4.2: Invalid timezone offsets (outside -12 to +12 range)
+    print("Test 4.2: Invalid timezone offset validation")
+    
+    invalid_offsets = [-13, -15, 13, 15, 25]
+    
+    for offset in invalid_offsets:
+        invalid_offset_response, invalid_offset_success = make_request(
+            "PUT", "/auth/profile",
+            data={"timezone_offset": offset},
+            auth_token=user1["token"],
+            expected_status=422  # Validation error
+        )
+        
+        if not invalid_offset_success:
+            print_success(f"✓ Invalid timezone offset {offset} correctly rejected")
+        else:
+            print_error(f"✗ Invalid timezone offset {offset} was allowed")
+            record_test(f"Profile Update - Invalid Timezone {offset}", False, "Invalid offset allowed")
+            break
+    else:
+        print_success("✓ All invalid timezone offsets correctly rejected")
+        record_test("Profile Update - Invalid Timezone Validation", True)
+    
+    # Step 5: Test combined updates
+    print_subheader("Step 5: Combined Update Tests")
+    
+    # Test 5.1: Update multiple fields at once
+    print("Test 5.1: Update multiple fields simultaneously")
+    
+    combined_username = f"combined_update_{int(time.time())}"
+    combined_data = {
+        "username": combined_username,
+        "gender": "female",
+        "timezone_offset": 5
+    }
+    
+    combined_response, combined_success = make_request(
+        "PUT", "/auth/profile",
+        data=combined_data,
+        auth_token=user1["token"]
+    )
+    
+    if combined_success:
+        response_username = combined_response.get("username")
+        response_gender = combined_response.get("gender")
+        response_timezone = combined_response.get("timezone_offset")
+        
+        if (response_username == combined_username and 
+            response_gender == "female" and 
+            response_timezone == 5):
+            print_success("✓ Multiple fields updated successfully")
+            record_test("Profile Update - Combined Updates", True)
+        else:
+            print_error(f"✗ Not all fields updated correctly")
+            print_error(f"Expected: {combined_data}")
+            print_error(f"Got: username={response_username}, gender={response_gender}, timezone={response_timezone}")
+            record_test("Profile Update - Combined Updates", False, "Not all fields updated")
+    else:
+        print_error(f"✗ Combined update failed: {combined_response}")
+        record_test("Profile Update - Combined Updates", False, f"Update failed: {combined_response}")
+    
+    # Test 5.2: Partial update (only one field)
+    print("Test 5.2: Partial update (single field)")
+    
+    partial_response, partial_success = make_request(
+        "PUT", "/auth/profile",
+        data={"timezone_offset": -3},
+        auth_token=user1["token"]
+    )
+    
+    if partial_success and partial_response.get("timezone_offset") == -3:
+        print_success("✓ Partial update (single field) successful")
+        record_test("Profile Update - Partial Update", True)
+    else:
+        print_error("✗ Partial update failed")
+        record_test("Profile Update - Partial Update", False, "Partial update failed")
+    
+    # Step 6: Test error scenarios
+    print_subheader("Step 6: Error Scenario Tests")
+    
+    # Test 6.1: Update without authorization token
+    print("Test 6.1: Update without authorization token")
+    
+    no_auth_response, no_auth_success = make_request(
+        "PUT", "/auth/profile",
+        data={"username": "should_fail"},
+        expected_status=401
+    )
+    
+    if not no_auth_success:
+        print_success("✓ Update correctly failed without authorization")
+        record_test("Profile Update - No Auth Token", True)
+    else:
+        print_error("✗ Update succeeded without authorization (security issue)")
+        record_test("Profile Update - No Auth Token", False, "No auth required")
+    
+    # Test 6.2: Update with invalid token
+    print("Test 6.2: Update with invalid authorization token")
+    
+    invalid_token_response, invalid_token_success = make_request(
+        "PUT", "/auth/profile",
+        data={"username": "should_fail"},
+        auth_token="invalid_token_12345",
+        expected_status=401
+    )
+    
+    if not invalid_token_success:
+        print_success("✓ Update correctly failed with invalid token")
+        record_test("Profile Update - Invalid Token", True)
+    else:
+        print_error("✗ Update succeeded with invalid token (security issue)")
+        record_test("Profile Update - Invalid Token", False, "Invalid token accepted")
+    
+    # Test 6.3: Update with no fields provided
+    print("Test 6.3: Update with no fields to update")
+    
+    no_fields_response, no_fields_success = make_request(
+        "PUT", "/auth/profile",
+        data={},  # Empty data
+        auth_token=user1["token"],
+        expected_status=400
+    )
+    
+    if not no_fields_success:
+        if "no fields to update" in str(no_fields_response.get("detail", "")).lower():
+            print_success("✓ Update correctly failed with no fields")
+            record_test("Profile Update - No Fields", True)
+        else:
+            print_error(f"✗ Wrong error message for no fields: {no_fields_response}")
+            record_test("Profile Update - No Fields", False, f"Wrong error: {no_fields_response}")
+    else:
+        print_error("✗ Update succeeded with no fields")
+        record_test("Profile Update - No Fields", False, "No fields accepted")
+    
+    # Step 7: Test response validation
+    print_subheader("Step 7: Response Validation Tests")
+    
+    # Test 7.1: Verify updated_at field is updated
+    print("Test 7.1: Verify updated_at field is updated")
+    
+    # Get current user data to compare timestamps
+    current_user_response, current_user_success = make_request(
+        "GET", "/auth/me",
+        auth_token=user1["token"]
+    )
+    
+    if current_user_success:
+        original_updated_at = current_user_response.get("updated_at")
+        
+        # Wait a moment to ensure timestamp difference
+        time.sleep(1)
+        
+        # Make an update
+        timestamp_test_response, timestamp_test_success = make_request(
+            "PUT", "/auth/profile",
+            data={"timezone_offset": 7},
+            auth_token=user1["token"]
+        )
+        
+        if timestamp_test_success:
+            new_updated_at = timestamp_test_response.get("updated_at")
+            
+            if new_updated_at and new_updated_at != original_updated_at:
+                print_success("✓ updated_at field is properly updated")
+                record_test("Profile Update - Updated At Field", True)
+            else:
+                print_error("✗ updated_at field not updated")
+                record_test("Profile Update - Updated At Field", False, "Timestamp not updated")
+        else:
+            print_error("✗ Failed to test updated_at field")
+            record_test("Profile Update - Updated At Field", False, "Test failed")
+    else:
+        print_error("✗ Failed to get current user data for timestamp test")
+        record_test("Profile Update - Updated At Field", False, "Failed to get user data")
+    
+    # Test 7.2: Verify complete UserResponse structure
+    print("Test 7.2: Verify complete UserResponse structure")
+    
+    final_update_response, final_update_success = make_request(
+        "PUT", "/auth/profile",
+        data={"username": f"final_test_{int(time.time())}"},
+        auth_token=user1["token"]
+    )
+    
+    if final_update_success:
+        expected_fields = [
+            "id", "username", "email", "role", "status", "gender", 
+            "virtual_balance", "frozen_balance", "daily_limit_used", 
+            "daily_limit_max", "email_verified", "created_at", 
+            "total_games_played", "total_games_won", "total_amount_wagered", 
+            "total_amount_won", "total_commission_paid", "timezone_offset"
+        ]
+        
+        missing_fields = [field for field in expected_fields if field not in final_update_response]
+        
+        if not missing_fields:
+            print_success("✓ Response contains all expected UserResponse fields")
+            record_test("Profile Update - Complete Response Structure", True)
+        else:
+            print_error(f"✗ Response missing fields: {missing_fields}")
+            record_test("Profile Update - Complete Response Structure", False, f"Missing: {missing_fields}")
+    else:
+        print_error("✗ Failed to test response structure")
+        record_test("Profile Update - Complete Response Structure", False, "Test failed")
+    
+    # Step 8: Cleanup test users (optional)
+    print_subheader("Step 8: Test Summary")
+    
+    print_success("Profile update endpoint testing completed")
+    print_success("Key areas tested:")
+    print_success("- Username updates (success, uniqueness, length validation)")
+    print_success("- Gender updates (male/female switching, invalid values)")
+    print_success("- Timezone offset updates (valid range -12 to +12, invalid values)")
+    print_success("- Combined updates (multiple fields at once)")
+    print_success("- Error scenarios (no token, invalid token, no fields)")
+    print_success("- Response validation (updated UserResponse, updated_at field)")
+
 def test_human_bot_commission_return_on_draw() -> None:
     """Test Human-Bot commission return on draw logic fix as requested in the review.
     
