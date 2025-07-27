@@ -36,7 +36,6 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
   });
   const [updating, setUpdating] = useState(false);
   const [showFullId, setShowFullId] = useState(false);
-  const [totalBalance, setTotalBalance] = useState(0);
   
   // Sync editForm with user data
   useEffect(() => {
@@ -48,31 +47,6 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
       });
     }
   }, [user.username, user.gender, user.timezone_offset]);
-
-  // Fetch total balance for mobile header
-  useEffect(() => {
-    const fetchTotalBalance = async () => {
-      try {
-        if (!user) return;
-        
-        const token = localStorage.getItem('token');
-        const balanceResponse = await axios.get(`${API}/economy/balance`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        const balance = balanceResponse.data;
-        const total = (balance.virtual_balance || 0) + (balance.frozen_balance || 0) + (balance.total_gem_value || 0);
-        setTotalBalance(total);
-      } catch (error) {
-        console.error('Error fetching total balance:', error);
-        setTotalBalance(0);
-      }
-    };
-
-    fetchTotalBalance();
-    const interval = setInterval(fetchTotalBalance, 10000); // Update every 10 seconds
-    return () => clearInterval(interval);
-  }, [user]);
   
   // Notification system
   const { showSuccess, showError, showSuccessRU, showErrorRU } = useNotifications();
