@@ -3458,6 +3458,10 @@ async def update_profile(
                 detail="User not found"
             )
         
+        # Ensure required fields are present for UserResponse
+        if "total_commission_paid" not in updated_user:
+            updated_user["total_commission_paid"] = 0.0
+        
         logger.info(f"✅ Profile updated successfully for user {current_user.id}")
         return UserResponse(**updated_user)
         
