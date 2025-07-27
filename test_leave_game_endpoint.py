@@ -78,9 +78,19 @@ def register_and_verify_user(username: str, email: str, password: str = "Test123
     
     print(f"✅ User registered successfully")
     
-    # Auto-verify email (simulate email verification)
-    # In a real scenario, we'd need to extract the token from email
-    # For testing, we'll try to login directly
+    # Get verification token from registration response
+    verification_token = response["data"].get("verification_token")
+    if verification_token:
+        print(f"📧 Verifying email with token")
+        verify_data = {"token": verification_token}
+        verify_response = make_request("POST", "/auth/verify-email", verify_data)
+        if verify_response["success"]:
+            print(f"✅ Email verified successfully")
+        else:
+            print(f"⚠️ Email verification failed, trying login anyway: {verify_response['data']}")
+    else:
+        print(f"⚠️ No verification token in response, trying login anyway")
+    
     time.sleep(1)
     
     # Login to get access token
