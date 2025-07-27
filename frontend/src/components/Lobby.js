@@ -659,7 +659,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
                 type="number"
                 placeholder="$0"
                 value={betFilters.minAmount}
-                onChange={(e) => handleFilterChange('minAmount', e.target.value)}
+                onChange={handleMinAmountChange}
                 className="w-20 px-2 py-1 bg-surface-card border border-accent-primary border-opacity-30 rounded text-white text-sm focus:outline-none focus:border-accent-primary"
                 min="0"
                 step="1"
