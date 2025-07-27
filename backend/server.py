@@ -713,6 +713,11 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UpdateProfileRequest(BaseModel):
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    gender: Optional[str] = Field(None, pattern=r'^(male|female)$')
+    timezone_offset: Optional[int] = Field(None, ge=-12, le=12)
+
 class EmailVerificationRequest(BaseModel):
     token: str
 
