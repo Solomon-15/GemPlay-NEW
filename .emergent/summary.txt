@@ -1,98 +1,70 @@
 <analysis>
-The previous AI engineer effectively navigated a complex set of feature additions, bug fixes, and performance optimizations for the GemPlay application. The trajectory showcases a methodical approach, starting with addressing critical user feedback regarding core functionalities like Human-bot gender management and avatar display. The engineer meticulously debugged both frontend and backend inconsistencies, ensuring data integrity and correct UI representation. Subsequent tasks included enhancing administrative controls with new data columns and filtering, correcting complex statistical calculations, and improving application stability by addressing external library interactions and performance bottlenecks. Each phase involved iterative development, focused testing, and direct engagement with the user for clarification. The process concluded with the engineer in the midst of debugging a persistent issue related to updating human bot data, demonstrating a continuous problem-solving cycle.
+The previous AI engineer demonstrated an iterative and detailed approach to enhancing the GemPlay application. The trajectory began with a critical fix to ensure frozen commissions are returned to players in case of a draw, followed by debugging a persistent issue where this fix didn't fully work due to an . Subsequently, the engineer implemented a significant new feature: an Unfreeze all stuck commission button in the admin panel, requiring backend API development and frontend UI integration. The work then shifted to several frontend display fixes: first, correcting the Total balance calculation in the portfolio (Inventory and HeaderPortfolio components) to include , , and . This was followed by a comprehensive cache clearing operation across the system. Finally, the engineer tackled displaying the full Total balance (including frozen balance and gem value) near the Logout button in the Sidebar, which involved fetching user balance data within the Sidebar component itself due to limited initial props. Each phase involved understanding user clarifications, implementing changes, and verifying results.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting platform featuring Human-bots and a 3% commission system. The primary goals are robust betting, accurate financial metrics, and comprehensive admin controls. Key problems addressed by the previous engineer include:
-- **Human-bot Management:** Enhancing bulk creation with delay and gender; adding a gender column with toggle; fixing Human-bot vs Human-bot game timeouts; excluding Human-bot winnings from 'Bot Revenue' profit.
-- **Data Display & Management:** Removing display limits in Lobby API requests; implementing mass selection and deletion for 'Users' and 'Bets' admin sections.
-- **UI/UX Reorganization:** Moving 'Notification System Demo' and 'Monitoring' to the Admin Panel.
-- **New Features/Fixes:**
-    - Adding a Кто создал (Who Created) column to the Active Bets modal for Human bots, showing Я (Me) or Имя Оппонента with filtering.
-    - Correcting the Средний: (Average) value in ДИАПАЗОН СТАВОК (Bet Range) for Human bots to be the average of active, bot-created bets.
-    - Disabling automatic MetaMask connection to prevent browser console errors.
-    - Optimizing  rendering for performance.
-    - Fixing bot creation errors related to Bot name already exists and multiple submissions, along with styling in-app notifications.
-    - Adding an Ограничение (Bet Limit) column for Human bots, allowing a maximum bet amount for participation as an opponent.
+The GemPlay application is an asynchronous PvP gem betting platform with Human-bots and a 3% commission system. The primary goal is to provide robust betting, accurate financial metrics, and comprehensive admin controls. The previous engineer implemented:
+1.  **Commission Return on Draw**: In cases of a draw, frozen commission should be automatically returned to participants' balances, proportional to their original contribution.
+2.  **Unfreeze All Stuck Commission Feature**: An admin button in User Management to unfreeze commissions from games that did not finish correctly for all users (human bots, regular bots, players). This involves moving funds from  to , requiring confirmation, superadmin access, and logging.
+3.  **Correct Total Balance Calculation**: The Total balance displayed in the Balance block (Inventory and HeaderPortfolio) and near the LOGOUT button in the Sidebar should be the sum of , , and the total value of all gems (including frozen gems). It should not deduct commission or gem costs upon freezing.
 </product_requirements>
 
 <key_technical_concepts>
-- **React.js**: Frontend development for dynamic UI and component-based structure.
-- **FastAPI**: Python backend framework for building performant APIs.
-- **MongoDB**: NoSQL database for flexible data storage.
-- **Pydantic**: Data validation for Python models in FastAPI.
-- **Supervisor**: Process manager for application services.
-- **Axios**: HTTP client for API requests in the frontend.
-- **React Hooks**: , , ,  for state management and performance.
+- **React.js**: Frontend for UI components.
+- **FastAPI**: Python backend for API endpoints.
+- **MongoDB**: NoSQL database for data storage.
+- **Pydantic**: Data validation for FastAPI models.
+- **Supervisor**: Process manager for frontend/backend services.
+- **Axios**: HTTP client for frontend API calls.
+- **React Hooks**: ,  for component state and side effects.
+- **Middleware**: Backend for request processing (e.g., ).
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a MERN-stack variant (React.js, FastAPI, MongoDB) structured into  and  directories.
+The application utilizes a MERN-stack variant (React.js, FastAPI, MongoDB) structured into  and  directories.
 
 
 
-- : Central backend logic.
-    - **Importance**: Handles API routes, database, game logic, background tasks.
+- :
+    - **Importance**: Core backend logic for API routes, database, game logic. Handles commission unfreezing on draw, and the new unfreeze all stuck commission API.
     - **Changes Made**:
-        - : Added  field.
-        - : Added  and  fields.
-        - : Added  field with default .
-        - : Added  field.
-        -  endpoint: Modified to calculate and return  for each bot based on active, bot-created bets; added  to response.
-        - New  function added for precise average bet calculation.
-- : Manages human-bot settings and bulk/individual creation.
+        - Modified  to handle draw outcomes, ensuring  and  are returned to both players by explicitly calling .
+        - Added a new admin API endpoint  to identify and unfreeze commissions from incorrectly ended games.
+- :
+    - **Importance**: Admin panel for managing users. Now includes the Unfreeze all stuck commission button.
     - **Changes Made**:
-        - Updated  state to include .
-        - Modified  to reset  and correctly handle error/success notifications (using ).
-        - Added  field to the creation/editing form and initialized its state.
-        - Implemented  state to prevent multiple form submissions and updated the Создать бота button to reflect loading.
-        - Updated error handling for bot creation, specifically for Bot name already exists.
-- : Displays human-bot list.
+        - Added a Разморозить всю зависшую комиссию button.
+        - Implemented a confirmation modal () for the new feature.
+        - Integrated  function to call the new backend API.
+- :
+    - **Importance**: Displays user's inventory and balance details.
     - **Changes Made**:
-        - Updated Средний: calculation to use  for correct display of average active bets.
-        - Added ОГРАНИЧЕНИЕ column with an editable input field for  (using ).
-        - Adjusted column spans for table headers.
-- : Active bets modal for human bots.
+        - Modified the  function to correctly calculate  (Total) as , ensuring frozen amounts are included.
+- :
+    - **Importance**: Displays a summary of the user's portfolio in the header.
     - **Changes Made**:
-        - Added  state and  for filtering.
-        - Implemented  logic to display Я or  with conditional styling.
-        - Added a new column Кто создал between Сумма and Ходы.
-        - Added filter dropdown UI for Все ставки, Мои ставки, Ставки оппонентов.
-        - Reset  on modal close.
-- : Displays player/bot information (avatars).
+        - Modified the  function to correctly calculate  (Total) as , aligning with the user's requirement.
+- :
+    - **Importance**: Main navigation sidebar, now displays the overall Total balance.
     - **Changes Made**:
-        - Modified  to differentiate human bots (using  or ) from regular bots for displaying gender-specific avatars.
-        - Wrapped the component in  and used  for functions (, , ) and  for computed values (, , , , , ) to optimize rendering. Removed .
-- : Main application component, handles routing.
-    - **Changes Made**: Imported  to disable MetaMask auto-connection.
-- : (NEWLY CREATED) Utility file to block MetaMask auto-connection.
-    - **Importance**: Prevents browser console errors from MetaMask extension.
-    - **Changes Made**: Overrides  methods (, , ) to prevent automatic connection attempts.
-- , : Navigation/layout components.
-    - **Changes Made**: Removed Notification System Demo and Monitoring from  and moved them as new sections to the  menu.
-- : Global CSS.
-    - **Changes Made**: Custom styles for toggle switches for gender selection.
-- , : Avatar assets.
-    - **Changes Made**: Now correctly used by  based on  data.
+        - Added  and  imports.
+        - Implemented  function to fetch balance data from  every 10 seconds.
+        - Calculated  as .
+        - Replaced the display of  near the LOGOUT button with .
 </code_architecture>
 
 <pending_tasks>
-- Debug the Failed to update human bot error when attempting to update an existing human bot's  via the API.
+- There are no explicitly pending tasks from the provided trajectory. The last described task was successfully completed.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was implementing the Ограничение (Bet Limit) feature for Human bots. This involved:
-1.  **Backend Updates**:
-    -   Adding a  field (defaulting to 300) to the , , , and  models in .
-    -   Ensuring the  endpoint correctly returns this new field.
-2.  **Frontend Updates**:
-    -   Adding the ОГРАНИЧЕНИЕ column to the  table, positioned between ДИАПАЗОН СТАВОК and ПРОЦЕНТ ПОБЕД.
-    -   Making this column editable directly in the table via .
-    -   Integrating the  input field into the Human bot creation/editing form within .
+Immediately before this summary request, the AI engineer successfully completed the implementation of two key fixes requested by the user.
 
-The current state is that creating *new* bots with a specified  works correctly, and these bots are returned from the API with the correct limit. However, the attempt to *update* an existing bot's  via the API (using a  command for testing) resulted in a  error. The engineer was in the process of examining backend logs to diagnose this specific update failure.
+First, the Total balance display logic was corrected across the frontend. Initially, the user reported that the  balance in the Balance block was incorrectly deducting frozen commission and gem costs. The AI engineer clarified the requirement, determining that  should always represent . This was addressed by modifying the  function in  and  to sum these three components.
+
+Second, the display of the user's balance near the LOGOUT button in the Sidebar was updated. The user requested that this display, previously showing only , should now reflect the comprehensive  balance. To achieve this, the AI engineer modified . Since the  component initially only received a  prop without detailed balance or gem information, the engineer implemented a new  function within . This function now uses  and  to fetch the complete balance data from the  endpoint every 10 seconds. The  is then calculated () and displayed, replacing the previous  display. This ensures consistency and correctness across all relevant UI elements. Both tasks are confirmed as completed based on the trajectory.
 </current_work>
 
 <optional_next_step>
-Debug the Failed to update human bot error when updating an existing human bot's .
+There are no explicit next steps requested by the user in the provided trajectory, as the last task was completed.
 </optional_next_step>
