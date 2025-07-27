@@ -36,9 +36,16 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
   };
 
   const fetchData = async () => {
+    if (!user?.id) return;
+    
     setLoading(true);
-    await Promise.all([fetchBalance(), fetchGems()]);
-    setLoading(false);
+    try {
+      await Promise.all([fetchBalance(), fetchGems()]);
+    } catch (error) {
+      console.error('Error fetching portfolio data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
