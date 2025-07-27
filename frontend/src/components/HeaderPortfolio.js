@@ -159,7 +159,7 @@ const HeaderPortfolio = ({ user }) => {
             ${formatNumber(portfolioData.total.value)}
           </div>
           <div className="text-xs text-text-secondary block md:block">
-            {(() => {
+            ${(() => {
               const totalFrozen = portfolioData.balance.frozen + portfolioData.gems.frozenValue;
               const totalAvailable = portfolioData.total.value - totalFrozen;
               
