@@ -7,10 +7,34 @@ import HeaderPortfolio from './HeaderPortfolio';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Utility function to format time with user's timezone offset
+const formatTimeWithOffset = (dateString, timezoneOffset = 0) => {
+  const date = new Date(dateString);
+  const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+  const localTime = new Date(utcTime + (timezoneOffset * 3600000));
+  return localTime.toLocaleString();
+};
+
+// Utility function to format short ID
+const formatShortId = (id) => {
+  if (!id || id.length < 6) return id;
+  return `${id.substring(0, 3)}...${id.substring(id.length - 3)}`;
+};
+
 const Profile = ({ user, onUpdateUser, setCurrentView }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositing, setDepositing] = useState(false);
+  
+  // Edit profile states
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    username: user.username || '',
+    gender: user.gender || 'male',
+    timezone_offset: user.timezone_offset || 0
+  });
+  const [updating, setUpdating] = useState(false);
+  const [showFullId, setShowFullId] = useState(false);
   
   const handleAddBalance = async () => {
     const amount = parseFloat(depositAmount);
