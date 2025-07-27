@@ -13,6 +13,7 @@ import CreateGame from "./components/CreateGame";
 import GameLobby from "./components/GameLobby";
 import AdminPanel from "./components/AdminPanel";
 import HeaderPortfolio from "./components/HeaderPortfolio";
+import MobileHeader from "./components/MobileHeader";
 import NotificationProvider from "./components/NotificationContext";
 import { GemsProvider } from './components/GemsContext';
 import NotificationContainer from "./components/NotificationContainer";
