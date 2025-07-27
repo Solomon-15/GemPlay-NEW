@@ -9,6 +9,98 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
   const [gems, setGems] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const API = process.env.REACT_APP_BACKEND_URL;
+
+  const fetchBalance = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/economy/balance`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setBalance(response.data);
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+    }
+  };
+
+  const fetchGems = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/gems/inventory`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setGems(response.data || []);
+    } catch (error) {
+      console.error('Error fetching gems:', error);
+    }
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    await Promise.all([fetchBalance(), fetchGems()]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchData();
+      
+      // Subscribe to global updates
+      const globalRefresh = getGlobalLobbyRefresh();
+      const unregister = globalRefresh.registerRefreshCallback(() => {
+        fetchData();
+      });
+      
+      return () => {
+        unregister();
+      };
+    }
+  }, [user?.id]);
+
+  // Calculate portfolio data
+  const getPortfolioData = () => {
+    if (!balance) return null;
+    
+    const virtualBalance = balance.virtual_balance;
+    const frozenBalance = balance.frozen_balance;
+    const totalGemsCount = gems.reduce((sum, gem) => sum + gem.quantity, 0);
+    const frozenGemsCount = gems.reduce((sum, gem) => sum + gem.frozen_quantity, 0);
+    const availableGemValue = balance.available_gem_value;
+    const frozenGemValue = balance.total_gem_value - balance.available_gem_value;
+    const totalValue = virtualBalance + frozenBalance + balance.total_gem_value;
+
+    return {
+      balance: {
+        total: virtualBalance + frozenBalance,
+        frozen: frozenBalance,
+        available: virtualBalance
+      },
+      gems: {
+        totalCount: totalGemsCount,
+        totalValue: balance.total_gem_value,
+        frozenCount: frozenGemsCount,
+        frozenValue: frozenGemValue,
+        availableValue: availableGemValue
+      },
+      total: {
+        value: totalValue
+      }
+    };
+  };
+
+  const portfolioData = getPortfolioData();
+
+  // Format numbers with commas
+  const formatNumber = (number) => {
+    return number.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  };
+  const [balance, setBalance] = useState(null);
+  const [gems, setGems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const profileMenuItems = [
     {
       id: 'profile',
