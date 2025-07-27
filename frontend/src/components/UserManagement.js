@@ -1447,7 +1447,6 @@ const UserManagement = ({ user: currentUser }) => {
           <div>
             <label className="block text-text-secondary text-sm font-rajdhani mb-1">Причина удаления *</label>
             <textarea
-              key={`delete-reason-${selectedUser?.id || 'default'}`}
               value={deleteReason}
               onChange={(e) => setDeleteReason(e.target.value)}
               placeholder="Подробно опишите причину удаления аккаунта..."
