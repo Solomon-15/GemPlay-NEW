@@ -282,7 +282,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
           </div>
         </div>
       ) : portfolioData ? (
-        <div className="flex space-x-2 px-16 py-2 border-b border-border-primary">
+        <div className="flex space-x-2 px-4 py-2 border-b border-border-primary">
           {/* Balance Block */}
           <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
             <div className="text-center">
