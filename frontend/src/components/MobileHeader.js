@@ -287,7 +287,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
           <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
             <div className="text-center">
               <h3 className="font-rajdhani text-xs font-semibold text-white mb-0">Balance</h3>
-              <div className="font-rajdhani text-s font-bold text-green-400 break-words whitespace-nowrap">
+              <div className="font-rajdhani text-sm font-bold text-green-400 break-words whitespace-nowrap">
                 ${formatNumber(portfolioData.balance.total)}
               </div>
               {portfolioData.balance.frozen > 0 && (
