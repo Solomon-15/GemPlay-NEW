@@ -672,7 +672,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
                 type="number"
                 placeholder="$∞"
                 value={betFilters.maxAmount}
-                onChange={(e) => handleFilterChange('maxAmount', e.target.value)}
+                onChange={handleMaxAmountChange}
                 className="w-20 px-2 py-1 bg-surface-card border border-accent-primary border-opacity-30 rounded text-white text-sm focus:outline-none focus:border-accent-primary"
                 min="0"
                 step="1"
