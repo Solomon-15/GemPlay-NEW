@@ -130,7 +130,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
   ];
 
   return (
-    <div className="md:hidden bg-surface-sidebar border-b border-border-primary sticky top-0 z-50">
+    <div className="md:hidden bg-surface-sidebar border- border-border-primary sticky top-0 z-50">
       {/* Balance, Gems, Total tiles row */}
       {portfolioData && !loading && (
         <div className="flex space-x-2 px-4 py-2 border-b border-border-primary">
