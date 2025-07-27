@@ -3392,16 +3392,20 @@ async def update_profile(
 ):
     """Update user profile information."""
     try:
+        logger.info(f"🔄 Profile update request from user {current_user.id}: {request.dict()}")
+        
         update_fields = {}
         
         # Update username if provided
         if request.username is not None:
+            logger.info(f"Updating username to: {request.username}")
             # Check if username already exists
             existing_user = await db.users.find_one({
                 "username": request.username,
                 "id": {"$ne": current_user.id}
             })
             if existing_user:
+                logger.warning(f"Username {request.username} already exists")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Username already exists"
@@ -3410,13 +3414,16 @@ async def update_profile(
         
         # Update gender if provided
         if request.gender is not None:
+            logger.info(f"Updating gender to: {request.gender}")
             update_fields["gender"] = request.gender
         
         # Update timezone offset if provided
         if request.timezone_offset is not None:
+            logger.info(f"Updating timezone_offset to: {request.timezone_offset}")
             update_fields["timezone_offset"] = request.timezone_offset
         
         if not update_fields:
+            logger.warning("No fields to update")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No fields to update"
@@ -3425,13 +3432,18 @@ async def update_profile(
         # Add updated timestamp
         update_fields["updated_at"] = datetime.utcnow()
         
+        logger.info(f"Update fields: {update_fields}")
+        
         # Update user in database
         result = await db.users.update_one(
             {"id": current_user.id},
             {"$set": update_fields}
         )
         
+        logger.info(f"Update result: matched={result.matched_count}, modified={result.modified_count}")
+        
         if result.modified_count == 0:
+            logger.error(f"Failed to update profile for user {current_user.id}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update profile"
@@ -3440,11 +3452,13 @@ async def update_profile(
         # Get updated user data
         updated_user = await db.users.find_one({"id": current_user.id})
         if not updated_user:
+            logger.error(f"User {current_user.id} not found after update")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
         
+        logger.info(f"✅ Profile updated successfully for user {current_user.id}")
         return UserResponse(**updated_user)
         
     except HTTPException:
