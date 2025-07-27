@@ -3385,6 +3385,77 @@ async def add_balance(
         "remaining_daily_limit": remaining_limit - request.amount
     }
 
+@auth_router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    request: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Update user profile information."""
+    try:
+        update_fields = {}
+        
+        # Update username if provided
+        if request.username is not None:
+            # Check if username already exists
+            existing_user = await db.users.find_one({
+                "username": request.username,
+                "id": {"$ne": current_user.id}
+            })
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Username already exists"
+                )
+            update_fields["username"] = request.username
+        
+        # Update gender if provided
+        if request.gender is not None:
+            update_fields["gender"] = request.gender
+        
+        # Update timezone offset if provided
+        if request.timezone_offset is not None:
+            update_fields["timezone_offset"] = request.timezone_offset
+        
+        if not update_fields:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No fields to update"
+            )
+        
+        # Add updated timestamp
+        update_fields["updated_at"] = datetime.utcnow()
+        
+        # Update user in database
+        result = await db.users.update_one(
+            {"id": current_user.id},
+            {"$set": update_fields}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update profile"
+            )
+        
+        # Get updated user data
+        updated_user = await db.users.find_one({"id": current_user.id})
+        if not updated_user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        return UserResponse(**updated_user)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating profile: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update profile"
+        )
+
 # ==============================================================================
 # ECONOMY API ROUTES
 # ==============================================================================
