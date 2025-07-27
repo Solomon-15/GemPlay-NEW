@@ -217,7 +217,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
                   <input
                     type="text"
                     value={editForm.username}
-                    onChange={(e) => setEditForm({...editForm, username: e.target.value})}
+                    onChange={handleUsernameChange}
                     className="w-full px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani focus:outline-none focus:border-accent-primary"
                   />
                 </div>
