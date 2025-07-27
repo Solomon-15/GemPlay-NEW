@@ -4,6 +4,7 @@ import { formatCurrencyWithSymbol, formatDollarAmount, validateDailyLimit, ECONO
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 import { useNotifications } from './NotificationContext';
 import HeaderPortfolio from './HeaderPortfolio';
+import MobileHeader from './MobileHeader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
