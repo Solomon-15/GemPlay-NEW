@@ -233,8 +233,8 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
                       </div>
                       <div>
                         <div className="font-rajdhani font-semibold text-white text-sm">{user.username}</div>
-                        <div className="text-text-secondary text-xs">
-                          Total: ${totalBalance.toFixed(2)}
+                        <div className="text-green-400 text-xs">
+                          Total: ${portfolioData ? formatNumber(portfolioData.total.value) : totalBalance.toFixed(2)}
                         </div>
                       </div>
                     </div>
