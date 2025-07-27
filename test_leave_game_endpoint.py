@@ -128,12 +128,12 @@ def add_balance_to_user(token: str, amount: float = 1000.0) -> bool:
 def purchase_gems(token: str, gem_type: str, quantity: int) -> bool:
     """Purchase gems for user"""
     headers = {"Authorization": f"Bearer {token}"}
-    data = {
+    params = {
         "gem_type": gem_type,
         "quantity": quantity
     }
     
-    response = make_request("POST", "/gems/buy", data, headers)
+    response = make_request("POST", "/gems/buy", headers=headers, params=params)
     if response["success"]:
         print(f"✅ Purchased {quantity} {gem_type} gems")
         return True
