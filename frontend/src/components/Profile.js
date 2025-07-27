@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { formatCurrencyWithSymbol, formatDollarAmount, validateDailyLimit, ECONOMY_CONFIG } from '../utils/economy';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
