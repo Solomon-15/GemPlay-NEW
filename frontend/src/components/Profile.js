@@ -37,6 +37,9 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
   const [updating, setUpdating] = useState(false);
   const [showFullId, setShowFullId] = useState(false);
   
+  // Notification system
+  const { showSuccess, showError, showSuccessRU, showErrorRU } = useNotifications();
+  
   const handleAddBalance = async () => {
     const amount = parseFloat(depositAmount);
     if (!amount || amount <= 0) {
