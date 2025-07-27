@@ -42,14 +42,14 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
         {/* Notifications Bell */}
         <NotificationBell isCollapsed={false} />
         
-        <div className="w-8 h-8 flex items-center justify-center">
+        <div className="w-17 h-18 flex items-center justify-center">
           <img 
             src="/gems/gem-green.svg" 
             alt="GemPlay" 
-            className="w-6 h-6 object-contain"
+            className="w-12 h-12 object-contain"
           />
         </div>
-        <span className="font-russo text-lg text-accent-primary">GemPLAY</span>
+        <span className="font-russo text-3xl text-accent-primary">GemPLAY</span>
       </div>
 
       {/* Right side - Profile dropdown */}
