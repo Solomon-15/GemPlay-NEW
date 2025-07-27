@@ -324,6 +324,7 @@ class User(BaseModel):
     total_amount_wagered: float = 0.0
     total_amount_won: float = 0.0
     total_commission_paid: float = 0.0  # Общая сумма комиссий, оплаченных ботом
+    timezone_offset: int = 0  # UTC offset in hours (-12 to +12)
 
 class GemDefinition(BaseModel):
     id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
