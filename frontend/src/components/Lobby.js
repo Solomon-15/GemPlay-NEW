@@ -567,6 +567,14 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     }));
   }, []);
 
+  const handleMinAmountChange = useCallback((e) => {
+    handleFilterChange('minAmount', e.target.value);
+  }, [handleFilterChange]);
+
+  const handleMaxAmountChange = useCallback((e) => {
+    handleFilterChange('maxAmount', e.target.value);
+  }, [handleFilterChange]);
+
   const clearFilters = useCallback(() => {
     setBetFilters({
       minAmount: '',
