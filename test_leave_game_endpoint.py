@@ -195,12 +195,17 @@ def leave_game(token: str, game_id: str) -> Dict:
     return response
 
 def get_game_details(token: str, game_id: str) -> Dict:
-    """Get game details"""
+    """Get game details from my-bets endpoint"""
     headers = {"Authorization": f"Bearer {token}"}
     
-    response = make_request("GET", f"/games/{game_id}", headers=headers)
+    response = make_request("GET", "/games/my-bets", headers=headers)
     if response["success"]:
-        return response["data"]
+        games = response["data"]
+        for game in games:
+            if game.get("id") == game_id:
+                return game
+        print(f"❌ Game {game_id} not found in my-bets")
+        return {}
     else:
         print(f"❌ Failed to get game details: {response['data']}")
         return {}
