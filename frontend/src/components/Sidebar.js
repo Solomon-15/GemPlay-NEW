@@ -4,6 +4,7 @@ import axios from 'axios';
 
 const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapsed, onOpenAdminPanel, onLogout }) => {
   const [totalBalance, setTotalBalance] = useState(0);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const API = process.env.REACT_APP_BACKEND_URL;
 
   // Функция для получения общего баланса (Total)
