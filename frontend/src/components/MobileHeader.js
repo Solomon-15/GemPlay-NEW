@@ -97,10 +97,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
       maximumFractionDigits: 2
     });
   };
-  const [balance, setBalance] = useState(null);
-  const [gems, setGems] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  
   const profileMenuItems = [
     {
       id: 'profile',
