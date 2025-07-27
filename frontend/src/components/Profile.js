@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { formatCurrencyWithSymbol, formatDollarAmount, validateDailyLimit, ECONOMY_CONFIG } from '../utils/economy';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
+import { useNotifications } from './NotificationContext';
 import HeaderPortfolio from './HeaderPortfolio';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
