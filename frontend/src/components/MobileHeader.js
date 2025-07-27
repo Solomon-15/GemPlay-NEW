@@ -12,26 +12,34 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
   const API = process.env.REACT_APP_BACKEND_URL;
 
   const fetchBalance = async () => {
+    if (!user?.id) return;
     try {
       const token = localStorage.getItem('token');
+      if (!token) return;
+      
       const response = await axios.get(`${API}/api/economy/balance`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPortfolioBalance(response.data);
     } catch (error) {
       console.error('Error fetching balance:', error);
+      // Don't set error state to avoid breaking the UI
     }
   };
 
   const fetchGems = async () => {
+    if (!user?.id) return;
     try {
       const token = localStorage.getItem('token');
+      if (!token) return;
+      
       const response = await axios.get(`${API}/api/gems/inventory`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setGems(response.data || []);
     } catch (error) {
       console.error('Error fetching gems:', error);
+      // Don't set error state to avoid breaking the UI
     }
   };
 
