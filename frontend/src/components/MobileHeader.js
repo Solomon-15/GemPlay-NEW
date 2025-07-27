@@ -294,8 +294,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
                 </div>
               )}
             </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
