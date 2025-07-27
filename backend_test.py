@@ -19567,11 +19567,11 @@ def test_dashboard_endpoints() -> None:
     print_success("- Performance is acceptable for admin dashboard usage")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - UNFREEZE STUCK COMMISSION FUNCTIONALITY")
+    print_header("GEMPLAY BACKEND API TESTING - PROFILE UPDATE ENDPOINT")
     
     try:
-        # Run the Unfreeze Stuck Commission test as specifically requested in the review
-        test_unfreeze_stuck_commission()
+        # Run the Profile Update endpoint test as specifically requested in the review
+        test_profile_update_endpoint()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
