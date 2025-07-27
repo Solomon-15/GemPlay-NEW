@@ -72,6 +72,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         })
       });
       
+      // Отмечаем, что игрок присоединился к игре
+      setHasJoinedGame(true);
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Ошибка при присоединении к игре');
