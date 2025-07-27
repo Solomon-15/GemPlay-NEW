@@ -293,8 +293,6 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
                   </button>
                 </div>
               )}
-            </div>
-          )}
         </div>
       </div>
     </div>
