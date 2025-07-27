@@ -12480,7 +12480,7 @@ def test_mobile_header_balance_endpoints() -> None:
     
     # Step 1: Login as admin user
     print_subheader("Step 1: Admin Login")
-    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin", True)
     
     if not admin_token:
         print_error("Failed to login as admin - cannot proceed with balance endpoints test")
