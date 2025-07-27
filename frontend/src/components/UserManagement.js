@@ -1065,7 +1065,6 @@ const UserManagement = ({ user: currentUser }) => {
                     <div>
                       <label className="block text-text-secondary text-sm mb-1">Уведомление пользователю:</label>
                       <textarea
-                        key={`custom-notification-${selectedGem?.type || 'default'}`}
                         value={customNotification}
                         onChange={(e) => setCustomNotification(e.target.value)}
                         placeholder="Персональное сообщение пользователю о изменении гемов..."
