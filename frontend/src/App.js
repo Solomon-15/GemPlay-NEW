@@ -342,7 +342,13 @@ function App() {
                   <MyBets user={user} onUpdateUser={checkAuthStatus} />
                 )}
                 {currentView === 'profile' && (
-                  <Profile user={user} onUpdateUser={checkAuthStatus} setCurrentView={setCurrentView} />
+                  <Profile 
+                    user={user} 
+                    onUpdateUser={checkAuthStatus} 
+                    setCurrentView={setCurrentView}
+                    onOpenAdminPanel={handleOpenAdminPanel}
+                    onLogout={handleLogout}
+                  />
                 )}
                 {currentView === 'shop' && (
                   <Shop user={user} onUpdateUser={checkAuthStatus} />
