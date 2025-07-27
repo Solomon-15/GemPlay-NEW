@@ -292,8 +292,10 @@ function App() {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-h-screen">
-              {/* Top Bar - Sticky Header */}
-              <nav className="sticky top-0 z-40 bg-surface-sidebar border-b border-border-primary p-4 flex-shrink-0">
+              {/* Top Bar - Sticky Header (hidden on mobile for profile page) */}
+              <nav className={`sticky top-0 z-40 bg-surface-sidebar border-b border-border-primary p-4 flex-shrink-0 ${
+                currentView === 'profile' ? 'hidden md:block' : ''
+              }`}>
                 <div className="flex items-center justify-between">
                   {/* Desktop: Page Title Only */}
                   <div className="hidden md:block">
