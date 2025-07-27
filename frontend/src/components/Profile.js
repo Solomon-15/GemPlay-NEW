@@ -23,7 +23,7 @@ const formatShortId = (id) => {
   return `${id.substring(0, 3)}...${id.substring(id.length - 3)}`;
 };
 
-const Profile = ({ user, onUpdateUser, setCurrentView }) => {
+const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogout }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [depositAmount, setDepositAmount] = useState('');
   const [depositing, setDepositing] = useState(false);
