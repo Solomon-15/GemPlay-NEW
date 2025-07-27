@@ -236,7 +236,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
                   <label className="block font-roboto text-text-secondary text-sm mb-1">Timezone Offset (UTC)</label>
                   <select
                     value={editForm.timezone_offset}
-                    onChange={(e) => setEditForm({...editForm, timezone_offset: parseInt(e.target.value)})}
+                    onChange={handleTimezoneChange}
                     className="w-full px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani focus:outline-none focus:border-accent-primary"
                   >
                     {Array.from({length: 25}, (_, i) => i - 12).map(offset => (
