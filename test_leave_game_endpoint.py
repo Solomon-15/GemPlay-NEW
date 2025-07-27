@@ -283,9 +283,22 @@ def test_leave_game_endpoint():
         
         # Step 6: Verify game is ACTIVE
         print("\n📋 Step 6: Verifying game is ACTIVE")
-        game_details = get_game_details(creator_token, game_id)
+        
+        # Check creator's games
+        creator_game_details = get_game_details(creator_token, game_id)
+        if not creator_game_details:
+            # Try opponent's games
+            opponent_game_details = get_game_details(opponent_token, game_id)
+            if not opponent_game_details:
+                print(f"❌ Game not found in either user's my-bets")
+                return False
+            game_details = opponent_game_details
+        else:
+            game_details = creator_game_details
+            
         if game_details.get("status") != "ACTIVE":
             print(f"❌ Game is not ACTIVE, status: {game_details.get('status')}")
+            print(f"Game details: {game_details}")
             return False
         print(f"✅ Game is ACTIVE")
         
