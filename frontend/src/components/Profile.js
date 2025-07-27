@@ -76,6 +76,50 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
     }
   };
   
+  // Handle profile update
+  const handleUpdateProfile = async () => {
+    if (!editForm.username.trim()) {
+      alert('Username cannot be empty');
+      return;
+    }
+    
+    setUpdating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(`${API}/auth/profile`, editForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (onUpdateUser) {
+        onUpdateUser();
+      }
+      
+      setIsEditing(false);
+      alert('Profile updated successfully');
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Error updating profile');
+    } finally {
+      setUpdating(false);
+    }
+  };
+  
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setEditForm({
+      username: user.username || '',
+      gender: user.gender || 'male',
+      timezone_offset: user.timezone_offset || 0
+    });
+    setIsEditing(false);
+  };
+  
+  // Handle ID click (show full ID and copy)
+  const handleIdClick = () => {
+    setShowFullId(!showFullId);
+    navigator.clipboard.writeText(user.id);
+    alert('User ID copied to clipboard!');
+  };
+  
   const ProfileOverview = () => (
     <div className="space-y-6">
       {/* Profile Header */}
@@ -83,14 +127,63 @@ const Profile = ({ user, onUpdateUser, setCurrentView }) => {
         <div className="flex items-center space-x-6">
           <div className="w-20 h-20 bg-gradient-accent rounded-full flex items-center justify-center">
             <img 
-              src={user.gender === 'female' ? '/Women.svg' : '/Men.svg'} 
-              alt={user.gender === 'female' ? 'Female' : 'Male'}
+              src={isEditing ? (editForm.gender === 'female' ? '/Women.svg' : '/Men.svg') : (user.gender === 'female' ? '/Women.svg' : '/Men.svg')} 
+              alt={isEditing ? (editForm.gender === 'female' ? 'Female' : 'Male') : (user.gender === 'female' ? 'Female' : 'Male')}
               className="w-22 h-22"
             />
           </div>
           <div className="flex-1">
-            <h2 className="font-russo text-2xl text-white mb-2">{user.username}</h2>
-            <p className="font-roboto text-text-secondary mb-1">{user.email}</p>
+            {isEditing ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="block font-roboto text-text-secondary text-sm mb-1">Username</label>
+                  <input
+                    type="text"
+                    value={editForm.username}
+                    onChange={(e) => setEditForm({...editForm, username: e.target.value})}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani focus:outline-none focus:border-accent-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block font-roboto text-text-secondary text-sm mb-1">Gender</label>
+                  <select
+                    value={editForm.gender}
+                    onChange={(e) => setEditForm({...editForm, gender: e.target.value})}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani focus:outline-none focus:border-accent-primary"
+                  >
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-roboto text-text-secondary text-sm mb-1">Timezone Offset (UTC)</label>
+                  <select
+                    value={editForm.timezone_offset}
+                    onChange={(e) => setEditForm({...editForm, timezone_offset: parseInt(e.target.value)})}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani focus:outline-none focus:border-accent-primary"
+                  >
+                    {Array.from({length: 25}, (_, i) => i - 12).map(offset => (
+                      <option key={offset} value={offset}>
+                        UTC{offset >= 0 ? '+' : ''}{offset}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center space-x-3 mb-2">
+                  <h2 className="font-russo text-2xl text-white">{user.username}</h2>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-3 py-1 bg-accent-primary text-white rounded-lg text-sm font-rajdhani font-bold hover:bg-opacity-80 transition-colors"
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+                <p className="font-roboto text-text-secondary mb-1">{user.email}</p>
+              </>
+            )}
             <div className="flex items-center space-x-4 mb-2">
               <span className={`px-3 py-1 rounded-full text-xs font-rajdhani font-bold ${
                 user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' 
