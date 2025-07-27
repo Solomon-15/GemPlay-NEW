@@ -17,13 +17,15 @@ BASE_URL = "https://013b202f-b4dd-4372-8227-cd16e931e450.preview.emergentagent.c
 
 def generate_test_email():
     """Generate unique test email"""
-    timestamp = int(time.time())
-    return f"testuser_{timestamp}@test.com"
+    timestamp = int(time.time() * 1000)  # Use milliseconds for more uniqueness
+    random_suffix = random.randint(1000, 9999)
+    return f"testuser_{timestamp}_{random_suffix}@test.com"
 
 def generate_test_username():
     """Generate unique test username"""
-    timestamp = int(time.time())
-    return f"testuser_{timestamp}"
+    timestamp = int(time.time() * 1000)  # Use milliseconds for more uniqueness
+    random_suffix = random.randint(1000, 9999)
+    return f"testuser_{timestamp}_{random_suffix}"
 
 def make_request(method: str, endpoint: str, data: Dict = None, headers: Dict = None, params: Dict = None) -> Dict:
     """Make HTTP request with error handling"""
