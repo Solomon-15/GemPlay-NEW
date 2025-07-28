@@ -5542,6 +5542,33 @@ async def join_game(
                 detail="Game is no longer available - another player may have joined it"
             )
         
+        # SUCCESS: Game joined successfully!
+        # Send notification to game creator that their bet was accepted
+        try:
+            opponent_name = await get_user_name_for_notification(current_user.id)
+            
+            # Create notification payload
+            payload = NotificationPayload(
+                game_id=game_id,
+                opponent_name=opponent_name,
+                amount=game_obj.bet_amount,
+                action_url=f"/games/{game_id}"
+            )
+            
+            # Send bet accepted notification to creator
+            await create_notification(
+                user_id=game_obj.creator_id,
+                notification_type=NotificationTypeEnum.BET_ACCEPTED,
+                payload=payload,
+                priority=NotificationPriorityEnum.INFO
+            )
+            
+            logger.info(f"📬 Sent bet accepted notification to creator {game_obj.creator_id}")
+            
+        except Exception as e:
+            logger.error(f"Error sending bet accepted notification: {e}")
+            # Don't fail the join process if notification fails
+        
         # Мгновенное завершение игры после присоединения второго игрока
         logger.info(f"Completing game {game_id} immediately after join")
         
