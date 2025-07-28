@@ -4177,16 +4177,28 @@ async def gift_gems(
     )
     await db.profit_entries.insert_one(profit_entry.dict())
     
-    # Create notification for recipient
-    notification = {
-        "user_id": recipient["id"],
-        "type": "GIFT_RECEIVED",
-        "title": "Gift Received!",
-        "message": f"You received a gift from {current_user.username} — {quantity} {gem_type} gems worth ${gem_value:.2f}.",
-        "read": False,
-        "created_at": datetime.utcnow()
-    }
-    await db.notifications.insert_one(notification)
+    # Create new notification for recipient using the notification system
+    try:
+        sender_name = await get_user_name_for_notification(current_user.id)
+        
+        payload = NotificationPayload(
+            sender_name=sender_name,
+            amount=quantity,
+            action_url="/inventory"
+        )
+        
+        await create_notification(
+            user_id=recipient["id"],
+            notification_type=NotificationTypeEnum.GEM_GIFT,
+            payload=payload,
+            priority=NotificationPriorityEnum.INFO
+        )
+        
+        logger.info(f"📬 Sent gem gift notification to {recipient['id']} from {current_user.id}")
+        
+    except Exception as e:
+        logger.error(f"Error sending gem gift notification: {e}")
+        # Don't fail the gift process if notification fails
     
     # Recipient transaction
     recipient_transaction = Transaction(
