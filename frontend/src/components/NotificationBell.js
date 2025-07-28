@@ -183,45 +183,6 @@ const NotificationBell = ({ isCollapsed }) => {
           </div>
         </div>
       )}
-                    
-                    return (
-                      <div
-                        key={notification.id}
-                        onClick={() => {
-                          if (!notification.read) {
-                            markAsRead(notification.id);
-                          }
-                        }}
-                        className={`px-4 py-3 border-b border-border-primary last:border-b-0 hover:bg-surface-sidebar cursor-pointer transition-colors ${
-                          !notification.read ? 'bg-accent-primary bg-opacity-5' : ''
-                        }`}
-                      >
-                        <div className="flex items-start space-x-3">
-                          {/* Icon */}
-                          <div className={`text-lg ${color} flex-shrink-0 mt-0.5`}>
-                            {icon}
-                          </div>
-                          
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <h4 className={`text-sm font-medium ${
-                                !notification.read ? 'text-white' : 'text-text-secondary'
-                              }`}>
-                                {notification.title}
-                              </h4>
-                              {!notification.read && (
-                                <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
-                              )}
-                            </div>
-                            
-                            <p className={`text-xs ${
-                              !notification.read ? 'text-text-secondary' : 'text-gray-500'
-                            } leading-relaxed mb-1`}>
-                              {notification.message}
-                            </p>
-                            
-                            <div className="text-xs text-gray-500">
     </div>
   );
 };
