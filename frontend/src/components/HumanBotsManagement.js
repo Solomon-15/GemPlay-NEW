@@ -1067,8 +1067,62 @@ const HumanBotsManagement = () => {
                 </div>
               </div>
 
+              {/* Enhanced Pagination */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 mb-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <span className="text-white font-roboto text-sm">
+                      Показано {humanBots.length} из {stats.total_bots || 0} ботов
+                    </span>
+                    {cache.timestamp && (
+                      <span className="text-text-secondary text-xs">
+                        Последнее обновление: {new Date(cache.timestamp).toLocaleTimeString('ru-RU')}
+                      </span>
+                    )}
+                    {(loading || loadingPriority) && (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-primary"></div>
+                        <span className="text-text-secondary text-sm">
+                          {loadingPriority ? 'Загрузка приоритетных данных...' : 'Загрузка...'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    {/* Pagination buttons */}
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage <= 1 || loading}
+                      className="px-3 py-1 bg-surface-sidebar text-white text-sm rounded border border-border-primary hover:bg-surface-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← Назад
+                    </button>
+                    
+                    <span className="text-white text-sm">
+                      Страница {currentPage} из {totalPages}
+                    </span>
+                    
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage >= totalPages || loading}
+                      className="px-3 py-1 bg-surface-sidebar text-white text-sm rounded border border-border-primary hover:bg-surface-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Вперед →
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Human Bots List */}
               <HumanBotsList 
+                humanBots={humanBots}
+                loading={loading || loadingPriority}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                priorityFields={priorityFields}
                 onEditBot={(bot) => {
                   setEditingBot(bot);
                   setCreateFormData({
@@ -1092,6 +1146,10 @@ const HumanBotsManagement = () => {
                   setShowCreateForm(true);
                 }}
                 onCreateBot={() => setShowCreateForm(true)}
+                onRefresh={() => {
+                  fetchHumanBots(false);
+                  fetchStats();
+                }}
               />
             </div>
           )}
