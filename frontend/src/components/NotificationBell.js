@@ -27,18 +27,29 @@ const NotificationBell = ({ isCollapsed }) => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
-      // Position dropdown so its left-top corner touches the bell
-      // Use fixed positioning relative to viewport to prevent scroll issues
-      const position = {
-        // Top edge of dropdown should align with bottom edge of bell (fixed to viewport)
-        top: bellRect.bottom + 2, // 2px gap for perfect visual connection
-        // Left edge of dropdown should align with left edge of bell (fixed to viewport)
-        left: bellRect.left,
-        maxHeight: viewportHeight - bellRect.bottom - 20, // Leave margin from bottom
-        maxWidth: Math.min(320, viewportWidth - bellRect.left - 20) // Don't exceed viewport
-      };
+      // Мобильная адаптация
+      const isMobile = viewportWidth <= 768;
       
-      setDropdownPosition(position);
+      if (isMobile) {
+        // В мобильной версии окно занимает чуть больше половины высоты экрана
+        const position = {
+          top: viewportHeight * 0.35, // Начинается с 35% высоты экрана
+          left: 20, // Отступ от краев
+          right: 20,
+          maxHeight: viewportHeight * 0.6, // Занимает 60% высоты экрана
+          width: viewportWidth - 40 // Полная ширина минус отступы
+        };
+        setDropdownPosition(position);
+      } else {
+        // Десктопная версия - как было
+        const position = {
+          top: bellRect.bottom + 2,
+          left: bellRect.left,
+          maxHeight: viewportHeight - bellRect.bottom - 20,
+          maxWidth: Math.min(320, viewportWidth - bellRect.left - 20)
+        };
+        setDropdownPosition(position);
+      }
     }
   }, [isOpen]);
 
