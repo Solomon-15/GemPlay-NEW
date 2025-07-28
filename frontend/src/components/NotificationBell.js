@@ -258,7 +258,7 @@ const NotificationBell = ({ isCollapsed }) => {
                       }}
                       className="text-xs text-accent-primary hover:text-accent-primary-dark transition-colors whitespace-nowrap"
                     >
-                      Все прочитано
+                      Mark all as read
                     </button>
                   )}
                   <button
