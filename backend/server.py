@@ -20816,7 +20816,7 @@ async def admin_broadcast_notification(
             target_users = request.target_users
         else:
             # Broadcast to all active users
-            users_cursor = db.users.find({"is_active": True}, {"id": 1})
+            users_cursor = db.users.find({"status": "ACTIVE"}, {"id": 1})
             target_users = [user["id"] async for user in users_cursor]
         
         if not target_users:
