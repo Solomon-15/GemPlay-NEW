@@ -2621,7 +2621,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Russian Review Human-Bot Admin Panel Fixes Testing"
+    - "Human-Bot Auto-Completion Testing"
+    - "Human-Bot Active Bets Endpoint Testing" 
+    - "Human-Bot Games Filter Endpoint Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
