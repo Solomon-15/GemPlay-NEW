@@ -111,33 +111,33 @@ const NotificationsPage = () => {
           <div className="flex flex-wrap items-center gap-4">
             {/* Read status filter */}
             <div className="flex items-center space-x-2">
-              <label className="text-sm text-text-secondary">Статус:</label>
+              <label className="text-sm text-text-secondary">Status:</label>
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 className="px-3 py-1 bg-surface-sidebar border border-border-primary rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary"
               >
-                <option value="all">Все</option>
-                <option value="unread">Непрочитанные</option>
-                <option value="read">Прочитанные</option>
+                <option value="all">All</option>
+                <option value="unread">Unread</option>
+                <option value="read">Read</option>
               </select>
             </div>
 
             {/* Type filter */}
             <div className="flex items-center space-x-2">
-              <label className="text-sm text-text-secondary">Тип:</label>
+              <label className="text-sm text-text-secondary">Type:</label>
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="px-3 py-1 bg-surface-sidebar border border-border-primary rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary"
               >
-                <option value="all">Все типы</option>
-                <option value="bet_accepted">Принятие ставок</option>
-                <option value="match_result">Результаты матчей</option>
-                <option value="commission_freeze">Заморозка комиссии</option>
-                <option value="gem_gift">Подарки гемов</option>
-                <option value="system_message">Системные сообщения</option>
-                <option value="admin_notification">Админ-уведомления</option>
+                <option value="all">All types</option>
+                <option value="bet_accepted">Bet Accepted</option>
+                <option value="match_result">Match Results</option>
+                <option value="commission_freeze">Commission Freeze</option>
+                <option value="gem_gift">Gem Gifts</option>
+                <option value="system_message">System Messages</option>
+                <option value="admin_notification">Admin Notifications</option>
               </select>
             </div>
           </div>
