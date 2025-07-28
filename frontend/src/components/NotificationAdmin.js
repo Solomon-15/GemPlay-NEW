@@ -180,6 +180,78 @@ const NotificationAdmin = ({ user }) => {
     return () => clearTimeout(timeoutId);
   }, [userSearch, searchUsers]);
 
+  // Функции для детальной аналитики
+  const fetchDetailedAnalytics = useCallback(async (page = 1) => {
+    try {
+      setDetailedLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '50'
+      });
+      
+      if (filters.type_filter) params.append('type_filter', filters.type_filter);
+      if (filters.date_from) params.append('date_from', filters.date_from);
+      if (filters.date_to) params.append('date_to', filters.date_to);
+      
+      const response = await axios.get(`${API}/admin/notifications/detailed-analytics?${params}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setDetailedAnalytics(response.data.data);
+        setDetailedPagination(response.data.pagination);
+      }
+    } catch (error) {
+      console.error('Error fetching detailed analytics:', error);
+      showErrorRU('Ошибка загрузки детальной аналитики');
+    } finally {
+      setDetailedLoading(false);
+    }
+  }, [filters, showErrorRU]);
+
+  const handleResendToUnread = async (notificationId) => {
+    try {
+      setResendingId(notificationId);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.post(`${API}/admin/notifications/resend-to-unread`, 
+        { notification_id: notificationId },
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        showSuccessRU(`Повторно отправлено ${response.data.resent_count} пользователям`);
+        fetchDetailedAnalytics(detailedPagination.current_page);
+      }
+    } catch (error) {
+      console.error('Error resending notification:', error);
+      showErrorRU('Ошибка повторной отправки уведомления');
+    } finally {
+      setResendingId(null);
+    }
+  };
+
+  const getReadPercentageColor = (percentage) => {
+    if (percentage >= 80) return 'text-green-400';
+    if (percentage >= 50) return 'text-yellow-400';
+    return 'text-red-400';
+  };
+
+  const getReadPercentageBgColor = (percentage) => {
+    if (percentage >= 80) return 'bg-green-500';
+    if (percentage >= 50) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
+  // Загрузка детальной аналитики при смене фильтров
+  useEffect(() => {
+    if (activeTab === 'detailed') {
+      fetchDetailedAnalytics(1);
+    }
+  }, [activeTab, fetchDetailedAnalytics]);
+
   return (
     <div className="p-6">
       <div className="mb-6">
