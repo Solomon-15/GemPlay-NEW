@@ -20917,41 +20917,38 @@ async def get_detailed_notification_analytics(
         
         detailed_analytics = []
         
+        # Get all active human users once (exclude bots)
+        all_humans_query = {
+            "status": "ACTIVE",
+            "role": {"$in": ["USER", "ADMIN", "SUPER_ADMIN"]},
+            "$or": [
+                {"bot_type": {"$exists": False}},
+                {"bot_type": None}
+            ]
+        }
+        all_humans_cursor = db.users.find(all_humans_query, {"id": 1, "username": 1, "email": 1})
+        all_humans = await all_humans_cursor.to_list(None)
+        all_human_ids = [user["id"] for user in all_humans]
+        humans_map = {user["id"]: user for user in all_humans}
+        
         for notification in notifications:
             notification_id = notification["id"]
             notification_type = notification.get("type", "unknown")
             
-            # Get all users who should have received this notification (exclude bots)
-            # Find all human users (not Human-bots or Regular bots)
-            all_users_query = {
-                "status": "ACTIVE",
-                "role": {"$in": ["USER", "ADMIN", "SUPER_ADMIN"]},
-                "$or": [
-                    {"bot_type": {"$exists": False}},
-                    {"bot_type": None}
-                ]
-            }
-            
-            # If notification was targeted to specific users
+            # Determine target users for this notification
             if notification.get("target_users"):
-                target_user_ids = notification["target_users"]
-                all_users_query = {
-                    "status": "ACTIVE", 
-                    "id": {"$in": target_user_ids},
-                    "$or": [
-                        {"bot_type": {"$exists": False}},
-                        {"bot_type": None}
-                    ]
-                }
+                # Notification was sent to specific users
+                target_user_ids = [uid for uid in notification["target_users"] if uid in humans_map]
+                target_users = [humans_map[uid] for uid in target_user_ids]
+            else:
+                # Notification was sent to all users
+                target_users = all_humans
+                target_user_ids = all_human_ids
             
-            # Get all target users
-            target_users_cursor = db.users.find(all_users_query, {"id": 1, "username": 1, "email": 1})
-            target_users = await target_users_cursor.to_list(None)
-            
-            # Get read status for this notification for all users in one query
+            # Get read status for this notification for target users in one query
             read_notifications_cursor = db.notifications.find({
                 "id": notification_id,
-                "user_id": {"$in": [user["id"] for user in target_users]},
+                "user_id": {"$in": target_user_ids},
                 "read": True
             }, {"user_id": 1, "read_at": 1})
             read_notifications = await read_notifications_cursor.to_list(None)
