@@ -20890,12 +20890,30 @@ async def get_detailed_notification_analytics(
                 date_query["$lte"] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
             query["created_at"] = date_query
         
-        # Get total count for pagination
-        total_count = await db.notifications.count_documents(query)
+        # Get unique notifications with pagination (group by notification id)
+        pipeline = [
+            {"$match": query},
+            {"$group": {
+                "_id": "$id",
+                "notification": {"$first": "$$ROOT"}
+            }},
+            {"$sort": {"notification.created_at": -1}},
+            {"$skip": (page - 1) * limit},
+            {"$limit": limit},
+            {"$replaceRoot": {"newRoot": "$notification"}}
+        ]
         
-        # Get notifications with pagination
-        notifications_cursor = db.notifications.find(query).sort("created_at", -1).skip((page - 1) * limit).limit(limit)
+        notifications_cursor = db.notifications.aggregate(pipeline)
         notifications = await notifications_cursor.to_list(limit)
+        
+        # Get total count of unique notifications
+        count_pipeline = [
+            {"$match": query},
+            {"$group": {"_id": "$id"}},
+            {"$count": "total"}
+        ]
+        count_result = await db.notifications.aggregate(count_pipeline).to_list(1)
+        total_count = count_result[0]["total"] if count_result else 0
         
         detailed_analytics = []
         
