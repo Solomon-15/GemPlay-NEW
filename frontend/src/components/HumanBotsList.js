@@ -230,18 +230,14 @@ const HumanBotsList = ({
         gender: newGender
       });
       
-      // Update local state
-      setHumanBots(prevBots => 
-        prevBots.map(bot => 
-          bot.id === botId ? { ...bot, gender: newGender } : bot
-        )
-      );
-      
       // Trigger global lobby refresh to update avatars in real-time
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       
       addNotification(`Пол Human-бота изменен на ${newGender === 'male' ? 'мужской' : 'женский'}`, 'success');
+      
+      // Use parent refresh function instead of local state update
+      if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Ошибка изменения пола Human-бота:', error);
       addNotification('Ошибка изменения пола Human-бота', 'error');
