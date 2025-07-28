@@ -16,12 +16,9 @@ const NotificationBell = ({ isCollapsed }) => {
     markAllAsRead
   } = useNotifications();
 
-  const { position, calculatePosition } = useDropdownPosition(bellRef);
-
   // Handle bell click
   const handleBellClick = () => {
     if (!isOpen) {
-      calculatePosition();
       fetchNotifications();
     }
     setIsOpen(!isOpen);
@@ -35,16 +32,54 @@ const NotificationBell = ({ isCollapsed }) => {
     }
   };
 
+  // Handle notification click
+  const handleNotificationClick = async (notification) => {
+    // Mark as read if not already read
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+    }
+    
+    // Navigate to action URL if exists
+    if (notification.payload?.action_url) {
+      window.location.href = notification.payload.action_url;
+    }
+    
+    setIsOpen(false);
+  };
+
+  // Format time ago helper
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'только что';
+    if (diffInMinutes < 60) return `${diffInMinutes} мин назад`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} ч назад`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} д назад`;
+  };
+
+  // Get priority color
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'error': return 'border-l-red-500';
+      case 'warning': return 'border-l-yellow-500';
+      default: return 'border-l-accent-primary';
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      window.addEventListener('resize', calculatePosition);
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
-        window.removeEventListener('resize', calculatePosition);
       };
     }
-  }, [isOpen, calculatePosition]);
+  }, [isOpen]);
 
   return (
     <div className="relative">
