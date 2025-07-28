@@ -21045,12 +21045,6 @@ async def get_detailed_notification_analytics(
         )
 
 
-from pydantic import BaseModel
-from typing import Optional
-
-class ResendNotificationRequest(BaseModel):
-    notification_id: str
-
 @api_router.post("/admin/notifications/resend-to-unread")
 async def resend_notification_to_unread(
     request: ResendNotificationRequest,
