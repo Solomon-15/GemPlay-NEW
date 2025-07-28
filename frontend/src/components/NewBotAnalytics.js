@@ -27,10 +27,25 @@ const NewBotAnalytics = () => {
   // Получение списка обычных ботов
   const fetchRegularBots = async () => {
     try {
+      // Проверяем наличие токена авторизации
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('No authorization token found');
+        return;
+      }
+      
       const response = await get('/admin/bots');
       setRegularBotsList(response.bots || []);
     } catch (error) {
       console.error('Error fetching regular bots:', error);
+      
+      // Handle authorization errors
+      if (error.response?.status === 401) {
+        console.warn('Unauthorized access to regular bots list');
+        localStorage.removeItem('token');
+      } else if (error.response?.status === 403) {
+        console.warn('Insufficient permissions for regular bots list');
+      }
     }
   };
 
