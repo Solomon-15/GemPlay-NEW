@@ -80,11 +80,71 @@ const HumanBotsManagement = () => {
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
 
-  // Helper function to execute API operations
-  const executeOperation = async (endpoint, method = 'GET', data = null) => {
+  // Generate cache key based on current filters and pagination
+  const generateCacheKey = useCallback(() => {
+    return JSON.stringify({
+      page: currentPage,
+      limit: pageSize,
+      filters,
+      priorityFields
+    });
+  }, [currentPage, pageSize, filters, priorityFields]);
+
+  // Check if cache is valid
+  const isCacheValid = useCallback((cacheKey) => {
+    if (!cache.data || !cache.timestamp || cache.key !== cacheKey) {
+      return false;
+    }
+    return Date.now() - cache.timestamp < CACHE_DURATION;
+  }, [cache]);
+
+  // Update cache
+  const updateCache = useCallback((data, cacheKey) => {
+    setCache({
+      data,
+      timestamp: Date.now(),
+      key: cacheKey
+    });
+  }, []);
+
+  // Debounced search handler
+  const handleSearchChange = useCallback((value) => {
+    setSearchTerm(value);
+    
+    // Clear existing timeout
+    if (searchDebounceTimeout) {
+      clearTimeout(searchDebounceTimeout);
+    }
+    
+    // Set new timeout for 500ms debounce
+    const timeout = setTimeout(() => {
+      setFilters(prev => ({
+        ...prev,
+        search: value
+      }));
+      setCurrentPage(1); // Reset to first page on search
+    }, 500);
+    
+    setSearchDebounceTimeout(timeout);
+  }, [searchDebounceTimeout]);
+
+  // Enhanced API operation with caching
+  const executeOperation = async (endpoint, method = 'GET', data = null, useCache = false) => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Check cache for GET requests
+      if (method === 'GET' && useCache) {
+        const cacheKey = generateCacheKey();
+        if (isCacheValid(cacheKey)) {
+          console.log('Using cached data for Human-bots');
+          setHumanBots(cache.data.bots || []);
+          setTotalPages(cache.data.pagination?.total_pages || 1);
+          setLoading(false);
+          return cache.data;
+        }
+      }
       
       const token = localStorage.getItem('token');
       const config = {
@@ -105,6 +165,13 @@ const HumanBotsManagement = () => {
       }
       
       const response = await axios(config);
+      
+      // Update cache for GET requests
+      if (method === 'GET' && useCache) {
+        const cacheKey = generateCacheKey();
+        updateCache(response.data, cacheKey);
+      }
+      
       return response.data;
     } catch (err) {
       let errorMessage = 'Ошибка API запроса';
