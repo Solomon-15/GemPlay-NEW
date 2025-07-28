@@ -60,10 +60,20 @@ const UserManagement = ({ user: currentUser }) => {
   const [userGems, setUserGems] = useState([]);
   const [userBets, setUserBets] = useState([]);
   const [userStats, setUserStats] = useState({});
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Debounce search term to prevent cursor loss
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.currentPage, searchTerm, statusFilter]);
+  }, [pagination.currentPage, debouncedSearchTerm, statusFilter]);
 
   // Живой счетчик для обновления времени каждую секунду
   useEffect(() => {
