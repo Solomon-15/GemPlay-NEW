@@ -899,8 +899,20 @@ const NotificationAdmin = ({ user }) => {
           <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-rajdhani text-xl font-bold text-white">Детальная аналитика отправок</h2>
-              <div className="text-text-secondary text-sm">
-                Показано {detailedAnalytics.length} из {detailedPagination.total_items}
+              <div className="flex items-center space-x-4">
+                {/* Ручное удаление выбранных */}
+                {selectedNotificationsForDeletion.length > 0 && (
+                  <button
+                    onClick={handleDeleteByIds}
+                    disabled={deleteLoading}
+                    className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded transition-all duration-200 disabled:opacity-50"
+                  >
+                    🗑️ Удалить выбранные ({selectedNotificationsForDeletion.length})
+                  </button>
+                )}
+                <div className="text-text-secondary text-sm">
+                  Показано {detailedAnalytics.length} из {detailedPagination.total_items}
+                </div>
               </div>
             </div>
 
@@ -914,10 +926,18 @@ const NotificationAdmin = ({ user }) => {
                   <div key={item.notification_id} className="bg-surface-sidebar rounded-lg p-4 border border-gray-700">
                     {/* Компактный вид уведомления */}
                     <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <span className="text-2xl">
-                            {item.type === 'admin_notification' ? '🛡️' : 
+                      <div className="flex items-center space-x-3">
+                        {/* Чекбокс для выбора */}
+                        <input
+                          type="checkbox"
+                          checked={selectedNotificationsForDeletion.includes(item.notification_id)}
+                          onChange={() => toggleNotificationSelection(item.notification_id)}
+                          className="text-accent-primary focus:ring-accent-primary"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <span className="text-2xl">
+                              {item.type === 'admin_notification' ? '🛡️' : 
                              item.type === 'bet_accepted' ? '🎯' :
                              item.type === 'match_result' ? '🏆' :
                              item.type === 'gem_gift' ? '💎' : '📬'}
