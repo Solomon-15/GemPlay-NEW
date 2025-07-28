@@ -29,9 +29,16 @@ const NotificationAdmin = ({ user }) => {
   const [foundUsers, setFoundUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
 
+  // Состояние для удаления уведомлений
+  const [notificationStats, setNotificationStats] = useState([]);
+  const [selectedTypesForDeletion, setSelectedTypesForDeletion] = useState([]);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   // Состояние для детальной аналитики отправок
   const [detailedAnalytics, setDetailedAnalytics] = useState([]);
   const [detailedLoading, setDetailedLoading] = useState(false);
+  const [selectedNotificationsForDeletion, setSelectedNotificationsForDeletion] = useState([]);
   const [detailedPagination, setDetailedPagination] = useState({
     current_page: 1,
     per_page: 50,
