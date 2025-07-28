@@ -222,31 +222,6 @@ const NotificationBell = ({ isCollapsed }) => {
                             </p>
                             
                             <div className="text-xs text-gray-500">
-                              {timeAgo(notification.created_at)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            {notifications.length > 0 && (
-              <div className="px-4 py-2 border-t border-border-primary bg-surface-sidebar">
-                <button 
-                  onClick={() => setIsOpen(false)}
-                  className="w-full text-xs text-text-secondary hover:text-white transition-colors text-center"
-                >
-                  Close notifications
-                </button>
-              </div>
-            )}
-          </div>
-        </>
-      )}
     </div>
   );
 };
