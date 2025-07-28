@@ -693,7 +693,7 @@ const NotificationAdmin = ({ user }) => {
                         {/* Кнопка повторной отправки */}
                         {item.unread_count > 0 && (
                           <button
-                            onClick={() => handleResendToUnread(item.notification_id)}
+                            onClick={() => handleResendClick(item.notification_id)}
                             disabled={resendingId === item.notification_id}
                             className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold rounded transition-all duration-200 disabled:opacity-50"
                           >
