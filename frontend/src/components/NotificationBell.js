@@ -31,13 +31,12 @@ const NotificationBell = ({ isCollapsed }) => {
       const isMobile = viewportWidth <= 768;
       
       if (isMobile) {
-        // В мобильной версии окно занимает чуть больше половины высоты экрана
+        // В мобильной версии окно раскрывается от иконки колокольчика
         const position = {
-          top: viewportHeight * 0.35, // Начинается с 35% высоты экрана
-          left: 20, // Отступ от краев
-          right: 20,
-          maxHeight: viewportHeight * 0.6, // Занимает 60% высоты экрана
-          width: viewportWidth - 40 // Полная ширина минус отступы
+          top: bellRect.bottom + 2, // Прямо под колокольчиком с небольшим отступом
+          left: Math.max(10, bellRect.left - 10), // Левый край соприкасается с иконкой, минимум 10px от края
+          maxHeight: viewportHeight - bellRect.bottom - 20, // До конца экрана с отступом
+          width: Math.min(300, viewportWidth - 20) // Фиксированная ширина с учетом отступов
         };
         setDropdownPosition(position);
       } else {
