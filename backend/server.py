@@ -18010,6 +18010,7 @@ async def list_human_bots(
             response_bot_dict["correct_profit"] = correct_profit  # STATISTICS (priority)
             response_bots.append(response_bot_dict)
         
+        
         # Calculate pagination
         total_pages = (total_bots + limit - 1) // limit
         
@@ -18023,7 +18024,19 @@ async def list_human_bots(
                 total_items=total_bots,
                 has_next=page < total_pages,
                 has_prev=page > 1
-            )
+            ),
+            # Add metadata for frontend caching and performance
+            metadata={
+                "search_applied": bool(search),
+                "filters_applied": bool(character or is_active is not None or min_bet_range or max_bet_range),
+                "priority_fields_loaded": priority_fields,
+                "sort_applied": f"{sort_by}:{sort_order}",
+                "cache_timestamp": int(time.time()),  # Unix timestamp for cache management
+                "query_performance": {
+                    "total_filtered": total_bots,
+                    "returned": len(response_bots)
+                }
+            }
         )
         
     except Exception as e:
