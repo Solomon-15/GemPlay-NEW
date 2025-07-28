@@ -289,9 +289,8 @@ def test_notification_bot_exclusion_fixes() -> None:
         "target_users": [ADMIN_USER["email"]],  # Send to specific user
         "type": "admin_notification", 
         "priority": "info",
-        "custom_title": "Test Specific User",
-        "custom_message": "Testing specific user notification with individual ID",
-        "custom_emoji": "👤"
+        "title": "Test Specific User",
+        "message": "Testing specific user notification with individual ID"
     }
     
     specific_response, specific_success = make_request(
