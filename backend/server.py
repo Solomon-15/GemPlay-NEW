@@ -19079,19 +19079,11 @@ async def get_human_bot_active_bets(
         total_active_bets = len(active_bets_list)
         total_bet_amount = sum(game.get('bet_amount', 0) for game in active_bets_list)
         
-        # Get win/loss statistics from all completed games where bot participated
-        completed_games_cursor = db.games.find({
-            "$or": [
-                {"creator_id": bot_id},  # Бот является создателем
-                {"opponent_id": bot_id}  # Бот является оппонентом
-            ],
-            "status": "COMPLETED"
-        })
-        completed_games_list = await completed_games_cursor.to_list(None)
-        
-        bot_wins = sum(1 for game in completed_games_list if game.get('winner_id') == bot_id)
-        player_wins = sum(1 for game in completed_games_list if game.get('winner_id') and game.get('winner_id') != bot_id)
-        draws = sum(1 for game in completed_games_list if game.get('winner_id') is None)
+        # Get win/loss statistics using utility function to avoid duplication
+        statistics = await calculate_bot_statistics(bot_id, db)
+        bot_wins = statistics["wins"]
+        player_wins = statistics["losses"]  # losses from bot perspective = wins from player perspective
+        draws = statistics["draws"]
         
         # Format active bets for display
         formatted_bets = []
