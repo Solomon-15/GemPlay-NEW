@@ -41,6 +41,21 @@ const NotificationBell = ({ isCollapsed }) => {
     }
   }, [isOpen]);
 
+  // Force position recalculation when dropdown opens
+  useEffect(() => {
+    if (isOpen) {
+      // Immediate calculation
+      calculateDropdownPosition();
+      
+      // Also calculate after a small delay to ensure DOM is updated
+      const timeoutId = setTimeout(() => {
+        calculateDropdownPosition();
+      }, 10);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [isOpen, calculateDropdownPosition]);
+
   // Update position when bell is clicked, window resizes, or scrolls
   useEffect(() => {
     if (isOpen) {
