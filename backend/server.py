@@ -20854,12 +20854,208 @@ async def get_notification_analytics(
             success=True,
             analytics=analytics
         )
-        
+
     except Exception as e:
         logger.error(f"Error getting notification analytics: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get notification analytics"
+        )
+
+
+@api_router.get("/admin/notifications/detailed-analytics")
+async def get_detailed_notification_analytics(
+    page: int = Query(1, ge=1),
+    limit: int = Query(50, ge=1, le=100),
+    type_filter: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get detailed analytics for each notification with user read status"""
+    try:
+        # Build query filters
+        query = {}
+        
+        # Type filter
+        if type_filter:
+            query["type"] = type_filter
+            
+        # Date filters
+        if date_from or date_to:
+            date_query = {}
+            if date_from:
+                date_query["$gte"] = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+            if date_to:
+                date_query["$lte"] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+            query["created_at"] = date_query
+        
+        # Get total count for pagination
+        total_count = await db.notifications.count_documents(query)
+        
+        # Get notifications with pagination
+        notifications_cursor = db.notifications.find(query).sort("created_at", -1).skip((page - 1) * limit).limit(limit)
+        notifications = await notifications_cursor.to_list(limit)
+        
+        detailed_analytics = []
+        
+        for notification in notifications:
+            notification_id = notification["id"]
+            notification_type = notification.get("type", "unknown")
+            
+            # Get all users who should have received this notification (exclude bots)
+            # Find all human users (not Human-bots or Regular bots)
+            all_users_query = {
+                "status": "ACTIVE",
+                "role": {"$in": ["USER", "ADMIN", "SUPER_ADMIN"]},
+                "$or": [
+                    {"bot_type": {"$exists": False}},
+                    {"bot_type": None}
+                ]
+            }
+            
+            # If notification was targeted to specific users
+            if notification.get("target_users"):
+                target_user_ids = notification["target_users"]
+                all_users_query = {
+                    "status": "ACTIVE", 
+                    "id": {"$in": target_user_ids},
+                    "$or": [
+                        {"bot_type": {"$exists": False}},
+                        {"bot_type": None}
+                    ]
+                }
+            
+            # Get all target users
+            target_users_cursor = db.users.find(all_users_query, {"id": 1, "username": 1, "email": 1})
+            target_users = await target_users_cursor.to_list(None)
+            
+            # Get read status for each user
+            read_users = []
+            unread_users = []
+            
+            for user in target_users:
+                # Check if this user has read this notification
+                user_notification = await db.notifications.find_one({
+                    "id": notification_id,
+                    "user_id": user["id"]
+                })
+                
+                user_info = {
+                    "user_id": user["id"],
+                    "username": user.get("username", "Unknown"),
+                    "email": user.get("email", "unknown@example.com"),
+                    "read_at": user_notification.get("read_at") if user_notification and user_notification.get("read") else None
+                }
+                
+                if user_notification and user_notification.get("read"):
+                    read_users.append(user_info)
+                else:
+                    unread_users.append(user_info)
+            
+            total_recipients = len(target_users)
+            read_count = len(read_users)
+            read_percentage = (read_count / max(total_recipients, 1)) * 100
+            
+            detailed_analytics.append({
+                "notification_id": notification_id,
+                "type": notification_type,
+                "title": notification.get("title", ""),
+                "message": notification.get("message", ""),
+                "created_at": notification.get("created_at"),
+                "total_recipients": total_recipients,
+                "read_count": read_count,
+                "unread_count": total_recipients - read_count,
+                "read_percentage": round(read_percentage, 2),
+                "read_users": read_users,
+                "unread_users": unread_users
+            })
+        
+        return {
+            "success": True,
+            "data": detailed_analytics,
+            "pagination": {
+                "current_page": page,
+                "per_page": limit,
+                "total_items": total_count,
+                "total_pages": (total_count + limit - 1) // limit,
+                "has_next": page * limit < total_count,
+                "has_prev": page > 1
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting detailed notification analytics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get detailed notification analytics"
+        )
+
+
+@api_router.post("/admin/notifications/resend-to-unread")
+async def resend_notification_to_unread(
+    notification_id: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Resend notification to users who haven't read it"""
+    try:
+        # Get original notification
+        original_notification = await db.notifications.find_one({"id": notification_id})
+        if not original_notification:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Notification not found"
+            )
+        
+        # Get all users who haven't read this notification (exclude bots)
+        all_users_query = {
+            "status": "ACTIVE",
+            "role": {"$in": ["USER", "ADMIN", "SUPER_ADMIN"]},
+            "$or": [
+                {"bot_type": {"$exists": False}},
+                {"bot_type": None}
+            ]
+        }
+        
+        target_users_cursor = db.users.find(all_users_query, {"id": 1})
+        all_target_users = await target_users_cursor.to_list(None)
+        
+        # Find users who haven't read the notification
+        unread_user_ids = []
+        for user in all_target_users:
+            user_notification = await db.notifications.find_one({
+                "id": notification_id,
+                "user_id": user["id"],
+                "read": True
+            })
+            if not user_notification:
+                unread_user_ids.append(user["id"])
+        
+        # Create new notifications for unread users
+        resent_count = 0
+        for user_id in unread_user_ids:
+            new_notification_id = await create_notification(
+                user_id=user_id,
+                notification_type=NotificationTypeEnum(original_notification["type"]),
+                priority=NotificationPriorityEnum(original_notification.get("priority", "info")),
+                custom_title=f"[REMINDER] {original_notification.get('title', '')}",
+                custom_message=original_notification.get("message", ""),
+                custom_emoji=original_notification.get("emoji", "🔔")
+            )
+            if new_notification_id:
+                resent_count += 1
+        
+        return {
+            "success": True,
+            "message": f"Notification resent to {resent_count} unread users",
+            "resent_count": resent_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error resending notification: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to resend notification"
         )
 
 
