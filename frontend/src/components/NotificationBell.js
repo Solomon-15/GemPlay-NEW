@@ -245,7 +245,7 @@ const NotificationBell = ({ isCollapsed }) => {
             {/* Header */}
             <div className="sticky top-0 p-3 border-b border-gray-700 bg-surface-card rounded-t-lg z-10">
               <div className="flex items-center justify-between">
-                <h3 className="text-white font-rajdhani font-bold text-lg">Уведомления</h3>
+                <h3 className="text-white font-rajdhani font-bold text-lg">Notifications</h3>
                 <div className="flex items-center space-x-3">
                   {loading && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-primary"></div>
