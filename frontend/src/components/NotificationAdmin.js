@@ -495,6 +495,232 @@ const NotificationAdmin = ({ user }) => {
         </div>
       )}
 
+      {/* Таб детальной аналитики отправок */}
+      {activeTab === 'detailed' && (
+        <div className="space-y-6">
+          {/* Фильтры */}
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+            <h2 className="font-rajdhani text-xl font-bold text-white mb-4">Фильтры аналитики</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Тип уведомления */}
+              <div>
+                <label className="block text-text-secondary text-sm font-medium mb-2">
+                  Тип уведомления
+                </label>
+                <select
+                  value={filters.type_filter}
+                  onChange={(e) => setFilters({ ...filters, type_filter: e.target.value })}
+                  className="w-full bg-surface-sidebar border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                >
+                  <option value="">Все типы</option>
+                  <option value="admin_notification">Админские</option>
+                  <option value="bet_accepted">Ставка принята</option>
+                  <option value="match_result">Результат матча</option>
+                  <option value="gem_gift">Подарок гемов</option>
+                  <option value="system_message">Системные</option>
+                </select>
+              </div>
+
+              {/* Дата от */}
+              <div>
+                <label className="block text-text-secondary text-sm font-medium mb-2">
+                  Дата от
+                </label>
+                <input
+                  type="date"
+                  value={filters.date_from}
+                  onChange={(e) => setFilters({ ...filters, date_from: e.target.value })}
+                  className="w-full bg-surface-sidebar border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+
+              {/* Дата до */}
+              <div>
+                <label className="block text-text-secondary text-sm font-medium mb-2">
+                  Дата до
+                </label>
+                <input
+                  type="date"
+                  value={filters.date_to}
+                  onChange={(e) => setFilters({ ...filters, date_to: e.target.value })}
+                  className="w-full bg-surface-sidebar border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-accent-primary"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <button
+                onClick={() => fetchDetailedAnalytics(1)}
+                className="px-4 py-2 bg-accent-primary hover:bg-accent-primary-dark text-white font-rajdhani font-bold rounded-lg transition-all duration-200"
+              >
+                🔍 Применить фильтры
+              </button>
+            </div>
+          </div>
+
+          {/* Список уведомлений с аналитикой */}
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-rajdhani text-xl font-bold text-white">Детальная аналитика отправок</h2>
+              <div className="text-text-secondary text-sm">
+                Показано {detailedAnalytics.length} из {detailedPagination.total_items}
+              </div>
+            </div>
+
+            {detailedLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {detailedAnalytics.map((item) => (
+                  <div key={item.notification_id} className="bg-surface-sidebar rounded-lg p-4 border border-gray-700">
+                    {/* Компактный вид уведомления */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <span className="text-2xl">
+                            {item.type === 'admin_notification' ? '🛡️' : 
+                             item.type === 'bet_accepted' ? '🎯' :
+                             item.type === 'match_result' ? '🏆' :
+                             item.type === 'gem_gift' ? '💎' : '📬'}
+                          </span>
+                          <div>
+                            <h3 className="text-white font-bold text-lg">{item.title}</h3>
+                            <p className="text-text-secondary text-sm">
+                              {new Date(item.created_at).toLocaleString('ru-RU')} • {item.type}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-gray-300 text-sm mb-3 line-clamp-2">{item.message}</p>
+                        
+                        {/* Прогресс-бар */}
+                        <div className="flex items-center space-x-4">
+                          <div className="flex-1">
+                            <div className="flex justify-between text-xs mb-1">
+                              <span className="text-gray-400">Прочитано</span>
+                              <span className={`font-bold ${getReadPercentageColor(item.read_percentage)}`}>
+                                {item.read_count}/{item.total_recipients} ({item.read_percentage}%)
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-700 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full transition-all duration-300 ${getReadPercentageBgColor(item.read_percentage)}`}
+                                style={{ width: `${item.read_percentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2 ml-4">
+                        {/* Кнопка повторной отправки */}
+                        {item.unread_count > 0 && (
+                          <button
+                            onClick={() => handleResendToUnread(item.notification_id)}
+                            disabled={resendingId === item.notification_id}
+                            className="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold rounded transition-all duration-200 disabled:opacity-50"
+                          >
+                            {resendingId === item.notification_id ? '⏳' : '🔄'} Повторить
+                          </button>
+                        )}
+                        
+                        {/* Кнопка показать детали */}
+                        <button
+                          onClick={() => setExpandedNotification(
+                            expandedNotification === item.notification_id ? null : item.notification_id
+                          )}
+                          className="px-3 py-1 bg-accent-primary hover:bg-accent-primary-dark text-white text-xs font-bold rounded transition-all duration-200"
+                        >
+                          {expandedNotification === item.notification_id ? '▲ Скрыть' : '▼ Детали'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Развернутые детали */}
+                    {expandedNotification === item.notification_id && (
+                      <div className="mt-4 pt-4 border-t border-gray-600">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* Прочитавшие пользователи */}
+                          <div>
+                            <h4 className="text-green-400 font-bold mb-3">
+                              ✅ Прочитали ({item.read_count})
+                            </h4>
+                            <div className="max-h-64 overflow-y-auto space-y-2">
+                              {item.read_users.map((user) => (
+                                <div key={user.user_id} className="bg-green-900 bg-opacity-20 rounded p-2">
+                                  <div className="text-white text-sm font-medium">{user.username}</div>
+                                  <div className="text-gray-400 text-xs">{user.email}</div>
+                                  {user.read_at && (
+                                    <div className="text-green-400 text-xs">
+                                      Прочитано: {new Date(user.read_at).toLocaleString('ru-RU')}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Не прочитавшие пользователи */}
+                          <div>
+                            <h4 className="text-red-400 font-bold mb-3">
+                              ❌ Не прочитали ({item.unread_count})
+                            </h4>
+                            <div className="max-h-64 overflow-y-auto space-y-2">
+                              {item.unread_users.map((user) => (
+                                <div key={user.user_id} className="bg-red-900 bg-opacity-20 rounded p-2">
+                                  <div className="text-white text-sm font-medium">{user.username}</div>
+                                  <div className="text-gray-400 text-xs">{user.email}</div>
+                                  <div className="text-red-400 text-xs">Не прочитано</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {detailedAnalytics.length === 0 && (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3 opacity-50">📭</div>
+                    <div className="text-gray-400">Нет данных для отображения</div>
+                    <div className="text-gray-500 text-sm mt-1">Попробуйте изменить фильтры</div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Пагинация */}
+            {detailedPagination.total_pages > 1 && (
+              <div className="flex justify-center items-center space-x-4 mt-6 pt-6 border-t border-gray-700">
+                <button
+                  onClick={() => fetchDetailedAnalytics(detailedPagination.current_page - 1)}
+                  disabled={!detailedPagination.has_prev}
+                  className="px-4 py-2 bg-surface-sidebar border border-gray-600 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-card transition-colors"
+                >
+                  ← Предыдущая
+                </button>
+                
+                <span className="text-text-secondary">
+                  Страница {detailedPagination.current_page} из {detailedPagination.total_pages}
+                </span>
+                
+                <button
+                  onClick={() => fetchDetailedAnalytics(detailedPagination.current_page + 1)}
+                  disabled={!detailedPagination.has_next}
+                  className="px-4 py-2 bg-surface-sidebar border border-gray-600 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-card transition-colors"
+                >
+                  Следующая →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Таб аналитики */}
       {activeTab === 'analytics' && (
         <div className="space-y-6">
