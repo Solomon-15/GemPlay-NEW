@@ -1150,8 +1150,10 @@ const HumanBotsManagement = () => {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 pageSize={pageSize}
-                onPageChange={setCurrentPage}
                 priorityFields={priorityFields}
+                stats={stats} // Pass stats to child component
+                globalSettings={globalSettings} // Pass global settings to child component
+                onPageChange={setCurrentPage}
                 onEditBot={(bot) => {
                   setEditingBot(bot);
                   setCreateFormData({
@@ -1178,6 +1180,7 @@ const HumanBotsManagement = () => {
                 onRefresh={() => {
                   fetchHumanBots(false);
                   fetchStats();
+                  fetchGlobalSettings(); // Add global settings refresh
                 }}
               />
             </div>
