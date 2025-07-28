@@ -58,34 +58,14 @@ const HumanBotsList = ({
   const [commissionPage, setCommissionPage] = useState(1);
 
   useEffect(() => {
-    fetchStats();
-    fetchGlobalSettings();
+    // Remove duplicate fetch calls - parent component handles this
+    // fetchStats();
+    // fetchGlobalSettings();
   }, []);
 
-  // Remove local fetchHumanBots function since data comes from props
-  // const fetchHumanBots = async () => { ... }
-
-  const fetchStats = async () => {
-    try {
-      const response = await executeOperation('/admin/human-bots/stats', 'GET');
-      if (response.success !== false) {
-        setStats(response);
-      }
-    } catch (error) {
-      console.error('Ошибка получения статистики:', error);
-    }
-  };
-
-  const fetchGlobalSettings = async () => {
-    try {
-      const response = await executeOperation('/admin/human-bots/settings', 'GET');
-      if (response.success !== false) {
-        setGlobalSettings(response.settings || {});
-      }
-    } catch (error) {
-      console.error('Ошибка получения глобальных настроек:', error);
-    }
-  };
+  // Remove duplicate functions - parent component provides the data
+  // const fetchStats = async () => { ... }
+  // const fetchGlobalSettings = async () => { ... }
 
   // Helper function to execute API operations
   const executeOperation = async (endpoint, method = 'GET', data = null) => {
