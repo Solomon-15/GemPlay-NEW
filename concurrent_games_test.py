@@ -14,7 +14,7 @@ import string
 import hashlib
 
 # Configuration
-BASE_URL = "https://c3094430-a67a-4704-b959-4fd10b62d970.preview.emergentagent.com/api"
+BASE_URL = "https://baf8f4bf-8f93-48f1-becd-06acae851bae.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
