@@ -331,7 +331,7 @@ const NotificationBell = ({ isCollapsed }) => {
                 }}
                 className="text-accent-primary text-sm hover:text-accent-primary-dark transition-colors font-medium"
               >
-                Все уведомления →
+                All notifications →
               </button>
             </div>
           </div>
