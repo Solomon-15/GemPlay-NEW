@@ -18,6 +18,7 @@ const NotificationBell = ({ isCollapsed }) => {
 
   // Enhanced positioning calculation for perfect alignment
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const [expandedNotificationId, setExpandedNotificationId] = useState(null);
 
   // Calculate precise dropdown position with fixed positioning
   const calculateDropdownPosition = useCallback(() => {
