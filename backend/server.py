@@ -20771,6 +20771,7 @@ async def admin_broadcast_notification(
         
         # Send notification to each user
         sent_count = 0
+        notification_ids = []
         for user_id in target_users:
             notification_id = await create_notification(
                 user_id=user_id,
@@ -20785,13 +20786,20 @@ async def admin_broadcast_notification(
             
             if notification_id:
                 sent_count += 1
+                notification_ids.append(notification_id)
         
         logger.info(f"Admin {current_admin.email} broadcast notification to {sent_count} users")
+        
+        # For broadcast to all, return first notification_id for reference
+        # For specific users, all notifications share the same content but have unique IDs
+        reference_notification_id = notification_ids[0] if notification_ids else None
         
         return {
             "success": True,
             "message": f"Notification sent to {sent_count} users",
-            "sent_count": sent_count
+            "sent_count": sent_count,
+            "notification_id": reference_notification_id,
+            "total_notifications": len(notification_ids)
         }
         
     except Exception as e:
