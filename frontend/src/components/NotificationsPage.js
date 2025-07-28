@@ -20,15 +20,19 @@ const NotificationsPage = () => {
     fetchNotifications(page, 20);
   }, [page, fetchNotifications]);
 
-  const handleNotificationClick = async (notification) => {
+  const handleNotificationClick = async (notification, event) => {
+    // Предотвращаем стандартное поведение события
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
     
-    // Navigate to action URL if exists
-    if (notification.payload?.action_url) {
-      window.location.href = notification.payload.action_url;
-    }
+    // НЕ ПЕРЕХОДИМ ПО ССЫЛКАМ АВТОМАТИЧЕСКИ - только помечаем как прочитанное
+    // Если нужна навигация, пользователь может кликнуть на специальную кнопку
   };
 
   const formatTimeAgo = (dateString) => {
