@@ -105,39 +105,29 @@ const NotificationBell = ({ isCollapsed }) => {
 
       {/* Notifications Dropdown */}
       {isOpen && (
-        <>
-          {/* Enhanced Backdrop */}
-          <div 
-            className="fixed inset-0 z-[9998]" 
-            onClick={() => setIsOpen(false)}
-          />
-          
-          {/* Dropdown Panel */}
-          <div 
-            ref={dropdownRef}
-            className="fixed z-[9999] w-80 bg-surface-card border border-border-primary rounded-lg shadow-2xl overflow-hidden"
-            style={{
-              ...position,
-              right: position.right !== 'auto' ? `${bellRef.current?.getBoundingClientRect().right - (bellRef.current?.getBoundingClientRect().width || 0) - 320 + (bellRef.current?.getBoundingClientRect().width || 0)}px` : position.right,
-              left: position.left !== 'auto' ? `${bellRef.current?.getBoundingClientRect().left}px` : position.left,
-              top: position.top !== 'auto' ? `${(bellRef.current?.getBoundingClientRect().bottom || 0) + 8}px` : position.top,
-              bottom: position.bottom !== 'auto' ? `${window.innerHeight - (bellRef.current?.getBoundingClientRect().top || 0) + 8}px` : position.bottom,
-              maxHeight: position.maxHeight,
-              minWidth: '320px',
-              maxWidth: '320px'
-            }}
-          >
-            {/* Header */}
-            <div className="px-4 py-3 border-b border-border-primary flex items-center justify-between bg-surface-card">
-              <h3 className="font-rajdhani font-bold text-white">Notifications</h3>
-              {unreadCount > 0 && (
-                <button
-                  onClick={markAllAsRead}
-                  className="text-xs text-accent-primary hover:text-accent-secondary transition-colors"
-                >
-                  Mark all read
-                </button>
-              )}
+        <div 
+          ref={dropdownRef}
+          className="absolute right-0 mt-2 w-80 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg shadow-lg z-50"
+        >
+          {/* Header */}
+          <div className="p-3 border-b border-gray-700">
+            <div className="flex items-center justify-between">
+              <h3 className="text-white font-rajdhani font-bold text-lg">Уведомления</h3>
+              <div className="flex items-center space-x-2">
+                {loading && (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-primary"></div>
+                )}
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="text-xs text-accent-primary hover:underline"
+                  >
+                    Все прочитано
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
             </div>
 
             {/* Notifications List */}
