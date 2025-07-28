@@ -58,24 +58,12 @@ const HumanBotsList = ({
   const [commissionPage, setCommissionPage] = useState(1);
 
   useEffect(() => {
-    fetchHumanBots();
     fetchStats();
     fetchGlobalSettings();
   }, []);
 
-  const fetchHumanBots = async () => {
-    try {
-      setLoading(true);
-      const response = await executeOperation('/admin/human-bots?limit=100', 'GET');
-      if (response.success !== false) {
-        setHumanBots(response.bots || []);
-      }
-    } catch (error) {
-      console.error('Ошибка получения Human-ботов:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Remove local fetchHumanBots function since data comes from props
+  // const fetchHumanBots = async () => { ... }
 
   const fetchStats = async () => {
     try {
