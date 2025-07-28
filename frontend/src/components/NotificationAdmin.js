@@ -181,6 +181,16 @@ const NotificationAdmin = ({ user }) => {
           📤 Отправить уведомление
         </button>
         <button
+          onClick={() => setActiveTab('detailed')}
+          className={`flex-1 py-3 px-4 font-rajdhani font-bold rounded-lg transition-all duration-200 ${
+            activeTab === 'detailed'
+              ? 'bg-accent-primary text-white shadow-lg'
+              : 'text-text-secondary hover:text-white hover:bg-surface-card'
+          }`}
+        >
+          📋 Аналитика отправок
+        </button>
+        <button
           onClick={() => setActiveTab('analytics')}
           className={`flex-1 py-3 px-4 font-rajdhani font-bold rounded-lg transition-all duration-200 ${
             activeTab === 'analytics'
