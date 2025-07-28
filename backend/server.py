@@ -20750,9 +20750,12 @@ async def admin_broadcast_notification(
             # Broadcast to all active users, excluding all bots (Human-bots and Regular bots)
             users_cursor = db.users.find({
                 "status": "ACTIVE",
-                "$or": [
+                "role": {"$in": ["USER", "ADMIN", "SUPER_ADMIN"]},
+                "$and": [
                     {"bot_type": {"$exists": False}},
-                    {"bot_type": None}
+                    {"bot_type": {"$ne": "HUMAN"}},
+                    {"bot_type": {"$ne": "REGULAR"}},
+                    {"is_bot": {"$ne": True}}
                 ]
             }, {"id": 1})
             target_users = [user["id"] async for user in users_cursor]
