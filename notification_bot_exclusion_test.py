@@ -121,44 +121,21 @@ def test_login(email: str, password: str, user_type: str = "user") -> Optional[s
     print_subheader(f"Testing {user_type.title()} Login")
     
     login_data = {
-        "username": email,  # FastAPI OAuth2PasswordRequestForm uses 'username' field
+        "email": email,
         "password": password
     }
     
-    # Use form data for OAuth2PasswordRequestForm
-    response = requests.post(
-        f"{BASE_URL}/auth/login",
-        data=login_data,  # Use data instead of json for form data
-        headers={"Content-Type": "application/x-www-form-urlencoded"}
-    )
+    response, success = make_request("POST", "/auth/login", data=login_data)
     
-    print(f"Login response status: {response.status_code}")
-    
-    if response.status_code == 200:
-        try:
-            response_data = response.json()
-            print(f"Login response: {json.dumps(response_data, indent=2)}")
-            
-            if "access_token" in response_data:
-                print_success(f"{user_type.title()} login successful")
-                record_test(f"{user_type.title()} Login", True)
-                return response_data["access_token"]
-            else:
-                print_error(f"{user_type.title()} login response missing access_token")
-                record_test(f"{user_type.title()} Login", False, "Missing access_token")
-        except json.JSONDecodeError:
-            print_error(f"{user_type.title()} login response not valid JSON")
-            record_test(f"{user_type.title()} Login", False, "Invalid JSON response")
+    if success and "access_token" in response and "user" in response:
+        print_success(f"{user_type.title()} login successful")
+        print_success(f"User details: {response['user']['username']} ({response['user']['email']})")
+        record_test(f"{user_type.title()} Login", True)
+        return response["access_token"]
     else:
-        print_error(f"{user_type.title()} login failed with status {response.status_code}")
-        try:
-            error_data = response.json()
-            print_error(f"Error details: {error_data}")
-        except:
-            print_error(f"Error text: {response.text}")
-        record_test(f"{user_type.title()} Login", False, f"Status: {response.status_code}")
-    
-    return None
+        print_error(f"{user_type.title()} login failed: {response}")
+        record_test(f"{user_type.title()} Login", False, f"Login failed: {response}")
+        return None
 
 def test_notification_bot_exclusion_fixes() -> None:
     """Test the notification system bot exclusion fixes as requested in the review."""
