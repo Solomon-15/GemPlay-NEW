@@ -21042,15 +21042,21 @@ async def get_detailed_notification_analytics(
         )
 
 
+from pydantic import BaseModel
+from typing import Optional
+
+class ResendNotificationRequest(BaseModel):
+    notification_id: str
+
 @api_router.post("/admin/notifications/resend-to-unread")
 async def resend_notification_to_unread(
-    notification_id: str,
+    request: ResendNotificationRequest,
     current_admin: User = Depends(get_current_admin)
 ):
     """Resend notification to users who haven't read it"""
     try:
         # Get original notification
-        original_notification = await db.notifications.find_one({"id": notification_id})
+        original_notification = await db.notifications.find_one({"id": request.notification_id})
         if not original_notification:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -21074,9 +21080,9 @@ async def resend_notification_to_unread(
         unread_user_ids = []
         for user in all_target_users:
             user_notification = await db.notifications.find_one({
-                "id": notification_id,
+                "id": request.notification_id,
                 "user_id": user["id"],
-                "read": True
+                "is_read": True  # Исправлено: должно быть is_read, а не read
             })
             if not user_notification:
                 unread_user_ids.append(user["id"])
