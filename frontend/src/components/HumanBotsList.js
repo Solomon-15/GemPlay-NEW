@@ -533,7 +533,7 @@ const HumanBotsList = ({
       // First try normal delete
       await executeOperation(`/admin/human-bots/${bot.id}`, 'DELETE');
       addNotification(`Human-бот "${bot.name}" успешно удален из системы`, 'success');
-      await fetchHumanBots();
+      if (onRefresh) onRefresh(); // Use parent refresh function
       await fetchStats();
     } catch (error) {
       console.error('Ошибка удаления бота:', error);
