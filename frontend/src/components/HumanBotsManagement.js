@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { useNotifications } from './NotificationContext';
 import useConfirmation from '../hooks/useConfirmation';
@@ -11,6 +11,10 @@ import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Cache configuration
+const CACHE_DURATION = 60000; // 1 minute in milliseconds
+const AUTO_REFRESH_INTERVAL = 60000; // Auto-refresh every 1 minute
+
 const HumanBotsManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -19,12 +23,41 @@ const HumanBotsManagement = () => {
   const { prompt, inputModal } = useInput();
   const [humanBots, setHumanBots] = useState([]);
   const [stats, setStats] = useState({});
+  
+  // Enhanced pagination with adjustable page size
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(10); // Adjustable page size
+  
+  // Enhanced filters with search
   const [filters, setFilters] = useState({
+    search: '',
     character: '',
-    is_active: null
+    is_active: null,
+    min_bet_range: '',
+    max_bet_range: '',
+    sort_by: 'created_at',
+    sort_order: 'desc'
   });
+  
+  // Search state with debouncing
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchDebounceTimeout, setSearchDebounceTimeout] = useState(null);
+  
+  // Cache state
+  const [cache, setCache] = useState({
+    data: null,
+    timestamp: null,
+    key: null
+  });
+  
+  // Auto-refresh state
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(null);
+  
+  // Performance optimization state
+  const [priorityFields, setPriorityFields] = useState(true);
+  const [loadingPriority, setLoadingPriority] = useState(false);
 
   // Состояние для табов
   const [activeTab, setActiveTab] = useState('bots'); // 'bots' или 'settings'
