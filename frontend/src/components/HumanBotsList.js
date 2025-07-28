@@ -600,7 +600,7 @@ const HumanBotsList = ({
       try {
         const response = await executeOperation(`/admin/human-bots/${bot.id}?force_delete=true`, 'DELETE');
         addNotification(response.message || `Human-бот "${bot.name}" принудительно удален со всеми активными играми`, 'warning');
-        await fetchHumanBots();
+        if (onRefresh) onRefresh(); // Use parent refresh function
         await fetchStats();
       } catch (forceError) {
         console.error('Ошибка принудительного удаления:', forceError);
