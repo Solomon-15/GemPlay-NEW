@@ -250,6 +250,62 @@ const NotificationAdmin = ({ user }) => {
     }
   };
 
+  const handleResendClick = (notificationId) => {
+    setShowResendModal(notificationId);
+    setResendOption('unread');
+  };
+
+  const handleResendConfirm = async () => {
+    if (!showResendModal) return;
+    
+    try {
+      setResendingId(showResendModal);
+      const token = localStorage.getItem('token');
+      
+      let endpoint, payload;
+      if (resendOption === 'unread') {
+        endpoint = `${API}/admin/notifications/resend-to-unread`;
+        payload = { notification_id: showResendModal };
+      } else {
+        // Найти оригинальное уведомление для повторной отправки всем
+        const originalNotification = detailedAnalytics.find(n => n.notification_id === showResendModal);
+        if (!originalNotification) {
+          showErrorRU('Уведомление не найдено');
+          return;
+        }
+        
+        endpoint = `${API}/admin/notifications/broadcast`;
+        payload = {
+          type: originalNotification.type,
+          title: originalNotification.title,
+          message: originalNotification.message,
+          priority: 'info', // Устанавливаем дефолтный приоритет
+          target_users: null // Отправить всем пользователям
+        };
+      }
+      
+      const response = await axios.post(endpoint, payload, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        const count = response.data.resent_count || response.data.sent_count;
+        if (resendOption === 'unread') {
+          showSuccessRU(`Повторно отправлено ${count} непрочитавшим пользователям`);
+        } else {
+          showSuccessRU(`Отправлено ${count} пользователям`);
+        }
+        fetchDetailedAnalytics(detailedPagination.current_page);
+      }
+    } catch (error) {
+      console.error('Error resending notification:', error);
+      showErrorRU('Ошибка повторной отправки уведомления');
+    } finally {
+      setResendingId(null);
+      setShowResendModal(null);
+    }
+  };
+
   const getReadPercentageColor = (percentage) => {
     if (percentage >= 80) return 'text-green-400';
     if (percentage >= 50) return 'text-yellow-400';
