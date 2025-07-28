@@ -183,8 +183,15 @@ const NotificationAdmin = ({ user }) => {
   // Функции для детальной аналитики
   const fetchDetailedAnalytics = useCallback(async (page = 1) => {
     try {
+      console.log('fetchDetailedAnalytics called:', { page, filters });
       setDetailedLoading(true);
       const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No auth token found');
+        showErrorRU('Необходима авторизация');
+        return;
+      }
       
       const params = new URLSearchParams({
         page: page.toString(),
@@ -195,17 +202,25 @@ const NotificationAdmin = ({ user }) => {
       if (filters.date_from) params.append('date_from', filters.date_from);
       if (filters.date_to) params.append('date_to', filters.date_to);
       
+      console.log('Making API request to:', `${API}/admin/notifications/detailed-analytics?${params}`);
+      
       const response = await axios.get(`${API}/admin/notifications/detailed-analytics?${params}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
+      console.log('API response:', response.data);
+
       if (response.data.success) {
         setDetailedAnalytics(response.data.data);
         setDetailedPagination(response.data.pagination);
+        console.log('Data set:', response.data.data.length, 'notifications');
+      } else {
+        console.error('API returned success: false');
+        showErrorRU('Ошибка получения данных');
       }
     } catch (error) {
       console.error('Error fetching detailed analytics:', error);
-      showErrorRU('Ошибка загрузки детальной аналитики');
+      showErrorRU('Ошибка загрузки детальной аналитики: ' + (error.response?.data?.detail || error.message));
     } finally {
       setDetailedLoading(false);
     }
