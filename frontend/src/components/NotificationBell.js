@@ -21,13 +21,13 @@ const NotificationBell = ({ isCollapsed }) => {
 
   // Calculate precise dropdown position with fixed positioning
   const calculateDropdownPosition = useCallback(() => {
-    if (bellRef.current) {
+    if (bellRef.current && isOpen) {
       const bellRect = bellRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
       // Position dropdown so its left-top corner touches the bell
-      // Use fixed positioning to prevent scroll issues
+      // Use fixed positioning relative to viewport to prevent scroll issues
       const position = {
         // Top edge of dropdown should align with bottom edge of bell (fixed to viewport)
         top: bellRect.bottom + 2, // 2px gap for perfect visual connection
@@ -39,7 +39,7 @@ const NotificationBell = ({ isCollapsed }) => {
       
       setDropdownPosition(position);
     }
-  }, []);
+  }, [isOpen]);
 
   // Update position when bell is clicked, window resizes, or scrolls
   useEffect(() => {
