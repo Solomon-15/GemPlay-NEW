@@ -236,17 +236,38 @@ const NotificationAdmin = ({ user }) => {
 
       console.log('API response:', response.data);
 
-      if (response.data.success) {
-        setDetailedAnalytics(response.data.data);
-        setDetailedPagination(response.data.pagination);
-        console.log('Data set:', response.data.data.length, 'notifications');
+      if (response.data && response.data.success) {
+        const data = response.data.data || [];
+        const pagination = response.data.pagination || {
+          current_page: 1,
+          per_page: 50,
+          total_items: 0,
+          total_pages: 0,
+          has_next: false,
+          has_prev: false
+        };
+        
+        setDetailedAnalytics(data);
+        setDetailedPagination(pagination);
+        console.log('Data set:', data.length, 'notifications');
+        
+        if (data.length === 0) {
+          console.log('No notifications found for detailed analytics');
+          showErrorRU('Нет данных для отображения. Попробуйте создать уведомления.');
+        }
       } else {
-        console.error('API returned success: false');
-        showErrorRU('Ошибка получения данных');
+        console.error('API returned success: false or no success field');
+        showErrorRU('Ошибка получения данных аналитики');
       }
     } catch (error) {
       console.error('Error fetching detailed analytics:', error);
-      showErrorRU('Ошибка загрузки детальной аналитики: ' + (error.response?.data?.detail || error.message));
+      if (error.response?.status === 401) {
+        showErrorRU('Ошибка авторизации. Войдите в систему заново.');
+      } else if (error.response?.status === 403) {
+        showErrorRU('Недостаточно прав для просмотра аналитики');
+      } else {
+        showErrorRU('Ошибка загрузки детальной аналитики: ' + (error.response?.data?.detail || error.message));
+      }
     } finally {
       setDetailedLoading(false);
     }
