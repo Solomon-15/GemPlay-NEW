@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""
+GemPlay Notification System API Testing
+Comprehensive testing of Phase 1 notification system implementation
+"""
+
 import requests
 import json
 import time
