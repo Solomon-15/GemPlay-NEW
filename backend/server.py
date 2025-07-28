@@ -17848,18 +17848,72 @@ async def get_human_bot_average_bet_amount(bot_id: str) -> float:
 @api_router.get("/admin/human-bots", response_model=HumanBotsListResponse)
 async def list_human_bots(
     page: int = Query(1, ge=1),
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(10, ge=1, le=100),  # Default to 10 for better performance
+    # Search and filtering parameters
+    search: Optional[str] = Query(None, description="Search by bot name"),
+    character: Optional[str] = Query(None, description="Filter by character type"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    min_bet_range: Optional[str] = Query(None, description="Filter by min bet range (e.g., '1-50')"),
+    max_bet_range: Optional[str] = Query(None, description="Filter by max bet range (e.g., '50-200')"),
+    # Sorting parameters
+    sort_by: Optional[str] = Query("created_at", description="Sort field"),
+    sort_order: Optional[str] = Query("desc", description="Sort order (asc/desc)"),
+    # Performance optimization
+    priority_fields: Optional[bool] = Query(True, description="Load priority fields first"),
     current_admin: User = Depends(get_current_admin)
 ):
-    """List human bots with pagination."""
+    """List human bots with enhanced search, filtering, and pagination."""
     try:
         skip = (page - 1) * limit
         
-        # Get total count
-        total_bots = await db.human_bots.count_documents({})
+        # Build MongoDB filter query
+        query_filter = {}
         
-        # Get bots
-        bots_cursor = db.human_bots.find({}).sort("created_at", -1).skip(skip).limit(limit)
+        # Search by name (case-insensitive)
+        if search:
+            query_filter["name"] = {"$regex": search, "$options": "i"}
+        
+        # Filter by character
+        if character:
+            query_filter["character"] = character
+        
+        # Filter by active status
+        if is_active is not None:
+            query_filter["is_active"] = is_active
+        
+        # Filter by min bet range
+        if min_bet_range:
+            try:
+                min_range_parts = min_bet_range.split('-')
+                if len(min_range_parts) == 2:
+                    min_val, max_val = float(min_range_parts[0]), float(min_range_parts[1])
+                    query_filter["min_bet"] = {"$gte": min_val, "$lte": max_val}
+            except (ValueError, IndexError):
+                pass  # Ignore invalid range format
+        
+        # Filter by max bet range
+        if max_bet_range:
+            try:
+                max_range_parts = max_bet_range.split('-')
+                if len(max_range_parts) == 2:
+                    min_val, max_val = float(max_range_parts[0]), float(max_range_parts[1])
+                    query_filter["max_bet"] = {"$gte": min_val, "$lte": max_val}
+            except (ValueError, IndexError):
+                pass  # Ignore invalid range format
+        
+        # Get total count with filters
+        total_bots = await db.human_bots.count_documents(query_filter)
+        
+        # Build sort criteria
+        sort_direction = -1 if sort_order.lower() == "desc" else 1
+        sort_criteria = [(sort_by, sort_direction)]
+        
+        # Add secondary sort by created_at for consistency
+        if sort_by != "created_at":
+            sort_criteria.append(("created_at", -1))
+        
+        # Get bots with filters and sorting
+        bots_cursor = db.human_bots.find(query_filter).sort(sort_criteria).skip(skip).limit(limit)
         bots_list = await bots_cursor.to_list(length=limit)
         
         # Format response bots with active bets count
