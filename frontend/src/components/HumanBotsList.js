@@ -364,7 +364,7 @@ const HumanBotsList = ({
 
         addNotification(`Успешно удалено ${successCount} из ${selectedBots.size} Human-ботов`, 'success');
         clearSelection();
-        await fetchHumanBots();
+        if (onRefresh) onRefresh(); // Use parent refresh function
         await fetchStats();
       } catch (error) {
         console.error('Ошибка массового удаления:', error);
