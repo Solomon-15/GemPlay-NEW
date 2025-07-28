@@ -21569,11 +21569,11 @@ def test_notification_bot_exclusion_fix() -> None:
     print_success("- Recipient verification completed")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - NOTIFICATION BOT EXCLUSION FIX")
+    print_header("GEMPLAY BACKEND API TESTING - NOTIFICATION SYSTEM FIXES")
     
     try:
-        # Run the Notification Bot Exclusion Fix test as specifically requested in the review
-        test_notification_bot_exclusion_fix()
+        # Run the Notification System Fixes test as specifically requested in the review
+        test_notification_system_fixes()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
