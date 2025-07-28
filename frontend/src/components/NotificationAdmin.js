@@ -157,6 +157,91 @@ const NotificationAdmin = ({ user }) => {
     setSelectedUsers(selectedUsers.filter(u => u.id !== userId));
   };
 
+  // Функции для удаления уведомлений по категориям
+  const fetchNotificationStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/notifications/stats-by-type`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setNotificationStats(response.data.stats);
+      }
+    } catch (error) {
+      console.error('Error fetching notification stats:', error);
+      showErrorRU('Ошибка загрузки статистики уведомлений');
+    }
+  };
+
+  const handleDeleteByType = async () => {
+    if (selectedTypesForDeletion.length === 0) {
+      showErrorRU('Выберите категории для удаления');
+      return;
+    }
+
+    try {
+      setDeleteLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.delete(`${API}/admin/notifications/by-type`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        data: { notification_types: selectedTypesForDeletion }
+      });
+
+      if (response.data.success) {
+        showSuccessRU(response.data.message);
+        setSelectedTypesForDeletion([]);
+        setShowDeleteConfirmation(false);
+        fetchNotificationStats(); // Обновляем статистику
+        if (activeTab === 'detailed') {
+          fetchDetailedAnalytics(detailedPagination.current_page); // Обновляем детальную аналитику
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting notifications:', error);
+      showErrorRU('Ошибка удаления уведомлений');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleDeleteByIds = async () => {
+    if (selectedNotificationsForDeletion.length === 0) {
+      showErrorRU('Выберите уведомления для удаления');
+      return;
+    }
+
+    try {
+      setDeleteLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.delete(`${API}/admin/notifications/by-ids`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+        data: { notification_ids: selectedNotificationsForDeletion }
+      });
+
+      if (response.data.success) {
+        showSuccessRU(response.data.message);
+        setSelectedNotificationsForDeletion([]);
+        fetchDetailedAnalytics(detailedPagination.current_page); // Обновляем список
+      }
+    } catch (error) {
+      console.error('Error deleting notifications by IDs:', error);
+      showErrorRU('Ошибка удаления выбранных уведомлений');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const toggleNotificationSelection = (notificationId) => {
+    setSelectedNotificationsForDeletion(prev => 
+      prev.includes(notificationId)
+        ? prev.filter(id => id !== notificationId)
+        : [...prev, notificationId]
+    );
+  };
+
   // Отправка уведомления
   const sendNotification = async () => {
     if (!notification.title.trim() || !notification.message.trim()) {
