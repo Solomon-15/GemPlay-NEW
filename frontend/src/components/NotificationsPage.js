@@ -62,12 +62,12 @@ const NotificationsPage = () => {
 
   const getTypeLabel = (type) => {
     const typeLabels = {
-      bet_accepted: 'Принятие ставки',
-      match_result: 'Результат матча',
-      commission_freeze: 'Заморозка комиссии',
-      gem_gift: 'Подарок гемов',
-      system_message: 'Системное сообщение',
-      admin_notification: 'Админ-уведомление'
+      bet_accepted: 'Bet Accepted',
+      match_result: 'Match Result',
+      commission_freeze: 'Commission Freeze',
+      gem_gift: 'Gem Gift',
+      system_message: 'System Message',
+      admin_notification: 'Admin Notification'
     };
     return typeLabels[type] || type;
   };
