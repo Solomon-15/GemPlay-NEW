@@ -17962,36 +17962,36 @@ async def generate_notification_content(notification_type: NotificationTypeEnum,
     templates = {
         NotificationTypeEnum.BET_ACCEPTED: {
             "emoji": "🎯",
-            "title": "Ставка принята!",
-            "message": "{opponent_name} принял вашу ставку на ${amount:.2f}"
+            "title": "Bet Accepted!",
+            "message": "{opponent_name} accepted your ${amount:.2f} bet"
         },
         NotificationTypeEnum.MATCH_RESULT: {
             "emoji_map": {"won": "🏆", "lost": "💔", "draw": "🤝"},
-            "title": "Результат матча",
+            "title": "Match Result",
             "message_map": {
-                "won": "Вы выиграли против {opponent_name}! Получено: ${amount_won:.2f}",
-                "lost": "Вы проиграли против {opponent_name}. Потеряно: ${amount_lost:.2f}",
-                "draw": "Ничья против {opponent_name}. Ставка возвращена: ${amount:.2f}"
+                "won": "You won against {opponent_name}! Received: ${amount_won:.2f}",
+                "lost": "You lost against {opponent_name}. Lost: ${amount_lost:.2f}",
+                "draw": "Draw against {opponent_name}. Bet returned: ${amount:.2f}"
             }
         },
         NotificationTypeEnum.COMMISSION_FREEZE: {
             "emoji": "❄️",
-            "title": "Комиссия заморожена",
-            "message": "Комиссия ${amount:.2f} заморожена до завершения игры"
+            "title": "Commission Frozen",
+            "message": "Commission ${amount:.2f} frozen until game completion"
         },
         NotificationTypeEnum.GEM_GIFT: {
             "emoji": "💎",
-            "title": "Подарок получен!",
-            "message": "{sender_name} подарил вам {amount:.0f} гемов"
+            "title": "Gift Received!",
+            "message": "{sender_name} gifted you {amount:.0f} gems"
         },
         NotificationTypeEnum.SYSTEM_MESSAGE: {
             "emoji_map": {"update": "📢", "maintenance": "🔧", "error": "⚠️"},
-            "title": "Системное уведомление",
+            "title": "System Notification",
             "message": "{system_message}"
         },
         NotificationTypeEnum.ADMIN_NOTIFICATION: {
             "emoji": "🛡️",
-            "title": "Административное уведомление", 
+            "title": "Admin Notification", 
             "message": "{admin_message}"
         }
     }
