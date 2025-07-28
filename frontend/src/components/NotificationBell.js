@@ -152,33 +152,24 @@ const NotificationBell = ({ isCollapsed }) => {
         )}
       </button>
 
-      {/* Notifications Dropdown - Fixed Positioning */}
+      {/* Notifications Dropdown - Enhanced Responsive Design */}
       {isOpen && (
         <>
-          {/* Backdrop for mobile */}
+          {/* Mobile backdrop */}
           <div 
-            className="fixed inset-0 bg-black bg-opacity-25 z-40 md:hidden"
+            className="fixed inset-0 bg-black bg-opacity-25 z-40 sm:hidden"
             onClick={() => setIsOpen(false)}
           />
           
           <div 
             ref={dropdownRef}
-            className={`
-              absolute z-50 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg shadow-lg
-              ${isCollapsed 
-                ? 'right-0 top-full mt-2 w-80 max-w-[90vw]' 
-                : 'right-0 top-full mt-2 w-80 max-w-[90vw]'
-              }
-              md:w-80 sm:w-72 xs:w-64
-            `}
+            className={getDropdownClasses()}
             style={{
-              maxHeight: 'calc(100vh - 100px)',
-              transform: window.innerWidth < 768 ? 'translateX(-50%)' : 'none',
-              left: window.innerWidth < 768 ? '50%' : 'auto'
+              maxHeight: 'min(24rem, calc(100vh - 120px))'
             }}
           >
             {/* Header */}
-            <div className="p-3 border-b border-gray-700 bg-surface-card rounded-t-lg">
+            <div className="sticky top-0 p-3 border-b border-gray-700 bg-surface-card rounded-t-lg z-10">
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-rajdhani font-bold text-lg">Уведомления</h3>
                 <div className="flex items-center space-x-3">
@@ -191,27 +182,31 @@ const NotificationBell = ({ isCollapsed }) => {
                         e.stopPropagation();
                         markAllAsRead();
                       }}
-                      className="text-xs text-accent-primary hover:underline whitespace-nowrap"
+                      className="text-xs text-accent-primary hover:text-accent-primary-dark transition-colors whitespace-nowrap"
                     >
                       Все прочитано
                     </button>
                   )}
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="text-gray-400 hover:text-white transition-colors md:hidden"
+                    className="text-gray-400 hover:text-white transition-colors sm:hidden p-1"
+                    aria-label="Закрыть"
                   >
-                    ✕
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Notifications List - Scrollable */}
-            <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+            {/* Notifications List - Enhanced Scrolling */}
+            <div className="overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
               {persistentNotifications.length === 0 ? (
-                <div className="p-6 text-center">
+                <div className="p-8 text-center">
                   <div className="text-4xl mb-3 opacity-50">📭</div>
                   <div className="text-gray-400 text-sm">Нет уведомлений</div>
+                  <div className="text-gray-500 text-xs mt-1">Здесь будут отображаться ваши уведомления</div>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-700">
@@ -224,20 +219,20 @@ const NotificationBell = ({ isCollapsed }) => {
                       }`}
                     >
                       <div className="flex items-start space-x-3">
-                        <span className="text-lg flex-shrink-0 mt-0.5">{notification.emoji}</span>
+                        <span className="text-lg flex-shrink-0 mt-0.5 select-none">{notification.emoji}</span>
                         <div className="flex-1 min-w-0">
-                          <div className={`text-sm leading-tight ${!notification.is_read ? 'font-bold text-white' : 'text-gray-300'}`}>
+                          <div className={`text-sm leading-tight break-words ${!notification.is_read ? 'font-bold text-white' : 'text-gray-300'}`}>
                             {notification.title}
                           </div>
-                          <div className="text-xs text-gray-400 mt-1 line-clamp-2 leading-tight">
+                          <div className="text-xs text-gray-400 mt-1 line-clamp-2 leading-tight break-words">
                             {notification.message}
                           </div>
                           <div className="flex items-center justify-between mt-2">
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 flex-shrink-0">
                               {formatTimeAgo(notification.created_at)}
                             </div>
                             {!notification.is_read && (
-                              <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
+                              <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0 ml-2"></div>
                             )}
                           </div>
                         </div>
@@ -248,14 +243,14 @@ const NotificationBell = ({ isCollapsed }) => {
               )}
             </div>
             
-            {/* Footer */}
-            <div className="p-3 border-t border-gray-700 bg-surface-card rounded-b-lg">
+            {/* Footer - Sticky */}
+            <div className="sticky bottom-0 p-3 border-t border-gray-700 bg-surface-card rounded-b-lg">
               <button 
                 onClick={() => {
                   window.location.href = '/notifications';
                   setIsOpen(false);
                 }}
-                className="text-accent-primary text-sm hover:underline transition-colors"
+                className="text-accent-primary text-sm hover:text-accent-primary-dark transition-colors font-medium"
               >
                 Все уведомления →
               </button>
