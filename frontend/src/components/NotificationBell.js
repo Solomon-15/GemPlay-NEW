@@ -284,8 +284,8 @@ const NotificationBell = ({ isCollapsed }) => {
               {persistentNotifications.length === 0 ? (
                 <div className="p-8 text-center">
                   <div className="text-4xl mb-3 opacity-50">📭</div>
-                  <div className="text-gray-400 text-sm">Нет уведомлений</div>
-                  <div className="text-gray-500 text-xs mt-1">Здесь будут отображаться ваши уведомления</div>
+                  <div className="text-gray-400 text-sm">No notifications</div>
+                  <div className="text-gray-500 text-xs mt-1">Your notifications will appear here</div>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-700">
