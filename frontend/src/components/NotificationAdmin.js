@@ -46,6 +46,8 @@ const NotificationAdmin = ({ user }) => {
   });
   const [expandedNotification, setExpandedNotification] = useState(null);
   const [resendingId, setResendingId] = useState(null);
+  const [showResendModal, setShowResendModal] = useState(null);
+  const [resendOption, setResendOption] = useState('unread'); // 'unread' or 'all'
 
   // Типы уведомлений
   const notificationTypes = [
