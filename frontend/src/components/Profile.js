@@ -525,7 +525,8 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
         <div className="flex space-x-1 bg-surface-sidebar rounded-lg p-1">
           {[
             { id: 'overview', label: 'Overview', icon: '👤' },
-            { id: 'settings', label: 'Settings', icon: '⚙️' }
+            { id: 'settings', label: 'Settings', icon: '⚙️' },
+            { id: 'notifications', label: 'Уведомления', icon: '🔔' }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -547,6 +548,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
       <div className="max-w-6xl mx-auto">
         {activeTab === 'overview' && <ProfileOverview />}
         {activeTab === 'settings' && <ProfileSettings />}
+        {activeTab === 'notifications' && <NotificationSettings />}
       </div>
       </div>
     </div>
