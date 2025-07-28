@@ -28,6 +28,25 @@ const NotificationAdmin = ({ user }) => {
   const [foundUsers, setFoundUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
 
+  // Состояние для детальной аналитики отправок
+  const [detailedAnalytics, setDetailedAnalytics] = useState([]);
+  const [detailedLoading, setDetailedLoading] = useState(false);
+  const [detailedPagination, setDetailedPagination] = useState({
+    current_page: 1,
+    per_page: 50,
+    total_items: 0,
+    total_pages: 0,
+    has_next: false,
+    has_prev: false
+  });
+  const [filters, setFilters] = useState({
+    type_filter: '',
+    date_from: '',
+    date_to: ''
+  });
+  const [expandedNotification, setExpandedNotification] = useState(null);
+  const [resendingId, setResendingId] = useState(null);
+
   // Типы уведомлений
   const notificationTypes = [
     { value: 'admin_notification', label: 'Админское уведомление', icon: '👑' },
