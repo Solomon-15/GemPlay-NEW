@@ -130,13 +130,13 @@ def test_login(email: str, password: str, user_type: str = "user") -> Optional[s
     print_subheader(f"Testing {user_type} Login")
     
     login_data = {
-        "username": email,  # FastAPI OAuth2PasswordRequestForm uses 'username' field
+        "username": email,
         "password": password
     }
     
-    # Use form data for OAuth2 login
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    response = requests.post(f"{BASE_URL}/auth/login", data=login_data, headers=headers)
+    # Use JSON data for login
+    headers = {"Content-Type": "application/json"}
+    response = requests.post(f"{BASE_URL}/auth/login", json=login_data, headers=headers)
     
     print(f"Login response status: {response.status_code}")
     
@@ -157,6 +157,11 @@ def test_login(email: str, password: str, user_type: str = "user") -> Optional[s
             record_test(f"{user_type} Login", False, "Invalid JSON response")
     else:
         print_error(f"{user_type} login failed with status {response.status_code}")
+        try:
+            error_data = response.json()
+            print(f"Error details: {json.dumps(error_data, indent=2)}")
+        except:
+            print(f"Error text: {response.text}")
         record_test(f"{user_type} Login", False, f"Status: {response.status_code}")
     
     return None
