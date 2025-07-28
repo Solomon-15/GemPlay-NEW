@@ -717,7 +717,7 @@ const NotificationAdmin = ({ user }) => {
                     {expandedNotification === item.notification_id && (
                       <div className="mt-4 pt-4 border-t border-gray-600">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          {/* Прочитавшие пользователи */}
+                          {/* Прочитавшие пользователи - ЗЕЛЕНЫЙ ФОН И ТЕКСТ */}
                           <div>
                             <h4 className="text-green-400 font-bold mb-3">
                               ✅ Прочитали ({item.read_count})
@@ -732,6 +732,12 @@ const NotificationAdmin = ({ user }) => {
                                       Прочитано: {new Date(user.read_at).toLocaleString('ru-RU')}
                                     </div>
                                   )}
+                                  {/* ЗЕЛЕНЫЙ СТАТУС "ПРОЧИТАНО" */}
+                                  <div className="mt-1">
+                                    <span className="inline-block px-2 py-1 text-xs font-bold bg-green-600 text-white rounded">
+                                      Прочитано
+                                    </span>
+                                  </div>
                                 </div>
                               ))}
                             </div>
