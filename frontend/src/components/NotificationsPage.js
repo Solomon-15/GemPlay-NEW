@@ -100,7 +100,7 @@ const NotificationsPage = () => {
                 onClick={markAllAsRead}
                 className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary-dark transition-colors"
               >
-                Отметить все как прочитанные
+                Mark all as read
               </button>
             )}
           </div>
