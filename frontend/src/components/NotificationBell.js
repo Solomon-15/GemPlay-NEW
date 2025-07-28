@@ -268,7 +268,7 @@ const NotificationBell = ({ isCollapsed }) => {
               maxHeight: `${dropdownPosition.maxHeight || 400}px`,
               opacity: isOpen ? 1 : 0,
               transform: isOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-8px)'
-            }}}
+            }}
           >
             {/* Header */}
             <div className="sticky top-0 p-3 border-b border-gray-700 bg-surface-card rounded-t-lg z-10">
