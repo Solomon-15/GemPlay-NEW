@@ -361,6 +361,9 @@ function App() {
                 {currentView === 'history' && (
                   <History user={user} onUpdateUser={checkAuthStatus} />
                 )}
+                {currentView === 'notifications' && (
+                  <NotificationsPage />
+                )}
 
                 </div>
               </div>
