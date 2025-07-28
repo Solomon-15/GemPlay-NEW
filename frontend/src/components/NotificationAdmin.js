@@ -551,7 +551,34 @@ const NotificationAdmin = ({ user }) => {
 
                     {/* Поиск пользователей */}
                     {targetUsers === 'specific' && (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
+                        {/* Переключатель режима поиска */}
+                        <div className="flex space-x-4">
+                          <label className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="searchMode"
+                              value="name"
+                              checked={searchMode === 'name'}
+                              onChange={(e) => setSearchMode(e.target.value)}
+                              className="text-accent-primary focus:ring-accent-primary"
+                            />
+                            <span className="text-white text-sm">Поиск по имени</span>
+                          </label>
+                          <label className="flex items-center space-x-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="searchMode"
+                              value="email"
+                              checked={searchMode === 'email'}
+                              onChange={(e) => setSearchMode(e.target.value)}
+                              className="text-accent-primary focus:ring-accent-primary"
+                            />
+                            <span className="text-white text-sm">Поиск по почте</span>
+                          </label>
+                        </div>
+                        
+                        {/* Поле поиска */}
                         <div className="relative">
                           <input
                             type="text"
@@ -559,7 +586,7 @@ const NotificationAdmin = ({ user }) => {
                             onChange={(e) => setUserSearch(e.target.value)}
                             onFocus={handleSearchFocus}
                             onBlur={handleSearchBlur}
-                            placeholder="Поиск пользователей по имени или email"
+                            placeholder={`Введите ${searchMode === 'name' ? 'имя пользователя' : 'email адрес'} для поиска`}
                             className="w-full bg-surface-sidebar border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-accent-primary"
                           />
                           
@@ -576,22 +603,18 @@ const NotificationAdmin = ({ user }) => {
                                   <div className="text-xs text-gray-400">{user.email}</div>
                                 </button>
                               ))}
-                              {foundUsers.length === 0 && userSearch && (
-                                <div className="px-3 py-2 text-gray-400 text-sm">
-                                  Пользователи не найдены
-                                </div>
-                              )}
                             </div>
                           )}
                           
-                          {/* Показать сообщение если нет пользователей при фокусе */}
-                          {foundUsers.length === 0 && !userSearch && (
+                          {/* Сообщение когда нет результатов но есть поиск */}
+                          {foundUsers.length === 0 && userSearch.trim().length > 0 && (
                             <div className="absolute top-full left-0 right-0 bg-surface-sidebar border border-gray-600 rounded-lg mt-1 z-10 shadow-xl">
                               <div className="px-3 py-2 text-gray-400 text-sm">
-                                Наведите на поле для загрузки пользователей...
+                                Пользователи не найдены
                               </div>
                             </div>
                           )}
+                        </div>
                         </div>
 
                         {/* Выбранные пользователи */}
