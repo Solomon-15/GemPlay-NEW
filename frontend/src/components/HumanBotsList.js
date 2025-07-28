@@ -519,7 +519,7 @@ const HumanBotsList = ({
       try {
         const response = await executeOperation(`/admin/human-bots/${bot.id}/reset-stats`, 'POST');
         addNotification(`Статистика Human-бота "${bot.name}" успешно сброшена`, 'success');
-        await fetchHumanBots();
+        if (onRefresh) onRefresh(); // Use parent refresh function
         await fetchStats();
       } catch (error) {
         console.error('Ошибка сброса статистики:', error);
