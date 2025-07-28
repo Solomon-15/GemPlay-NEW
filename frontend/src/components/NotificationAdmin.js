@@ -349,7 +349,15 @@ const NotificationAdmin = ({ user }) => {
       console.log('Fetching detailed analytics...');
       fetchDetailedAnalytics(1);
     }
-  }, [activeTab, fetchDetailedAnalytics]);
+  }, [activeTab, filters, fetchDetailedAnalytics]);
+
+  // Принудительная загрузка аналитики при переключении таба
+  const handleDetailedTabClick = () => {
+    setActiveTab('detailed');
+    setTimeout(() => {
+      fetchDetailedAnalytics(1);
+    }, 100);
+  };
 
   return (
     <div className="p-6">
