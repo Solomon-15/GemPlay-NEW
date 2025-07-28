@@ -334,7 +334,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
                     >
                       {/* Основное уведомление */}
                       <div
-                        onClick={() => handleNotificationClick(notification)}
+                        onClick={(event) => handleNotificationClick(notification, event)}
                         className="p-3 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200"
                       >
                         <div className="flex items-start space-x-3">
