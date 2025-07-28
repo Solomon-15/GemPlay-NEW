@@ -17810,7 +17810,267 @@ async def upload_sound_file(sound_id: str, file_data: UploadSoundFileRequest, cu
         )
 
 # ==============================================================================
-# HUMAN BOTS API
+# NOTIFICATION SYSTEM MODELS AND API
+# ==============================================================================
+
+# Notification Models
+class NotificationTypeEnum(str, Enum):
+    BET_ACCEPTED = "bet_accepted"
+    MATCH_RESULT = "match_result" 
+    COMMISSION_FREEZE = "commission_freeze"
+    GEM_GIFT = "gem_gift"
+    SYSTEM_MESSAGE = "system_message"
+    ADMIN_NOTIFICATION = "admin_notification"
+
+class NotificationPriorityEnum(str, Enum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+
+class NotificationPayload(BaseModel):
+    game_id: Optional[str] = None
+    opponent_name: Optional[str] = None
+    amount: Optional[float] = None
+    result: Optional[str] = None  # won/lost/draw
+    amount_won: Optional[float] = None
+    amount_lost: Optional[float] = None
+    sender_name: Optional[str] = None
+    category: Optional[str] = None
+    system_message: Optional[str] = None
+    admin_message: Optional[str] = None
+    action_url: Optional[str] = None
+
+class NotificationCreate(BaseModel):
+    user_id: str
+    type: NotificationTypeEnum
+    title: str
+    message: str
+    emoji: str
+    priority: NotificationPriorityEnum = NotificationPriorityEnum.INFO
+    payload: Optional[NotificationPayload] = NotificationPayload()
+    expires_at: Optional[datetime] = None
+
+class NotificationResponse(BaseModel):
+    id: str
+    user_id: str
+    type: NotificationTypeEnum
+    title: str
+    message: str
+    emoji: str
+    priority: NotificationPriorityEnum
+    payload: Optional[NotificationPayload]
+    is_read: bool = False
+    read_at: Optional[datetime] = None
+    created_at: datetime
+    expires_at: Optional[datetime] = None
+
+class NotificationListResponse(BaseModel):
+    success: bool
+    notifications: List[NotificationResponse]
+    pagination: Dict[str, Any]
+
+class NotificationSettings(BaseModel):
+    bet_accepted: bool = True
+    match_results: bool = True
+    commission_freeze: bool = True
+    gem_gifts: bool = True
+    system_messages: bool = True 
+    admin_notifications: bool = True
+
+class UserNotificationSettings(BaseModel):
+    user_id: str
+    settings: NotificationSettings
+    updated_at: datetime
+
+class NotificationSettingsResponse(BaseModel):
+    success: bool
+    settings: NotificationSettings
+
+class AdminBroadcastRequest(BaseModel):
+    type: NotificationTypeEnum
+    title: str
+    message: str
+    priority: NotificationPriorityEnum = NotificationPriorityEnum.INFO
+    target_users: Optional[List[str]] = None  # If empty, broadcast to all
+    expires_at: Optional[datetime] = None
+
+class NotificationAnalytics(BaseModel):
+    total_sent: int
+    total_read: int
+    read_rate: float
+    by_type: Dict[str, Dict[str, Any]]
+
+class NotificationAnalyticsResponse(BaseModel):
+    success: bool
+    analytics: NotificationAnalytics
+
+
+# ==============================================================================
+# NOTIFICATION SYSTEM UTILITY FUNCTIONS
+# ==============================================================================
+
+async def get_user_notification_settings(user_id: str) -> NotificationSettings:
+    """Get user notification settings or default if not exist"""
+    try:
+        settings_doc = await db.user_notification_settings.find_one({"user_id": user_id})
+        if settings_doc:
+            return NotificationSettings(**settings_doc["settings"])
+        return NotificationSettings()  # Default settings
+    except Exception as e:
+        logger.error(f"Error getting notification settings for user {user_id}: {e}")
+        return NotificationSettings()
+
+async def generate_notification_content(notification_type: NotificationTypeEnum, payload: NotificationPayload) -> tuple:
+    """Generate notification content based on type and payload"""
+    
+    templates = {
+        NotificationTypeEnum.BET_ACCEPTED: {
+            "emoji": "🎯",
+            "title": "Ставка принята!",
+            "message": "{opponent_name} принял вашу ставку на ${amount:.2f}"
+        },
+        NotificationTypeEnum.MATCH_RESULT: {
+            "emoji_map": {"won": "🏆", "lost": "💔", "draw": "🤝"},
+            "title": "Результат матча",
+            "message_map": {
+                "won": "Вы выиграли против {opponent_name}! Получено: ${amount_won:.2f}",
+                "lost": "Вы проиграли против {opponent_name}. Потеряно: ${amount_lost:.2f}",
+                "draw": "Ничья против {opponent_name}. Ставка возвращена: ${amount:.2f}"
+            }
+        },
+        NotificationTypeEnum.COMMISSION_FREEZE: {
+            "emoji": "❄️",
+            "title": "Комиссия заморожена",
+            "message": "Комиссия ${amount:.2f} заморожена до завершения игры"
+        },
+        NotificationTypeEnum.GEM_GIFT: {
+            "emoji": "💎",
+            "title": "Подарок получен!",
+            "message": "{sender_name} подарил вам {amount:.0f} гемов"
+        },
+        NotificationTypeEnum.SYSTEM_MESSAGE: {
+            "emoji_map": {"update": "📢", "maintenance": "🔧", "error": "⚠️"},
+            "title": "Системное уведомление",
+            "message": "{system_message}"
+        },
+        NotificationTypeEnum.ADMIN_NOTIFICATION: {
+            "emoji": "🛡️",
+            "title": "Административное уведомление", 
+            "message": "{admin_message}"
+        }
+    }
+    
+    template = templates.get(notification_type)
+    if not template:
+        return "📬", "Уведомление", "Новое уведомление"
+    
+    # Handle emoji selection
+    if "emoji_map" in template:
+        if notification_type == NotificationTypeEnum.MATCH_RESULT:
+            emoji = template["emoji_map"].get(payload.result, "🎮")
+        elif notification_type == NotificationTypeEnum.SYSTEM_MESSAGE:
+            emoji = template["emoji_map"].get(payload.category, "📢")
+        else:
+            emoji = template.get("emoji", "📬")
+    else:
+        emoji = template.get("emoji", "📬")
+    
+    title = template.get("title", "Уведомление")
+    
+    # Handle message generation
+    if "message_map" in template:
+        if notification_type == NotificationTypeEnum.MATCH_RESULT:
+            message_template = template["message_map"].get(payload.result, template.get("message", ""))
+        else:
+            message_template = template.get("message", "")
+    else:
+        message_template = template.get("message", "")
+    
+    # Format message with payload data
+    try:
+        payload_dict = payload.model_dump() if payload else {}
+        message = message_template.format(**{k: v for k, v in payload_dict.items() if v is not None})
+    except (KeyError, ValueError) as e:
+        logger.warning(f"Error formatting notification message: {e}")
+        message = "Новое уведомление"
+    
+    return emoji, title, message
+
+async def create_notification(
+    user_id: str,
+    notification_type: NotificationTypeEnum,
+    payload: Optional[NotificationPayload] = None,
+    priority: NotificationPriorityEnum = NotificationPriorityEnum.INFO,
+    expires_at: Optional[datetime] = None
+) -> Optional[str]:
+    """Create and store notification"""
+    
+    try:
+        # Check user notification settings
+        settings = await get_user_notification_settings(user_id)
+        setting_key = notification_type.value
+        
+        if hasattr(settings, setting_key) and not getattr(settings, setting_key):
+            logger.info(f"Notification {notification_type} disabled for user {user_id}")
+            return None
+        
+        # Generate notification content
+        if payload is None:
+            payload = NotificationPayload()
+            
+        emoji, title, message = await generate_notification_content(notification_type, payload)
+        
+        # Create notification document
+        notification_id = str(uuid.uuid4())
+        notification = {
+            "id": notification_id,
+            "user_id": user_id,
+            "type": notification_type.value,
+            "title": title,
+            "message": message,
+            "emoji": emoji,
+            "priority": priority.value,
+            "payload": payload.model_dump() if payload else {},
+            "is_read": False,
+            "read_at": None,
+            "created_at": datetime.utcnow(),
+            "expires_at": expires_at
+        }
+        
+        # Store in database
+        await db.notifications.insert_one(notification)
+        
+        logger.info(f"Created notification {notification_id} for user {user_id}: {title}")
+        
+        # TODO: Send via WebSocket when implemented
+        # await send_notification_to_user(user_id, notification)
+        
+        return notification_id
+        
+    except Exception as e:
+        logger.error(f"Error creating notification: {e}")
+        return None
+
+async def get_user_name_for_notification(user_id: str) -> str:
+    """Get user name for notification display"""
+    try:
+        # Try human bot first
+        bot = await db.human_bots.find_one({"id": user_id})
+        if bot:
+            return bot.get("name", "Бот")
+        
+        # Try regular user
+        user = await db.users.find_one({"id": user_id})
+        if user:
+            return user.get("username", "Игрок")
+        
+        return "Неизвестный игрок"
+    except Exception:
+        return "Игрок"
+
+
+# ==============================================================================
+# NOTIFICATION SYSTEM API ENDPOINTS  
 # ==============================================================================
 
 # Utility function for calculating bot statistics (remove duplication)
