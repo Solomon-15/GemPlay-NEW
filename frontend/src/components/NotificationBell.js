@@ -44,29 +44,43 @@ const NotificationBell = ({ isCollapsed }) => {
   // Update position when bell is clicked, window resizes, or scrolls
   useEffect(() => {
     if (isOpen) {
+      // Calculate initial position
       calculateDropdownPosition();
       
       const handleResize = () => {
-        if (isOpen) {
-          calculateDropdownPosition();
-        }
+        calculateDropdownPosition();
       };
       
       const handleScroll = () => {
-        if (isOpen) {
-          calculateDropdownPosition();
-        }
+        calculateDropdownPosition();
       };
       
-      // Use capture phase for scroll to catch all scroll events
+      // Use both window and document scroll events for maximum coverage
       window.addEventListener('resize', handleResize);
-      document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
       window.addEventListener('scroll', handleScroll, { passive: true });
+      document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+      
+      // Also listen to all scrollable parent elements
+      let scrollableParent = bellRef.current?.parentElement;
+      const scrollListeners = [];
+      
+      while (scrollableParent && scrollableParent !== document.body) {
+        if (scrollableParent.scrollHeight > scrollableParent.clientHeight) {
+          scrollableParent.addEventListener('scroll', handleScroll, { passive: true });
+          scrollListeners.push(scrollableParent);
+        }
+        scrollableParent = scrollableParent.parentElement;
+      }
       
       return () => {
         window.removeEventListener('resize', handleResize);
-        document.removeEventListener('scroll', handleScroll, { capture: true });
         window.removeEventListener('scroll', handleScroll);
+        document.removeEventListener('scroll', handleScroll, { capture: true });
+        
+        // Remove listeners from scrollable parents
+        scrollListeners.forEach(element => {
+          element.removeEventListener('scroll', handleScroll);
+        });
       };
     }
   }, [isOpen, calculateDropdownPosition]);
