@@ -20822,11 +20822,17 @@ async def admin_broadcast_notification(
         if not target_users:
             return {"success": True, "message": "No target users found", "sent_count": 0}
         
-        # Create payload for system message
-        payload = NotificationPayload(
-            system_message=request.message,
-            category="admin_broadcast"  
-        )
+        # Create payload based on notification type
+        if request.type == NotificationTypeEnum.ADMIN_NOTIFICATION:
+            payload = NotificationPayload(
+                admin_message=request.message,
+                category="admin_broadcast"  
+            )
+        else:
+            payload = NotificationPayload(
+                system_message=request.message,
+                category="admin_broadcast"  
+            )
         
         # Send notification to each user
         sent_count = 0
