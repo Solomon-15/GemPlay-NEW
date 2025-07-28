@@ -128,26 +128,61 @@ const NotificationBell = ({ isCollapsed }) => {
               </div>
             </div>
           </div>
-            </div>
 
-            {/* Notifications List */}
-            <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800" 
-                 style={{ 
-                   maxHeight: 'calc(100% - 120px)',
-                   minHeight: '200px'
-                 }}>
-              {notifications.length === 0 ? (
-                <div className="px-4 py-8 text-center text-text-secondary">
-                  <svg className="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  <div className="text-sm">No notifications yet</div>
-                  <div className="text-xs mt-1">You'll see notifications here when something happens</div>
+          {/* Notifications List */}
+          <div className="max-h-96 overflow-y-auto">
+            {persistentNotifications.length === 0 ? (
+              <div className="p-4 text-center">
+                <div className="text-gray-400 text-sm">📭</div>
+                <div className="text-gray-400 text-sm mt-2">Нет уведомлений</div>
+              </div>
+            ) : (
+              persistentNotifications.slice(0, 10).map(notification => (
+                <div
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`p-3 border-b border-gray-700 last:border-b-0 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200 border-l-4 ${getPriorityColor(notification.priority)} ${
+                    !notification.is_read ? 'bg-accent-primary bg-opacity-5' : ''
+                  }`}
+                >
+                  <div className="flex items-start space-x-3">
+                    <span className="text-lg flex-shrink-0 mt-0.5">{notification.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className={`text-sm ${!notification.is_read ? 'font-bold text-white' : 'text-gray-300'}`}>
+                        {notification.title}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1 line-clamp-2">
+                        {notification.message}
+                      </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="text-xs text-gray-500">
+                          {formatTimeAgo(notification.created_at)}
+                        </div>
+                        {!notification.is_read && (
+                          <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-0">
-                  {notifications.map((notification) => {
-                    const { icon, color } = getNotificationIcon(notification.type);
+              ))
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="p-3 border-t border-gray-700">
+            <button 
+              onClick={() => {
+                window.location.href = '/notifications';
+                setIsOpen(false);
+              }}
+              className="text-accent-primary text-sm hover:underline"
+            >
+              Все уведомления →
+            </button>
+          </div>
+        </div>
+      )}
                     
                     return (
                       <div
