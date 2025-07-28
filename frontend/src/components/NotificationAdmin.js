@@ -207,13 +207,15 @@ const NotificationAdmin = ({ user }) => {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  // Поиск пользователей с задержкой
+  // Поиск пользователей с задержкой - только после ввода символа
   useEffect(() => {
     if (userSearch.trim().length > 0) {
       const timeoutId = setTimeout(() => searchUsers(userSearch), 300);
       return () => clearTimeout(timeoutId);
+    } else {
+      // Очищаем результаты если поле пустое
+      setFoundUsers([]);
     }
-    // Не очищаем результаты автоматически - пусть они остаются после фокуса
   }, [userSearch, searchUsers]);
 
   // Функции для детальной аналитики
