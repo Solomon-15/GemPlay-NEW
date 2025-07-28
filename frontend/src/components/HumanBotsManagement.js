@@ -259,43 +259,75 @@ const HumanBotsManagement = () => {
   const [showBulkCreateForm, setShowBulkCreateForm] = useState(false);
   const [editingBot, setEditingBot] = useState(null);
 
-  useEffect(() => {
-    fetchHumanBots();
-    fetchStats();
-  }, [currentPage, filters]);
-
-  // Инициализация списка ботов при изменении количества или открытии модального окна
-  useEffect(() => {
-    if (showBulkCreateForm && bulkCreateData.bots.length !== bulkCreateData.count) {
-      const bots = initializeBots(bulkCreateData.count);
-      setBulkCreateData(prev => ({
-        ...prev,
-        bots: bots
-      }));
-    }
-  }, [showBulkCreateForm, bulkCreateData.count]);
-
-  const fetchHumanBots = async () => {
+  const fetchHumanBots = useCallback(async (useCache = true) => {
     try {
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: '10'
-      });
+      setLoadingPriority(true);
       
-      if (filters.character) params.append('character', filters.character);
-      if (filters.is_active !== null) params.append('is_active', filters.is_active.toString());
-
-      const response = await executeOperation('/admin/human-bots?' + params.toString(), 'GET');
+      // Build query parameters with all new filters
+      const params = {
+        page: currentPage.toString(),
+        limit: pageSize.toString(),
+        priority_fields: priorityFields.toString()
+      };
+      
+      // Add search parameter
+      if (filters.search && filters.search.trim()) {
+        params.search = filters.search.trim();
+      }
+      
+      // Add filter parameters
+      if (filters.character) {
+        params.character = filters.character;
+      }
+      
+      if (filters.is_active !== null) {
+        params.is_active = filters.is_active.toString();
+      }
+      
+      if (filters.min_bet_range) {
+        params.min_bet_range = filters.min_bet_range;
+      }
+      
+      if (filters.max_bet_range) {
+        params.max_bet_range = filters.max_bet_range;
+      }
+      
+      // Add sorting parameters
+      if (filters.sort_by) {
+        params.sort_by = filters.sort_by;
+      }
+      
+      if (filters.sort_order) {
+        params.sort_order = filters.sort_order;
+      }
+      
+      // Build query string
+      const queryString = new URLSearchParams(params).toString();
+      
+      const response = await executeOperation(`/admin/human-bots?${queryString}`, 'GET', null, useCache);
+      
       if (response.success !== false) {
         setHumanBots(response.bots || []);
-        setTotalPages(response.total_pages || 1);
+        
+        if (response.pagination) {
+          setTotalPages(response.pagination.total_pages || 1);
+        }
+        
+        // Log performance information if available
+        if (response.metadata) {
+          console.log('Human-bots query performance:', response.metadata.query_performance);
+          console.log('Cache timestamp:', new Date(response.metadata.cache_timestamp * 1000));
+        }
       }
     } catch (error) {
       console.error('Ошибка получения Human-ботов:', error);
+      addNotification('Ошибка загрузки списка Human-ботов', 'error');
+    } finally {
+      setLoadingPriority(false);
     }
-  };
+  }, [currentPage, pageSize, filters, priorityFields, executeOperation, addNotification]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await executeOperation('/admin/human-bots/stats', 'GET');
       if (response.success !== false) {
@@ -304,7 +336,47 @@ const HumanBotsManagement = () => {
     } catch (error) {
       console.error('Ошибка получения статистики:', error);
     }
-  };
+  }, [executeOperation]);
+
+  // Auto-refresh functionality
+  useEffect(() => {
+    if (autoRefresh) {
+      const interval = setInterval(() => {
+        console.log('Auto-refreshing Human-bots data...');
+        fetchHumanBots(false); // Don't use cache for auto-refresh
+        fetchStats();
+      }, AUTO_REFRESH_INTERVAL);
+      
+      setRefreshInterval(interval);
+      
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    } else if (refreshInterval) {
+      clearInterval(refreshInterval);
+      setRefreshInterval(null);
+    }
+  }, [autoRefresh, fetchHumanBots, fetchStats]);
+
+  // Fetch data when dependencies change
+  useEffect(() => {
+    fetchHumanBots();
+    fetchStats();
+  }, [currentPage, pageSize, filters, priorityFields]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (searchDebounceTimeout) {
+        clearTimeout(searchDebounceTimeout);
+      }
+      if (refreshInterval) {
+        clearInterval(refreshInterval);
+      }
+    };
+  }, [searchDebounceTimeout, refreshInterval]);
 
   const fetchHumanBotSettings = async () => {
     try {
