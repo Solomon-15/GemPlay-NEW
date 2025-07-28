@@ -9271,18 +9271,34 @@ async def get_all_users(
     page: int = 1,
     limit: int = 50,
     search: Optional[str] = None,
+    search_mode: Optional[str] = None,  # 'name' или 'email'
     status: Optional[str] = None,
+    exclude_bots: Optional[bool] = False,
     current_user: User = Depends(get_current_admin)
 ):
     """Get all users with pagination and filtering."""
     try:
         # Build query
         query = {}
+        
+        # Исключение ботов если requested
+        if exclude_bots:
+            query["bot_type"] = {"$exists": False}
+            query["is_bot"] = {"$ne": True}
+        
         if search:
-            query["$or"] = [
-                {"username": {"$regex": search, "$options": "i"}},
-                {"email": {"$regex": search, "$options": "i"}}
-            ]
+            if search_mode == 'name':
+                # Поиск только по имени
+                query["username"] = {"$regex": search, "$options": "i"}
+            elif search_mode == 'email':
+                # Поиск только по email
+                query["email"] = {"$regex": search, "$options": "i"}
+            else:
+                # Поиск по обоим полям (по умолчанию)
+                query["$or"] = [
+                    {"username": {"$regex": search, "$options": "i"}},
+                    {"email": {"$regex": search, "$options": "i"}}
+                ]
         if status:
             query["status"] = status
         
