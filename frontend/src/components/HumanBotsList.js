@@ -500,7 +500,7 @@ const HumanBotsList = ({
         const response = await executeOperation(`/admin/human-bots/${bot.id}/reset-stats`, 'POST');
         addNotification(`Статистика Human-бота "${bot.name}" успешно сброшена`, 'success');
         if (onRefresh) onRefresh(); // Use parent refresh function
-        await fetchStats();
+        // await fetchStats(); // Remove duplicate call
       } catch (error) {
         console.error('Ошибка сброса статистики:', error);
         addNotification(`Ошибка при сбросе статистики: ${error.message}`, 'error');
