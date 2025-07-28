@@ -88,10 +88,10 @@ const NotificationsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-rajdhani font-bold text-white mb-2">
-                🔔 Уведомления
+                🔔 Notifications
               </h1>
               <p className="text-text-secondary">
-                {unreadCount > 0 ? `У вас ${unreadCount} непрочитанных уведомлений` : 'Все уведомления прочитаны'}
+                {unreadCount > 0 ? `You have ${unreadCount} unread notifications` : 'All notifications are read'}
               </p>
             </div>
             
