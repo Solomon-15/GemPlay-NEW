@@ -295,9 +295,9 @@ const NewBotAnalytics = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'human' && humanBotsList.length > 0) {
+    if (activeTab === 'human') {
       fetchHumanBotsAnalytics();
-    } else if (activeTab === 'regular' && regularBotsList.length > 0) {
+    } else if (activeTab === 'regular') {
       fetchRegularBotsAnalytics();
     }
   }, [activeTab, timeRange, humanBotsList, regularBotsList]);
