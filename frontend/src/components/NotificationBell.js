@@ -40,7 +40,29 @@ const NotificationBell = ({ isCollapsed }) => {
     }
   }, []);
 
-  // Update position when bell is clicked or window resizes  
+  // Calculate precise dropdown position with fixed positioning
+  const calculateDropdownPosition = useCallback(() => {
+    if (bellRef.current) {
+      const bellRect = bellRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Position dropdown so its left-top corner touches the bell
+      // Use fixed positioning to prevent scroll issues
+      const position = {
+        // Top edge of dropdown should align with bottom edge of bell (fixed to viewport)
+        top: bellRect.bottom + 2, // 2px gap for perfect visual connection
+        // Left edge of dropdown should align with left edge of bell (fixed to viewport)
+        left: bellRect.left,
+        maxHeight: viewportHeight - bellRect.bottom - 20, // Leave margin from bottom
+        maxWidth: Math.min(320, viewportWidth - bellRect.left - 20) // Don't exceed viewport
+      };
+      
+      setDropdownPosition(position);
+    }
+  }, []);
+
+  // Update position when bell is clicked, window resizes, or scrolls
   useEffect(() => {
     if (isOpen) {
       calculateDropdownPosition();
@@ -57,12 +79,15 @@ const NotificationBell = ({ isCollapsed }) => {
         }
       };
       
+      // Use capture phase for scroll to catch all scroll events
       window.addEventListener('resize', handleResize);
-      window.addEventListener('scroll', handleScroll, true);
+      document.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+      window.addEventListener('scroll', handleScroll, { passive: true });
       
       return () => {
         window.removeEventListener('resize', handleResize);
-        window.removeEventListener('scroll', handleScroll, true);
+        document.removeEventListener('scroll', handleScroll, { capture: true });
+        window.removeEventListener('scroll', handleScroll);
       };
     }
   }, [isOpen, calculateDropdownPosition]);
