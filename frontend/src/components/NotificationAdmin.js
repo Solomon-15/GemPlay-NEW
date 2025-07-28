@@ -552,6 +552,7 @@ const NotificationAdmin = ({ user }) => {
                             value={userSearch}
                             onChange={(e) => setUserSearch(e.target.value)}
                             onFocus={handleSearchFocus}
+                            onBlur={handleSearchBlur}
                             placeholder="Поиск пользователей по имени или email"
                             className="w-full bg-surface-sidebar border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-accent-primary"
                           />
@@ -574,6 +575,15 @@ const NotificationAdmin = ({ user }) => {
                                   Пользователи не найдены
                                 </div>
                               )}
+                            </div>
+                          )}
+                          
+                          {/* Показать сообщение если нет пользователей при фокусе */}
+                          {foundUsers.length === 0 && !userSearch && (
+                            <div className="absolute top-full left-0 right-0 bg-surface-sidebar border border-gray-600 rounded-lg mt-1 z-10 shadow-xl">
+                              <div className="px-3 py-2 text-gray-400 text-sm">
+                                Наведите на поле для загрузки пользователей...
+                              </div>
                             </div>
                           )}
                         </div>
