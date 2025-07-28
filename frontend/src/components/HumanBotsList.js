@@ -255,14 +255,10 @@ const HumanBotsList = ({
         bet_limit_amount: newAmount
       });
       
-      // Update local state
-      setHumanBots(prevBots => 
-        prevBots.map(b => 
-          b.id === bot.id ? { ...b, bet_limit_amount: newAmount } : b
-        )
-      );
-      
       addNotification(`Ограничение Human-бота "${bot.name}" изменено на ${newAmount}`, 'success');
+      
+      // Use parent refresh function instead of local state update
+      if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Ошибка изменения ограничения Human-бота:', error);
       addNotification('Ошибка изменения ограничения Human-бота', 'error');
