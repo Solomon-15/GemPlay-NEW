@@ -906,6 +906,7 @@ class HumanBotsListResponse(BaseModel):
     success: bool
     bots: List[Dict[str, Any]]
     pagination: PaginationInfo
+    metadata: Optional[Dict[str, Any]] = None  # Add metadata for caching and performance info
 
 # ==============================================================================
 # UTILITY FUNCTIONS
