@@ -25,6 +25,7 @@ const NotificationAdmin = ({ user }) => {
   const [targetUsers, setTargetUsers] = useState('all'); // 'all' или 'specific'
   const [specificUsers, setSpecificUsers] = useState('');
   const [userSearch, setUserSearch] = useState('');
+  const [searchMode, setSearchMode] = useState('name'); // 'name' или 'email'
   const [foundUsers, setFoundUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
 
