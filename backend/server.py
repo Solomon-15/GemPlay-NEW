@@ -20851,7 +20851,10 @@ async def admin_broadcast_notification(
                 notification_type=request.type,
                 payload=payload,
                 priority=request.priority,
-                expires_at=request.expires_at
+                expires_at=request.expires_at,
+                custom_title=request.title,
+                custom_message=request.message,
+                custom_emoji="🔔"  # Default emoji for admin broadcasts
             )
             
             if notification_id:
