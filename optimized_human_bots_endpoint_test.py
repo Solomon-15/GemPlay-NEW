@@ -139,7 +139,7 @@ def test_admin_login() -> Optional[str]:
     
     response, success = make_request(
         "POST", "/auth/login", 
-        params=ADMIN_USER
+        data=ADMIN_USER
     )
     
     if success and "access_token" in response:
