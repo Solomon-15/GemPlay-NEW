@@ -17985,36 +17985,16 @@ async def list_human_bots(
             # Get active bets count (PENDING BETS priority field)
             active_bets_count = await get_human_bot_active_bets_count(bot["id"])
             
-            # STATISTICS priority fields - optimized calculation
+            # STATISTICS priority fields - optimized calculation using utility function
             if priority_fields:
-                # Calculate draws from completed games (optimized query)
-                completed_games_cursor = db.games.find({
-                    "$or": [
-                        {"creator_id": bot["id"]},
-                        {"opponent_id": bot["id"]}
-                    ],
-                    "status": "COMPLETED"
-                })
-                completed_games = await completed_games_cursor.to_list(None)
-                
-                draws = sum(1 for game in completed_games if game.get('winner_id') is None)
-                losses = sum(1 for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot["id"])
-                wins = sum(1 for game in completed_games if game.get('winner_id') == bot["id"])
-                actual_games_played = len(completed_games)  # Only count completed games
-                
-                # Calculate correct profit: (sum of bets in won games) - (sum of bets in lost games)
-                won_games = [game for game in completed_games if game.get('winner_id') == bot["id"]]
-                lost_games = [game for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot["id"]]
-                
-                # Calculate total bet amounts for won and lost games
-                total_bet_amount_won = sum(game.get('bet_amount', 0.0) for game in won_games)
-                total_bet_amount_lost = sum(game.get('bet_amount', 0.0) for game in lost_games)
-                
-                # Correct profit calculation
-                correct_profit = total_bet_amount_won - total_bet_amount_lost
-                
-                # Calculate win rate
-                win_rate = (wins / max(actual_games_played, 1)) * 100 if actual_games_played > 0 else 0
+                # Use the new utility function to avoid code duplication
+                statistics = await calculate_bot_statistics(bot["id"], db)
+                draws = statistics["draws"]
+                losses = statistics["losses"]
+                wins = statistics["wins"]
+                actual_games_played = statistics["actual_games_played"]
+                correct_profit = statistics["correct_profit"]
+                win_rate = statistics["win_rate"]
             else:
                 # Fallback to basic statistics for faster loading
                 draws = 0
