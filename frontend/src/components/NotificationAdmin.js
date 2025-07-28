@@ -615,10 +615,11 @@ const NotificationAdmin = ({ user }) => {
                             </div>
                           )}
                         </div>
-                        </div>
+                      </div>
+                    )}
 
                         {/* Выбранные пользователи */}
-                        {selectedUsers.length > 0 && (
+                        {targetUsers === 'specific' && selectedUsers.length > 0 && (
                           <div className="space-y-1">
                             <div className="text-sm text-text-secondary">
                               Выбрано пользователей: {selectedUsers.length}
