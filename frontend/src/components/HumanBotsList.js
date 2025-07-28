@@ -444,7 +444,7 @@ const HumanBotsList = ({
       });
       addNotification(`Настройки Human-бота "${bot.name}" изменены: автоигра с другими ботами ${canPlay ? 'включена' : 'отключена'}`, 'success');
       if (onRefresh) onRefresh(); // Use parent refresh function
-      await fetchStats();
+      // await fetchStats(); // Remove duplicate call
     } catch (error) {
       console.error('Ошибка переключения автоигры:', error);
     }
