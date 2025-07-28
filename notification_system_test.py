@@ -164,11 +164,12 @@ def create_test_user() -> Optional[str]:
     """Create a test user and return their auth token."""
     print_subheader("Creating Test User")
     
-    # Generate unique user data
+    # Generate unique user data with more randomness
     timestamp = int(time.time())
+    random_suffix = random.randint(1000, 9999)
     user_data = {
-        "username": f"testuser_{timestamp}",
-        "email": f"testuser_{timestamp}@test.com",
+        "username": f"testuser_{timestamp}_{random_suffix}",
+        "email": f"testuser_{timestamp}_{random_suffix}@test.com",
         "password": "TestPass123!",
         "gender": "male"
     }
