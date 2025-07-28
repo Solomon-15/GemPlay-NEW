@@ -3162,24 +3162,7 @@ async def verify_email(request: EmailVerificationRequest):
 async def login(user_credentials: UserLogin):
     """Login user."""
     user = await db.users.find_one({"email": user_credentials.email})
-    
-    # Debug logging
-    logger.info(f"Login attempt for email: {user_credentials.email}")
-    
-    if not user:
-        logger.warning(f"User not found for email: {user_credentials.email}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    logger.info(f"User found: {user.get('id', 'no-id')}, checking password...")
-    password_valid = verify_password(user_credentials.password, user["password_hash"])
-    logger.info(f"Password verification result: {password_valid}")
-    
-    if not password_valid:
-        logger.warning(f"Invalid password for user: {user_credentials.email}")
+    if not user or not verify_password(user_credentials.password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
