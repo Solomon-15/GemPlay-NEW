@@ -65,6 +65,15 @@ const NewBotAnalytics = () => {
     try {
       setLoading(true);
       
+      // Проверяем наличие токена авторизации
+      const token = localStorage.getItem('token');
+      if (!token) {
+        showErrorRU('Необходима авторизация для доступа к аналитике');
+        // Redirect to login
+        window.location.href = '/login';
+        return;
+      }
+      
       // Получаем игры обычных ботов
       const gamesResponse = await get('/admin/games', {
         page: 1,
@@ -80,7 +89,20 @@ const NewBotAnalytics = () => {
       
     } catch (error) {
       console.error('Error fetching regular bots analytics:', error);
-      showErrorRU('Ошибка загрузки аналитики обычных ботов');
+      
+      // Handle different types of errors
+      if (error.response?.status === 401) {
+        showErrorRU('Ошибка авторизации. Перенаправляем на страницу входа...');
+        // Clear invalid token and redirect
+        localStorage.removeItem('token');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else if (error.response?.status === 403) {
+        showErrorRU('Недостаточно прав для доступа к аналитике обычных ботов');
+      } else {
+        showErrorRU('Ошибка загрузки аналитики обычных ботов');
+      }
     } finally {
       setLoading(false);
     }
