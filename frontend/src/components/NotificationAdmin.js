@@ -247,7 +247,9 @@ const NotificationAdmin = ({ user }) => {
 
   // Загрузка детальной аналитики при смене фильтров
   useEffect(() => {
+    console.log('useEffect triggered:', { activeTab, filters });
     if (activeTab === 'detailed') {
+      console.log('Fetching detailed analytics...');
       fetchDetailedAnalytics(1);
     }
   }, [activeTab, fetchDetailedAnalytics]);
