@@ -431,7 +431,7 @@ const HumanBotsList = ({
       await executeOperation(`/admin/human-bots/${bot.id}/toggle-status`, 'POST');
       addNotification(`Human-бот "${bot.name}" ${bot.is_active ? 'успешно деактивирован' : 'успешно активирован'}`, 'success');
       if (onRefresh) onRefresh(); // Use parent refresh function
-      await fetchStats();
+      // await fetchStats(); // Remove duplicate call
     } catch (error) {
       console.error('Ошибка переключения статуса:', error);
     }
