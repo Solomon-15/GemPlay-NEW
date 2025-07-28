@@ -24,10 +24,13 @@ const NotificationBell = ({ isCollapsed }) => {
     setIsOpen(!isOpen);
   };
 
-  // Handle click outside
+  // Handle click outside with improved logic
   const handleClickOutside = (event) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
-        bellRef.current && !bellRef.current.contains(event.target)) {
+    if (isOpen && 
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target) && 
+        bellRef.current && 
+        !bellRef.current.contains(event.target)) {
       setIsOpen(false);
     }
   };
@@ -45,6 +48,28 @@ const NotificationBell = ({ isCollapsed }) => {
     }
     
     setIsOpen(false);
+  };
+
+  // Enhanced responsive positioning
+  const getDropdownClasses = () => {
+    const baseClasses = `
+      absolute z-50 bg-surface-card border border-accent-primary border-opacity-30 
+      rounded-lg shadow-xl transform transition-all duration-200 ease-out
+    `;
+    
+    // Responsive width and positioning
+    const responsiveClasses = `
+      w-80 max-w-[calc(100vw-2rem)]
+      sm:w-72 sm:max-w-[calc(100vw-2rem)]
+      xs:w-64 xs:max-w-[calc(100vw-1rem)]
+      right-0 top-full mt-2
+    `;
+    
+    const stateClasses = isOpen 
+      ? 'opacity-100 scale-100 translate-y-0' 
+      : 'opacity-0 scale-95 -translate-y-2 pointer-events-none';
+    
+    return `${baseClasses} ${responsiveClasses} ${stateClasses}`;
   };
 
   // Format time ago helper
