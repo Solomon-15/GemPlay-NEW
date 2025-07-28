@@ -17813,6 +17813,63 @@ async def upload_sound_file(sound_id: str, file_data: UploadSoundFileRequest, cu
 # HUMAN BOTS API
 # ==============================================================================
 
+# Utility function for calculating bot statistics (remove duplication)
+async def calculate_bot_statistics(bot_id: str, db):
+    """Calculate comprehensive statistics for a bot to avoid code duplication."""
+    try:
+        # Get completed games where bot participated
+        completed_games_cursor = db.games.find({
+            "$or": [
+                {"creator_id": bot_id},
+                {"opponent_id": bot_id}
+            ],
+            "status": "COMPLETED"
+        })
+        completed_games = await completed_games_cursor.to_list(None)
+        
+        # Calculate basic statistics
+        draws = sum(1 for game in completed_games if game.get('winner_id') is None)
+        losses = sum(1 for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot_id)
+        wins = sum(1 for game in completed_games if game.get('winner_id') == bot_id)
+        actual_games_played = len(completed_games)
+        
+        # Calculate profit: (sum of bets in won games) - (sum of bets in lost games)
+        won_games = [game for game in completed_games if game.get('winner_id') == bot_id]
+        lost_games = [game for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot_id]
+        
+        total_bet_amount_won = sum(game.get('bet_amount', 0.0) for game in won_games)
+        total_bet_amount_lost = sum(game.get('bet_amount', 0.0) for game in lost_games)
+        
+        correct_profit = total_bet_amount_won - total_bet_amount_lost
+        
+        # Calculate win rate
+        win_rate = (wins / max(actual_games_played, 1)) * 100 if actual_games_played > 0 else 0
+        
+        return {
+            "draws": draws,
+            "losses": losses,
+            "wins": wins,
+            "actual_games_played": actual_games_played,
+            "correct_profit": correct_profit,
+            "win_rate": round(win_rate, 2),
+            "total_bet_amount_won": total_bet_amount_won,
+            "total_bet_amount_lost": total_bet_amount_lost
+        }
+    except Exception as e:
+        logger.error(f"Error calculating bot statistics for {bot_id}: {e}")
+        return {
+            "draws": 0,
+            "losses": 0,
+            "wins": 0,
+            "actual_games_played": 0,
+            "correct_profit": 0.0,
+            "win_rate": 0.0,
+            "total_bet_amount_won": 0.0,
+            "total_bet_amount_lost": 0.0
+        }
+
+
+# Helper functions - keep existing
 async def get_human_bot_active_bets_count(bot_id: str) -> int:
     """Get count of active bets for a human bot (only WAITING status - available for joining)."""
     try:
