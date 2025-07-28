@@ -481,7 +481,7 @@ const HumanBotsList = ({
         const response = await executeOperation(`/admin/human-bots/${bot.id}/recalculate-bets`, 'POST');
         addNotification(`Пересчёт ставок завершён: Human-бот "${bot.name}" - отменено ${response.cancelled_bets} активных ставок`, 'success');
         if (onRefresh) onRefresh(); // Use parent refresh function
-        await fetchStats();
+        // await fetchStats(); // Remove duplicate call
       } catch (error) {
         console.error('Ошибка пересчёта ставок:', error);
       }
