@@ -950,7 +950,8 @@ const NotificationAdmin = ({ user }) => {
                           </div>
                         </div>
                       </div>
-                        </div>
+
+                      <div className="flex-1">
                         <p className="text-gray-300 text-sm mb-3 line-clamp-2">{item.message}</p>
                         
                         {/* Прогресс-бар */}
