@@ -20931,6 +20931,26 @@ async def get_detailed_notification_analytics(
         all_human_ids = [user["id"] for user in all_humans]
         humans_map = {user["id"]: user for user in all_humans}
         
+        # PERFORMANCE OPTIMIZATION: Get all read notifications for all paginated notifications at once
+        notification_ids = [notification["id"] for notification in notifications]
+        
+        # Single query to get ALL read notifications for ALL notifications being displayed
+        all_read_notifications_cursor = db.notifications.find({
+            "id": {"$in": notification_ids},
+            "user_id": {"$in": all_human_ids},
+            "read": True
+        }, {"id": 1, "user_id": 1, "read_at": 1})
+        all_read_notifications = await all_read_notifications_cursor.to_list(None)
+        
+        # Group read notifications by notification_id for efficient lookup
+        read_notifications_by_id = {}
+        for read_notif in all_read_notifications:
+            notif_id = read_notif["id"]
+            if notif_id not in read_notifications_by_id:
+                read_notifications_by_id[notif_id] = []
+            read_notifications_by_id[notif_id].append(read_notif)
+        
+        # Process each notification using the pre-fetched read data
         for notification in notifications:
             notification_id = notification["id"]
             notification_type = notification.get("type", "unknown")
@@ -20945,13 +20965,8 @@ async def get_detailed_notification_analytics(
                 target_users = all_humans
                 target_user_ids = all_human_ids
             
-            # Get read status for this notification for target users in one query
-            read_notifications_cursor = db.notifications.find({
-                "id": notification_id,
-                "user_id": {"$in": target_user_ids},
-                "read": True
-            }, {"user_id": 1, "read_at": 1})
-            read_notifications = await read_notifications_cursor.to_list(None)
+            # Get read notifications for this specific notification from pre-fetched data
+            read_notifications = read_notifications_by_id.get(notification_id, [])
             
             # Create a set of user IDs who have read the notification
             read_user_ids = {notif["user_id"] for notif in read_notifications}
