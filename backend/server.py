@@ -21063,12 +21063,8 @@ async def resend_notification_to_unread(
         all_users_query = {
             "status": "ACTIVE",
             "role": {"$in": ["USER", "ADMIN", "SUPER_ADMIN"]},
-            "$and": [
-                {"bot_type": {"$exists": False}},
-                {"bot_type": {"$ne": "HUMAN"}},
-                {"bot_type": {"$ne": "REGULAR"}},
-                {"is_bot": {"$ne": True}}
-            ]
+            "bot_type": {"$exists": False},
+            "is_bot": {"$ne": True}
         }
         
         target_users_cursor = db.users.find(all_users_query, {"id": 1})
