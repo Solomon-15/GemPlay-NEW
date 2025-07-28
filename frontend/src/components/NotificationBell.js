@@ -127,85 +127,116 @@ const NotificationBell = ({ isCollapsed }) => {
         )}
       </button>
 
-      {/* Notifications Dropdown */}
+      {/* Notifications Dropdown - Fixed Positioning */}
       {isOpen && (
-        <div 
-          ref={dropdownRef}
-          className="absolute right-0 mt-2 w-80 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg shadow-lg z-50"
-        >
-          {/* Header */}
-          <div className="p-3 border-b border-gray-700">
-            <div className="flex items-center justify-between">
-              <h3 className="text-white font-rajdhani font-bold text-lg">Уведомления</h3>
-              <div className="flex items-center space-x-2">
-                {loading && (
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-primary"></div>
-                )}
-                {unreadCount > 0 && (
+        <>
+          {/* Backdrop for mobile */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-25 z-40 md:hidden"
+            onClick={() => setIsOpen(false)}
+          />
+          
+          <div 
+            ref={dropdownRef}
+            className={`
+              absolute z-50 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg shadow-lg
+              ${isCollapsed 
+                ? 'right-0 top-full mt-2 w-80 max-w-[90vw]' 
+                : 'right-0 top-full mt-2 w-80 max-w-[90vw]'
+              }
+              md:w-80 sm:w-72 xs:w-64
+            `}
+            style={{
+              maxHeight: 'calc(100vh - 100px)',
+              transform: window.innerWidth < 768 ? 'translateX(-50%)' : 'none',
+              left: window.innerWidth < 768 ? '50%' : 'auto'
+            }}
+          >
+            {/* Header */}
+            <div className="p-3 border-b border-gray-700 bg-surface-card rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <h3 className="text-white font-rajdhani font-bold text-lg">Уведомления</h3>
+                <div className="flex items-center space-x-3">
+                  {loading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-primary"></div>
+                  )}
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        markAllAsRead();
+                      }}
+                      className="text-xs text-accent-primary hover:underline whitespace-nowrap"
+                    >
+                      Все прочитано
+                    </button>
+                  )}
                   <button
-                    onClick={markAllAsRead}
-                    className="text-xs text-accent-primary hover:underline"
+                    onClick={() => setIsOpen(false)}
+                    className="text-gray-400 hover:text-white transition-colors md:hidden"
                   >
-                    Все прочитано
+                    ✕
                   </button>
-                )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Notifications List */}
-          <div className="max-h-96 overflow-y-auto">
-            {persistentNotifications.length === 0 ? (
-              <div className="p-4 text-center">
-                <div className="text-gray-400 text-sm">📭</div>
-                <div className="text-gray-400 text-sm mt-2">Нет уведомлений</div>
-              </div>
-            ) : (
-              persistentNotifications.slice(0, 10).map(notification => (
-                <div
-                  key={notification.id}
-                  onClick={() => handleNotificationClick(notification)}
-                  className={`p-3 border-b border-gray-700 last:border-b-0 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200 border-l-4 ${getPriorityColor(notification.priority)} ${
-                    !notification.is_read ? 'bg-accent-primary bg-opacity-5' : ''
-                  }`}
-                >
-                  <div className="flex items-start space-x-3">
-                    <span className="text-lg flex-shrink-0 mt-0.5">{notification.emoji}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className={`text-sm ${!notification.is_read ? 'font-bold text-white' : 'text-gray-300'}`}>
-                        {notification.title}
-                      </div>
-                      <div className="text-xs text-gray-400 mt-1 line-clamp-2">
-                        {notification.message}
-                      </div>
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="text-xs text-gray-500">
-                          {formatTimeAgo(notification.created_at)}
+            {/* Notifications List - Scrollable */}
+            <div className="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+              {persistentNotifications.length === 0 ? (
+                <div className="p-6 text-center">
+                  <div className="text-4xl mb-3 opacity-50">📭</div>
+                  <div className="text-gray-400 text-sm">Нет уведомлений</div>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-700">
+                  {persistentNotifications.slice(0, 10).map(notification => (
+                    <div
+                      key={notification.id}
+                      onClick={() => handleNotificationClick(notification)}
+                      className={`p-3 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200 border-l-4 ${getPriorityColor(notification.priority)} ${
+                        !notification.is_read ? 'bg-accent-primary bg-opacity-5' : ''
+                      }`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <span className="text-lg flex-shrink-0 mt-0.5">{notification.emoji}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className={`text-sm leading-tight ${!notification.is_read ? 'font-bold text-white' : 'text-gray-300'}`}>
+                            {notification.title}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1 line-clamp-2 leading-tight">
+                            {notification.message}
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="text-xs text-gray-500">
+                              {formatTimeAgo(notification.created_at)}
+                            </div>
+                            {!notification.is_read && (
+                              <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
+                            )}
+                          </div>
                         </div>
-                        {!notification.is_read && (
-                          <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
-                        )}
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))
-            )}
+              )}
+            </div>
+            
+            {/* Footer */}
+            <div className="p-3 border-t border-gray-700 bg-surface-card rounded-b-lg">
+              <button 
+                onClick={() => {
+                  window.location.href = '/notifications';
+                  setIsOpen(false);
+                }}
+                className="text-accent-primary text-sm hover:underline transition-colors"
+              >
+                Все уведомления →
+              </button>
+            </div>
           </div>
-          
-          {/* Footer */}
-          <div className="p-3 border-t border-gray-700">
-            <button 
-              onClick={() => {
-                window.location.href = '/notifications';
-                setIsOpen(false);
-              }}
-              className="text-accent-primary text-sm hover:underline"
-            >
-              Все уведомления →
-            </button>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
