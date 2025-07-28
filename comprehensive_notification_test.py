@@ -130,7 +130,7 @@ def test_login(email: str, password: str, user_type: str = "user") -> Optional[s
     print_subheader(f"Testing {user_type} Login")
     
     login_data = {
-        "username": email,
+        "email": email,
         "password": password
     }
     
