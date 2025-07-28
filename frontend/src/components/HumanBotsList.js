@@ -463,7 +463,7 @@ const HumanBotsList = ({
         can_play_with_other_bots: canPlay
       });
       addNotification(`Настройки Human-бота "${bot.name}" изменены: автоигра с другими ботами ${canPlay ? 'включена' : 'отключена'}`, 'success');
-      await fetchHumanBots();
+      if (onRefresh) onRefresh(); // Use parent refresh function
       await fetchStats();
     } catch (error) {
       console.error('Ошибка переключения автоигры:', error);
