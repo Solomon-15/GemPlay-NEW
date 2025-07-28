@@ -148,7 +148,7 @@ const NotificationsPage = () => {
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto"></div>
-              <p className="text-text-secondary mt-2">Загрузка уведомлений...</p>
+              <p className="text-text-secondary mt-2">Loading notifications...</p>
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="text-center py-12">
