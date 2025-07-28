@@ -1,22 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNotifications as useNotificationBell, useDropdownPosition } from '../hooks/useNotificationBell';
+import { useNotifications } from './NotificationContext';
 
 const NotificationBell = ({ isCollapsed }) => {
   const [isOpen, setIsOpen] = useState(false);
   const bellRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Use custom hooks
+  // Use the integrated notification system
   const {
-    notifications,
+    persistentNotifications,
     unreadCount,
     loading,
     fetchNotifications,
     markAsRead,
-    markAllAsRead,
-    getNotificationIcon,
-    timeAgo
-  } = useNotificationBell();
+    markAllAsRead
+  } = useNotifications();
 
   const { position, calculatePosition } = useDropdownPosition(bellRef);
 
