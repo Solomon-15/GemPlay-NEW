@@ -116,6 +116,23 @@ const NotificationBell = ({ isCollapsed }) => {
     }
   };
 
+  // Toggle expanded notification
+  const toggleExpandedNotification = (notificationId, event) => {
+    event.stopPropagation();
+    setExpandedNotificationId(expandedNotificationId === notificationId ? null : notificationId);
+  };
+
+  // Block body scroll when dropdown is open
+  useEffect(() => {
+    if (isOpen) {
+      // Запрещаем скролл основного контента
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = 'unset';
+      };
+    }
+  }, [isOpen]);
+
   // Handle click outside with improved logic
   const handleClickOutside = (event) => {
     if (isOpen && 
