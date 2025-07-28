@@ -5858,6 +5858,83 @@ async def determine_game_winner(game_id: str) -> dict:
             }
         )
         
+        # Send match result notifications to both players
+        try:
+            creator_name = await get_user_name_for_notification(game_obj.creator_id)
+            opponent_name = await get_user_name_for_notification(game_obj.opponent_id)
+            
+            # Determine winnings/losses for notifications
+            total_pot = game_obj.bet_amount * 2 if not is_regular_bot_game else game_obj.bet_amount
+            winnings = total_pot - commission_amount if winner_id else 0
+            
+            # Send notification to creator
+            if result_status == "creator_wins":
+                creator_payload = NotificationPayload(
+                    game_id=game_id,
+                    opponent_name=opponent_name,
+                    result="won",
+                    amount_won=winnings,
+                    action_url="/games/history"
+                )
+                opponent_payload = NotificationPayload(
+                    game_id=game_id,
+                    opponent_name=creator_name,
+                    result="lost",
+                    amount_lost=game_obj.bet_amount,
+                    action_url="/games/history"
+                )
+            elif result_status == "opponent_wins":
+                creator_payload = NotificationPayload(
+                    game_id=game_id,
+                    opponent_name=opponent_name,
+                    result="lost",
+                    amount_lost=game_obj.bet_amount,
+                    action_url="/games/history"
+                )
+                opponent_payload = NotificationPayload(
+                    game_id=game_id,
+                    opponent_name=creator_name,
+                    result="won",
+                    amount_won=winnings,
+                    action_url="/games/history"
+                )
+            else:  # draw
+                creator_payload = NotificationPayload(
+                    game_id=game_id,
+                    opponent_name=opponent_name,
+                    result="draw",
+                    amount=game_obj.bet_amount,
+                    action_url="/games/history"
+                )
+                opponent_payload = NotificationPayload(
+                    game_id=game_id,
+                    opponent_name=creator_name,
+                    result="draw",
+                    amount=game_obj.bet_amount,
+                    action_url="/games/history"
+                )
+            
+            # Send notifications to both players
+            await create_notification(
+                user_id=game_obj.creator_id,
+                notification_type=NotificationTypeEnum.MATCH_RESULT,
+                payload=creator_payload,
+                priority=NotificationPriorityEnum.INFO
+            )
+            
+            await create_notification(
+                user_id=game_obj.opponent_id,
+                notification_type=NotificationTypeEnum.MATCH_RESULT,
+                payload=opponent_payload,
+                priority=NotificationPriorityEnum.INFO
+            )
+            
+            logger.info(f"📬 Sent match result notifications for game {game_id}")
+        
+        except Exception as e:
+            logger.error(f"Error sending match result notifications: {e}")
+            # Don't fail the game completion if notification fails
+        
         # Refresh game object to get latest data
         updated_game = await db.games.find_one({"id": game_id})
         if updated_game:
