@@ -996,6 +996,7 @@ const NotificationAdmin = ({ user }) => {
                         </button>
                       </div>
                     </div>
+                  </div>
 
                     {/* Развернутые детали */}
                     {expandedNotification === item.notification_id && (
