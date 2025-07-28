@@ -1,22 +1,32 @@
 <analysis>
-The AI engineer successfully transitioned the GemPlay application from MVP, initially focusing on core financial logic (commission, bet returns, balance consistency), user profile editing, and a major  refactoring. Debugging included resolving Metamask removal issues and fixing a critical bug in the Admin Bot Analytics section, specifically for human-bots, though Regular Bots analytics remains problematic.
-
-The primary focus shifted to optimizing Human-Bot Management. This involved comprehensive backend and frontend refactoring for pagination, search, filtering, caching, and deduplication of bot statistics calculation. The engineer then successfully implemented a detailed notification system, including backend API, database schema, WebSocket integration, and frontend UI components (bell, settings page), addressing multiple rounds of user feedback on positioning and display. The immediate outstanding issue is fixing the notification dropdown's scroll behavior.
+The AI engineer successfully built the GemPlay application from an MVP to a more feature-rich platform. Initial efforts focused on core financial logic, user profiles, and UI refinements. Significant work was dedicated to optimizing Human-Bot Management with pagination, search, and caching, as well as implementing a comprehensive real-time notification system (backend APIs, database schema, WebSocket integration, and frontend UI components like bell, dropdown, and settings page). The engineer systematically addressed critical bugs, including a notification dropdown scroll issue and initial authorization problems. The most recent ongoing work involves creating a detailed notification analytics section in the admin panel and is currently focused on optimizing the backend API's performance due to slow database queries.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting platform with Human-bots and a 3% commission system, aiming for robust betting, accurate financials, and comprehensive admin controls. Initial development focused on: ensuring full frozen amounts return on game exit/draw, implementing an Unfreeze All Stuck Commission admin feature, correcting Total balance calculation across UI, enabling user profile editing (username, gender, timezone, shortened ID), and refactoring the  for responsiveness and skeleton loading. Recent work included complete Metamask removal and fixing the Admin Panel Analytics for Human-bots. The ongoing task is to optimize Human-Bot Management with pagination (10 items/page, adjustable), search/filtering, 1-minute caching (auto-update), and prioritized display of STATISTICS and PENDING BETS. A significant new requirement is a full Notification System, integrating with  for real-time (WebSocket) critical events, supporting various types (bet, match results, gifts, system, admin), managing read/unread status, storing history with pagination, and featuring UI elements (bell, dropdown, settings page), and admin analytics.
+The GemPlay application is an asynchronous PvP gem betting platform with Human-bots and a 3% commission system. The core problem is to provide a robust betting environment with accurate financials and comprehensive administrative controls. Initial requirements included ensuring frozen amounts return on game exit/draw, an Unfreeze All Stuck Commission admin feature, correct Total balance calculation, user profile editing (username, gender, timezone, shortened ID), and a responsive  with skeleton loading. Recent work involved Metamask removal and fixing Admin Panel Analytics for Human-bots.
+
+Key new features:
+1.  **Human-Bot Management Optimization**: Pagination (10 items/page, adjustable), search/filtering, 1-minute caching (auto-update), and prioritized display of STATISTICS and PENDING BETS.
+2.  **Full Notification System**:
+    *   Real-time (WebSocket) delivery for critical events.
+    *   Support for various types (bet, match results, gifts, system, admin).
+    *   Manage read/unread status and store history with pagination.
+    *   Frontend UI: bell icon, dropdown, settings page, and dedicated notifications page.
+    *   Admin panel for creating and sending notifications to players, with analytics.
+    *   Localization: Bell interface and system messages in English by default; admin-created messages retain their input language (Russian/English); admin panel UI remains in Russian.
+    *   Detailed Admin Analytics: Display all sent notifications (including system/automatic), with pagination (50 items/page), filtering (type, date, sender), compact view (progress bars, color indication), detailed view on click (full list of readers/non-readers with names/emails), graphs, and a resend option for unread users. Human/regular bots should be excluded from analytics.
 </product_requirements>
 
 <key_technical_concepts>
--   **React.js**: Frontend UI, state management, hooks (useState, useEffect, useCallback), context API.
+-   **React.js**: Frontend UI, state management (useState, useEffect), hooks, context API.
 -   **FastAPI**: Python backend, RESTful APIs, Pydantic models.
--   **MongoDB**: NoSQL database.
+-   **MongoDB**: NoSQL database for data storage.
+-   **WebSocket**: Real-time communication for instant notifications.
 -   **Axios**: HTTP client for API calls.
--   **Supervisor**: Process manager.
--   **Tailwind CSS**: Utility-first CSS framework.
--   **WebSocket**: Real-time communication for notifications.
--   **Pagination, Caching, Debouncing**: Performance optimization techniques.
+-   **Supervisor**: Process manager for application services.
+-   **Tailwind CSS**: Utility-first CSS framework for styling.
+-   **Pagination, Caching, Debouncing**: Techniques for performance optimization.
+-   **Passlib (Bcrypt)**: For secure password hashing and verification.
 </key_technical_concepts>
 
 <code_architecture>
@@ -25,52 +35,48 @@ The application uses a MERN-stack variant (React.js, FastAPI, MongoDB) structure
 
 
 -   : Centralizes backend logic.
-    -   **Importance**: Manages all API endpoints, database interactions, and core game logic.
-    -   **Changes Made**: Enhanced  for pagination, search, filter, and caching. Added  utility and integrated it into bot-related endpoints (, ). Implemented extensive notification system APIs (GET/PUT , , POST , GET ) with new Pydantic models. Integrated notification triggers into game events (, ) and gem transfers.
--   : Manages human bot listing and operations.
-    -   **Importance**: Provides the user interface for human-bot administration, including search, filters, and pagination controls.
-    -   **Changes Made**: Implemented client-side pagination, search, and filtering logic using  for API calls. Updated  to support new backend parameters. Passed control (data, pagination, refresh callback) to  and provided statistics.
--   : Renders the list of human bots.
-    -   **Importance**: Displays individual human bot details in a table format.
-    -   **Changes Made**: Transformed into a controlled component by removing its internal data fetching and state management. Now receives  data, pagination state, and  callback via props from its parent, , ensuring all list updates are externally managed.
--   : Global context for notifications.
-    -   **Importance**: Centralizes notification state, WebSocket connectivity, and provides an API for other components to interact with notifications.
-    -   **Changes Made**: Refactored to integrate with the new backend notification system, managing  and  states. Includes logic for  (pull), , and  (WebSocket push). Maintains backward compatibility for existing toast notifications.
+    -   **Importance**: Handles all API endpoints, database interactions, and core application logic.
+    -   **Changes Made**:
+        *   Enhanced  for pagination, search, filter, and caching.
+        *   Implemented extensive notification system APIs (GET/PUT , , POST , GET , GET , POST ) with new Pydantic models.
+        *   Integrated notification triggers into game events and gem transfers.
+        *   **CRITICAL FIXES**: Updated  to  for user queries in broadcast. Modified  to accept , , . Removed duplicate old  GET and  POST endpoints to ensure the correct ones are used. Fixed login endpoint logic for password verification and hashing. Translated system notification templates to English. Optimized the  endpoint to reduce individual database queries per user/notification.
 -   : Bell icon UI element.
     -   **Importance**: Visual indicator for unread notifications and entry point to recent notification list.
-    -   **Changes Made**: Heavily refactored. Displays unread count, opens a dropdown with recent notifications upon click. Stylized the icon, removed accompanying text, and implemented precise fixed positioning for the dropdown relative to the bell's top-left corner, ensuring it doesn't shift on scroll (though this fix is still pending final confirmation).
--   : User settings for notifications.
-    -   **Importance**: Allows users to customize which types of notifications they receive.
-    -   **Changes Made**: A new component created to manage user notification preferences, fetching and updating settings via the backend API.
--   : Dedicated page for all notifications.
-    -   **Importance**: Provides a comprehensive view of historical notifications with pagination and filtering capabilities.
-    -   **Changes Made**: A new component created for displaying the full notification history.
--   : User profile interface.
-    -   **Importance**: Where users manage their personal information and settings.
-    -   **Changes Made**: Integrated  as a new tab within the user's profile section, allowing users to configure their notification preferences.
--   : Main application navigation sidebar.
-    -   **Importance**: Provides global navigation access.
-    -   **Changes Made**: Integrated  into the sidebar, making it accessible from most parts of the application.
--   : Main application entry point.
-    -   **Importance**: Initializes the main application components and contexts.
-    -   **Changes Made**: Previously had  import removed.
-
+    -   **Changes Made**: Heavily refactored for precise fixed positioning (with  and  dependencies) to prevent shifting on scroll. Localized all hardcoded Russian texts (e.g., Уведомления, Все прочитано) to English.
+-   : Global context for notifications.
+    -   **Importance**: Centralizes notification state, WebSocket connectivity, and provides an API for other components.
+    -   **Changes Made**: Refactored to integrate with the new backend system, managing  and  states. Fixed one Russian error message. Now expects the backend API to return a structured object .
+-    (CREATED): New admin component.
+    -   **Importance**: Provides the full interface for creating, sending, and viewing analytics for notifications.
+    -   **Changes Made**: Implemented UI for creating (types, priorities, title/message, recipient selection) and analytics (new tab for Аналитика отправок, with filters, pagination, compact view with progress bars, detailed user lists, and resend option).
+-   : Main admin interface.
+    -   **Importance**: Provides navigation and renders different admin sections.
+    -   **Changes Made**: Imported  and added a new Уведомления section to the sidebar menu and corresponding logic to render the  component.
+-   : Manages user listing and operations.
+    -   **Importance**: Admin interface for user management.
+    -   **Changes Made**: Implemented  for search functionality to prevent excessive re-renders and potential cursor disappearance. Optimized  to prevent unnecessary pagination resets. Wrapped  and  in .
+-   : Bot analytics component.
+    -   **Importance**: Displays analytics for human and regular bots.
+    -   **Changes Made**: Added authorization checks and more detailed error handling to  and  to prevent redirecting to the login page when an admin token is missing or invalid.
 </code_architecture>
 
 <pending_tasks>
--   **Cursor Disappearance Issue**: Cursor disappears after single character input in  and other similar input fields.
--   **Regular Bots Analytics Fix**: The Regular Bots tab in the Admin Panel's analytics section still redirects to the login page.
--   **Notification Modal Scroll Issue**: The notification dropdown in  still shifts its position when the page is scrolled, despite efforts to fix its fixed positioning.
+-   **Cursor Disappearance Issue**: Cursor disappears after single character input in  and other similar input fields (changes were made but not confirmed as fully fixed).
+-   **Regular Bots Analytics Fix**: The Regular Bots tab in the Admin Panel's analytics section still redirects to the login page (backend APIs confirmed, but frontend behavior not fully confirmed after all auth fixes).
+-   **Notification Detailed Analytics Performance**: The API for detailed notification analytics is still slow/freezing due to inefficient database queries, causing sent messages not to display properly in the frontend.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary, the AI engineer was addressing quick fixes for the newly implemented notification system. The primary user request was to ensure the notification modal (dropdown) that appears upon clicking the bell icon maintains a fixed position relative to the bell, specifically aligning its left-top corner precisely with the bell, and crucially, that it should *not* shift when the user scrolls the page.
+Immediately before this summary request, the AI engineer was working on optimizing the performance of the Detailed Analytics section within the Notification Management module of the admin panel. The user reported that sent messages were not displaying in this section, which was diagnosed to be primarily a performance issue on the backend.
 
-The engineer had successfully removed the Уведомления text from beside the bell icon, implemented a stylized bell icon, and ensured the modal's adaptive width across different screen resolutions. The alignment of the modal's left-top corner with the bell was also perfectly achieved based on the last screenshot test.
+The backend API endpoint  in  was identified as causing freezes or extremely slow responses. The root cause was pinpointed to inefficient database queries, specifically performing multiple individual queries to fetch user data for each notification and recipient, which is highly problematic for large datasets.
 
-However, the most recent test (Chat Message 335) revealed a persistent problem: the dropdown still exhibits vertical displacement during page scrolling. The engineer acknowledged this scroll issue and identified it as a critical problem with fixed positioning, indicating that the modal's  coordinate was changing from  to  pixels during scroll. The very last action taken was an attempt to resolve this by adding a scroll event listener () within , presumably to re-calculate or enforce the fixed position on scroll.
+The engineer attempted to optimize the code in  (around lines 20910-20965) by aiming to reduce the number of database calls. The strategy was to fetch all necessary user data in a more efficient manner (e.g., in one go) rather than iterating and querying for each user individually per notification. There was also an attempt to fix a logic error related to handling duplicate notifications in the analytics.
+
+At the very end of the trajectory, despite modifications, the API was still reported as slow or freezing. The last action taken was another attempt to refactor the database query logic to collect all relevant user data more efficiently (). This task is ongoing and not yet resolved.
 </current_work>
 
 <optional_next_step>
-Test the implemented fix for the notification dropdown's scroll-related shifting to confirm its fixed positioning.
+Optimize the backend query for  to resolve the performance bottleneck and display issues.
 </optional_next_step>
