@@ -20744,8 +20744,14 @@ async def admin_broadcast_notification(
         if request.target_users:
             target_users = request.target_users
         else:
-            # Broadcast to all active users
-            users_cursor = db.users.find({"status": "ACTIVE"}, {"id": 1})
+            # Broadcast to all active users, excluding all bots (Human-bots and Regular bots)
+            users_cursor = db.users.find({
+                "status": "ACTIVE",
+                "$or": [
+                    {"bot_type": {"$exists": False}},
+                    {"bot_type": None}
+                ]
+            }, {"id": 1})
             target_users = [user["id"] async for user in users_cursor]
         
         if not target_users:
