@@ -278,8 +278,13 @@ const UserManagement = ({ user: currentUser }) => {
 
   // Event handlers
   const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-    pagination.handlePageChange(1);
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
+    
+    // Only reset page to 1 if search term actually changed
+    if (searchTerm !== newSearchTerm && newSearchTerm.length > 0) {
+      pagination.handlePageChange(1);
+    }
   };
 
   const handleStatusFilter = (status) => {
