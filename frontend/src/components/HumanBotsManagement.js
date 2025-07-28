@@ -378,6 +378,17 @@ const HumanBotsManagement = () => {
     };
   }, [searchDebounceTimeout, refreshInterval]);
 
+  // Initialize bot list when bulk create form opens
+  useEffect(() => {
+    if (showBulkCreateForm && bulkCreateData.bots.length !== bulkCreateData.count) {
+      const bots = initializeBots(bulkCreateData.count);
+      setBulkCreateData(prev => ({
+        ...prev,
+        bots: bots
+      }));
+    }
+  }, [showBulkCreateForm, bulkCreateData.count]);
+
   const fetchHumanBotSettings = async () => {
     try {
       setSettingsLoading(true);
