@@ -762,6 +762,70 @@ const NotificationAdmin = ({ user }) => {
                   `📤 Отправить уведомление${targetUsers === 'all' ? ' всем' : ` (${selectedUsers.length} получателей)`}`
                 )}
               </button>
+
+              {/* Раздел удаления уведомлений по категориям */}
+              <div className="border-t border-gray-600 pt-6 mt-6">
+                <h3 className="text-white text-lg font-rajdhani font-bold mb-4">🗑️ Управление базой уведомлений</h3>
+                
+                {/* Загрузка статистики */}
+                <div className="mb-4">
+                  <button
+                    onClick={fetchNotificationStats}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-200"
+                  >
+                    📊 Загрузить статистику по категориям
+                  </button>
+                </div>
+
+                {/* Статистика и выбор категорий для удаления */}
+                {notificationStats.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <h4 className="text-white font-bold mb-3">Статистика уведомлений по категориям:</h4>
+                      <div className="space-y-2">
+                        {notificationStats.map(stat => (
+                          <label key={stat.type} className="flex items-center justify-between cursor-pointer p-2 rounded hover:bg-surface-card">
+                            <div className="flex items-center space-x-3">
+                              <input
+                                type="checkbox"
+                                checked={selectedTypesForDeletion.includes(stat.type)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedTypesForDeletion([...selectedTypesForDeletion, stat.type]);
+                                  } else {
+                                    setSelectedTypesForDeletion(selectedTypesForDeletion.filter(t => t !== stat.type));
+                                  }
+                                }}
+                                className="text-accent-primary focus:ring-accent-primary"
+                              />
+                              <span className="text-white font-medium">{stat.name}</span>
+                            </div>
+                            <span className="text-accent-primary font-bold">{stat.count} шт.</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Кнопка удаления по категориям */}
+                    {selectedTypesForDeletion.length > 0 && (
+                      <div className="space-y-2">
+                        <div className="text-yellow-400 text-sm">
+                          ⚠️ Выбрано для удаления: {selectedTypesForDeletion.length} категорий, 
+                          всего уведомлений: {notificationStats
+                            .filter(stat => selectedTypesForDeletion.includes(stat.type))
+                            .reduce((sum, stat) => sum + stat.count, 0)}
+                        </div>
+                        <button
+                          onClick={() => setShowDeleteConfirmation(true)}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-200"
+                        >
+                          🗑️ Удалить выбранные категории
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
