@@ -863,32 +863,207 @@ const HumanBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Filters */}
-              <div className="filters-section">
-                <div className="filter-group">
-                  <label>Характер:</label>
-                  <select 
-                    value={filters.character} 
-                    onChange={(e) => setFilters({...filters, character: e.target.value})}
-                  >
-                    <option value="">Все</option>
-                    {characters.map(char => (
-                      <option key={char.value} value={char.value}>
-                        {char.label}
-                      </option>
-                    ))}
-                  </select>
+              {/* Enhanced Search and Filters */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-rajdhani font-bold text-white">🔍 Поиск и фильтры</h3>
+                  <div className="flex items-center space-x-4">
+                    {/* Auto-refresh toggle */}
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-text-secondary">Авто-обновление:</label>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={autoRefresh}
+                          onChange={(e) => setAutoRefresh(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-accent-primary peer-focus:ring-opacity-25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-accent-primary"></div>
+                      </label>
+                    </div>
+                    
+                    {/* Priority fields toggle */}
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-text-secondary">Приоритетная загрузка:</label>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={priorityFields}
+                          onChange={(e) => setPriorityFields(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 peer-focus:ring-opacity-25 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                      </label>
+                    </div>
+
+                    {/* Manual refresh button */}
+                    <button
+                      onClick={() => {
+                        fetchHumanBots(false);
+                        fetchStats();
+                        addNotification('Данные обновлены', 'success');
+                      }}
+                      disabled={loading || loadingPriority}
+                      className="px-3 py-1 bg-accent-primary text-white text-sm rounded hover:bg-accent-primary-dark disabled:opacity-50 transition-colors"
+                    >
+                      {loading || loadingPriority ? '⏳' : '🔄'} Обновить
+                    </button>
+                  </div>
                 </div>
-                <div className="filter-group">
-                  <label>Статус:</label>
-                  <select 
-                    value={filters.is_active || ''} 
-                    onChange={(e) => setFilters({...filters, is_active: e.target.value === '' ? null : e.target.value === 'true'})}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Search by name */}
+                  <div className="filter-group">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Поиск по имени:</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        placeholder="Введите имя бота..."
+                        className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={() => handleSearchChange('')}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-text-secondary hover:text-white"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Character filter */}
+                  <div className="filter-group">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Характер:</label>
+                    <select 
+                      value={filters.character} 
+                      onChange={(e) => {
+                        setFilters({...filters, character: e.target.value});
+                        setCurrentPage(1);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                    >
+                      <option value="">Все характеры</option>
+                      {characters.map(char => (
+                        <option key={char.value} value={char.value}>
+                          {char.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Status filter */}
+                  <div className="filter-group">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Статус:</label>
+                    <select 
+                      value={filters.is_active === null ? '' : filters.is_active.toString()} 
+                      onChange={(e) => {
+                        setFilters({...filters, is_active: e.target.value === '' ? null : e.target.value === 'true'});
+                        setCurrentPage(1);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                    >
+                      <option value="">Все статусы</option>
+                      <option value="true">Активные</option>
+                      <option value="false">Неактивные</option>
+                    </select>
+                  </div>
+
+                  {/* Page size selector */}
+                  <div className="filter-group">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Элементов на странице:</label>
+                    <select 
+                      value={pageSize} 
+                      onChange={(e) => {
+                        setPageSize(parseInt(e.target.value));
+                        setCurrentPage(1);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                    >
+                      <option value={5}>5</option>
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Advanced filters row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  {/* Min bet range filter */}
+                  <div className="filter-group">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Диапазон мин. ставок:</label>
+                    <input
+                      type="text"
+                      value={filters.min_bet_range}
+                      onChange={(e) => {
+                        setFilters({...filters, min_bet_range: e.target.value});
+                        setCurrentPage(1);
+                      }}
+                      placeholder="Например: 1-50"
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Sort by */}
+                  <div className="filter-group">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Сортировка:</label>
+                    <select 
+                      value={filters.sort_by} 
+                      onChange={(e) => {
+                        setFilters({...filters, sort_by: e.target.value});
+                        setCurrentPage(1);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                    >
+                      <option value="created_at">По дате создания</option>
+                      <option value="name">По имени</option>
+                      <option value="character">По характеру</option>
+                      <option value="is_active">По статусу</option>
+                      <option value="min_bet">По мин. ставке</option>
+                      <option value="max_bet">По макс. ставке</option>
+                    </select>
+                  </div>
+
+                  {/* Sort order */}
+                  <div className="filter-group">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">Порядок:</label>
+                    <select 
+                      value={filters.sort_order} 
+                      onChange={(e) => {
+                        setFilters({...filters, sort_order: e.target.value});
+                        setCurrentPage(1);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                    >
+                      <option value="desc">По убыванию</option>
+                      <option value="asc">По возрастанию</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Clear filters button */}
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setFilters({
+                        search: '',
+                        character: '',
+                        is_active: null,
+                        min_bet_range: '',
+                        max_bet_range: '',
+                        sort_by: 'created_at',
+                        sort_order: 'desc'
+                      });
+                      setSearchTerm('');
+                      setCurrentPage(1);
+                    }}
+                    className="px-4 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
                   >
-                    <option value="">Все</option>
-                    <option value="true">Активные</option>
-                    <option value="false">Неактивные</option>
-                  </select>
+                    🗑️ Очистить фильтры
+                  </button>
                 </div>
               </div>
 
