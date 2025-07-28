@@ -94,7 +94,7 @@ const UserManagement = ({ user: currentUser }) => {
         limit: pagination.itemsPerPage.toString()
       });
       
-      if (searchTerm) params.append('search', searchTerm);
+      if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
       if (statusFilter) params.append('status', statusFilter);
       
       const response = await axios.get(`${API}/admin/users?${params}`, {
