@@ -17998,7 +17998,7 @@ async def generate_notification_content(notification_type: NotificationTypeEnum,
     
     template = templates.get(notification_type)
     if not template:
-        return "📬", "Уведомление", "Новое уведомление"
+        return "📬", "Notification", "New notification"
     
     # Handle emoji selection
     if "emoji_map" in template:
