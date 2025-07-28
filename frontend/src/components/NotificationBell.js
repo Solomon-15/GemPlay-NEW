@@ -89,10 +89,15 @@ const NotificationBell = ({ isCollapsed }) => {
   const handleBellClick = () => {
     if (!isOpen) {
       fetchNotifications();
-      // Calculate position before opening
-      setTimeout(calculateDropdownPosition, 0);
     }
     setIsOpen(!isOpen);
+    
+    // Force position recalculation after state change
+    if (!isOpen) {
+      setTimeout(() => {
+        calculateDropdownPosition();
+      }, 0);
+    }
   };
 
   // Handle click outside with improved logic
