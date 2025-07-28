@@ -20930,25 +20930,31 @@ async def get_detailed_notification_analytics(
             target_users_cursor = db.users.find(all_users_query, {"id": 1, "username": 1, "email": 1})
             target_users = await target_users_cursor.to_list(None)
             
-            # Get read status for each user
+            # Get read status for this notification for all users in one query
+            read_notifications_cursor = db.notifications.find({
+                "id": notification_id,
+                "user_id": {"$in": [user["id"] for user in target_users]},
+                "read": True
+            }, {"user_id": 1, "read_at": 1})
+            read_notifications = await read_notifications_cursor.to_list(None)
+            
+            # Create a set of user IDs who have read the notification
+            read_user_ids = {notif["user_id"] for notif in read_notifications}
+            read_at_map = {notif["user_id"]: notif.get("read_at") for notif in read_notifications}
+            
+            # Build read/unread user lists
             read_users = []
             unread_users = []
             
             for user in target_users:
-                # Check if this user has read this notification
-                user_notification = await db.notifications.find_one({
-                    "id": notification_id,
-                    "user_id": user["id"]
-                })
-                
                 user_info = {
                     "user_id": user["id"],
                     "username": user.get("username", "Unknown"),
                     "email": user.get("email", "unknown@example.com"),
-                    "read_at": user_notification.get("read_at") if user_notification and user_notification.get("read") else None
+                    "read_at": read_at_map.get(user["id"])
                 }
                 
-                if user_notification and user_notification.get("read"):
+                if user["id"] in read_user_ids:
                     read_users.append(user_info)
                 else:
                     unread_users.append(user_info)
