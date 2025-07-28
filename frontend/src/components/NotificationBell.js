@@ -83,26 +83,45 @@ const NotificationBell = ({ isCollapsed }) => {
 
   return (
     <div className="relative">
-      {/* Bell Button */}
+      {/* Bell Button - Stylized Design */}
       <button
         ref={bellRef}
         onClick={handleBellClick}
         className={`
-          flex items-center justify-center p-2 text-text-secondary hover:text-white 
-          transition-all duration-200 rounded-lg hover:bg-surface-sidebar
-          ${isCollapsed ? 'w-10 h-10' : 'w-full px-3 py-2'}
+          relative flex items-center justify-center p-3 text-text-secondary hover:text-white 
+          transition-all duration-200 rounded-lg hover:bg-surface-sidebar group
+          ${isCollapsed ? 'w-10 h-10' : 'w-10 h-10'}
         `}
         aria-label="Notifications"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M15 17h5l-5-5V9a6 6 0 10-12 0v3l-5 5h5m7 0v1a3 3 0 01-6 0v-1m6 0H9" />
-        </svg>
+        {/* Stylized Bell Icon */}
+        <div className="relative">
+          <svg 
+            className="w-6 h-6 transform group-hover:scale-110 transition-transform duration-200" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" 
+            />
+          </svg>
+          
+          {/* Notification Dot - only show when there are unread notifications */}
+          {unreadCount > 0 && (
+            <div className="absolute -top-1 -right-1 flex items-center justify-center">
+              <div className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></div>
+              <div className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></div>
+            </div>
+          )}
+        </div>
         
-        {!isCollapsed && <span className="ml-3 font-roboto">Уведомления</span>}
-        
+        {/* Unread Count Badge */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+          <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1 border-2 border-surface-primary">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
