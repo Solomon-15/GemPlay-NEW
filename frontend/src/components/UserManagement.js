@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNotifications } from './NotificationContext';
 import { formatDollarAmount } from '../utils/economy';
