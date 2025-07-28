@@ -263,13 +263,12 @@ const NotificationBell = ({ isCollapsed }) => {
             className="fixed z-50 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg shadow-xl transform transition-all duration-200 ease-out"
             style={{
               top: `${dropdownPosition.top}px`,
-              left: dropdownPosition.width ? '20px' : `${dropdownPosition.left}px`,
-              right: dropdownPosition.width ? '20px' : 'auto',
-              width: dropdownPosition.width ? `${dropdownPosition.width}px` : `${Math.min(320, dropdownPosition.maxWidth || 320)}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width || Math.min(320, dropdownPosition.maxWidth || 320)}px`,
               maxHeight: `${dropdownPosition.maxHeight || 400}px`,
               opacity: isOpen ? 1 : 0,
               transform: isOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-8px)'
-            }}
+            }}}
           >
             {/* Header */}
             <div className="sticky top-0 p-3 border-b border-gray-700 bg-surface-card rounded-t-lg z-10">
