@@ -40,16 +40,16 @@ const NotificationsPage = () => {
     const now = new Date();
     const diffInMinutes = Math.floor((now - date) / (1000 * 60));
     
-    if (diffInMinutes < 1) return 'только что';
-    if (diffInMinutes < 60) return `${diffInMinutes} мин назад`;
+    if (diffInMinutes < 1) return 'just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
     
     const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours} ч назад`;
+    if (diffInHours < 24) return `${diffInHours} hrs ago`;
     
     const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 30) return `${diffInDays} д назад`;
+    if (diffInDays < 30) return `${diffInDays} days ago`;
     
-    return date.toLocaleDateString('ru-RU');
+    return date.toLocaleDateString('en-US');
   };
 
   const getPriorityColor = (priority) => {
