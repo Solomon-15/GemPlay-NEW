@@ -18117,7 +18117,10 @@ async def create_notification(
     notification_type: NotificationTypeEnum,
     payload: Optional[NotificationPayload] = None,
     priority: NotificationPriorityEnum = NotificationPriorityEnum.INFO,
-    expires_at: Optional[datetime] = None
+    expires_at: Optional[datetime] = None,
+    custom_title: Optional[str] = None,
+    custom_message: Optional[str] = None,
+    custom_emoji: Optional[str] = None
 ) -> Optional[str]:
     """Create and store notification"""
     
@@ -18131,10 +18134,16 @@ async def create_notification(
             return None
         
         # Generate notification content
-        if payload is None:
-            payload = NotificationPayload()
-            
-        emoji, title, message = await generate_notification_content(notification_type, payload)
+        if custom_title and custom_message:
+            # Use custom content for admin broadcasts
+            emoji = custom_emoji or "🔔"
+            title = custom_title
+            message = custom_message
+        else:
+            # Use template-based generation for game events
+            if payload is None:
+                payload = NotificationPayload()
+            emoji, title, message = await generate_notification_content(notification_type, payload)
         
         # Create notification document
         notification_id = str(uuid.uuid4())
