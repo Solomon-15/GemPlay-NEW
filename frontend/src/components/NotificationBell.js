@@ -322,30 +322,78 @@ const NotificationBell = ({ isCollapsed }) => {
                   {persistentNotifications.slice(0, 10).map(notification => (
                     <div
                       key={notification.id}
-                      onClick={() => handleNotificationClick(notification)}
-                      className={`p-3 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200 border-l-4 ${getPriorityColor(notification.priority)} ${
+                      className={`border-l-4 ${getPriorityColor(notification.priority)} ${
                         !notification.is_read ? 'bg-accent-primary bg-opacity-5' : ''
                       }`}
                     >
-                      <div className="flex items-start space-x-3">
-                        <span className="text-lg flex-shrink-0 mt-0.5 select-none">{notification.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className={`text-sm leading-tight break-words ${!notification.is_read ? 'font-bold text-white' : 'text-gray-300'}`}>
-                            {notification.title}
-                          </div>
-                          <div className="text-xs text-gray-400 mt-1 line-clamp-2 leading-tight break-words">
-                            {notification.message}
-                          </div>
-                          <div className="flex items-center justify-between mt-2">
-                            <div className="text-xs text-gray-500 flex-shrink-0">
-                              {formatTimeAgo(notification.created_at)}
+                      {/* Основное уведомление */}
+                      <div
+                        onClick={() => handleNotificationClick(notification)}
+                        className="p-3 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <span className="text-lg flex-shrink-0 mt-0.5 select-none">{notification.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-sm leading-tight break-words ${!notification.is_read ? 'font-bold text-white' : 'text-gray-300'}`}>
+                              {notification.title}
                             </div>
-                            {!notification.is_read && (
-                              <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0 ml-2"></div>
-                            )}
+                            <div className="text-xs text-gray-400 mt-1 line-clamp-2 leading-tight break-words">
+                              {expandedNotificationId === notification.id 
+                                ? notification.message 
+                                : (notification.message.length > 60 
+                                    ? notification.message.substring(0, 60) + '...' 
+                                    : notification.message)
+                              }
+                            </div>
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="text-xs text-gray-500 flex-shrink-0">
+                                {formatTimeAgo(notification.created_at)}
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                {!notification.is_read && (
+                                  <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
+                                )}
+                                {/* Кнопка расширения */}
+                                {notification.message.length > 60 && (
+                                  <button
+                                    onClick={(e) => toggleExpandedNotification(notification.id, e)}
+                                    className="text-accent-primary hover:text-accent-primary-dark text-xs font-medium"
+                                  >
+                                    {expandedNotificationId === notification.id ? 'Скрыть' : 'Подробнее'}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
+
+                      {/* Расширенный контент */}
+                      {expandedNotificationId === notification.id && (
+                        <div className="px-3 pb-3 border-t border-gray-600 bg-surface-sidebar bg-opacity-50">
+                          <div className="pt-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs text-gray-400 font-medium">Полный текст:</div>
+                              <button
+                                onClick={(e) => toggleExpandedNotification(notification.id, e)}
+                                className="text-gray-400 hover:text-white text-xs p-1"
+                                aria-label="Закрыть расширенный вид"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                            <div className="text-sm text-gray-300 leading-relaxed break-words">
+                              {notification.message}
+                            </div>
+                            <div className="text-xs text-gray-500 pt-1 border-t border-gray-600">
+                              <div>Дата: {new Date(notification.created_at).toLocaleString('ru-RU')}</div>
+                              <div>Отправитель: {notification.type === 'admin_notification' ? 'Администратор' : 'Система'}</div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
