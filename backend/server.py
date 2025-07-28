@@ -21126,6 +21126,149 @@ async def resend_notification_to_unread(
         )
 
 
+class DeleteNotificationsByTypeRequest(BaseModel):
+    notification_types: List[str]  # Список типов для удаления
+
+class DeleteNotificationsByIdsRequest(BaseModel):
+    notification_ids: List[str]  # Список ID для удаления
+
+# Добавляем эти эндпоинты после существующих notification endpoints
+
+@api_router.delete("/admin/notifications/by-type")
+async def delete_notifications_by_type(
+    request: DeleteNotificationsByTypeRequest,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Удаление уведомлений по типу/категории"""
+    try:
+        # Русские названия для типов уведомлений
+        type_names = {
+            "bet_accepted": "Ставки",
+            "match_result": "Результаты", 
+            "commission_freeze": "Комиссия",
+            "gem_gift": "Подарки",
+            "system_message": "Системные",
+            "admin_notification": "Админские"
+        }
+        
+        # Подсчитаем количество уведомлений для удаления
+        total_count = 0
+        for notification_type in request.notification_types:
+            count = await db.notifications.count_documents({"type": notification_type})
+            total_count += count
+            logger.info(f"Found {count} notifications of type {notification_type}")
+        
+        if total_count == 0:
+            return {
+                "success": True,
+                "message": "Нет уведомлений для удаления",
+                "deleted_count": 0
+            }
+        
+        # Удаляем уведомления
+        delete_result = await db.notifications.delete_many({
+            "type": {"$in": request.notification_types}
+        })
+        
+        deleted_count = delete_result.deleted_count
+        type_names_str = ", ".join([type_names.get(t, t) for t in request.notification_types])
+        
+        logger.info(f"Admin {current_admin.email} deleted {deleted_count} notifications of types: {request.notification_types}")
+        
+        return {
+            "success": True,
+            "message": f"Удалено {deleted_count} уведомлений категорий: {type_names_str}",
+            "deleted_count": deleted_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error deleting notifications by type: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка удаления уведомлений: {str(e)}"
+        )
+
+@api_router.delete("/admin/notifications/by-ids")
+async def delete_notifications_by_ids(
+    request: DeleteNotificationsByIdsRequest,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Ручное удаление уведомлений по ID"""
+    try:
+        if not request.notification_ids:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Список ID не может быть пустым"  
+            )
+        
+        # Удаляем уведомления по ID
+        delete_result = await db.notifications.delete_many({
+            "id": {"$in": request.notification_ids}
+        })
+        
+        deleted_count = delete_result.deleted_count
+        
+        logger.info(f"Admin {current_admin.email} manually deleted {deleted_count} notifications by IDs")
+        
+        return {
+            "success": True,
+            "message": f"Удалено {deleted_count} уведомлений",
+            "deleted_count": deleted_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error deleting notifications by IDs: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка удаления уведомлений: {str(e)}"
+        )
+
+@api_router.get("/admin/notifications/stats-by-type")
+async def get_notifications_stats_by_type(
+    current_admin: User = Depends(get_current_admin)
+):
+    """Получить статистику уведомлений по типам"""
+    try:
+        # Русские названия для типов уведомлений
+        type_names = {
+            "bet_accepted": "Ставки",
+            "match_result": "Результаты", 
+            "commission_freeze": "Комиссия",
+            "gem_gift": "Подарки",
+            "system_message": "Системные",
+            "admin_notification": "Админские"
+        }
+        
+        # Агрегация по типам
+        pipeline = [
+            {"$group": {"_id": "$type", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}}
+        ]
+        
+        results = await db.notifications.aggregate(pipeline).to_list(None)
+        
+        stats = []
+        for result in results:
+            notification_type = result["_id"]
+            count = result["count"]
+            stats.append({
+                "type": notification_type,
+                "name": type_names.get(notification_type, notification_type),
+                "count": count
+            })
+        
+        return {
+            "success": True,
+            "stats": stats
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting notification stats: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка получения статистики: {str(e)}"
+        )
+
 # ==============================================================================
 # HUMAN BOTS API
 # ==============================================================================
