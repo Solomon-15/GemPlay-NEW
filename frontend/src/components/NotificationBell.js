@@ -409,8 +409,12 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
             {/* Footer - Sticky */}
             <div className="sticky bottom-0 p-3 border-t border-gray-700 bg-surface-card rounded-b-lg">
               <button 
-                onClick={() => {
-                  window.location.href = '/notifications';
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (setCurrentView) {
+                    setCurrentView('notifications');
+                  }
                   setIsOpen(false);
                 }}
                 className="text-accent-primary text-sm hover:text-accent-primary-dark transition-colors font-medium"
