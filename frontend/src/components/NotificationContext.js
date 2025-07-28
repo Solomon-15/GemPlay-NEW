@@ -56,7 +56,7 @@ export const NotificationProvider = ({ children }) => {
       }
     } catch (err) {
       console.error('Error fetching notifications:', err);
-      setError('Ошибка загрузки уведомлений');
+      setError('Failed to load notifications');
     } finally {
       setLoading(false);
     }
