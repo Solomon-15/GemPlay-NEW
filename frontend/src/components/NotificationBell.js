@@ -17,7 +17,7 @@ const NotificationBell = ({ isCollapsed }) => {
   } = useNotifications();
 
   // Enhanced positioning calculation for perfect alignment
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   // Calculate precise dropdown position
   const calculateDropdownPosition = useCallback(() => {
@@ -26,20 +26,21 @@ const NotificationBell = ({ isCollapsed }) => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
-      // Position dropdown so its right-top corner touches the bell
+      // Position dropdown so its left-top corner touches the bell
       const position = {
         // Top edge of dropdown should align with bottom edge of bell
-        top: bellRect.bottom + 8, // 8px gap for better visual separation
-        // Right edge of dropdown should align with right edge of bell
-        right: viewportWidth - bellRect.right,
-        maxHeight: viewportHeight - bellRect.bottom - 20 // Leave some margin from bottom
+        top: bellRect.bottom + 2, // 2px gap for perfect visual connection
+        // Left edge of dropdown should align with left edge of bell
+        left: bellRect.left,
+        maxHeight: viewportHeight - bellRect.bottom - 20, // Leave margin from bottom
+        maxWidth: Math.min(320, viewportWidth - bellRect.left - 20) // Don't exceed viewport
       };
       
       setDropdownPosition(position);
     }
   }, []);
 
-  // Update position when bell is clicked or window resizes
+  // Update position when bell is clicked or window resizes  
   useEffect(() => {
     if (isOpen) {
       calculateDropdownPosition();
@@ -50,8 +51,19 @@ const NotificationBell = ({ isCollapsed }) => {
         }
       };
       
+      const handleScroll = () => {
+        if (isOpen) {
+          calculateDropdownPosition();
+        }
+      };
+      
       window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+      window.addEventListener('scroll', handleScroll, true);
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('scroll', handleScroll, true);
+      };
     }
   }, [isOpen, calculateDropdownPosition]);
 
