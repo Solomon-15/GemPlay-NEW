@@ -21034,10 +21034,11 @@ async def resend_notification_to_unread(
         # Create new notifications for unread users
         resent_count = 0
         for user_id in unread_user_ids:
+            # Use ADMIN_NOTIFICATION type for resent notifications
             new_notification_id = await create_notification(
                 user_id=user_id,
-                notification_type=NotificationTypeEnum(original_notification["type"]),
-                priority=NotificationPriorityEnum(original_notification.get("priority", "info")),
+                notification_type=NotificationTypeEnum.ADMIN_NOTIFICATION,
+                priority=NotificationPriorityEnum.INFO,
                 custom_title=f"[REMINDER] {original_notification.get('title', '')}",
                 custom_message=original_notification.get("message", ""),
                 custom_emoji=original_notification.get("emoji", "🔔")
