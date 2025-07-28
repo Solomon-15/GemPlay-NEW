@@ -3914,33 +3914,6 @@ async def delete_gem_admin(
             detail="Failed to delete gem"
         )
 
-@api_router.get("/notifications", response_model=List[dict])
-async def get_user_notifications(current_user: User = Depends(get_current_user)):
-    """Get user notifications."""
-    try:
-        notifications = await db.notifications.find(
-            {"user_id": current_user.id}
-        ).sort("created_at", -1).limit(20).to_list(20)
-        
-        return [
-            {
-                "id": str(notification.get("_id")),
-                "type": notification.get("type", "INFO"),
-                "title": notification.get("title", ""),
-                "message": notification.get("message", ""),
-                "read": notification.get("read", False),
-                "created_at": notification.get("created_at").isoformat()
-            }
-            for notification in notifications
-        ]
-        
-    except Exception as e:
-        logger.error(f"Error fetching notifications: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to fetch notifications"
-        )
-
 @api_router.post("/notifications/{notification_id}/mark-read", response_model=dict)
 async def mark_notification_read(
     notification_id: str, 
