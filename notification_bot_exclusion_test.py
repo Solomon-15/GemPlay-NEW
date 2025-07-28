@@ -159,9 +159,8 @@ def test_notification_bot_exclusion_fixes() -> None:
         "target_users": None,  # Send to all users (should exclude bots)
         "type": "admin_notification",
         "priority": "info",
-        "custom_title": "Test Bot Exclusion",
-        "custom_message": "Testing that bots are excluded from broadcast notifications",
-        "custom_emoji": "🧪"
+        "title": "Test Bot Exclusion",
+        "message": "Testing that bots are excluded from broadcast notifications"
     }
     
     broadcast_response, broadcast_success = make_request(
