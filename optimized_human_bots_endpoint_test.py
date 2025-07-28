@@ -91,6 +91,7 @@ def make_request(
     method: str, 
     endpoint: str, 
     params: Optional[Dict[str, Any]] = None,
+    data: Optional[Dict[str, Any]] = None,
     headers: Optional[Dict[str, str]] = None,
     expected_status: int = 200,
     auth_token: Optional[str] = None
@@ -107,8 +108,14 @@ def make_request(
     print(f"Making {method} request to {url}")
     if params:
         print(f"Request params: {json.dumps(params, indent=2)}")
+    if data:
+        print(f"Request data: {json.dumps(data, indent=2)}")
     
-    response = requests.request(method, url, params=params, headers=headers)
+    if data and method.lower() in ["post", "put", "patch"]:
+        headers["Content-Type"] = "application/json"
+        response = requests.request(method, url, json=data, params=params, headers=headers)
+    else:
+        response = requests.request(method, url, params=params, headers=headers)
     
     print(f"Response status: {response.status_code}")
     
