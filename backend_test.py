@@ -21057,12 +21057,293 @@ def test_notification_detailed_analytics_performance_optimization() -> None:
     print_success("The N+1 query optimization successfully reduced database queries from 1+1+N to 1+1+1")
     print_success("All functionality preserved while improving performance significantly")
 
+def test_notification_bot_exclusion_fix() -> None:
+    """Test the notification bot exclusion fix as requested in the review.
+    
+    Tests the following specific changes:
+    1. Backend - Bot exclusion in broadcast notifications (target_users: null excludes bots)
+    2. Backend - Unique IDs for specific users
+    3. Backend - Resend functionality works correctly
+    
+    SPECIFIC TESTS:
+    1. Test endpoint /api/admin/notifications/broadcast with target_users: null
+    2. Verify that bots are excluded from recipients list
+    3. Test sending notifications to specific users with unique IDs
+    4. Test /api/admin/notifications/resend-to-unread endpoint
+    """
+    print_header("NOTIFICATION BOT EXCLUSION FIX TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with notification bot exclusion test")
+        record_test("Notification Bot Exclusion - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Get user and bot counts for verification
+    print_subheader("Step 2: Get User and Bot Counts")
+    
+    # Get total users count
+    users_response, users_success = make_request(
+        "GET", "/admin/users?page=1&limit=1000",
+        auth_token=admin_token
+    )
+    
+    total_users = 0
+    human_users = 0
+    bot_users = 0
+    
+    if users_success and "users" in users_response:
+        total_users = len(users_response["users"])
+        for user in users_response["users"]:
+            # Check if user is a bot (has bot_type field or is marked as bot)
+            if user.get("bot_type") or user.get("is_bot", False):
+                bot_users += 1
+            else:
+                human_users += 1
+    
+    print_success(f"Total users in system: {total_users}")
+    print_success(f"Human users: {human_users}")
+    print_success(f"Bot users: {bot_users}")
+    
+    # Get Human-bots count
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=1000",
+        auth_token=admin_token
+    )
+    
+    human_bots_count = 0
+    if human_bots_success and "bots" in human_bots_response:
+        human_bots_count = len(human_bots_response["bots"])
+    
+    print_success(f"Human-bots in system: {human_bots_count}")
+    
+    # Calculate expected recipients (should exclude all bots)
+    expected_recipients = human_users  # Only human users should receive notifications
+    
+    print_success(f"Expected notification recipients (humans only): {expected_recipients}")
+    
+    record_test("Notification Bot Exclusion - Get Counts", True)
+    
+    # TEST 1: Broadcast to all users (target_users: null) - should exclude bots
+    print_subheader("TEST 1: Broadcast to All Users (Exclude Bots)")
+    
+    broadcast_data = {
+        "type": "admin_notification",
+        "title": "Test Bot Exclusion",
+        "message": "This notification should only go to human users, not bots",
+        "priority": "info",
+        "target_users": None  # null means all users, but should exclude bots
+    }
+    
+    broadcast_response, broadcast_success = make_request(
+        "POST", "/admin/notifications/broadcast",
+        data=broadcast_data,
+        auth_token=admin_token
+    )
+    
+    if broadcast_success:
+        sent_count = broadcast_response.get("sent_count", 0)
+        print_success(f"Broadcast successful - sent_count: {sent_count}")
+        
+        # Verify that sent_count matches expected recipients (humans only)
+        if sent_count == expected_recipients:
+            print_success(f"✅ Bot exclusion working correctly!")
+            print_success(f"✅ Sent to {sent_count} recipients (expected {expected_recipients} humans)")
+            print_success(f"✅ Bots excluded from broadcast as expected")
+            record_test("Notification Bot Exclusion - Broadcast All Users", True)
+        elif sent_count == total_users:
+            print_error(f"❌ Bot exclusion NOT working - sent to all users including bots")
+            print_error(f"❌ Sent: {sent_count}, Expected: {expected_recipients}")
+            print_error(f"❌ Bots were NOT excluded from broadcast")
+            record_test("Notification Bot Exclusion - Broadcast All Users", False, f"Sent to bots: {sent_count} vs {expected_recipients}")
+        else:
+            print_warning(f"⚠️ Unexpected sent_count: {sent_count}")
+            print_warning(f"⚠️ Expected: {expected_recipients}, Total users: {total_users}")
+            record_test("Notification Bot Exclusion - Broadcast All Users", False, f"Unexpected count: {sent_count}")
+        
+        # Store notification ID for later tests
+        notification_id = broadcast_response.get("notification_id")
+        if notification_id:
+            print_success(f"Notification ID: {notification_id}")
+        
+    else:
+        print_error("❌ Broadcast to all users failed")
+        record_test("Notification Bot Exclusion - Broadcast All Users", False, "Broadcast failed")
+        return
+    
+    # TEST 2: Broadcast to specific users - should have unique IDs
+    print_subheader("TEST 2: Broadcast to Specific Users (Unique IDs)")
+    
+    # Get a few specific human user IDs
+    specific_user_ids = []
+    if users_success and "users" in users_response:
+        for user in users_response["users"][:3]:  # Take first 3 users
+            if not user.get("bot_type") and not user.get("is_bot", False):
+                specific_user_ids.append(user["id"])
+    
+    if len(specific_user_ids) >= 2:
+        print_success(f"Testing with specific users: {specific_user_ids}")
+        
+        specific_broadcast_data = {
+            "type": "admin_notification", 
+            "title": "Test Specific Users",
+            "message": "This notification goes to specific users with unique IDs",
+            "priority": "warning",
+            "target_users": specific_user_ids
+        }
+        
+        specific_broadcast_response, specific_broadcast_success = make_request(
+            "POST", "/admin/notifications/broadcast",
+            data=specific_broadcast_data,
+            auth_token=admin_token
+        )
+        
+        if specific_broadcast_success:
+            specific_sent_count = specific_broadcast_response.get("sent_count", 0)
+            print_success(f"Specific broadcast successful - sent_count: {specific_sent_count}")
+            
+            # Verify sent_count matches number of specific users
+            if specific_sent_count == len(specific_user_ids):
+                print_success(f"✅ Specific user targeting working correctly!")
+                print_success(f"✅ Sent to {specific_sent_count} specific users")
+                record_test("Notification Bot Exclusion - Specific Users", True)
+            else:
+                print_error(f"❌ Specific user targeting failed")
+                print_error(f"❌ Expected: {len(specific_user_ids)}, Sent: {specific_sent_count}")
+                record_test("Notification Bot Exclusion - Specific Users", False, f"Count mismatch: {specific_sent_count}")
+            
+            # Check for unique notification ID
+            specific_notification_id = specific_broadcast_response.get("notification_id")
+            if specific_notification_id and specific_notification_id != notification_id:
+                print_success(f"✅ Unique notification ID generated: {specific_notification_id}")
+                record_test("Notification Bot Exclusion - Unique IDs", True)
+            else:
+                print_error(f"❌ Notification ID not unique or missing")
+                record_test("Notification Bot Exclusion - Unique IDs", False, "ID not unique")
+        
+        else:
+            print_error("❌ Specific user broadcast failed")
+            record_test("Notification Bot Exclusion - Specific Users", False, "Broadcast failed")
+    
+    else:
+        print_warning("⚠️ Not enough human users for specific targeting test")
+        record_test("Notification Bot Exclusion - Specific Users", False, "Not enough users")
+    
+    # TEST 3: Test resend-to-unread endpoint
+    print_subheader("TEST 3: Test Resend to Unread Functionality")
+    
+    if notification_id:
+        resend_response, resend_success = make_request(
+            "POST", f"/admin/notifications/{notification_id}/resend-to-unread",
+            auth_token=admin_token
+        )
+        
+        if resend_success:
+            resend_count = resend_response.get("resent_count", 0)
+            print_success(f"✅ Resend to unread successful - resent_count: {resend_count}")
+            
+            # Verify resend count is reasonable (should be <= original sent_count)
+            if resend_count <= sent_count:
+                print_success(f"✅ Resend count reasonable: {resend_count} <= {sent_count}")
+                record_test("Notification Bot Exclusion - Resend Unread", True)
+            else:
+                print_error(f"❌ Resend count too high: {resend_count} > {sent_count}")
+                record_test("Notification Bot Exclusion - Resend Unread", False, "Count too high")
+        
+        else:
+            print_error("❌ Resend to unread failed")
+            record_test("Notification Bot Exclusion - Resend Unread", False, "Resend failed")
+    
+    else:
+        print_warning("⚠️ No notification ID available for resend test")
+        record_test("Notification Bot Exclusion - Resend Unread", False, "No notification ID")
+    
+    # TEST 4: Verify bot exclusion by checking notification recipients
+    print_subheader("TEST 4: Verify Bot Exclusion in Notification Recipients")
+    
+    if notification_id:
+        # Get notification details to verify recipients
+        notification_details_response, notification_details_success = make_request(
+            "GET", f"/admin/notifications/{notification_id}",
+            auth_token=admin_token
+        )
+        
+        if notification_details_success:
+            recipients = notification_details_response.get("recipients", [])
+            print_success(f"Notification has {len(recipients)} recipients")
+            
+            # Check if any recipients are bots
+            bot_recipients = 0
+            human_recipients = 0
+            
+            for recipient in recipients:
+                recipient_id = recipient.get("user_id")
+                # Find this user in our users list
+                for user in users_response.get("users", []):
+                    if user["id"] == recipient_id:
+                        if user.get("bot_type") or user.get("is_bot", False):
+                            bot_recipients += 1
+                        else:
+                            human_recipients += 1
+                        break
+            
+            print_success(f"Recipients analysis:")
+            print_success(f"  Human recipients: {human_recipients}")
+            print_success(f"  Bot recipients: {bot_recipients}")
+            
+            if bot_recipients == 0:
+                print_success(f"✅ No bots in recipients list - exclusion working!")
+                record_test("Notification Bot Exclusion - Verify Recipients", True)
+            else:
+                print_error(f"❌ Found {bot_recipients} bot recipients - exclusion failed!")
+                record_test("Notification Bot Exclusion - Verify Recipients", False, f"Bot recipients: {bot_recipients}")
+        
+        else:
+            print_warning("⚠️ Could not get notification details for verification")
+            record_test("Notification Bot Exclusion - Verify Recipients", False, "Details unavailable")
+    
+    # TEST 5: Test alternative resend endpoint format
+    print_subheader("TEST 5: Test Alternative Resend Endpoint")
+    
+    # Try the alternative endpoint format mentioned in the review
+    alt_resend_response, alt_resend_success = make_request(
+        "POST", "/admin/notifications/resend-to-unread",
+        data={"notification_id": notification_id} if notification_id else {},
+        auth_token=admin_token
+    )
+    
+    if alt_resend_success:
+        print_success(f"✅ Alternative resend endpoint working")
+        record_test("Notification Bot Exclusion - Alt Resend Endpoint", True)
+    else:
+        print_warning("⚠️ Alternative resend endpoint not available or failed")
+        record_test("Notification Bot Exclusion - Alt Resend Endpoint", False, "Endpoint unavailable")
+    
+    # Summary
+    print_subheader("Notification Bot Exclusion Fix Test Summary")
+    print_success("Notification bot exclusion fix testing completed")
+    print_success("Key findings:")
+    print_success(f"- Total users in system: {total_users}")
+    print_success(f"- Human users (should receive notifications): {human_users}")
+    print_success(f"- Bot users (should be excluded): {bot_users}")
+    print_success(f"- Human-bots (should be excluded): {human_bots_count}")
+    print_success(f"- Broadcast sent_count: {sent_count if 'sent_count' in locals() else 'N/A'}")
+    print_success("- Bot exclusion logic tested for broadcast to all users")
+    print_success("- Unique notification IDs verified for specific users")
+    print_success("- Resend functionality tested")
+    print_success("- Recipient verification completed")
+
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - NOTIFICATION DETAILED ANALYTICS PERFORMANCE OPTIMIZATION")
+    print_header("GEMPLAY BACKEND API TESTING - NOTIFICATION BOT EXCLUSION FIX")
     
     try:
-        # Run the Notification Detailed Analytics Performance Optimization test as specifically requested in the review
-        test_notification_detailed_analytics_performance_optimization()
+        # Run the Notification Bot Exclusion Fix test as specifically requested in the review
+        test_notification_bot_exclusion_fix()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
