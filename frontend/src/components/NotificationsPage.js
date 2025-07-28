@@ -172,7 +172,7 @@ const NotificationsPage = () => {
                 className={`bg-surface-card border border-gray-700 rounded-lg p-4 cursor-pointer hover:bg-surface-sidebar transition-colors border-l-4 ${getPriorityColor(notification.priority)} ${
                   !notification.is_read ? 'ring-1 ring-accent-primary ring-opacity-30' : ''
                 }`}
-                onClick={() => handleNotificationClick(notification)}
+                onClick={(event) => handleNotificationClick(notification, event)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-4 flex-1">
