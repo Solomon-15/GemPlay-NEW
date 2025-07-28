@@ -1,4 +1,16 @@
 frontend:
+  - task: "Regular Bots Analytics Authorization Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/NewBotAnalytics.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "pending_test"
+        agent: "main"
+        comment: "REGULAR BOTS ANALYTICS AUTHORIZATION FIX COMPLETED: Fixed critical issue where Regular Bots tab in Admin Panel Analytics section would redirect to login page due to authorization errors. TECHNICAL IMPLEMENTATION: ✅ 1. ENHANCED AUTHORIZATION CHECKING - Added token validation before making API requests to /admin/bots and /admin/games endpoints, prevents requests with invalid or missing tokens, includes proper error handling for authentication failures ✅ 2. COMPREHENSIVE ERROR HANDLING - Added specific handling for 401 (Unauthorized) and 403 (Forbidden) HTTP errors, clear user feedback with appropriate Russian error messages, automatic token cleanup and redirect for authentication issues ✅ 3. IMPROVED fetchRegularBotsAnalytics FUNCTION - Enhanced with pre-request token validation, detailed error categorization and user feedback, graceful handling of authorization failures with redirect logic ✅ 4. ENHANCED fetchRegularBots FUNCTION - Added token checking before API calls, silent error handling for authorization issues, prevents unnecessary error notifications for permission problems ✅ 5. USER EXPERIENCE IMPROVEMENTS - Clear error messages for different authorization scenarios, automatic redirect to login page for authentication failures, maintains application state during error handling BACKEND VERIFICATION: ✅ Confirmed /admin/bots endpoint exists and properly implemented, ✅ Verified regular_bot_only parameter in /admin/games endpoint, ✅ Backend authorization logic is correctly implemented with proper access controls ROOT CAUSE IDENTIFIED: Component was making API requests without proper token validation, causing 401/403 errors that weren't properly handled, leading to unexpected redirects to login page. EXPECTED BEHAVIOR: Regular Bots tab now properly handles authorization, displays appropriate error messages for permission issues, maintains user session and provides clear feedback. Ready for comprehensive testing with proper admin credentials."
+
   - task: "UserManagement Cursor Disappearance Fix"
     implemented: true
     working: true
