@@ -1,83 +1,76 @@
 <analysis>
-The previous AI engineer successfully developed GemPlay from MVP, focusing on core financial logic (commission, bet returns, unfreezing stuck commissions), and ensuring Total balance consistency across the UI. Subsequently, user profile editing and a significant  refactoring were implemented, creating a global, responsive component with financial tiles and skeleton loading. The engineer demonstrated strong debugging skills, resolving frontend CSS  issues.
+The AI engineer successfully transitioned the GemPlay application from MVP, initially focusing on core financial logic (commission, bet returns, balance consistency), user profile editing, and a major  refactoring. Debugging included resolving Metamask removal issues and fixing a critical bug in the Admin Bot Analytics section, specifically for human-bots, though Regular Bots analytics remains problematic.
 
-The immediate past work involved two main threads:
-1.  **Metamask Removal**: All Metamask-related code was identified and successfully removed from  and , including build file cleanup.
-2.  **Bot Analytics Fix**: The user reported the admin Bot Analytics section not loading. The engineer debugged and corrected API endpoint prefixes ( to ), adjusted data parsing from  to , and modified loading logic to display analytics even with empty bot lists. While Human-bot analytics now loads correctly, a subsequent test showed the Regular Bots tab still causes a redirect to the login page, indicating a persistent JavaScript error.
-
-The new task is to optimize the loading of Human-bots in the Human-Bot Management section, with user input confirming specific requirements for pagination (10 items/page, adjustable), search/filtering, frontend/backend caching (1 min, auto-update), and prioritized display fields.
+The primary focus shifted to optimizing Human-Bot Management. This involved comprehensive backend and frontend refactoring for pagination, search, filtering, caching, and deduplication of bot statistics calculation. The engineer then successfully implemented a detailed notification system, including backend API, database schema, WebSocket integration, and frontend UI components (bell, settings page), addressing multiple rounds of user feedback on positioning and display. The immediate outstanding issue is fixing the notification dropdown's scroll behavior.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting platform featuring Human-bots and a 3% commission system. The core objective is to deliver robust betting mechanics, accurate financial metrics, and comprehensive administrative controls. So far, development focused on:
-1.  **Commission & Bet Return**: Ensuring full frozen amounts (bet + commission) are returned on game exit/draw, and games revert to lobby.
-2.  **Unfreeze All Stuck Commission Feature**: Admin function to move frozen commissions to virtual balance with confirmation.
-3.  **Correct Total Balance Calculation**: Accurate  display in Inventory, HeaderPortfolio, and Sidebar.
-4.  **Profile Editing**: User modification of username, gender, timezone, and display of a shortened, copyable user ID.
-5.  **Mobile Header Refactoring**: Global replacement with a responsive, sticky  (Header-02) displaying Balance, Gems, and Total tiles with titles inside, equal margins, and full data lines.
-6.  **Loading Improvements**: Implementing skeleton loading and robust error handling for mobile header financial tiles.
-7.  **Dynamic Profile Total**: Replacing static Total in mobile header's profile dropdown with dynamic, green-colored value.
-8.  **Metamask Removal**: Remove all Metamask-related code from the application.
-9.  **Bot Analytics Fix**: Restore functionality of the Admin Panel's Bot Analytics section.
-10. **Human-Bot Management Optimization**: Improve loading speed for Human-bots in Human-Bot Management via pagination (10 bots/page, adjustable), search/filtering, 1-minute cache with auto-update, and optimized API requests focusing on STATISTICS and PENDING BETS fields.
+The GemPlay application is an asynchronous PvP gem betting platform with Human-bots and a 3% commission system, aiming for robust betting, accurate financials, and comprehensive admin controls. Initial development focused on: ensuring full frozen amounts return on game exit/draw, implementing an Unfreeze All Stuck Commission admin feature, correcting Total balance calculation across UI, enabling user profile editing (username, gender, timezone, shortened ID), and refactoring the  for responsiveness and skeleton loading. Recent work included complete Metamask removal and fixing the Admin Panel Analytics for Human-bots. The ongoing task is to optimize Human-Bot Management with pagination (10 items/page, adjustable), search/filtering, 1-minute caching (auto-update), and prioritized display of STATISTICS and PENDING BETS. A significant new requirement is a full Notification System, integrating with  for real-time (WebSocket) critical events, supporting various types (bet, match results, gifts, system, admin), managing read/unread status, storing history with pagination, and featuring UI elements (bell, dropdown, settings page), and admin analytics.
 </product_requirements>
 
 <key_technical_concepts>
--   **React.js**: Frontend UI, state management, hooks.
+-   **React.js**: Frontend UI, state management, hooks (useState, useEffect, useCallback), context API.
 -   **FastAPI**: Python backend, RESTful APIs, Pydantic models.
 -   **MongoDB**: NoSQL database.
--   **Axios**: HTTP client.
+-   **Axios**: HTTP client for API calls.
 -   **Supervisor**: Process manager.
 -   **Tailwind CSS**: Utility-first CSS framework.
--   **Clipboard API**: For copying text.
+-   **WebSocket**: Real-time communication for notifications.
+-   **Pagination, Caching, Debouncing**: Performance optimization techniques.
 </key_technical_concepts>
 
 <code_architecture>
-The application utilizes a MERN-stack variant (React.js, FastAPI, MongoDB) organized into  and  directories.
+The application uses a MERN-stack variant (React.js, FastAPI, MongoDB) structured into  and  directories.
 
 
 
--   : Centralizes backend logic. Modified to return frozen balances on draw/cancel, added  and  endpoints, and updated  Pydantic models.
--   : Admin interface. Added Unfreeze all stuck commission button and fixed cursor issue.
--   : Displays user inventory.  updated for correct  calculation.
--   : Header portfolio summary.  updated, CSS adjusted for mobile balance tiles.
--   : Main navigation.  implemented for  display.
--   : Modal for joining bets. Integrated backend call to cancel game on modal close.
--   : User profile management. Added Edit Profile, enabled in-component editing for username/gender/timezone, shortened user ID, integrated , removed duplicate mobile elements, and used .
--   : Global context for notifications. Used for displaying system messages.
--   : Displays available bets.  for filter input handlers resolved cursor issues.
--   : New, responsive mobile header. Completely rewritten to include Balance, Gems, Total tiles (with titles inside, equal margins, sticky), skeleton loading, and robust error handling. Corrected multiple CSS syntax errors (, , ). The Total value in profile dropdown made dynamic and green.
--   : Admin panel component for bot analytics. Recently modified to correct API endpoint URLs (removed  prefix where redundant), updated data access from  to , and adjusted  dependencies to ensure analytics load even with empty bot lists.
--   : Component for displaying various charts. It is imported and used within  to visualize bot statistics.
--   : Component for managing Human-bots. This file is the current focus for optimization, particularly in how it fetches and displays the list of human bots.
--   : Custom hook for API interactions. Examined for potential issues with API calls to the backend.
--   : (DELETED) Previously prevented Metamask injection. Completely removed from the codebase.
--   : Main application component. Integrated  globally, replacing older mobile header logic. Also, the import for  was removed from this file.
--   , , : Python test scripts for backend API. Created to verify game scenarios and user profile updates.
+-   : Centralizes backend logic.
+    -   **Importance**: Manages all API endpoints, database interactions, and core game logic.
+    -   **Changes Made**: Enhanced  for pagination, search, filter, and caching. Added  utility and integrated it into bot-related endpoints (, ). Implemented extensive notification system APIs (GET/PUT , , POST , GET ) with new Pydantic models. Integrated notification triggers into game events (, ) and gem transfers.
+-   : Manages human bot listing and operations.
+    -   **Importance**: Provides the user interface for human-bot administration, including search, filters, and pagination controls.
+    -   **Changes Made**: Implemented client-side pagination, search, and filtering logic using  for API calls. Updated  to support new backend parameters. Passed control (data, pagination, refresh callback) to  and provided statistics.
+-   : Renders the list of human bots.
+    -   **Importance**: Displays individual human bot details in a table format.
+    -   **Changes Made**: Transformed into a controlled component by removing its internal data fetching and state management. Now receives  data, pagination state, and  callback via props from its parent, , ensuring all list updates are externally managed.
+-   : Global context for notifications.
+    -   **Importance**: Centralizes notification state, WebSocket connectivity, and provides an API for other components to interact with notifications.
+    -   **Changes Made**: Refactored to integrate with the new backend notification system, managing  and  states. Includes logic for  (pull), , and  (WebSocket push). Maintains backward compatibility for existing toast notifications.
+-   : Bell icon UI element.
+    -   **Importance**: Visual indicator for unread notifications and entry point to recent notification list.
+    -   **Changes Made**: Heavily refactored. Displays unread count, opens a dropdown with recent notifications upon click. Stylized the icon, removed accompanying text, and implemented precise fixed positioning for the dropdown relative to the bell's top-left corner, ensuring it doesn't shift on scroll (though this fix is still pending final confirmation).
+-   : User settings for notifications.
+    -   **Importance**: Allows users to customize which types of notifications they receive.
+    -   **Changes Made**: A new component created to manage user notification preferences, fetching and updating settings via the backend API.
+-   : Dedicated page for all notifications.
+    -   **Importance**: Provides a comprehensive view of historical notifications with pagination and filtering capabilities.
+    -   **Changes Made**: A new component created for displaying the full notification history.
+-   : User profile interface.
+    -   **Importance**: Where users manage their personal information and settings.
+    -   **Changes Made**: Integrated  as a new tab within the user's profile section, allowing users to configure their notification preferences.
+-   : Main application navigation sidebar.
+    -   **Importance**: Provides global navigation access.
+    -   **Changes Made**: Integrated  into the sidebar, making it accessible from most parts of the application.
+-   : Main application entry point.
+    -   **Importance**: Initializes the main application components and contexts.
+    -   **Changes Made**: Previously had  import removed.
+
 </code_architecture>
 
 <pending_tasks>
--   **Cursor Disappearance Issue**: Cursor disappears after single character input in  and other similar fields (e.g., Profile Username, Lobby min/max sum, Admin Panel Delete User reason).
+-   **Cursor Disappearance Issue**: Cursor disappears after single character input in  and other similar input fields.
 -   **Regular Bots Analytics Fix**: The Regular Bots tab in the Admin Panel's analytics section still redirects to the login page.
--   **Human-Bot Management Optimization**: Implement pagination, lazy loading, caching (1 min, auto-update), search/filtering, and optimized API requests for Human-bot list.
+-   **Notification Modal Scroll Issue**: The notification dropdown in  still shifts its position when the page is scrolled, despite efforts to fix its fixed positioning.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer completed the task of removing all Metamask-related code from the application. This involved:
-1.  Deleting the  file from .
-2.  Removing its corresponding import statement from .
-3.  Cleaning up the  directory to ensure no old Metamask-related code remained in compiled assets.
+Immediately before this summary, the AI engineer was addressing quick fixes for the newly implemented notification system. The primary user request was to ensure the notification modal (dropdown) that appears upon clicking the bell icon maintains a fixed position relative to the bell, specifically aligning its left-top corner precisely with the bell, and crucially, that it should *not* shift when the user scrolls the page.
 
-Following this, the engineer addressed a critical bug reported by the user: the Admin Panel Analytics section was not loading. Debugging revealed and fixed several issues within :
-1.  Incorrect API endpoint prefixes:  was corrected to  and similar for regular bots.
-2.  Incorrect data structure access: The component was expecting  but the API was returning , which was corrected.
-3.  Conditional loading logic: The  hook's dependency on  was removed to ensure analytics would load even if the initial bot list was empty.
+The engineer had successfully removed the Уведомления text from beside the bell icon, implemented a stylized bell icon, and ensured the modal's adaptive width across different screen resolutions. The alignment of the modal's left-top corner with the bell was also perfectly achieved based on the last screenshot test.
 
-These fixes successfully enabled the Human-bot analytics to load and display correctly, showing overall statistics, graphs (Game Volume, Win Rate, Average Bet Size), and time period toggles. However, during testing, switching to the Regular Bots tab still caused the application to redirect to the login page, indicating an unresolved JavaScript error in that specific sub-section.
-
-The current focus has now shifted to optimizing the Human-Bot Management section, specifically to improve the loading performance of the Human-bot list. The user has provided detailed requirements for this task, including implementing pagination (10 bots per page, adjustable), search/filtering, caching (1 minute, auto-update, preference for which layer to cache), and prioritizing STATISTICS and PENDING BETS fields for initial display. The engineer has just begun analyzing  to formulate a plan for these optimizations.
+However, the most recent test (Chat Message 335) revealed a persistent problem: the dropdown still exhibits vertical displacement during page scrolling. The engineer acknowledged this scroll issue and identified it as a critical problem with fixed positioning, indicating that the modal's  coordinate was changing from  to  pixels during scroll. The very last action taken was an attempt to resolve this by adding a scroll event listener () within , presumably to re-calculate or enforce the fixed position on scroll.
 </current_work>
 
 <optional_next_step>
-Analyze  and related backend endpoints to plan pagination, caching, and lazy loading for Human-bots.
+Test the implemented fix for the notification dropdown's scroll-related shifting to confirm its fixed positioning.
 </optional_next_step>
