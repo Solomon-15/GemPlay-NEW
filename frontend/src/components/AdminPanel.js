@@ -878,6 +878,8 @@ const AdminPanel = ({ user, onClose }) => {
         return <GemsManagement />;
       case 'sounds':
         return <SoundsAdmin user={user} />;
+      case 'notifications':
+        return <NotificationAdmin user={user} />;
       case 'profit':
         return <ProfitAdmin user={user} />;
       case 'settings':
