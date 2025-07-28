@@ -2675,6 +2675,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "GemPlay Notification System API Testing (Phase 1)"
     - "Human-Bot Auto-Completion Testing"
     - "Human-Bot Active Bets Endpoint Testing" 
     - "Human-Bot Games Filter Endpoint Testing"
