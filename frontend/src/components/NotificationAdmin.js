@@ -84,19 +84,25 @@ const NotificationAdmin = ({ user }) => {
     }
   }, [showErrorRU]);
 
-  // Поиск пользователей
+  // Поиск пользователей с учетом режима поиска
   const searchUsers = useCallback(async (query) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Если запрос пустой, показываем всех доступных пользователей (первые 20)
-      const searchQuery = query.trim() || '';
+      // Поиск только если есть хотя бы один символ
+      if (!query || query.trim().length === 0) {
+        setFoundUsers([]);
+        return;
+      }
+      
+      const searchQuery = query.trim();
       
       const response = await axios.get(`${API}/admin/users`, {
         headers: { 'Authorization': `Bearer ${token}` },
         params: { 
-          search: searchQuery, 
-          limit: searchQuery ? 10 : 20, // Больше пользователей если нет фильтра
+          search: searchQuery,
+          search_mode: searchMode, // Передаем режим поиска
+          limit: 20,
           exclude_bots: true // Исключаем ботов из поиска
         }
       });
@@ -116,7 +122,7 @@ const NotificationAdmin = ({ user }) => {
       console.error('Error searching users:', error);
       setFoundUsers([]);
     }
-  }, []);
+  }, [searchMode]); // Добавляем searchMode в зависимости
 
   // Показать всех пользователей при фокусе на поле поиска
   const handleSearchFocus = () => {
