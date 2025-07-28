@@ -463,7 +463,7 @@ const HumanBotsList = ({
       });
       addNotification(`Настройки Human-бота "${bot.name}" изменены: игра с игроками ${canPlay ? 'включена' : 'отключена'}`, 'success');
       if (onRefresh) onRefresh(); // Use parent refresh function
-      await fetchStats();
+      // await fetchStats(); // Remove duplicate call
     } catch (error) {
       console.error('Ошибка переключения игры с игроками:', error);
     }
