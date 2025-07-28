@@ -277,7 +277,7 @@ const UserManagement = ({ user: currentUser }) => {
   };
 
   // Event handlers
-  const handleSearch = (e) => {
+  const handleSearch = useCallback((e) => {
     const newSearchTerm = e.target.value;
     setSearchTerm(newSearchTerm);
     
@@ -285,7 +285,7 @@ const UserManagement = ({ user: currentUser }) => {
     if (searchTerm !== newSearchTerm && newSearchTerm.length > 0) {
       pagination.handlePageChange(1);
     }
-  };
+  }, [searchTerm, pagination]);
 
   const handleStatusFilter = (status) => {
     setStatusFilter(status);
