@@ -158,20 +158,23 @@ const NotificationBell = ({ isCollapsed }) => {
     }
   };
 
-  // Handle notification click - НЕ ЗАКРЫВАТЬ ОКНО
-  const handleNotificationClick = async (notification) => {
+  // Handle notification click - НЕ ЗАКРЫВАТЬ ОКНО И НЕ ПЕРЕЗАГРУЖАТЬ СТРАНИЦУ
+  const handleNotificationClick = async (notification, event) => {
+    // Предотвращаем стандартное поведение события
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
     // Mark as read if not already read
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
     
-    // Navigate to action URL if exists (только при наличии URL)
-    if (notification.payload?.action_url) {
-      window.location.href = notification.payload.action_url;
-      setIsOpen(false); // Закрываем только при переходе по ссылке
-    }
+    // НЕ ПЕРЕХОДИМ ПО ССЫЛКАМ АВТОМАТИЧЕСКИ - только помечаем как прочитанное
+    // Если нужна навигация, пользователь может кликнуть на специальную кнопку
     
-    // Окно остается открытым при обычном клике на уведомление
+    // Окно остается открытым при любом клике на уведомление
   };
 
   // Format time ago helper
