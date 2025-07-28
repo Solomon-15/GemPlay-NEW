@@ -32,10 +32,14 @@ const NotificationBell = ({ isCollapsed }) => {
       
       if (isMobile) {
         // В мобильной версии окно раскрывается от иконки колокольчика
+        // Ограничиваем высоту до 80% экрана, чтобы не уходило за границы
+        const maxHeight = viewportHeight * 0.8; // 80% высоты экрана
+        const availableHeight = viewportHeight - bellRect.bottom - 20; // Доступная высота под колокольчиком
+        
         const position = {
           top: bellRect.bottom + 2, // Прямо под колокольчиком с небольшим отступом
           left: Math.max(10, bellRect.left - 10), // Левый край соприкасается с иконкой, минимум 10px от края
-          maxHeight: viewportHeight - bellRect.bottom - 20, // До конца экрана с отступом
+          maxHeight: Math.min(maxHeight, availableHeight), // Меньшее из двух значений
           width: Math.min(300, viewportWidth - 20) // Фиксированная ширина с учетом отступов
         };
         setDropdownPosition(position);
