@@ -212,7 +212,7 @@ const HumanBotsList = ({
 
         addNotification(`Успешно ${action} ${successCount} из ${selectedBots.size} Human-ботов`, 'success');
         clearSelection();
-        await fetchHumanBots();
+        if (onRefresh) onRefresh(); // Use parent refresh function
         await fetchStats();
       } catch (error) {
         console.error('Ошибка массового изменения статуса:', error);
