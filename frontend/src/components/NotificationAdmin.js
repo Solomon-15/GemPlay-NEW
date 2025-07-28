@@ -1233,6 +1233,56 @@ const NotificationAdmin = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Модальное окно подтверждения удаления по категориям */}
+      {showDeleteConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-white text-xl font-rajdhani font-bold mb-4">⚠️ Подтверждение удаления</h3>
+            
+            <div className="mb-6">
+              <p className="text-text-secondary mb-4">
+                Вы действительно хотите удалить все уведомления следующих категорий?
+              </p>
+              <div className="bg-surface-sidebar rounded-lg p-3 space-y-2">
+                {selectedTypesForDeletion.map(type => {
+                  const stat = notificationStats.find(s => s.type === type);
+                  return (
+                    <div key={type} className="flex justify-between items-center">
+                      <span className="text-white font-medium">{stat?.name}</span>
+                      <span className="text-red-400 font-bold">{stat?.count} шт.</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-3 text-red-400 font-bold">
+                Всего будет удалено: {notificationStats
+                  .filter(stat => selectedTypesForDeletion.includes(stat.type))
+                  .reduce((sum, stat) => sum + stat.count, 0)} уведомлений
+              </div>
+              <p className="text-yellow-400 text-sm mt-2">
+                ⚠️ Это действие необратимо!
+              </p>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowDeleteConfirmation(false)}
+                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-rajdhani font-bold rounded transition-all duration-200"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleDeleteByType}
+                disabled={deleteLoading}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded transition-all duration-200 disabled:opacity-50"
+              >
+                {deleteLoading ? 'Удаляется...' : 'Удалить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
