@@ -205,7 +205,7 @@ const NotificationBell = ({ isCollapsed }) => {
         )}
       </button>
 
-      {/* Notifications Dropdown - Enhanced Responsive Design */}
+      {/* Notifications Dropdown - Fixed Positioning with Left-Top Corner Alignment */}
       {isOpen && (
         <>
           {/* Mobile backdrop */}
@@ -216,9 +216,14 @@ const NotificationBell = ({ isCollapsed }) => {
           
           <div 
             ref={dropdownRef}
-            className={getDropdownClasses()}
+            className="fixed z-50 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg shadow-xl transform transition-all duration-200 ease-out"
             style={{
-              maxHeight: 'min(24rem, calc(100vh - 120px))'
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${Math.min(320, dropdownPosition.maxWidth || 320)}px`,
+              maxHeight: `${dropdownPosition.maxHeight || 400}px`,
+              opacity: isOpen ? 1 : 0,
+              transform: isOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-8px)'
             }}
           >
             {/* Header */}
@@ -254,7 +259,12 @@ const NotificationBell = ({ isCollapsed }) => {
             </div>
 
             {/* Notifications List - Enhanced Scrolling */}
-            <div className="overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+            <div 
+              className="overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
+              style={{ 
+                maxHeight: `${(dropdownPosition.maxHeight || 400) - 120}px` // Account for header and footer
+              }}
+            >
               {persistentNotifications.length === 0 ? (
                 <div className="p-8 text-center">
                   <div className="text-4xl mb-3 opacity-50">📭</div>
