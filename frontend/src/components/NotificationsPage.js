@@ -244,7 +244,7 @@ const NotificationsPage = () => {
               disabled={loading}
               className="px-6 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary-dark disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Загрузка...' : 'Загрузить еще'}
+              {loading ? 'Loading...' : 'Load more'}
             </button>
           </div>
         )}
