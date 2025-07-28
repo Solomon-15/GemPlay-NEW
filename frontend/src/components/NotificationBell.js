@@ -19,27 +19,6 @@ const NotificationBell = ({ isCollapsed }) => {
   // Enhanced positioning calculation for perfect alignment
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
-  // Calculate precise dropdown position
-  const calculateDropdownPosition = useCallback(() => {
-    if (bellRef.current) {
-      const bellRect = bellRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      // Position dropdown so its left-top corner touches the bell
-      const position = {
-        // Top edge of dropdown should align with bottom edge of bell
-        top: bellRect.bottom + 2, // 2px gap for perfect visual connection
-        // Left edge of dropdown should align with left edge of bell
-        left: bellRect.left,
-        maxHeight: viewportHeight - bellRect.bottom - 20, // Leave margin from bottom
-        maxWidth: Math.min(320, viewportWidth - bellRect.left - 20) // Don't exceed viewport
-      };
-      
-      setDropdownPosition(position);
-    }
-  }, []);
-
   // Calculate precise dropdown position with fixed positioning
   const calculateDropdownPosition = useCallback(() => {
     if (bellRef.current) {
