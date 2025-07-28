@@ -18,7 +18,7 @@ const NewBotAnalytics = () => {
   const fetchHumanBots = async () => {
     try {
       const response = await get('/admin/human-bots');
-      setHumanBotsList(response.human_bots || []);
+      setHumanBotsList(response.bots || []);
     } catch (error) {
       console.error('Error fetching human bots:', error);
     }
