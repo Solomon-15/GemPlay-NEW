@@ -359,6 +359,7 @@ const HumanBotsManagement = () => {
         console.log('Auto-refreshing Human-bots data...');
         fetchHumanBots(false); // Don't use cache for auto-refresh
         fetchStats();
+        fetchGlobalSettings(); // Add global settings refresh
       }, AUTO_REFRESH_INTERVAL);
       
       setRefreshInterval(interval);
