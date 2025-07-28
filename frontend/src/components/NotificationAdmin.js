@@ -197,8 +197,13 @@ const NotificationAdmin = ({ user }) => {
 
   // Поиск пользователей с задержкой
   useEffect(() => {
-    const timeoutId = setTimeout(() => searchUsers(userSearch), 300);
-    return () => clearTimeout(timeoutId);
+    if (userSearch.trim().length > 0) {
+      const timeoutId = setTimeout(() => searchUsers(userSearch), 300);
+      return () => clearTimeout(timeoutId);
+    } else {
+      // Очищаем результаты если поле пустое и не в фокусе
+      setFoundUsers([]);
+    }
   }, [userSearch, searchUsers]);
 
   // Функции для детальной аналитики
