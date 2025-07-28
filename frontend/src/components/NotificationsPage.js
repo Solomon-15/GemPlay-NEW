@@ -154,14 +154,14 @@ const NotificationsPage = () => {
             <div className="text-center py-12">
               <div className="text-4xl mb-4">📭</div>
               <h3 className="text-lg font-rajdhani font-bold text-white mb-2">
-                Нет уведомлений
+                No notifications
               </h3>
               <p className="text-text-secondary">
                 {filter === 'all' 
-                  ? 'У вас пока нет уведомлений'
+                  ? 'You have no notifications yet'
                   : filter === 'unread'
-                  ? 'Все уведомления прочитаны'
-                  : 'Нет прочитанных уведомлений'
+                  ? 'All notifications are read'
+                  : 'No read notifications'
                 }
               </p>
             </div>
