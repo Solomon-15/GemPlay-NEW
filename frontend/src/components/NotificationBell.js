@@ -16,10 +16,51 @@ const NotificationBell = ({ isCollapsed }) => {
     markAllAsRead
   } = useNotifications();
 
-  // Handle bell click
+  // Enhanced positioning calculation for perfect alignment
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+
+  // Calculate precise dropdown position
+  const calculateDropdownPosition = useCallback(() => {
+    if (bellRef.current) {
+      const bellRect = bellRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      // Position dropdown so its right-top corner touches the bell
+      const position = {
+        // Top edge of dropdown should align with bottom edge of bell
+        top: bellRect.bottom + 8, // 8px gap for better visual separation
+        // Right edge of dropdown should align with right edge of bell
+        right: viewportWidth - bellRect.right,
+        maxHeight: viewportHeight - bellRect.bottom - 20 // Leave some margin from bottom
+      };
+      
+      setDropdownPosition(position);
+    }
+  }, []);
+
+  // Update position when bell is clicked or window resizes
+  useEffect(() => {
+    if (isOpen) {
+      calculateDropdownPosition();
+      
+      const handleResize = () => {
+        if (isOpen) {
+          calculateDropdownPosition();
+        }
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, [isOpen, calculateDropdownPosition]);
+
+  // Handle bell click with position calculation
   const handleBellClick = () => {
     if (!isOpen) {
       fetchNotifications();
+      // Calculate position before opening
+      setTimeout(calculateDropdownPosition, 0);
     }
     setIsOpen(!isOpen);
   };
