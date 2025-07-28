@@ -378,6 +378,7 @@ const HumanBotsManagement = () => {
   useEffect(() => {
     fetchHumanBots();
     fetchStats();
+    fetchGlobalSettings(); // Add global settings fetch
   }, [currentPage, pageSize, filters, priorityFields]);
 
   // Cleanup timeouts on unmount
