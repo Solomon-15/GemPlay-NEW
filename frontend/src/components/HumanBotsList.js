@@ -500,7 +500,7 @@ const HumanBotsList = ({
       try {
         const response = await executeOperation(`/admin/human-bots/${bot.id}/recalculate-bets`, 'POST');
         addNotification(`Пересчёт ставок завершён: Human-бот "${bot.name}" - отменено ${response.cancelled_bets} активных ставок`, 'success');
-        await fetchHumanBots();
+        if (onRefresh) onRefresh(); // Use parent refresh function
         await fetchStats();
       } catch (error) {
         console.error('Ошибка пересчёта ставок:', error);
