@@ -27,7 +27,7 @@ const NewBotAnalytics = () => {
   // Получение списка обычных ботов
   const fetchRegularBots = async () => {
     try {
-      const response = await get('/api/admin/bots');
+      const response = await get('/admin/bots');
       setRegularBotsList(response.bots || []);
     } catch (error) {
       console.error('Error fetching regular bots:', error);
