@@ -66,7 +66,7 @@ const NewBotAnalytics = () => {
       setLoading(true);
       
       // Получаем игры обычных ботов
-      const gamesResponse = await get('/api/admin/games', {
+      const gamesResponse = await get('/admin/games', {
         page: 1,
         limit: 1000,
         regular_bot_only: true
