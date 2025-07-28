@@ -1,91 +1,83 @@
 <analysis>
-The previous AI engineer successfully brought the GemPlay application from inception to a functional MVP, then continued with feature enhancements and bug fixes. Initially, the focus was on core financial logic, ensuring proper commission and bet returns upon game exit or draw, and implementing an admin feature to unfreeze stuck commissions. Frontend consistency for Total balance calculations across various UI components was also addressed. Subsequently, the engineer enhanced the user profile, adding editing capabilities for username, gender, and UTC offset, along with a shortened user ID display. A significant refactoring effort was dedicated to the mobile header, creating a global  component to ensure full-width responsiveness and correct display of financial tiles, replacing older header versions. The trajectory also highlights the engineer's strong debugging skills, particularly in resolving backend API issues and persistent frontend UI glitches. Most recently, the engineer iteratively fixed Script error runtime issues by correcting several CSS syntax mistakes (, , ) and implemented skeleton loading for improved performance. The final explicit user request is to remove all Metamask-related code.
+The previous AI engineer successfully developed GemPlay from MVP, focusing on core financial logic (commission, bet returns, unfreezing stuck commissions), and ensuring Total balance consistency across the UI. Subsequently, user profile editing and a significant  refactoring were implemented, creating a global, responsive component with financial tiles and skeleton loading. The engineer demonstrated strong debugging skills, resolving frontend CSS  issues.
+
+The immediate past work involved two main threads:
+1.  **Metamask Removal**: All Metamask-related code was identified and successfully removed from  and , including build file cleanup.
+2.  **Bot Analytics Fix**: The user reported the admin Bot Analytics section not loading. The engineer debugged and corrected API endpoint prefixes ( to ), adjusted data parsing from  to , and modified loading logic to display analytics even with empty bot lists. While Human-bot analytics now loads correctly, a subsequent test showed the Regular Bots tab still causes a redirect to the login page, indicating a persistent JavaScript error.
+
+The new task is to optimize the loading of Human-bots in the Human-Bot Management section, with user input confirming specific requirements for pagination (10 items/page, adjustable), search/filtering, frontend/backend caching (1 min, auto-update), and prioritized display fields.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting platform featuring Human-bots and a 3% commission system. The core objective is to deliver robust betting mechanics, accurate financial metrics, and comprehensive administrative controls. The application development has so far focused on:
-1.  **Commission & Bet Return**: On player exit (e.g., closing modal) or a game draw, the full frozen amount (initial bet + 3% commission) must be returned to the player's virtual balance, and the game should revert to an available state in the lobby.
-2.  **Unfreeze All Stuck Commission Feature**: An administrative function within User Management to unfreeze commissions from incorrectly concluded games, transferring funds from  to , requiring confirmation and logging.
-3.  **Correct Total Balance Calculation**: The Total balance displayed in the Inventory, HeaderPortfolio, and near the Sidebar's LOGOUT button must accurately reflect .
-4.  **Profile Editing**: The Profile interface requires an Edit Profile button to enable users to modify their username, gender (triggering avatar updates), view a shortened/copyable user ID, and edit/display their timezone in UTC format.
-5.  **Mobile Header Refactoring**: Globally replace an older mobile header (Header-01) with a newer, responsive design (Header-02) that spans full screen width, includes a notification bell icon, and correctly displays financial tiles (, , ) with their titles inside, equal horizontal outer margins, and full details. This header should also be sticky at the top on scroll.
-6.  **Loading Improvements**: Enhance initial data loading for financial tiles in the mobile header, implementing skeleton loading and robust error handling for a smoother user experience.
-7.  **Dynamic Profile Total**: In the mobile header's profile dropdown, replace the static Total balance display with the dynamic value fetched from the top Total tile, colored green.
+The GemPlay application is an asynchronous PvP gem betting platform featuring Human-bots and a 3% commission system. The core objective is to deliver robust betting mechanics, accurate financial metrics, and comprehensive administrative controls. So far, development focused on:
+1.  **Commission & Bet Return**: Ensuring full frozen amounts (bet + commission) are returned on game exit/draw, and games revert to lobby.
+2.  **Unfreeze All Stuck Commission Feature**: Admin function to move frozen commissions to virtual balance with confirmation.
+3.  **Correct Total Balance Calculation**: Accurate  display in Inventory, HeaderPortfolio, and Sidebar.
+4.  **Profile Editing**: User modification of username, gender, timezone, and display of a shortened, copyable user ID.
+5.  **Mobile Header Refactoring**: Global replacement with a responsive, sticky  (Header-02) displaying Balance, Gems, and Total tiles with titles inside, equal margins, and full data lines.
+6.  **Loading Improvements**: Implementing skeleton loading and robust error handling for mobile header financial tiles.
+7.  **Dynamic Profile Total**: Replacing static Total in mobile header's profile dropdown with dynamic, green-colored value.
+8.  **Metamask Removal**: Remove all Metamask-related code from the application.
+9.  **Bot Analytics Fix**: Restore functionality of the Admin Panel's Bot Analytics section.
+10. **Human-Bot Management Optimization**: Improve loading speed for Human-bots in Human-Bot Management via pagination (10 bots/page, adjustable), search/filtering, 1-minute cache with auto-update, and optimized API requests focusing on STATISTICS and PENDING BETS fields.
 </product_requirements>
 
 <key_technical_concepts>
--   **React.js**: Frontend UI, state management, hooks (, , ).
--   **FastAPI**: Python backend for RESTful APIs, Pydantic for data models.
--   **MongoDB**: NoSQL database for data persistence.
--   **Axios**: HTTP client for API communication.
--   **Supervisor**: Process manager for frontend and backend services.
--   **Tailwind CSS**: Utility-first CSS framework for responsive design.
+-   **React.js**: Frontend UI, state management, hooks.
+-   **FastAPI**: Python backend, RESTful APIs, Pydantic models.
+-   **MongoDB**: NoSQL database.
+-   **Axios**: HTTP client.
+-   **Supervisor**: Process manager.
+-   **Tailwind CSS**: Utility-first CSS framework.
 -   **Clipboard API**: For copying text.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a MERN-stack variant (React.js, FastAPI, MongoDB) organized into  and  directories.
+The application utilizes a MERN-stack variant (React.js, FastAPI, MongoDB) organized into  and  directories.
 
 
 
--   :
-    -   **Importance**: Centralizes backend logic, API routes, and database interactions. It handles game mechanics, user profile management, and financial operations like commission unfreezing.
-    -   **Changes Made**: Logic modified to return frozen balances/gems on game draw/cancel; added  endpoint; implemented  for user data updates; updated  Pydantic models with  and  for serialization.
--   :
-    -   **Importance**: Admin interface for user management.
-    -   **Changes Made**: Added Unfreeze all stuck commission button; fixed cursor issue in textareas by removing dynamic  props.
--   :
-    -   **Importance**: Displays a user's inventory and financial details.
-    -   **Changes Made**:  function logic updated to correctly sum  for .
--   :
-    -   **Importance**: Header component displaying a summary of the user's portfolio.
-    -   **Changes Made**:  function updated for  calculation; CSS adjustments for responsive display of balance tiles on mobile (showing all three lines of data); fixed  sign.
--   :
-    -   **Importance**: Main navigation, now displays overall Total balance.
-    -   **Changes Made**:  implemented to retrieve and display  ().
--   :
-    -   **Importance**: Modal for joining bets; handles game cancellation upon player exit.
-    -   **Changes Made**: Integrated backend  call when a joining player closes the modal.
--   :
-    -   **Importance**: User profile management.
-    -   **Changes Made**: Added Edit Profile button; enabled in-component editing for username, gender, timezone offset;  for state synchronization; shortened user ID display with copy functionality (later changed to select-on-click);  integration; removed duplicate mobile balance tiles and  import;  for input handlers to prevent cursor issues.
--   :
-    -   **Importance**: Provides global context for system notifications.
-    -   **Changes Made**: Used for displaying various system messages.
--   :
-    -   **Importance**: Displays available bets.
-    -   **Changes Made**:  implemented for filter input change handlers to resolve cursor disappearance.
--   :
-    -   **Importance**: Newly created and frequently modified component for responsive mobile header.
-    -   **Changes Made**: Designed for notification bell, logo, profile dropdown. Recent major changes include a complete rewrite to incorporate Balance, Gems, and Total tiles directly within the header, with titles inside blocks, equal outer horizontal margins, sticky positioning, and all three lines of data displayed. Implemented skeleton loading for initial data fetch, and robust error handling. The Total value in the profile dropdown was made dynamic and green. Multiple CSS syntax errors ( to ,  to ,  to ) were identified and corrected.
--   :
-    -   **Importance**: Main application component, manages routing and global layout.
-    -   **Changes Made**: Integrated  globally for all mobile views, replacing previous mobile header code. Passes  and  props to .
--   , , :
-    -   **Importance**: Python test scripts for backend API testing.
-    -   **Changes Made**: Created to verify game exit scenarios and user profile updates.
+-   : Centralizes backend logic. Modified to return frozen balances on draw/cancel, added  and  endpoints, and updated  Pydantic models.
+-   : Admin interface. Added Unfreeze all stuck commission button and fixed cursor issue.
+-   : Displays user inventory.  updated for correct  calculation.
+-   : Header portfolio summary.  updated, CSS adjusted for mobile balance tiles.
+-   : Main navigation.  implemented for  display.
+-   : Modal for joining bets. Integrated backend call to cancel game on modal close.
+-   : User profile management. Added Edit Profile, enabled in-component editing for username/gender/timezone, shortened user ID, integrated , removed duplicate mobile elements, and used .
+-   : Global context for notifications. Used for displaying system messages.
+-   : Displays available bets.  for filter input handlers resolved cursor issues.
+-   : New, responsive mobile header. Completely rewritten to include Balance, Gems, Total tiles (with titles inside, equal margins, sticky), skeleton loading, and robust error handling. Corrected multiple CSS syntax errors (, , ). The Total value in profile dropdown made dynamic and green.
+-   : Admin panel component for bot analytics. Recently modified to correct API endpoint URLs (removed  prefix where redundant), updated data access from  to , and adjusted  dependencies to ensure analytics load even with empty bot lists.
+-   : Component for displaying various charts. It is imported and used within  to visualize bot statistics.
+-   : Component for managing Human-bots. This file is the current focus for optimization, particularly in how it fetches and displays the list of human bots.
+-   : Custom hook for API interactions. Examined for potential issues with API calls to the backend.
+-   : (DELETED) Previously prevented Metamask injection. Completely removed from the codebase.
+-   : Main application component. Integrated  globally, replacing older mobile header logic. Also, the import for  was removed from this file.
+-   , , : Python test scripts for backend API. Created to verify game scenarios and user profile updates.
 </code_architecture>
 
 <pending_tasks>
--   **Cursor Disappearance Issue**: The problem where the cursor disappears after entering/deleting a single character in certain text fields (e.g., Profile Username, Lobby min/max sum, Admin Panel Delete User reason) persists in specific components like  and other similar fields, despite  fixes in  and .
+-   **Cursor Disappearance Issue**: Cursor disappears after single character input in  and other similar fields (e.g., Profile Username, Lobby min/max sum, Admin Panel Delete User reason).
+-   **Regular Bots Analytics Fix**: The Regular Bots tab in the Admin Panel's analytics section still redirects to the login page.
+-   **Human-Bot Management Optimization**: Implement pagination, lazy loading, caching (1 min, auto-update), search/filtering, and optimized API requests for Human-bot list.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer was actively engaged in addressing and resolving several critical UI and loading issues within the application's mobile version, primarily concerning the  component.
+Immediately prior to this summary, the AI engineer completed the task of removing all Metamask-related code from the application. This involved:
+1.  Deleting the  file from .
+2.  Removing its corresponding import statement from .
+3.  Cleaning up the  directory to ensure no old Metamask-related code remained in compiled assets.
 
-The work encompassed:
-1.  **Mobile Header Refinement**: The user requested specific adjustments to the mobile header, including ensuring the Balance, Gems, and Total tiles have their titles inside the blocks, possess equal outer horizontal margins, and are integrated into a single row within the sticky header. The AI engineer performed a significant rewrite of  and updated  to consolidate and correctly display these elements, ensuring the header remains sticky at the top during scrolling and shows all three lines of financial data (main value, frozen funds, available balance).
-2.  **Loading Optimization**: The user requested fixes and improvements for initial data loading. The engineer implemented skeleton loading to provide animated placeholders while data is fetched, enhanced error handling logic (including checks for user token presence), and optimized the loading conditions for faster responsiveness. This resulted in a smoother and quicker display of financial data in the mobile header tiles.
-3.  **Dynamic Profile Total Value**: The user requested that the static Total value within the profile section of the mobile header's dropdown be replaced with the dynamic value from the main Total tile, and that it be displayed in green. This was successfully implemented, ensuring the value is accurate and visually distinct.
-4.  **Runtime Error (Script Error) Resolution**: The engineer repeatedly encountered and fixed Script error runtime errors, which were traced to incorrect CSS class usages within . Specific fixes included:
-    *   Correcting  to .
-    *   Changing  to .
-    *   Adjusting  to .
-    These changes addressed underlying compilation and rendering issues, ensuring the mobile header displayed correctly and without errors.
+Following this, the engineer addressed a critical bug reported by the user: the Admin Panel Analytics section was not loading. Debugging revealed and fixed several issues within :
+1.  Incorrect API endpoint prefixes:  was corrected to  and similar for regular bots.
+2.  Incorrect data structure access: The component was expecting  but the API was returning , which was corrected.
+3.  Conditional loading logic: The  hook's dependency on  was removed to ensure analytics would load even if the initial bot list was empty.
 
-The last completed task was the resolution of the  instances by correcting CSS properties in .
+These fixes successfully enabled the Human-bot analytics to load and display correctly, showing overall statistics, graphs (Game Volume, Win Rate, Average Bet Size), and time period toggles. However, during testing, switching to the Regular Bots tab still caused the application to redirect to the login page, indicating an unresolved JavaScript error in that specific sub-section.
+
+The current focus has now shifted to optimizing the Human-Bot Management section, specifically to improve the loading performance of the Human-bot list. The user has provided detailed requirements for this task, including implementing pagination (10 bots per page, adjustable), search/filtering, caching (1 minute, auto-update, preference for which layer to cache), and prioritizing STATISTICS and PENDING BETS fields for initial display. The engineer has just begun analyzing  to formulate a plan for these optimizations.
 </current_work>
 
 <optional_next_step>
-The immediate next step is to delete all code in the application related to Metamask, as per the user's explicit request.
+Analyze  and related backend endpoints to plan pagination, caching, and lazy loading for Human-bots.
 </optional_next_step>
