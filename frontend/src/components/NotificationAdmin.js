@@ -85,25 +85,44 @@ const NotificationAdmin = ({ user }) => {
 
   // Поиск пользователей
   const searchUsers = useCallback(async (query) => {
-    if (!query.trim()) {
-      setFoundUsers([]);
-      return;
-    }
-
     try {
       const token = localStorage.getItem('token');
+      
+      // Если запрос пустой, показываем всех доступных пользователей (первые 20)
+      const searchQuery = query.trim() || '';
+      
       const response = await axios.get(`${API}/admin/users`, {
         headers: { 'Authorization': `Bearer ${token}` },
-        params: { search: query, limit: 10 }
+        params: { 
+          search: searchQuery, 
+          limit: searchQuery ? 10 : 20, // Больше пользователей если нет фильтра
+          exclude_bots: true // Исключаем ботов из поиска
+        }
       });
 
       if (response.data.success) {
-        setFoundUsers(response.data.users || []);
+        const users = response.data.users || [];
+        // Дополнительная фильтрация на фронтенде для исключения ботов
+        const humanUsers = users.filter(user => 
+          !user.bot_type && 
+          !user.is_bot && 
+          user.role && 
+          ['USER', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)
+        );
+        setFoundUsers(humanUsers);
       }
     } catch (error) {
       console.error('Error searching users:', error);
+      setFoundUsers([]);
     }
   }, []);
+
+  // Показать всех пользователей при фокусе на поле поиска
+  const handleSearchFocus = () => {
+    if (userSearch.trim() === '' && foundUsers.length === 0) {
+      searchUsers(''); // Загружаем всех пользователей
+    }
+  };
 
   // Добавить пользователя в список получателей
   const addUserToSelection = (user) => {
