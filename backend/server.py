@@ -20428,6 +20428,392 @@ async def unfreeze_stuck_commission(current_admin: User = Depends(get_current_ad
 
 
 # ==============================================================================
+# NOTIFICATION SYSTEM API ENDPOINTS  
+# ==============================================================================
+
+@api_router.get("/notifications", response_model=NotificationListResponse)
+async def get_user_notifications(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=50),
+    type: Optional[NotificationTypeEnum] = Query(None),
+    is_read: Optional[bool] = Query(None),
+    since: Optional[datetime] = Query(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Get user notifications with pagination and filtering"""
+    try:
+        skip = (page - 1) * limit
+        
+        # Build query filter
+        query_filter = {"user_id": current_user.id}
+        
+        # Add type filter
+        if type:
+            query_filter["type"] = type.value
+            
+        # Add read status filter  
+        if is_read is not None:
+            query_filter["is_read"] = is_read
+            
+        # Add since filter for incremental sync
+        if since:
+            query_filter["created_at"] = {"$gte": since}
+        
+        # Add expiration filter (exclude expired notifications)
+        current_time = datetime.utcnow()
+        query_filter["$or"] = [
+            {"expires_at": None},
+            {"expires_at": {"$gte": current_time}}
+        ]
+        
+        # Get total count
+        total_notifications = await db.notifications.count_documents(query_filter)
+        
+        # Get unread count
+        unread_count = await db.notifications.count_documents({
+            "user_id": current_user.id,
+            "is_read": False,
+            "$or": [
+                {"expires_at": None},
+                {"expires_at": {"$gte": current_time}}
+            ]
+        })
+        
+        # Get notifications with pagination
+        notifications_cursor = db.notifications.find(query_filter).sort("created_at", -1).skip(skip).limit(limit)
+        notifications_list = await notifications_cursor.to_list(length=limit)
+        
+        # Format response
+        notifications = []
+        for notif in notifications_list:
+            payload = NotificationPayload(**notif.get("payload", {}))
+            
+            notifications.append(NotificationResponse(
+                id=notif["id"],
+                user_id=notif["user_id"],
+                type=NotificationTypeEnum(notif["type"]),
+                title=notif["title"],
+                message=notif["message"],
+                emoji=notif["emoji"],
+                priority=NotificationPriorityEnum(notif["priority"]),
+                payload=payload,
+                is_read=notif["is_read"],
+                read_at=notif.get("read_at"),
+                created_at=notif["created_at"],
+                expires_at=notif.get("expires_at")
+            ))
+        
+        # Calculate pagination
+        total_pages = (total_notifications + limit - 1) // limit
+        
+        return NotificationListResponse(
+            success=True,
+            notifications=notifications,
+            pagination={
+                "current_page": page,
+                "total_pages": total_pages,
+                "per_page": limit,
+                "total_items": total_notifications,
+                "unread_count": unread_count,
+                "has_next": page < total_pages,
+                "has_prev": page > 1
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting notifications: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get notifications"
+        )
+
+@api_router.put("/notifications/{notification_id}/read")
+async def mark_notification_as_read(
+    notification_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Mark specific notification as read"""
+    try:
+        # Verify notification belongs to user
+        notification = await db.notifications.find_one({
+            "id": notification_id,
+            "user_id": current_user.id
+        })
+        
+        if not notification:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Notification not found"
+            )
+        
+        # Update read status
+        await db.notifications.update_one(
+            {"id": notification_id},
+            {"$set": {
+                "is_read": True,
+                "read_at": datetime.utcnow()
+            }}
+        )
+        
+        return {"success": True, "message": "Notification marked as read"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error marking notification as read: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to mark notification as read"
+        )
+
+@api_router.put("/notifications/mark-all-read")
+async def mark_all_notifications_as_read(
+    current_user: User = Depends(get_current_user)
+):
+    """Mark all user notifications as read"""
+    try:
+        current_time = datetime.utcnow()
+        
+        # Update all unread notifications for user
+        result = await db.notifications.update_many(
+            {
+                "user_id": current_user.id,
+                "is_read": False,
+                "$or": [
+                    {"expires_at": None},
+                    {"expires_at": {"$gte": current_time}}
+                ]
+            },
+            {"$set": {
+                "is_read": True,
+                "read_at": current_time
+            }}
+        )
+        
+        return {
+            "success": True, 
+            "message": f"Marked {result.modified_count} notifications as read"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error marking all notifications as read: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to mark all notifications as read"
+        )
+
+@api_router.get("/notifications/settings", response_model=NotificationSettingsResponse)
+async def get_notification_settings(
+    current_user: User = Depends(get_current_user)
+):
+    """Get user notification settings"""
+    try:
+        settings = await get_user_notification_settings(current_user.id)
+        
+        return NotificationSettingsResponse(
+            success=True,
+            settings=settings
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting notification settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get notification settings"
+        )
+
+@api_router.put("/notifications/settings", response_model=NotificationSettingsResponse) 
+async def update_notification_settings(
+    settings: NotificationSettings,
+    current_user: User = Depends(get_current_user)
+):
+    """Update user notification settings"""
+    try:
+        settings_doc = {
+            "user_id": current_user.id,
+            "settings": settings.model_dump(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Upsert settings
+        await db.user_notification_settings.update_one(
+            {"user_id": current_user.id},
+            {"$set": settings_doc},
+            upsert=True
+        )
+        
+        return NotificationSettingsResponse(
+            success=True,
+            settings=settings
+        )
+        
+    except Exception as e:
+        logger.error(f"Error updating notification settings: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update notification settings"
+        )
+
+@api_router.delete("/notifications/{notification_id}")
+async def delete_notification(
+    notification_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete specific notification"""
+    try:
+        # Verify notification belongs to user
+        result = await db.notifications.delete_one({
+            "id": notification_id,
+            "user_id": current_user.id
+        })
+        
+        if result.deleted_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Notification not found"
+            )
+        
+        return {"success": True, "message": "Notification deleted"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting notification: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete notification"
+        )
+
+# ==============================================================================
+# ADMIN NOTIFICATION API ENDPOINTS
+# ==============================================================================
+
+@api_router.post("/admin/notifications/broadcast")
+async def admin_broadcast_notification(
+    request: AdminBroadcastRequest,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Admin broadcast notification to users"""
+    try:
+        # Get target users
+        if request.target_users:
+            target_users = request.target_users
+        else:
+            # Broadcast to all active users
+            users_cursor = db.users.find({"is_active": True}, {"id": 1})
+            target_users = [user["id"] async for user in users_cursor]
+        
+        if not target_users:
+            return {"success": True, "message": "No target users found", "sent_count": 0}
+        
+        # Create payload for system message
+        payload = NotificationPayload(
+            system_message=request.message,
+            category="admin_broadcast"  
+        )
+        
+        # Send notification to each user
+        sent_count = 0
+        for user_id in target_users:
+            notification_id = await create_notification(
+                user_id=user_id,
+                notification_type=request.type,
+                payload=payload,
+                priority=request.priority,
+                expires_at=request.expires_at
+            )
+            
+            if notification_id:
+                sent_count += 1
+        
+        logger.info(f"Admin {current_admin.email} broadcast notification to {sent_count} users")
+        
+        return {
+            "success": True,
+            "message": f"Notification sent to {sent_count} users",
+            "sent_count": sent_count
+        }
+        
+    except Exception as e:
+        logger.error(f"Error broadcasting notification: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to broadcast notification"
+        )
+
+@api_router.get("/admin/notifications/analytics", response_model=NotificationAnalyticsResponse)
+async def get_notification_analytics(
+    days: int = Query(30, ge=1, le=365),
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get notification analytics for admin"""
+    try:
+        # Calculate date range
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
+        
+        # Get total statistics
+        total_sent = await db.notifications.count_documents({
+            "created_at": {"$gte": start_date, "$lte": end_date}
+        })
+        
+        total_read = await db.notifications.count_documents({
+            "created_at": {"$gte": start_date, "$lte": end_date},
+            "is_read": True
+        })
+        
+        read_rate = (total_read / max(total_sent, 1)) * 100
+        
+        # Get statistics by type
+        pipeline = [
+            {"$match": {"created_at": {"$gte": start_date, "$lte": end_date}}},
+            {"$group": {
+                "_id": "$type",
+                "sent": {"$sum": 1},
+                "read": {"$sum": {"$cond": ["$is_read", 1, 0]}}
+            }}
+        ]
+        
+        type_stats_cursor = db.notifications.aggregate(pipeline)
+        by_type = {}
+        
+        async for stat in type_stats_cursor:
+            notification_type = stat["_id"]
+            sent = stat["sent"]
+            read = stat["read"]
+            rate = (read / max(sent, 1)) * 100
+            
+            by_type[notification_type] = {
+                "sent": sent,
+                "read": read,
+                "rate": round(rate, 2)
+            }
+        
+        analytics = NotificationAnalytics(
+            total_sent=total_sent,
+            total_read=total_read,
+            read_rate=round(read_rate, 2),
+            by_type=by_type
+        )
+        
+        return NotificationAnalyticsResponse(
+            success=True,
+            analytics=analytics
+        )
+        
+    except Exception as e:
+        logger.error(f"Error getting notification analytics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get notification analytics"
+        )
+
+
+# ==============================================================================
+# HUMAN BOTS API
+# ==============================================================================
+
+# ==============================================================================
 # INCLUDE ROUTERS
 # ==============================================================================
 
