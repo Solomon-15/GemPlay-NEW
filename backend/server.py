@@ -3914,59 +3914,6 @@ async def delete_gem_admin(
             detail="Failed to delete gem"
         )
 
-@api_router.post("/notifications/{notification_id}/mark-read", response_model=dict)
-async def mark_notification_read(
-    notification_id: str, 
-    current_user: User = Depends(get_current_user)
-):
-    """Mark notification as read."""
-    try:
-        from bson import ObjectId
-        
-        result = await db.notifications.update_one(
-            {
-                "_id": ObjectId(notification_id),
-                "user_id": current_user.id
-            },
-            {"$set": {"read": True}}
-        )
-        
-        if result.modified_count == 0:
-            raise HTTPException(
-                status_code=404,
-                detail="Notification not found"
-            )
-        
-        return {"success": True, "message": "Notification marked as read"}
-        
-    except Exception as e:
-        logger.error(f"Error marking notification as read: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to mark notification as read"
-        )
-
-@api_router.post("/notifications/mark-all-read", response_model=dict)
-async def mark_all_notifications_read(current_user: User = Depends(get_current_user)):
-    """Mark all notifications as read."""
-    try:
-        result = await db.notifications.update_many(
-            {"user_id": current_user.id, "read": False},
-            {"$set": {"read": True}}
-        )
-        
-        return {
-            "success": True, 
-            "message": f"Marked {result.modified_count} notifications as read"
-        }
-        
-    except Exception as e:
-        logger.error(f"Error marking all notifications as read: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to mark notifications as read"
-        )
-
 @api_router.get("/users/search", response_model=List[dict])
 async def search_users(query: str, current_user: User = Depends(get_current_user)):
     """Search users by email or username for gifting."""
