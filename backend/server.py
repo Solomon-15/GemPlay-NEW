@@ -17916,42 +17916,58 @@ async def list_human_bots(
         bots_cursor = db.human_bots.find(query_filter).sort(sort_criteria).skip(skip).limit(limit)
         bots_list = await bots_cursor.to_list(length=limit)
         
-        # Format response bots with active bets count
+        
+        # Format response bots with optimized data loading
         response_bots = []
+        
+        # Batch process for better performance
         for bot in bots_list:
-            # Calculate win rate
-            win_rate = (bot.get("total_games_won", 0) / max(bot.get("total_games_played", 1), 1)) * 100
+            # Priority fields: STATISTICS and PENDING BETS (loaded first)
             
-            # Get active bets count
+            # Get active bets count (PENDING BETS priority field)
             active_bets_count = await get_human_bot_active_bets_count(bot["id"])
             
-            # Get average bet amount from active bets
-            average_bet_amount = await get_human_bot_average_bet_amount(bot["id"])
+            # STATISTICS priority fields - optimized calculation
+            if priority_fields:
+                # Calculate draws from completed games (optimized query)
+                completed_games_cursor = db.games.find({
+                    "$or": [
+                        {"creator_id": bot["id"]},
+                        {"opponent_id": bot["id"]}
+                    ],
+                    "status": "COMPLETED"
+                })
+                completed_games = await completed_games_cursor.to_list(None)
+                
+                draws = sum(1 for game in completed_games if game.get('winner_id') is None)
+                losses = sum(1 for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot["id"])
+                wins = sum(1 for game in completed_games if game.get('winner_id') == bot["id"])
+                actual_games_played = len(completed_games)  # Only count completed games
+                
+                # Calculate correct profit: (sum of bets in won games) - (sum of bets in lost games)
+                won_games = [game for game in completed_games if game.get('winner_id') == bot["id"]]
+                lost_games = [game for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot["id"]]
+                
+                # Calculate total bet amounts for won and lost games
+                total_bet_amount_won = sum(game.get('bet_amount', 0.0) for game in won_games)
+                total_bet_amount_lost = sum(game.get('bet_amount', 0.0) for game in lost_games)
+                
+                # Correct profit calculation
+                correct_profit = total_bet_amount_won - total_bet_amount_lost
+                
+                # Calculate win rate
+                win_rate = (wins / max(actual_games_played, 1)) * 100 if actual_games_played > 0 else 0
+            else:
+                # Fallback to basic statistics for faster loading
+                draws = 0
+                losses = 0
+                wins = bot.get("total_games_won", 0)
+                actual_games_played = bot.get("total_games_played", 0)
+                correct_profit = 0.0
+                win_rate = (bot.get("total_games_won", 0) / max(bot.get("total_games_played", 1), 1)) * 100
             
-            # Calculate draws from completed games
-            completed_games = await db.games.find({
-                "$or": [
-                    {"creator_id": bot["id"]},
-                    {"opponent_id": bot["id"]}
-                ],
-                "status": "COMPLETED"
-            }).to_list(None)
-            
-            draws = sum(1 for game in completed_games if game.get('winner_id') is None)
-            losses = sum(1 for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot["id"])
-            wins = sum(1 for game in completed_games if game.get('winner_id') == bot["id"])
-            actual_games_played = len(completed_games)  # Only count completed games
-            
-            # Calculate correct profit: (sum of bets in won games) - (sum of bets in lost games)
-            won_games = [game for game in completed_games if game.get('winner_id') == bot["id"]]
-            lost_games = [game for game in completed_games if game.get('winner_id') and game.get('winner_id') != bot["id"]]
-            
-            # Calculate total bet amounts for won and lost games
-            total_bet_amount_won = sum(game.get('bet_amount', 0.0) for game in won_games)
-            total_bet_amount_lost = sum(game.get('bet_amount', 0.0) for game in lost_games)
-            
-            # Correct profit calculation
-            correct_profit = total_bet_amount_won - total_bet_amount_lost
+            # Get average bet amount (less priority field)
+            average_bet_amount = await get_human_bot_average_bet_amount(bot["id"]) if priority_fields else 0
             
             response_bot = HumanBotResponse(
                 id=bot["id"],
@@ -17984,14 +18000,14 @@ async def list_human_bots(
                 updated_at=bot["updated_at"]
             )
             
-            # Add active bets count and draws as additional fields
+            # Add priority fields as additional data
             response_bot_dict = response_bot.model_dump()  # Updated method name
-            response_bot_dict["active_bets_count"] = active_bets_count
-            response_bot_dict["draws"] = draws
-            response_bot_dict["losses"] = losses
-            response_bot_dict["actual_games_played"] = actual_games_played
-            response_bot_dict["actual_wins"] = wins
-            response_bot_dict["correct_profit"] = correct_profit
+            response_bot_dict["active_bets_count"] = active_bets_count  # PENDING BETS (priority)
+            response_bot_dict["draws"] = draws  # STATISTICS (priority)
+            response_bot_dict["losses"] = losses  # STATISTICS (priority)
+            response_bot_dict["actual_games_played"] = actual_games_played  # STATISTICS (priority)
+            response_bot_dict["actual_wins"] = wins  # STATISTICS (priority)
+            response_bot_dict["correct_profit"] = correct_profit  # STATISTICS (priority)
             response_bots.append(response_bot_dict)
         
         # Calculate pagination
