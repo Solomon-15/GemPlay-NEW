@@ -20,6 +20,8 @@ const HumanBotsList = ({
   totalPages = 1, 
   pageSize = 10,
   priorityFields = true,
+  stats = {}, // Получаем статистику от родительского компонента
+  globalSettings = {}, // Получаем глобальные настройки от родительского компонента
   onEditBot, 
   onCreateBot,
   onPageChange,
@@ -29,11 +31,9 @@ const HumanBotsList = ({
   const { confirm, confirmationModal } = useConfirmation();
   const { prompt, inputModal } = useInput();
 
-  // Remove local humanBots state since we now use props
-  // const [humanBots, setHumanBots] = useState([]);
-  // const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({});
-  const [globalSettings, setGlobalSettings] = useState({}); // Global settings state
+  // Remove duplicate states - получаем от родительского компонента
+  // const [stats, setStats] = useState({});
+  // const [globalSettings, setGlobalSettings] = useState({});
   
   // Multiple selection states
   const [selectedBots, setSelectedBots] = useState(new Set());
