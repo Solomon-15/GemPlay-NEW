@@ -892,6 +892,63 @@ const NotificationAdmin = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Модальное окно выбора типа повторной отправки */}
+      {showResendModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-white text-xl font-rajdhani font-bold mb-4">Повторная отправка уведомления</h3>
+            
+            <div className="space-y-4 mb-6">
+              <label className="flex items-center space-x-3 p-3 rounded-lg border border-gray-600 hover:border-accent-primary cursor-pointer">
+                <input
+                  type="radio"
+                  name="resendOption"
+                  value="unread"
+                  checked={resendOption === 'unread'}
+                  onChange={(e) => setResendOption(e.target.value)}
+                  className="text-accent-primary focus:ring-accent-primary"
+                />
+                <div>
+                  <div className="text-white font-medium">Только непрочитавшим</div>
+                  <div className="text-text-secondary text-sm">Отправить уведомление пользователям, которые его еще не прочитали</div>
+                </div>
+              </label>
+              
+              <label className="flex items-center space-x-3 p-3 rounded-lg border border-gray-600 hover:border-accent-primary cursor-pointer">
+                <input
+                  type="radio"
+                  name="resendOption"
+                  value="all"
+                  checked={resendOption === 'all'}
+                  onChange={(e) => setResendOption(e.target.value)}
+                  className="text-accent-primary focus:ring-accent-primary"
+                />
+                <div>
+                  <div className="text-white font-medium">Всем изначальным получателям</div>
+                  <div className="text-text-secondary text-sm">Отправить уведомление всем пользователям, которые должны были его получить</div>
+                </div>
+              </label>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowResendModal(null)}
+                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-rajdhani font-bold rounded transition-all duration-200"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={handleResendConfirm}
+                disabled={resendingId === showResendModal}
+                className="flex-1 px-4 py-2 bg-accent-primary hover:bg-accent-primary-dark text-white font-rajdhani font-bold rounded transition-all duration-200 disabled:opacity-50"
+              >
+                {resendingId === showResendModal ? 'Отправляется...' : 'Отправить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
