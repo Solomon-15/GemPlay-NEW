@@ -822,6 +822,9 @@ class UploadSoundFileRequest(BaseModel):
     file_format: str = Field(..., pattern="^(mp3|wav|ogg)$")  # Only these formats
     file_size: int = Field(..., gt=0, le=5242880)  # Max 5MB
 
+class ResendNotificationRequest(BaseModel):
+    notification_id: str
+
 class SoundResponse(BaseModel):
     id: str
     name: str
