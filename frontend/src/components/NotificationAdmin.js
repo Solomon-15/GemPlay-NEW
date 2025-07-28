@@ -934,20 +934,22 @@ const NotificationAdmin = ({ user }) => {
                           onChange={() => toggleNotificationSelection(item.notification_id)}
                           className="text-accent-primary focus:ring-accent-primary"
                         />
-                        <div className="flex-1">
                           <div className="flex items-center space-x-3 mb-2">
                             <span className="text-2xl">
                               {item.type === 'admin_notification' ? '🛡️' : 
-                             item.type === 'bet_accepted' ? '🎯' :
-                             item.type === 'match_result' ? '🏆' :
-                             item.type === 'gem_gift' ? '💎' : '📬'}
-                          </span>
-                          <div>
-                            <h3 className="text-white font-bold text-lg">{item.title}</h3>
-                            <p className="text-text-secondary text-sm">
-                              {new Date(item.created_at).toLocaleString('ru-RU')} • {item.type}
-                            </p>
+                               item.type === 'bet_accepted' ? '🎯' :
+                               item.type === 'match_result' ? '🏆' :
+                               item.type === 'gem_gift' ? '💎' : '📬'}
+                            </span>
+                            <div>
+                              <h3 className="text-white font-bold text-lg">{item.title}</h3>
+                              <p className="text-text-secondary text-sm">
+                                {new Date(item.created_at).toLocaleString('ru-RU')} • {item.type}
+                              </p>
+                            </div>
                           </div>
+                        </div>
+                      </div>
                         </div>
                         <p className="text-gray-300 text-sm mb-3 line-clamp-2">{item.message}</p>
                         
