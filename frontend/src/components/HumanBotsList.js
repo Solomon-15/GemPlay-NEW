@@ -13,14 +13,25 @@ import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const HumanBotsList = ({ onEditBot, onCreateBot }) => {
+const HumanBotsList = ({ 
+  humanBots = [], 
+  loading = false, 
+  currentPage = 1, 
+  totalPages = 1, 
+  pageSize = 10,
+  priorityFields = true,
+  onEditBot, 
+  onCreateBot,
+  onPageChange,
+  onRefresh
+}) => {
   const { addNotification } = useNotifications();
   const { confirm, confirmationModal } = useConfirmation();
   const { prompt, inputModal } = useInput();
 
-  // States
-  const [humanBots, setHumanBots] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Remove local humanBots state since we now use props
+  // const [humanBots, setHumanBots] = useState([]);
+  // const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [globalSettings, setGlobalSettings] = useState({}); // Global settings state
   
