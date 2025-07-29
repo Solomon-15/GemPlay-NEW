@@ -21196,14 +21196,16 @@ async def get_detailed_notification_analytics(
         # Group read notifications by notification_id for efficient lookup
         read_notifications_by_id = {}
         for read_notif in all_read_notifications:
-            notif_id = read_notif["id"]
+            # Handle both id and _id fields
+            notif_id = read_notif.get("id") or str(read_notif.get("_id"))
             if notif_id not in read_notifications_by_id:
                 read_notifications_by_id[notif_id] = []
             read_notifications_by_id[notif_id].append(read_notif)
         
         # Process each notification using the pre-fetched read data
         for notification in notifications:
-            notification_id = notification["id"]
+            # Handle both id and _id fields
+            notification_id = notification.get("id") or str(notification.get("_id"))
             notification_type = notification.get("type", "unknown")
             
             # Determine target users for this notification
