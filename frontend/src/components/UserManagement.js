@@ -1887,6 +1887,11 @@ const UserManagement = ({ user: currentUser }) => {
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="font-rajdhani font-bold text-green-400">
+                          {formatDollarAmount(user.total_balance || 0)}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
                         <div className="relative group">
                           <button
                             onClick={() => handleGemsModal(user)}
