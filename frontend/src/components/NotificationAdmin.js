@@ -694,12 +694,8 @@ const NotificationAdmin = ({ user }) => {
                             value={userSearch}
                             onChange={(e) => {
                               setUserSearch(e.target.value);
-                              // Выполняем поиск если есть введенный текст, иначе показываем всех пользователей
-                              if (e.target.value.trim().length > 0) {
-                                searchUsers(e.target.value.trim());
-                              } else {
-                                handleSearchFocus(); // Показываем всех пользователей при пустом поле
-                              }
+                              // Выполняем поиск с задержкой
+                              searchUsers(e.target.value.trim());
                             }}
                             onFocus={handleSearchFocus}
                             onBlur={handleSearchBlur}
