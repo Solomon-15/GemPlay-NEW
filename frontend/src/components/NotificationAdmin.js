@@ -118,20 +118,20 @@ const NotificationAdmin = ({ user }) => {
 
       console.log('📊 Search response:', response.data); // Отладка
 
-      if (response.data.success) {
-        const users = response.data.users || [];
-        console.log('👥 Found users before filtering:', users.length); // Отладка
-        // Дополнительная фильтрация на фронтенде для исключения ботов
-        const humanUsers = users.filter(user => 
-          !user.bot_type && 
-          !user.is_bot && 
-          user.role && 
-          ['USER', 'ADMIN', 'SUPER_ADMIN', 'PLAYER'].includes(user.role) // Добавляем PLAYER
-        );
-        
-        console.log('✅ Human users after filtering:', humanUsers.length); // Отладка
-        setFoundUsers(humanUsers);
-      }
+      // API /admin/users не возвращает success поле, только данные напрямую
+      const users = response.data.users || [];
+      console.log('👥 Found users before filtering:', users.length); // Отладка
+      
+      // Дополнительная фильтрация на фронтенде для исключения ботов
+      const humanUsers = users.filter(user => 
+        user.user_type !== 'HUMAN_BOT' && 
+        user.user_type !== 'REGULAR_BOT' && 
+        user.role && 
+        ['USER', 'ADMIN', 'SUPER_ADMIN', 'PLAYER'].includes(user.role)
+      );
+      
+      console.log('✅ Human users after filtering:', humanUsers.length); // Отладка
+      setFoundUsers(humanUsers);
     } catch (error) {
       console.error('❌ Error searching users:', error);
       setFoundUsers([]);
