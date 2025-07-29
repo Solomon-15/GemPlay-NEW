@@ -1718,7 +1718,7 @@ const UserManagement = ({ user: currentUser }) => {
               }}
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
             >
-              <option value="-">По умолчанию</option>
+              <option value="--asc">По умолчанию</option>
               <option value="name-asc">Имя (А-Я)</option>
               <option value="name-desc">Имя (Я-А)</option>
               <option value="role-asc">Роль (возр.)</option>
