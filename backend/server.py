@@ -9278,6 +9278,8 @@ async def get_all_users(
     sort_order: Optional[str] = "asc",  # asc или desc
     balance_min: Optional[float] = None,  # Фильтр по минимальному балансу
     balance_max: Optional[float] = None,  # Фильтр по максимальному балансу
+    total_min: Optional[float] = None,    # Фильтр по минимальному TOTAL балансу
+    total_max: Optional[float] = None,    # Фильтр по максимальному TOTAL балансу
     exclude_bots: Optional[bool] = False,
     current_user: User = Depends(get_current_admin)
 ):
