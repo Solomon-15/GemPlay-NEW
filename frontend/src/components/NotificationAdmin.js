@@ -700,9 +700,10 @@ const NotificationAdmin = ({ user }) => {
                             type="text"
                             value={userSearch}
                             onChange={(e) => {
-                              setUserSearch(e.target.value);
-                              // Выполняем поиск с задержкой
-                              searchUsers(e.target.value.trim());
+                              const value = e.target.value;
+                              setUserSearch(value);
+                              // Выполняем поиск с введенным текстом или показываем всех при пустом поле
+                              searchUsers(value.trim());
                             }}
                             onFocus={handleSearchFocus}
                             onBlur={handleSearchBlur}
