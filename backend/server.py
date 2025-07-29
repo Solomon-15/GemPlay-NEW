@@ -9354,11 +9354,12 @@ async def get_all_users(
         # Get users with pagination but without sorting if sorting by total
         skip = (page - 1) * limit
         
-        # Специальная обработка для сортировки по TOTAL
+        # Специальная обработка для сортировки по TOTAL и ROLE
         sort_by_total = sort_by == "total"
+        sort_by_role = sort_by == "role"
         
-        if sort_by_total:
-            # Для сортировки по TOTAL получаем больше пользователей, сортируем после расчета, затем применяем пагинацию
+        if sort_by_total or sort_by_role:
+            # Для сортировки по TOTAL или ROLE получаем больше пользователей, сортируем после расчета, затем применяем пагинацию
             all_users = await db.users.find(query).to_list(None)  # Получаем всех пользователей для правильной сортировки
         else:
             # Обычная сортировка в MongoDB
