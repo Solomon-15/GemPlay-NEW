@@ -31,9 +31,20 @@ import ipaddress
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
+# MongoDB connection with enhanced configuration
 mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
+client = AsyncIOMotorClient(
+    mongo_url,
+    maxPoolSize=100,  # Увеличиваем размер пула подключений
+    minPoolSize=10,   # Минимальное количество подключений
+    maxIdleTimeMS=30000,  # Максимальное время простоя подключения (30 сек)
+    waitQueueTimeoutMS=5000,  # Время ожидания подключения (5 сек)
+    serverSelectionTimeoutMS=10000,  # Таймаут выбора сервера (10 сек)
+    connectTimeoutMS=10000,  # Таймаут подключения (10 сек)
+    socketTimeoutMS=60000,   # Таймаут сокета (60 сек)
+    retryWrites=True,        # Включить повторные записи
+    retryReads=True          # Включить повторные чтения
+)
 db = client[os.environ['DB_NAME']]
 
 # Security
