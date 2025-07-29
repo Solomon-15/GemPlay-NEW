@@ -257,14 +257,32 @@ const UserManagement = ({ user: currentUser }) => {
     );
   };
 
-  const getUserRoleBadge = (role) => {
+  const getUserRoleBadge = (user) => {
+    // Сначала проверяем тип пользователя (бот или обычный пользователь)
+    if (user.user_type === 'HUMAN_BOT') {
+      return (
+        <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold bg-orange-600`}>
+          Human-бот
+        </span>
+      );
+    }
+    
+    if (user.user_type === 'REGULAR_BOT') {
+      return (
+        <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold bg-indigo-600`}>
+          Обычный бот
+        </span>
+      );
+    }
+    
+    // Для обычных пользователей показываем их роль
     const roleMap = {
       'USER': { color: 'bg-blue-600', text: 'Игрок' },
       'ADMIN': { color: 'bg-purple-600', text: 'Админ' },
       'SUPER_ADMIN': { color: 'bg-red-600', text: 'Супер-админ' }
     };
     
-    const roleInfo = roleMap[role] || { color: 'bg-gray-600', text: role };
+    const roleInfo = roleMap[user.role] || { color: 'bg-gray-600', text: user.role };
     
     return (
       <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold ${roleInfo.color}`}>
