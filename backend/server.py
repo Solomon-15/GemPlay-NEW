@@ -9348,9 +9348,18 @@ async def get_all_users(
             sort_direction = -1
         # Если sort_order не указан или некорректен, используем значение по умолчанию (-1)
         
-        # Get users with pagination and sorting
+        # Get users with pagination but without sorting if sorting by total
         skip = (page - 1) * limit
-        users = await db.users.find(query).skip(skip).limit(limit).sort(sort_field, sort_direction).to_list(limit)
+        
+        # Специальная обработка для сортировки по TOTAL
+        sort_by_total = sort_by == "total"
+        
+        if sort_by_total:
+            # Для сортировки по TOTAL получаем больше пользователей, сортируем после расчета, затем применяем пагинацию
+            all_users = await db.users.find(query).to_list(None)  # Получаем всех пользователей для правильной сортировки
+        else:
+            # Обычная сортировка в MongoDB
+            users = await db.users.find(query).skip(skip).limit(limit).sort(sort_field, sort_direction).to_list(limit)
         
         # Также получаем данные из коллекций bots и human_bots для добавления информации о ботах
         bots = await db.bots.find({}).to_list(1000)  # Получаем всех обычных ботов
