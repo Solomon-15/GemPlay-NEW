@@ -9333,6 +9333,7 @@ async def get_all_users(
                 "role": "role",
                 "status": "status",
                 "balance": "virtual_balance",
+                "total": "virtual_balance",  # Будем сортировать по virtual_balance как приблизительное значение total
                 "registration_date": "created_at",
                 "last_login": "last_login"
             }
