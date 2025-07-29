@@ -137,21 +137,28 @@ const UserManagement = ({ user: currentUser }) => {
       
       if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
       if (statusFilter) params.append('status', statusFilter);
+      if (roleFilter) params.append('role', roleFilter);
+      if (sortBy) params.append('sort_by', sortBy);
+      if (sortOrder) params.append('sort_order', sortOrder);
+      if (balanceMin) params.append('balance_min', balanceMin);
+      if (balanceMax) params.append('balance_max', balanceMax);
       
       const response = await axios.get(`${API}/admin/users?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Сортировка пользователей: админы и супер-админы первыми
+      // Сортировка пользователей: админы и супер-админы первыми, затем боты
       const sortedUsers = (response.data.users || []).sort((a, b) => {
         const roleOrder = {
           'SUPER_ADMIN': 1,
-          'ADMIN': 2,
-          'USER': 3
+          'ADMIN': 2, 
+          'USER': 3,
+          'HUMAN_BOT': 4,
+          'REGULAR_BOT': 5
         };
         
-        const aOrder = roleOrder[a.role] || 3;
-        const bOrder = roleOrder[b.role] || 3;
+        const aOrder = roleOrder[a.user_type] || roleOrder[a.role] || 5;
+        const bOrder = roleOrder[b.user_type] || roleOrder[b.role] || 5;
         
         // Если роли одинаковые, сортируем по username
         if (aOrder === bOrder) {
