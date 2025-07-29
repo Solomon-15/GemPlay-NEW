@@ -1859,8 +1859,14 @@ const UserManagement = ({ user: currentUser }) => {
                       <span className="text-accent-primary">{getSortIcon('name')}</span>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    Онлайн статус
+                  <th 
+                    onClick={() => handleColumnSort('online_status')}
+                    className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-main transition-colors"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Онлайн статус</span>
+                      <span className="text-accent-primary">{getSortIcon('online_status')}</span>
+                    </div>
                   </th>
                   <th 
                     onClick={() => handleColumnSort('role')}
