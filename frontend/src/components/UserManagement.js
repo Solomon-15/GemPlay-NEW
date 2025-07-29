@@ -1850,14 +1850,26 @@ const UserManagement = ({ user: currentUser }) => {
                       className="rounded border-border-primary text-accent-primary focus:ring-accent-primary"
                     />
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    Пользователь
+                  <th 
+                    onClick={() => handleColumnSort('name')}
+                    className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-main transition-colors"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Пользователь</span>
+                      <span className="text-accent-primary">{getSortIcon('name')}</span>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Онлайн статус
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    Роль
+                  <th 
+                    onClick={() => handleColumnSort('role')}
+                    className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-main transition-colors"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Роль</span>
+                      <span className="text-accent-primary">{getSortIcon('role')}</span>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Баланс
