@@ -5587,14 +5587,12 @@ async def join_game(
             logger.error(f"Error sending bet accepted notification: {e}")
             # Don't fail the join process if notification fails
         
-        # Return game state - opponent now needs to choose their move within 1 minute
-        return {
-            "message": "Successfully joined game",
-            "game_id": game_id,
-            "status": "ACTIVE",
-            "deadline": datetime.utcnow() + timedelta(minutes=1),
-            "next_action": "Choose your move within 1 minute"
-        }
+        # Complete the game immediately with both moves
+        logger.info(f"🎯 Completing game {game_id} immediately after join with moves")
+        game_result = await determine_game_winner(game_id)
+        
+        # Return completed game result (expected by frontend)
+        return game_result
         
     except HTTPException:
         raise
