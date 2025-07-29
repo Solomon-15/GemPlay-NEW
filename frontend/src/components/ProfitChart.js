@@ -8,14 +8,10 @@ import {
   Title,
   Tooltip,
   Legend,
-  ArcElement
+  ArcElement,
+  Filler
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
-  Tooltip,
-  Legend,
-  ArcElement,
-  Filler,
-} from 'chart.js';
 
 ChartJS.register(
   CategoryScale,
