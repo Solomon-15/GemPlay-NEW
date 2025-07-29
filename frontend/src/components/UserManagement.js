@@ -114,7 +114,7 @@ const UserManagement = ({ user: currentUser }) => {
 
   useEffect(() => {
     fetchUsers();
-  }, [pagination.currentPage, debouncedSearchTerm, statusFilter]);
+  }, [pagination.currentPage, debouncedSearchTerm, statusFilter, roleFilter, sortBy, sortOrder, balanceMin, balanceMax]);
 
   // Живой счетчик для обновления времени каждую секунду
   useEffect(() => {
