@@ -9543,12 +9543,16 @@ async def get_all_users(
                     return 1 if status == "ONLINE" else 2
                 
                 cleaned_users.sort(key=get_online_status_priority, reverse=(sort_direction == -1))
-            
-            # Обновляем total для правильной пагинации ПОСЛЕ дедупликации и сортировки
-            total = len(cleaned_users)
-            
-            # Применяем пагинацию
+        
+        # Обновляем total для правильной пагинации ПОСЛЕ дедупликации и сортировки
+        total = len(cleaned_users)
+        
+        # Применяем пагинацию для всех случаев
+        if sort_by_total or sort_by_role or sort_by_online_status:
+            # Для специальной сортировки применяем пагинацию после сортировки
             cleaned_users = cleaned_users[skip:skip + limit]
+        
+        # Для обычных случаев пагинация уже применена в MongoDB запросе
         
         return {
             "users": cleaned_users,
