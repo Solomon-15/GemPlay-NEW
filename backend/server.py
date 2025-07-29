@@ -9322,9 +9322,36 @@ async def get_all_users(
         # Get total count
         total = await db.users.count_documents(query)
         
-        # Get users with pagination
+        # Определение сортировки
+        sort_field = "created_at"
+        sort_direction = -1  # По умолчанию desc
+        
+        if sort_by:
+            sort_fields_map = {
+                "name": "username",
+                "email": "email", 
+                "role": "role",
+                "status": "status",
+                "balance": "virtual_balance",
+                "registration_date": "created_at",
+                "last_login": "last_login"
+            }
+            sort_field = sort_fields_map.get(sort_by, "created_at")
+            
+        if sort_order == "asc":
+            sort_direction = 1
+        
+        # Get users with pagination and sorting
         skip = (page - 1) * limit
-        users = await db.users.find(query).skip(skip).limit(limit).sort("created_at", -1).to_list(limit)
+        users = await db.users.find(query).skip(skip).limit(limit).sort(sort_field, sort_direction).to_list(limit)
+        
+        # Также получаем данные из коллекций bots и human_bots для добавления информации о ботах
+        bots = await db.bots.find({}).to_list(1000)  # Получаем всех обычных ботов
+        human_bots = await db.human_bots.find({}).to_list(1000)  # Получаем всех человеко-ботов
+        
+        # Создаем карты для быстрого поиска
+        bots_by_name = {bot.get("name"): bot for bot in bots}
+        human_bots_by_name = {bot.get("name"): bot for bot in human_bots}
         
         # Clean user data
         cleaned_users = []
