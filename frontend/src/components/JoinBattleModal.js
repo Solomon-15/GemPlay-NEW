@@ -85,9 +85,33 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       let battleOutcome = null;
       
-      // Игра завершается мгновенно, API возвращает результат игры напрямую
-      if (result.game_id && result.winner_id !== undefined) {
-        console.log('🎮 Game completed immediately');
+      // Проверяем статус игры после join
+      if (result.status === 'ACTIVE') {
+        console.log('🎮 Game is now ACTIVE - need to choose move');
+        
+        // Автоматически выбираем ход для завершения игры
+        const chooseMoveResult = await chooseMove(result.game_id, selectedMove);
+        
+        // Обрабатываем результат завершенной игры
+        if (chooseMoveResult.game_id && chooseMoveResult.winner_id !== undefined) {
+          console.log('🎮 Game completed after choosing move');
+          
+          battleOutcome = chooseMoveResult.winner_id === user.id ? 'win' : 
+                         (chooseMoveResult.winner_id ? 'lose' : 'draw');
+          
+          // Сохраняем результат битвы
+          setBattleResult({
+            result: battleOutcome,
+            opponentMove: chooseMoveResult.creator_move,
+            gameData: chooseMoveResult
+          });
+        } else {
+          throw new Error(`Ошибка завершения игры. Неожиданная структура ответа от choose-move.`);
+        }
+        
+      } else if (result.game_id && result.winner_id !== undefined) {
+        // Legacy поддержка мгновенного завершения
+        console.log('🎮 Game completed immediately (legacy)');
         
         battleOutcome = result.winner_id === user.id ? 'win' : 
                        (result.winner_id ? 'lose' : 'draw');
@@ -100,7 +124,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         });
         
       } else {
-        throw new Error(`Неожиданная структура ответа API. Ожидались поля game_id и winner_id.`);
+        throw new Error(`Неожиданная структура ответа API. Ожидался статус ACTIVE или завершенная игра.`);
       }
       
       // Обновляем инвентарь и данные пользователя
