@@ -9478,10 +9478,29 @@ async def get_all_users(
                 
             cleaned_users.append(cleaned_user)
         
-        # Если сортируем по TOTAL, сортируем cleaned_users и применяем пагинацию
-        if sort_by_total:
-            # Сортируем по total_balance
-            cleaned_users.sort(key=lambda x: x["total_balance"], reverse=(sort_direction == -1))
+        # Если сортируем по TOTAL или ROLE, сортируем cleaned_users и применяем пагинацию
+        if sort_by_total or sort_by_role:
+            if sort_by_total:
+                # Сортируем по total_balance
+                cleaned_users.sort(key=lambda x: x["total_balance"], reverse=(sort_direction == -1))
+            elif sort_by_role:
+                # Сортируем по приоритету ролей
+                def get_role_priority(user):
+                    # Определяем приоритет на основе типа пользователя
+                    if user["user_type"] == "REGULAR_BOT":
+                        return 5  # Обычные боты - последние
+                    elif user["user_type"] == "HUMAN_BOT":
+                        return 4  # Human боты
+                    elif user["role"] == "USER":
+                        return 3  # Игроки
+                    elif user["role"] == "ADMIN":
+                        return 2  # Админы
+                    elif user["role"] == "SUPER_ADMIN":
+                        return 1  # Супер Админы - первые
+                    else:
+                        return 6  # Неизвестный тип - в конец
+                
+                cleaned_users.sort(key=get_role_priority, reverse=(sort_direction == -1))
             
             # Применяем пагинацию
             total_after_filter = len(cleaned_users)
