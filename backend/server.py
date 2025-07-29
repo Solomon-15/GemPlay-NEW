@@ -9439,7 +9439,12 @@ async def get_all_users(
             if user_type == "USER":
                 bot_status = get_user_online_status(user)
             
-            cleaned_user = {
+                # Безопасное получение числовых значений с проверкой типов
+                virtual_bal = float(user.get("virtual_balance") or 0)
+                frozen_bal = float(user.get("frozen_balance") or 0)
+                gems_val = float(round(total_gems_value, 2))
+                
+                cleaned_user = {
                 "id": user.get("id"),
                 "username": user.get("username"),
                 "email": user.get("email"),
@@ -9449,9 +9454,9 @@ async def get_all_users(
                 "online_status": get_user_online_status(user),  # Новое поле для онлайн статуса
                 "bot_status": bot_status,  # Статус бота (ONLINE/OFFLINE) или онлайн статус пользователя
                 "gender": user.get("gender"),
-                "virtual_balance": user.get("virtual_balance", 0),
-                "frozen_balance": user.get("frozen_balance", 0),  # Добавляем замороженный баланс
-                "total_balance": float(user.get("virtual_balance", 0) + user.get("frozen_balance", 0) + round(total_gems_value, 2)),  # Полный баланс как float для правильной сортировки
+                "virtual_balance": virtual_bal,
+                "frozen_balance": frozen_bal,  # Добавляем замороженный баланс
+                "total_balance": virtual_bal + frozen_bal + gems_val,  # Полный баланс как float для правильной сортировки
                 "total_games_played": total_games_played,
                 "total_games_won": total_games_won,
                 "total_games_lost": total_games_lost,
