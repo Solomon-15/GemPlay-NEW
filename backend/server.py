@@ -20742,8 +20742,8 @@ async def get_user_notifications(
                 type=NotificationTypeEnum(notif["type"]),
                 title=notif["title"],
                 message=notif["message"],
-                emoji=notif["emoji"],
-                priority=NotificationPriorityEnum(notif["priority"]),
+                emoji=notif.get("emoji", "📢"),  # Default emoji if not present
+                priority=NotificationPriorityEnum(notif.get("priority", "info")),  # Default priority if not present
                 payload=payload,
                 is_read=notif["is_read"],
                 read_at=notif.get("read_at"),
