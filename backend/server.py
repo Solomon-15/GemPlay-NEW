@@ -21153,7 +21153,7 @@ async def get_detailed_notification_analytics(
         all_read_notifications_cursor = db.notifications.find({
             "id": {"$in": notification_ids},
             "user_id": {"$in": all_human_ids},
-            "read": True
+            "is_read": True
         }, {"id": 1, "user_id": 1, "read_at": 1})
         all_read_notifications = await all_read_notifications_cursor.to_list(None)
         
