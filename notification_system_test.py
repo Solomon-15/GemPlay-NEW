@@ -412,12 +412,14 @@ def test_response_structure_validation() -> None:
     total_count = pagination.get("total_items", 0)
     unread_count = pagination.get("unread_count", 0)
     
+    print_success(f"success: {success} (type: {type(success).__name__})")
     print_success(f"total_count: {total_count} (type: {type(total_count).__name__})")
     print_success(f"unread_count: {unread_count} (type: {type(unread_count).__name__})")
     print_success(f"notifications: {len(notifications) if isinstance(notifications, list) else 'not a list'} items")
     
     # Validate field types
     type_checks = []
+    type_checks.append(("success", isinstance(success, bool), f"Expected bool, got {type(success).__name__}"))
     type_checks.append(("total_count", isinstance(total_count, int), f"Expected int, got {type(total_count).__name__}"))
     type_checks.append(("unread_count", isinstance(unread_count, int), f"Expected int, got {type(unread_count).__name__}"))
     type_checks.append(("notifications", isinstance(notifications, list), f"Expected list, got {type(notifications).__name__}"))
