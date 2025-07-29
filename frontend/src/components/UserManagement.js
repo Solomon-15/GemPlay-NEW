@@ -1721,6 +1721,8 @@ const UserManagement = ({ user: currentUser }) => {
               <option value="status-desc">Статус (убыв.)</option>
               <option value="balance-asc">Баланс (возр.)</option>
               <option value="balance-desc">Баланс (убыв.)</option>
+              <option value="total-asc">TOTAL (возр.)</option>
+              <option value="total-desc">TOTAL (убыв.)</option>
               <option value="registration_date-asc">Дата рег. (старые)</option>
               <option value="registration_date-desc">Дата рег. (новые)</option>
             </select>
