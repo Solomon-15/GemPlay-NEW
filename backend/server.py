@@ -9456,6 +9456,13 @@ async def get_all_users(
                 "ban_reason": user.get("ban_reason"),
                 "ban_until": user.get("ban_until")
             }
+            
+            # Применяем фильтр по TOTAL если указан
+            if total_min is not None and cleaned_user["total_balance"] < total_min:
+                continue
+            if total_max is not None and cleaned_user["total_balance"] > total_max:
+                continue
+                
             cleaned_users.append(cleaned_user)
         
         return {
