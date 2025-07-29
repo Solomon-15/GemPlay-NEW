@@ -102,10 +102,15 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       // Filter games - separate human bots from regular bots
       const allGames = gamesResponse.data || [];
       
-      // Available bets should include:
-      // 1. All human player games (is_bot_game is false or undefined)
-      // 2. Human-bot games (is_human_bot is true)
+      // Available bets should include only WAITING games:
+      // 1. All human player games (is_bot_game is false or undefined) with WAITING status
+      // 2. Human-bot games (is_human_bot is true) with WAITING status
       setAvailableBets(allGames.filter(game => {
+        // Only show WAITING games in Available Bets
+        if (game.status !== 'WAITING') {
+          return false;
+        }
+        
         // If it's not a bot game at all, include it (human players)
         if (!game.is_bot_game) {
           return true;
