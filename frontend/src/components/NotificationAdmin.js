@@ -162,6 +162,13 @@ const NotificationAdmin = ({ user }) => {
     }
   };
 
+  // Скрыть список при потере фокуса (с задержкой для возможности клика)
+  const handleSearchBlur = () => {
+    setTimeout(() => {
+      setFoundUsers([]);
+    }, 200);
+  };
+
   // Добавить пользователя в список получателей
   const addUserToSelection = (user) => {
     if (!selectedUsers.find(u => u.id === user.id)) {
