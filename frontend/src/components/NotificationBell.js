@@ -359,7 +359,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
                                 {!notification.is_read && (
                                   <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
                                 )}
-                                {/* Кнопка расширения */}
+                                {/* Expand button */}
                                 {notification.message.length > 60 && (
                                   <button
                                     onClick={(e) => toggleExpandedNotification(notification.id, e)}
