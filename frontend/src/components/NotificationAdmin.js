@@ -133,7 +133,7 @@ const NotificationAdmin = ({ user }) => {
         setFoundUsers(humanUsers);
       }
     } catch (error) {
-      console.error('Error searching users:', error);
+      console.error('❌ Error searching users:', error);
       setFoundUsers([]);
     }
   }, [searchMode]); // Добавляем searchMode в зависимости
