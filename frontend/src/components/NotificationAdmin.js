@@ -104,6 +104,8 @@ const NotificationAdmin = ({ user }) => {
       
       const searchQuery = query.trim();
       
+      console.log('🔍 Searching users:', { searchQuery, searchMode }); // Отладка
+      
       const response = await axios.get(`${API}/admin/users`, {
         headers: { 'Authorization': `Bearer ${token}` },
         params: { 
