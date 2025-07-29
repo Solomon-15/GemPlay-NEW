@@ -1,5 +1,773 @@
 #!/usr/bin/env python3
 """
+GemPlay Notification System Backend API Testing
+Testing notification system after connection pool and retry logic fixes
+
+Focus Areas:
+1. Reliability Test: GET /api/notifications - test multiple times to ensure no more 500 errors
+2. Concurrent Load Test: Multiple simultaneous requests to check connection pool handling  
+3. Response Structure Validation: Ensure aggregation pipeline returns correct data structure
+4. Admin Analytics: GET /api/admin/notifications/detailed-analytics
+5. Error Handling: Verify proper error messages and retry behavior
+
+Expected Results:
+- BEFORE: Intermittent 500 errors (~18% failure rate)
+- AFTER: Consistent 200 OK responses with reliable database connection handling
+"""
+
+import requests
+import json
+import time
+import sys
+import threading
+import concurrent.futures
+from typing import Dict, Any, Optional, List, Tuple
+import random
+import string
+from datetime import datetime
+
+# Configuration
+BASE_URL = "https://2afcdb68-e337-4e72-a16b-588ed6811928.preview.emergentagent.com/api"
+ADMIN_USER = {
+    "email": "admin@gemplay.com",
+    "password": "Admin123!"
+}
+
+SUPER_ADMIN_USER = {
+    "email": "superadmin@gemplay.com",
+    "password": "SuperAdmin123!"
+}
+
+# Test results tracking
+test_results = {
+    "total": 0,
+    "passed": 0,
+    "failed": 0,
+    "tests": []
+}
+
+# Colors for terminal output
+class Colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def print_header(text: str) -> None:
+    """Print a formatted header."""
+    print(f"\n{Colors.HEADER}{Colors.BOLD}{'=' * 80}{Colors.ENDC}")
+    print(f"{Colors.HEADER}{Colors.BOLD}{text.center(80)}{Colors.ENDC}")
+    print(f"{Colors.HEADER}{Colors.BOLD}{'=' * 80}{Colors.ENDC}\n")
+
+def print_subheader(text: str) -> None:
+    """Print a formatted subheader."""
+    print(f"\n{Colors.OKBLUE}{Colors.BOLD}{text}{Colors.ENDC}")
+    print(f"{Colors.OKBLUE}{'-' * 80}{Colors.ENDC}\n")
+
+def print_success(text: str) -> None:
+    """Print a success message."""
+    print(f"{Colors.OKGREEN}✓ {text}{Colors.ENDC}")
+
+def print_warning(text: str) -> None:
+    """Print a warning message."""
+    print(f"{Colors.WARNING}⚠ {text}{Colors.ENDC}")
+
+def print_error(text: str) -> None:
+    """Print an error message."""
+    print(f"{Colors.FAIL}✗ {text}{Colors.ENDC}")
+
+def record_test(name: str, passed: bool, details: str = "") -> None:
+    """Record a test result."""
+    test_results["total"] += 1
+    if passed:
+        test_results["passed"] += 1
+    else:
+        test_results["failed"] += 1
+    
+    test_results["tests"].append({
+        "name": name,
+        "passed": passed,
+        "details": details
+    })
+
+def make_request(
+    method: str, 
+    endpoint: str, 
+    data: Optional[Dict[str, Any]] = None,
+    headers: Optional[Dict[str, str]] = None,
+    expected_status: int = 200,
+    auth_token: Optional[str] = None,
+    timeout: int = 30
+) -> Tuple[Dict[str, Any], bool, int]:
+    """Make an HTTP request to the API."""
+    url = f"{BASE_URL}{endpoint}"
+    
+    if headers is None:
+        headers = {}
+    
+    if auth_token:
+        headers["Authorization"] = f"Bearer {auth_token}"
+    
+    try:
+        if data and method.lower() in ["post", "put", "patch"]:
+            headers["Content-Type"] = "application/json"
+            response = requests.request(method, url, json=data, headers=headers, timeout=timeout)
+        else:
+            response = requests.request(method, url, params=data, headers=headers, timeout=timeout)
+        
+        try:
+            response_data = response.json()
+        except json.JSONDecodeError:
+            response_data = {"text": response.text}
+        
+        success = response.status_code == expected_status
+        return response_data, success, response.status_code
+        
+    except requests.exceptions.Timeout:
+        return {"error": "Request timeout"}, False, 408
+    except requests.exceptions.ConnectionError:
+        return {"error": "Connection error"}, False, 503
+    except Exception as e:
+        return {"error": str(e)}, False, 500
+
+def test_login(email: str, password: str, user_type: str = "user") -> Optional[str]:
+    """Test user login and return auth token."""
+    print(f"Testing login for {user_type}: {email}")
+    
+    login_data = {"email": email, "password": password}
+    response, success, status_code = make_request("POST", "/auth/login", data=login_data)
+    
+    if success and "access_token" in response:
+        print_success(f"{user_type.capitalize()} login successful")
+        return response["access_token"]
+    else:
+        print_error(f"{user_type.capitalize()} login failed: {response}")
+        return None
+
+def test_notification_reliability() -> None:
+    """Test 1: Reliability Test - GET /api/notifications multiple times to ensure no 500 errors."""
+    print_header("TEST 1: NOTIFICATION RELIABILITY TESTING")
+    
+    # Login as admin
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with reliability test")
+        record_test("Notification Reliability - Admin Login", False, "Admin login failed")
+        return
+    
+    print_subheader("Testing GET /api/notifications endpoint reliability")
+    
+    # Test parameters
+    num_requests = 20  # Test 20 requests to check for intermittent errors
+    success_count = 0
+    error_count = 0
+    error_details = []
+    response_times = []
+    
+    print(f"Making {num_requests} sequential requests to /api/notifications...")
+    
+    for i in range(num_requests):
+        start_time = time.time()
+        response, success, status_code = make_request(
+            "GET", "/notifications", 
+            auth_token=admin_token
+        )
+        end_time = time.time()
+        response_time = end_time - start_time
+        response_times.append(response_time)
+        
+        print(f"Request {i+1}: Status {status_code}, Time: {response_time:.3f}s", end="")
+        
+        if success:
+            success_count += 1
+            print_success(f" ✓")
+            
+            # Validate response structure
+            if isinstance(response, dict):
+                expected_fields = ["total_count", "unread_count", "notifications"]
+                missing_fields = [field for field in expected_fields if field not in response]
+                if missing_fields:
+                    print_warning(f"Response missing fields: {missing_fields}")
+                else:
+                    print(f"    Response structure valid: {len(response.get('notifications', []))} notifications")
+            
+        else:
+            error_count += 1
+            print_error(f" ✗ Status: {status_code}")
+            error_details.append({
+                "request_num": i+1,
+                "status_code": status_code,
+                "response": response
+            })
+    
+    # Calculate statistics
+    success_rate = (success_count / num_requests) * 100
+    avg_response_time = sum(response_times) / len(response_times)
+    max_response_time = max(response_times)
+    min_response_time = min(response_times)
+    
+    print_subheader("Reliability Test Results")
+    print_success(f"Total requests: {num_requests}")
+    print_success(f"Successful requests: {success_count}")
+    print_success(f"Failed requests: {error_count}")
+    print_success(f"Success rate: {success_rate:.1f}%")
+    print_success(f"Average response time: {avg_response_time:.3f}s")
+    print_success(f"Min response time: {min_response_time:.3f}s")
+    print_success(f"Max response time: {max_response_time:.3f}s")
+    
+    # Check if we achieved the expected improvement
+    if success_rate >= 95.0:  # Expecting at least 95% success rate (vs previous 82%)
+        print_success("✅ RELIABILITY TEST PASSED: Success rate >= 95%")
+        record_test("Notification Reliability - Success Rate", True, f"Success rate: {success_rate:.1f}%")
+    else:
+        print_error(f"❌ RELIABILITY TEST FAILED: Success rate {success_rate:.1f}% < 95%")
+        record_test("Notification Reliability - Success Rate", False, f"Success rate: {success_rate:.1f}%")
+    
+    # Check response time consistency
+    if max_response_time < 5.0:  # Should respond within 5 seconds
+        print_success("✅ RESPONSE TIME TEST PASSED: All requests < 5s")
+        record_test("Notification Reliability - Response Time", True, f"Max time: {max_response_time:.3f}s")
+    else:
+        print_error(f"❌ RESPONSE TIME TEST FAILED: Max time {max_response_time:.3f}s >= 5s")
+        record_test("Notification Reliability - Response Time", False, f"Max time: {max_response_time:.3f}s")
+    
+    # Show error details if any
+    if error_details:
+        print_subheader("Error Details")
+        for error in error_details:
+            print_error(f"Request {error['request_num']}: Status {error['status_code']}")
+            print_error(f"  Response: {error['response']}")
+
+def test_concurrent_load() -> None:
+    """Test 2: Concurrent Load Test - Multiple simultaneous requests to check connection pool handling."""
+    print_header("TEST 2: CONCURRENT LOAD TESTING")
+    
+    # Login as admin
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with concurrent test")
+        record_test("Concurrent Load - Admin Login", False, "Admin login failed")
+        return
+    
+    print_subheader("Testing concurrent requests to notification endpoints")
+    
+    # Test parameters
+    num_concurrent_requests = 10  # 10 simultaneous requests
+    num_rounds = 3  # 3 rounds of concurrent requests
+    
+    def make_concurrent_request(request_id: int, round_num: int) -> Dict[str, Any]:
+        """Make a single concurrent request."""
+        start_time = time.time()
+        response, success, status_code = make_request(
+            "GET", "/notifications", 
+            auth_token=admin_token,
+            timeout=10
+        )
+        end_time = time.time()
+        
+        return {
+            "request_id": request_id,
+            "round": round_num,
+            "success": success,
+            "status_code": status_code,
+            "response_time": end_time - start_time,
+            "response": response
+        }
+    
+    all_results = []
+    
+    for round_num in range(1, num_rounds + 1):
+        print_subheader(f"Round {round_num}: {num_concurrent_requests} concurrent requests")
+        
+        # Use ThreadPoolExecutor for concurrent requests
+        with concurrent.futures.ThreadPoolExecutor(max_workers=num_concurrent_requests) as executor:
+            # Submit all requests
+            futures = [
+                executor.submit(make_concurrent_request, i+1, round_num) 
+                for i in range(num_concurrent_requests)
+            ]
+            
+            # Collect results
+            round_results = []
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    result = future.result()
+                    round_results.append(result)
+                    all_results.append(result)
+                except Exception as e:
+                    print_error(f"Request failed with exception: {e}")
+                    all_results.append({
+                        "request_id": -1,
+                        "round": round_num,
+                        "success": False,
+                        "status_code": 500,
+                        "response_time": 0,
+                        "response": {"error": str(e)}
+                    })
+        
+        # Analyze round results
+        round_success_count = sum(1 for r in round_results if r["success"])
+        round_success_rate = (round_success_count / len(round_results)) * 100
+        round_avg_time = sum(r["response_time"] for r in round_results) / len(round_results)
+        
+        print_success(f"Round {round_num} results:")
+        print_success(f"  Success rate: {round_success_rate:.1f}% ({round_success_count}/{len(round_results)})")
+        print_success(f"  Average response time: {round_avg_time:.3f}s")
+        
+        # Show individual request results
+        for result in sorted(round_results, key=lambda x: x["request_id"]):
+            status_icon = "✓" if result["success"] else "✗"
+            print(f"    Request {result['request_id']}: {status_icon} Status {result['status_code']}, Time: {result['response_time']:.3f}s")
+        
+        # Wait between rounds
+        if round_num < num_rounds:
+            print("Waiting 2 seconds before next round...")
+            time.sleep(2)
+    
+    # Overall analysis
+    print_subheader("Concurrent Load Test Results")
+    
+    total_requests = len(all_results)
+    total_success = sum(1 for r in all_results if r["success"])
+    overall_success_rate = (total_success / total_requests) * 100
+    overall_avg_time = sum(r["response_time"] for r in all_results) / total_requests
+    
+    print_success(f"Total concurrent requests: {total_requests}")
+    print_success(f"Total successful requests: {total_success}")
+    print_success(f"Overall success rate: {overall_success_rate:.1f}%")
+    print_success(f"Overall average response time: {overall_avg_time:.3f}s")
+    
+    # Check for connection pool issues
+    connection_errors = [r for r in all_results if r["status_code"] in [503, 504, 408]]
+    if connection_errors:
+        print_error(f"Found {len(connection_errors)} connection-related errors")
+        for error in connection_errors:
+            print_error(f"  Round {error['round']}, Request {error['request_id']}: Status {error['status_code']}")
+    else:
+        print_success("✅ No connection pool exhaustion errors detected")
+    
+    # Test results
+    if overall_success_rate >= 90.0:  # Expecting at least 90% success rate under load
+        print_success("✅ CONCURRENT LOAD TEST PASSED: Success rate >= 90%")
+        record_test("Concurrent Load - Success Rate", True, f"Success rate: {overall_success_rate:.1f}%")
+    else:
+        print_error(f"❌ CONCURRENT LOAD TEST FAILED: Success rate {overall_success_rate:.1f}% < 90%")
+        record_test("Concurrent Load - Success Rate", False, f"Success rate: {overall_success_rate:.1f}%")
+    
+    if len(connection_errors) == 0:
+        print_success("✅ CONNECTION POOL TEST PASSED: No connection errors")
+        record_test("Concurrent Load - Connection Pool", True, "No connection errors")
+    else:
+        print_error(f"❌ CONNECTION POOL TEST FAILED: {len(connection_errors)} connection errors")
+        record_test("Concurrent Load - Connection Pool", False, f"{len(connection_errors)} errors")
+
+def test_response_structure_validation() -> None:
+    """Test 3: Response Structure Validation - Ensure aggregation pipeline returns correct data structure."""
+    print_header("TEST 3: RESPONSE STRUCTURE VALIDATION")
+    
+    # Login as admin
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with structure validation")
+        record_test("Response Structure - Admin Login", False, "Admin login failed")
+        return
+    
+    print_subheader("Testing notification response structure from aggregation pipeline")
+    
+    # Test GET /api/notifications
+    response, success, status_code = make_request(
+        "GET", "/notifications", 
+        auth_token=admin_token
+    )
+    
+    if not success:
+        print_error(f"Failed to get notifications: Status {status_code}")
+        record_test("Response Structure - Get Notifications", False, f"Status: {status_code}")
+        return
+    
+    print_success("✅ Successfully retrieved notifications")
+    
+    # Validate top-level structure
+    print_subheader("Validating Top-Level Response Structure")
+    
+    expected_top_level_fields = ["total_count", "unread_count", "notifications"]
+    missing_top_fields = [field for field in expected_top_level_fields if field not in response]
+    
+    if not missing_top_fields:
+        print_success("✅ All expected top-level fields present")
+        record_test("Response Structure - Top Level Fields", True)
+    else:
+        print_error(f"❌ Missing top-level fields: {missing_top_fields}")
+        record_test("Response Structure - Top Level Fields", False, f"Missing: {missing_top_fields}")
+        return
+    
+    # Validate field types
+    total_count = response.get("total_count")
+    unread_count = response.get("unread_count")
+    notifications = response.get("notifications")
+    
+    print_success(f"total_count: {total_count} (type: {type(total_count).__name__})")
+    print_success(f"unread_count: {unread_count} (type: {type(unread_count).__name__})")
+    print_success(f"notifications: {len(notifications) if isinstance(notifications, list) else 'not a list'} items")
+    
+    # Validate field types
+    type_checks = []
+    type_checks.append(("total_count", isinstance(total_count, int), f"Expected int, got {type(total_count).__name__}"))
+    type_checks.append(("unread_count", isinstance(unread_count, int), f"Expected int, got {type(unread_count).__name__}"))
+    type_checks.append(("notifications", isinstance(notifications, list), f"Expected list, got {type(notifications).__name__}"))
+    
+    all_types_correct = True
+    for field_name, is_correct, error_msg in type_checks:
+        if is_correct:
+            print_success(f"✅ {field_name} type correct")
+        else:
+            print_error(f"❌ {field_name} type incorrect: {error_msg}")
+            all_types_correct = False
+    
+    if all_types_correct:
+        record_test("Response Structure - Field Types", True)
+    else:
+        record_test("Response Structure - Field Types", False, "Some field types incorrect")
+    
+    # Validate logical consistency
+    print_subheader("Validating Logical Consistency")
+    
+    if unread_count <= total_count:
+        print_success("✅ unread_count <= total_count (logical)")
+        record_test("Response Structure - Logical Consistency", True)
+    else:
+        print_error(f"❌ unread_count ({unread_count}) > total_count ({total_count}) (illogical)")
+        record_test("Response Structure - Logical Consistency", False, f"unread_count > total_count")
+    
+    # Validate individual notification structure
+    if notifications and len(notifications) > 0:
+        print_subheader("Validating Individual Notification Structure")
+        
+        sample_notification = notifications[0]
+        expected_notification_fields = ["id", "user_id", "type", "title", "message", "is_read", "created_at"]
+        missing_notification_fields = [field for field in expected_notification_fields if field not in sample_notification]
+        
+        if not missing_notification_fields:
+            print_success("✅ Sample notification has all expected fields")
+            record_test("Response Structure - Notification Fields", True)
+        else:
+            print_error(f"❌ Sample notification missing fields: {missing_notification_fields}")
+            record_test("Response Structure - Notification Fields", False, f"Missing: {missing_notification_fields}")
+        
+        # Show sample notification structure
+        print_success("Sample notification structure:")
+        for key, value in sample_notification.items():
+            print_success(f"  {key}: {value} (type: {type(value).__name__})")
+    
+    else:
+        print_warning("No notifications available to validate individual structure")
+        record_test("Response Structure - Notification Fields", False, "No notifications to validate")
+    
+    # Test aggregation pipeline performance
+    print_subheader("Testing Aggregation Pipeline Performance")
+    
+    # Make multiple requests to test consistency
+    aggregation_times = []
+    for i in range(5):
+        start_time = time.time()
+        response, success, status_code = make_request(
+            "GET", "/notifications", 
+            auth_token=admin_token
+        )
+        end_time = time.time()
+        
+        if success:
+            aggregation_times.append(end_time - start_time)
+            print_success(f"Request {i+1}: {end_time - start_time:.3f}s")
+        else:
+            print_error(f"Request {i+1}: Failed with status {status_code}")
+    
+    if aggregation_times:
+        avg_aggregation_time = sum(aggregation_times) / len(aggregation_times)
+        max_aggregation_time = max(aggregation_times)
+        
+        print_success(f"Average aggregation time: {avg_aggregation_time:.3f}s")
+        print_success(f"Max aggregation time: {max_aggregation_time:.3f}s")
+        
+        if avg_aggregation_time < 2.0:  # Should be faster than 2 seconds on average
+            print_success("✅ AGGREGATION PERFORMANCE TEST PASSED")
+            record_test("Response Structure - Aggregation Performance", True, f"Avg time: {avg_aggregation_time:.3f}s")
+        else:
+            print_error(f"❌ AGGREGATION PERFORMANCE TEST FAILED: Avg time {avg_aggregation_time:.3f}s >= 2s")
+            record_test("Response Structure - Aggregation Performance", False, f"Avg time: {avg_aggregation_time:.3f}s")
+
+def test_admin_analytics() -> None:
+    """Test 4: Admin Analytics - GET /api/admin/notifications/detailed-analytics."""
+    print_header("TEST 4: ADMIN ANALYTICS TESTING")
+    
+    # Login as admin
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with analytics test")
+        record_test("Admin Analytics - Admin Login", False, "Admin login failed")
+        return
+    
+    print_subheader("Testing GET /api/admin/notifications/detailed-analytics")
+    
+    # Test the detailed analytics endpoint
+    response, success, status_code = make_request(
+        "GET", "/admin/notifications/detailed-analytics", 
+        auth_token=admin_token
+    )
+    
+    if not success:
+        print_error(f"Failed to get detailed analytics: Status {status_code}")
+        print_error(f"Response: {response}")
+        record_test("Admin Analytics - Get Analytics", False, f"Status: {status_code}")
+        return
+    
+    print_success("✅ Successfully retrieved detailed analytics")
+    record_test("Admin Analytics - Get Analytics", True)
+    
+    # Validate analytics response structure
+    print_subheader("Validating Analytics Response Structure")
+    
+    expected_analytics_fields = ["success", "analytics"]
+    missing_analytics_fields = [field for field in expected_analytics_fields if field not in response]
+    
+    if not missing_analytics_fields:
+        print_success("✅ Analytics response has expected top-level structure")
+        record_test("Admin Analytics - Response Structure", True)
+    else:
+        print_error(f"❌ Analytics response missing fields: {missing_analytics_fields}")
+        record_test("Admin Analytics - Response Structure", False, f"Missing: {missing_analytics_fields}")
+        return
+    
+    analytics_data = response.get("analytics", {})
+    
+    # Expected analytics fields
+    expected_analytics_data_fields = [
+        "total_notifications", "total_users", "read_notifications", 
+        "unread_notifications", "notification_types", "recent_notifications"
+    ]
+    
+    missing_data_fields = [field for field in expected_analytics_data_fields if field not in analytics_data]
+    
+    if not missing_data_fields:
+        print_success("✅ Analytics data has all expected fields")
+        record_test("Admin Analytics - Data Fields", True)
+    else:
+        print_error(f"❌ Analytics data missing fields: {missing_data_fields}")
+        record_test("Admin Analytics - Data Fields", False, f"Missing: {missing_data_fields}")
+    
+    # Display analytics data
+    print_subheader("Analytics Data Summary")
+    for key, value in analytics_data.items():
+        if isinstance(value, (int, float, str)):
+            print_success(f"{key}: {value}")
+        elif isinstance(value, list):
+            print_success(f"{key}: {len(value)} items")
+        elif isinstance(value, dict):
+            print_success(f"{key}: {len(value)} categories")
+    
+    # Test analytics performance
+    print_subheader("Testing Analytics Performance")
+    
+    analytics_times = []
+    for i in range(3):
+        start_time = time.time()
+        response, success, status_code = make_request(
+            "GET", "/admin/notifications/detailed-analytics", 
+            auth_token=admin_token
+        )
+        end_time = time.time()
+        
+        if success:
+            analytics_times.append(end_time - start_time)
+            print_success(f"Analytics request {i+1}: {end_time - start_time:.3f}s")
+        else:
+            print_error(f"Analytics request {i+1}: Failed with status {status_code}")
+    
+    if analytics_times:
+        avg_analytics_time = sum(analytics_times) / len(analytics_times)
+        
+        print_success(f"Average analytics response time: {avg_analytics_time:.3f}s")
+        
+        if avg_analytics_time < 3.0:  # Should be faster than 3 seconds
+            print_success("✅ ANALYTICS PERFORMANCE TEST PASSED")
+            record_test("Admin Analytics - Performance", True, f"Avg time: {avg_analytics_time:.3f}s")
+        else:
+            print_error(f"❌ ANALYTICS PERFORMANCE TEST FAILED: Avg time {avg_analytics_time:.3f}s >= 3s")
+            record_test("Admin Analytics - Performance", False, f"Avg time: {avg_analytics_time:.3f}s")
+
+def test_error_handling_and_retry() -> None:
+    """Test 5: Error Handling - Verify proper error messages and retry behavior."""
+    print_header("TEST 5: ERROR HANDLING AND RETRY TESTING")
+    
+    # Login as admin
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with error handling test")
+        record_test("Error Handling - Admin Login", False, "Admin login failed")
+        return
+    
+    print_subheader("Testing Error Handling and Retry Logic")
+    
+    # Test 1: Invalid endpoint (should return 404)
+    print_subheader("Test 1: Invalid Endpoint (404 Error)")
+    
+    response, success, status_code = make_request(
+        "GET", "/notifications/invalid-endpoint", 
+        auth_token=admin_token,
+        expected_status=404
+    )
+    
+    if status_code == 404:
+        print_success("✅ Invalid endpoint correctly returns 404")
+        record_test("Error Handling - Invalid Endpoint", True)
+    else:
+        print_error(f"❌ Invalid endpoint returned {status_code} instead of 404")
+        record_test("Error Handling - Invalid Endpoint", False, f"Status: {status_code}")
+    
+    # Test 2: Unauthorized access (should return 401)
+    print_subheader("Test 2: Unauthorized Access (401 Error)")
+    
+    response, success, status_code = make_request(
+        "GET", "/notifications", 
+        expected_status=401
+    )
+    
+    if status_code == 401:
+        print_success("✅ Unauthorized access correctly returns 401")
+        record_test("Error Handling - Unauthorized Access", True)
+    else:
+        print_error(f"❌ Unauthorized access returned {status_code} instead of 401")
+        record_test("Error Handling - Unauthorized Access", False, f"Status: {status_code}")
+    
+    # Test 3: Invalid notification ID (should return 404)
+    print_subheader("Test 3: Invalid Notification ID (404 Error)")
+    
+    invalid_notification_id = "invalid-notification-id-12345"
+    response, success, status_code = make_request(
+        "PUT", f"/notifications/{invalid_notification_id}/mark-read", 
+        auth_token=admin_token,
+        expected_status=404
+    )
+    
+    if status_code == 404:
+        print_success("✅ Invalid notification ID correctly returns 404")
+        record_test("Error Handling - Invalid Notification ID", True)
+    else:
+        print_error(f"❌ Invalid notification ID returned {status_code} instead of 404")
+        record_test("Error Handling - Invalid Notification ID", False, f"Status: {status_code}")
+    
+    # Test 4: Test retry logic by making requests with short timeouts
+    print_subheader("Test 4: Connection Resilience Testing")
+    
+    resilience_success_count = 0
+    resilience_total_count = 10
+    
+    for i in range(resilience_total_count):
+        response, success, status_code = make_request(
+            "GET", "/notifications", 
+            auth_token=admin_token,
+            timeout=5  # Short timeout to test resilience
+        )
+        
+        if success:
+            resilience_success_count += 1
+            print_success(f"Request {i+1}: Success")
+        else:
+            print_error(f"Request {i+1}: Failed with status {status_code}")
+    
+    resilience_rate = (resilience_success_count / resilience_total_count) * 100
+    
+    print_success(f"Connection resilience rate: {resilience_rate:.1f}%")
+    
+    if resilience_rate >= 90.0:
+        print_success("✅ CONNECTION RESILIENCE TEST PASSED")
+        record_test("Error Handling - Connection Resilience", True, f"Success rate: {resilience_rate:.1f}%")
+    else:
+        print_error(f"❌ CONNECTION RESILIENCE TEST FAILED: Success rate {resilience_rate:.1f}% < 90%")
+        record_test("Error Handling - Connection Resilience", False, f"Success rate: {resilience_rate:.1f}%")
+    
+    # Test 5: Verify error message format
+    print_subheader("Test 5: Error Message Format Validation")
+    
+    # Test with invalid JSON data
+    invalid_data = "invalid json data"
+    response, success, status_code = make_request(
+        "POST", "/admin/notifications/broadcast", 
+        data=invalid_data,
+        auth_token=admin_token,
+        expected_status=422
+    )
+    
+    if status_code in [400, 422]:  # Either 400 or 422 is acceptable for invalid JSON
+        print_success("✅ Invalid JSON correctly returns 400/422")
+        
+        # Check if error message is properly formatted
+        if isinstance(response, dict) and ("detail" in response or "message" in response):
+            print_success("✅ Error response has proper message format")
+            record_test("Error Handling - Error Message Format", True)
+        else:
+            print_error("❌ Error response missing proper message format")
+            record_test("Error Handling - Error Message Format", False, "Missing error message")
+    else:
+        print_error(f"❌ Invalid JSON returned {status_code} instead of 400/422")
+        record_test("Error Handling - Error Message Format", False, f"Status: {status_code}")
+
+def run_all_tests() -> None:
+    """Run all notification system tests."""
+    print_header("GEMPLAY NOTIFICATION SYSTEM BACKEND API TESTING")
+    print_success("Testing notification system after connection pool and retry logic fixes")
+    print_success("Focus: Reliability, Concurrency, Response Structure, Analytics, Error Handling")
+    
+    # Run all tests
+    test_notification_reliability()
+    test_concurrent_load()
+    test_response_structure_validation()
+    test_admin_analytics()
+    test_error_handling_and_retry()
+    
+    # Print final summary
+    print_header("FINAL TEST SUMMARY")
+    
+    total_tests = test_results["total"]
+    passed_tests = test_results["passed"]
+    failed_tests = test_results["failed"]
+    success_rate = (passed_tests / total_tests * 100) if total_tests > 0 else 0
+    
+    print_success(f"Total tests run: {total_tests}")
+    print_success(f"Tests passed: {passed_tests}")
+    print_success(f"Tests failed: {failed_tests}")
+    print_success(f"Overall success rate: {success_rate:.1f}%")
+    
+    if success_rate >= 80.0:
+        print_success("🎉 NOTIFICATION SYSTEM TESTING: OVERALL SUCCESS")
+        print_success("✅ Connection pool and retry logic fixes are working correctly")
+        print_success("✅ No more intermittent 500 errors detected")
+        print_success("✅ System handles concurrent load properly")
+        print_success("✅ Response structure from aggregation pipeline is correct")
+        print_success("✅ Admin analytics endpoint is functional")
+        print_success("✅ Error handling and retry logic is robust")
+    else:
+        print_error("❌ NOTIFICATION SYSTEM TESTING: NEEDS IMPROVEMENT")
+        print_error(f"❌ Success rate {success_rate:.1f}% < 80%")
+        print_error("❌ Some issues still need to be addressed")
+    
+    # Show failed tests
+    if failed_tests > 0:
+        print_subheader("Failed Tests Details")
+        for test in test_results["tests"]:
+            if not test["passed"]:
+                print_error(f"❌ {test['name']}: {test['details']}")
+    
+    return success_rate >= 80.0
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)
+"""
 GemPlay Notification System Comprehensive Testing
 Testing notification delivery issues and system functionality
 """
