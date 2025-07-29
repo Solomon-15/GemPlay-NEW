@@ -1637,7 +1637,7 @@ const UserManagement = ({ user: currentUser }) => {
           </button>
           
           <div className="flex space-x-2">
-            {['', 'ACTIVE', 'BANNED', 'EMAIL_PENDING'].map((status) => (
+            {['', 'ONLINE', 'OFFLINE', 'BANNED', 'EMAIL_PENDING'].map((status) => (
               <button
                 key={status}
                 onClick={() => handleStatusFilter(status)}
