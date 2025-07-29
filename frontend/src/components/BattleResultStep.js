@@ -12,7 +12,6 @@ const BattleResultStep = ({
 }) => {
   const [timeUntilAutoClose, setTimeUntilAutoClose] = React.useState(30);
 
-  // Автозакрытие через 7 секунд
   React.useEffect(() => {
     const timer = setInterval(() => {
       setTimeUntilAutoClose(prev => {
@@ -27,21 +26,18 @@ const BattleResultStep = ({
     return () => clearInterval(timer);
   }, [onClose]);
 
-  // Конфигурация ходов
   const moves = [
     { id: 'rock', name: 'Rock', icon: '/Rock.svg' },
     { id: 'paper', name: 'Paper', icon: '/Paper.svg' },
     { id: 'scissors', name: 'Scissors', icon: '/Scissors.svg' }
   ];
 
-  // Получаем данные о результате битвы
   const {
     result = 'draw', // win, lose, draw
     opponentMove = 'rock',
     gameData = null
   } = battleResult || {};
 
-  // Определяем цвета и тексты для результата
   const getResultConfig = () => {
     switch (result) {
       case 'win':
@@ -70,7 +66,6 @@ const BattleResultStep = ({
 
   const resultConfig = getResultConfig();
 
-  // Обработчик закрытия с предотвращением всплытия
   const handleClose = () => {
     if (onClose) {
       onClose();

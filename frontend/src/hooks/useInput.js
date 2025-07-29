@@ -35,7 +35,6 @@ const useInput = () => {
       } catch (error) {
         setLoading(false);
         console.error('Error in input action:', error);
-        // Не закрываем модальное окно при ошибке
       }
     } else {
       setIsOpen(false);

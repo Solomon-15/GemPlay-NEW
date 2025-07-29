@@ -70,7 +70,6 @@ const HeaderPortfolio = ({ user }) => {
     const frozenGemsCount = gems.reduce((sum, gem) => sum + gem.frozen_quantity, 0);
     const availableGemValue = balance.available_gem_value;
     const frozenGemValue = balance.total_gem_value - balance.available_gem_value;
-    // ИСПРАВЛЕНИЕ: Total = virtual_balance + frozen_balance + стоимость всех гемов
     const totalValue = virtualBalance + frozenBalance + balance.total_gem_value;
 
     return {

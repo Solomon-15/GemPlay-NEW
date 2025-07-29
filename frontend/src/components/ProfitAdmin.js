@@ -23,21 +23,17 @@ const ProfitAdmin = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   
-  // Новые состояния для категорий транзакций
   const [activeCategory, setActiveCategory] = useState('BET_COMMISSION');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
 
-  // Дополнительные состояния
   const [tooltip, setTooltip] = useState({ show: false, text: '', x: 0, y: 0 });
   const [copySuccess, setCopySuccess] = useState(false);
   
-  // Дополнительные фильтры
   const [playerFilter, setPlayerFilter] = useState('');
   const [amountFilter, setAmountFilter] = useState({ min: '', max: '' });
   const [transactionIdFilter, setTransactionIdFilter] = useState('');
 
-  // Состояния для модальных окон и интерактивности
   const [activeModal, setActiveModal] = useState(null);
   const [modalData, setModalData] = useState([]);
   const [modalLoading, setModalLoading] = useState(false);
@@ -48,14 +44,12 @@ const ProfitAdmin = ({ user }) => {
   const [expensesSettings, setExpensesSettings] = useState({ percentage: 60, manual_amount: 0 });
   const [showExpensesModal, setShowExpensesModal] = useState(false);
   
-  // Состояния для настройки комиссий
   const [commissionModalSettings, setCommissionModalSettings] = useState({
     bet_commission_rate: 3,
     gift_commission_rate: 3
   });
   const [savingCommission, setSavingCommission] = useState(false);
 
-  // Пагинация для истории прибыли
   const pagination = usePagination(1, 10);
 
   useEffect(() => {
@@ -64,7 +58,6 @@ const ProfitAdmin = ({ user }) => {
 
   useEffect(() => {
     if (activeTab === 'history') {
-      // Сброс на первую страницу при смене категории или фильтров
       if (pagination.currentPage > 1) {
         pagination.handlePageChange(1);
       } else {
@@ -168,7 +161,6 @@ const ProfitAdmin = ({ user }) => {
     return colors[type] || 'text-gray-400';
   };
 
-  // Информация о категориях
   const categories = {
     'BET_COMMISSION': {
       name: 'Комиссия от ставок',
@@ -251,7 +243,6 @@ const ProfitAdmin = ({ user }) => {
     return colors[categoryKey] || 'bg-gray-600/20';
   };
 
-  // Функции для копирования в буфер и tooltip
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -275,7 +266,6 @@ const ProfitAdmin = ({ user }) => {
     setTooltip({ show: false, text: '', x: 0, y: 0 });
   };
 
-  // Функции для определения типа действия и игрока
   const getActionType = (entry, category) => {
     if (category === 'BET_COMMISSION') {
       return 'Комиссия с выигрыша';
@@ -288,14 +278,11 @@ const ProfitAdmin = ({ user }) => {
   };
 
   const getPlayerInfo = (entry) => {
-    // Для ботов
     if (entry.bot_id) {
       return `Bot_${entry.bot_id.substring(0, 8)}`;
     }
     
-    // Для пользователей - показываем имя и почту если есть
     if (entry.source_user_id) {
-      // Если есть дополнительная информация о пользователе
       if (entry.user_name && entry.user_email) {
         return (
           <div>
@@ -304,14 +291,12 @@ const ProfitAdmin = ({ user }) => {
           </div>
         );
       }
-      // Если нет дополнительной информации, показываем ID
       return `Игрок ${entry.source_user_id.substring(0, 8)}...`;
     }
     
     return '—';
   };
 
-  // Функции расчёта для блоков
   const calculateTotalRevenue = (stats) => {
     return (stats.bet_commission || 0) + 
            (stats.human_bot_commission || 0) + 
@@ -329,23 +314,19 @@ const ProfitAdmin = ({ user }) => {
     return calculateTotalRevenue(stats) - calculateExpenses(stats);
   };
 
-  // Функции для модальных окон
   const openModal = async (type) => {
     try {
       setActiveModal(type);
       setModalError(null);
       setActivePeriod('month'); // Сброс периода при открытии модального окна
       
-      // Для модальных окон с настройками комиссий загружаем текущие настройки
       if (type === 'bet_commission' || type === 'gift_commission') {
-        // Инициализируем текущими значениями из commissionSettings
         setCommissionModalSettings({
           bet_commission_rate: commissionSettings?.bet_commission_rate || 3,
           gift_commission_rate: commissionSettings?.gift_commission_rate || 3
         });
         setModalData([]);
       } else {
-        // Для других типов загружаем соответствующие данные
         await loadModalData(type, 'month');
       }
     } catch (error) {
@@ -354,7 +335,6 @@ const ProfitAdmin = ({ user }) => {
     }
   };
 
-  // Функция для загрузки данных для модальных окон
   const loadModalData = async (type, period = activePeriod) => {
     setModalLoading(true);
     setModalError(null);
@@ -364,7 +344,6 @@ const ProfitAdmin = ({ user }) => {
       
       switch (type) {
         case 'bot_revenue':
-          // Загружаем данные о доходах от ботов
           const botRevenueResponse = await axios.get(`${API}/admin/profit/bot-revenue-details?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -372,7 +351,6 @@ const ProfitAdmin = ({ user }) => {
           break;
           
         case 'frozen_funds':
-          // Загружаем данные о замороженных средствах
           const frozenFundsResponse = await axios.get(`${API}/admin/profit/frozen-funds-details?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -380,7 +358,6 @@ const ProfitAdmin = ({ user }) => {
           break;
           
         case 'total_revenue':
-          // Загружаем сводку по всем источникам дохода
           const totalRevenueResponse = await axios.get(`${API}/admin/profit/total-revenue-breakdown?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -388,7 +365,6 @@ const ProfitAdmin = ({ user }) => {
           break;
           
         case 'expenses':
-          // Загружаем данные о расходах
           const expensesResponse = await axios.get(`${API}/admin/profit/expenses-details?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -396,7 +372,6 @@ const ProfitAdmin = ({ user }) => {
           break;
           
         case 'human_bot_commission':
-          // Загружаем данные о комиссиях от Human-ботов
           const humanBotCommissionResponse = await axios.get(`${API}/admin/human-bots-total-commission?page=1&limit=100`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -404,7 +379,6 @@ const ProfitAdmin = ({ user }) => {
           break;
           
         case 'net_profit':
-          // Загружаем данные о чистой прибыли
           const netProfitResponse = await axios.get(`${API}/admin/profit/net-profit-analysis?period=${period}`, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -423,7 +397,6 @@ const ProfitAdmin = ({ user }) => {
     }
   };
 
-  // Функция для смены периода
   const handlePeriodChange = (period) => {
     setActivePeriod(period);
     if (activeModal) {
@@ -431,7 +404,6 @@ const ProfitAdmin = ({ user }) => {
     }
   };
 
-  // Функция для сохранения настроек комиссий
   const saveCommissionSettings = async () => {
     setSavingCommission(true);
     try {
@@ -443,25 +415,20 @@ const ProfitAdmin = ({ user }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Обновляем состояние с новыми настройками
       setCommissionSettings(response.data);
       
-      // Обновляем статистику, чтобы отразить изменения
       await fetchData();
       
-      // Показываем уведомление об успехе (можно добавить toast)
       console.log('Настройки комиссий успешно сохранены');
       
     } catch (error) {
       console.error('Ошибка сохранения настроек комиссий:', error);
-      // Показываем уведомление об ошибке
       alert('Ошибка при сохранении настроек комиссий');
     } finally {
       setSavingCommission(false);
     }
   };
 
-  // Функция для смены страницы в модальном окне Human-bot комиссий
   const loadHumanBotCommissionPage = async (page) => {
     if (page < 1) return;
     

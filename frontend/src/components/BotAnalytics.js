@@ -51,7 +51,6 @@ const BotAnalytics = () => {
     fetchAnalyticsData();
     fetchBotsList();
     
-    // Автоматическое обновление каждые 30 секунд
     const interval = setInterval(fetchAnalyticsData, 30000);
     setRefreshInterval(interval);
     

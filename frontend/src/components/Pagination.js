@@ -18,7 +18,6 @@ const Pagination = ({
     }
   };
 
-  // Генерация списка страниц для отображения
   const getPageNumbers = () => {
     const pages = [];
     const halfMax = Math.floor(maxPageNumbers / 2);
@@ -26,7 +25,6 @@ const Pagination = ({
     let startPage = Math.max(1, currentPage - halfMax);
     let endPage = Math.min(totalPages, startPage + maxPageNumbers - 1);
     
-    // Корректируем startPage если endPage достигла максимума
     if (endPage - startPage + 1 < maxPageNumbers) {
       startPage = Math.max(1, endPage - maxPageNumbers + 1);
     }

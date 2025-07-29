@@ -27,7 +27,6 @@ const GiftConfirmationModal = ({
   const commission = totalValue * 0.03; // 3% комиссия
   const finalValue = totalValue; // Получатель получает полную стоимость
 
-  // Поиск получателя по email или имени
   const searchRecipient = async (identifier) => {
     if (!identifier.trim()) {
       setRecipientInfo(null);
@@ -54,7 +53,6 @@ const GiftConfirmationModal = ({
     }
   };
 
-  // Debounced поиск
   useEffect(() => {
     if (searchTimer) {
       clearTimeout(searchTimer);
@@ -91,11 +89,9 @@ const GiftConfirmationModal = ({
 
       showSuccess(`You sent a gift to ${recipientInfo.username}. A commission of ${formatDollarAmount(commission)} has been deducted from your balance.`);
       
-      // Автоматическое обновление Lobby
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       
-      // Callback для обновления инвентаря
       if (onGiftSuccess) {
         onGiftSuccess();
       }

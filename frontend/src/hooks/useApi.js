@@ -283,11 +283,9 @@ export const useApi = () => {
   };
 
   return {
-    // Состояния
     loading,
     error,
     
-    // Базовые методы
     makeRequest,
     get,
     post,
@@ -295,15 +293,12 @@ export const useApi = () => {
     delete: del,
     patch,
     
-    // Специализированные API
     botsApi,
     reportsApi,
     analyticsApi,
     
-    // Утилиты
     errorUtils,
     
-    // Очистка ошибок
     clearError: useCallback(() => setError(null), [])
   };
 };

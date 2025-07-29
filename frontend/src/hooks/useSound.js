@@ -5,13 +5,11 @@ import soundManager from '../utils/SoundManager';
  * Хук для работы с новой звуковой системой
  */
 export const useSound = () => {
-  // Инициализация AudioContext при первом взаимодействии пользователя
   useEffect(() => {
     const handleFirstInteraction = () => {
       if (soundManager.context && soundManager.context.state === 'suspended') {
         soundManager.context.resume();
       }
-      // Удаляем обработчики после первого взаимодействия
       document.removeEventListener('click', handleFirstInteraction);
       document.removeEventListener('keydown', handleFirstInteraction);
     };
@@ -25,7 +23,6 @@ export const useSound = () => {
     };
   }, []);
 
-  // Игровые звуки с поддержкой типов игр
   const gameAudio = {
     createBet: useCallback((gameType = 'ALL') => soundManager.playSound('создание_ставки', gameType), []),
     acceptBet: useCallback((gameType = 'ALL') => soundManager.playSound('принятие_ставки', gameType), []),
@@ -36,14 +33,12 @@ export const useSound = () => {
     draw: useCallback((gameType = 'ALL') => soundManager.playSound('ничья', gameType), [])
   };
 
-  // Звуки действий с гемами
   const gemAudio = {
     buy: useCallback(() => soundManager.playSound('покупка_гема'), []),
     sell: useCallback(() => soundManager.playSound('продажа_гема'), []),
     gift: useCallback(() => soundManager.playSound('подарок_гемов'), [])
   };
 
-  // Звуки интерфейса
   const uiAudio = {
     hover: useCallback(() => soundManager.playSound('hover'), []),
     modalOpen: useCallback(() => soundManager.playSound('открытие_модала'), []),
@@ -53,13 +48,11 @@ export const useSound = () => {
     click: useCallback(() => soundManager.playSound('создание_ставки'), []) // Переиспользуем звук создания ставки для кликов
   };
 
-  // Звуки системы
   const systemAudio = {
     timerExpire: useCallback(() => soundManager.playSound('таймер_reveal'), []),
     reward: useCallback(() => soundManager.playSound('награда'), [])
   };
 
-  // Настройки звука
   const soundSettings = {
     isEnabled: useCallback(() => soundManager.enabled, []),
     getVolume: useCallback(() => soundManager.volume, []),
@@ -68,7 +61,6 @@ export const useSound = () => {
     reloadSounds: useCallback(() => soundManager.reloadSounds(), [])
   };
 
-  // Совместимость с существующим API
   const playSound = {
     createBet: gameAudio.createBet,
     acceptBet: gameAudio.acceptBet,
@@ -91,19 +83,15 @@ export const useSound = () => {
   };
 
   return {
-    // Группы звуков
     game: gameAudio,
     gem: gemAudio,
     ui: uiAudio,
     system: systemAudio,
     
-    // Настройки
     settings: soundSettings,
     
-    // Прямой доступ к playSound для совместимости
     playSound,
     
-    // Новые функции
     playCoin: gemAudio.buy, // Алиас для совместимости
     playClick: uiAudio.click,
     playSuccess: gameAudio.victory,

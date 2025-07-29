@@ -28,13 +28,11 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const [showCreateBetModal, setShowCreateBetModal] = useState(false);
   const [gemPrices, setGemPrices] = useState([]);
   
-  // Состояние для фильтров Available Bets
   const [betFilters, setBetFilters] = useState({
     minAmount: '',
     maxAmount: ''
   });
   
-  // Состояние для Join Battle модального окна
   const [selectedBetForJoin, setSelectedBetForJoin] = useState(null);
   const [showJoinBattleModal, setShowJoinBattleModal] = useState(false);
   
@@ -54,10 +52,8 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       getGemPrices().then(setGemPrices);
     });
     
-    // Обновляем данные каждые 10 секунд
     const interval = setInterval(fetchLobbyData, 10000);
     
-    // Регистрируем колбэк для мгновенного обновления после операций
     const globalRefresh = getGlobalLobbyRefresh();
     const unregister = globalRefresh.registerRefreshCallback(() => {
       console.log('🔄 Lobby auto-refresh triggered by operation');
@@ -204,16 +200,13 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     }
   };
 
-  // Обработчики для Join Battle модального окна
   const handleOpenJoinBattle = (game) => {
-    // Определяем, является ли это игрой с ботом
     const isBotGame = availableBots.some(botGame => 
       (botGame.game_id || botGame.id) === (game.game_id || game.id)
     ) || ongoingBotBattles.some(botGame => 
       (botGame.game_id || botGame.id) === (game.game_id || game.id)
     );
     
-    // Добавляем флаг игры с ботом
     const gameWithBotFlag = {
       ...game,
       is_bot_game: isBotGame
@@ -515,12 +508,10 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       if (response.data && response.data.success) {
         showSuccess('Bet cancelled successfully');
         
-        // 🔄 МГНОВЕННОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ОТМЕНЫ СТАВКИ
         const globalRefresh = getGlobalLobbyRefresh();
         globalRefresh.triggerLobbyRefresh();
         console.log('❌ Bet cancelled - triggering lobby refresh');
         
-        // Дополнительное обновление для надежности
         await fetchLobbyData();
         if (onUpdateUser) {
           onUpdateUser();
@@ -568,7 +559,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     return items.slice(startIndex, endIndex);
   };
 
-  // Функция фильтрации доступных ставок по сумме
   const getFilteredAvailableBets = () => {
     let filtered = availableBets;
     
@@ -589,14 +579,12 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     return filtered;
   };
 
-  // Обработчики для фильтров
   const handleFilterChange = useCallback((field, value) => {
     setBetFilters(prev => ({
       ...prev,
       [field]: value
     }));
     
-    // Сбросить пагинацию при изменении фильтров
     setCurrentPage(prev => ({
       ...prev,
       availableBets: 1
@@ -990,7 +978,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
             if (onUpdateUser) {
               onUpdateUser();
             }
-            // НЕ закрываем модальное окно здесь
           }}
         />
       )}

@@ -76,7 +76,6 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
       
       setDepositAmount('');
       
-      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ДОБАВЛЕНИЯ БАЛАНСА
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       console.log(`💵 Added $${amount} balance - triggering lobby refresh`);

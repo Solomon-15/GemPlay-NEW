@@ -1,11 +1,9 @@
-// Утилиты для генерации данных для графиков
 export const generatePeriodLabels = (period) => {
   const now = new Date();
   const labels = [];
   
   switch (period) {
     case 'day':
-      // Последние 24 часа по часам
       for (let i = 23; i >= 0; i--) {
         const date = new Date(now);
         date.setHours(date.getHours() - i);
@@ -14,7 +12,6 @@ export const generatePeriodLabels = (period) => {
       break;
       
     case 'week':
-      // Последние 7 дней
       for (let i = 6; i >= 0; i--) {
         const date = new Date(now);
         date.setDate(date.getDate() - i);
@@ -23,7 +20,6 @@ export const generatePeriodLabels = (period) => {
       break;
       
     case 'month':
-      // Последние 30 дней по неделям
       for (let i = 3; i >= 0; i--) {
         const date = new Date(now);
         date.setDate(date.getDate() - (i * 7));
@@ -32,7 +28,6 @@ export const generatePeriodLabels = (period) => {
       break;
       
     case 'all':
-      // Последние 12 месяцев
       for (let i = 11; i >= 0; i--) {
         const date = new Date(now);
         date.setMonth(date.getMonth() - i);
@@ -51,7 +46,6 @@ export const generateMockChartData = (period, type, values) => {
   const labels = generatePeriodLabels(period);
   const dataLength = labels.length;
   
-  // Генерируем случайные данные если не переданы
   if (!values) {
     values = Array.from({ length: dataLength }, () => Math.random() * 1000 + 100);
   }

@@ -16,12 +16,10 @@ class SoundManager {
     this.currentlyPlaying = null; // Для системы приоритетов
     this.criticalSounds = new Set(); // Критичные звуки для предзагрузки
     
-    // Инициализация
     this.initAudioContext();
     this.loadSettings();
     this.loadSounds();
     
-    // Определяем критичные звуки для предзагрузки
     this.criticalSounds = new Set([
       'создание_ставки',
       'принятие_ставки', 
@@ -43,7 +41,6 @@ class SoundManager {
     }
   }
 
-  // Загрузка настроек звука из localStorage
   loadSettings() {
     try {
       const settings = JSON.parse(localStorage.getItem('gemplay-sound-settings') || '{}');
@@ -54,7 +51,6 @@ class SoundManager {
     }
   }
 
-  // Сохранение настроек звука
   saveSettings() {
     try {
       const settings = {
@@ -67,7 +63,6 @@ class SoundManager {
     }
   }
 
-  // Загрузка звуков из API
   async loadSounds() {
     try {
       const token = localStorage.getItem('token');
@@ -91,7 +86,6 @@ class SoundManager {
       const soundsData = await response.json();
       console.log(`Loaded ${soundsData.length} sounds from API`);
 
-      // Сохраняем звуки в Map, группируя по event_trigger
       for (const sound of soundsData) {
         if (!this.sounds.has(sound.event_trigger)) {
           this.sounds.set(sound.event_trigger, []);
@@ -99,12 +93,10 @@ class SoundManager {
         this.sounds.get(sound.event_trigger).push(sound);
       }
 
-      // Сортируем каждую группу по приоритету (высший приоритет первый)
       for (const [trigger, soundList] of this.sounds.entries()) {
         soundList.sort((a, b) => b.priority - a.priority);
       }
 
-      // Предзагружаем критичные звуки
       await this.preloadCriticalSounds();
 
     } catch (error) {
@@ -113,7 +105,6 @@ class SoundManager {
     }
   }
 
-  // Предзагрузка критичных звуков
   async preloadCriticalSounds() {
     const preloadPromises = [];
     
@@ -136,15 +127,12 @@ class SoundManager {
     }
   }
 
-  // Загрузка аудиофайла
   async loadAudioFile(sound) {
     if (this.audioCache.has(sound.id)) {
       return this.audioCache.get(sound.id);
     }
 
     try {
-      // В реальном приложении здесь бы был запрос за аудио данными
-      // Пока используем программные звуки как fallback
       const audioBuffer = await this.createProgrammaticSound(sound.event_trigger);
       this.audioCache.set(sound.id, audioBuffer);
       return audioBuffer;
@@ -154,9 +142,7 @@ class SoundManager {
     }
   }
 
-  // Создание fallback звуков (программных)
   createFallbackSounds() {
-    // Создаем простые программные звуки как fallback
     const fallbackSounds = [
       { event_trigger: 'создание_ставки', priority: 7, is_enabled: true, volume: 0.5, delay: 0, can_repeat: true, game_type: 'ALL' },
       { event_trigger: 'принятие_ставки', priority: 6, is_enabled: true, volume: 0.5, delay: 0, can_repeat: true, game_type: 'ALL' },
@@ -182,7 +168,6 @@ class SoundManager {
     console.log('Fallback sounds created');
   }
 
-  // Основная функция воспроизведения звука с учетом приоритетов
   async playSound(eventTrigger, gameType = 'ALL', volumeMultiplier = 1) {
     if (!this.enabled || !this.context) return;
 
@@ -192,7 +177,6 @@ class SoundManager {
       return;
     }
 
-    // Фильтруем звуки по типу игры и статусу
     const applicableSounds = soundList.filter(sound => 
       sound.is_enabled && 
       (sound.game_type === 'ALL' || sound.game_type === gameType)
@@ -203,33 +187,27 @@ class SoundManager {
       return;
     }
 
-    // Берем звук с наивысшим приоритетом
     const sound = applicableSounds[0];
 
-    // Проверяем систему приоритетов
     if (this.currentlyPlaying && this.currentlyPlaying.priority >= sound.priority) {
       console.log(`Sound blocked by higher priority: ${this.currentlyPlaying.priority} >= ${sound.priority}`);
       return;
     }
 
-    // Проверяем can_repeat
     if (!sound.can_repeat && this.currentlyPlaying && this.currentlyPlaying.event_trigger === eventTrigger) {
       console.log(`Sound repeat blocked for: ${eventTrigger}`);
       return;
     }
 
-    // Останавливаем текущий звук если есть
     if (this.currentlyPlaying) {
       this.stopCurrentSound();
     }
 
-    // Применяем задержку если есть
     if (sound.delay > 0) {
       await new Promise(resolve => setTimeout(resolve, sound.delay));
     }
 
     try {
-      // Возобновляем AudioContext если приостановлен
       if (this.context.state === 'suspended') {
         await this.context.resume();
       }
@@ -249,7 +227,6 @@ class SoundManager {
     }
   }
 
-  // Воспроизведение аудиофайла
   async playAudioFile(sound, volumeMultiplier) {
     let audioBuffer = this.audioCache.get(sound.id);
     
@@ -269,13 +246,11 @@ class SoundManager {
     source.connect(gainNode);
     gainNode.connect(this.context.destination);
     
-    // Устанавливаем громкость
     const finalVolume = this.volume * sound.volume * volumeMultiplier;
     gainNode.gain.setValueAtTime(finalVolume, this.context.currentTime);
     
     source.start(0);
     
-    // Очищаем currentlyPlaying когда звук закончится
     source.onended = () => {
       if (this.currentlyPlaying === sound) {
         this.currentlyPlaying = null;
@@ -283,14 +258,12 @@ class SoundManager {
     };
   }
 
-  // Воспроизведение программного звука
   async playProgrammaticSound(sound, volumeMultiplier) {
     const soundFunction = this.getProgrammaticSoundFunction(sound.event_trigger);
     if (soundFunction) {
       const finalVolume = this.volume * sound.volume * volumeMultiplier;
       soundFunction(finalVolume);
       
-      // Программные звуки короткие, очищаем через 1 секунду
       setTimeout(() => {
         if (this.currentlyPlaying === sound) {
           this.currentlyPlaying = null;
@@ -299,7 +272,6 @@ class SoundManager {
     }
   }
 
-  // Получение функции программного звука
   getProgrammaticSoundFunction(eventTrigger) {
     const soundMap = {
       'создание_ставки': (volume) => this.createClickSound(800, 0.1 * volume, 'sine'),
@@ -324,33 +296,26 @@ class SoundManager {
     return soundMap[eventTrigger];
   }
 
-  // Остановка текущего звука
   stopCurrentSound() {
-    // Для программных звуков просто обнуляем
     this.currentlyPlaying = null;
   }
 
-  // Обновление настроек
   updateSettings(enabled, volume) {
     this.enabled = enabled;
     this.volume = Math.max(0, Math.min(1, volume));
     this.saveSettings();
   }
 
-  // Перезагрузка звуков (для обновления после изменений в админке)
   async reloadSounds() {
     this.sounds.clear();
     this.audioCache.clear();
     await this.loadSounds();
   }
 
-  // Создание программного звука (сохраняем существующую логику)
   async createProgrammaticSound(eventTrigger) {
-    // Возвращаем null - будем использовать синхронные функции
     return null;
   }
 
-  // === ПРОГРАММНЫЕ ЗВУКИ (копируем из старого soundSystem.js) ===
   
   createClickSound(frequency = 800, duration = 0.1, waveType = 'sine') {
     if (!this.context) return;
@@ -516,7 +481,6 @@ class SoundManager {
   createCrystalSound(volume = 1) {
     if (!this.context) return;
 
-    // Создаем эффект рассыпающихся кристаллов
     for (let i = 0; i < 8; i++) {
       const delay = i * 0.02;
       const freq = 800 + Math.random() * 800;
@@ -706,7 +670,6 @@ class SoundManager {
   }
 }
 
-// Создаем глобальный экземпляр
 const soundManager = new SoundManager();
 
 export default soundManager;

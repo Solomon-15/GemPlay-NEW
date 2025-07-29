@@ -8,45 +8,37 @@ import BattleResultStep from './BattleResultStep';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
-  // Проверка обязательных пропсов
   if (!bet || !user || !onClose) {
     console.error('JoinBattleModal: Missing required props', { bet, user, onClose });
     return null;
   }
 
-  // Основные константы
   const targetAmount = bet?.bet_amount || 0;
   const COMMISSION_RATE = 0.03; // 3%
   const isBotGame = bet?.is_bot_game || false; // Определяем, является ли это игрой с ботом
   const commissionAmount = isBotGame ? 0 : targetAmount * COMMISSION_RATE; // Для игр с ботами комиссия = 0
 
-  // НОВАЯ АСИНХРОННАЯ АРХИТЕКТУРА - 3 шага для лучшего UX
   const [currentStep, setCurrentStep] = useState(1); // 1: выбор гемов, 2: выбор хода, 3: результат
   const [loading, setLoading] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(60); // 1-минутный таймер
   
-  // Состояние countdown 3-2-1
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownNumber, setCountdownNumber] = useState(3);
 
-  // Данные игрока
   const [selectedGems, setSelectedGems] = useState({});
   const [selectedMove, setSelectedMove] = useState('');
   const [battleResult, setBattleResult] = useState(null);
   const [hasJoinedGame, setHasJoinedGame] = useState(false); // Отслеживаем, присоединился ли игрок
 
-  // Контексты
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
   const { showSuccess, showError } = useNotifications() || {};
 
-  // Конфигурация ходов
   const moves = [
     { id: 'rock', name: 'Rock', icon: '/Rock.svg' },
     { id: 'paper', name: 'Paper', icon: '/Paper.svg' },
     { id: 'scissors', name: 'Scissors', icon: '/Scissors.svg' }
   ];
 
-  // ЛОГИКА ВЫБОРА ХОДА (для ACTIVE игр)
   const chooseMove = async (gameId, move) => {
     console.log('🎯 Choosing move for active game:', { gameId, move });
     
@@ -77,7 +69,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // ЛОГИКА ПРИСОЕДИНЕНИЯ К БИТВЕ
   const joinBattle = async () => {
     setLoading(true);
     
@@ -90,7 +81,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         userId: user.id
       });
       
-      // Присоединяемся к игре - система автоматически определит результат
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${bet.id}/join`, {
         method: 'POST',
         headers: {
@@ -103,7 +93,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         })
       });
       
-      // Отмечаем, что игрок присоединился к игре
       setHasJoinedGame(true);
       
       if (!response.ok) {
@@ -116,21 +105,17 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       let battleOutcome = null;
       
-      // Проверяем статус игры после join
       if (result.status === 'ACTIVE') {
         console.log('🎮 Game is now ACTIVE - need to choose move');
         
-        // Автоматически выбираем ход для завершения игры
         const chooseMoveResult = await chooseMove(result.game_id, selectedMove);
         
-        // Обрабатываем результат завершенной игры
         if (chooseMoveResult.game_id && chooseMoveResult.winner_id !== undefined) {
           console.log('🎮 Game completed after choosing move');
           
           battleOutcome = chooseMoveResult.winner_id === user.id ? 'win' : 
                          (chooseMoveResult.winner_id ? 'lose' : 'draw');
           
-          // Сохраняем результат битвы
           setBattleResult({
             result: battleOutcome,
             opponentMove: chooseMoveResult.creator_move,
@@ -141,13 +126,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         }
         
       } else if (result.game_id && result.winner_id !== undefined) {
-        // Legacy поддержка мгновенного завершения
         console.log('🎮 Game completed immediately (legacy)');
         
         battleOutcome = result.winner_id === user.id ? 'win' : 
                        (result.winner_id ? 'lose' : 'draw');
         
-        // Сохраняем результат битвы
         setBattleResult({
           result: battleOutcome,
           opponentMove: result.creator_move,
@@ -158,21 +141,17 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         throw new Error(`Неожиданная структура ответа API. Ожидался статус ACTIVE или завершенная игра.`);
       }
       
-      // Обновляем инвентарь и данные пользователя
       await refreshInventory();
       if (onUpdateUser) {
         onUpdateUser();
       }
       
-      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ПРИСОЕДИНЕНИЯ К ИГРЕ
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       console.log('⚔️ Battle joined/completed - triggering lobby refresh');
       
-      // Переходим к результату (шаг 3)
       setCurrentStep(3);
       
-      // Показываем уведомление о результате
       const resultText = battleOutcome === 'win' ? 'Victory!' : 
                         (battleOutcome === 'lose' ? 'Defeat!' : 'Draw!');
       showSuccess(`Battle completed! ${resultText}`);
@@ -185,21 +164,17 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // Валидация перед запуском битвы
   const validateBeforeBattle = () => {
-    // Проверяем выбор хода
     if (!selectedMove) {
       showError('Please select your move');
       return false;
     }
     
-    // Проверяем выбор гемов
     if (Object.keys(selectedGems).length === 0) {
       showError('Please select gems to match opponent\'s bet');
       return false;
     }
     
-    // Проверяем точность суммы гемов
     const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
       return sum + (gem ? gem.price * quantity : 0);
@@ -210,7 +185,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       return false;
     }
     
-    // Проверяем доступность гемов в инвентаре
     for (const [gemType, quantity] of Object.entries(selectedGems)) {
       const gem = gemsData.find(g => g.type === gemType);
       if (!gem) {
@@ -224,7 +198,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       }
     }
     
-    // Проверяем комиссию против общего баланса (только для игр с людьми)
     if (!isBotGame) {
       const commissionRequired = targetAmount * 0.06;
       const totalBalance = user?.virtual_balance || 0;
@@ -240,20 +213,16 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     return true;
   };
 
-  // Запуск битвы с анимированным обратным отсчетом 3-2-1
   const startBattle = async () => {
-    // ВАЛИДАЦИЯ ДО COUNTDOWN - ЭТО КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ
     if (!validateBeforeBattle()) {
       return;
     }
     
     setLoading(true);
     
-    // Показываем анимированный обратный отсчет 3-2-1
     setShowCountdown(true);
     setCountdownNumber(3);
     
-    // Обратный отсчет с анимацией
     await new Promise(resolve => {
       let count = 3;
       const countdownInterval = setInterval(() => {
@@ -268,11 +237,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       }, 1000);
     });
     
-    // Запускаем асинхронную битву
     await joinBattle();
   };
 
-  // Функция для выхода из игры
   const leaveGame = async () => {
     if (!hasJoinedGame) return; // Не выходим, если не присоединились
     
@@ -296,13 +263,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       const result = await response.json();
       console.log('🚪 Leave game response:', result);
       
-      // Обновляем данные пользователя
       await refreshInventory();
       if (onUpdateUser) {
         onUpdateUser();
       }
       
-      // Обновляем лобби
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       
@@ -310,30 +275,24 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       
     } catch (error) {
       console.error('🚨 Error leaving game:', error);
-      // Не показываем ошибку при выходе
     }
   };
 
-  // Обработчик закрытия модального окна
   const handleClose = async () => {
     if (hasJoinedGame && currentStep < 3) {
-      // Если игрок присоединился, но игра не завершена - выходим из игры
       await leaveGame();
     }
     onClose();
   };
 
-  // Таймер автозакрытия (1 минута) - только на первых двух шагах
   useEffect(() => {
     if (currentStep >= 3) {
-      // Не запускаем таймер на шаге результата
       return;
     }
     
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
-          // Время истекло - закрываем модальное окно
           handleClose();
           return 0;
         }
@@ -344,7 +303,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     return () => clearInterval(timer);
   }, [currentStep, hasJoinedGame]);
 
-  // Обработчик стратегий - NEW FRONTEND IMPLEMENTATION
   const handleStrategySelect = (strategy) => {
     setLoading(true);
     
@@ -374,14 +332,12 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // Конфигурация шагов - 3 отдельных шага
   const steps = [
     { id: 1, name: 'Gem Selection', description: 'Select your gems' },
     { id: 2, name: 'Move Selection', description: 'Choose your move' },
     { id: 3, name: 'Battle Result', description: 'Battle result' }
   ];
 
-  // Проверка доступности средств для оплаты комиссии (только для игр с людьми)
   const totalBalance = user?.virtual_balance || 0;
   const frozenBalance = user?.frozen_balance || 0; 
   const availableForSpending = totalBalance - frozenBalance;
@@ -408,7 +364,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     );
   }
 
-  // Проверка доступности гемов
   const totalAvailableGemValue = gemsData.reduce((sum, gem) => 
     sum + (gem.available_quantity * gem.price), 0
   );
@@ -435,9 +390,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     );
   }
 
-  // Рендер текущего шага - 3 отдельных шага
   const renderCurrentStep = () => {
-    // Вычисляем общую стоимость выбранных гемов
     const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
       return sum + (gem ? gem.price * quantity : 0);
@@ -445,7 +398,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
 
     switch (currentStep) {
       case 1:
-        // Шаг 1: Выбор гемов
         return (
           <GemSelectionStep
             targetAmount={targetAmount}
@@ -459,7 +411,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           />
         );
       case 2:
-        // Шаг 2: Выбор хода
         return (
           <MoveSelectionStep
             targetAmount={targetAmount}
@@ -469,7 +420,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           />
         );
       case 3:
-        // Шаг 3: Результат битвы
         return (
           <BattleResultStep
             battleResult={battleResult}
@@ -489,7 +439,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  // Проверка возможности перехода к следующему шагу
   const canGoNext = () => {
     const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
@@ -498,21 +447,17 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     
     switch (currentStep) {
       case 1:
-        // Шаг 1: Проверяем что гемы выбраны и сумма точная
         return Object.keys(selectedGems).length > 0 && 
                Math.abs(totalGemValue - targetAmount) <= 0.01;
       case 2:
-        // Шаг 2: Проверяем что ход выбран
         return selectedMove !== '';
       default:
         return false;
     }
   };
 
-  // Навигация между шагами
   const goToNextStep = () => {
     if (currentStep === 2) {
-      // На шаге 2 кнопка "Next" запускает битву
       startBattle();
     } else if (canGoNext()) {
       setCurrentStep(prev => prev + 1);

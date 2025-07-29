@@ -15,7 +15,6 @@ const UserManagement = ({ user: currentUser }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   
-  // Новые состояния для фильтров
   const [roleFilter, setRoleFilter] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [sortOrder, setSortOrder] = useState('asc');
@@ -33,7 +32,6 @@ const UserManagement = ({ user: currentUser }) => {
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   
-  // Пагинация (изменено на 20 согласно требованию)
   const pagination = usePagination(1, 20);
   
   // Modal states
@@ -72,7 +70,6 @@ const UserManagement = ({ user: currentUser }) => {
   const [userStats, setUserStats] = useState({});
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  // Загрузка сохраненных фильтров из localStorage
   useEffect(() => {
     const savedFilters = localStorage.getItem('userManagementFilters');
     if (savedFilters) {
@@ -93,7 +90,6 @@ const UserManagement = ({ user: currentUser }) => {
     }
   }, []);
 
-  // Сохранение фильтров в localStorage при изменении
   useEffect(() => {
     const filters = {
       searchTerm,
@@ -122,7 +118,6 @@ const UserManagement = ({ user: currentUser }) => {
     fetchUsers();
   }, [pagination.currentPage, debouncedSearchTerm, statusFilter, roleFilter, sortBy, sortOrder, balanceMin, balanceMax, totalMin, totalMax]);
 
-  // Живой счетчик для обновления времени каждую секунду
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -155,7 +150,6 @@ const UserManagement = ({ user: currentUser }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Сортировка пользователей: админы и супер-админы первыми, затем боты
       const sortedUsers = (response.data.users || []).sort((a, b) => {
         const roleOrder = {
           'SUPER_ADMIN': 1,
@@ -168,7 +162,6 @@ const UserManagement = ({ user: currentUser }) => {
         const aOrder = roleOrder[a.user_type] || roleOrder[a.role] || 5;
         const bOrder = roleOrder[b.user_type] || roleOrder[b.role] || 5;
         
-        // Если роли одинаковые, сортируем по username
         if (aOrder === bOrder) {
           return a.username.localeCompare(b.username);
         }
@@ -246,15 +239,12 @@ const UserManagement = ({ user: currentUser }) => {
     );
   };
 
-  // Обновленная функция для отображения онлайн статуса (включая ботов)
   const getUserOnlineStatusBadge = (user) => {
     let onlineStatus;
     
-    // Для ботов используем bot_status
     if (user.user_type === 'HUMAN_BOT' || user.user_type === 'REGULAR_BOT') {
       onlineStatus = user.bot_status;
     } else {
-      // Для обычных пользователей используем online_status
       onlineStatus = user.online_status;
     }
     
@@ -274,7 +264,6 @@ const UserManagement = ({ user: currentUser }) => {
   };
 
   const getUserRoleBadge = (user) => {
-    // Сначала проверяем тип пользователя (бот или обычный пользователь)
     if (user.user_type === 'HUMAN_BOT') {
       return (
         <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold bg-orange-600`}>
@@ -291,7 +280,6 @@ const UserManagement = ({ user: currentUser }) => {
       );
     }
     
-    // Для обычных пользователей показываем их роль
     const roleMap = {
       'USER': { color: 'bg-blue-600', text: 'Игрок' },
       'ADMIN': { color: 'bg-purple-600', text: 'Админ' },
@@ -374,7 +362,6 @@ const UserManagement = ({ user: currentUser }) => {
     pagination.handlePageChange(1);
   };
   
-  // Новые обработчики фильтров
   const handleRoleFilter = (role) => {
     setRoleFilter(role);
     pagination.handlePageChange(1);
@@ -382,10 +369,8 @@ const UserManagement = ({ user: currentUser }) => {
   
   const handleSortChange = (field) => {
     if (sortBy === field) {
-      // Если тот же поле, меняем порядок
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      // Если новое поле, устанавливаем asc
       setSortBy(field);
       setSortOrder('asc');
     }
@@ -413,23 +398,18 @@ const UserManagement = ({ user: currentUser }) => {
     pagination.handlePageChange(1);
   };
   
-  // Новая функция для интерактивной сортировки по клику на заголовки
   const handleColumnSort = (columnField) => {
     if (sortBy === columnField) {
-      // Если тот же столбец, меняем порядок: desc -> asc -> desc
       setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
     } else {
-      // Новый столбец, начинаем с desc (убывание)
       setSortBy(columnField);
       setSortOrder('desc');
     }
     pagination.handlePageChange(1);
   };
   
-  // Функция для получения стилизованной иконки сортировки
   const getSortIcon = (columnField) => {
     if (sortBy !== columnField) {
-      // Нет активной сортировки - показываем нейтральную иконку
       return (
         <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" className="opacity-50">
           <path d="M6 2L8 4H4L6 2Z" />
@@ -439,14 +419,12 @@ const UserManagement = ({ user: currentUser }) => {
     }
     
     if (sortOrder === 'desc') {
-      // Сортировка по убыванию - стрелка вниз
       return (
         <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" className="text-accent-primary">
           <path d="M6 10L2 6H10L6 10Z" />
         </svg>
       );
     } else {
-      // Сортировка по возрастанию - стрелка вверх
       return (
         <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" className="text-accent-primary">
           <path d="M6 2L10 6H2L6 2Z" />

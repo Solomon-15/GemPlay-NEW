@@ -31,7 +31,6 @@ const HumanBotsList = ({
   const { confirm, confirmationModal } = useConfirmation();
   const { prompt, inputModal } = useInput();
 
-  // Remove duplicate states - получаем от родительского компонента
   // const [stats, setStats] = useState({});
   // const [globalSettings, setGlobalSettings] = useState({});
   

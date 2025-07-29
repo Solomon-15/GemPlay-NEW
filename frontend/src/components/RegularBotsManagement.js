@@ -49,32 +49,26 @@ const RegularBotsManagement = () => {
   const [cycleBot, setCycleBot] = useState(null);
   const [cycleData, setCycleData] = useState(null);
   
-  // Состояния для inline редактирования лимитов
   const [editingBotLimits, setEditingBotLimits] = useState({}); // {botId: {limit: value, saving: false}}
   const [botLimitsValidation, setBotLimitsValidation] = useState({});
   const [globalMaxBets, setGlobalMaxBets] = useState(50);
   
-  // Состояния для управления приоритетами
   const [priorityType, setPriorityType] = useState('order'); // 'order' или 'manual'
   const [updatingPriority, setUpdatingPriority] = useState(null); // ID бота для которого обновляется приоритет
 
-  // Новые состояния для управления прибылью ботов
   const [isProfitAccumulatorsModalOpen, setIsProfitAccumulatorsModalOpen] = useState(false);
   const [profitAccumulators, setProfitAccumulators] = useState([]);
   const [profitPagination, setProfitPagination] = useState({ current_page: 1, total_pages: 1 });
   const [isForceCompleteModalOpen, setIsForceCompleteModalOpen] = useState(false);
   const [selectedBotForForceComplete, setSelectedBotForForceComplete] = useState(null);
 
-  // Состояния для индивидуального просмотра накопителей бота
   const [isBotProfitModalOpen, setIsBotProfitModalOpen] = useState(false);
   const [selectedBotForProfit, setSelectedBotForProfit] = useState(null);
   const [botProfitAccumulators, setBotProfitAccumulators] = useState([]);
   const [botProfitPagination, setBotProfitPagination] = useState({ current_page: 1, total_pages: 1 });
 
-  // Пагинация для списка ботов
   const pagination = usePagination(1, 10);
 
-  // Состояния для массового выбора ботов
   const [selectedBots, setSelectedBots] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
@@ -82,27 +76,21 @@ const RegularBotsManagement = () => {
 
   // Form states for creating bot with new extended system
   const [botForm, setBotForm] = useState({
-    // Основные параметры
     name: '',
     
-    // Настройки ставок (обновлены согласно спецификации)
     min_bet_amount: 1.0, // 1-10000
     max_bet_amount: 50.0, // 1-10000
     win_percentage: 55.0, // 0-100% (по умолчанию 55%)
     
-    // Циклы и лимиты (обновлены согласно спецификации)
     cycle_games: 12, // 1-66 (по умолчанию 12)
     individual_limit: 12, // 1-66 (по умолчанию = cycle_games)
     
-    // Поведенческие настройки
     creation_mode: 'queue-based', // 'always-first', 'queue-based', 'after-all'
     priority_order: 50, // 1-100
     pause_between_games: 5, // 1-300 секунд (по умолчанию 5)
     
-    // Стратегии прибыли (обновлены согласно спецификации)
     profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
     
-    // Старые поля для совместимости
     cycle_total_amount: 0, // calculated automatically
     can_accept_bets: false,
     can_play_with_bots: true
@@ -126,24 +114,19 @@ const RegularBotsManagement = () => {
     setBotForm(prev => ({ ...prev, cycle_total_amount: newAmount }));
   }, [botForm.min_bet_amount, botForm.max_bet_amount, botForm.cycle_games]);
 
-  // Состояние для валидации расширенной системы
   const [extendedValidation, setExtendedValidation] = useState({
     isValid: true,
     errors: []
   });
 
-  // Состояние для табов
   const [activeTab, setActiveTab] = useState('bots'); // 'bots' или 'settings'
 
   const { showSuccessRU, showErrorRU } = useNotifications();
   
-  // Хук для модального окна подтверждения
   const { confirm, confirmationModal } = useConfirmation();
   
-  // Хук для модального окна ввода
   const { prompt, inputModal } = useInput();
 
-  // Функции для массового выбора ботов
   const handleSelectBot = (botId) => {
     const newSelected = new Set(selectedBots);
     if (newSelected.has(botId)) {
@@ -154,7 +137,6 @@ const RegularBotsManagement = () => {
     setSelectedBots(newSelected);
     setShowBulkActions(newSelected.size > 0);
     
-    // Обновляем состояние "выбрать все"
     setSelectAll(newSelected.size === botsList.length && botsList.length > 0);
   };
 
@@ -176,7 +158,6 @@ const RegularBotsManagement = () => {
     setShowBulkActions(false);
   };
 
-  // Функции для массовых действий
   const handleBulkToggleStatus = async (activate) => {
     if (selectedBots.size === 0) return;
     
@@ -307,7 +288,6 @@ const RegularBotsManagement = () => {
     fetchGlobalBotSettings();
   }, []);
 
-  // Перезагрузка списка ботов при изменении страницы
   useEffect(() => {
     fetchBotsList();
   }, [pagination.currentPage]);
@@ -337,17 +317,14 @@ const RegularBotsManagement = () => {
         }
       });
       
-      // Обработка пагинированного ответа
       const botsData = response.data.bots || response.data;
       const sortedBots = botsData.sort((a, b) => {
         return a.priority_order - b.priority_order;
       });
       setBotsList(sortedBots);
       
-      // Сброс выбора при изменении списка ботов
       clearSelection();
       
-      // Обновление пагинации
       if (response.data.total_count !== undefined) {
         pagination.updatePagination(response.data.total_count);
       } else {
@@ -359,7 +336,6 @@ const RegularBotsManagement = () => {
     }
   };
 
-  // Новая функция для получения статуса очереди ботов
   const fetchBotQueueStatus = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -375,7 +351,6 @@ const RegularBotsManagement = () => {
     }
   };
 
-  // Новая функция для получения детального анализа win rate
   const fetchBotWinRateAnalysis = async (botId) => {
     try {
       const token = localStorage.getItem('token');
@@ -462,15 +437,12 @@ const RegularBotsManagement = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Обновляем локальное состояние для немедленного обновления UI
       setBotSettings(newSettings);
       setIsGlobalSettingsOpen(false);
       showSuccessRU(response.data.message);
       
-      // Обновляем статистику активных ставок
       await fetchActiveBetsStats();
       
-      // Принудительно обновляем компонент для мгновенного отображения изменений
       await fetchBotsList();
     } catch (error) {
       console.error('Ошибка обновления настроек:', error);
@@ -494,11 +466,9 @@ const RegularBotsManagement = () => {
     }
   };
 
-  // Функция валидации для новой системы ботов
   const validateExtendedBotForm = (formData) => {
     const errors = [];
     
-    // Проверка диапазона ставок
     if (formData.min_bet_amount < 1 || formData.min_bet_amount > 10000) {
       errors.push('Минимальная ставка должна быть от 1 до 10000');
     }
@@ -511,38 +481,31 @@ const RegularBotsManagement = () => {
       errors.push('Минимальная ставка должна быть меньше максимальной');
     }
     
-    // Проверка процента побед
     if (formData.win_percentage < 0 || formData.win_percentage > 100) {
       errors.push('Процент побед должен быть от 0 до 100');
     }
     
-    // Проверка количества игр в цикле
     if (formData.cycle_games < 1 || formData.cycle_games > 66) {
       errors.push('Количество игр в цикле должно быть от 1 до 66');
     }
     
-    // Проверка индивидуального лимита
     if (formData.individual_limit < 1 || formData.individual_limit > 66) {
       errors.push('Индивидуальный лимит должен быть от 1 до 66');
     }
     
-    // Проверка приоритета
     if (formData.priority_order < 1 || formData.priority_order > 100) {
       errors.push('Приоритет должен быть от 1 до 100');
     }
     
-    // Проверка паузы между играми
     if (formData.pause_between_games < 1 || formData.pause_between_games > 300) {
       errors.push('Пауза между играми должна быть от 1 до 300 секунд');
     }
     
-    // Проверка режима создания
     const validModes = ['always-first', 'queue-based', 'after-all'];
     if (!validModes.includes(formData.creation_mode)) {
       errors.push('Неверный режим создания ставок');
     }
     
-    // Проверка стратегии прибыли
     const validStrategies = ['start-positive', 'balanced', 'start-negative'];
     if (!validStrategies.includes(formData.profit_strategy)) {
       errors.push('Неверная стратегия прибыли');
@@ -554,14 +517,12 @@ const RegularBotsManagement = () => {
     };
   };
 
-  // Валидация в реальном времени
   const validateExtendedFormInRealTime = (formData) => {
     const validation = validateExtendedBotForm(formData);
     setExtendedValidation(validation);
     return validation.isValid;
   };
 
-  // Обработчики для новых действий расширенной системы
   const handleToggleBotStatus = async (bot) => {
     try {
       const token = localStorage.getItem('token');
@@ -607,7 +568,6 @@ const RegularBotsManagement = () => {
   };
 
   const createExtendedBot = async () => {
-    // Валидация перед созданием
     const validation = validateExtendedBotForm(botForm);
     if (!validation.isValid) {
       setExtendedValidation(validation);
@@ -618,7 +578,6 @@ const RegularBotsManagement = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // Подготавливаем данные для новой системы
       const botData = {
         name: botForm.name,
         min_bet_amount: botForm.min_bet_amount,
@@ -632,7 +591,6 @@ const RegularBotsManagement = () => {
         profit_strategy: botForm.profit_strategy
       };
       
-      // Используем новый endpoint для создания regular ботов
       const response = await axios.post(`${API}/admin/bots/create-regular`, botData, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -640,7 +598,6 @@ const RegularBotsManagement = () => {
       showSuccessRU(response.data.message);
       setIsCreateModalOpen(false);
       
-      // Сбрасываем форму
       setBotForm({
         name: '',
         min_bet_amount: 1.0,
@@ -686,7 +643,6 @@ const RegularBotsManagement = () => {
     try {
       const response = await axios.get(`${API}/admin/bots/${bot.id}`, getApiConfig());
       
-      // Загружаем все параметры бота в форму создания
       setBotForm({
         name: response.data.bot.name || '',
         min_bet_amount: response.data.bot.min_bet_amount || 1.0,
@@ -703,7 +659,6 @@ const RegularBotsManagement = () => {
         can_play_with_bots: response.data.bot.can_play_with_bots || true
       });
       
-      // Устанавливаем режим редактирования
       setEditingBot(response.data.bot);
       setIsCreateModalOpen(true);
     } catch (error) {
@@ -787,7 +742,6 @@ const RegularBotsManagement = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // Используем правильный endpoint для получения активных ставок
       const response = await axios.get(`${API}/admin/bots/${bot.id}/active-bets`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -810,7 +764,6 @@ const RegularBotsManagement = () => {
         actions_taken: data.actions_taken || { cancelled: 0, created: 0 }
       });
       
-      // Показываем уведомление о произведенных действиях
       if (data.actions_taken?.cancelled > 0) {
         showSuccessRU(`Отменено ${data.actions_taken.cancelled} лишних ставок`);
       }
@@ -822,7 +775,6 @@ const RegularBotsManagement = () => {
       console.error('Ошибка загрузки активных ставок:', error);
       showErrorRU('Ошибка при загрузке активных ставок');
       
-      // Fallback: показываем пустые данные
       setActiveBetsData({
         bets: [],
         totalBets: 0,
@@ -858,7 +810,6 @@ const RegularBotsManagement = () => {
     return new Date(dateString).toLocaleDateString('ru-RU');
   };
 
-  // Функции для inline редактирования лимитов ботов
   const handleEditBotLimit = (botId, currentLimit) => {
     setEditingBotLimits(prev => ({
       ...prev,
@@ -885,14 +836,12 @@ const RegularBotsManagement = () => {
   const handleBotLimitChange = (botId, newLimit) => {
     const limit = parseInt(newLimit);
     
-    // Валидация
     let error = null;
     if (isNaN(limit) || limit < 1) {
       error = 'Лимит должен быть больше 0';
     } else if (limit > 50) {
       error = 'Лимит не может быть больше 50';
     } else {
-      // Проверка глобального лимита
       const otherBotsTotal = botsList
         .filter(bot => bot.id !== botId)
         .reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0);
@@ -939,17 +888,14 @@ const RegularBotsManagement = () => {
       if (response.data.success) {
         showSuccessRU('Лимит бота успешно обновлен');
         
-        // Обновляем локальные данные
         setBotsList(prev => prev.map(bot => 
           bot.id === botId 
             ? { ...bot, max_individual_bets: parseInt(editData.limit) }
             : bot
         ));
         
-        // Убираем из редактирования
         handleCancelEditBotLimit(botId);
         
-        // Обновляем статистику
         await fetchActiveBetsStats();
       }
     } catch (error) {
@@ -966,7 +912,6 @@ const RegularBotsManagement = () => {
     }
   };
 
-  // Функции для управления приоритетами ботов
   const handleMoveBotUp = async (botId) => {
     if (priorityType !== 'manual') return;
     
@@ -984,17 +929,14 @@ const RegularBotsManagement = () => {
       if (response.data.success) {
         showSuccessRU('Приоритет бота повышен');
         
-        // Обновляем локальные данные
         setBotsList(prev => {
           const newList = [...prev];
           const currentIndex = newList.findIndex(bot => bot.id === botId);
           if (currentIndex > 0) {
-            // Меняем местами приоритеты
             const temp = newList[currentIndex].priority_order;
             newList[currentIndex].priority_order = newList[currentIndex - 1].priority_order;
             newList[currentIndex - 1].priority_order = temp;
             
-            // Сортируем по приоритету
             newList.sort((a, b) => (a.priority_order || 0) - (b.priority_order || 0));
           }
           return newList;
@@ -1027,17 +969,14 @@ const RegularBotsManagement = () => {
       if (response.data.success) {
         showSuccessRU('Приоритет бота понижен');
         
-        // Обновляем локальные данные
         setBotsList(prev => {
           const newList = [...prev];
           const currentIndex = newList.findIndex(bot => bot.id === botId);
           if (currentIndex < newList.length - 1) {
-            // Меняем местами приоритеты
             const temp = newList[currentIndex].priority_order;
             newList[currentIndex].priority_order = newList[currentIndex + 1].priority_order;
             newList[currentIndex + 1].priority_order = temp;
             
-            // Сортируем по приоритету
             newList.sort((a, b) => (a.priority_order || 0) - (b.priority_order || 0));
           }
           return newList;
@@ -1080,7 +1019,6 @@ const RegularBotsManagement = () => {
     }
   };
 
-  // Функции для управления прибылью ботов
   const handleOpenProfitAccumulators = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -1100,7 +1038,6 @@ const RegularBotsManagement = () => {
 
 
 
-  // Функция для просмотра накопителей прибыли конкретного бота
   const handleOpenBotProfitModal = async (bot) => {
     try {
       const token = localStorage.getItem('token');
@@ -1756,7 +1693,6 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-orange-400 font-roboto text-sm">
                         {(() => {
-                          // Получаем процент побед из настроек бота
                           const winPercentage = bot.win_percentage || (bot.win_rate ? bot.win_rate * 100 : 55);
                           return Math.round(winPercentage);
                         })()}%

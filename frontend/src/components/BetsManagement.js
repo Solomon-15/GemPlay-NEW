@@ -43,7 +43,6 @@ const BetsManagement = () => {
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
-  // Пагинация
   const pagination = usePagination(1, 10);
 
   const { showSuccessRU, showErrorRU, showWarningRU } = useNotifications();
@@ -53,7 +52,6 @@ const BetsManagement = () => {
     fetchBets();
   }, [statusFilter, userFilter, pagination.currentPage]);
 
-  // Живой счетчик для обновления времени каждую секунду
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
@@ -249,7 +247,6 @@ const BetsManagement = () => {
     const created = new Date(createdAt);
     const diffInSeconds = Math.floor((currentTime - created) / 1000);
     
-    // Обеспечиваем, что счетчик начинается с 0 секунд
     const totalSeconds = Math.max(0, diffInSeconds);
     
     const hours = Math.floor(totalSeconds / 3600);

@@ -21,7 +21,6 @@ const NotificationsPage = () => {
   }, [page, fetchNotifications]);
 
   const handleNotificationClick = async (notification, event) => {
-    // Предотвращаем стандартное поведение события
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -31,8 +30,6 @@ const NotificationsPage = () => {
       await markAsRead(notification.id);
     }
     
-    // НЕ ПЕРЕХОДИМ ПО ССЫЛКАМ АВТОМАТИЧЕСКИ - только помечаем как прочитанное
-    // Если нужна навигация, пользователь может кликнуть на специальную кнопку
   };
 
   const formatTimeAgo = (dateString) => {

@@ -11,7 +11,6 @@ const GemSelectionStep = ({
   onStrategySelect,
   showError
 }) => {
-  // Безопасное форматирование валюты
   const formatCurrency = (amount) => {
     try {
       if (typeof amount !== 'number' || isNaN(amount)) {
@@ -24,13 +23,11 @@ const GemSelectionStep = ({
     }
   };
 
-  // Подсчет общей стоимости выбранных гемов
   const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
     const gem = gemsData.find(g => g.type === gemType);
     return sum + (gem ? gem.price * quantity : 0);
   }, 0);
 
-  // Обработчик изменения количества гемов
   const handleGemQuantityChange = (gemType, quantity) => {
     const gem = gemsData.find(g => g.type === gemType);
     if (!gem) return;
@@ -200,7 +197,6 @@ const GemSelectionStep = ({
             const available = gem.available_quantity || 0;
             const selected = selectedGems[gem.type] || 0;
             
-            // Показываем только гемы, которые доступны или уже выбраны
             if (!gem.has_available && selected <= 0) return null;
             
             return (

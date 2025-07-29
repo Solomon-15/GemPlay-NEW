@@ -36,7 +36,6 @@ const AdminPanel = ({ user, onClose }) => {
   const { showSuccessRU, showErrorRU } = useNotifications();
   const { confirm, confirmationModal } = useConfirmation();
 
-  // Проверка прав доступа
   useEffect(() => {
     console.log('🔍 AdminPanel: Checking user access. User:', user);
     console.log('🔍 AdminPanel: Token in localStorage:', localStorage.getItem('token') ? 'EXISTS' : 'MISSING');
@@ -74,7 +73,6 @@ const AdminPanel = ({ user, onClose }) => {
   useEffect(() => {
     fetchDashboardStats();
     
-    // Настраиваем перехватчик axios для обработки ошибок 401
     const interceptor = axios.interceptors.response.use(
       (response) => response,
       (error) => {
@@ -86,7 +84,6 @@ const AdminPanel = ({ user, onClose }) => {
       }
     );
     
-    // Очищаем перехватчик при размонтировании компонента
     return () => {
       axios.interceptors.response.eject(interceptor);
     };
@@ -111,7 +108,6 @@ const AdminPanel = ({ user, onClose }) => {
         return;
       }
       
-      // Получаем старую статистику для дашборда (для совместимости)
       const [usersResponse, botsResponse, gamesResponse, dashboardResponse] = await Promise.allSettled([
         axios.get(`${API}/admin/users/stats`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -122,7 +118,6 @@ const AdminPanel = ({ user, onClose }) => {
         axios.get(`${API}/admin/games/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        // Новый endpoint для расширенной статистики
         axios.get(`${API}/admin/dashboard/stats`, {
           headers: { Authorization: `Bearer ${token}` }
         })
@@ -135,14 +130,12 @@ const AdminPanel = ({ user, onClose }) => {
         dashboard: dashboardResponse.status
       });
 
-      // Устанавливаем старую статистику (для совместимости с существующими компонентами)
       setStats({
         users: usersResponse.status === 'fulfilled' ? usersResponse.value.data : { total: '—', active: '—', banned: '—' },
         bots: botsResponse.status === 'fulfilled' ? botsResponse.value.data.length : '—',
         games: gamesResponse.status === 'fulfilled' ? gamesResponse.value.data : { total: '—', active: '—', completed: '—' }
       });
       
-      // Устанавливаем новую расширенную статистику для dashboard
       if (dashboardResponse.status === 'fulfilled') {
         setDashboardStats(dashboardResponse.value.data);
       } else {
@@ -161,7 +154,6 @@ const AdminPanel = ({ user, onClose }) => {
     } catch (error) {
       console.error('❌ AdminPanel: Error loading statistics:', error);
       
-      // Если получили 401 ошибку, токен истек
       if (error.response?.status === 401) {
         console.log('🔒 AdminPanel: Token expired (401), handling logout');
         handleTokenExpired();
@@ -172,13 +164,11 @@ const AdminPanel = ({ user, onClose }) => {
     }
   };
 
-  // Функция для форматирования чисел в формате 1,234,567
   const formatNumber = (num) => {
     if (num === '—' || num === undefined || num === null) return '—';
     return Number(num).toLocaleString('en-US');
   };
 
-  // Функция для сброса объёма ставок
   const resetBetVolume = async () => {
     const confirmed = await confirm({
       title: 'Сброс объёма ставок',
@@ -208,13 +198,11 @@ const AdminPanel = ({ user, onClose }) => {
     }
   };
 
-  // Функция для ручного обновления статистики
   const refreshStats = async () => {
     await fetchDashboardStats();
     showSuccessRU('Статистика обновлена');
   };
 
-  // Настройка автообновления
   useEffect(() => {
     if (autoRefresh && activeSection === 'dashboard') {
       const interval = setInterval(fetchDashboardStats, 5000); // Обновление каждые 5 секунд
@@ -409,7 +397,6 @@ const AdminPanel = ({ user, onClose }) => {
     </div>
   );
 
-  // Компонент StatCard с дополнительной кнопкой действия
   const StatCardWithAction = ({ title, value, icon, color = 'text-accent-primary', onAction, actionIcon, actionTitle }) => (
     <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 hover:border-green-500 transition-colors duration-200">
       <div className="flex items-center justify-between">

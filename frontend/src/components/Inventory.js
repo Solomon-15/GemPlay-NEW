@@ -87,7 +87,6 @@ const Inventory = ({ user, onUpdateUser }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // 🔔 НОВОЕ УВЕДОМЛЕНИЕ ПРИ ПРОДАЖЕ ГЕМОВ
       const totalValue = formatGemValue(gem.price * quantity);
       const gemDisplayName = gemType === 'Ruby' ? 'Rubies' : 
                             gemType === 'Emerald' ? 'Emeralds' :
@@ -103,7 +102,6 @@ const Inventory = ({ user, onUpdateUser }) => {
       await fetchInventory();
       await fetchBalance();
       
-      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ПРОДАЖИ ГЕМОВ
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       console.log(`💰 Sold ${quantity} ${gemType} gems - triggering lobby refresh`);
@@ -156,7 +154,6 @@ const Inventory = ({ user, onUpdateUser }) => {
     const frozenGemsCount = gems.reduce((sum, gem) => sum + gem.frozen_quantity, 0);
     const availableGemValue = balance.available_gem_value;
     const frozenGemValue = balance.total_gem_value - balance.available_gem_value;
-    // ИСПРАВЛЕНИЕ: Total = virtual_balance + frozen_balance + стоимость всех гемов
     const totalValue = virtualBalance + frozenBalance + balance.total_gem_value;
 
     return {

@@ -13,7 +13,6 @@ const SoundSettings = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  // Преобразование volume в уровни для совместимости
   const getVolumeLevel = (vol) => {
     if (!enabled || vol === 0) return 'off';
     if (vol <= 0.3) return 'quiet';
@@ -39,7 +38,6 @@ const SoundSettings = ({ isOpen, onClose }) => {
     setVolume(newVolume);
     setEnabled(newEnabled);
     
-    // Проигрываем тестовый звук
     if (newEnabled) {
       setTimeout(() => soundManager.playSound('создание_ставки'), 100);
     }

@@ -37,22 +37,16 @@ const MyBets = ({ user }) => {
     
     switch (activeTab) {
       case 'awaiting':
-        // Ставки, которые вы создали и ждут оппонента
         return safeBets.filter(bet => bet.status === 'WAITING' && bet.creator_id === user.id);
       case 'ongoing':
-        // Ставки, в которых вы участвуете (только ACTIVE статус, так как REVEAL больше нет)
         return safeBets.filter(bet => bet.status === 'ACTIVE');
       case 'wins':
-        // Ваши победы
         return safeBets.filter(bet => bet.status === 'COMPLETED' && bet.winner_id === user.id);
       case 'losses':
-        // Ваши поражения
         return safeBets.filter(bet => bet.status === 'COMPLETED' && bet.winner_id && bet.winner_id !== user.id);
       case 'draws':
-        // Ничьи
         return safeBets.filter(bet => bet.status === 'COMPLETED' && !bet.winner_id);
       case 'cancelled':
-        // Отмененные ставки
         return safeBets.filter(bet => bet.status === 'CANCELLED' || bet.status === 'TIMEOUT');
       default:
         return safeBets;
@@ -77,16 +71,13 @@ const MyBets = ({ user }) => {
     }
   };
 
-  // Функция для получения стилей карточки в зависимости от статуса
   const getCardStyles = (bet) => {
     const baseStyles = "rounded-lg p-4 transition-all duration-300";
     
-    // Если ставка принята и в процессе игры (ACTIVE)
     if (bet.status === 'ACTIVE') {
       return `${baseStyles} bg-[#23233e] border-[#23d364] border-opacity-40 hover:border-opacity-60 border`;
     }
     
-    // Стандартные стили для всех остальных статусов
     return `${baseStyles} bg-[#09295e] border-[#23d364] border-opacity-30 hover:border-opacity-50 border`;
   };
 

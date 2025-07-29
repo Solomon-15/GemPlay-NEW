@@ -16,10 +16,8 @@ const PlayerCard = React.memo(({
   user
 }) => {
   const { gemsDefinitions, getGemByType } = useGems();
-  // Убираем локальное состояние модального окна
   // const [showAcceptModal, setShowAcceptModal] = useState(false);
 
-  // УБИРАЕМ ВРЕМЕННЫЙ ЛОГ ДЛЯ ОТЛАДКИ - он вызывает лишние рендеры
   // console.log('🔄 PlayerCard render:', {
   //   gameId: game.game_id || game.id,
   //   timestamp: new Date().toISOString()
@@ -43,27 +41,21 @@ const PlayerCard = React.memo(({
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
-  // Мемоизируем функцию получения фона карточки
   const cardBackground = useMemo(() => {
-    // Основной фон для всех карточек - тёмно-синий мистический
     const baseBackground = 'bg-[#09295e]';
     
-    // Если это карточка в процессе игры (ACTIVE status для создателя)
     if (isMyBet && game.status === 'ACTIVE') {
       return `bg-[#23233e] border-[#23d364] border-opacity-40 hover:border-opacity-60`;
     }
     
-    // Стандартное оформление с зелёной рамкой
     return `${baseBackground} border-[#23d364] border-opacity-30 hover:border-opacity-50`;
   }, [isMyBet, game.status]);
 
-  // Мемоизируем функцию форматирования имени пользователя
   const formatUsername = useCallback((username) => {
     if (!username) return 'Player';
     return username.length > 15 ? username.substring(0, 15) + '...' : username;
   }, []);
 
-  // Мемоизируем отформатированное имя
   const formattedUsername = useMemo(() => 
     formatUsername(game.creator?.username || 'Player'), 
     [game.creator?.username, formatUsername]
@@ -94,22 +86,17 @@ const PlayerCard = React.memo(({
 
   // Determine avatar based on gender or bot type
   const getAvatarIcon = () => {
-    // Проверяем, является ли это Human-ботом
     if (game.is_human_bot || game.creator_type === 'human_bot' || game.bot_type === 'HUMAN') {
-      // Для Human-ботов используем аватарки по полу
       const gender = game.creator?.gender || 'male';
       return gender === 'female' ? '/Women.svg' : '/Men.svg';
     }
-    // Для обычных ботов используем эмодзи робота
     if (isBot) {
       return '🤖'; // Bot emoji
     }
-    // Для обычных пользователей используем аватарки по полу
     const gender = game.creator?.gender || 'male';
     return gender === 'female' ? '/Women.svg' : '/Men.svg';
   };
 
-  // Мемоизируем функции-обработчики
   const handleAcceptClick = useCallback(() => {
     if (onAccept) {
       onAccept(game.game_id || game.id); // Передаем ID игры, а не объект
@@ -124,7 +111,6 @@ const PlayerCard = React.memo(({
     }
   }, [onCancel, game.game_id, game.id]);
 
-  // Мемоизируем вычисления
   const totalAmount = useMemo(() => getTotalBetAmount(), [game.bet_amount, game.gems, gemsDefinitions]);
   const timeRemaining = useMemo(() => getTimeRemaining(), [game.created_at, currentTime]);
   const sortedGems = useMemo(() => getSortedGems(), [game.gems, gemsDefinitions]);
@@ -199,7 +185,6 @@ const PlayerCard = React.memo(({
           {/* Action Button */}
           <div className="flex-shrink-0">
             {isMyBet ? (
-              // Если игра в процессе (ACTIVE или REVEAL status)
               (game.status === 'ACTIVE' || game.status === 'REVEAL') ? (
                 <button
                   disabled
@@ -216,7 +201,6 @@ const PlayerCard = React.memo(({
                 </button>
               )
             ) : isOngoing ? (
-              // Если это ongoing battle (для пользователя)
               <button
                 disabled
                 className="px-4 py-2 bg-orange-600 text-white font-rajdhani font-bold rounded-lg cursor-not-allowed"

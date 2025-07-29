@@ -7,21 +7,18 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const API = process.env.REACT_APP_BACKEND_URL;
 
-  // Функция для получения общего баланса (Total)
   const fetchTotalBalance = async () => {
     try {
       if (!user) return;
       
       const token = localStorage.getItem('token');
       
-      // Получаем баланс
       const balanceResponse = await axios.get(`${API}/api/economy/balance`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       const balance = balanceResponse.data;
       
-      // Вычисляем Total = virtual_balance + frozen_balance + total_gem_value
       const total = (balance.virtual_balance || 0) + (balance.frozen_balance || 0) + (balance.total_gem_value || 0);
       setTotalBalance(total);
       
@@ -31,14 +28,12 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
     }
   };
 
-  // Загружаем Total при монтировании и изменении пользователя
   useEffect(() => {
     if (user) {
       fetchTotalBalance();
     }
   }, [user]);
 
-  // Обновляем Total каждые 10 секунд
   useEffect(() => {
     if (!user) return;
     
@@ -208,7 +203,6 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
       <nav className="flex-1 py-4">
         <ul className={`space-y-1 ${isCollapsed ? 'px-1' : 'px-2'}`}>
           {menuItems.map((item) => {
-            // Показать элементы только для админов, если это админ-элемент
             if (item.adminOnly && (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN'))) {
               return null;
             }

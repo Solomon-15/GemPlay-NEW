@@ -11,7 +11,6 @@ const NotificationAdmin = ({ user }) => {
   const [analytics, setAnalytics] = useState({});
   const { showSuccessRU, showErrorRU } = useNotifications();
 
-  // Состояние для отправки уведомлений
   const [notification, setNotification] = useState({
     type: 'admin_notification',
     title: '',
@@ -21,7 +20,6 @@ const NotificationAdmin = ({ user }) => {
     expires_at: null
   });
 
-  // Состояние для целевых пользователей
   const [targetUsers, setTargetUsers] = useState('all'); // 'all' или 'specific'
   const [specificUsers, setSpecificUsers] = useState('');
   const [userSearch, setUserSearch] = useState('');
@@ -29,13 +27,11 @@ const NotificationAdmin = ({ user }) => {
   const [foundUsers, setFoundUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
 
-  // Состояние для удаления уведомлений
   const [notificationStats, setNotificationStats] = useState([]);
   const [selectedTypesForDeletion, setSelectedTypesForDeletion] = useState([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Состояние для детальной аналитики отправок
   const [detailedAnalytics, setDetailedAnalytics] = useState([]);
   const [detailedLoading, setDetailedLoading] = useState(false);
   const [selectedNotificationsForDeletion, setSelectedNotificationsForDeletion] = useState([]);
@@ -57,7 +53,6 @@ const NotificationAdmin = ({ user }) => {
   const [showResendModal, setShowResendModal] = useState(null);
   const [resendOption, setResendOption] = useState('unread'); // 'unread' or 'all'
 
-  // Типы уведомлений
   const notificationTypes = [
     { value: 'admin_notification', label: 'Админское уведомление', icon: '👑' },
     { value: 'system_message', label: 'Системное сообщение', icon: '⚙️' },
@@ -67,14 +62,12 @@ const NotificationAdmin = ({ user }) => {
     { value: 'bet_accepted', label: 'Ставка принята', icon: '✅' }
   ];
 
-  // Приоритеты уведомлений
   const priorities = [
     { value: 'info', label: 'Информация', color: 'text-blue-400', bgColor: 'bg-blue-500' },
     { value: 'warning', label: 'Предупреждение', color: 'text-yellow-400', bgColor: 'bg-yellow-500' },
     { value: 'error', label: 'Критическое', color: 'text-red-400', bgColor: 'bg-red-500' }
   ];
 
-  // Загрузка аналитики
   const fetchAnalytics = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
@@ -91,12 +84,10 @@ const NotificationAdmin = ({ user }) => {
     }
   }, [showErrorRU]);
 
-  // Поиск пользователей с учетом режима поиска
   const searchUsers = useCallback(async (query) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Поиск только если есть хотя бы один символ
       if (!query || query.trim().length === 0) {
         setFoundUsers([]);
         return;
@@ -118,11 +109,9 @@ const NotificationAdmin = ({ user }) => {
 
       console.log('📊 Search response:', response.data); // Отладка
 
-      // API /admin/users не возвращает success поле, только данные напрямую
       const users = response.data.users || [];
       console.log('👥 Found users before filtering:', users.length); // Отладка
       
-      // Дополнительная фильтрация на фронтенде для исключения ботов
       const humanUsers = users.filter(user => 
         user.user_type !== 'HUMAN_BOT' && 
         user.user_type !== 'REGULAR_BOT' && 
@@ -138,20 +127,16 @@ const NotificationAdmin = ({ user }) => {
     }
   }, [searchMode]); // Добавляем searchMode в зависимости
 
-  // Загружаем всех пользователей при фокусе на поле
   const handleSearchFocus = async () => {
-    // Используем searchUsers с пустой строкой для загрузки всех пользователей
     searchUsers('');
   };
 
-  // Скрыть список при потере фокуса (с задержкой для возможности клика)
   const handleSearchBlur = () => {
     setTimeout(() => {
       setFoundUsers([]);
     }, 200);
   };
 
-  // Добавить пользователя в список получателей
   const addUserToSelection = (user) => {
     if (!selectedUsers.find(u => u.id === user.id)) {
       setSelectedUsers([...selectedUsers, user]);
@@ -160,12 +145,10 @@ const NotificationAdmin = ({ user }) => {
     setFoundUsers([]);
   };
 
-  // Удалить пользователя из списка получателей
   const removeUserFromSelection = (userId) => {
     setSelectedUsers(selectedUsers.filter(u => u.id !== userId));
   };
 
-  // Функции для удаления уведомлений по категориям
   const fetchNotificationStats = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -250,7 +233,6 @@ const NotificationAdmin = ({ user }) => {
     );
   };
 
-  // Отправка уведомления
   const sendNotification = async () => {
     if (!notification.title.trim() || !notification.message.trim()) {
       showErrorRU('Заполните заголовок и сообщение');
@@ -261,7 +243,6 @@ const NotificationAdmin = ({ user }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Подготовка данных для отправки
       const payload = {
         type: notification.type,
         title: notification.title.trim(),
@@ -278,7 +259,6 @@ const NotificationAdmin = ({ user }) => {
       if (response.data.success) {
         showSuccessRU(`Уведомление отправлено ${response.data.sent_count} пользователям`);
         
-        // Очистка формы
         setNotification({
           type: 'admin_notification',
           title: '',
@@ -290,7 +270,6 @@ const NotificationAdmin = ({ user }) => {
         setSelectedUsers([]);
         setTargetUsers('all');
         
-        // Обновление аналитики
         fetchAnalytics();
       }
     } catch (error) {
@@ -302,23 +281,19 @@ const NotificationAdmin = ({ user }) => {
     }
   };
 
-  // Загрузка аналитики при монтировании
   useEffect(() => {
     fetchAnalytics();
   }, [fetchAnalytics]);
 
-  // Поиск пользователей с задержкой - только после ввода символа
   useEffect(() => {
     if (userSearch.trim().length > 0) {
       const timeoutId = setTimeout(() => searchUsers(userSearch), 300);
       return () => clearTimeout(timeoutId);
     } else {
-      // Очищаем результаты если поле пустое
       setFoundUsers([]);
     }
   }, [userSearch, searchUsers]);
 
-  // Функции для детальной аналитики
   const fetchDetailedAnalytics = useCallback(async (page = 1) => {
     try {
       console.log('fetchDetailedAnalytics called:', { page, filters });
@@ -424,7 +399,6 @@ const NotificationAdmin = ({ user }) => {
         endpoint = `${API}/admin/notifications/resend-to-unread`;
         payload = { notification_id: showResendModal };
       } else {
-        // Найти оригинальное уведомление для повторной отправки всем
         const originalNotification = detailedAnalytics.find(n => n.notification_id === showResendModal);
         if (!originalNotification) {
           showErrorRU('Уведомление не найдено');
@@ -463,7 +437,6 @@ const NotificationAdmin = ({ user }) => {
     }
   };
 
-  // Определяем является ли уведомление индивидуальным (не массовым)
   const isIndividualNotification = (type) => {
     const individualTypes = ['bet_accepted', 'match_result', 'gem_gift', 'commission_freeze'];
     return individualTypes.includes(type);
@@ -481,7 +454,6 @@ const NotificationAdmin = ({ user }) => {
     return 'bg-red-500';
   };
 
-  // Загрузка детальной аналитики при смене фильтров
   useEffect(() => {
     console.log('useEffect triggered:', { activeTab, filters });
     if (activeTab === 'detailed') {
@@ -490,7 +462,6 @@ const NotificationAdmin = ({ user }) => {
     }
   }, [activeTab, filters, fetchDetailedAnalytics]);
 
-  // Принудительная загрузка аналитики при переключении таба
   const handleDetailedTabClick = () => {
     setActiveTab('detailed');
     setTimeout(() => {
@@ -692,7 +663,6 @@ const NotificationAdmin = ({ user }) => {
                             onChange={(e) => {
                               const value = e.target.value;
                               setUserSearch(value);
-                              // Выполняем поиск с введенным текстом или показываем всех при пустом поле
                               searchUsers(value.trim());
                             }}
                             onFocus={handleSearchFocus}
@@ -978,7 +948,6 @@ const NotificationAdmin = ({ user }) => {
                         
                         {/* Отображение для индивидуальных и массовых уведомлений */}
                         {isIndividualNotification(item.type) ? (
-                          // Для индивидуальных уведомлений - простая информация
                           <div className="flex items-center space-x-4">
                             <div className="flex-1">
                               <div className="text-xs text-gray-400">
@@ -993,7 +962,6 @@ const NotificationAdmin = ({ user }) => {
                             </div>
                           </div>
                         ) : (
-                          // Для массовых уведомлений - прогресс-бар и счетчики
                           <div className="flex items-center space-x-4">
                             <div className="flex-1">
                               <div className="flex justify-between text-xs mb-1">
@@ -1041,7 +1009,6 @@ const NotificationAdmin = ({ user }) => {
                     {expandedNotification === item.notification_id && (
                       <div className="mt-4 pt-4 border-t border-gray-600">
                         {isIndividualNotification(item.type) ? (
-                          // Для индивидуальных уведомлений - простое отображение с полным текстом
                           <div className="space-y-4">
                             {/* Полный текст сообщения */}
                             <div className="bg-surface-card rounded-lg p-4">
@@ -1098,7 +1065,6 @@ const NotificationAdmin = ({ user }) => {
                             </div>
                           </div>
                         ) : (
-                          // Для массовых уведомлений - обычная структура со списками пользователей
                           <div className="space-y-6">
                             {/* Полный текст массового уведомления */}
                             <div className="bg-surface-card rounded-lg p-4">

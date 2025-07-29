@@ -34,7 +34,6 @@ const InterfaceSettings = () => {
       setSettings(response.data);
     } catch (error) {
       console.error('Error fetching interface settings:', error);
-      // Используем дефолтные значения если не удалось загрузить
     } finally {
       setLoading(false);
     }
@@ -59,7 +58,6 @@ const InterfaceSettings = () => {
   const handleChange = (section, field, value) => {
     const numValue = parseInt(value);
     
-    // Определяем лимиты в зависимости от типа поля
     let minVal, maxVal;
     if (field.startsWith('max_')) {
       minVal = 10;

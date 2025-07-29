@@ -14,7 +14,6 @@ const NewBotAnalytics = () => {
   const { showErrorRU, showSuccessRU } = useNotifications();
   const { get } = useApi();
 
-  // Получение списка Human-ботов
   const fetchHumanBots = async () => {
     try {
       const response = await get('/admin/human-bots');
@@ -24,10 +23,8 @@ const NewBotAnalytics = () => {
     }
   };
 
-  // Получение списка обычных ботов
   const fetchRegularBots = async () => {
     try {
-      // Проверяем наличие токена авторизации
       const token = localStorage.getItem('token');
       if (!token) {
         console.warn('No authorization token found');
@@ -49,12 +46,10 @@ const NewBotAnalytics = () => {
     }
   };
 
-  // Получение данных аналитики для Human-ботов
   const fetchHumanBotsAnalytics = async () => {
     try {
       setLoading(true);
       
-      // Получаем игры Human-ботов
       const gamesResponse = await get('/admin/games', {
         page: 1,
         limit: 1000,
@@ -63,7 +58,6 @@ const NewBotAnalytics = () => {
       
       const games = gamesResponse.games || [];
       
-      // Вычисляем аналитику
       const analytics = calculateAnalytics(games, humanBotsList, 'human');
       setHumanBotsData(analytics);
       
@@ -75,12 +69,10 @@ const NewBotAnalytics = () => {
     }
   };
 
-  // Получение данных аналитики для обычных ботов
   const fetchRegularBotsAnalytics = async () => {
     try {
       setLoading(true);
       
-      // Проверяем наличие токена авторизации
       const token = localStorage.getItem('token');
       if (!token) {
         showErrorRU('Необходима авторизация для доступа к аналитике');
@@ -89,7 +81,6 @@ const NewBotAnalytics = () => {
         return;
       }
       
-      // Получаем игры обычных ботов
       const gamesResponse = await get('/admin/games', {
         page: 1,
         limit: 1000,
@@ -98,7 +89,6 @@ const NewBotAnalytics = () => {
       
       const games = gamesResponse.games || [];
       
-      // Вычисляем аналитику
       const analytics = calculateAnalytics(games, regularBotsList, 'regular');
       setRegularBotsData(analytics);
       
@@ -123,12 +113,10 @@ const NewBotAnalytics = () => {
     }
   };
 
-  // Функция для вычисления аналитики
   const calculateAnalytics = (games, bots, botType) => {
     const now = new Date();
     let startTime;
     
-    // Определяем временной диапазон
     switch (timeRange) {
       case '24h':
         startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -143,20 +131,17 @@ const NewBotAnalytics = () => {
         startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000);
     }
 
-    // Фильтруем игры по времени
     const filteredGames = games.filter(game => {
       const gameDate = new Date(game.created_at);
       return gameDate >= startTime;
     });
 
-    // Общая статистика
     const totalGames = filteredGames.length;
     const completedGames = filteredGames.filter(game => game.status === 'completed');
     const activeGames = filteredGames.filter(game => game.status === 'active');
     const activeBots = bots.filter(bot => bot.is_active || bot.active);
     const inactiveBots = bots.filter(bot => !bot.is_active && !bot.active);
 
-    // Статистика по каждому боту
     const botStats = bots.map(bot => {
       const botGames = filteredGames.filter(game => game.creator_id === bot.id);
       const botCompletedGames = botGames.filter(game => game.status === 'completed');
@@ -166,7 +151,6 @@ const NewBotAnalytics = () => {
       const avgBetSize = botGames.length > 0 ? totalBetAmount / botGames.length : 0;
       const winRate = botCompletedGames.length > 0 ? (botWins.length / botCompletedGames.length) * 100 : 0;
       
-      // Вычисляем чистую прибыль/убыток
       let netProfit = 0;
       botCompletedGames.forEach(game => {
         if (game.winner_id === bot.id) {
@@ -190,12 +174,10 @@ const NewBotAnalytics = () => {
       };
     });
 
-    // Топ-5 самых успешных ботов
     const topBots = botStats
       .sort((a, b) => parseFloat(b.winRate) - parseFloat(a.winRate))
       .slice(0, 5);
 
-    // Генерация данных для графиков
     const chartData = generateChartData(filteredGames, startTime, timeRange);
 
     return {
@@ -216,7 +198,6 @@ const NewBotAnalytics = () => {
     };
   };
 
-  // Генерация данных для графиков
   const generateChartData = (games, startTime, timeRange) => {
     const now = new Date();
     const intervals = timeRange === '24h' ? 24 : timeRange === '7d' ? 7 : 30;
@@ -231,7 +212,6 @@ const NewBotAnalytics = () => {
       const intervalStart = new Date(startTime.getTime() + i * intervalDuration);
       const intervalEnd = new Date(startTime.getTime() + (i + 1) * intervalDuration);
       
-      // Генерация лейблов
       if (timeRange === '24h') {
         labels.push(intervalStart.getHours().toString().padStart(2, '0') + ':00');
       } else if (timeRange === '7d') {
@@ -240,7 +220,6 @@ const NewBotAnalytics = () => {
         labels.push(intervalStart.getDate().toString());
       }
 
-      // Фильтрация игр для данного интервала
       const intervalGames = games.filter(game => {
         const gameDate = new Date(game.created_at);
         return gameDate >= intervalStart && gameDate < intervalEnd;
@@ -270,7 +249,6 @@ const NewBotAnalytics = () => {
     };
   };
 
-  // Получение данных для графиков
   const getGameVolumeChartData = () => {
     const data = activeTab === 'human' ? humanBotsData : regularBotsData;
     if (!data.chartData) return { labels: [], datasets: [] };
@@ -325,7 +303,6 @@ const NewBotAnalytics = () => {
     };
   };
 
-  // Эффекты для загрузки данных
   useEffect(() => {
     fetchHumanBots();
     fetchRegularBots();

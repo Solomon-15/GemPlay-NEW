@@ -69,16 +69,13 @@ const Shop = ({ user, onUpdateUser }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Звук успешной покупки гемов
       gem.buy();
       
       showSuccess(`Successfully purchased ${quantity} ${gemType} gem${quantity > 1 ? 's' : ''}!`);
       await fetchBalance();
       
-      // 🔄 ОБНОВЛЯЕМ ЛОКАЛЬНЫЙ ИНВЕНТАРЬ ГЕМОВ
       await refreshInventory();
       
-      // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY ПОСЛЕ ПОКУПКИ ГЕМОВ
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       console.log(`💎 Bought ${quantity} ${gemType} gems - triggering lobby refresh`);
@@ -87,7 +84,6 @@ const Shop = ({ user, onUpdateUser }) => {
         onUpdateUser();
       }
     } catch (error) {
-      // Звук ошибки
       ui.error();
       
       const errorMessage = error.response?.data?.detail || 'Error buying gems. Please try again.';

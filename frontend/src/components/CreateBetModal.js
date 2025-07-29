@@ -228,7 +228,6 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         await refreshInventory();
         onUpdateUser?.();
         
-        // 🔄 АВТОМАТИЧЕСКОЕ ОБНОВЛЕНИЕ LOBBY
         const globalRefresh = getGlobalLobbyRefresh();
         globalRefresh.triggerLobbyRefresh();
         console.log('🎮 Bet created - triggering lobby refresh');

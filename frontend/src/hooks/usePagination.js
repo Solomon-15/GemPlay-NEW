@@ -16,7 +16,6 @@ const usePagination = (initialPage = 1, itemsPerPage = 10) => {
     setTotalItems(newTotalItems);
     setTotalPages(newTotalPages);
     
-    // Если текущая страница больше общего количества страниц, переходим на последнюю
     if (currentPage > newTotalPages) {
       setCurrentPage(newTotalPages);
     }
@@ -34,7 +33,6 @@ const usePagination = (initialPage = 1, itemsPerPage = 10) => {
     offset: (currentPage - 1) * itemsPerPage
   });
 
-  // Сброс на первую страницу при изменении количества элементов на странице
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
@@ -51,7 +49,6 @@ const usePagination = (initialPage = 1, itemsPerPage = 10) => {
     resetPagination,
     getPaginationParams,
     
-    // Дополнительные вспомогательные методы
     isFirstPage: currentPage === 1,
     isLastPage: currentPage === totalPages,
     hasNextPage: currentPage < totalPages,

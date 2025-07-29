@@ -27,12 +27,9 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
-      // Мобильная адаптация
       const isMobile = viewportWidth <= 768;
       
       if (isMobile) {
-        // В мобильной версии окно раскрывается от иконки колокольчика
-        // Ограничиваем высоту до 80% экрана, чтобы не уходило за границы
         const maxHeight = viewportHeight * 0.8; // 80% высоты экрана
         const availableHeight = viewportHeight - bellRect.bottom - 20; // Доступная высота под колокольчиком
         
@@ -44,7 +41,6 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
         };
         setDropdownPosition(position);
       } else {
-        // Десктопная версия - как было
         const position = {
           top: bellRect.bottom + 2,
           left: bellRect.left,
@@ -139,7 +135,6 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
   // Block body scroll when dropdown is open
   useEffect(() => {
     if (isOpen) {
-      // Запрещаем скролл основного контента
       document.body.style.overflow = 'hidden';
       return () => {
         document.body.style.overflow = 'unset';
@@ -158,9 +153,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
     }
   };
 
-  // Handle notification click - НЕ ЗАКРЫВАТЬ ОКНО И НЕ ПЕРЕЗАГРУЖАТЬ СТРАНИЦУ
   const handleNotificationClick = async (notification, event) => {
-    // Предотвращаем стандартное поведение события
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -171,10 +164,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
       await markAsRead(notification.id);
     }
     
-    // НЕ ПЕРЕХОДИМ ПО ССЫЛКАМ АВТОМАТИЧЕСКИ - только помечаем как прочитанное
-    // Если нужна навигация, пользователь может кликнуть на специальную кнопку
     
-    // Окно остается открытым при любом клике на уведомление
   };
 
   // Format time ago helper

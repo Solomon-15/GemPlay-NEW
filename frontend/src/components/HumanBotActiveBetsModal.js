@@ -22,7 +22,6 @@ const HumanBotActiveBetsModal = ({
   const [creatorFilter, setCreatorFilter] = useState('all'); // 'all', 'me', 'opponent'
   const { confirm, confirmationModal } = useConfirmation();
 
-  // Загрузка цен гемов при открытии модального окна
   useEffect(() => {
     const loadGemPrices = async () => {
       await preloadGemPrices();
@@ -30,7 +29,6 @@ const HumanBotActiveBetsModal = ({
     loadGemPrices();
   }, []);
 
-  // Загрузка активных ставок при открытии модального окна
   useEffect(() => {
     if (isOpen && bot) {
       fetchActiveBets();
@@ -54,7 +52,6 @@ const HumanBotActiveBetsModal = ({
     if (bet.is_creator) {
       return 'Я'; // Бот создал эту ставку
     } else {
-      // Ставку создал оппонент
       return bet.opponent_name || 'Оппонент';
     }
   };
@@ -122,7 +119,6 @@ const HumanBotActiveBetsModal = ({
   const handleDeleteBetsHistory = async () => {
     console.log('🗑️ Starting delete bets history for bot:', bot.id);
     
-    // Показать стилизованное диалог подтверждения
     const confirmed = await confirm({
       title: 'Удаление истории ставок',
       message: `Вы уверены, что хотите удалить всю историю завершённых ставок для Human-бота "${bot.name}"?\n\nБудут удалены только ставки со статусом "Завершена", "Отменена" и "Архивирована".\nАктивные ставки останутся нетронутыми.\n\nЭто действие необратимо!`,
@@ -156,7 +152,6 @@ const HumanBotActiveBetsModal = ({
         
         addNotification?.(`Скрыто ${hiddenCount} завершённых ставок из истории`, 'success');
         
-        // Перезагружаем данные
         console.log('🗑️ Reloading bets data');
         if (showAllBets) {
           await fetchAllBets();
@@ -192,7 +187,6 @@ const HumanBotActiveBetsModal = ({
       if (response.data && response.data.success !== false) {
         addNotification?.(`Очищено ${response.data.cleared_count || 0} завершенных ставок`, 'success');
         
-        // Если показываем все ставки, перезагружаем их, иначе только активные
         if (showAllBets) {
           await fetchAllBets();
         } else {
@@ -400,7 +394,6 @@ const HumanBotActiveBetsModal = ({
                       const dateStr = betDate.toLocaleDateString('ru-RU');
                       const timeStr = betDate.toLocaleTimeString('ru-RU');
                       
-                      // Определяем является ли ставка активной
                       const isActiveBet = ['WAITING', 'ACTIVE', 'REVEAL'].includes(bet.status?.toUpperCase());
                       
                       return (

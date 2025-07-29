@@ -59,10 +59,8 @@ const HumanBotsManagement = () => {
   const [priorityFields, setPriorityFields] = useState(true);
   const [loadingPriority, setLoadingPriority] = useState(false);
 
-  // Состояние для табов
   const [activeTab, setActiveTab] = useState('bots'); // 'bots' или 'settings'
 
-  // Состояние для настроек Human-ботов
   const [humanBotSettings, setHumanBotSettings] = useState({
     max_active_bets_human: 100,
     auto_play_enabled: false,
@@ -433,9 +431,7 @@ const HumanBotsManagement = () => {
       
       if (response.success !== false) {
         addNotification(response.message || 'Настройки сохранены успешно', 'success');
-        // Обновить настройки после сохранения
         await fetchHumanBotSettings();
-        // Обновить список ботов если были изменения
         if (response.adjusted_bots_count > 0) {
           await fetchHumanBots();
         }
@@ -447,7 +443,6 @@ const HumanBotsManagement = () => {
     }
   };
 
-  // Обновленный useEffect для загрузки настроек при переключении на вкладку настроек
   useEffect(() => {
     if (activeTab === 'settings') {
       fetchHumanBotSettings();
@@ -455,18 +450,15 @@ const HumanBotsManagement = () => {
   }, [activeTab]);
 
   const handleCreateBot = async () => {
-    // Проверяем, что форма не отправляется уже
     if (loading) {
       return;
     }
 
-    // Валидация процентов
     if (createFormData.win_percentage + createFormData.loss_percentage + createFormData.draw_percentage !== 100) {
       addNotification('Сумма процентов должна равняться 100%', 'error');
       return;
     }
 
-    // Проверка уникальности имени для нового бота
     if (!editingBot) {
       const existingBot = humanBots.find(bot => 
         bot.name.toLowerCase() === createFormData.name.toLowerCase()
@@ -482,14 +474,11 @@ const HumanBotsManagement = () => {
       const isCreating = !editingBot;
       
       if (editingBot) {
-        // Редактирование существующего бота
         response = await executeOperation(`/admin/human-bots/${editingBot.id}`, 'PUT', createFormData);
       } else {
-        // Создание нового бота
         response = await executeOperation('/admin/human-bots', 'POST', createFormData);
       }
       
-      // Успешное выполнение операции
       const botName = createFormData.name || 'Human-бот';
       
       if (isCreating) {
@@ -498,12 +487,9 @@ const HumanBotsManagement = () => {
         addNotification(`Human-бот "${botName}" успешно отредактирован`, 'success');
       }
       
-      // Закрытие модального окна
       setShowCreateForm(false);
       setEditingBot(null);
       
-      // Сброс формы только при создании (согласно требованиям - форму не сбрасывать)
-      // Но нужно сбросить editingBot состояние
       if (isCreating) {
         setCreateFormData({
           name: '',
@@ -525,21 +511,17 @@ const HumanBotsManagement = () => {
         });
       }
       
-      // Обновление Lobby для актуализации аватарок
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
       
-      // Обновление списка Human-ботов
       await fetchHumanBots();
       
     } catch (error) {
       console.error('Ошибка создания/редактирования Human-бота:', error);
       
-      // Обработка специфических ошибок
       if (error.message.includes('Bot name already exists')) {
         addNotification(`Бот с именем "${createFormData.name}" уже существует. Пожалуйста, выберите другое имя.`, 'error');
       } else {
-        // Разные сообщения для создания и редактирования
         const operation = editingBot ? 'редактировании' : 'создании';
         addNotification(`Ошибка при ${operation} бота. Попробуйте еще раз.`, 'error');
       }
@@ -553,15 +535,11 @@ const HumanBotsManagement = () => {
     }
 
     try {
-      // Подготовим данные для отправки
       const payload = {
         ...bulkCreateData,
-        // Сохраним обратную совместимость для delay_range
         delay_range: [bulkCreateData.min_delay || 30, bulkCreateData.max_delay || 120],
-        // Отправим и отдельные поля для задержки
         min_delay: bulkCreateData.min_delay || 30,
         max_delay: bulkCreateData.max_delay || 120,
-        // Отправим данные ботов
         bots: bulkCreateData.bots || []
       };
 
@@ -572,14 +550,12 @@ const HumanBotsManagement = () => {
         fetchHumanBots();
         fetchStats();
         
-        // Показать детали создания
         if (response.failed_count && response.failed_count > 0) {
           addNotification(`Создано ${response.created_count} ботов, не удалось создать: ${response.failed_count}`, 'warning');
         } else {
           addNotification(`Успешно создано ${response.created_count} ботов`, 'success');
         }
         
-        // Сбросить форму
         setBulkCreateData({
           count: 10,
           character: 'BALANCED',
@@ -678,7 +654,6 @@ const HumanBotsManagement = () => {
     return `${value.toFixed(1)}%`;
   };
 
-  // Функция для генерации случайных имен
   const generateRandomName = () => {
     const maleNames = ['Alikhan', 'Nurzhan', 'Ayan', 'Ruslan', 'Bekzat','Yerlan', 'Zhanibek', 'Omir', 'Azamat', 'Temirlan',   'Aleksandr', 'Dmitriy', 'Maksim', 'Andrey', 'Sergey', 'Aleksey', 'Vladimir', 'Pavel', 'Roman', 'Artem'];
     const femaleNames = ['Aigerim', 'Gulnara', 'Aizhan', 'Sabina', 'Saule', 'Dilnaz', 'Madina', 'Zhanar', 'Aruzhan', 'Gulzhana', 'Anna', 'Mariya', 'Elena', 'Natalya', 'Olga', 'Tatyana', 'Irina', 'Svetlana', 'Ekaterina', 'Viktoriya'];
@@ -696,7 +671,6 @@ const HumanBotsManagement = () => {
     };
   };
 
-  // Функция для инициализации данных ботов
   const initializeBots = (count) => {
     const bots = [];
     for (let i = 0; i < count; i++) {
@@ -710,7 +684,6 @@ const HumanBotsManagement = () => {
     return bots;
   };
 
-  // Обновляем количество ботов и инициализируем их данные
   const updateBotCount = (count) => {
     const bots = initializeBots(count);
     setBulkCreateData({
@@ -720,7 +693,6 @@ const HumanBotsManagement = () => {
     });
   };
 
-  // Обновляем данные конкретного бота
   const updateBotData = (botId, field, value) => {
     const updatedBots = bulkCreateData.bots.map(bot => 
       bot.id === botId ? { ...bot, [field]: value } : bot

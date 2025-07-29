@@ -32,7 +32,6 @@ const useConfirmation = () => {
       } catch (error) {
         setLoading(false);
         console.error('Error in confirmation action:', error);
-        // Не закрываем модальное окно при ошибке
       }
     } else {
       setIsOpen(false);

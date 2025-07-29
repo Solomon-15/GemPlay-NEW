@@ -11,14 +11,12 @@ export const useBotsManagement = () => {
   const { botsApi, errorUtils, loading: apiLoading } = useApi();
   const { showSuccessRU, showErrorRU } = useNotifications();
   
-  // Централизованные состояния
   const [botsList, setBotsList] = useState([]);
   const [stats, setStats] = useState({});
   const [activeBetsStats, setActiveBetsStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Состояния операций (объединенные из двух хуков)
   const [operationStates, setOperationStates] = useState({});
   const [validationErrors, setValidationErrors] = useState({});
 
@@ -137,7 +135,6 @@ export const useBotsManagement = () => {
         showSuccessRU(response.message || 'Бот успешно создан');
         setValidationErrors({});
         
-        // Обновляем данные
         await Promise.all([fetchBotsList(), fetchStats()]);
         
         return response;
@@ -170,7 +167,6 @@ export const useBotsManagement = () => {
         showSuccessRU(response.message || 'Бот успешно обновлен');
         setValidationErrors({});
         
-        // Обновляем список
         await fetchBotsList();
         
         return response;
@@ -202,7 +198,6 @@ export const useBotsManagement = () => {
       if (response.success) {
         showSuccessRU(response.message || 'Бот успешно удален');
         
-        // Обновляем данные
         await Promise.all([fetchBotsList(), fetchStats()]);
         
         return response;
@@ -231,7 +226,6 @@ export const useBotsManagement = () => {
         const newStatus = !currentStatus;
         showSuccessRU(response.message || `Бот ${newStatus ? 'включен' : 'выключен'}`);
         
-        // Обновляем данные
         await Promise.all([fetchBotsList(), fetchStats()]);
         
         return response;
@@ -311,7 +305,6 @@ export const useBotsManagement = () => {
       if (response.success) {
         showSuccessRU(response.message || 'Лимит успешно обновлен');
         
-        // Обновляем список
         await fetchBotsList();
         
         return response;
@@ -343,7 +336,6 @@ export const useBotsManagement = () => {
         if (response.success) {
           showSuccessRU(response.message || `Все боты ${enabled ? 'включены' : 'выключены'}`);
           
-          // Обновляем данные
           await Promise.all([fetchBotsList(), fetchStats()]);
           
           return response;
@@ -374,7 +366,6 @@ export const useBotsManagement = () => {
           showSuccessRU(response.message || 'Обычные боты запущены');
         }
         
-        // Обновляем данные
         await Promise.all([fetchStats(), fetchActiveBetsStats()]);
         
         return response;
@@ -442,19 +433,16 @@ export const useBotsManagement = () => {
   }, [fetchBotsList, fetchStats, fetchActiveBetsStats]);
 
   return {
-    // Данные
     botsList,
     stats,
     activeBetsStats,
     loading,
     error,
     
-    // Состояния операций (объединенные)
     operationStates,
     validationErrors,
     apiLoading, // Из useApi
     
-    // Основные операции (объединенные и оптимизированные)
     fetchBotsList,
     fetchStats,
     fetchActiveBetsStats,
@@ -464,25 +452,20 @@ export const useBotsManagement = () => {
     toggleBotStatus,
     executeOperation, // Добавляем универсальную функцию
     
-    // Специальные операции
     fetchBotActiveBets,
     fetchBotCycleHistory,
     updateBotLimit,
     
-    // Массовые операции
     bulkOperations,
     
-    // Утилиты (из useBotOperations)
     stateUtils,
     validateBotData,
     getOperationState,
     
-    // Удобные проверки состояний
     isCreating: getOperationState('creating'),
     isTogglingAll: getOperationState('toggling_all'),
     isStartingRegular: getOperationState('starting_regular'),
     
-    // Общие утилиты
     refresh: useCallback(async () => {
       await Promise.all([
         fetchBotsList(),
