@@ -9465,6 +9465,18 @@ async def get_all_users(
                 
             cleaned_users.append(cleaned_user)
         
+        # Если сортируем по TOTAL, сортируем cleaned_users и применяем пагинацию
+        if sort_by_total:
+            # Сортируем по total_balance
+            cleaned_users.sort(key=lambda x: x["total_balance"], reverse=(sort_direction == -1))
+            
+            # Применяем пагинацию
+            total_after_filter = len(cleaned_users)
+            cleaned_users = cleaned_users[skip:skip + limit]
+            
+            # Обновляем total для правильной пагинации
+            total = total_after_filter
+        
         return {
             "users": cleaned_users,
             "total": total,
