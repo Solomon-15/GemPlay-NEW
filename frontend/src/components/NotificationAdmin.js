@@ -959,23 +959,41 @@ const NotificationAdmin = ({ user }) => {
                       <div className="flex-1">
                         <p className="text-gray-300 text-sm mb-3 line-clamp-2">{item.message}</p>
                         
-                        {/* Прогресс-бар */}
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-1">
-                            <div className="flex justify-between text-xs mb-1">
-                              <span className="text-gray-400">Прочитано</span>
-                              <span className={`font-bold ${getReadPercentageColor(item.read_percentage)}`}>
-                                {item.read_count}/{item.total_recipients} ({item.read_percentage}%)
-                              </span>
-                            </div>
-                            <div className="w-full bg-gray-700 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-300 ${getReadPercentageBgColor(item.read_percentage)}`}
-                                style={{ width: `${item.read_percentage}%` }}
-                              ></div>
+                        {/* Отображение для индивидуальных и массовых уведомлений */}
+                        {isIndividualNotification(item.type) ? (
+                          // Для индивидуальных уведомлений - простая информация
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-1">
+                              <div className="text-xs text-gray-400">
+                                <span>📅 Отправлено: {new Date(item.created_at).toLocaleString('ru-RU')}</span>
+                                {item.read_count > 0 && item.read_users.length > 0 && item.read_users[0].read_at && (
+                                  <span className="ml-4">✅ Прочитано: {new Date(item.read_users[0].read_at).toLocaleString('ru-RU')}</span>
+                                )}
+                                {item.read_count === 0 && (
+                                  <span className="ml-4 text-red-400">❌ Не прочитано</span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        ) : (
+                          // Для массовых уведомлений - прогресс-бар и счетчики
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-1">
+                              <div className="flex justify-between text-xs mb-1">
+                                <span className="text-gray-400">Прочитано</span>
+                                <span className={`font-bold ${getReadPercentageColor(item.read_percentage)}`}>
+                                  {item.read_count}/{item.total_recipients} ({item.read_percentage}%)
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div 
+                                  className={`h-2 rounded-full transition-all duration-300 ${getReadPercentageBgColor(item.read_percentage)}`}
+                                  style={{ width: `${item.read_percentage}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex items-center space-x-2 ml-4">
