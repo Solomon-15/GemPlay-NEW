@@ -1023,49 +1023,108 @@ const NotificationAdmin = ({ user }) => {
                     {/* Развернутые детали */}
                     {expandedNotification === item.notification_id && (
                       <div className="mt-4 pt-4 border-t border-gray-600">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                          {/* Прочитавшие пользователи - ЗЕЛЕНЫЙ ФОН И ТЕКСТ */}
-                          <div>
-                            <h4 className="text-green-400 font-bold mb-3">
-                              ✅ Прочитали ({item.read_count})
-                            </h4>
-                            <div className="max-h-64 overflow-y-auto space-y-2">
-                              {item.read_users.map((user) => (
-                                <div key={user.user_id} className="bg-green-900 bg-opacity-20 rounded p-2">
-                                  <div className="text-white text-sm font-medium">{user.username}</div>
-                                  <div className="text-gray-400 text-xs">{user.email}</div>
-                                  {user.read_at && (
-                                    <div className="text-green-400 text-xs">
-                                      Прочитано: {new Date(user.read_at).toLocaleString('ru-RU')}
+                        {isIndividualNotification(item.type) ? (
+                          // Для индивидуальных уведомлений - простое отображение с полным текстом
+                          <div className="space-y-4">
+                            {/* Полный текст сообщения */}
+                            <div className="bg-surface-card rounded-lg p-4">
+                              <h4 className="text-white font-bold mb-2">📝 Полный текст уведомления:</h4>
+                              <div className="bg-gray-800 rounded p-3">
+                                <p className="text-gray-200 whitespace-pre-wrap">{item.message}</p>
+                              </div>
+                            </div>
+                            
+                            {/* Информация о получателе */}
+                            <div className="bg-surface-card rounded-lg p-4">
+                              <h4 className="text-blue-400 font-bold mb-3">👤 Получатель:</h4>
+                              {item.read_count > 0 && item.read_users.length > 0 ? (
+                                <div className="bg-green-900 bg-opacity-20 rounded p-3">
+                                  <div className="text-white font-medium">{item.read_users[0].username}</div>
+                                  <div className="text-gray-400 text-sm">{item.read_users[0].email}</div>
+                                  <div className="mt-2 space-y-1">
+                                    <div className="text-blue-400 text-sm">
+                                      📅 Отправлено: {new Date(item.created_at).toLocaleString('ru-RU')}
                                     </div>
-                                  )}
-                                  {/* ЗЕЛЕНЫЙ СТАТУС "ПРОЧИТАНО" */}
-                                  <div className="mt-1">
+                                    {item.read_users[0].read_at && (
+                                      <div className="text-green-400 text-sm">
+                                        ✅ Прочитано: {new Date(item.read_users[0].read_at).toLocaleString('ru-RU')}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="mt-2">
                                     <span className="inline-block px-2 py-1 text-xs font-bold bg-green-600 text-white rounded">
                                       Прочитано
                                     </span>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Не прочитавшие пользователи */}
-                          <div>
-                            <h4 className="text-red-400 font-bold mb-3">
-                              ❌ Не прочитали ({item.unread_count})
-                            </h4>
-                            <div className="max-h-64 overflow-y-auto space-y-2">
-                              {item.unread_users.map((user) => (
-                                <div key={user.user_id} className="bg-red-900 bg-opacity-20 rounded p-2">
-                                  <div className="text-white text-sm font-medium">{user.username}</div>
-                                  <div className="text-gray-400 text-xs">{user.email}</div>
-                                  <div className="text-red-400 text-xs">Не прочитано</div>
+                              ) : item.unread_count > 0 && item.unread_users.length > 0 ? (
+                                <div className="bg-red-900 bg-opacity-20 rounded p-3">
+                                  <div className="text-white font-medium">{item.unread_users[0].username}</div>
+                                  <div className="text-gray-400 text-sm">{item.unread_users[0].email}</div>
+                                  <div className="mt-2">
+                                    <div className="text-blue-400 text-sm">
+                                      📅 Отправлено: {new Date(item.created_at).toLocaleString('ru-RU')}
+                                    </div>
+                                    <div className="text-red-400 text-sm">
+                                      ❌ Не прочитано
+                                    </div>
+                                  </div>
+                                  <div className="mt-2">
+                                    <span className="inline-block px-2 py-1 text-xs font-bold bg-red-600 text-white rounded">
+                                      Не прочитано
+                                    </span>
+                                  </div>
                                 </div>
-                              ))}
+                              ) : (
+                                <div className="text-gray-400 text-sm">Информация о получателе недоступна</div>
+                              )}
                             </div>
                           </div>
-                        </div>
+                        ) : (
+                          // Для массовых уведомлений - обычная структура со списками пользователей
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* Прочитавшие пользователи */}
+                            <div>
+                              <h4 className="text-green-400 font-bold mb-3">
+                                ✅ Прочитали ({item.read_count})
+                              </h4>
+                              <div className="max-h-64 overflow-y-auto space-y-2">
+                                {item.read_users.map((user) => (
+                                  <div key={user.user_id} className="bg-green-900 bg-opacity-20 rounded p-2">
+                                    <div className="text-white text-sm font-medium">{user.username}</div>
+                                    <div className="text-gray-400 text-xs">{user.email}</div>
+                                    {user.read_at && (
+                                      <div className="text-green-400 text-xs">
+                                        Прочитано: {new Date(user.read_at).toLocaleString('ru-RU')}
+                                      </div>
+                                    )}
+                                    <div className="mt-1">
+                                      <span className="inline-block px-2 py-1 text-xs font-bold bg-green-600 text-white rounded">
+                                        Прочитано
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Не прочитавшие пользователи */}
+                            <div>
+                              <h4 className="text-red-400 font-bold mb-3">
+                                ❌ Не прочитали ({item.unread_count})
+                              </h4>
+                              <div className="max-h-64 overflow-y-auto space-y-2">
+                                {item.unread_users.map((user) => (
+                                  <div key={user.user_id} className="bg-red-900 bg-opacity-20 rounded p-2">
+                                    <div className="text-white text-sm font-medium">{user.username}</div>
+                                    <div className="text-gray-400 text-xs">{user.email}</div>
+                                    <div className="text-red-400 text-xs">Не прочитано</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
