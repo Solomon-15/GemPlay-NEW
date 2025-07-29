@@ -9337,8 +9337,12 @@ async def get_all_users(
                 "email": "email", 
                 "role": None,  # Специальная обработка для role - будем сортировать после определения user_type
                 "status": "status",
+                "online_status": None,  # Специальная обработка для online_status - зависит от типа пользователя
                 "balance": "virtual_balance",
                 "total": None,  # Специальная обработка для total - будем сортировать после расчета
+                "gems": "total_gems_value",  # Сортировка по стоимости гемов
+                "bets": "active_bets_count",  # Сортировка по количеству активных ставок
+                "games": "total_games_played",  # Сортировка по количеству игр
                 "registration_date": "created_at",
                 "last_login": "last_login"
             }
