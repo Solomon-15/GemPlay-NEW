@@ -465,7 +465,8 @@ def test_response_structure_validation() -> None:
         # Show sample notification structure
         print_success("Sample notification structure:")
         for key, value in sample_notification.items():
-            print_success(f"  {key}: {value} (type: {type(value).__name__})")
+            if key not in ["payload"]:  # Skip complex nested objects for readability
+                print_success(f"  {key}: {value} (type: {type(value).__name__})")
     
     else:
         print_warning("No notifications available to validate individual structure")
