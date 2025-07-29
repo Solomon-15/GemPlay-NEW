@@ -21199,13 +21199,25 @@ async def get_detailed_notification_analytics(
         # Get total count of unique notifications
         count_pipeline = [
             {"$match": query},
+            {
+                "$addFields": {
+                    "rounded_time": {
+                        "$dateFromParts": {
+                            "year": {"$year": "$created_at"},
+                            "month": {"$month": "$created_at"},
+                            "day": {"$dayOfMonth": "$created_at"},
+                            "hour": {"$hour": "$created_at"},
+                            "minute": {"$minute": "$created_at"}
+                        }
+                    }
+                }
+            },
             {"$group": {
                 "_id": {
-                    "notification_id": {"$ifNull": ["$notification_id", "$_id"]},
                     "title": "$title",
                     "message": "$message",
                     "type": "$type", 
-                    "created_at": "$created_at"
+                    "rounded_time": "$rounded_time"
                 }
             }},
             {"$count": "total"}
