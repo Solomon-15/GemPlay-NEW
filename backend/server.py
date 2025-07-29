@@ -21307,12 +21307,25 @@ async def get_detailed_notification_analytics(
             
             # Для массовых уведомлений найдем ВСЕ экземпляры этого уведомления
             if not is_individual_notification:
-                # Ищем все уведомления с такими же параметрами
+                # Округляем время для поиска (до минуты)
+                created_at = notification.get("created_at")
+                if isinstance(created_at, datetime):
+                    rounded_time = created_at.replace(second=0, microsecond=0)
+                    time_range_start = rounded_time
+                    time_range_end = rounded_time.replace(second=59, microsecond=999999)
+                else:
+                    time_range_start = created_at
+                    time_range_end = created_at
+
+                # Ищем все уведомления с такими же параметрами в пределах минуты
                 mass_notification_query = {
                     "title": notification.get("title"),
                     "message": notification.get("message"),
                     "type": notification.get("type"),
-                    "created_at": notification.get("created_at")
+                    "created_at": {
+                        "$gte": time_range_start,
+                        "$lte": time_range_end
+                    }
                 }
                 
                 # Получаем все экземпляры этого массового уведомления
