@@ -31,8 +31,8 @@ const UserManagement = ({ user: currentUser }) => {
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
   
-  // Пагинация
-  const pagination = usePagination(1, 10);
+  // Пагинация (изменено на 20 согласно требованию)
+  const pagination = usePagination(1, 20);
   
   // Modal states
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
