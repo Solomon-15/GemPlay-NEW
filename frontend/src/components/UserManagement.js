@@ -21,6 +21,8 @@ const UserManagement = ({ user: currentUser }) => {
   const [sortOrder, setSortOrder] = useState('asc');
   const [balanceMin, setBalanceMin] = useState('');
   const [balanceMax, setBalanceMax] = useState('');
+  const [totalMin, setTotalMin] = useState('');      // Новый фильтр по минимальному TOTAL
+  const [totalMax, setTotalMax] = useState('');      // Новый фильтр по максимальному TOTAL
   
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date()); // Для живого счетчика
