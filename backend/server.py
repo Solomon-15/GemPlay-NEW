@@ -21160,19 +21160,32 @@ async def get_detailed_notification_analytics(
             query["created_at"] = date_query
         
         # Get unique notifications with pagination
-        # Group by a combination of fields to handle both individual and mass notifications correctly
+        # For mass notifications, group by title+message+type, ignoring exact timestamp differences
         pipeline = [
             {"$match": query},
+            {
+                "$addFields": {
+                    # Округляем время до минуты для группировки массовых рассылок
+                    "rounded_time": {
+                        "$dateFromParts": {
+                            "year": {"$year": "$created_at"},
+                            "month": {"$month": "$created_at"},
+                            "day": {"$dayOfMonth": "$created_at"},
+                            "hour": {"$hour": "$created_at"},
+                            "minute": {"$minute": "$created_at"}
+                        }
+                    }
+                }
+            },
             {"$group": {
                 "_id": {
-                    "notification_id": {"$ifNull": ["$notification_id", "$_id"]},
                     "title": "$title",
                     "message": "$message", 
                     "type": "$type",
-                    "created_at": "$created_at"
+                    "rounded_time": "$rounded_time"
                 },
                 "notification": {"$first": "$$ROOT"},
-                "total_instances": {"$sum": 1}  # Count how many instances of this notification exist
+                "total_instances": {"$sum": 1}
             }},
             {"$sort": {"notification.created_at": -1}},
             {"$skip": (page - 1) * limit},
