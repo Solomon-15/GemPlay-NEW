@@ -5492,7 +5492,90 @@ async def join_game(
             detail=f"Failed to join game: {str(e)}"
         )
 
-# NOTE: Games complete automatically after opponent joins and chooses move
+# Commit-reveal game flow endpoints
+
+@api_router.post("/games/{game_id}/choose-move", response_model=dict)
+async def choose_move_for_active_game(
+    game_id: str,
+    move_data: dict,
+    current_user: User = Depends(get_current_user_with_security)
+):
+    """Allow opponent to choose their move in an active game (commit-reveal scheme)."""
+    logger.info(f"🎯 CHOOSE_MOVE called for user {current_user.id}, game {game_id}")
+    try:
+        # Get the game
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Game not found"
+            )
+        
+        game_obj = Game(**game)
+        
+        # Validate that this is an active game and user is the opponent
+        if game_obj.status != GameStatus.ACTIVE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Game is not in active state"
+            )
+        
+        if game_obj.opponent_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You are not the opponent in this game"
+            )
+        
+        if game_obj.opponent_move:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You have already chosen your move"
+            )
+        
+        # Check if deadline hasn't passed
+        if game_obj.active_deadline and datetime.utcnow() > game_obj.active_deadline:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Time limit expired. Game will be recreated for the creator."
+            )
+        
+        # Validate move
+        move = move_data.get("move")
+        if move not in ["rock", "paper", "scissors"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid move. Must be rock, paper, or scissors"
+            )
+        
+        # Update game with opponent's move and complete the game
+        await db.games.update_one(
+            {"id": game_id},
+            {
+                "$set": {
+                    "opponent_move": move,
+                    "started_at": datetime.utcnow(),
+                    "status": GameStatus.COMPLETED,  # Mark as completed since we have both moves
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Determine winner and complete the game
+        game_result = await determine_game_winner(game_id)
+        
+        logger.info(f"🎯 Game {game_id} completed with opponent move: {move}")
+        return game_result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error choosing move for game {game_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to choose move: {str(e)}"
+        )
+
+# NOTE: Games complete automatically after opponent chooses move
 
 @api_router.post("/admin/bots/{bot_id}/reset-bets", response_model=dict)
 async def reset_bot_bets(
