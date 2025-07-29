@@ -394,8 +394,8 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
                               {notification.message}
                             </div>
                             <div className="text-xs text-gray-500 pt-1 border-t border-gray-600">
-                              <div>Дата: {new Date(notification.created_at).toLocaleString('ru-RU')}</div>
-                              <div>Отправитель: {notification.type === 'admin_notification' ? 'Администратор' : 'Система'}</div>
+                              <div>Date: {new Date(notification.created_at).toLocaleString('en-US')}</div>
+                              <div>Sender: {notification.type === 'admin_notification' ? 'Administrator' : 'System'}</div>
                             </div>
                           </div>
                         </div>
