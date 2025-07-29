@@ -426,12 +426,33 @@ const UserManagement = ({ user: currentUser }) => {
     pagination.handlePageChange(1);
   };
   
-  // Функция для получения иконки сортировки
+  // Функция для получения стилизованной иконки сортировки
   const getSortIcon = (columnField) => {
     if (sortBy !== columnField) {
-      return '↕️'; // Нет активной сортировки
+      // Нет активной сортировки - показываем нейтральную иконку
+      return (
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" className="opacity-50">
+          <path d="M6 2L8 4H4L6 2Z" />
+          <path d="M6 10L8 8H4L6 10Z" />
+        </svg>
+      );
     }
-    return sortOrder === 'desc' ? '↓' : '↑';
+    
+    if (sortOrder === 'desc') {
+      // Сортировка по убыванию - стрелка вниз
+      return (
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" className="text-accent-primary">
+          <path d="M6 10L2 6H10L6 10Z" />
+        </svg>
+      );
+    } else {
+      // Сортировка по возрастанию - стрелка вверх
+      return (
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" className="text-accent-primary">
+          <path d="M6 2L10 6H2L6 2Z" />
+        </svg>
+      );
+    }
   };
 
   const handleEditUser = (user) => {
