@@ -21564,7 +21564,7 @@ async def delete_notifications_by_ids(
     request: DeleteNotificationsByIdsRequest,
     current_admin: User = Depends(get_current_admin)
 ):
-    """Ручное удаление уведомлений по ID"""
+    """Ручное удаление уведомлений по ID - удаляет целые сообщения со всеми экземплярами"""
     try:
         if not request.notification_ids:
             raise HTTPException(
@@ -21572,19 +21572,65 @@ async def delete_notifications_by_ids(
                 detail="Список ID не может быть пустым"  
             )
         
-        # Удаляем уведомления по ID
-        delete_result = await db.notifications.delete_many({
-            "id": {"$in": request.notification_ids}
-        })
+        total_deleted_count = 0
+        individual_notification_types = {"bet_accepted", "match_result", "gem_gift", "commission_freeze"}
         
-        deleted_count = delete_result.deleted_count
+        # Обрабатываем каждый ID отдельно
+        for notification_id in request.notification_ids:
+            # Сначала найдем уведомление, чтобы определить его тип
+            notification = await db.notifications.find_one({
+                "$or": [
+                    {"id": notification_id},
+                    {"_id": ObjectId(notification_id) if ObjectId.is_valid(notification_id) else None}
+                ]
+            })
+            
+            if not notification:
+                continue  # Пропускаем, если уведомление не найдено
+            
+            notification_type = notification.get("type", "unknown")
+            is_individual_notification = notification_type in individual_notification_types
+            
+            if is_individual_notification:
+                # Для индивидуальных уведомлений удаляем только конкретное уведомление
+                delete_result = await db.notifications.delete_many({
+                    "$or": [
+                        {"id": notification_id},
+                        {"_id": ObjectId(notification_id) if ObjectId.is_valid(notification_id) else None}
+                    ]
+                })
+                total_deleted_count += delete_result.deleted_count
+            else:
+                # Для массовых уведомлений удаляем ВСЕ экземпляры с такими же параметрами
+                created_at = notification.get("created_at")
+                if isinstance(created_at, datetime):
+                    rounded_time = created_at.replace(second=0, microsecond=0)
+                    time_range_start = rounded_time
+                    time_range_end = rounded_time.replace(second=59, microsecond=999999)
+                else:
+                    time_range_start = created_at
+                    time_range_end = created_at
+
+                # Удаляем все экземпляры массового уведомления
+                mass_delete_query = {
+                    "title": notification.get("title"),
+                    "message": notification.get("message"),
+                    "type": notification.get("type"),
+                    "created_at": {
+                        "$gte": time_range_start,
+                        "$lte": time_range_end
+                    }
+                }
+                
+                delete_result = await db.notifications.delete_many(mass_delete_query)
+                total_deleted_count += delete_result.deleted_count
         
-        logger.info(f"Admin {current_admin.email} manually deleted {deleted_count} notifications by IDs")
+        logger.info(f"Admin {current_admin.email} manually deleted {total_deleted_count} notifications by IDs (including all instances)")
         
         return {
             "success": True,
-            "message": f"Удалено {deleted_count} уведомлений",
-            "deleted_count": deleted_count
+            "message": f"Удалено {total_deleted_count} уведомлений (включая все экземпляры)",
+            "deleted_count": total_deleted_count
         }
         
     except Exception as e:
