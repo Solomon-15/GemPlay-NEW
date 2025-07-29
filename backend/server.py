@@ -5448,12 +5448,12 @@ async def join_game(
             {
                 "$set": {
                     "opponent_id": current_user.id,
-                    "opponent_move": join_data.move,
                     "opponent_gems": join_data.gems,  # Save opponent's gem combination
-                    "started_at": datetime.utcnow(),
-                    "status": "ACTIVE",  # Mark as active immediately
-                    "active_deadline": datetime.utcnow() + timedelta(minutes=1),  # 1 minute to complete
-                    "is_regular_bot_game": is_regular_bot_game  # Mark if this is a regular bot game
+                    "joined_at": datetime.utcnow(),  # When opponent joined
+                    "status": "ACTIVE",  # Mark as active - waiting for opponent to choose move
+                    "active_deadline": datetime.utcnow() + timedelta(minutes=1),  # 1 minute for opponent to choose move
+                    "is_regular_bot_game": is_regular_bot_game,  # Mark if this is a regular bot game
+                    "updated_at": datetime.utcnow()
                 }
             }
         )
