@@ -9465,6 +9465,15 @@ async def get_all_users(
                 continue
             if total_max is not None and cleaned_user["total_balance"] > total_max:
                 continue
+            
+            # Применяем фильтр по онлайн статусу если указан
+            if status in ['ONLINE', 'OFFLINE']:
+                # Определяем актуальный онлайн статус
+                user_online_status = cleaned_user["bot_status"] if cleaned_user["user_type"] in ["HUMAN_BOT", "REGULAR_BOT"] else cleaned_user["online_status"]
+                if status == 'ONLINE' and user_online_status != 'ONLINE':
+                    continue
+                if status == 'OFFLINE' and user_online_status != 'OFFLINE':
+                    continue
                 
             cleaned_users.append(cleaned_user)
         
