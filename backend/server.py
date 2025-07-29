@@ -99,35 +99,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Middleware для обновления last_activity пользователей
 @app.middleware("http")
 async def update_user_activity(request: Request, call_next):
     response = await call_next(request)
     
-    # Обновляем last_activity только для аутентифицированных запросов
     if request.url.path.startswith("/api/") and "Authorization" in request.headers:
         try:
-            # Извлекаем токен из заголовка
             auth_header = request.headers.get("Authorization")
             if auth_header and auth_header.startswith("Bearer "):
                 token = auth_header.split(" ")[1]
                 
-                # Декодируем токен для получения user_id
                 try:
                     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
                     user_id = payload.get("sub")
                     
                     if user_id:
-                        # Обновляем last_activity для пользователя
                         await db.users.update_one(
                             {"id": user_id},
                             {"$set": {"last_activity": datetime.utcnow()}}
                         )
                 except JWTError:
-                    # Если токен невалидный, ничего не делаем
                     pass
         except Exception as e:
-            # Логируем ошибку, но не блокируем запрос
             logger.warning(f"Failed to update user activity: {e}")
     
     return response
@@ -153,24 +146,20 @@ def get_user_online_status(user_data):
     Returns:
         str: 'ONLINE', 'OFFLINE', или 'BANNED'
     """
-    # Если пользователь забанен, всегда возвращаем BANNED
     if user_data.get("status") == "BANNED":
         return "BANNED"
     
-    # Получаем время последней активности
     last_activity = user_data.get("last_activity")
     
     if not last_activity:
         return "OFFLINE"
     
-    # Если last_activity это строка, конвертируем в datetime
     if isinstance(last_activity, str):
         try:
             last_activity = datetime.fromisoformat(last_activity.replace('Z', '+00:00'))
         except ValueError:
             return "OFFLINE"
     
-    # Проверяем, была ли активность в последние 5 минут
     current_time = datetime.utcnow()
     five_minutes_ago = current_time - timedelta(minutes=5)
     
@@ -221,7 +210,6 @@ class BotSettingsRequest(BaseModel):
     autoActivateFromQueue: bool = True
     priorityType: str = Field(default="order")  # 'order' or 'manual'
 
-# Human Bot Settings Request model - новая модель для настроек Human-ботов
 class HumanBotSettingsRequest(BaseModel):
     max_active_bets_human: int = Field(ge=1, le=1000000, description="Максимальное количество активных ставок для всех Human ботов")
     auto_play_enabled: Optional[bool] = Field(default=False, description="Глобальное включение автоигры между Human-ботами")
@@ -473,12 +461,10 @@ class Bot(BaseModel):
     bot_type: BotType
     is_active: bool = True
     
-    # Настройки ставок (обновлены согласно спецификации)
     min_bet_amount: float = 1.0  # 1-10000
     max_bet_amount: float = 100.0  # 1-10000
     win_rate: float = 0.55  # 0-100% (по умолчанию 55%)
     
-    # Циклы и лимиты (обновлены согласно спецификации)
     cycle_games: int = 12  # 1-66 (по умолчанию 12)
     current_cycle_games: int = 0
     current_cycle_wins: int = 0
@@ -487,19 +473,15 @@ class Bot(BaseModel):
     current_limit: Optional[int] = None  # 1-66 (по умолчанию = cycle_games)
     individual_limit: int = 12  # 1-66 (индивидуальный лимит активных ставок)
     
-    # Поведенческие настройки (новые поля)
     creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
     priority_order: int = 50  # 1-100
     pause_between_games: int = 5  # 1-300 секунд (по умолчанию 5)
     
-    # Стратегии прибыли (новое поле)
     profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
     
-    # Временные метки
     last_game_time: Optional[datetime] = None
     last_bet_time: Optional[datetime] = None  # Новое поле
     
-    # Старые поля (совместимость)
     can_accept_bets: bool = False
     can_play_with_bots: bool = False
     avatar_gender: str = "male"
@@ -527,41 +509,33 @@ class HumanBot(BaseModel):
     gender: str = "male"  # male/female for avatar
     is_active: bool = True
     
-    # Диапазон ставок
     min_bet: float = Field(ge=1.0, le=10000.0)  # 1-10000
     max_bet: float = Field(ge=1.0, le=10000.0)  # 1-10000
     
-    # Лимит ставок (максимальное количество одновременных ставок)
     bet_limit: int = Field(default=12, ge=1, le=100)  # 1-100
     bet_limit_amount: float = 300.0  # Maximum bet amount this bot can participate in as opponent
     
-    # Распределение исходов (в процентах, сумма должна быть 100%)
     win_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     loss_percentage: float = Field(default=40.0, ge=0.0, le=100.0)
     draw_percentage: float = Field(default=20.0, ge=0.0, le=100.0)
     
-    # Интервал между действиями (в секундах)
     min_delay: int = Field(default=30, ge=1, le=300)   # 1-300 секунд
     max_delay: int = Field(default=120, ge=1, le=300)  # 1-300 секунд
     
-    # Настройки commit-reveal
     use_commit_reveal: bool = True
     
-    # Уровень логирования
     logging_level: str = Field(default="INFO")  # INFO, DEBUG
     
     # Auto-play settings
     can_play_with_other_bots: bool = Field(default=True)  # Can play with other bots automatically
     can_play_with_players: bool = Field(default=True)  # Can play with live players
     
-    # Статистика
     total_games_played: int = 0
     total_games_won: int = 0  
     total_amount_wagered: float = 0.0
     total_amount_won: float = 0.0
     total_commission_paid: float = 0.0  # Общая сумма комиссий, оплаченных ботом
     
-    # Временные метки
     last_action_time: Optional[datetime] = None
     last_bet_time: Optional[datetime] = None
     
@@ -1068,34 +1042,27 @@ class HumanBotBehavior:
         bet_range = max_bet - min_bet
         
         if character == HumanBotCharacter.STABLE:
-            # Стабильные ставки в нижней трети диапазона
             return min_bet + (bet_range * random.uniform(0.1, 0.4))
             
         elif character == HumanBotCharacter.AGGRESSIVE:
-            # Крупные ставки в верхней половине диапазона
             return min_bet + (bet_range * random.uniform(0.6, 1.0))
             
         elif character == HumanBotCharacter.CAUTIOUS:
-            # Минимальные ставки
             return min_bet + (bet_range * random.uniform(0.0, 0.2))
             
         elif character == HumanBotCharacter.BALANCED:
-            # Равномерно по всему диапазону
             return min_bet + (bet_range * random.uniform(0.2, 0.8))
             
         elif character == HumanBotCharacter.IMPULSIVE:
-            # Случайные всплески - или очень мало, или очень много
             if random.random() < 0.3:
                 return min_bet + (bet_range * random.uniform(0.8, 1.0))  # Всплеск
             else:
                 return min_bet + (bet_range * random.uniform(0.0, 0.3))  # Обычно мало
                 
         elif character == HumanBotCharacter.ANALYST:
-            # Адаптивные ставки (пока используем средние значения)
             return min_bet + (bet_range * random.uniform(0.3, 0.7))
             
         elif character == HumanBotCharacter.MIMIC:
-            # Копирует средние ставки (пока используем центральные значения)
             return min_bet + (bet_range * random.uniform(0.4, 0.6))
         
         # Fallback
@@ -1117,19 +1084,15 @@ class HumanBotBehavior:
         moves = [GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
         
         if character == HumanBotCharacter.AGGRESSIVE:
-            # Агрессивные: предпочитают рискованные ходы (ножницы), атакующая стратегия
             return random.choices(moves, weights=[0.2, 0.3, 0.5])[0]
             
         elif character == HumanBotCharacter.CAUTIOUS:
-            # Осторожные: предпочитают "безопасный" камень, консервативная стратегия  
             return random.choices(moves, weights=[0.6, 0.25, 0.15])[0]
             
         elif character == HumanBotCharacter.BALANCED:
-            # Сбалансированные: равномерное распределение
             return random.choice(moves)
             
         elif character == HumanBotCharacter.IMPULSIVE:
-            # Импульсивные: полностью случайные, но с всплесками одного хода
             if random.random() < 0.3:  # 30% шанс "зацикливания" на одном ходу
                 favorite_move = random.choice(moves)
                 return favorite_move
@@ -1137,21 +1100,15 @@ class HumanBotBehavior:
                 return random.choice(moves)
                 
         elif character == HumanBotCharacter.ANALYST:
-            # Аналитики: стратегия на основе "мета-анализа" - адаптивная стратегия
-            # Симулируем анализ предыдущих игр (пока используем взвешенную логику)
             return random.choices(moves, weights=[0.35, 0.4, 0.25])[0]  # Чуть больше бумаги
             
         elif character == HumanBotCharacter.STABLE:
-            # Стабильные: предсказуемые паттерны, предпочитают камень
             return random.choices(moves, weights=[0.5, 0.3, 0.2])[0]
             
         elif character == HumanBotCharacter.MIMIC:
-            # Мимики: пытаются копировать успешные стратегии (пока сбалансированно)
-            # В будущем можно добавить анализ успешных ходов других игроков
             return random.choice(moves)
             
         else:
-            # Default: сбалансированный подход
             return random.choice(moves)
 
     @staticmethod
@@ -1159,10 +1116,8 @@ class HumanBotBehavior:
                        draw_percentage: float, game_value: float = 0) -> str:
         """Определить исход игры на основе характера и настроек"""
         
-        # Базовые вероятности
         rand = random.uniform(0, 100)
         
-        # Модификации на основе характера
         win_mod = 0
         loss_mod = 0
         
@@ -1171,7 +1126,6 @@ class HumanBotBehavior:
         elif character == HumanBotCharacter.CAUTIOUS and game_value > 100:
             win_mod = -10  # Осторожные боты реже выигрывают дорогие игры
         elif character == HumanBotCharacter.ANALYST:
-            # Аналитик адаптируется (пока простая логика)
             if game_value > 50:
                 win_mod = 5
         
@@ -1191,19 +1145,16 @@ class HumanBotBehavior:
         """Получить время задержки между действиями"""
         
         if character == HumanBotCharacter.IMPULSIVE:
-            # Импульсивные боты иногда действуют очень быстро
             if random.random() < 0.3:
                 return min(min_delay, 10)  # Очень быстро
             else:
                 return random.randint(min_delay, max_delay)
                 
         elif character == HumanBotCharacter.CAUTIOUS:
-            # Осторожные боты действуют медленнее
             delay_range = max_delay - min_delay
             return min_delay + int(delay_range * random.uniform(0.6, 1.0))
             
         else:
-            # Обычная задержка
             return random.randint(min_delay, max_delay)
 
 async def generate_unique_bot_name() -> str:
@@ -1697,7 +1648,6 @@ async def bot_automation_loop():
 async def maintain_all_bots_active_bets():
     """Поддерживает количество активных ставок для всех активных ботов."""
     try:
-        # Получаем всех активных обычных ботов
         active_bots = await db.bots.find({
             "is_active": True,
             "bot_type": "REGULAR"
@@ -1708,24 +1658,20 @@ async def maintain_all_bots_active_bets():
             
         logger.info(f"🤖 Checking {len(active_bots)} active bots for bet maintenance")
         
-        # Проверяем каждого бота
         for bot_doc in active_bots:
             try:
                 bot_id = bot_doc["id"]
                 cycle_games = bot_doc.get("cycle_games", 12)
                 
-                # Подсчитываем текущие активные ставки
                 current_active_bets = await db.games.count_documents({
                     "creator_id": bot_id,
                     "status": "WAITING"
                 })
                 
-                # Если активных ставок меньше цикла, создаем новые
                 if current_active_bets < cycle_games:
                     needed_bets = cycle_games - current_active_bets
                     logger.info(f"🎯 Bot {bot_doc['name']} needs {needed_bets} more bets ({current_active_bets}/{cycle_games})")
                     
-                    # Создаем объект Bot из документа базы данных
                     bot_obj = Bot(
                         id=bot_doc["id"],
                         name=bot_doc["name"],
@@ -1743,7 +1689,6 @@ async def maintain_all_bots_active_bets():
                         profit_strategy=bot_doc.get("profit_strategy", "balanced")
                     )
                     
-                    # Поддерживаем активные ставки на уровне цикла
                     await maintain_bot_active_bets_count(bot_id, cycle_games)
                     
             except Exception as e:
@@ -1907,7 +1852,6 @@ async def create_human_bot_bet(human_bot: HumanBot):
         game = Game(
             creator_id=human_bot.id,
             creator_type="human_bot",
-            # Всегда сохраняем реальный ход, даже при commit-reveal
             creator_move=bot_move,
             creator_move_hash=move_hash,
             creator_salt=salt,
@@ -3934,8 +3878,6 @@ async def delete_gem_admin(
 async def search_users(query: str, current_user: User = Depends(get_current_user)):
     """Search users by email or username for gifting."""
     try:
-        # Исключаем текущего пользователя из результатов
-        # Ищем по email или username (case-insensitive)
         search_filter = {
             "$and": [
                 {"id": {"$ne": current_user.id}},  # Исключаем себя
@@ -4307,7 +4249,6 @@ async def get_bot_profit_integration(current_admin: User = Depends(get_current_a
 async def get_bot_win_rate_analysis(bot_id: str, current_user: User = Depends(get_current_admin)):
     """Get detailed win rate analysis for a bot."""
     try:
-        # Получаем бота
         bot = await db.bots.find_one({"id": bot_id})
         if not bot:
             raise HTTPException(
@@ -4315,35 +4256,29 @@ async def get_bot_win_rate_analysis(bot_id: str, current_user: User = Depends(ge
                 detail="Bot not found"
             )
         
-        # Получаем игры бота
         bot_games = await db.games.find({
             "creator_id": bot_id,
             "creator_type": "bot",
             "status": "COMPLETED"
         }).sort("created_at", -1).limit(100).to_list(100)
         
-        # Анализируем win rate
         total_games = len(bot_games)
         total_wins = sum(1 for game in bot_games if game.get("result") == "WIN")
         actual_win_rate = (total_wins / total_games * 100) if total_games > 0 else 0
         
-        # Получаем настройки бота
         target_win_rate = bot.get("win_rate_percent", 60)
         bot_behavior = bot.get("bot_behavior", "balanced")
         profit_strategy = bot.get("profit_strategy", "balanced")
         
-        # Анализируем цикл
         cycle_games = bot.get("cycle_games", 12)
         current_cycle_games = bot.get("current_cycle_games", 0)
         current_cycle_wins = bot.get("current_cycle_wins", 0)
         current_cycle_win_rate = (current_cycle_wins / current_cycle_games * 100) if current_cycle_games > 0 else 0
         
-        # Прогнозируем оставшиеся игры
         remaining_games = cycle_games - current_cycle_games
         needed_wins = int(target_win_rate / 100 * cycle_games) - current_cycle_wins
         needed_win_rate = (needed_wins / remaining_games * 100) if remaining_games > 0 else 0
         
-        # Анализируем поведение
         behavior_stats = {
             "aggressive": {
                 "description": "Более агрессивная игра с большим разбросом результатов",
@@ -4362,7 +4297,6 @@ async def get_bot_win_rate_analysis(bot_id: str, current_user: User = Depends(ge
             }
         }.get(bot_behavior, {})
         
-        # Стратегия прибыли
         strategy_stats = {
             "start_profit": {
                 "description": "Старт с прибыли - выигрыши в начале цикла",
@@ -4445,7 +4379,6 @@ async def toggle_extended_bot_status(
             }}
         )
         
-        # Логирование действия
         admin_log = AdminLog(
             admin_id=current_user.id,
             action="TOGGLE_BOT_STATUS",
@@ -4487,7 +4420,6 @@ async def force_complete_bot_cycle(
                 detail="Бот не найден"
             )
         
-        # Отменяем все активные ставки бота
         cancelled_bets = await db.games.update_many(
             {"creator_id": bot_id, "status": "waiting"},
             {"$set": {
@@ -4496,7 +4428,6 @@ async def force_complete_bot_cycle(
             }}
         )
         
-        # Подсчитываем прибыль/убыток за текущий цикл
         completed_games = await db.games.find({
             "creator_id": bot_id,
             "status": "completed"
@@ -4506,7 +4437,6 @@ async def force_complete_bot_cycle(
         total_winnings = sum(game.get("winnings", 0) for game in completed_games if game.get("winner_id") == bot_id)
         cycle_profit = total_winnings - total_bet_amount
         
-        # Обновляем статистику бота
         await db.bots.update_one(
             {"id": bot_id},
             {"$set": {
@@ -4519,7 +4449,6 @@ async def force_complete_bot_cycle(
             }}
         )
         
-        # Логирование действия
         admin_log = AdminLog(
             admin_id=current_user.id,
             action="FORCE_COMPLETE_CYCLE",
@@ -4563,13 +4492,11 @@ async def get_bot_cycle_bets(
                 detail="Бот не найден"
             )
         
-        # Получаем все игры бота за текущий цикл
         cycle_games = await db.games.find({
             "creator_id": bot_id,
             "is_bot_game": True
         }).sort("created_at", -1).limit(bot.get("cycle_games", 12)).to_list(None)
         
-        # Форматируем данные для отображения
         formatted_bets = []
         for i, game in enumerate(cycle_games):
             bet_info = {
@@ -4631,7 +4558,6 @@ async def create_extended_bot(
         can_accept_bets = bot_config.get("can_accept_bets", False)
         can_play_with_bots = bot_config.get("can_play_with_bots", True)
         
-        # Определение диапазона ставок из bot_type
         bot_types_map = {
             'type-1': {'min': 1, 'max': 2, 'name': 'Type 1: 1–2 $'},
             'type-2': {'min': 1, 'max': 5, 'name': 'Type 2: 1–5 $'},
@@ -4654,7 +4580,6 @@ async def create_extended_bot(
         min_bet = bot_type_info['min']
         max_bet = bot_type_info['max']
         
-        # Валидация расширенной системы
         validation_errors = []
         
         if not name or len(name.strip()) < 3:
@@ -4690,7 +4615,6 @@ async def create_extended_bot(
                 detail=f"Ошибки валидации: {'; '.join(validation_errors)}"
             )
         
-        # Создание расширенного бота
         bot_data = {
             "id": str(uuid.uuid4()),
             "type": "REGULAR",
@@ -4699,7 +4623,6 @@ async def create_extended_bot(
             "is_active": True,
             "bot_type": "REGULAR",
             
-            # Параметры расширенной системы
             "creation_mode": creation_mode,
             "cycle_games": cycle_games,
             "bot_behavior": bot_behavior,
@@ -4711,15 +4634,12 @@ async def create_extended_bot(
             "win_rate_percent": win_rate_percent,
             "profit_strategy": profit_strategy,
             
-            # Диапазон ставок
             "min_bet_amount": min_bet,
             "max_bet_amount": max_bet,
             
-            # Дополнительные настройки
             "can_accept_bets": can_accept_bets,
             "can_play_with_bots": can_play_with_bots,
             
-            # Статистика
             "games_played": 0,
             "games_won": 0,
             "games_lost": 0,
@@ -4731,7 +4651,6 @@ async def create_extended_bot(
             "bot_profit_amount": 0.0,
             "bot_profit_percent": 0.0,
             
-            # Состояние
             "last_game_time": None,
             "last_bet_time": None,
             "current_bet_id": None,
@@ -4745,10 +4664,8 @@ async def create_extended_bot(
         
         created_bot_id = bot_data["id"]
         
-        # Генерируем начальные ставки для бота используя расширенную систему
         try:
             if creation_mode == 'queue-based':
-                # Создаем ставки сразу для queue-based ботов
                 await generate_bot_cycle_bets(
                     bot_id=created_bot_id,
                     cycle_length=cycle_games,
@@ -4760,13 +4677,10 @@ async def create_extended_bot(
                 )
                 logger.info(f"Generated initial bets for extended bot {created_bot_id}")
             else:
-                # Для always-first и after-all режимов создаем ставки по расписанию
                 logger.info(f"Extended bot {created_bot_id} created with {creation_mode} mode, bets will be generated according to schedule")
         except Exception as e:
             logger.error(f"Error generating initial bets for extended bot {created_bot_id}: {e}")
-            # Не блокируем создание бота из-за ошибки генерации ставок
         
-        # Логирование действия администратора
         admin_log = AdminLog(
             admin_id=current_user.id,
             action="CREATE_EXTENDED_BOT",
@@ -4966,7 +4880,6 @@ async def create_game(
                 }
             )
         
-        # Freeze commission balance - ПРАВИЛЬНАЯ ЛОГИКА: списываем с virtual_balance и добавляем к frozen_balance
         await db.users.update_one(
             {"id": current_user.id},
             {
@@ -5704,7 +5617,6 @@ async def reset_bot_bets(
                 detail="Бот не найден"
             )
         
-        # Отменяем все активные ставки бота
         cancelled_result = await db.games.update_many(
             {"creator_id": bot_id, "status": {"$in": ["WAITING", "ACTIVE"]}},
             {"$set": {
@@ -5714,7 +5626,6 @@ async def reset_bot_bets(
             }}
         )
         
-        # Сбрасываем статистику текущего цикла
         await db.bots.update_one(
             {"id": bot_id},
             {"$set": {
@@ -5725,7 +5636,6 @@ async def reset_bot_bets(
             }}
         )
         
-        # Пересоздаем ставки для бота
         try:
             await generate_bot_cycle_bets(
                 bot_id=bot_id,
@@ -5738,9 +5648,7 @@ async def reset_bot_bets(
             )
         except Exception as e:
             logger.error(f"Error regenerating bets for bot {bot_id}: {e}")
-            # Не блокируем операцию из-за ошибки генерации
         
-        # Логирование действия
         admin_log = AdminLog(
             admin_id=current_user.id,
             action="RESET_BOT_BETS",
@@ -6116,19 +6024,15 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
         # Check if this is a regular bot game (no commission)
         is_regular_bot_game = getattr(game, 'is_regular_bot_game', False)
         
-        # Дополнительная проверка: если один из участников - обычный бот
         if not is_regular_bot_game:
-            # Проверяем создателя игры
             creator_bot = await db.bots.find_one({"id": game.creator_id})
             creator_is_regular_bot = creator_bot and creator_bot.get("bot_type") == "REGULAR"
             
-            # Проверяем оппонента
             opponent_is_regular_bot = False
             if game.opponent_id:
                 opponent_bot = await db.bots.find_one({"id": game.opponent_id})
                 opponent_is_regular_bot = opponent_bot and opponent_bot.get("bot_type") == "REGULAR"
             
-            # Если хотя бы один из участников - обычный бот, игра без комиссии
             is_regular_bot_game = creator_is_regular_bot or opponent_is_regular_bot
         
         if is_regular_bot_game:
@@ -6136,7 +6040,6 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
             # Override commission amount to 0 for regular bot games
             commission_amount = 0
             
-            # Накопление прибыли для обычных ботов
             await accumulate_bot_profit(game, winner_id)
         
         # Unfreeze gems for both players using their respective gem combinations
@@ -6224,7 +6127,6 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     logger.info(f"💰 REGULAR BOT GAME - Winner {winner_id} gets full payout, no commission involved")
                 else:
                     # Normal human vs human game with commission
-                    # ПРАВИЛЬНАЯ ЛОГИКА: Просто списываем комиссию из frozen_balance как плату за игру
                     commission_to_deduct = game.bet_amount * 0.03  # 3% от ставки победителя
                     
                     new_winner_frozen = winner["frozen_balance"] - commission_to_deduct
@@ -6298,13 +6200,11 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     )
                     await db.profit_entries.insert_one(profit_entry.dict())
             
-            # Handle commission for loser - ПРАВИЛЬНАЯ ЛОГИКА: просто убираем комиссию как плату за игру
             if not is_regular_bot_game:
                 loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
                 loser = await db.users.find_one({"id": loser_id})
                 
                 if loser:
-                    # Loser is a human player - комиссия просто списывается как плата за игру
                     commission_to_deduct = game.bet_amount * 0.03
                     await db.users.update_one(
                         {"id": loser_id},
@@ -6358,7 +6258,6 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         
                         logger.info(f"DRAW - Returning {commission_to_return} commission to player {player_id} (virtual_balance: {player.get('virtual_balance', 0)} -> {player.get('virtual_balance', 0) + commission_to_return})")
                         
-                        # ПРАВИЛЬНАЯ ЛОГИКА: При ничьей возвращаем комиссию из frozen_balance в virtual_balance
                         await db.users.update_one(
                             {"id": player_id},
                             {
@@ -6394,10 +6293,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
         # Update independent counters for Human-bot games
         await update_independent_counters(game, winner_id, commission_amount)
         
-        # Автоматическое создание новой ставки для бота при принятии существующей
-        # await maintain_bot_active_bets(game)  # УДАЛЕНО - заменено на новую систему
         
-        # Возвращаем обновлённую игру
         updated_game = await db.games.find_one({"id": game.id})
         return Game(**updated_game).dict()
             
@@ -6451,7 +6347,6 @@ async def update_independent_counters(game: Game, winner_id: str, commission_amo
         # Don't raise - this is a non-critical operation
 
 # ==============================================================================
-# НОВАЯ СИСТЕМА ОБЫЧНЫХ БОТОВ
 # ==============================================================================
 
 class RegularBotSystem:
@@ -6462,7 +6357,6 @@ class RegularBotSystem:
         self.logger = logger
     
     # ==========================================================================
-    # МОДЕЛЬ ДАННЫХ ОБЫЧНОГО БОТА
     # ==========================================================================
     
     class RegularBotData(BaseModel):
@@ -6472,12 +6366,10 @@ class RegularBotSystem:
         bot_type: str = "REGULAR"
         is_active: bool = True
         
-        # Настройки ставок
         min_bet_amount: float = 1.0
         max_bet_amount: float = 100.0
         win_rate: float = 0.55  # 55%
         
-        # Циклы и лимиты
         cycle_games: int = 12
         current_cycle_games: int = 0
         current_cycle_wins: int = 0
@@ -6485,29 +6377,24 @@ class RegularBotSystem:
         current_cycle_gem_value_total: float = 0.0
         current_limit: int = 12  # Индивидуальный лимит активных ставок
         
-        # Поведенческие настройки
         creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
         priority_order: int = 50  # 1-100
         pause_between_games: int = 5  # секунды
         
-        # Стратегии прибыли
         profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
         
-        # Временные метки
         last_game_time: Optional[datetime] = None
         last_bet_time: Optional[datetime] = None
         created_at: datetime = Field(default_factory=datetime.utcnow)
         updated_at: datetime = Field(default_factory=datetime.utcnow)
     
     # ==========================================================================
-    # ГЛОБАЛЬНЫЕ НАСТРОЙКИ
     # ==========================================================================
     
     async def get_global_settings(self):
         """Получение глобальных настроек системы ботов."""
         settings = await self.db.bot_settings.find_one({"id": "bot_settings"})
         if not settings:
-            # Создаем дефолтные настройки если их нет
             default_settings = {
                 "id": "bot_settings",
                 "max_active_bets_regular": 1000000,
@@ -6523,7 +6410,6 @@ class RegularBotSystem:
         return settings
     
     # ==========================================================================
-    # ПРОВЕРКА ЛИМИТОВ
     # ==========================================================================
     
     async def check_global_limits(self, bot_type: str = "REGULAR"):
@@ -6606,17 +6492,14 @@ class RegularBotSystem:
     
     async def validate_bet_creation(self, bot_id: str):
         """Полная валидация перед созданием ставки."""
-        # Проверка глобальных лимитов
         global_check = await self.check_global_limits("REGULAR")
         if not global_check["passed"]:
             return global_check
         
-        # Проверка индивидуальных лимитов
         individual_check = await self.check_individual_limits(bot_id)
         if not individual_check["passed"]:
             return individual_check
         
-        # Проверка временных ограничений
         timing_check = await self.check_timing_constraints(bot_id)
         if not timing_check["passed"]:
             return timing_check
@@ -6624,7 +6507,6 @@ class RegularBotSystem:
         return {"passed": True, "reason": None}
     
     # ==========================================================================
-    # СТРАТЕГИИ ПРИБЫЛИ И ПРИНЯТИЕ РЕШЕНИЙ
     # ==========================================================================
     
     async def calculate_win_need(self, bot_id: str):
@@ -6633,7 +6515,6 @@ class RegularBotSystem:
         if not bot:
             return {"should_win": False, "reason": "Bot not found"}
         
-        # Получаем статистику текущего цикла
         cycle_stats = {
             "current_games": bot.get("current_cycle_games", 0),
             "total_games": bot.get("cycle_games", 12),
@@ -6642,20 +6523,16 @@ class RegularBotSystem:
             "target_win_rate": bot.get("win_rate", 0.55)
         }
         
-        # Текущий процент по стоимости
         current_win_rate = cycle_stats["won_value"] / max(cycle_stats["total_value"], 1) if cycle_stats["total_value"] > 0 else 0
         
-        # Позиция в цикле (от 0 до 1)
         cycle_position = cycle_stats["current_games"] / cycle_stats["total_games"]
         
-        # Расчет целевого процента на основе стратегии
         target_rate = await self.get_target_rate_by_strategy(
             bot.get("profit_strategy", "balanced"),
             cycle_position,
             cycle_stats["target_win_rate"]
         )
         
-        # Принятие решения
         should_win = current_win_rate < target_rate
         
         self.logger.info(f"Bot {bot_id} win decision: current={current_win_rate:.2f}, target={target_rate:.2f}, decision={'WIN' if should_win else 'LOSE'}")
@@ -6671,7 +6548,6 @@ class RegularBotSystem:
     async def get_target_rate_by_strategy(self, strategy: str, cycle_position: float, base_rate: float):
         """Получение целевого процента на основе стратегии прибыли."""
         if strategy == "start-positive":
-            # В начале цикла высокий процент, к концу - низкий
             if cycle_position < 0.33:  # Первая треть
                 return base_rate + 0.15  # +15%
             elif cycle_position < 0.66:  # Вторая треть
@@ -6680,7 +6556,6 @@ class RegularBotSystem:
                 return base_rate - 0.15  # -15%
         
         elif strategy == "start-negative":
-            # В начале цикла низкий процент, к концу - высокий
             if cycle_position < 0.33:  # Первая треть
                 return base_rate - 0.15  # -15%
             elif cycle_position < 0.66:  # Вторая треть
@@ -6689,7 +6564,6 @@ class RegularBotSystem:
                 return base_rate + 0.15  # +15%
         
         else:  # balanced
-            # Равномерное распределение
             return base_rate
     
     async def determine_bot_move(self, bot_id: str, player_move: str, bet_amount: float):
@@ -6697,7 +6571,6 @@ class RegularBotSystem:
         win_decision = await self.calculate_win_need(bot_id)
         
         if win_decision["should_win"]:
-            # Выбираем выигрышный ход
             if player_move == "rock":
                 bot_move = "paper"
             elif player_move == "paper":
@@ -6706,7 +6579,6 @@ class RegularBotSystem:
                 bot_move = "rock"
             result = "WIN"
         else:
-            # Выбираем проигрышный ход
             if player_move == "rock":
                 bot_move = "scissors"
             elif player_move == "paper":
@@ -6715,7 +6587,6 @@ class RegularBotSystem:
                 bot_move = "paper"
             result = "LOSE"
         
-        # Логируем решение для админов
         await self.log_bot_decision(bot_id, {
             "player_move": player_move,
             "bot_move": bot_move,
@@ -6731,32 +6602,26 @@ class RegularBotSystem:
         }
     
     # ==========================================================================
-    # СОЗДАНИЕ СТАВОК И УПРАВЛЕНИЕ ЦИКЛАМИ
     # ==========================================================================
     
     async def create_bot_bet_with_validation(self, bot_id: str):
         """Единственная функция для создания ставки бота с полной валидацией."""
         try:
-            # 1. Полная валидация
             validation = await self.validate_bet_creation(bot_id)
             if not validation["passed"]:
                 self.logger.info(f"🚫 Bot {bot_id} bet creation blocked: {validation['reason']}")
                 return {"success": False, "reason": validation["reason"]}
             
-            # 2. Получение данных бота
             bot = await self.db.bots.find_one({"id": bot_id})
             if not bot:
                 return {"success": False, "reason": "Bot not found"}
             
-            # 3. Генерация параметров ставки
             bet_params = await self.generate_bet_parameters(bot)
             
-            # 4. Создание Commit-Reveal данных
             initial_move = random.choice(["rock", "paper", "scissors"])
             salt = secrets.token_hex(32)
             move_hash = hashlib.sha256(f"{initial_move}{salt}".encode()).hexdigest()
             
-            # 5. Создание игры
             game = Game(
                 id=str(uuid.uuid4()),
                 creator_id=bot_id,
@@ -6776,13 +6641,10 @@ class RegularBotSystem:
                 }
             )
             
-            # 6. Сохранение в базу данных
             await self.db.games.insert_one(game.dict())
             
-            # 7. Обновление статистики бота
             await self.update_bot_after_bet_creation(bot_id, bet_params["total_value"])
             
-            # 8. Логирование
             await self.log_bot_action(bot_id, "BET_CREATED", {
                 "game_id": game.id,
                 "bet_amount": bet_params["total_value"],
@@ -6805,11 +6667,9 @@ class RegularBotSystem:
     
     async def generate_bet_parameters(self, bot: dict):
         """Генерация параметров ставки на основе настроек бота."""
-        # Диапазон сумм ставки
         min_bet = bot.get("min_bet_amount", 1.0)
         max_bet = bot.get("max_bet_amount", 100.0)
         
-        # Генерируем комбинацию гемов сначала, потом рассчитываем сумму
         gem_combination, actual_bet_amount = await self.generate_gem_combination_and_amount(min_bet, max_bet)
         
         return {
@@ -6891,7 +6751,6 @@ class RegularBotSystem:
         bet_gems = {}
         remaining_amount = target_amount
         
-        # Распределяем ставку по гемам
         for i, gem_type in enumerate(gem_types):
             if remaining_amount <= 0:
                 break
@@ -6925,7 +6784,6 @@ class RegularBotSystem:
         return total_value
     
     # ==========================================================================
-    # ОБНОВЛЕНИЕ СТАТИСТИКИ И ЛОГИРОВАНИЕ
     # ==========================================================================
     
     async def update_bot_after_bet_creation(self, bot_id: str, bet_amount: float):
@@ -6965,7 +6823,6 @@ class RegularBotSystem:
         
         await self.db.bots.update_one({"id": bot_id}, update_data)
         
-        # Проверяем завершение цикла
         await self.check_cycle_completion(bot_id)
     
     async def check_cycle_completion(self, bot_id: str):
@@ -6978,7 +6835,6 @@ class RegularBotSystem:
         cycle_games = bot.get("cycle_games", 12)
         
         if current_games >= cycle_games:
-            # Цикл завершен
             cycle_stats = {
                 "total_games": current_games,
                 "wins": bot.get("current_cycle_wins", 0),
@@ -6988,10 +6844,8 @@ class RegularBotSystem:
                 "completed_at": datetime.utcnow()
             }
             
-            # Логируем завершение цикла
             await self.log_bot_action(bot_id, "CYCLE_COMPLETED", cycle_stats)
             
-            # Сбрасываем статистику цикла
             await self.db.bots.update_one(
                 {"id": bot_id},
                 {
@@ -7030,22 +6884,18 @@ class RegularBotSystem:
         await self.db.bot_decision_logs.insert_one(log_entry)
     
     # ==========================================================================
-    # ФОНОВЫЕ ЗАДАЧИ
     # ==========================================================================
     
     async def process_bots_automation(self):
         """Основная функция фоновой автоматизации ботов."""
         try:
-            # Получаем всех активных ботов
             active_bots = await self.db.bots.find({"is_active": True, "bot_type": "REGULAR"}).to_list(1000)
             
             if not active_bots:
                 return
             
-            # Сортируем по приоритету
             sorted_bots = await self.sort_bots_by_priority(active_bots)
             
-            # Обрабатываем каждого бота
             for bot in sorted_bots:
                 try:
                     result = await self.create_bot_bet_with_validation(bot["id"])
@@ -7075,18 +6925,14 @@ class RegularBotSystem:
             else:  # queue-based
                 queue_based.append(bot)
         
-        # Сортировка queue-based по приоритету
         queue_based.sort(key=lambda x: x.get("priority_order", 50))
         
-        # Финальный порядок
         return always_first + queue_based + after_all
 
 
-# Создаем глобальный экземпляр системы
 regular_bot_system = RegularBotSystem()
 
 # ==============================================================================
-# НОВАЯ ФОНОВАЯ ЗАДАЧА ДЛЯ АВТОМАТИЗАЦИИ БОТОВ
 # ==============================================================================
 
 async def new_bot_automation_task():
@@ -7095,31 +6941,24 @@ async def new_bot_automation_task():
     
     while True:
         try:
-            # Обрабатываем ботов через новую систему
             await regular_bot_system.process_bots_automation()
             
-            # Пауза между циклами (5 секунд согласно спецификации)
             await asyncio.sleep(5)
             
         except Exception as e:
             logger.error(f"❌ Error in new bot automation: {e}")
-            # Пауза при ошибке (10 секунд согласно спецификации)
             await asyncio.sleep(10)
 
-# СТАРЫЕ ФУНКЦИИ - ПОМЕЧЕНЫ ДЛЯ УДАЛЕНИЯ
 
 async def maintain_bot_active_bets(game: Game):
     """Поддерживает количество активных ставок бота равным параметру cycle_games."""
     try:
-        # Определяем, какой бот участвует в игре
         bot_id = None
         
-        # Проверяем создателя игры
         creator_bot = await db.bots.find_one({"id": game.creator_id})
         if creator_bot and creator_bot.get("bot_type") == "REGULAR":
             bot_id = game.creator_id
         
-        # Проверяем оппонента
         if not bot_id and game.opponent_id:
             opponent_bot = await db.bots.find_one({"id": game.opponent_id})
             if opponent_bot and opponent_bot.get("bot_type") == "REGULAR":
@@ -7128,23 +6967,18 @@ async def maintain_bot_active_bets(game: Game):
         if not bot_id:
             return  # Не бот или Human бот, ничего не делаем
         
-        # Получаем бота
         bot = await db.bots.find_one({"id": bot_id})
         if not bot:
             return
         
         bot_obj = Bot(**bot)
         
-        # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
-        # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
         max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
         max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
         
-        # Определяем тип бота
         bot_type = bot.get("bot_type", "REGULAR")
         
-        # Подсчитываем текущие активные ставки по типу бота
         if bot_type == "REGULAR":
             current_global_bets = await db.games.count_documents({
                 "creator_type": "bot",
@@ -7168,27 +7002,22 @@ async def maintain_bot_active_bets(game: Game):
             })
             max_limit = max_active_bets_human
         
-        # Проверяем глобальный лимит
         if current_global_bets >= max_limit:
             logger.info(f"🚫 Global limit reached, skipping bet creation for {bot_type} bot {bot_id}: {current_global_bets}/{max_limit}")
             return
         
-        # Получаем текущее количество активных ставок конкретного бота
         current_active_bets = await db.games.count_documents({
             "creator_id": bot_id,
             "status": "WAITING"
         })
         
-        # Получаем целевое количество активных ставок (cycle_games)
         target_active_bets = bot_obj.cycle_games
         
-        # Проверяем индивидуальный лимит бота
         individual_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
         if current_active_bets >= individual_limit:
             logger.info(f"🚫 Individual limit reached for bot {bot_id}: {current_active_bets}/{individual_limit}")
             return
         
-        # Если активных ставок меньше целевого количества, создаём новые
         needed_bets = min(target_active_bets - current_active_bets, individual_limit - current_active_bets)
         
         if needed_bets > 0:
@@ -7201,7 +7030,6 @@ async def maintain_bot_active_bets(game: Game):
                 except Exception as e:
                     logger.error(f"Failed to create new bet for bot {bot_id}: {e}")
             
-            # Обновляем количество активных ставок в базе данных
             new_active_count = await db.games.count_documents({
                 "creator_id": bot_id,
                 "status": "WAITING"
@@ -7225,17 +7053,14 @@ async def maintain_bot_active_bets(game: Game):
 async def accumulate_bot_profit(game: Game, winner_id: str):
     """Накопление прибыли от обычных ботов в защищённом контейнере."""
     try:
-        # Определяем, какой бот участвует в игре
         bot_id = None
         bot_won = False
         
-        # Проверяем создателя игры
         creator_bot = await db.bots.find_one({"id": game.creator_id})
         if creator_bot and creator_bot.get("bot_type") == "REGULAR":
             bot_id = game.creator_id
             bot_won = (winner_id == game.creator_id)
         
-        # Проверяем оппонента
         if game.opponent_id:
             opponent_bot = await db.bots.find_one({"id": game.opponent_id})
             if opponent_bot and opponent_bot.get("bot_type") == "REGULAR":
@@ -7246,7 +7071,6 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             logger.warning(f"No regular bot found in game {game.id}")
             return
         
-        # Получаем или создаём аккумулятор прибыли для текущего цикла
         bot = await db.bots.find_one({"id": bot_id})
         if not bot:
             logger.error(f"Bot {bot_id} not found")
@@ -7254,16 +7078,13 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
         
         cycle_length = bot.get("cycle_length", 12)  # По умолчанию 12 игр
         
-        # Ищем активный аккумулятор прибыли для этого бота
         accumulator = await db.bot_profit_accumulators.find_one({
             "bot_id": bot_id,
             "is_cycle_completed": False
         })
         
         if not accumulator:
-            # Создаём новый аккумулятор для нового цикла
             cycle_number = 1
-            # Найдём последний цикл для определения номера
             last_accumulator = await db.bot_profit_accumulators.find_one(
                 {"bot_id": bot_id},
                 sort=[("cycle_number", -1)]
@@ -7284,13 +7105,10 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
         else:
             accumulator = BotProfitAccumulator(**accumulator)
         
-        # Обновляем данные аккумулятора
         bet_amount = game.bet_amount
         
-        # Бот всегда тратит сумму ставки (независимо от результата)
         new_total_spent = accumulator.total_spent + bet_amount
         
-        # Если бот выиграл, добавляем к заработанному
         new_total_earned = accumulator.total_earned
         if bot_won:
             new_total_earned += bet_amount * 2  # Бот получает свою ставку + ставку противника
@@ -7300,7 +7118,6 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
         
         new_games_completed = accumulator.games_completed + 1
         
-        # Обновляем аккумулятор
         await db.bot_profit_accumulators.update_one(
             {"id": accumulator.id},
             {
@@ -7317,7 +7134,6 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
         logger.info(f"🤖 Bot {bot_id} cycle update: {new_games_completed}/{cycle_length} games, "
                    f"spent: ${new_total_spent}, earned: ${new_total_earned}")
         
-        # Проверяем, завершён ли цикл
         if new_games_completed >= cycle_length:
             await complete_bot_cycle(accumulator.id, new_total_spent, new_total_earned, bot_id)
         
@@ -7327,10 +7143,8 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
 async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earned: float, bot_id: str):
     """Завершение цикла бота и перевод излишка в прибыль."""
     try:
-        # Рассчитываем прибыль: заработанное - потраченное
         profit = total_earned - total_spent
         
-        # Обновляем аккумулятор как завершённый
         await db.bot_profit_accumulators.update_one(
             {"id": accumulator_id},
             {
@@ -7343,7 +7157,6 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             }
         )
         
-        # Если есть прибыль, переводим её в "Доход от ботов"
         if profit > 0:
             bot = await db.bots.find_one({"id": bot_id})
             bot_name = bot.get("name", "Unknown Bot") if bot else "Unknown Bot"
@@ -7361,7 +7174,6 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
         else:
             logger.info(f"🎯 Bot {bot_id} cycle completed: no profit (deficit: ${abs(profit):.2f})")
         
-        # Сбрасываем счётчики бота для нового цикла
         await db.bots.update_one(
             {"id": bot_id},
             {
@@ -7385,7 +7197,6 @@ async def get_bot_profit_accumulators(
 ):
     """Получить накопители прибыли ботов (только для админа)."""
     try:
-        # Построение фильтра
         filter_query = {}
         
         if bot_id:
@@ -7394,14 +7205,11 @@ async def get_bot_profit_accumulators(
         if is_completed is not None:
             filter_query["is_cycle_completed"] = is_completed
         
-        # Подсчёт общего количества
         total_count = await db.bot_profit_accumulators.count_documents(filter_query)
         
-        # Получение данных с пагинацией
         skip = (page - 1) * limit
         accumulators = await db.bot_profit_accumulators.find(filter_query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
         
-        # Обогащение данных информацией о ботах
         result = []
         for acc in accumulators:
             bot = await db.bots.find_one({"id": acc["bot_id"]})
@@ -7440,7 +7248,6 @@ async def force_complete_bot_cycle_v2(
 ):
     """Принудительно завершить текущий цикл бота (только для админа)."""
     try:
-        # Найти активный аккумулятор
         accumulator = await db.bot_profit_accumulators.find_one({
             "bot_id": bot_id,
             "is_cycle_completed": False
@@ -7452,7 +7259,6 @@ async def force_complete_bot_cycle_v2(
                 detail="No active cycle found for this bot"
             )
         
-        # Завершить цикл
         await complete_bot_cycle(
             accumulator["id"],
             accumulator["total_spent"],
@@ -7658,10 +7464,8 @@ async def cancel_game(game_id: str, current_user: User = Depends(get_current_use
                 }
             )
         
-        # Return frozen commission - ПРАВИЛЬНАЯ ЛОГИКА: возвращаем из frozen_balance в virtual_balance
         commission_to_return = game_obj.bet_amount * 0.03
         
-        # ПРАВИЛЬНАЯ ЛОГИКА: При отмене игры комиссия возвращается из frozen_balance в virtual_balance
         await db.users.update_one(
             {"id": current_user.id},
             {
@@ -9202,10 +9006,8 @@ async def get_games_stats(current_user: User = Depends(get_current_admin)):
 async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
     """Get comprehensive dashboard statistics for admin panel."""
     try:
-        # Get active Human bots - используем ту же логику что и в Human боты разделе
         active_human_bots_count = await db.human_bots.count_documents({"is_active": True})
         
-        # Get active Human bots games - активные ставки Human ботов
         human_bots = await db.human_bots.find({"is_active": True}).to_list(None)
         human_bot_ids = [bot["id"] for bot in human_bots]
         active_human_bots_games = await db.games.count_documents({
@@ -9213,11 +9015,9 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
-        # Get active regular bots in game - подсчет уникальных ботов в активных играх
         regular_bots = await db.bots.find({"is_active": True}).to_list(None)
         regular_bot_ids = [bot["id"] for bot in regular_bots]
         
-        # Находим уникальных ботов в активных играх (WAITING или ACTIVE)
         active_regular_bots_pipeline = [
             {"$match": {
                 "creator_id": {"$in": regular_bot_ids},
@@ -9229,7 +9029,6 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
         active_regular_bots_result = await db.games.aggregate(active_regular_bots_pipeline).to_list(1)
         active_regular_bots_in_game = active_regular_bots_result[0]["unique_bots"] if active_regular_bots_result else 0
         
-        # Get online users count - подсчет пользователей с онлайн статусом
         all_users = await db.users.find({}).to_list(None)
         online_users_count = 0
         total_users_count = len(all_users)
@@ -9239,12 +9038,10 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
             if user_online_status == "ONLINE":
                 online_users_count += 1
         
-        # Get active games (WAITING + ACTIVE) - все активные игры
         active_games = await db.games.count_documents({
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
-        # Get active regular bots games - активные ставки обычных ботов со статусами Ожидание и Активна
         active_regular_bots_games = await db.games.count_documents({
             "creator_id": {"$in": regular_bot_ids},
             "status": {"$in": ["WAITING", "ACTIVE"]}
@@ -9467,34 +9264,27 @@ async def get_all_users(
         # Build query
         query = {}
         
-        # Исключение ботов если requested
         if exclude_bots:
             query["bot_type"] = {"$exists": False}
             query["is_bot"] = {"$ne": True}
         
         if search:
             if search_mode == 'name':
-                # Поиск только по имени
                 query["username"] = {"$regex": search, "$options": "i"}
             elif search_mode == 'email':
-                # Поиск только по email
                 query["email"] = {"$regex": search, "$options": "i"}
             else:
-                # Поиск по обоим полям (по умолчанию)
                 query["$or"] = [
                     {"username": {"$regex": search, "$options": "i"}},
                     {"email": {"$regex": search, "$options": "i"}}
                 ]
         if status:
-            # Если фильтр по онлайн статусу (ONLINE/OFFLINE), не применяем к query
-            # Эти фильтры будут применены после расчета онлайн статуса
             if status not in ['ONLINE', 'OFFLINE']:
                 query["status"] = status
             
         if role:
             query["role"] = role
             
-        # Фильтр по балансу
         if balance_min is not None or balance_max is not None:
             balance_filter = {}
             if balance_min is not None:
@@ -9506,7 +9296,6 @@ async def get_all_users(
         # Get total count
         total = await db.users.count_documents(query)
         
-        # Определение сортировки
         sort_field = "created_at"
         sort_direction = -1  # По умолчанию desc
         
@@ -9527,33 +9316,26 @@ async def get_all_users(
             }
             sort_field = sort_fields_map.get(sort_by, "created_at")
             
-        # Правильная обработка направления сортировки
         if sort_order == "asc":
             sort_direction = 1
         elif sort_order == "desc":
             sort_direction = -1
-        # Если sort_order не указан или некорректен, используем значение по умолчанию (-1)
         
         # Get users with pagination but without sorting if sorting by total
         skip = (page - 1) * limit
         
-        # Специальная обработка для сортировки по TOTAL, ROLE и ONLINE_STATUS
         sort_by_total = sort_by == "total"
         sort_by_role = sort_by == "role"
         sort_by_online_status = sort_by == "online_status"
         
         if sort_by_total or sort_by_role or sort_by_online_status:
-            # Для сортировки по TOTAL, ROLE или ONLINE_STATUS получаем больше пользователей, сортируем после расчета, затем применяем пагинацию
             all_users = await db.users.find(query).to_list(None)  # Получаем всех пользователей для правильной сортировки
         else:
-            # Обычная сортировка в MongoDB
             users = await db.users.find(query).skip(skip).limit(limit).sort(sort_field, sort_direction).to_list(limit)
         
-        # Также получаем данные из коллекций bots и human_bots для добавления информации о ботах
         bots = await db.bots.find({}).to_list(1000)  # Получаем всех обычных ботов
         human_bots = await db.human_bots.find({}).to_list(1000)  # Получаем всех человеко-ботов
         
-        # Создаем карты для быстрого поиска
         bots_by_name = {bot.get("name"): bot for bot in bots}
         human_bots_by_name = {bot.get("name"): bot for bot in human_bots}
         
@@ -9597,28 +9379,23 @@ async def get_all_users(
             total_games_lost = total_games_played - total_games_won
             total_games_draw = user.get("total_games_draw", 0)
             
-            # Определение типа пользователя (обычный, Human-бот, обычный бот)
             username = user.get("username")
             user_type = "USER"  # По умолчанию обычный пользователь
             bot_status = None
             
-            # Проверяем, является ли пользователь Human-ботом
             if username in human_bots_by_name:
                 user_type = "HUMAN_BOT"
                 human_bot_info = human_bots_by_name[username]
                 bot_status = "ONLINE" if human_bot_info.get("is_active", False) else "OFFLINE"
             
-            # Проверяем, является ли пользователь обычным ботом
             elif username in bots_by_name:
                 user_type = "REGULAR_BOT" 
                 bot_info = bots_by_name[username]
                 bot_status = "ONLINE" if bot_info.get("is_active", False) else "OFFLINE"
             
-            # Для обычных пользователей определяем онлайн статус по активности
             if user_type == "USER":
                 bot_status = get_user_online_status(user)
             
-                # Безопасное получение числовых значений с проверкой типов
                 virtual_bal = float(user.get("virtual_balance") or 0)
                 frozen_bal = float(user.get("frozen_balance") or 0)
                 gems_val = float(round(total_gems_value, 2))
@@ -9650,15 +9427,12 @@ async def get_all_users(
                 "ban_until": user.get("ban_until")
             }
             
-            # Применяем фильтр по TOTAL если указан
             if total_min is not None and cleaned_user["total_balance"] < total_min:
                 continue
             if total_max is not None and cleaned_user["total_balance"] > total_max:
                 continue
             
-            # Применяем фильтр по онлайн статусу если указан
             if status in ['ONLINE', 'OFFLINE']:
-                # Определяем актуальный онлайн статус
                 user_online_status = cleaned_user["bot_status"] if cleaned_user["user_type"] in ["HUMAN_BOT", "REGULAR_BOT"] else cleaned_user["online_status"]
                 if status == 'ONLINE' and user_online_status != 'ONLINE':
                     continue
@@ -9667,7 +9441,6 @@ async def get_all_users(
                 
             cleaned_users.append(cleaned_user)
         
-        # Удаляем дубликаты по username (сохраняем только первое вхождение)
         seen_usernames = set()
         unique_users = []
         for user in cleaned_users:
@@ -9678,27 +9451,20 @@ async def get_all_users(
         
         cleaned_users = unique_users
         
-        # Если сортируем по TOTAL, ROLE или ONLINE_STATUS, сортируем cleaned_users и применяем пагинацию
         if sort_by_total or sort_by_role or sort_by_online_status:
             if sort_by_total:
-                # Сортируем по total_balance с гарантированным приведением к числу
                 def get_total_balance_safe(x):
                     val = x.get("total_balance", 0)
                     try:
-                        # Принудительное приведение к float
                         if isinstance(val, str):
-                            # Удаляем символы валюты и запятые если есть
                             val = val.replace('$', '').replace(',', '').replace(' ', '')
                         return float(val) if val is not None else 0.0
                     except (ValueError, TypeError):
                         return 0.0
                 
-                # Сортируем: reverse=True для убывания (desc), reverse=False для возрастания (asc)
                 cleaned_users.sort(key=get_total_balance_safe, reverse=(sort_direction == -1))
             elif sort_by_role:
-                # Сортируем по приоритету ролей
                 def get_role_priority(user):
-                    # Определяем приоритет на основе типа пользователя
                     if user["user_type"] == "REGULAR_BOT":
                         return 5  # Обычные боты - последние
                     elif user["user_type"] == "HUMAN_BOT":
@@ -9714,24 +9480,17 @@ async def get_all_users(
                 
                 cleaned_users.sort(key=get_role_priority, reverse=(sort_direction == -1))
             elif sort_by_online_status:
-                # Сортируем по онлайн статусу
                 def get_online_status_priority(user):
-                    # Определяем статус для ботов и пользователей
                     status = user["bot_status"] if user["user_type"] in ["HUMAN_BOT", "REGULAR_BOT"] else user["online_status"]
-                    # ONLINE имеет приоритет над OFFLINE
                     return 1 if status == "ONLINE" else 2
                 
                 cleaned_users.sort(key=get_online_status_priority, reverse=(sort_direction == -1))
         
-        # Обновляем total для правильной пагинации ПОСЛЕ дедупликации и сортировки
         total = len(cleaned_users)
         
-        # Применяем пагинацию для всех случаев
         if sort_by_total or sort_by_role or sort_by_online_status:
-            # Для специальной сортировки применяем пагинацию после сортировки
             cleaned_users = cleaned_users[skip:skip + limit]
         
-        # Для обычных случаев пагинация уже применена в MongoDB запросе
         
         return {
             "users": cleaned_users,
@@ -10067,7 +9826,6 @@ async def get_profit_stats(current_admin: User = Depends(get_current_admin)):
         ]).to_list(1)
         frozen_funds = frozen_funds_result[0]["total"] if frozen_funds_result else 0
         
-        # Calculate expenses (для будущего использования)
         total_expenses = profit_breakdown.get("REFUND", 0) + profit_breakdown.get("BONUS", 0) + profit_breakdown.get("EXPENSE", 0)
         
         return {
@@ -10939,20 +10697,16 @@ async def should_bot_take_action(bot: Bot) -> bool:
 async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
     """Поддерживает количество активных ставок равным target_count."""
     try:
-        # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
-        # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
         max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
         max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
         
-        # Получаем информацию о боте
         bot = await db.bots.find_one({"id": bot_id})
         if not bot:
             return
             
         bot_type = bot.get("bot_type", "REGULAR")
         
-        # Подсчитываем текущие активные ставки по типу бота
         if bot_type == "REGULAR":
             current_global_bets = await db.games.count_documents({
                 "creator_type": "bot",
@@ -10976,24 +10730,19 @@ async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
             })
             max_limit = max_active_bets_human
         
-        # Получаем текущее количество активных ставок конкретного бота
         current_active_bets = await db.games.count_documents({
             "creator_id": bot_id,
             "status": "WAITING"
         })
         
-        # Если активных ставок меньше целевого количества, создаём новые
         if current_active_bets < target_count:
             needed_bets = target_count - current_active_bets
             
-            # Проверяем, сколько ставок можно создать с учетом глобального лимита
             available_global_slots = max_limit - current_global_bets
             
-            # Также проверяем индивидуальный лимит бота
             individual_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
             available_individual_slots = individual_limit - current_active_bets
             
-            # Берем минимум между всеми лимитами
             actual_needed_bets = min(needed_bets, available_global_slots, available_individual_slots)
             
             if actual_needed_bets > 0:
@@ -11001,7 +10750,6 @@ async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
                 
                 for i in range(actual_needed_bets):
                     try:
-                        # Проверяем глобальный лимит перед каждой попыткой создания
                         current_check = await db.games.count_documents({
                             "creator_type": "bot",
                             "is_bot_game": True,
@@ -11027,11 +10775,9 @@ async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
             else:
                 logger.info(f"🚫 Cannot create bets for bot {bot_id}: global limit reached {current_global_bets}/{max_limit}")
         
-        # Если активных ставок больше целевого количества, удаляем лишние
         elif current_active_bets > target_count:
             excess_bets = current_active_bets - target_count
             
-            # Получаем лишние ставки
             excess_games = await db.games.find({
                 "creator_id": bot_id,
                 "status": "WAITING"
@@ -11044,7 +10790,6 @@ async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
                 except Exception as e:
                     logger.error(f"Failed to delete excess bet {game['id']}: {e}")
         
-        # Обновляем количество активных ставок в базе данных
         final_active_count = await db.games.count_documents({
             "creator_id": bot_id,
             "status": "WAITING"
@@ -11068,17 +10813,13 @@ async def maintain_bot_active_bets_count(bot_id: str, target_count: int):
 async def bot_create_game_automatically(bot: Bot):
     """Make bot create a game automatically using gem-based betting."""
     try:
-        # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
-        # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
         max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
         max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
         
-        # Определяем тип бота
         bot_doc = await db.bots.find_one({"id": bot.id})
         bot_type = bot_doc.get("bot_type", "REGULAR") if bot_doc else "REGULAR"
         
-        # Подсчитываем текущие активные ставки по типу бота
         if bot_type == "REGULAR":
             current_active_bets = await db.games.count_documents({
                 "creator_type": "bot",
@@ -11102,7 +10843,6 @@ async def bot_create_game_automatically(bot: Bot):
             })
             max_limit = max_active_bets_human
         
-        # Проверяем глобальный лимит
         if current_active_bets >= max_limit:
             logger.info(f"🚫 Global limit reached for {bot_type} bots: {current_active_bets}/{max_limit}")
             return False
@@ -11220,7 +10960,6 @@ async def bot_join_game_automatically(bot: Bot):
         if not bot.can_accept_bets:
             return
             
-        # НОВОЕ ПРАВИЛО: Обычные боты не могут присоединяться к играм живых игроков
         if bot.bot_type == BotType.REGULAR:
             logger.info(f"🚫 Regular bot {bot.name} cannot join live player games")
             return
@@ -11277,12 +11016,10 @@ async def bot_join_game_automatically(bot: Bot):
         if bot.bot_type == "REGULAR":
             commission_amount = game_obj.bet_amount * 0.03
             
-            # Проверяем, была ли игра создана обычным ботом (тогда комиссия не была заморожена)
             creator_bot = await db.bots.find_one({"id": game_obj.creator_id})
             creator_is_regular_bot = creator_bot and creator_bot.get("bot_type") == "REGULAR"
             
             if not creator_is_regular_bot:
-                # Игра была создана человеком или Human-ботом, возвращаем комиссию
                 await db.users.update_one(
                     {"id": game_obj.creator_id},
                     {
@@ -11296,7 +11033,6 @@ async def bot_join_game_automatically(bot: Bot):
                 commission_returned = commission_amount
                 logger.info(f"💰 REGULAR BOT GAME - Returned commission ${commission_amount} to creator {game_obj.creator_id}")
             else:
-                # Игра была создана обычным ботом, комиссия не была заморожена
                 logger.info(f"💰 REGULAR BOT vs REGULAR BOT - No commission was frozen, nothing to return")
         
         # Update game with bot as opponent and move to REVEAL phase
@@ -11309,7 +11045,6 @@ async def bot_join_game_automatically(bot: Bot):
                     "status": GameStatus.ACTIVE,  # Changed to ACTIVE
                     "started_at": datetime.utcnow(),
                     "active_deadline": datetime.utcnow() + timedelta(minutes=1),  # 1 minute to complete
-                    # НЕ ПЕРЕЗАПИСЫВАЕМ is_regular_bot_game - оставляем как было при создании игры
                     "commission_returned": commission_returned  # Track returned commission
                 }
             }
@@ -14300,7 +14035,6 @@ async def create_regular_bots(
 ):
     """Create regular bots (admin only) - ОБНОВЛЕНО для новой системы."""
     try:
-        # Параметры согласно новой спецификации (убрано поле count)
         min_bet = bot_config.get("min_bet_amount", 1.0)  # 1-10000
         max_bet = bot_config.get("max_bet_amount", 50.0)  # 1-10000
         win_rate = bot_config.get("win_percentage", 55.0) / 100.0  # 0-100% -> 0.0-1.0
@@ -14311,13 +14045,10 @@ async def create_regular_bots(
         pause_between_games = bot_config.get("pause_between_games", 5)  # 1-300
         profit_strategy = bot_config.get("profit_strategy", "balanced")
         
-        # Генерация уникального имени бота
         bot_name = bot_config.get("name", "").strip()
         if not bot_name:
-            # Автоматически генерируем уникальное имя Bot#
             bot_name = await generate_unique_bot_name()
         else:
-            # Проверяем, что имя не дублируется
             existing_bot = await db.bots.find_one({"name": bot_name})
             if existing_bot:
                 raise HTTPException(
@@ -14327,7 +14058,6 @@ async def create_regular_bots(
         
         created_bots = []
         
-        # Создаем только одного бота (убрано поле count)
         bot = Bot(
             name=bot_name,
             bot_type=BotType.REGULAR,
@@ -14347,7 +14077,6 @@ async def create_regular_bots(
         await db.bots.insert_one(bot.dict())
         created_bots.append(bot.id)
         
-        # Логируем создание через новую систему
         await regular_bot_system.log_bot_action(bot.id, "BOT_CREATED", {
             "config": bot_config,
             "admin_id": current_user.id
@@ -14387,11 +14116,9 @@ async def start_regular_bots(
 ):
     """Start all regular bots to create bets."""
     try:
-        # Получаем настройки ботов
         settings = await db.bot_settings.find_one({"id": "bot_settings"})
         max_active_bets = settings.get("max_active_bets_regular", 1000000) if settings else 1000000
         
-        # Проверяем текущее количество активных ставок обычных ботов
         current_active_bets = await db.games.count_documents({
             "creator_type": "bot",
             "is_bot_game": True,
@@ -14411,14 +14138,12 @@ async def start_regular_bots(
                 "limit_reached": True
             }
         
-        # Получаем всех активных обычных ботов с учетом режимов создания ставок
         active_bots = await db.bots.find({
             "type": "REGULAR",
             "is_active": True
         }).to_list(100)
         
         if not active_bots:
-            # Создаем ботов если их нет
             await create_regular_bots(
                 {"count": 5, "min_bet_amount": 1.0, "max_bet_amount": 1000000.0},
                 current_user
@@ -14428,7 +14153,6 @@ async def start_regular_bots(
                 "is_active": True
             }).to_list(100)
         
-        # Сортируем ботов по режимам создания ставок и приоритетам
         def sort_bots_by_creation_mode(bots):
             """Сортировка ботов по режимам создания ставок и приоритету."""
             always_first_bots = []
@@ -14444,12 +14168,10 @@ async def start_regular_bots(
                 else:  # queue-based
                     queue_based_bots.append(bot)
             
-            # Сортируем каждую группу по приоритету
             always_first_bots.sort(key=lambda x: x.get("priority_order", 999))
             queue_based_bots.sort(key=lambda x: x.get("priority_order", 999))
             after_all_bots.sort(key=lambda x: x.get("priority_order", 999))
             
-            # Возвращаем отсортированный список: Always-first -> Queue-based -> After-all
             return always_first_bots + queue_based_bots + after_all_bots
         
         sorted_bots = sort_bots_by_creation_mode(active_bots)
@@ -14457,7 +14179,6 @@ async def start_regular_bots(
         started_bots = 0
         available_slots = max_active_bets - current_active_bets
         
-        # Обрабатываем ботов в отсортированном порядке
         for bot_doc in sorted_bots:
             if started_bots >= available_slots:
                 break  # Достигнут лимит активных ставок
@@ -14465,16 +14186,13 @@ async def start_regular_bots(
             bot = Bot(**bot_doc)
             creation_mode = bot_doc.get("creation_mode", "queue-based")
             
-            # Проверяем, не создавал ли бот ставку недавно
             now = datetime.utcnow()
             if bot.last_bet_time:
                 time_since_last_bet = (now - bot.last_bet_time).total_seconds()
                 if time_since_last_bet < bot.recreate_timer:
                     continue
             
-            # Специальная логика для режима "after-all"
             if creation_mode == "after-all":
-                # Проверяем, что все always-first и queue-based боты уже активны
                 other_bots_active = await db.games.count_documents({
                     "creator_type": "bot",
                     "bot_type": "REGULAR",
@@ -14482,7 +14200,6 @@ async def start_regular_bots(
                     "creator_id": {"$ne": bot.id}
                 })
                 
-                # Получаем количество always-first и queue-based ботов
                 priority_bots_count = await db.bots.count_documents({
                     "type": "REGULAR",
                     "is_active": True,
@@ -14490,16 +14207,13 @@ async def start_regular_bots(
                     "id": {"$ne": bot.id}
                 })
                 
-                # Если есть приоритетные боты, но они еще не создали ставки, пропускаем
                 if priority_bots_count > 0 and other_bots_active < priority_bots_count:
                     continue
             
-            # Создаем ставку для бота
             success = await create_bot_bet(bot)
             if success:
                 started_bots += 1
                 
-                # Обновляем время последней ставки
                 await db.bots.update_one(
                     {"id": bot.id},
                     {
@@ -14510,7 +14224,6 @@ async def start_regular_bots(
                     }
                 )
         
-        # Обновляем статистику активных ставок
         final_active_bets = current_active_bets + started_bots
         
         return {
@@ -14535,18 +14248,14 @@ async def create_bot_bet(bot: Bot) -> bool:
     try:
         import random
         
-        # ============ ПРОВЕРКА ГЛОБАЛЬНЫХ ЛИМИТОВ ============
-        # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
         max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
         max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
         
-        # Получаем информацию о боте из базы данных для режима создания ставок
         bot_doc = await db.bots.find_one({"id": bot.id})
         creation_mode = bot_doc.get("creation_mode", "queue-based") if bot_doc else "queue-based"
         bot_type = bot_doc.get("bot_type", "REGULAR") if bot_doc else "REGULAR"
         
-        # Подсчитываем текущие активные ставки по типу бота
         if bot_type == "REGULAR":
             current_active_bets = await db.games.count_documents({
                 "creator_type": "bot",
@@ -14570,51 +14279,38 @@ async def create_bot_bet(bot: Bot) -> bool:
             })
             max_limit = max_active_bets_human
         
-        # Проверяем глобальный лимит
         if current_active_bets >= max_limit:
             logger.info(f"🚫 Global limit reached for {bot_type} bots: {current_active_bets}/{max_limit}")
             return False
         
-        # ============ ПРОВЕРКА ИНДИВИДУАЛЬНЫХ ЛИМИТОВ ============
-        # Получаем текущие активные ставки этого конкретного бота
         bot_active_bets = await db.games.count_documents({
             "creator_id": bot.id,
             "status": "WAITING"
         })
         
-        # Проверяем индивидуальный лимит бота
         individual_limit = bot_doc.get("current_limit") or bot_doc.get("cycle_games", 12)
         if bot_active_bets >= individual_limit:
             logger.info(f"🚫 Individual limit reached for bot {bot.id}: {bot_active_bets}/{individual_limit}")
             return False
         
-        # Передаем данные поведения бота в объект для should_bot_win
         if bot_doc:
             bot._bot_data = bot_doc
         
-        # Для режима "always-first" проверяем дополнительные условия
         if creation_mode == "always-first":
-            # Всегда создаем ставку для always-first ботов (в рамках лимитов)
             logger.info(f"Creating bet for always-first bot {bot.id}")
         
-        # Для режима "queue-based" используем стандартную логику
         elif creation_mode == "queue-based":
-            # Проверяем приоритет в очереди
             logger.info(f"Creating bet for queue-based bot {bot.id} with priority {bot_doc.get('priority_order', 999)}")
         
-        # Для режима "after-all" дополнительных проверок уже было выше
         elif creation_mode == "after-all":
             logger.info(f"Creating bet for after-all bot {bot.id}")
         
-        # Генерируем размер ставки
         bet_amount = round(random.uniform(bot.min_bet_amount, bot.max_bet_amount), 2)
         
-        # Создаем случайную комбинацию гемов для ставки
         gem_types = ["RUBY", "EMERALD", "SAPPHIRE", "DIAMOND"]
         bet_gems = {}
         total_value = 0.0
         
-        # Распределяем ставку по гемам
         remaining_amount = bet_amount
         for i, gem_type in enumerate(gem_types):
             if i == len(gem_types) - 1:  # Последний гем получает остаток
@@ -14633,7 +14329,6 @@ async def create_bot_bet(bot: Bot) -> bool:
                 if remaining_amount <= 0:
                     break
         
-        # Создаем игру/ставку
         game = Game(
             creator_id=bot.id,
             creator_type="bot",
@@ -14673,11 +14368,9 @@ async def create_bot_bet(bot: Bot) -> bool:
 async def get_next_bot_in_queue() -> dict:
     """Get the next bot in queue based on creation mode and priority."""
     try:
-        # Получаем глобальные настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
         max_active_bets = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
         
-        # Проверяем текущие активные ставки
         current_active_bets = await db.games.count_documents({
             "creator_type": "bot",
             "bot_type": "REGULAR",
@@ -14687,19 +14380,16 @@ async def get_next_bot_in_queue() -> dict:
         if current_active_bets >= max_active_bets:
             return {"message": "Global bet limit reached", "bot": None}
         
-        # Получаем всех активных ботов
         all_bots = await db.bots.find({
             "type": "REGULAR",
             "is_active": True
         }).to_list(100)
         
-        # Фильтруем ботов по режимам создания ставок
         always_first_bots = []
         queue_based_bots = []
         after_all_bots = []
         
         for bot in all_bots:
-            # Проверяем индивидуальные лимиты бота
             max_individual_bets = bot.get("max_individual_bets", 12)
             current_bot_bets = await db.games.count_documents({
                 "creator_id": bot["id"],
@@ -14710,7 +14400,6 @@ async def get_next_bot_in_queue() -> dict:
             if current_bot_bets >= max_individual_bets:
                 continue  # Бот достиг своего лимита
             
-            # Проверяем время последней ставки
             if bot.get("last_bet_time"):
                 time_since_last_bet = (datetime.utcnow() - bot["last_bet_time"]).total_seconds()
                 if time_since_last_bet < bot.get("recreate_timer", 30):
@@ -14724,18 +14413,15 @@ async def get_next_bot_in_queue() -> dict:
             else:
                 queue_based_bots.append(bot)
         
-        # Сортируем по приоритету
         always_first_bots.sort(key=lambda x: x.get("priority_order", 999))
         queue_based_bots.sort(key=lambda x: x.get("priority_order", 999))
         after_all_bots.sort(key=lambda x: x.get("priority_order", 999))
         
-        # Выбираем следующего бота
         if always_first_bots:
             return {"message": "Always-first bot selected", "bot": always_first_bots[0]}
         elif queue_based_bots:
             return {"message": "Queue-based bot selected", "bot": queue_based_bots[0]}
         elif after_all_bots:
-            # Проверяем, что все приоритетные боты уже создали ставки
             priority_bots_count = len(always_first_bots) + len(queue_based_bots)
             if priority_bots_count == 0:
                 return {"message": "After-all bot selected", "bot": after_all_bots[0]}
@@ -14782,24 +14468,20 @@ async def get_bot_global_settings_old(current_user: User = Depends(get_current_a
 async def get_bots_queue_status(current_user: User = Depends(get_current_admin)):
     """Get detailed bot queue status with creation modes."""
     try:
-        # Получаем общую информацию о ставках
         total_active_bets = await db.games.count_documents({
             "creator_type": "bot",
             "bot_type": "REGULAR",
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
-        # Получаем настройки
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
         max_active_bets = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
         
-        # Получаем всех активных ботов
         all_bots = await db.bots.find({
             "type": "REGULAR",
             "is_active": True
         }).to_list(100)
         
-        # Группируем ботов по режимам создания ставок
         modes_info = {
             "always-first": {"bots": [], "active_bets": 0},
             "queue-based": {"bots": [], "active_bets": 0},
@@ -14809,7 +14491,6 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
         for bot in all_bots:
             creation_mode = bot.get("creation_mode", "queue-based")
             
-            # Подсчитываем активные ставки для каждого бота
             bot_active_bets = await db.games.count_documents({
                 "creator_id": bot["id"],
                 "creator_type": "bot",
@@ -14829,11 +14510,9 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
             modes_info[creation_mode]["bots"].append(bot_info)
             modes_info[creation_mode]["active_bets"] += bot_active_bets
         
-        # Сортируем ботов по приоритету в каждом режиме
         for mode in modes_info:
             modes_info[mode]["bots"].sort(key=lambda x: x["priority_order"])
         
-        # Получаем информацию о следующем боте в очереди
         next_bot_info = await get_next_bot_in_queue()
         
         return {
@@ -14979,31 +14658,24 @@ async def create_individual_bot(
         can_play_with_bots = bot_config.get("can_play_with_bots", False)
         bet_distribution = bot_config.get("bet_distribution", "medium")  # новое поле
         
-        # Валидация математики
         validation_errors = []
         
-        # Проверка: (Сумма за цикл) / (Игр в цикле) <= Сред. ставка ($)
         avg_bet_from_cycle = cycle_total_amount / cycle_games
         if avg_bet_from_cycle > avg_bet:
             validation_errors.append(f"Средняя ставка (${avg_bet}) должна быть >= {avg_bet_from_cycle:.2f} (Сумма за цикл / Игр в цикле)")
         
-        # Проверка: Мин. ставка <= Сред. ставка
         if min_bet > avg_bet:
             validation_errors.append(f"Минимальная ставка (${min_bet}) должна быть <= средней ставки (${avg_bet})")
         
-        # Проверка: Процент выигрыша должен быть реалистичным
         if win_percentage < 0 or win_percentage > 100:
             validation_errors.append("Процент выигрыша должен быть от 0% до 100%")
         
-        # Проверка: Количество игр в цикле должно быть больше 0
         if cycle_games <= 0:
             validation_errors.append("Количество игр в цикле должно быть больше 0")
         
-        # Проверка: Сумма за цикл должна быть больше 0
         if cycle_total_amount <= 0:
             validation_errors.append("Сумма за цикл должна быть больше 0")
         
-        # Проверка: Можно ли создать валидный набор ставок
         max_possible_sum = cycle_games * avg_bet
         if cycle_total_amount > max_possible_sum:
             validation_errors.append(f"Сумма за цикл (${cycle_total_amount}) не может быть больше максимально возможной суммы (${max_possible_sum})")
@@ -15012,25 +14684,21 @@ async def create_individual_bot(
         if cycle_total_amount < min_possible_sum:
             validation_errors.append(f"Сумма за цикл (${cycle_total_amount}) не может быть меньше минимально возможной суммы (${min_possible_sum})")
         
-        # Проверка таймеров
         if pause_timer < 1 or pause_timer > 3600:
             validation_errors.append("Таймер паузы должен быть от 1 до 3600 секунд")
         
         if recreate_interval < 1:
             validation_errors.append("Интервал пересоздания должен быть минимум 1 секунда")
         
-        # Проверка распределения ставок
         if bet_distribution not in ["small", "medium", "large"]:
             validation_errors.append("Характер распределения ставок должен быть 'small', 'medium' или 'large'")
         
-        # Если есть ошибки валидации, вернуть их
         if validation_errors:
             raise HTTPException(
                 status_code=400, 
                 detail=f"Ошибки валидации: {'; '.join(validation_errors)}"
             )
         
-        # Создаем бота с новыми полями
         bot_data = {
             "id": str(uuid.uuid4()),
             "type": "REGULAR",
@@ -15039,7 +14707,6 @@ async def create_individual_bot(
             "is_active": True,
             "bot_type": "REGULAR",
             
-            # User-defined parameters (обновленные)
             "min_bet_amount": min_bet,
             "avg_bet_amount": avg_bet,  # новое поле вместо max_bet_amount
             "win_percentage": win_percentage,
@@ -15072,7 +14739,6 @@ async def create_individual_bot(
         
         created_bot_id = bot_data["id"]
         
-        # Создаём активные ставки для нового бота
         try:
             bot_obj = Bot(**bot_data)
             for _ in range(cycle_games):
@@ -15081,7 +14747,6 @@ async def create_individual_bot(
                 except Exception as e:
                     logger.error(f"Failed to create initial bet for bot {created_bot_id}: {e}")
             
-            # Обновляем количество активных ставок
             active_count = await db.games.count_documents({
                 "creator_id": created_bot_id,
                 "status": "WAITING"
@@ -15242,7 +14907,6 @@ async def get_regular_bots_list(
             
             win_rate = (wins / total_games * 100) if total_games > 0 else 0
             
-            # Рассчитываем прибыль бота
             total_bet_amount = await db.games.aggregate([
                 {"$match": {"creator_id": bot.id, "status": "COMPLETED"}},
                 {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
@@ -15258,25 +14922,20 @@ async def get_regular_bots_list(
             bot_profit_amount = total_win_sum - total_bet_sum
             bot_profit_percent = (bot_profit_amount / total_bet_sum * 100) if total_bet_sum > 0 else 0
             
-            # Текущий цикл
             cycle_games = bot_doc.get('cycle_games', 12)
             if cycle_games <= 0:
                 cycle_games = 12  # Значение по умолчанию
             
-            # Считаем только отыгранные ставки (победы + поражения, исключая ничьи)
             played_games = await db.games.count_documents({
                 "creator_id": bot.id,
                 "status": "COMPLETED",
                 "winner_id": {"$ne": None}  # Исключаем ничьи (когда winner_id = None)
             })
             
-            # Отыгранные ставки в текущем цикле
             current_cycle_played = played_games % cycle_games
             
-            # Прогресс цикла (X/12 где X = отыгранные ставки без ничьих)
             cycle_progress = f"{current_cycle_played}/{cycle_games}"
             
-            # Оставшиеся ставки для активных ставок (12 - X)
             remaining_slots = max(0, cycle_games - current_cycle_played)
             
             bot_details.append({
@@ -15816,35 +15475,27 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
             """Определяет диапазон ставок на основе типа распределения и поведения бота."""
             base_range = avg_bet - min_bet
             
-            # Базовые настройки распределения
             if bet_distribution == "small":
-                # Больше маленьких ставок - ближе к минимальной
                 bias_min = min_bet
                 bias_max = min_bet + base_range * 0.6  # 60% от диапазона
             elif bet_distribution == "large":
-                # Больше крупных ставок - ближе к средней
                 bias_min = min_bet + base_range * 0.4  # 40% от диапазона
                 bias_max = avg_bet
             else:  # medium
-                # Равномерное распределение
                 bias_min = min_bet + base_range * 0.2  # 20% от диапазона
                 bias_max = min_bet + base_range * 0.8  # 80% от диапазона
             
-            # Поведенческие корректировки
             if bot_behavior == 'aggressive':
-                # Агрессивные боты делают более разнообразные ставки
                 variance_multiplier = 1.2
                 bias_min *= 0.9  # Немного снижаем минимум
                 bias_max *= 1.1  # Немного повышаем максимум
             elif bot_behavior == 'cautious':
-                # Осторожные боты более консервативны
                 variance_multiplier = 0.8
                 bias_min *= 1.1  # Немного повышаем минимум
                 bias_max *= 0.9  # Немного снижаем максимум
             else:  # balanced
                 variance_multiplier = 1.0
             
-            # Убеждаемся, что диапазон разумный
             bias_min = max(min_bet, bias_min)
             bias_max = min(avg_bet, bias_max)
             
@@ -15891,15 +15542,12 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
             else:
                 # Generate bet within bias range based on distribution and behavior
                 if bet_distribution == "small":
-                    # Концентрация на малых ставках
                     variance = (bias_max - bias_min) * 0.3 * variance_multiplier
                     target_center = bias_min + (bias_max - bias_min) * 0.3
                 elif bet_distribution == "large":
-                    # Концентрация на крупных ставках
                     variance = (bias_max - bias_min) * 0.3 * variance_multiplier
                     target_center = bias_min + (bias_max - bias_min) * 0.7
                 else:  # medium
-                    # Равномерное распределение
                     variance = (bias_max - bias_min) * 0.4
                     target_center = (bias_min + bias_max) / 2
                 
@@ -16017,7 +15665,6 @@ async def update_individual_bot_settings(
         if cycle_games is not None and cycle_games < 1:
             raise HTTPException(status_code=400, detail="Cycle games must be at least 1")
         
-        # Новая валидация математики
         if min_bet_amount is not None and avg_bet_amount is not None:
             if min_bet_amount > avg_bet_amount:
                 raise HTTPException(status_code=400, detail="Min bet must be less than or equal to avg bet")
@@ -16084,13 +15731,11 @@ async def update_individual_bot_settings(
                 )
                 generated_bets = len(new_bets)
                 
-                # Поддерживаем правильное количество активных ставок
                 await maintain_bot_active_bets_count(bot_id, updated_bot.get("cycle_length", 12))
                 
             except Exception as e:
                 logger.warning(f"Failed to auto-recalculate bets for bot {bot_id}: {e}")
         
-        # Если изменился cycle_length, но не другие параметры, все равно поддерживаем активные ставки
         elif "cycle_length" in update_fields and bot.get("is_active", False):
             try:
                 await maintain_bot_active_bets_count(bot_id, update_fields["cycle_length"])
@@ -16685,7 +16330,6 @@ async def get_bot_active_bets(
 ):
     """Get active bets for a specific bot and manage them according to remaining_slots."""
     try:
-        # Получаем бота
         bot_doc = await db.bots.find_one({"id": bot_id})
         if not bot_doc:
             raise HTTPException(
@@ -16695,12 +16339,10 @@ async def get_bot_active_bets(
         
         bot = Bot(**bot_doc)
         
-        # Вычисляем remaining_slots (как в /admin/bots/regular/list)
         cycle_games = bot_doc.get('cycle_games', 12)
         if cycle_games <= 0:
             cycle_games = 12
         
-        # Считаем отыгранные ставки (победы + поражения, исключая ничьи)
         played_games = await db.games.count_documents({
             "creator_id": bot_id,
             "status": "COMPLETED",
@@ -16710,7 +16352,6 @@ async def get_bot_active_bets(
         current_cycle_played = played_games % cycle_games
         remaining_slots = max(0, cycle_games - current_cycle_played)
         
-        # Получаем текущие активные ставки
         active_games = await db.games.find({
             "creator_id": bot_id,
             "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
@@ -16718,7 +16359,6 @@ async def get_bot_active_bets(
         
         current_active_count = len(active_games)
         
-        # Если активных ставок больше, чем remaining_slots - удаляем лишние
         if current_active_count > remaining_slots:
             excess_games = current_active_count - remaining_slots
             games_to_cancel = active_games[:excess_games]
@@ -16726,37 +16366,30 @@ async def get_bot_active_bets(
             for game in games_to_cancel:
                 game_obj = Game(**game)
                 
-                # Возвращаем гемы создателю
                 if game_obj.bet_amount > 0:
                     await db.users.update_one(
                         {"id": game_obj.creator_id},
                         {"$inc": {"gems": game_obj.bet_amount}}
                     )
                 
-                # Удаляем игру
                 await db.games.delete_one({"id": game_obj.id})
                 
                 logger.info(f"Cancelled excess game {game_obj.id} for bot {bot_id}")
         
-        # Если активных ставок меньше, чем remaining_slots - создаем новые
         elif current_active_count < remaining_slots:
             needed_games = remaining_slots - current_active_count
             
             for _ in range(needed_games):
-                # Создаем новую ставку для бота
                 bet_amount = random.uniform(bot.min_bet_amount, bot.max_bet_amount)
                 bet_amount = round(bet_amount, 2)
                 
-                # Убеждаемся, что у бота достаточно гемов
                 bot_user = await db.users.find_one({"id": bot_id})
                 if not bot_user or bot_user.get("gems", 0) < bet_amount:
-                    # Если у бота нет гемов, добавляем их
                     await db.users.update_one(
                         {"id": bot_id},
                         {"$inc": {"gems": bet_amount}}
                     )
                 
-                # Создаем новую игру
                 new_game = Game(
                     creator_id=bot_id,
                     bet_amount=bet_amount,
@@ -16767,7 +16400,6 @@ async def get_bot_active_bets(
                 
                 await db.games.insert_one(new_game.dict())
                 
-                # Списываем гемы
                 await db.users.update_one(
                     {"id": bot_id},
                     {"$inc": {"gems": -bet_amount}}
@@ -16775,19 +16407,16 @@ async def get_bot_active_bets(
                 
                 logger.info(f"Created new game {new_game.id} for bot {bot_id}")
         
-        # Получаем обновленный список активных ставок
         updated_active_games = await db.games.find({
             "creator_id": bot_id,
             "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
         }).to_list(100)
         
-        # Получаем статистику завершенных игр
         completed_games = await db.games.find({
             "creator_id": bot_id,
             "status": "COMPLETED"
         }).to_list(1000)
         
-        # Подготавливаем данные для ответа
         bets_data = []
         for game in updated_active_games:
             bets_data.append({
@@ -16801,11 +16430,9 @@ async def get_bot_active_bets(
                 "result": game.get("result", "—")
             })
         
-        # Статистика
         total_bets = len(bets_data)
         total_bet_amount = sum(bet["bet_amount"] for bet in bets_data)
         
-        # Статистика завершенных игр
         bot_wins = len([g for g in completed_games if g.get("winner_id") == bot_id])
         player_wins = len([g for g in completed_games if g.get("winner_id") and g.get("winner_id") != bot_id])
         draws = len([g for g in completed_games if not g.get("winner_id")])
@@ -18510,7 +18137,6 @@ async def db_operation_with_retry(operation, max_retries=3, base_delay=0.1):
                 logger.error(f"Database operation failed after {max_retries} attempts: {e}")
                 raise e
             
-            # Экспоненциальный откат
             delay = base_delay * (2 ** attempt)
             logger.warning(f"Database operation failed (attempt {attempt + 1}/{max_retries}), retrying in {delay}s: {e}")
             await asyncio.sleep(delay)
@@ -19249,13 +18875,11 @@ async def bulk_create_human_bots(
                 bot_name = bot_data.get('name') if bot_data.get('name') else await generate_unique_human_bot_name()
                 bot_gender = bot_data.get('gender', 'male')
                 
-                # Generate random values within ranges (целые гемы)
                 min_bet = random.randint(int(bulk_data.min_bet_range[0]), int(bulk_data.min_bet_range[1]))
                 max_bet = random.randint(int(bulk_data.max_bet_range[0]), int(bulk_data.max_bet_range[1]))
                 
                 # Ensure min_bet < max_bet
                 if min_bet >= max_bet:
-                    # Поменяем местами если нужно, сохранив целые числа
                     min_bet, max_bet = min(min_bet, max_bet), max(min_bet, max_bet)
                     if min_bet == max_bet:
                         max_bet = min_bet + 1  # Гарантируем разность в 1 гем
@@ -19271,7 +18895,6 @@ async def bulk_create_human_bots(
                 # Generate bet_limit within range
                 bet_limit = random.randint(bulk_data.bet_limit_range[0], bulk_data.bet_limit_range[1])
                 
-                # Create bot (с целыми значениями ставок)
                 human_bot = HumanBot(
                     name=bot_name,
                     character=bulk_data.character,
@@ -19767,8 +19390,6 @@ async def get_human_bot_active_bets(
         if not bot:
             raise HTTPException(status_code=404, detail="Human bot not found")
         
-        # Get only active bets (WAITING, ACTIVE, REVEAL) и не скрытые
-        # Ищем игры где бот участвует как создатель ИЛИ как оппонент
         active_statuses = ["WAITING", "ACTIVE", "REVEAL"]
         active_bets_cursor = db.games.find({
             "$or": [
@@ -19798,12 +19419,10 @@ async def get_human_bot_active_bets(
             is_creator = game.get('creator_id') == bot_id
             
             if is_creator:
-                # Бот является создателем игры
                 opponent_id = game.get('opponent_id', '')
                 bot_gem = game.get("creator_gem", "")
                 opponent_gem = game.get("opponent_gem", "")
             else:
-                # Бот является оппонентом
                 opponent_id = game.get('creator_id', '')
                 bot_gem = game.get("opponent_gem", "")
                 opponent_gem = game.get("creator_gem", "")
@@ -19846,7 +19465,6 @@ async def get_human_bot_active_bets(
                 "winner_id": game.get("winner_id", ""),
                 "result": result,
                 "is_creator": is_creator,  # Добавляем флаг для отладки
-                # Добавляем информацию о ходах для завершенных игр
                 "creator_move": game.get("creator_move", ""),
                 "opponent_move": game.get("opponent_move", ""),
                 "bot_move": game.get("creator_move" if is_creator else "opponent_move", ""),
@@ -19887,7 +19505,6 @@ async def get_human_bot_all_bets(
         if not bot:
             raise HTTPException(status_code=404, detail="Human bot not found")
         
-        # Get all bets (исключая скрытые) где бот участвует как создатель ИЛИ как оппонент
         all_bets_cursor = db.games.find({
             "$or": [
                 {"creator_id": bot_id},  # Бот является создателем
@@ -19921,12 +19538,10 @@ async def get_human_bot_all_bets(
             is_creator = game.get('creator_id') == bot_id
             
             if is_creator:
-                # Бот является создателем игры
                 opponent_id = game.get('opponent_id', '')
                 bot_gem = game.get("creator_gem", "")
                 opponent_gem = game.get("opponent_gem", "")
             else:
-                # Бот является оппонентом
                 opponent_id = game.get('creator_id', '')
                 bot_gem = game.get("opponent_gem", "")
                 opponent_gem = game.get("creator_gem", "")
@@ -19969,7 +19584,6 @@ async def get_human_bot_all_bets(
                 "winner_id": game.get("winner_id", ""),
                 "result": result,
                 "is_creator": is_creator,  # Добавляем флаг для отладки
-                # Добавляем информацию о ходах для завершенных игр
                 "creator_move": game.get("creator_move", ""),
                 "opponent_move": game.get("opponent_move", ""),
                 "bot_move": game.get("creator_move" if is_creator else "opponent_move", ""),
@@ -20677,7 +20291,6 @@ async def delete_human_bot_completed_bets(
             "hidden": {"$ne": True}  # Не считаем уже скрытые
         })
         
-        # Hide only completed bets (preserve WAITING and ACTIVE), не удаляем
         hide_result = await db.games.update_many(
             {
                 "creator_id": bot_id,
@@ -21331,7 +20944,6 @@ async def get_detailed_notification_analytics(
             {"$match": query},
             {
                 "$addFields": {
-                    # Округляем время до минуты для группировки массовых рассылок
                     "rounded_time": {
                         "$dateFromParts": {
                             "year": {"$year": "$created_at"},
@@ -21467,13 +21079,10 @@ async def get_detailed_notification_analytics(
             notification_id = notification.get("id") or str(notification.get("_id"))
             notification_type = notification.get("type", "unknown")
             
-            # Определяем индивидуальные уведомления по типу
             individual_notification_types = {"bet_accepted", "match_result", "gem_gift", "commission_freeze"}
             is_individual_notification = notification_type in individual_notification_types
             
-            # Для массовых уведомлений найдем ВСЕ экземпляры этого уведомления
             if not is_individual_notification:
-                # Округляем время для поиска (до минуты)
                 created_at = notification.get("created_at")
                 if isinstance(created_at, datetime):
                     rounded_time = created_at.replace(second=0, microsecond=0)
@@ -21483,7 +21092,6 @@ async def get_detailed_notification_analytics(
                     time_range_start = created_at
                     time_range_end = created_at
 
-                # Ищем все уведомления с такими же параметрами в пределах минуты
                 mass_notification_query = {
                     "title": notification.get("title"),
                     "message": notification.get("message"),
@@ -21494,11 +21102,9 @@ async def get_detailed_notification_analytics(
                     }
                 }
                 
-                # Получаем все экземпляры этого массового уведомления
                 mass_notification_cursor = db.notifications.find(mass_notification_query, {"user_id": 1, "is_read": 1, "read_at": 1})
                 mass_notifications = await mass_notification_cursor.to_list(None)
                 
-                # Создаем карты для читателей массового уведомления
                 mass_read_user_ids = set()
                 mass_read_at_map = {}
                 
@@ -21510,28 +21116,23 @@ async def get_detailed_notification_analytics(
                         mass_read_user_ids.add(user_id)
                         mass_read_at_map[user_id] = mass_notif.get("read_at")
                 
-                # Для массовых уведомлений получатели - это все найденные пользователи из экземпляров
                 mass_target_user_ids = [notif.get("user_id") for notif in mass_notifications if notif.get("user_id") in humans_map]
                 target_user_ids = list(set(mass_target_user_ids))  # Убираем дубликаты
                 target_users = [humans_map[uid] for uid in target_user_ids]
                 
-                # Используем данные массового уведомления
                 read_user_ids = mass_read_user_ids
                 read_at_map = mass_read_at_map
             else:
-                # Для индивидуальных уведомлений используем старую логику
                 if notification.get("target_users"):
                     # Notification was sent to specific users
                     target_user_ids = [uid for uid in notification["target_users"] if uid in humans_map]
                     target_users = [humans_map[uid] for uid in target_user_ids]
                 else:
-                    # Для индивидуальных уведомлений найдем реального получателя из базы
                     notification_user_id = notification.get("user_id")
                     if notification_user_id and notification_user_id in humans_map:
                         target_users = [humans_map[notification_user_id]]
                         target_user_ids = [notification_user_id]
                     else:
-                        # Если получателя не найдено, пропускаем
                         continue
                 
                 # Get read notifications for this specific notification from pre-fetched data
@@ -21669,7 +21270,6 @@ class DeleteNotificationsByTypeRequest(BaseModel):
 class DeleteNotificationsByIdsRequest(BaseModel):
     notification_ids: List[str]  # Список ID для удаления
 
-# Добавляем эти эндпоинты после существующих notification endpoints
 
 @api_router.delete("/admin/notifications/by-type")
 async def delete_notifications_by_type(
@@ -21678,7 +21278,6 @@ async def delete_notifications_by_type(
 ):
     """Удаление уведомлений по типу/категории"""
     try:
-        # Русские названия для типов уведомлений
         type_names = {
             "bet_accepted": "Ставки",
             "match_result": "Результаты", 
@@ -21688,7 +21287,6 @@ async def delete_notifications_by_type(
             "admin_notification": "Админские"
         }
         
-        # Подсчитаем количество уведомлений для удаления
         total_count = 0
         for notification_type in request.notification_types:
             count = await db.notifications.count_documents({"type": notification_type})
@@ -21702,7 +21300,6 @@ async def delete_notifications_by_type(
                 "deleted_count": 0
             }
         
-        # Удаляем уведомления
         delete_result = await db.notifications.delete_many({
             "type": {"$in": request.notification_types}
         })
@@ -21741,9 +21338,7 @@ async def delete_notifications_by_ids(
         total_deleted_count = 0
         individual_notification_types = {"bet_accepted", "match_result", "gem_gift", "commission_freeze"}
         
-        # Обрабатываем каждый ID отдельно
         for notification_id in request.notification_ids:
-            # Сначала найдем уведомление, чтобы определить его тип
             notification = await db.notifications.find_one({
                 "$or": [
                     {"id": notification_id},
@@ -21758,7 +21353,6 @@ async def delete_notifications_by_ids(
             is_individual_notification = notification_type in individual_notification_types
             
             if is_individual_notification:
-                # Для индивидуальных уведомлений удаляем только конкретное уведомление
                 delete_result = await db.notifications.delete_many({
                     "$or": [
                         {"id": notification_id},
@@ -21767,7 +21361,6 @@ async def delete_notifications_by_ids(
                 })
                 total_deleted_count += delete_result.deleted_count
             else:
-                # Для массовых уведомлений удаляем ВСЕ экземпляры с такими же параметрами
                 created_at = notification.get("created_at")
                 if isinstance(created_at, datetime):
                     rounded_time = created_at.replace(second=0, microsecond=0)
@@ -21777,7 +21370,6 @@ async def delete_notifications_by_ids(
                     time_range_start = created_at
                     time_range_end = created_at
 
-                # Удаляем все экземпляры массового уведомления
                 mass_delete_query = {
                     "title": notification.get("title"),
                     "message": notification.get("message"),
@@ -21812,7 +21404,6 @@ async def get_notifications_stats_by_type(
 ):
     """Получить статистику уведомлений по типам"""
     try:
-        # Русские названия для типов уведомлений
         type_names = {
             "bet_accepted": "Ставки",
             "match_result": "Результаты", 
@@ -21822,7 +21413,6 @@ async def get_notifications_stats_by_type(
             "admin_notification": "Админские"
         }
         
-        # Агрегация по типам
         pipeline = [
             {"$group": {"_id": "$type", "count": {"$sum": 1}}},
             {"$sort": {"count": -1}}
