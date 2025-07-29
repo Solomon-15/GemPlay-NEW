@@ -704,7 +704,7 @@ const NotificationAdmin = ({ user }) => {
                             className="w-full bg-surface-sidebar border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-accent-primary"
                           />
                           
-                          {/* Результаты поиска */}
+                          {/* Результаты поиска или все пользователи */}
                           {foundUsers.length > 0 && (
                             <div className="absolute top-full left-0 right-0 bg-surface-sidebar border border-gray-600 rounded-lg mt-1 max-h-40 overflow-y-auto z-10 shadow-xl">
                               {foundUsers.map(user => (
@@ -713,8 +713,12 @@ const NotificationAdmin = ({ user }) => {
                                   onClick={() => addUserToSelection(user)}
                                   className="w-full text-left px-3 py-2 hover:bg-surface-card text-white text-sm border-b border-gray-700 last:border-b-0"
                                 >
-                                  <div className="font-medium">{user.username}</div>
-                                  <div className="text-xs text-gray-400">{user.email}</div>
+                                  <div className="font-medium">
+                                    {searchMode === 'name' ? user.username : user.email}
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    {searchMode === 'name' ? user.email : user.username}
+                                  </div>
                                 </button>
                               ))}
                             </div>
