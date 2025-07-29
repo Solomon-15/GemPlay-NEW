@@ -1785,6 +1785,32 @@ const UserManagement = ({ user: currentUser }) => {
             />
           </div>
         </div>
+
+        {/* Фильтр по TOTAL */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-secondary">Минимальный TOTAL</label>
+            <input
+              type="number"
+              placeholder="0"
+              value={totalMin}
+              onChange={(e) => setTotalMin(e.target.value)}
+              onBlur={handleTotalFilter}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-secondary">Максимальный TOTAL</label>
+            <input
+              type="number"
+              placeholder="∞"
+              value={totalMax}
+              onChange={(e) => setTotalMax(e.target.value)}
+              onBlur={handleTotalFilter}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Массовые действия */}
