@@ -9391,15 +9391,40 @@ async def get_all_users(
             total_games_lost = total_games_played - total_games_won
             total_games_draw = user.get("total_games_draw", 0)
             
+            # Определение типа пользователя (обычный, Human-бот, обычный бот)
+            username = user.get("username")
+            user_type = "USER"  # По умолчанию обычный пользователь
+            bot_status = None
+            
+            # Проверяем, является ли пользователь Human-ботом
+            if username in human_bots_by_name:
+                user_type = "HUMAN_BOT"
+                human_bot_info = human_bots_by_name[username]
+                bot_status = "ONLINE" if human_bot_info.get("is_active", False) else "OFFLINE"
+            
+            # Проверяем, является ли пользователь обычным ботом
+            elif username in bots_by_name:
+                user_type = "REGULAR_BOT" 
+                bot_info = bots_by_name[username]
+                bot_status = "ONLINE" if bot_info.get("is_active", False) else "OFFLINE"
+            
+            # Для обычных пользователей определяем онлайн статус по активности
+            if user_type == "USER":
+                bot_status = get_user_online_status(user)
+            
             cleaned_user = {
                 "id": user.get("id"),
                 "username": user.get("username"),
                 "email": user.get("email"),
                 "role": user.get("role"),
+                "user_type": user_type,  # Новое поле для типа пользователя
                 "status": user.get("status"),
                 "online_status": get_user_online_status(user),  # Новое поле для онлайн статуса
+                "bot_status": bot_status,  # Статус бота (ONLINE/OFFLINE) или онлайн статус пользователя
                 "gender": user.get("gender"),
                 "virtual_balance": user.get("virtual_balance", 0),
+                "frozen_balance": user.get("frozen_balance", 0),  # Добавляем замороженный баланс
+                "total_balance": user.get("virtual_balance", 0) + user.get("frozen_balance", 0),  # Общий баланс
                 "total_games_played": total_games_played,
                 "total_games_won": total_games_won,
                 "total_games_lost": total_games_lost,
