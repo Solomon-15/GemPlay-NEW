@@ -109,7 +109,7 @@ const NotificationAdmin = ({ user }) => {
         params: { 
           search: searchQuery,
           search_mode: searchMode, // Передаем режим поиска
-          limit: 20,
+          limit: 50, // Увеличиваем лимит для лучших результатов
           exclude_bots: true // Исключаем ботов из поиска
         }
       });
