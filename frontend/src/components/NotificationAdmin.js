@@ -133,23 +133,8 @@ const NotificationAdmin = ({ user }) => {
 
   // Загружаем всех пользователей при фокусе на поле
   const handleSearchFocus = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/users?search=&page=1&limit=100`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (response.data.success) {
-        // Фильтруем только человеческих пользователей (не ботов)
-        const humanUsers = response.data.users.filter(user => 
-          user.role !== 'HUMAN_BOT' && user.role !== 'REGULAR_BOT'
-        );
-        setFoundUsers(humanUsers);
-      }
-    } catch (error) {
-      console.error('Error loading all users on focus:', error);
-      setFoundUsers([]);
-    }
+    // Используем searchUsers с пустой строкой для загрузки всех пользователей
+    searchUsers('');
   };
 
   // Обработчик изменения режима поиска
