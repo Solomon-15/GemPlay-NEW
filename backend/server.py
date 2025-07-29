@@ -20738,7 +20738,7 @@ async def get_user_notifications(
             payload = NotificationPayload(**notif.get("payload", {}))
             
             notifications.append(NotificationResponse(
-                id=notif["id"],
+                id=notif.get("id") or str(notif.get("_id")),  # Handle both id and _id fields
                 user_id=notif["user_id"],
                 type=NotificationTypeEnum(notif["type"]),
                 title=notif["title"],
@@ -20746,7 +20746,7 @@ async def get_user_notifications(
                 emoji=notif.get("emoji", "📢"),  # Default emoji if not present
                 priority=NotificationPriorityEnum(notif.get("priority", "info")),  # Default priority if not present
                 payload=payload,
-                is_read=notif["is_read"],
+                is_read=notif.get("is_read", notif.get("read", False)),  # Handle both is_read and read fields
                 read_at=notif.get("read_at"),
                 created_at=notif["created_at"],
                 expires_at=notif.get("expires_at")
