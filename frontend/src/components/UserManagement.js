@@ -1876,7 +1876,7 @@ const UserManagement = ({ user: currentUser }) => {
                         {getUserOnlineStatusBadge(user)}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        {getUserRoleBadge(user.role)}
+                        {getUserRoleBadge(user)}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="font-rajdhani font-bold text-accent-primary">
