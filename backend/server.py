@@ -9380,7 +9380,7 @@ async def get_all_users(
         
         # Clean user data
         cleaned_users = []
-        users_to_process = all_users if (sort_by_total or sort_by_role) else users
+        users_to_process = all_users if (sort_by_total or sort_by_role or sort_by_online_status) else users
         
         for user in users_to_process:
             user_id = user.get("id")
