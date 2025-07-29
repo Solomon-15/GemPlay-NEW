@@ -20748,22 +20748,42 @@ async def get_user_notifications(
             {"expires_at": {"$gte": current_time}}
         ]
         
-        # Get total count
-        total_notifications = await db.notifications.count_documents(query_filter)
+        # Optimized single aggregation pipeline to get all data in one query
+        pipeline = [
+            {"$match": query_filter},
+            {"$facet": {
+                # Get total count
+                "total_count": [{"$count": "count"}],
+                # Get unread count
+                "unread_count": [
+                    {"$match": {"is_read": False}},
+                    {"$count": "count"}
+                ],
+                # Get paginated notifications
+                "notifications": [
+                    {"$sort": {"created_at": -1}},
+                    {"$skip": skip},
+                    {"$limit": limit}
+                ]
+            }}
+        ]
         
-        # Get unread count
-        unread_count = await db.notifications.count_documents({
-            "user_id": current_user.id,
-            "is_read": False,
-            "$or": [
-                {"expires_at": None},
-                {"expires_at": {"$gte": current_time}}
-            ]
-        })
+        # Execute the aggregation with retry logic
+        async def execute_aggregation():
+            cursor = db.notifications.aggregate(pipeline)
+            return await cursor.to_list(1)
+            
+        result = await db_operation_with_retry(execute_aggregation)
         
-        # Get notifications with pagination
-        notifications_cursor = db.notifications.find(query_filter).sort("created_at", -1).skip(skip).limit(limit)
-        notifications_list = await notifications_cursor.to_list(length=limit)
+        if not result:
+            raise Exception("Aggregation returned empty result")
+            
+        aggregation_result = result[0]
+        
+        # Extract results
+        total_notifications = aggregation_result["total_count"][0]["count"] if aggregation_result["total_count"] else 0
+        unread_count = aggregation_result["unread_count"][0]["count"] if aggregation_result["unread_count"] else 0
+        notifications_list = aggregation_result["notifications"]
         
         # Format response
         notifications = []
@@ -20803,7 +20823,8 @@ async def get_user_notifications(
         )
         
     except Exception as e:
-        logger.error(f"Error getting notifications: {e}")
+        logger.error(f"Error getting notifications for user {current_user.id}: {str(e)}")
+        logger.error(f"Error traceback:", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get notifications"
