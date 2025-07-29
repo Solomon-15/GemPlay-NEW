@@ -365,7 +365,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
                                     onClick={(e) => toggleExpandedNotification(notification.id, e)}
                                     className="text-accent-primary hover:text-accent-primary-dark text-xs font-medium"
                                   >
-                                    {expandedNotificationId === notification.id ? 'Скрыть' : 'Подробнее'}
+                                    {expandedNotificationId === notification.id ? 'Hide' : 'Details'}
                                   </button>
                                 )}
                               </div>
