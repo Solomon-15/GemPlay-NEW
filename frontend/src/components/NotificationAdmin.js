@@ -684,7 +684,7 @@ const NotificationAdmin = ({ user }) => {
                               name="searchMode"
                               value="name"
                               checked={searchMode === 'name'}
-                              onChange={(e) => setSearchMode(e.target.value)}
+                              onChange={(e) => handleSearchModeChange(e.target.value)}
                               className="text-accent-primary focus:ring-accent-primary"
                             />
                             <span className="text-white text-sm">Поиск по имени</span>
