@@ -118,17 +118,27 @@ def test_game_workflow():
     
     print(f"✅ Game created with ID: {game_id}")
     
-    # Check initial status
-    status_response, status_success = make_request("GET", f"/games/{game_id}/status", auth_token=admin_token)
+    # Check initial status through available games
+    available_response, available_success = make_request("GET", "/games/available", auth_token=admin_token)
     
-    if status_success:
-        initial_status = status_response.get("status")
-        print(f"Initial game status: {initial_status}")
+    if available_success and isinstance(available_response, list):
+        our_game = None
+        for game in available_response:
+            if game.get("game_id") == game_id:
+                our_game = game
+                break
         
-        if initial_status == "WAITING":
-            print("✅ CORRECT: Game status is WAITING after creation")
+        if our_game:
+            initial_status = our_game.get("status")
+            print(f"Initial game status: {initial_status}")
+            
+            if initial_status == "WAITING":
+                print("✅ CORRECT: Game status is WAITING after creation")
+            else:
+                print(f"❌ INCORRECT: Expected WAITING, got {initial_status}")
+                return False
         else:
-            print(f"❌ INCORRECT: Expected WAITING, got {initial_status}")
+            print("❌ Game not found in available games")
             return False
     else:
         print("❌ Failed to check initial game status")
