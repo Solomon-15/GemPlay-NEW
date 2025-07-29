@@ -281,8 +281,8 @@ def test_game_workflow():
         print("❌ Failed to give second user gems")
         return False
     
-    # Step 6: Second user joins the game (status should change to ACTIVE)
-    print("\n6. SECOND USER JOINS GAME (Status should change to ACTIVE)")
+    # Step 7: Second user joins the game (status should change to ACTIVE)
+    print("\n7. THIRD USER JOINS GAME (Status should change to ACTIVE)")
     
     join_game_data = {
         "move": "paper",
@@ -295,14 +295,14 @@ def test_game_workflow():
         print("❌ Failed to join game")
         return False
     
-    print("✅ Second user joined game successfully")
+    print("✅ Third user joined game successfully")
     
-    # Check status after join (should be ACTIVE) - check through available games
+    # Check status after join (should be ACTIVE) - check through available games using viewer
     time.sleep(1)  # Small delay to ensure status update
     
     # Since the game is now ACTIVE, it won't appear in available games anymore
     # Let's check if it's no longer in available games (which indicates it's ACTIVE)
-    available_after_join_response, available_after_join_success = make_request("GET", "/games/available", auth_token=admin_token)
+    available_after_join_response, available_after_join_success = make_request("GET", "/games/available", auth_token=viewer_token)
     
     if available_after_join_success and isinstance(available_after_join_response, list):
         game_still_available = False
@@ -321,8 +321,8 @@ def test_game_workflow():
         print("❌ Failed to check game status after join")
         return False
     
-    # Step 7: Second user chooses move (game should complete)
-    print("\n7. SECOND USER CHOOSES MOVE (Game should complete)")
+    # Step 8: Third user chooses move (game should complete)
+    print("\n8. THIRD USER CHOOSES MOVE (Game should complete)")
     
     choose_move_data = {
         "move": "paper"
