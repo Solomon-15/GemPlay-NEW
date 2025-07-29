@@ -455,6 +455,12 @@ const NotificationAdmin = ({ user }) => {
     }
   };
 
+  // Определяем является ли уведомление индивидуальным (не массовым)
+  const isIndividualNotification = (type) => {
+    const individualTypes = ['bet_accepted', 'match_result', 'gem_gift', 'commission_freeze'];
+    return individualTypes.includes(type);
+  };
+
   const getReadPercentageColor = (percentage) => {
     if (percentage >= 80) return 'text-green-400';
     if (percentage >= 50) return 'text-yellow-400';
