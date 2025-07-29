@@ -394,7 +394,7 @@ def test_response_structure_validation() -> None:
     # Validate top-level structure
     print_subheader("Validating Top-Level Response Structure")
     
-    expected_top_level_fields = ["total_count", "unread_count", "notifications"]
+    expected_top_level_fields = ["success", "notifications", "pagination"]
     missing_top_fields = [field for field in expected_top_level_fields if field not in response]
     
     if not missing_top_fields:
@@ -406,9 +406,11 @@ def test_response_structure_validation() -> None:
         return
     
     # Validate field types
-    total_count = response.get("total_count")
-    unread_count = response.get("unread_count")
+    success = response.get("success")
     notifications = response.get("notifications")
+    pagination = response.get("pagination", {})
+    total_count = pagination.get("total_items", 0)
+    unread_count = pagination.get("unread_count", 0)
     
     print_success(f"total_count: {total_count} (type: {type(total_count).__name__})")
     print_success(f"unread_count: {unread_count} (type: {type(unread_count).__name__})")
