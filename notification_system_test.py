@@ -536,7 +536,7 @@ def test_admin_analytics() -> None:
     # Validate analytics response structure
     print_subheader("Validating Analytics Response Structure")
     
-    expected_analytics_fields = ["success", "analytics"]
+    expected_analytics_fields = ["success", "data"]
     missing_analytics_fields = [field for field in expected_analytics_fields if field not in response]
     
     if not missing_analytics_fields:
