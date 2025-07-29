@@ -365,6 +365,39 @@ const UserManagement = ({ user: currentUser }) => {
     setStatusFilter(status);
     pagination.handlePageChange(1);
   };
+  
+  // Новые обработчики фильтров
+  const handleRoleFilter = (role) => {
+    setRoleFilter(role);
+    pagination.handlePageChange(1);
+  };
+  
+  const handleSortChange = (field) => {
+    if (sortBy === field) {
+      // Если тот же поле, меняем порядок
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Если новое поле, устанавливаем asc
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+    pagination.handlePageChange(1);
+  };
+  
+  const handleBalanceFilter = () => {
+    pagination.handlePageChange(1);
+  };
+  
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('');
+    setRoleFilter('');
+    setSortBy('');
+    setSortOrder('asc');
+    setBalanceMin('');
+    setBalanceMax('');
+    pagination.handlePageChange(1);
+  };
 
   const handleEditUser = (user) => {
     setSelectedUser(user);
