@@ -412,6 +412,27 @@ const UserManagement = ({ user: currentUser }) => {
     setTotalMax('');
     pagination.handlePageChange(1);
   };
+  
+  // Новая функция для интерактивной сортировки по клику на заголовки
+  const handleColumnSort = (columnField) => {
+    if (sortBy === columnField) {
+      // Если тот же столбец, меняем порядок: desc -> asc -> desc
+      setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+    } else {
+      // Новый столбец, начинаем с desc (убывание)
+      setSortBy(columnField);
+      setSortOrder('desc');
+    }
+    pagination.handlePageChange(1);
+  };
+  
+  // Функция для получения иконки сортировки
+  const getSortIcon = (columnField) => {
+    if (sortBy !== columnField) {
+      return '↕️'; // Нет активной сортировки
+    }
+    return sortOrder === 'desc' ? '↓' : '↑';
+  };
 
   const handleEditUser = (user) => {
     setSelectedUser(user);
