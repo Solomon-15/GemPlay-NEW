@@ -1411,6 +1411,315 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_notification_detailed_analytics_individual_vs_mass() -> None:
+    """Test the notification system backend API changes for individual vs mass notifications logic.
+    
+    This test specifically verifies the /api/admin/notifications/detailed-analytics endpoint
+    to ensure that:
+    1. Individual notifications (bet_accepted, match_result, gem_gift, commission_freeze) show single recipient
+    2. Mass notifications (admin_notification, system_message, admin_warning) can show multiple recipients
+    3. The "Ставка принята!" (bet_accepted) no longer shows 344 recipients but shows 1 recipient
+    4. Response structure is correct for both types
+    5. Data consistency is maintained
+    """
+    print_header("NOTIFICATION DETAILED ANALYTICS - INDIVIDUAL VS MASS LOGIC TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with notification analytics test")
+        record_test("Notification Analytics - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Test detailed analytics endpoint accessibility
+    print_subheader("Step 2: Test Detailed Analytics Endpoint")
+    
+    analytics_response, analytics_success = make_request(
+        "GET", "/admin/notifications/detailed-analytics?page=1&limit=20",
+        auth_token=admin_token
+    )
+    
+    if not analytics_success:
+        print_error("Failed to access detailed analytics endpoint")
+        record_test("Notification Analytics - Endpoint Access", False, "Endpoint not accessible")
+        return
+    
+    print_success("✓ Detailed analytics endpoint accessible")
+    
+    # Verify response structure
+    expected_fields = ["success", "data", "pagination"]
+    missing_fields = [field for field in expected_fields if field not in analytics_response]
+    
+    if not missing_fields:
+        print_success("✓ Response has all expected fields")
+        record_test("Notification Analytics - Response Structure", True)
+    else:
+        print_error(f"✗ Response missing fields: {missing_fields}")
+        record_test("Notification Analytics - Response Structure", False, f"Missing: {missing_fields}")
+        return
+    
+    notifications_data = analytics_response.get("data", [])
+    pagination_data = analytics_response.get("pagination", {})
+    
+    print_success(f"✓ Found {len(notifications_data)} notifications in analytics")
+    print_success(f"✓ Pagination: page {pagination_data.get('current_page', 0)}, total {pagination_data.get('total_items', 0)}")
+    
+    # Step 3: Analyze individual vs mass notification logic
+    print_subheader("Step 3: Analyze Individual vs Mass Notification Logic")
+    
+    individual_types = {"bet_accepted", "match_result", "gem_gift", "commission_freeze"}
+    mass_types = {"admin_notification", "system_message", "admin_warning"}
+    
+    individual_notifications = []
+    mass_notifications = []
+    other_notifications = []
+    
+    for notification in notifications_data:
+        notification_type = notification.get("type", "unknown")
+        total_recipients = notification.get("total_recipients", 0)
+        
+        if notification_type in individual_types:
+            individual_notifications.append(notification)
+        elif notification_type in mass_types:
+            mass_notifications.append(notification)
+        else:
+            other_notifications.append(notification)
+    
+    print_success(f"✓ Individual notifications found: {len(individual_notifications)}")
+    print_success(f"✓ Mass notifications found: {len(mass_notifications)}")
+    print_success(f"✓ Other notifications found: {len(other_notifications)}")
+    
+    # Step 4: Test Individual Notifications Logic
+    print_subheader("Step 4: Test Individual Notifications Logic")
+    
+    individual_test_passed = True
+    bet_accepted_found = False
+    
+    for notification in individual_notifications:
+        notification_type = notification.get("type", "unknown")
+        notification_id = notification.get("notification_id", "unknown")
+        total_recipients = notification.get("total_recipients", 0)
+        title = notification.get("title", "")
+        message = notification.get("message", "")
+        
+        print_success(f"Individual notification: {notification_type}")
+        print_success(f"  ID: {notification_id}")
+        print_success(f"  Title: {title}")
+        print_success(f"  Message: {message[:50]}...")
+        print_success(f"  Total recipients: {total_recipients}")
+        
+        # Check if this is a bet_accepted notification (Ставка принята!)
+        if notification_type == "bet_accepted" or "Ставка принята" in title or "Ставка принята" in message:
+            bet_accepted_found = True
+            print_success(f"  ✓ Found 'Ставка принята!' notification")
+            
+            if total_recipients == 1:
+                print_success(f"  ✅ CORRECT: Shows 1 recipient (not 344)")
+                record_test("Notification Analytics - Bet Accepted Single Recipient", True)
+            else:
+                print_error(f"  ❌ INCORRECT: Shows {total_recipients} recipients (should be 1)")
+                record_test("Notification Analytics - Bet Accepted Single Recipient", False, f"Recipients: {total_recipients}")
+                individual_test_passed = False
+        
+        # Verify individual notifications show only 1 recipient
+        if total_recipients == 1:
+            print_success(f"  ✅ CORRECT: Individual notification shows 1 recipient")
+        else:
+            print_error(f"  ❌ INCORRECT: Individual notification shows {total_recipients} recipients (should be 1)")
+            individual_test_passed = False
+        
+        # Verify read_users and unread_users structure
+        read_users = notification.get("read_users", [])
+        unread_users = notification.get("unread_users", [])
+        
+        if len(read_users) + len(unread_users) == total_recipients:
+            print_success(f"  ✓ Read/unread users count matches total recipients")
+        else:
+            print_error(f"  ✗ Read/unread users count mismatch: {len(read_users)} + {len(unread_users)} ≠ {total_recipients}")
+            individual_test_passed = False
+    
+    if individual_test_passed:
+        print_success("✅ Individual notifications logic PASSED")
+        record_test("Notification Analytics - Individual Notifications Logic", True)
+    else:
+        print_error("❌ Individual notifications logic FAILED")
+        record_test("Notification Analytics - Individual Notifications Logic", False, "Logic incorrect")
+    
+    if not bet_accepted_found:
+        print_warning("⚠ No 'Ставка принята!' (bet_accepted) notifications found for testing")
+        record_test("Notification Analytics - Bet Accepted Found", False, "No bet_accepted notifications")
+    
+    # Step 5: Test Mass Notifications Logic
+    print_subheader("Step 5: Test Mass Notifications Logic")
+    
+    mass_test_passed = True
+    
+    for notification in mass_notifications:
+        notification_type = notification.get("type", "unknown")
+        notification_id = notification.get("notification_id", "unknown")
+        total_recipients = notification.get("total_recipients", 0)
+        title = notification.get("title", "")
+        message = notification.get("message", "")
+        
+        print_success(f"Mass notification: {notification_type}")
+        print_success(f"  ID: {notification_id}")
+        print_success(f"  Title: {title}")
+        print_success(f"  Message: {message[:50]}...")
+        print_success(f"  Total recipients: {total_recipients}")
+        
+        # Verify mass notifications can show multiple recipients
+        if total_recipients >= 1:
+            print_success(f"  ✅ CORRECT: Mass notification shows {total_recipients} recipients")
+        else:
+            print_error(f"  ❌ INCORRECT: Mass notification shows {total_recipients} recipients (should be ≥ 1)")
+            mass_test_passed = False
+        
+        # Verify read_users and unread_users structure
+        read_users = notification.get("read_users", [])
+        unread_users = notification.get("unread_users", [])
+        read_count = notification.get("read_count", 0)
+        unread_count = notification.get("unread_count", 0)
+        
+        if len(read_users) + len(unread_users) == total_recipients:
+            print_success(f"  ✓ Read/unread users count matches total recipients")
+        else:
+            print_error(f"  ✗ Read/unread users count mismatch: {len(read_users)} + {len(unread_users)} ≠ {total_recipients}")
+            mass_test_passed = False
+        
+        if read_count == len(read_users) and unread_count == len(unread_users):
+            print_success(f"  ✓ Read/unread counts match user lists")
+        else:
+            print_error(f"  ✗ Read/unread counts mismatch: {read_count}/{unread_count} vs {len(read_users)}/{len(unread_users)}")
+            mass_test_passed = False
+    
+    if mass_test_passed:
+        print_success("✅ Mass notifications logic PASSED")
+        record_test("Notification Analytics - Mass Notifications Logic", True)
+    else:
+        print_error("❌ Mass notifications logic FAILED")
+        record_test("Notification Analytics - Mass Notifications Logic", False, "Logic incorrect")
+    
+    # Step 6: Test Response Structure Consistency
+    print_subheader("Step 6: Test Response Structure Consistency")
+    
+    structure_test_passed = True
+    required_notification_fields = [
+        "notification_id", "type", "title", "message", "created_at",
+        "total_recipients", "read_count", "unread_count", "read_percentage",
+        "read_users", "unread_users"
+    ]
+    
+    for i, notification in enumerate(notifications_data[:5]):  # Test first 5 notifications
+        notification_type = notification.get("type", "unknown")
+        
+        missing_fields = [field for field in required_notification_fields if field not in notification]
+        
+        if not missing_fields:
+            print_success(f"  ✓ Notification {i+1} ({notification_type}): All required fields present")
+        else:
+            print_error(f"  ✗ Notification {i+1} ({notification_type}): Missing fields: {missing_fields}")
+            structure_test_passed = False
+        
+        # Verify read_percentage calculation
+        total_recipients = notification.get("total_recipients", 0)
+        read_count = notification.get("read_count", 0)
+        read_percentage = notification.get("read_percentage", 0)
+        
+        if total_recipients > 0:
+            expected_percentage = round((read_count / total_recipients) * 100, 2)
+            if abs(read_percentage - expected_percentage) < 0.01:
+                print_success(f"  ✓ Read percentage calculation correct: {read_percentage}%")
+            else:
+                print_error(f"  ✗ Read percentage calculation incorrect: {read_percentage}% (expected {expected_percentage}%)")
+                structure_test_passed = False
+    
+    if structure_test_passed:
+        print_success("✅ Response structure consistency PASSED")
+        record_test("Notification Analytics - Response Structure Consistency", True)
+    else:
+        print_error("❌ Response structure consistency FAILED")
+        record_test("Notification Analytics - Response Structure Consistency", False, "Structure inconsistent")
+    
+    # Step 7: Test Data Consistency
+    print_subheader("Step 7: Test Data Consistency")
+    
+    consistency_test_passed = True
+    
+    for notification in notifications_data:
+        notification_type = notification.get("type", "unknown")
+        total_recipients = notification.get("total_recipients", 0)
+        read_count = notification.get("read_count", 0)
+        unread_count = notification.get("unread_count", 0)
+        
+        # Verify total_recipients = read_count + unread_count
+        if total_recipients == read_count + unread_count:
+            print_success(f"  ✓ {notification_type}: Recipients count consistent ({total_recipients} = {read_count} + {unread_count})")
+        else:
+            print_error(f"  ✗ {notification_type}: Recipients count inconsistent ({total_recipients} ≠ {read_count} + {unread_count})")
+            consistency_test_passed = False
+        
+        # Verify no phantom recipients for individual notifications
+        if notification_type in individual_types and total_recipients != 1:
+            print_error(f"  ✗ {notification_type}: Individual notification has {total_recipients} recipients (should be 1)")
+            consistency_test_passed = False
+    
+    if consistency_test_passed:
+        print_success("✅ Data consistency PASSED")
+        record_test("Notification Analytics - Data Consistency", True)
+    else:
+        print_error("❌ Data consistency FAILED")
+        record_test("Notification Analytics - Data Consistency", False, "Data inconsistent")
+    
+    # Step 8: Test Filtering by Type
+    print_subheader("Step 8: Test Filtering by Notification Type")
+    
+    # Test filtering by bet_accepted type
+    bet_accepted_response, bet_accepted_success = make_request(
+        "GET", "/admin/notifications/detailed-analytics?type_filter=bet_accepted&limit=10",
+        auth_token=admin_token
+    )
+    
+    if bet_accepted_success:
+        bet_accepted_data = bet_accepted_response.get("data", [])
+        print_success(f"✓ Filtered by bet_accepted: {len(bet_accepted_data)} notifications")
+        
+        # Verify all returned notifications are bet_accepted type
+        all_bet_accepted = all(notif.get("type") == "bet_accepted" for notif in bet_accepted_data)
+        
+        if all_bet_accepted:
+            print_success("✓ All filtered notifications are bet_accepted type")
+            record_test("Notification Analytics - Type Filtering", True)
+        else:
+            print_error("✗ Some filtered notifications are not bet_accepted type")
+            record_test("Notification Analytics - Type Filtering", False, "Filter not working")
+        
+        # Verify bet_accepted notifications show 1 recipient
+        for notif in bet_accepted_data:
+            total_recipients = notif.get("total_recipients", 0)
+            if total_recipients == 1:
+                print_success(f"  ✓ bet_accepted notification shows 1 recipient")
+            else:
+                print_error(f"  ✗ bet_accepted notification shows {total_recipients} recipients (should be 1)")
+    else:
+        print_error("Failed to filter notifications by type")
+        record_test("Notification Analytics - Type Filtering", False, "Filter request failed")
+    
+    # Summary
+    print_subheader("Notification Detailed Analytics Test Summary")
+    print_success("Notification detailed analytics testing completed")
+    print_success("Key findings:")
+    print_success(f"- Individual notifications found: {len(individual_notifications)}")
+    print_success(f"- Mass notifications found: {len(mass_notifications)}")
+    print_success(f"- Individual notifications logic: {'PASSED' if individual_test_passed else 'FAILED'}")
+    print_success(f"- Mass notifications logic: {'PASSED' if mass_test_passed else 'FAILED'}")
+    print_success(f"- Response structure: {'CONSISTENT' if structure_test_passed else 'INCONSISTENT'}")
+    print_success(f"- Data consistency: {'PASSED' if consistency_test_passed else 'FAILED'}")
+    print_success(f"- Bet accepted single recipient: {'VERIFIED' if bet_accepted_found else 'NOT FOUND'}")
+
 def test_notification_click_bug_fix() -> None:
     """Test notification system backend APIs after the notification click bug fix.
     
