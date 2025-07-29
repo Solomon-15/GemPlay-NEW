@@ -85,6 +85,8 @@ const UserManagement = ({ user: currentUser }) => {
         setSortOrder(filters.sortOrder || 'asc');
         setBalanceMin(filters.balanceMin || '');
         setBalanceMax(filters.balanceMax || '');
+        setTotalMin(filters.totalMin || '');
+        setTotalMax(filters.totalMax || '');
       } catch (error) {
         console.error('Error loading saved filters:', error);
       }
