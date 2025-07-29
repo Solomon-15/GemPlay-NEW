@@ -408,6 +408,8 @@ const UserManagement = ({ user: currentUser }) => {
     setSortOrder('asc');
     setBalanceMin('');
     setBalanceMax('');
+    setTotalMin('');
+    setTotalMax('');
     pagination.handlePageChange(1);
   };
 
