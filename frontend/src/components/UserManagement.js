@@ -70,6 +70,39 @@ const UserManagement = ({ user: currentUser }) => {
   const [userStats, setUserStats] = useState({});
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
+  // Загрузка сохраненных фильтров из localStorage
+  useEffect(() => {
+    const savedFilters = localStorage.getItem('userManagementFilters');
+    if (savedFilters) {
+      try {
+        const filters = JSON.parse(savedFilters);
+        setSearchTerm(filters.searchTerm || '');
+        setStatusFilter(filters.statusFilter || '');
+        setRoleFilter(filters.roleFilter || '');
+        setSortBy(filters.sortBy || '');
+        setSortOrder(filters.sortOrder || 'asc');
+        setBalanceMin(filters.balanceMin || '');
+        setBalanceMax(filters.balanceMax || '');
+      } catch (error) {
+        console.error('Error loading saved filters:', error);
+      }
+    }
+  }, []);
+
+  // Сохранение фильтров в localStorage при изменении
+  useEffect(() => {
+    const filters = {
+      searchTerm,
+      statusFilter,
+      roleFilter,
+      sortBy,
+      sortOrder,
+      balanceMin,
+      balanceMax
+    };
+    localStorage.setItem('userManagementFilters', JSON.stringify(filters));
+  }, [searchTerm, statusFilter, roleFilter, sortBy, sortOrder, balanceMin, balanceMax]);
+
   // Debounce search term to prevent cursor loss
   useEffect(() => {
     const timer = setTimeout(() => {
