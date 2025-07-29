@@ -128,6 +128,8 @@ const NotificationAdmin = ({ user }) => {
           user.role && 
           ['USER', 'ADMIN', 'SUPER_ADMIN', 'PLAYER'].includes(user.role) // Добавляем PLAYER
         );
+        
+        console.log('✅ Human users after filtering:', humanUsers.length); // Отладка
         setFoundUsers(humanUsers);
       }
     } catch (error) {
