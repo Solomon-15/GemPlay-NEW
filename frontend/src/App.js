@@ -346,15 +346,6 @@ function App() {
                 {currentView === 'inventory' && (
                   <Inventory user={user} onUpdateUser={checkAuthStatus} />
                 )}
-                {currentView === 'create-game' && (
-                  <CreateGame user={user} onUpdateUser={checkAuthStatus} />
-                )}
-                {currentView === 'game-lobby' && (
-                  <GameLobby user={user} onUpdateUser={checkAuthStatus} />
-                )}
-                {currentView === 'leaderboard' && (
-                  <Leaderboard user={user} onUpdateUser={checkAuthStatus} />
-                )}
                 {currentView === 'history' && (
                   <History user={user} onUpdateUser={checkAuthStatus} />
                 )}
