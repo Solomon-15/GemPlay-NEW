@@ -21280,14 +21280,47 @@ async def get_detailed_notification_analytics(
             individual_notification_types = {"bet_accepted", "match_result", "gem_gift", "commission_freeze"}
             is_individual_notification = notification_type in individual_notification_types
             
-            # Determine target users for this notification
-            if notification.get("target_users"):
-                # Notification was sent to specific users
-                target_user_ids = [uid for uid in notification["target_users"] if uid in humans_map]
+            # Для массовых уведомлений найдем ВСЕ экземпляры этого уведомления
+            if not is_individual_notification:
+                # Ищем все уведомления с такими же параметрами
+                mass_notification_query = {
+                    "title": notification.get("title"),
+                    "message": notification.get("message"),
+                    "type": notification.get("type"),
+                    "created_at": notification.get("created_at")
+                }
+                
+                # Получаем все экземпляры этого массового уведомления
+                mass_notification_cursor = db.notifications.find(mass_notification_query, {"user_id": 1, "is_read": 1, "read_at": 1})
+                mass_notifications = await mass_notification_cursor.to_list(None)
+                
+                # Создаем карты для читателей массового уведомления
+                mass_read_user_ids = set()
+                mass_read_at_map = {}
+                
+                for mass_notif in mass_notifications:
+                    user_id = mass_notif.get("user_id")
+                    is_read = mass_notif.get("is_read", mass_notif.get("read", False))
+                    
+                    if is_read and user_id in humans_map:
+                        mass_read_user_ids.add(user_id)
+                        mass_read_at_map[user_id] = mass_notif.get("read_at")
+                
+                # Для массовых уведомлений получатели - это все найденные пользователи из экземпляров
+                mass_target_user_ids = [notif.get("user_id") for notif in mass_notifications if notif.get("user_id") in humans_map]
+                target_user_ids = list(set(mass_target_user_ids))  # Убираем дубликаты
                 target_users = [humans_map[uid] for uid in target_user_ids]
+                
+                # Используем данные массового уведомления
+                read_user_ids = mass_read_user_ids
+                read_at_map = mass_read_at_map
             else:
-                # Для индивидуальных уведомлений ищем только одного получателя
-                if is_individual_notification:
+                # Для индивидуальных уведомлений используем старую логику
+                if notification.get("target_users"):
+                    # Notification was sent to specific users
+                    target_user_ids = [uid for uid in notification["target_users"] if uid in humans_map]
+                    target_users = [humans_map[uid] for uid in target_user_ids]
+                else:
                     # Для индивидуальных уведомлений найдем реального получателя из базы
                     notification_user_id = notification.get("user_id")
                     if notification_user_id and notification_user_id in humans_map:
@@ -21296,17 +21329,13 @@ async def get_detailed_notification_analytics(
                     else:
                         # Если получателя не найдено, пропускаем
                         continue
-                else:
-                    # Notification was sent to all users (массовые уведомления)
-                    target_users = all_humans
-                    target_user_ids = all_human_ids
-            
-            # Get read notifications for this specific notification from pre-fetched data
-            read_notifications = read_notifications_by_id.get(notification_id, [])
-            
-            # Create a set of user IDs who have read the notification
-            read_user_ids = {notif["user_id"] for notif in read_notifications}
-            read_at_map = {notif["user_id"]: notif.get("read_at") for notif in read_notifications}
+                
+                # Get read notifications for this specific notification from pre-fetched data
+                read_notifications = read_notifications_by_id.get(notification_id, [])
+                
+                # Create a set of user IDs who have read the notification
+                read_user_ids = {notif["user_id"] for notif in read_notifications}
+                read_at_map = {notif["user_id"]: notif.get("read_at") for notif in read_notifications}
             
             # Build read/unread user lists
             read_users = []
