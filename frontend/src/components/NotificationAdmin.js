@@ -131,9 +131,25 @@ const NotificationAdmin = ({ user }) => {
     }
   }, [searchMode]); // Добавляем searchMode в зависимости
 
-  // НЕ загружать пользователей при фокусе - только после ввода символа
-  const handleSearchFocus = () => {
-    // Не делаем ничего - автодополнение только после ввода первого символа
+  // Загружаем всех пользователей при фокусе на поле
+  const handleSearchFocus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/users?search=&page=1&limit=100`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        // Фильтруем только человеческих пользователей (не ботов)
+        const humanUsers = response.data.users.filter(user => 
+          user.role !== 'HUMAN_BOT' && user.role !== 'REGULAR_BOT'
+        );
+        setFoundUsers(humanUsers);
+      }
+    } catch (error) {
+      console.error('Error loading all users on focus:', error);
+      setFoundUsers([]);
+    }
   };
 
   // Скрыть список при потере фокуса (с задержкой для возможности клика)
