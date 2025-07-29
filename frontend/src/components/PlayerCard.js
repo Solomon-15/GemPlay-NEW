@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useGems } from './GemsContext';
-import { formatCurrencyWithSymbol, formatDollarAmount } from '../utils/economy';
 import { formatDollarsAsGems } from '../utils/gemUtils';
 
 const PlayerCard = React.memo(({ 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { formatAsGems } from '../utils/economy';
 
 const HumanBotCommissionModal = ({

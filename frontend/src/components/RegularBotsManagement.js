@@ -6,7 +6,6 @@ import Pagination from './Pagination';
 import usePagination from '../hooks/usePagination';
 import useConfirmation from '../hooks/useConfirmation';
 import useInput from '../hooks/useInput';
-import BotCycleModal from './BotCycleModal';
 import ConfirmationModal from './ConfirmationModal';
 import InputModal from './InputModal';
 import API, { getApiConfig } from '../utils/api';
@@ -1035,8 +1034,6 @@ const RegularBotsManagement = () => {
       showErrorRU('Ошибка при загрузке накопителей прибыли');
     }
   };
-
-
 
   const handleOpenBotProfitModal = async (bot) => {
     try {
@@ -2503,7 +2500,6 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-
               {/* Поведение */}
               <div className="border border-border-primary rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-white mb-3">Дополнительные настройки</h4>
@@ -2569,7 +2565,6 @@ const RegularBotsManagement = () => {
           </div>
         </div>
       )}
-
 
       
       {/* Модальное окно просмотра активных ставок */}
@@ -3111,7 +3106,6 @@ const RegularBotsManagement = () => {
       )}
 
       {/* Модальное окно активных ставок */}
-
 
       {/* Модальное окно истории цикла */}
       {isCycleModalOpen && cycleBot && cycleData && (

@@ -1,4 +1,3 @@
-import React from 'react';
 import { calculateGemCombination } from '../utils/gemCombinationAlgorithms';
 
 const GemSelectionStep = ({

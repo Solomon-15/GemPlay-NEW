@@ -1,5 +1,6 @@
-// Utility functions for gem-related operations and formatting
 import axios from 'axios';
+
+// Utility functions for gem-related operations and formatting
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;

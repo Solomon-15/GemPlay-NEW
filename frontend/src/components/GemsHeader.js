@@ -1,4 +1,3 @@
-import React from 'react';
 import { useGems } from './GemsContext';
 import { formatCurrencyWithSymbol } from '../utils/economy';
 

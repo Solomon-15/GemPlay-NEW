@@ -5,7 +5,6 @@ import { formatAsGems } from '../utils/economy';
 import useConfirmation from '../hooks/useConfirmation';
 import useInput from '../hooks/useInput';
 import ConfirmationModal from './ConfirmationModal';
-import InputModal from './InputModal';
 import HumanBotActiveBetsModal from './HumanBotActiveBetsModal';
 import HumanBotCommissionModal from './HumanBotCommissionModal';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';

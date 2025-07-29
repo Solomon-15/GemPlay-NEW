@@ -5,6 +5,7 @@ import Pagination from './Pagination';
 import usePagination from '../hooks/usePagination';
 import ProfitChart from './ProfitChart';
 import { 
+
   generateMockChartData, 
   generateRevenueBreakdownData, 
   generateExpensesData, 

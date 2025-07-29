@@ -1,5 +1,6 @@
-import React from 'react';
 import {
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
+
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
@@ -12,7 +13,6 @@ import {
   ArcElement,
   Filler,
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,

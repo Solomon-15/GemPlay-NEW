@@ -1,4 +1,3 @@
-import React from 'react';
 import { formatGemValue } from '../utils/economy';
 
 const MoveSelectionStep = ({
