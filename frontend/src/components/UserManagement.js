@@ -14,6 +14,14 @@ const UserManagement = ({ user: currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  
+  // Новые состояния для фильтров
+  const [roleFilter, setRoleFilter] = useState('');
+  const [sortBy, setSortBy] = useState('');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [balanceMin, setBalanceMin] = useState('');
+  const [balanceMax, setBalanceMax] = useState('');
+  
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date()); // Для живого счетчика
   
