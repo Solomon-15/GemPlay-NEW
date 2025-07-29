@@ -121,7 +121,7 @@ const NotificationAdmin = ({ user }) => {
           !user.bot_type && 
           !user.is_bot && 
           user.role && 
-          ['USER', 'ADMIN', 'SUPER_ADMIN'].includes(user.role)
+          ['USER', 'ADMIN', 'SUPER_ADMIN', 'PLAYER'].includes(user.role) // Добавляем PLAYER
         );
         setFoundUsers(humanUsers);
       }
