@@ -18336,9 +18336,6 @@ async def get_user_name_for_notification(user_id: str) -> str:
 
 async def db_operation_with_retry(operation, max_retries=3, base_delay=0.1):
     """Execute database operation with exponential backoff retry logic"""
-    import asyncio
-    from pymongo.errors import ServerSelectionTimeoutError, NetworkTimeout, AutoReconnect
-    
     for attempt in range(max_retries):
         try:
             return await operation()
