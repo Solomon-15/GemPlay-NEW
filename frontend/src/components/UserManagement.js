@@ -1647,7 +1647,10 @@ const UserManagement = ({ user: currentUser }) => {
                     : 'bg-surface-card text-text-secondary hover:text-white'
                 }`}
               >
-                {status || 'Все'}
+                {status ? (status === 'ONLINE' ? 'Онлайн' : 
+                          status === 'OFFLINE' ? 'Офлайн' : 
+                          status === 'BANNED' ? 'Заблокированы' : 
+                          status === 'EMAIL_PENDING' ? 'Ожидают подтв.' : status) : 'Все'}
               </button>
             ))}
           </div>
