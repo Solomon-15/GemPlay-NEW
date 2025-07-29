@@ -5607,36 +5607,24 @@ async def timeout_checker_task():
         try:
             current_time = datetime.utcnow()
             
-            # Find games in ACTIVE phase that have exceeded 1-minute deadline
+            # Find games in REVEAL phase that have exceeded deadline (legacy support)
             expired_games = await db.games.find({
-                "status": GameStatus.ACTIVE,
+                "status": GameStatus.REVEAL,
                 "active_deadline": {"$lt": current_time}
             }).to_list(100)
             
             if expired_games:
-                logger.info(f"⏰ Found {len(expired_games)} expired games to handle")
+                logger.info(f"⏰ Found {len(expired_games)} expired REVEAL games to handle")
                 
                 for game_data in expired_games:
                     try:
-                        # Check if this is a Human-bot game
-                        game_obj = Game(**game_data)
-                        
-                        # Check if at least one player is a Human-bot
-                        creator_is_human_bot = await db.human_bots.find_one({"id": game_obj.creator_id})
-                        opponent_is_human_bot = await db.human_bots.find_one({"id": game_obj.opponent_id})
-                        
-                        if creator_is_human_bot or opponent_is_human_bot:
-                            # Handle Human-bot game completion
-                            await handle_human_bot_game_completion(game_data["id"])
-                            logger.info(f"⏰ Successfully handled Human-bot game timeout for game {game_data['id']}")
-                        else:
-                            # Handle regular game timeout
-                            await handle_game_timeout(game_data["id"])
-                            logger.info(f"⏰ Successfully handled regular game timeout for game {game_data['id']}")
+                        # Handle timeout for REVEAL games
+                        await handle_game_timeout(game_data["id"])
+                        logger.info(f"⏰ Successfully handled REVEAL game timeout for game {game_data['id']}")
                     except Exception as e:
                         logger.error(f"❌ Error handling timeout for game {game_data['id']}: {e}")
             else:
-                logger.debug("⏰ No expired games found")
+                logger.debug("⏰ No expired REVEAL games found")
             
             # Sleep for 10 seconds before next check
             await asyncio.sleep(10)
