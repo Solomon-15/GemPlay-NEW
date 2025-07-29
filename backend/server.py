@@ -9339,8 +9339,12 @@ async def get_all_users(
             }
             sort_field = sort_fields_map.get(sort_by, "created_at")
             
+        # Правильная обработка направления сортировки
         if sort_order == "asc":
             sort_direction = 1
+        elif sort_order == "desc":
+            sort_direction = -1
+        # Если sort_order не указан или некорректен, используем значение по умолчанию (-1)
         
         # Get users with pagination and sorting
         skip = (page - 1) * limit
