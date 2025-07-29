@@ -9269,14 +9269,19 @@ GEM_PRICES = {
 @api_router.get("/admin/users", response_model=dict)
 async def get_all_users(
     page: int = 1,
-    limit: int = 50,
+    limit: int = 20,  # Изменено на 20 согласно требованию
     search: Optional[str] = None,
     search_mode: Optional[str] = None,  # 'name' или 'email'
     status: Optional[str] = None,
+    role: Optional[str] = None,  # Новый фильтр по ролям
+    sort_by: Optional[str] = None,  # Новый параметр сортировки
+    sort_order: Optional[str] = "asc",  # asc или desc
+    balance_min: Optional[float] = None,  # Фильтр по минимальному балансу
+    balance_max: Optional[float] = None,  # Фильтр по максимальному балансу
     exclude_bots: Optional[bool] = False,
     current_user: User = Depends(get_current_admin)
 ):
-    """Get all users with pagination and filtering."""
+    """Get all users with pagination, filtering and sorting."""
     try:
         # Build query
         query = {}
@@ -9301,6 +9306,18 @@ async def get_all_users(
                 ]
         if status:
             query["status"] = status
+            
+        if role:
+            query["role"] = role
+            
+        # Фильтр по балансу
+        if balance_min is not None or balance_max is not None:
+            balance_filter = {}
+            if balance_min is not None:
+                balance_filter["$gte"] = balance_min
+            if balance_max is not None:
+                balance_filter["$lte"] = balance_max
+            query["virtual_balance"] = balance_filter
         
         # Get total count
         total = await db.users.count_documents(query)
