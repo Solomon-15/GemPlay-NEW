@@ -1,6 +1,4 @@
 import {
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
-
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
@@ -8,6 +6,11 @@ import { Line, Bar, Doughnut } from 'react-chartjs-2';
   LineElement,
   BarElement,
   Title,
+  Tooltip,
+  Legend,
+  ArcElement
+} from 'chart.js';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
   Tooltip,
   Legend,
   ArcElement,
