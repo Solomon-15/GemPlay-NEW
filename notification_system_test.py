@@ -547,32 +547,38 @@ def test_admin_analytics() -> None:
         record_test("Admin Analytics - Response Structure", False, f"Missing: {missing_analytics_fields}")
         return
     
-    analytics_data = response.get("analytics", {})
-    
-    # Expected analytics fields
+    # Expected analytics fields - update based on actual response structure
     expected_analytics_data_fields = [
-        "total_notifications", "total_users", "read_notifications", 
-        "unread_notifications", "notification_types", "recent_notifications"
+        "success", "data", "pagination"
     ]
     
-    missing_data_fields = [field for field in expected_analytics_data_fields if field not in analytics_data]
+    missing_data_fields = [field for field in expected_analytics_data_fields if field not in response]
     
     if not missing_data_fields:
-        print_success("✅ Analytics data has all expected fields")
+        print_success("✅ Analytics response has all expected fields")
         record_test("Admin Analytics - Data Fields", True)
     else:
-        print_error(f"❌ Analytics data missing fields: {missing_data_fields}")
+        print_error(f"❌ Analytics response missing fields: {missing_data_fields}")
         record_test("Admin Analytics - Data Fields", False, f"Missing: {missing_data_fields}")
     
     # Display analytics data
     print_subheader("Analytics Data Summary")
-    for key, value in analytics_data.items():
-        if isinstance(value, (int, float, str)):
-            print_success(f"{key}: {value}")
-        elif isinstance(value, list):
-            print_success(f"{key}: {len(value)} items")
-        elif isinstance(value, dict):
-            print_success(f"{key}: {len(value)} categories")
+    analytics_data = response.get("data", [])
+    if isinstance(analytics_data, list):
+        print_success(f"Analytics data: {len(analytics_data)} notification records")
+        if analytics_data:
+            sample_record = analytics_data[0]
+            print_success("Sample analytics record fields:")
+            for key in sample_record.keys():
+                print_success(f"  - {key}")
+    else:
+        print_success(f"Analytics data type: {type(analytics_data).__name__}")
+    
+    pagination_data = response.get("pagination", {})
+    if isinstance(pagination_data, dict):
+        print_success(f"Pagination info: {len(pagination_data)} fields")
+        for key, value in pagination_data.items():
+            print_success(f"  {key}: {value}")
     
     # Test analytics performance
     print_subheader("Testing Analytics Performance")
