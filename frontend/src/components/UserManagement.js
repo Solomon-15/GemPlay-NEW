@@ -238,13 +238,21 @@ const UserManagement = ({ user: currentUser }) => {
     );
   };
 
-  // Новая функция для отображения онлайн статуса
+  // Обновленная функция для отображения онлайн статуса (включая ботов)
   const getUserOnlineStatusBadge = (user) => {
-    const onlineStatus = user.online_status;
+    let onlineStatus;
+    
+    // Для ботов используем bot_status
+    if (user.user_type === 'HUMAN_BOT' || user.user_type === 'REGULAR_BOT') {
+      onlineStatus = user.bot_status;
+    } else {
+      // Для обычных пользователей используем online_status
+      onlineStatus = user.online_status;
+    }
     
     const statusMap = {
       'ONLINE': { color: 'bg-green-500', text: 'Онлайн' },
-      'OFFLINE': { color: 'bg-yellow-500', text: 'Офлайн' },
+      'OFFLINE': { color: 'bg-gray-500', text: 'Офлайн' },
       'BANNED': { color: 'bg-red-500', text: 'BANNED' }
     };
     
