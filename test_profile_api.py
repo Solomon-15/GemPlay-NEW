@@ -7,7 +7,7 @@ import json
 import time
 
 # Configuration
-BASE_URL = "https://baf8f4bf-8f93-48f1-becd-06acae851bae.preview.emergentagent.com/api"
+BASE_URL = "https://2afcdb68-e337-4e72-a16b-588ed6811928.preview.emergentagent.com/api"
 
 def test_profile_update():
     """Test profile update endpoint"""

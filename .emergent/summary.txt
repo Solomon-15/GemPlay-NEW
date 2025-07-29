@@ -3,33 +3,33 @@ The AI engineer successfully progressed the GemPlay application through several 
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting platform with Human-bots, featuring a 3% commission system. The core problem addressed is to provide a robust betting environment with accurate financials and comprehensive administrative controls, including correct balance calculations, user profile editing, and responsive mobile UI.
-
-Key features developed and refined include:
-1.  **Human-Bot Management Optimization:** Implemented pagination (10 items/page, adjustable), search/filtering, and 1-minute caching, prioritizing STATISTICS and PENDING BETS display.
-2.  **Full Notification System:**
-    *   **Core:** Real-time (WebSocket) delivery for critical events (bet, match results, gifts, system, admin). Manages read/unread status, stores history with pagination.
-    *   **Frontend UI:** Bell icon, dropdown, settings page, and dedicated notifications page.
-    *   **Admin Panel:** Create/send notifications to players, with analytics. Localization of bell UI and system messages to English, while admin-created messages retain input language.
-    *   **Detailed Admin Analytics:** Displays all sent notifications (including system/automatic), with pagination (50 items/page), filtering (type, date, sender), compact/detailed views (progress bars, user lists), graphs, and a resend option for unread users. Critically, Human/regular bots are to be excluded from analytics.
-3.  **Recent Fixes & Enhancements:**
-    *   **Performance:** Optimize  backend endpoint to resolve freezing/slow responses.
-    *   **UI/UX:** Ensure Details button in analytics shows green Read status; Repeat button offers modal choice (unread/all). Notification bell: expanding a notification inside the list should not close the entire list; background scroll is blocked, but list scroll functions. Mobile modal: position from bell icon, occupies ~60-80% of screen height without going off-screen.
-    *   **Admin Sending Logic:** Specific users ensures unique ID/email per message. All users explicitly excludes *all* bots.
-    *   **User Search Autocomplete:** Implement a dropdown list of all players (name/email) on first character input in the Specific users section, with a name/email search toggle.
-    *   **Notification Deletion:** Add function to delete notifications by category (bet, match_result, gift, system, admin_notification) and manually, with confirmation and count display.
+The GemPlay application is an asynchronous PvP gem betting platform with Human-bots, needing robust financial tracking and administrative controls.
+**Key Features Implemented/Refined:**
+1.  **Human-Bot Management:** Optimized with pagination, search/filtering, and caching.
+2.  **Notification System:**
+    *   Real-time (WebSocket) for critical events (bet, match results, gifts, system, admin).
+    *   Frontend UI: Bell icon, dropdown, settings page, notifications page; localized to English.
+    *   Admin Panel: Create/send notifications (excluding bots), analytics, detailed analytics with pagination (50 items/page), filtering (type, date, sender), compact/detailed views (progress bars, user lists), graphs, resend to unread.
+    *   Deletion: By category (bet, match_result, gift, system, admin_notification) and manual.
+3.  **Recent Enhancements:**
+    *   Optimized  performance.
+    *   UI/UX: Details button marks read without closing dropdown; background scroll blocked; mobile modal positioned correctly (60-80% height).
+    *   Admin Sending: Specific users unique ID/email; All users strictly excludes *all* bots.
+    *   User Search Autocomplete: Dropdown on first character, name/email toggle.
+4.  **User Management Admin Panel:**
+    *   Add Human-bot and Regular bot roles. Display Online/Offline status for bots (Active = Online, Inactive = Offline).
+    *   Add comprehensive filters/sorting: name, roles, status, balance, gems, bets, games, registration date (dropdown filters, sorting by name/role/status/balance/gems/bets/games/registration date, interactive column sorting).
+    *   Pagination set to 20 items. Add TOTAL column (virtual_balance + frozen_balance + gems_value) with min/max filter and interactive sorting.
+    *   Update status filters to Online/Offline, remove Active. Implement interactive sorting by clicking column headers (first click descending, second ascending). Correct sorting logic for Role (Super Admin, Admin, Player, Human Bot, Regular Bot). Correct numeric sorting for TOTAL column.
 </product_requirements>
 
 <key_technical_concepts>
--   **React.js**: Frontend UI, state management, hooks, context API.
--   **FastAPI**: Python backend, RESTful APIs, Pydantic models.
--   **MongoDB**: NoSQL database.
--   **WebSocket**: Real-time communication for notifications.
--   **Axios**: HTTP client for API calls.
--   **Supervisor**: Process manager.
--   **Tailwind CSS**: Utility-first CSS.
--   **Pagination, Caching, Debouncing**: Performance optimization techniques.
--   **Passlib (Bcrypt)**: Password hashing.
+-   **MERN Stack Variant:** React.js (Frontend), FastAPI (Python Backend), MongoDB (NoSQL Database).
+-   **WebSocket:** Real-time communication for notifications.
+-   **Performance Optimization:** Pagination, Caching, Debouncing.
+-   **Security:** Passlib (Bcrypt) for password hashing.
+-   **Deployment/Management:** Kubernetes, Supervisor.
+-   **State Management:** React Context API (for notifications), local state for UI.
 </key_technical_concepts>
 
 <code_architecture>
@@ -37,47 +37,42 @@ The application uses a MERN-stack variant (React.js, FastAPI, MongoDB) structure
 
 
 
--   : Centralizes backend logic, API endpoints, and database interactions.
-    *   **Importance**: Core of the backend application.
-    *   **Changes Made**: Significant modifications for notification system APIs (GET/PUT , , POST , GET , GET , POST , and new endpoints for notification deletion like , , ). Critical bug fixes included optimizing detailed analytics queries by fetching users once, fixing  queries to use , ensuring correct bot exclusion logic in broadcast/resend, and enhancing  for custom fields. User search endpoint  was updated to support autocomplete.
--   : Frontend bell icon and dropdown UI.
-    *   **Importance**: Main entry point for user notifications.
-    *   **Changes Made**: Refactored positioning for mobile responsiveness, ensuring it opens from the bell and stays within screen bounds (80% height limit). Implemented logic to prevent background scroll while the notification list is open and ensured the list scroll remains active. Modified  to mark notifications as read without closing the dropdown.
--   : Global context for notification state.
-    *   **Importance**: Manages real-time notification data and WebSocket connection.
-    *   **Changes Made**: Integrated with the new backend system, handling  and .
--    (CREATED/MODIFIED): Admin panel component for notification management.
-    *   **Importance**: Provides UI for creating, sending, and managing notifications, including detailed analytics.
-    *   **Changes Made**: Implemented UI for creating notifications (types, recipients, custom messages). Enhanced Detailed Analytics to correctly display read status (green background/text) and manage Repeat functionality with a modal choice (resend to unread or all). Developed user search autocomplete for Specific users with toggleable name/email search and live suggestions. Added new UI for notification deletion by category and manual deletion, including confirmation prompts.
--   : Overall admin interface.
-    *   **Importance**: Provides navigation to various admin sections.
-    *   **Changes Made**: Integrated  by adding a corresponding menu item and routing logic.
--   : Manages user listing and operations.
-    *   **Importance**: Admin interface for user management.
-    *   **Changes Made**: Implemented  for search and optimized  and  with  for performance.
--   : Displays bot analytics.
-    *   **Importance**: Provides insights into bot performance.
-    *   **Changes Made**: Added authorization checks and error handling for robust data fetching.
+-   : The core of the backend application, centralizing API endpoints and database interactions.
+    *   **Importance**: Handles all server-side logic, data fetching, and processing.
+    *   **Changes Made**: Significantly modified for notification system APIs (GET/PUT , broadcast, analytics, deletion), user search autocomplete (), and extensive enhancements for the  endpoint. This includes adding logic for  and  fields, implementing filtering by roles, online status, balance ranges, and TOTAL balance range. Critical fixes for numerical sorting (especially ) and custom sorting for  have been implemented, along with deduplication logic for users retrieved and accurate pagination based on unique users.
+-   : Main application component, handling global state and routing.
+    *   **Importance**: Orchestrates the main view and provides global context.
+    *   **Changes Made**: Modified to manage  state for client-side navigation, integrating  and passing  to child components like .
+-   : Displays the notification bell icon and dropdown list of notifications.
+    *   **Importance**: User-facing entry point for real-time notifications.
+    *   **Changes Made**: Refactored for mobile responsiveness, fixed dropdown positioning, prevented background scroll, enabled list scroll, and modified  to mark as read without closing. All Russian text was translated to English.  prop added to facilitate internal navigation without full page reloads.
+-   : Dedicated page for displaying all user notifications.
+    *   **Importance**: Provides a full view of notification history with pagination.
+    *   **Changes Made**: Modified to use the  prop for internal navigation and prevent full page reloads. All Russian text within the component was translated to English.
+-   : Admin panel component for managing users.
+    *   **Importance**: Central administrative interface for viewing and managing user data, roles, and status.
+    *   **Changes Made**: Extensive modifications to add display for Human-bot and Regular bot roles, and Online/Offline status. Implemented new filter states and UI for roles, status, balance range, TOTAL balance range, and registration date. Changed default pagination to 20 items. Removed the dedicated sorting dropdown and implemented interactive column header sorting (Name, Role, Status, Balance, TOTAL, Gems, Bets, Games, Reg/Last Visit) with click-based ascending/descending toggling. Updated  and  helper functions to accommodate new logic.
+-    & : Navigation components within the application.
+    *   **Importance**: Provide structural navigation links across the application's different sections.
+    *   **Changes Made**: Updated to correctly pass the  prop to the  component, ensuring proper view changes upon notification interactions.
 </code_architecture>
 
 <pending_tasks>
-Based on the AI engineer's final summary in the trajectory, all previously identified pending tasks and new requests were stated as successfully implemented. Therefore, as per the previous engineer's final report, there are no explicitly pending tasks left for immediate work.
+The immediate pending task is to thoroughly debug and fix the numeric sorting for the TOTAL column in the User Management section. The user has explicitly stated that the sorting is still incorrect and duplicates are present, indicating issues with both the sorting logic and potentially data deduplication/pagination.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was working on a series of quick fixes and new features as requested by the user. This included addressing persistent issues and implementing new functionalities in the notification system's admin panel and frontend.
+Immediately prior to this summary, the AI engineer was working on resolving a critical and persistent bug in the User Management section of the admin panel. The primary issue was that the TOTAL column, which displays a user's total balance (including virtual balance, frozen balance, and gem value), was not sorting correctly by its numerical value. Instead, it appeared to be sorting as a string, leading to an illogical order (e.g., 0,983.28 followed by ,874.09). Additionally, the user reported the presence of duplicate entries in the user list, which could further complicate sorting and accurate pagination.
 
-Specifically, the work focused on:
-1.  **Mobile adaptation of the notification modal:** Adjusting its positioning in  to ensure it reveals from the bell icon, aligns its top-left corner, and occupies approximately 60-80% of the screen height without going off-screen, using  for precise calculation.
-2.  **User search autocomplete:** Fixing the autocomplete functionality in  for Specific users. This involved ensuring suggestions appear upon the first character input, displaying all available names and emails from the system, and implementing a toggle for searching by name or email. This also required backend changes in  to retrieve the user list efficiently for the autocomplete feature.
-3.  **Detailed Analytics and Repeat button functionality:** Verifying and correcting the display of Read status in the Detailed Analytics block in  (e.g., green background for read messages) and ensuring the Repeat button correctly triggers a modal with options to resend to unread users or all original recipients. This involved refining logic in both frontend and backend (, specifically  and ).
-4.  **Bot exclusion in broadcast notifications:** Re-verifying and correcting the logic in  to ensure that when sending notifications to All users, all types of bots (Human-bots and Regular bots, or any user with a  field) are strictly excluded from the recipient list.
-5.  **Notification window closing logic:** Modifying  to ensure that clicking on an individual notification or its Details/Hide button marks it as read but does *not* close the entire notification list, which should only close via the X button or a click outside the modal.
-6.  **Notification deletion feature:** Implementing new backend endpoints in  for deleting notifications by categories (e.g., bet, match_result, gift, system, admin_notification) and for manual selective deletion, along with corresponding UI in  that includes confirmation prompts and displays counts before deletion.
+The AI engineer made several attempts to address this in :
+1.  **Ensuring Numeric Conversion:** Code was modified to explicitly convert , , and  to floats and ensure  is computed as a numeric value.
+2.  **Refining Sorting Logic:** The custom sorting logic for  was reviewed and adjusted to ensure it performs a numerical comparison for both ascending and descending orders.
+3.  **Deduplication:** Logic was introduced to de-duplicate user entries before the final processing and pagination, which should ensure unique users are returned. This was applied to both custom-sorted (TOTAL, ROLE, ONLINE_STATUS) and standard MongoDB-sorted user lists.
+4.  **Pagination Count:** The calculation of  users for pagination was adjusted to account for the deduplication, aiming to provide an accurate count of unique users after filtering and sorting.
 
-The trajectory ends with the AI engineer claiming successful completion of all these tasks.
+Despite these efforts, the user provided new screenshots confirming the TOTAL column sorting was still incorrect and duplicates were present, indicating the underlying problem has not yet been fully resolved. The AI engineer's last action was another attempt to refine the deduplication and sorting logic for all scenarios within .
 </current_work>
 
 <optional_next_step>
-Verify the implemented quick fixes and new features, then inquire with the user about any further enhancements or new feature requests.
+Continue debugging and fixing the numeric sorting issue for the TOTAL column in the User Management section, and verify deduplication and pagination accuracy.
 </optional_next_step>
