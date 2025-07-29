@@ -1,35 +1,27 @@
 <analysis>
-The AI engineer successfully progressed the GemPlay application through several iterations of feature development and bug fixes. Initially, core features like Human-Bot management optimization (pagination, search, caching) and a comprehensive real-time notification system (backend APIs, WebSocket, frontend UI) were built. Critical issues, such as a notification dropdown scroll problem and authorization bugs, were addressed. The most recent phase of work, initiated by user feedback, focused on refining the notification system, particularly the Detailed Analytics section's performance, user search autocomplete in the admin panel, the mobile adaptation of the notification modal, and the precise exclusion of bots from broadcast notifications. A new feature for deleting notifications by category or manually was also implemented. The trajectory culminates with the AI engineer's final summary, asserting the successful completion of all requested quick fixes and new features.
+The previous AI engineer successfully tackled a series of critical bug fixes and feature enhancements for the GemPlay application. The work was iterative, often reacting to immediate user feedback and console errors. Initially, the engineer resolved intermittent 500 errors in the notification system, caused by a MongoDB connection pool overload, by implementing connection pooling, retry mechanisms, and query optimizations. Subsequently, the focus shifted to refining the admin panel's notification analytics, addressing issues like individual vs. mass notification display, duplicate mass mailing entries, calendar icon styling, and incorrect deletion logic. The most complex and recent task involved the commit-reveal betting system. This task saw a back-and-forth on implementing the  game status; the engineer re-introduced it, then reverted for a frontend error, and then re-re-introduced it at the user's explicit request. The current work is centered on ensuring the frontend and backend correctly handle the  status and the  step without API response structure errors.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting platform with Human-bots, needing robust financial tracking and administrative controls.
-**Key Features Implemented/Refined:**
-1.  **Human-Bot Management:** Optimized with pagination, search/filtering, and caching.
-2.  **Notification System:**
-    *   Real-time (WebSocket) for critical events (bet, match results, gifts, system, admin).
-    *   Frontend UI: Bell icon, dropdown, settings page, notifications page; localized to English.
-    *   Admin Panel: Create/send notifications (excluding bots), analytics, detailed analytics with pagination (50 items/page), filtering (type, date, sender), compact/detailed views (progress bars, user lists), graphs, resend to unread.
-    *   Deletion: By category (bet, match_result, gift, system, admin_notification) and manual.
-3.  **Recent Enhancements:**
-    *   Optimized  performance.
-    *   UI/UX: Details button marks read without closing dropdown; background scroll blocked; mobile modal positioned correctly (60-80% height).
-    *   Admin Sending: Specific users unique ID/email; All users strictly excludes *all* bots.
-    *   User Search Autocomplete: Dropdown on first character, name/email toggle.
-4.  **User Management Admin Panel:**
-    *   Add Human-bot and Regular bot roles. Display Online/Offline status for bots (Active = Online, Inactive = Offline).
-    *   Add comprehensive filters/sorting: name, roles, status, balance, gems, bets, games, registration date (dropdown filters, sorting by name/role/status/balance/gems/bets/games/registration date, interactive column sorting).
-    *   Pagination set to 20 items. Add TOTAL column (virtual_balance + frozen_balance + gems_value) with min/max filter and interactive sorting.
-    *   Update status filters to Online/Offline, remove Active. Implement interactive sorting by clicking column headers (first click descending, second ascending). Correct sorting logic for Role (Super Admin, Admin, Player, Human Bot, Regular Bot). Correct numeric sorting for TOTAL column.
+The GemPlay application is an asynchronous PvP gem betting platform featuring human-bots, requiring precise financial tracking and extensive administrative controls. The goal is to enhance existing functionalities and resolve critical bugs for improved user experience and system stability.
+**Key Features & Fixes:**
+1.  **Notification System:** Real-time notifications (WebSocket), comprehensive frontend UI (bell, settings, pages), and an admin panel for sending/managing notifications. Recent enhancements included performance optimization for detailed analytics, fixing UI issues (dropdown, mobile modal), precise bot exclusion from broadcasts, and implementing notification deletion by category or manually.
+2.  **User Management Admin Panel:** Display Human-bot and Regular bot roles, Online/Offline status. Implement advanced filters/sorting for name, roles, status, balances, gems, bets, games, and registration date. Add a TOTAL balance column with sorting. User search autocomplete in the Send Notification section of the admin panel should show all users on focus, filtered by name/email, excluding bots.
+3.  **Commit-Reveal Bet Logic:**
+    *   Player A creates a bet (WAITING).
+    *   Player B joins: bet moves from Available Bets to Ongoing Battles, status becomes ACTIVE, and a 1-minute timer starts for Player B to choose a move.
+    *   If Player B times out, Player A's bet is recreated with new commit-reveal data, and Player A's frozen funds are returned/re-frozen.
+    *   Ensure no Unexpected API response structure errors during the bet process.
 </product_requirements>
 
 <key_technical_concepts>
 -   **MERN Stack Variant:** React.js (Frontend), FastAPI (Python Backend), MongoDB (NoSQL Database).
 -   **WebSocket:** Real-time communication for notifications.
--   **Performance Optimization:** Pagination, Caching, Debouncing.
+-   **Performance Optimization:** Pagination, Caching, Debouncing, MongoDB aggregation pipelines.
 -   **Security:** Passlib (Bcrypt) for password hashing.
 -   **Deployment/Management:** Kubernetes, Supervisor.
--   **State Management:** React Context API (for notifications), local state for UI.
+-   **State Management:** React Context API, local state.
+-   **Error Handling:** Retry mechanisms with exponential backoff for database operations.
 </key_technical_concepts>
 
 <code_architecture>
@@ -37,42 +29,46 @@ The application uses a MERN-stack variant (React.js, FastAPI, MongoDB) structure
 
 
 
--   : The core of the backend application, centralizing API endpoints and database interactions.
-    *   **Importance**: Handles all server-side logic, data fetching, and processing.
-    *   **Changes Made**: Significantly modified for notification system APIs (GET/PUT , broadcast, analytics, deletion), user search autocomplete (), and extensive enhancements for the  endpoint. This includes adding logic for  and  fields, implementing filtering by roles, online status, balance ranges, and TOTAL balance range. Critical fixes for numerical sorting (especially ) and custom sorting for  have been implemented, along with deduplication logic for users retrieved and accurate pagination based on unique users.
--   : Main application component, handling global state and routing.
-    *   **Importance**: Orchestrates the main view and provides global context.
-    *   **Changes Made**: Modified to manage  state for client-side navigation, integrating  and passing  to child components like .
--   : Displays the notification bell icon and dropdown list of notifications.
-    *   **Importance**: User-facing entry point for real-time notifications.
-    *   **Changes Made**: Refactored for mobile responsiveness, fixed dropdown positioning, prevented background scroll, enabled list scroll, and modified  to mark as read without closing. All Russian text was translated to English.  prop added to facilitate internal navigation without full page reloads.
--   : Dedicated page for displaying all user notifications.
-    *   **Importance**: Provides a full view of notification history with pagination.
-    *   **Changes Made**: Modified to use the  prop for internal navigation and prevent full page reloads. All Russian text within the component was translated to English.
--   : Admin panel component for managing users.
-    *   **Importance**: Central administrative interface for viewing and managing user data, roles, and status.
-    *   **Changes Made**: Extensive modifications to add display for Human-bot and Regular bot roles, and Online/Offline status. Implemented new filter states and UI for roles, status, balance range, TOTAL balance range, and registration date. Changed default pagination to 20 items. Removed the dedicated sorting dropdown and implemented interactive column header sorting (Name, Role, Status, Balance, TOTAL, Gems, Bets, Games, Reg/Last Visit) with click-based ascending/descending toggling. Updated  and  helper functions to accommodate new logic.
--    & : Navigation components within the application.
-    *   **Importance**: Provide structural navigation links across the application's different sections.
-    *   **Changes Made**: Updated to correctly pass the  prop to the  component, ensuring proper view changes upon notification interactions.
+-   : The core backend, centralizing API endpoints.
+    *   **Importance**: Handles all server-side logic, database interactions for users, notifications, and games.
+    *   **Changes Made**:
+        *   Fixed incorrect field name ( to ) in notification analytics.
+        *   Increased MongoDB connection pool, added retry logic (), and optimized  using aggregation pipelines (facet).
+        *   Modified  to correctly differentiate and group individual vs. mass notifications (using ).
+        *   Updated  to delete all associated instances for mass notifications.
+        *   Refined  for searching (relevant for notification recipient search) to return correct structure (no  field) and ensure  role is included.
+        *   Modified  logic to transition games to  status, setting a .
+        *   Added  endpoint for Player B to submit their move.
+        *   Rewrote  to correctly process  games: return Player B's funds and recreate Player A's bet with new commit-reveal data, moving it back to  status.
+-   : Admin panel for managing notifications.
+    *   **Importance**: Provides UI for sending, viewing analytics, and deleting notifications. Handles user search for recipient selection.
+    *   **Changes Made**:
+        *   Adjusted rendering logic for Detailed Analytics to correctly display individual vs. mass notifications (hide counters, show full text).
+        *   Removed resend button for individual notifications.
+        *   Added Tailwind CSS classes for white calendar icons in date filters.
+        *   Implemented display all users on focus for recipient search, removed  check, corrected bot filtering to , increased search limit to 50, and added extensive debugging logs.
+        *   Ensured user search list updates on search mode change (name/email).
+-   : Modal for joining a battle (bet).
+    *   **Importance**: User interface for Player B to join a game and select their move.
+    *   **Changes Made**:
+        *   Modified  function to handle  status returned from backend on join.
+        *   Added a new  function to send Player B's move to the backend's  endpoint.
+        *   Logic was added to automatically call  immediately after  if the game transitions to , to then receive the completed game data.
 </code_architecture>
 
 <pending_tasks>
-The immediate pending task is to thoroughly debug and fix the numeric sorting for the TOTAL column in the User Management section. The user has explicitly stated that the sorting is still incorrect and duplicates are present, indicating issues with both the sorting logic and potentially data deduplication/pagination.
+-   **User Management TOTAL Column Sorting**: The numeric sorting issue and duplicate entries in the TOTAL column of the User Management admin panel (as per initial  and ) remain unaddressed in the provided trajectory.
+-   **Commit-Reveal Frontend Interaction (Finalizing)**: Ensure the frontend correctly handles the transition to  status after join and subsequently calls the  endpoint to complete the game, without raising Unexpected API response structure errors. The timeout logic on the backend side also needs final verification.
 </pending_tasks>
 
 <current_work>
-Immediately prior to this summary, the AI engineer was working on resolving a critical and persistent bug in the User Management section of the admin panel. The primary issue was that the TOTAL column, which displays a user's total balance (including virtual balance, frozen balance, and gem value), was not sorting correctly by its numerical value. Instead, it appeared to be sorting as a string, leading to an illogical order (e.g., 0,983.28 followed by ,874.09). Additionally, the user reported the presence of duplicate entries in the user list, which could further complicate sorting and accurate pagination.
+Immediately before this summary, the AI engineer was working on finalizing the commit-reveal betting logic. The primary issue was that after Player B joined a game and it transitioned to  status (waiting for Player B's move), the frontend was still encountering an Unexpected API response structure. Expected fields game_id and winner_id. error. This error occurred after Player B had chosen a move, indicating the frontend's  expected a final game result (with ) directly after the join operation or the subsequent move choice.
 
-The AI engineer made several attempts to address this in :
-1.  **Ensuring Numeric Conversion:** Code was modified to explicitly convert , , and  to floats and ensure  is computed as a numeric value.
-2.  **Refining Sorting Logic:** The custom sorting logic for  was reviewed and adjusted to ensure it performs a numerical comparison for both ascending and descending orders.
-3.  **Deduplication:** Logic was introduced to de-duplicate user entries before the final processing and pagination, which should ensure unique users are returned. This was applied to both custom-sorted (TOTAL, ROLE, ONLINE_STATUS) and standard MongoDB-sorted user lists.
-4.  **Pagination Count:** The calculation of  users for pagination was adjusted to account for the deduplication, aiming to provide an accurate count of unique users after filtering and sorting.
-
-Despite these efforts, the user provided new screenshots confirming the TOTAL column sorting was still incorrect and duplicates were present, indicating the underlying problem has not yet been fully resolved. The AI engineer's last action was another attempt to refine the deduplication and sorting logic for all scenarios within .
+The AI engineer's most recent actions to address this involve:
+1.  **Frontend Modification ():** The  function was updated to, upon receiving an  status after a successful join, immediately call a newly introduced  function. This  function then makes an API call to the backend's  endpoint, expecting the final game results (with  and ) from this second call.
+2.  **Backend Verification ():** The engineer is currently in the process of verifying the  function to confirm that it correctly manages the timeout scenario for games in  status, specifically ensuring Player B's funds are returned and Player A's bet is properly re-created with new commit-reveal data if Player B fails to make a move within the allocated minute.
 </current_work>
 
 <optional_next_step>
-Continue debugging and fixing the numeric sorting issue for the TOTAL column in the User Management section, and verify deduplication and pagination accuracy.
+Verify the  logic in  to ensure accurate fund returns and bet re-creation, then test the complete commit-reveal flow.
 </optional_next_step>
