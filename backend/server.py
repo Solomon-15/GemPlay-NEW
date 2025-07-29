@@ -21149,14 +21149,48 @@ async def get_detailed_notification_analytics(
         humans_map = {user["id"]: user for user in all_humans}
         
         # PERFORMANCE OPTIMIZATION: Get all read notifications for all paginated notifications at once
-        notification_ids = [notification["id"] for notification in notifications]
+        notification_ids = []
+        for notification in notifications:
+            # Handle both id and _id fields
+            notif_id = notification.get("id") or str(notification.get("_id"))
+            notification_ids.append(notif_id)
         
         # Single query to get ALL read notifications for ALL notifications being displayed
-        all_read_notifications_cursor = db.notifications.find({
+        # Handle both old and new notification formats
+        query_conditions = []
+        
+        # For notifications with 'id' field
+        query_conditions.append({
             "id": {"$in": notification_ids},
             "user_id": {"$in": all_human_ids},
-            "is_read": True
-        }, {"id": 1, "user_id": 1, "read_at": 1})
+            "$or": [
+                {"is_read": True},
+                {"read": True}  # Handle old field name
+            ]
+        })
+        
+        # For notifications with '_id' field (convert string IDs to ObjectId where valid)
+        valid_object_ids = []
+        for nid in notification_ids:
+            try:
+                if ObjectId.is_valid(nid):
+                    valid_object_ids.append(ObjectId(nid))
+            except:
+                pass
+        
+        if valid_object_ids:
+            query_conditions.append({
+                "_id": {"$in": valid_object_ids},
+                "user_id": {"$in": all_human_ids},
+                "$or": [
+                    {"is_read": True},
+                    {"read": True}  # Handle old field name
+                ]
+            })
+        
+        all_read_notifications_cursor = db.notifications.find({
+            "$or": query_conditions
+        }, {"id": 1, "_id": 1, "user_id": 1, "read_at": 1})
         all_read_notifications = await all_read_notifications_cursor.to_list(None)
         
         # Group read notifications by notification_id for efficient lookup
