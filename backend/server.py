@@ -9307,7 +9307,10 @@ async def get_all_users(
                     {"email": {"$regex": search, "$options": "i"}}
                 ]
         if status:
-            query["status"] = status
+            # Если фильтр по онлайн статусу (ONLINE/OFFLINE), не применяем к query
+            # Эти фильтры будут применены после расчета онлайн статуса
+            if status not in ['ONLINE', 'OFFLINE']:
+                query["status"] = status
             
         if role:
             query["role"] = role
