@@ -120,6 +120,7 @@ const NotificationAdmin = ({ user }) => {
 
       if (response.data.success) {
         const users = response.data.users || [];
+        console.log('👥 Found users before filtering:', users.length); // Отладка
         // Дополнительная фильтрация на фронтенде для исключения ботов
         const humanUsers = users.filter(user => 
           !user.bot_type && 
