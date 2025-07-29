@@ -700,7 +700,7 @@ const NotificationAdmin = ({ user }) => {
                             onChange={(e) => setUserSearch(e.target.value)}
                             onFocus={handleSearchFocus}
                             onBlur={handleSearchBlur}
-                            placeholder={`Введите ${searchMode === 'name' ? 'имя пользователя' : 'email адрес'} для поиска`}
+                            placeholder={`${searchMode === 'name' ? 'Выберите пользователя по имени или введите для поиска' : 'Выберите пользователя по email или введите для поиска'}`}
                             className="w-full bg-surface-sidebar border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-accent-primary"
                           />
                           
