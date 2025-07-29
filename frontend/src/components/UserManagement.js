@@ -1707,7 +1707,8 @@ const UserManagement = ({ user: currentUser }) => {
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
             >
               <option value="">Все статусы</option>
-              <option value="ACTIVE">Активен</option>
+              <option value="ONLINE">Онлайн</option>
+              <option value="OFFLINE">Офлайн</option>
               <option value="BANNED">Заблокирован</option>
               <option value="EMAIL_PENDING">Ожидает подтв.</option>
             </select>
