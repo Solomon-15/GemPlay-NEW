@@ -707,7 +707,15 @@ const NotificationAdmin = ({ user }) => {
                           <input
                             type="text"
                             value={userSearch}
-                            onChange={(e) => setUserSearch(e.target.value)}
+                            onChange={(e) => {
+                              setUserSearch(e.target.value);
+                              // Выполняем поиск если есть введенный текст, иначе показываем всех пользователей
+                              if (e.target.value.trim().length > 0) {
+                                searchUsers(e.target.value.trim());
+                              } else {
+                                handleSearchFocus(); // Показываем всех пользователей при пустом поле
+                              }
+                            }}
                             onFocus={handleSearchFocus}
                             onBlur={handleSearchBlur}
                             placeholder={`${searchMode === 'name' ? 'Выберите пользователя по имени или введите для поиска' : 'Выберите пользователя по email или введите для поиска'}`}
