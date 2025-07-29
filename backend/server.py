@@ -5804,24 +5804,51 @@ async def timeout_checker_task():
         try:
             current_time = datetime.utcnow()
             
-            # Find games in REVEAL phase that have exceeded deadline (legacy support)
+            # Find games in ACTIVE phase that have exceeded 1-minute deadline
             expired_games = await db.games.find({
+                "status": GameStatus.ACTIVE,
+                "active_deadline": {"$lt": current_time}  
+            }).to_list(100)
+            
+            if expired_games:
+                logger.info(f"⏰ Found {len(expired_games)} expired ACTIVE games to handle")
+                
+                for game_data in expired_games:
+                    try:
+                        # Check if this is a Human-bot game
+                        game_obj = Game(**game_data)
+                        
+                        # Check if at least one player is a Human-bot
+                        creator_is_human_bot = await db.human_bots.find_one({"id": game_obj.creator_id})
+                        opponent_is_human_bot = await db.human_bots.find_one({"id": game_obj.opponent_id})
+                        
+                        if creator_is_human_bot or opponent_is_human_bot:
+                            # Handle Human-bot game completion
+                            await handle_human_bot_game_completion(game_data["id"])
+                            logger.info(f"⏰ Successfully handled Human-bot game timeout for game {game_data['id']}")
+                        else:
+                            # Handle regular game timeout - recreate bet with new commit-reveal
+                            await handle_game_timeout(game_data["id"])
+                            logger.info(f"⏰ Successfully handled regular game timeout for game {game_data['id']}")
+                    except Exception as e:
+                        logger.error(f"❌ Error handling timeout for game {game_data['id']}: {e}")
+            else:
+                logger.debug("⏰ No expired ACTIVE games found")
+            
+            # Also check for expired REVEAL games (legacy support)
+            expired_reveal_games = await db.games.find({
                 "status": GameStatus.REVEAL,
                 "active_deadline": {"$lt": current_time}
             }).to_list(100)
             
-            if expired_games:
-                logger.info(f"⏰ Found {len(expired_games)} expired REVEAL games to handle")
-                
-                for game_data in expired_games:
+            if expired_reveal_games:
+                logger.info(f"⏰ Found {len(expired_reveal_games)} expired REVEAL games to handle")
+                for game_data in expired_reveal_games:
                     try:
-                        # Handle timeout for REVEAL games
                         await handle_game_timeout(game_data["id"])
                         logger.info(f"⏰ Successfully handled REVEAL game timeout for game {game_data['id']}")
                     except Exception as e:
-                        logger.error(f"❌ Error handling timeout for game {game_data['id']}: {e}")
-            else:
-                logger.debug("⏰ No expired REVEAL games found")
+                        logger.error(f"❌ Error handling REVEAL timeout for game {game_data['id']}: {e}")
             
             # Sleep for 10 seconds before next check
             await asyncio.sleep(10)
