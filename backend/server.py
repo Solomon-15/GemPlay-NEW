@@ -21260,15 +21260,30 @@ async def get_detailed_notification_analytics(
             notification_id = notification.get("id") or str(notification.get("_id"))
             notification_type = notification.get("type", "unknown")
             
+            # Определяем индивидуальные уведомления по типу
+            individual_notification_types = {"bet_accepted", "match_result", "gem_gift", "commission_freeze"}
+            is_individual_notification = notification_type in individual_notification_types
+            
             # Determine target users for this notification
             if notification.get("target_users"):
                 # Notification was sent to specific users
                 target_user_ids = [uid for uid in notification["target_users"] if uid in humans_map]
                 target_users = [humans_map[uid] for uid in target_user_ids]
             else:
-                # Notification was sent to all users
-                target_users = all_humans
-                target_user_ids = all_human_ids
+                # Для индивидуальных уведомлений ищем только одного получателя
+                if is_individual_notification:
+                    # Для индивидуальных уведомлений найдем реального получателя из базы
+                    notification_user_id = notification.get("user_id")
+                    if notification_user_id and notification_user_id in humans_map:
+                        target_users = [humans_map[notification_user_id]]
+                        target_user_ids = [notification_user_id]
+                    else:
+                        # Если получателя не найдено, пропускаем
+                        continue
+                else:
+                    # Notification was sent to all users (массовые уведомления)
+                    target_users = all_humans
+                    target_user_ids = all_human_ids
             
             # Get read notifications for this specific notification from pre-fetched data
             read_notifications = read_notifications_by_id.get(notification_id, [])
