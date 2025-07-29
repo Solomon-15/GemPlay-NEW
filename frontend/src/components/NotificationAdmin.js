@@ -997,8 +997,8 @@ const NotificationAdmin = ({ user }) => {
                       </div>
 
                       <div className="flex items-center space-x-2 ml-4">
-                        {/* Кнопка повторной отправки */}
-                        {item.unread_count > 0 && (
+                        {/* Кнопка повторной отправки - только для массовых уведомлений */}
+                        {!isIndividualNotification(item.type) && item.unread_count > 0 && (
                           <button
                             onClick={() => handleResendClick(item.notification_id)}
                             disabled={resendingId === item.notification_id}
