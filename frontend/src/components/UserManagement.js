@@ -1706,8 +1706,8 @@ const UserManagement = ({ user: currentUser }) => {
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => {
                 const [field, order] = e.target.value.split('-');
-                // Обрабатываем случай "По умолчанию" когда value="-"
-                if (field === '' && order === '') {
+                // Обрабатываем случай "По умолчанию" когда value="--asc"
+                if (field === '' || field === '-') {
                   setSortBy('');
                   setSortOrder('asc');
                 } else {
