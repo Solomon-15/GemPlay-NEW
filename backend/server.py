@@ -18059,6 +18059,7 @@ class NotificationTypeEnum(str, Enum):
     GEM_GIFT = "gem_gift"
     SYSTEM_MESSAGE = "system_message"
     ADMIN_NOTIFICATION = "admin_notification"
+    ADMIN_WARNING = "ADMIN_WARNING"  # Add support for existing ADMIN_WARNING notifications
 
 class NotificationPriorityEnum(str, Enum):
     INFO = "info"
