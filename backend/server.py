@@ -18330,6 +18330,28 @@ async def get_user_name_for_notification(user_id: str) -> str:
 
 
 # ==============================================================================
+# DATABASE RETRY HELPER FUNCTIONS  
+# ==============================================================================
+
+async def db_operation_with_retry(operation, max_retries=3, base_delay=0.1):
+    """Execute database operation with exponential backoff retry logic"""
+    import asyncio
+    from pymongo.errors import ServerSelectionTimeoutError, NetworkTimeout, AutoReconnect
+    
+    for attempt in range(max_retries):
+        try:
+            return await operation()
+        except (ServerSelectionTimeoutError, NetworkTimeout, AutoReconnect, Exception) as e:
+            if attempt == max_retries - 1:  # Последняя попытка
+                logger.error(f"Database operation failed after {max_retries} attempts: {e}")
+                raise e
+            
+            # Экспоненциальный откат
+            delay = base_delay * (2 ** attempt)
+            logger.warning(f"Database operation failed (attempt {attempt + 1}/{max_retries}), retrying in {delay}s: {e}")
+            await asyncio.sleep(delay)
+
+# ==============================================================================
 # NOTIFICATION SYSTEM API ENDPOINTS  
 # ==============================================================================
 
