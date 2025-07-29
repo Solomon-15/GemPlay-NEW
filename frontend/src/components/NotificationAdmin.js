@@ -116,6 +116,8 @@ const NotificationAdmin = ({ user }) => {
         }
       });
 
+      console.log('📊 Search response:', response.data); // Отладка
+
       if (response.data.success) {
         const users = response.data.users || [];
         // Дополнительная фильтрация на фронтенде для исключения ботов
