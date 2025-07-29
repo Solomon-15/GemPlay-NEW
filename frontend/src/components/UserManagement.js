@@ -107,7 +107,7 @@ const UserManagement = ({ user: currentUser }) => {
       totalMax
     };
     localStorage.setItem('userManagementFilters', JSON.stringify(filters));
-  }, [searchTerm, statusFilter, roleFilter, sortBy, sortOrder, balanceMin, balanceMax]);
+  }, [searchTerm, statusFilter, roleFilter, sortBy, sortOrder, balanceMin, balanceMax, totalMin, totalMax]);
 
   // Debounce search term to prevent cursor loss
   useEffect(() => {
