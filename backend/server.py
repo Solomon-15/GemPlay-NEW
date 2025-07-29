@@ -21159,12 +21159,20 @@ async def get_detailed_notification_analytics(
                 date_query["$lte"] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
             query["created_at"] = date_query
         
-        # Get unique notifications with pagination (group by notification _id)
+        # Get unique notifications with pagination
+        # Group by a combination of fields to handle both individual and mass notifications correctly
         pipeline = [
             {"$match": query},
             {"$group": {
-                "_id": "$_id",  # Use _id instead of id for MongoDB documents
-                "notification": {"$first": "$$ROOT"}
+                "_id": {
+                    "notification_id": {"$ifNull": ["$notification_id", "$_id"]},
+                    "title": "$title",
+                    "message": "$message", 
+                    "type": "$type",
+                    "created_at": "$created_at"
+                },
+                "notification": {"$first": "$$ROOT"},
+                "total_instances": {"$sum": 1}  # Count how many instances of this notification exist
             }},
             {"$sort": {"notification.created_at": -1}},
             {"$skip": (page - 1) * limit},
