@@ -5166,7 +5166,7 @@ async def handle_human_bot_game_completion(game_id: str):
         logger.error(f"Error auto-completing Human-bot game {game_id}: {e}")
 
 async def handle_game_timeout(game_id: str):
-    """Handle game timeout - return funds and potentially recreate bet."""
+    """Handle game timeout - return funds and recreate bet with new commit-reveal."""
     try:
         game = await db.games.find_one({"id": game_id})
         if not game:
@@ -5174,59 +5174,128 @@ async def handle_game_timeout(game_id: str):
             
         game_obj = Game(**game)
         
-        # Only handle timeout for REVEAL phase
-        if game_obj.status != GameStatus.REVEAL:
-            return
+        # Handle timeout for ACTIVE phase (opponent didn't choose move in time)
+        if game_obj.status == GameStatus.ACTIVE:
+            logger.info(f"🕐 Handling timeout for ACTIVE game {game_id} - opponent didn't choose move")
             
-        # Get both players
-        creator = await db.users.find_one({"id": game_obj.creator_id})
-        opponent = await db.users.find_one({"id": game_obj.opponent_id})
-        
-        if not creator or not opponent:
-            return
+            # Get both players
+            creator = await db.users.find_one({"id": game_obj.creator_id})
+            opponent = await db.users.find_one({"id": game_obj.opponent_id})
             
-        # Return gems to opponent (who joined but didn't reveal)
-        for gem_type, quantity in game_obj.bet_gems.items():
-            await db.user_gems.update_one(
-                {"user_id": game_obj.opponent_id, "gem_type": gem_type},
+            if not creator or not opponent:
+                logger.error(f"Cannot find creator or opponent for game {game_id}")
+                return
+            
+            # Return gems to opponent (who joined but didn't choose move)
+            if game_obj.opponent_gems:
+                for gem_type, quantity in game_obj.opponent_gems.items():
+                    if quantity > 0:
+                        await db.user_gems.update_one(
+                            {"user_id": game_obj.opponent_id, "gem_type": gem_type},
+                            {
+                                "$inc": {"frozen_quantity": -quantity},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        logger.info(f"💎 Returned {quantity} {gem_type} gems to opponent {game_obj.opponent_id}")
+            
+            # Return commission to opponent (if not a regular bot game)
+            if not game_obj.is_regular_bot_game:
+                commission = game_obj.bet_amount * 0.03
+                await db.users.update_one(
+                    {"id": game_obj.opponent_id},
+                    {
+                        "$inc": {
+                            "virtual_balance": commission,
+                            "frozen_balance": -commission
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                logger.info(f"💰 Returned ${commission} commission to opponent {game_obj.opponent_id}")
+            
+            # Generate NEW commit-reveal data for creator (ensure one-time use)
+            import secrets
+            new_salt = str(uuid.uuid4())
+            possible_moves = ["rock", "paper", "scissors"]
+            new_move = secrets.choice(possible_moves)  # Generate new random move
+            new_move_hash = hash_move_with_salt(new_move, new_salt)
+            
+            logger.info(f"🔄 Recreating bet for creator {game_obj.creator_id} with new commit-reveal")
+            logger.info(f"🔄 New move: {new_move}, New salt: {new_salt[:8]}...")
+            
+            # Recreate bet for creator with NEW commit-reveal data
+            await db.games.update_one(
+                {"id": game_id},
                 {
-                    "$inc": {"frozen_quantity": -quantity},
-                    "$set": {"updated_at": datetime.utcnow()}
+                    "$set": {
+                        "status": GameStatus.WAITING,
+                        "opponent_id": None,
+                        "opponent_move": None,
+                        "opponent_gems": None,
+                        "joined_at": None,
+                        "started_at": None,
+                        "active_deadline": None,
+                        # NEW commit-reveal data to ensure fairness and one-time use
+                        "creator_move": new_move,
+                        "creator_move_hash": new_move_hash,
+                        "creator_salt": new_salt,
+                        # Reset timestamps
+                        "created_at": datetime.utcnow(),  # Reset creation time
+                        "updated_at": datetime.utcnow()
+                    }
                 }
             )
             
-        # Return commission to opponent
-        commission = game_obj.bet_amount * 0.03
-        await db.users.update_one(
-            {"id": game_obj.opponent_id},
-            {
-                "$inc": {
-                    "virtual_balance": commission,
-                    "frozen_balance": -commission
-                },
-                "$set": {"updated_at": datetime.utcnow()}
-            }
-        )
-        
-        # Recreate bet for creator - change status back to WAITING
-        await db.games.update_one(
-            {"id": game_id},
-            {
-                "$set": {
-                    "status": GameStatus.WAITING,
-                    "opponent_id": None,
-                    "opponent_move": None,
-                    "started_at": None,
-                    "active_deadline": None,
-                    "updated_at": datetime.utcnow()
-                }
-            }
-        )
-        
-        logger.info(f"Game {game_id} timeout handled - bet recreated for creator")
+            # Send notifications to both players
+            try:
+                # Notify creator that their bet was recreated
+                creator_payload = NotificationPayload(
+                    game_id=game_id,
+                    amount=game_obj.bet_amount,
+                    action_url=f"/games/{game_id}"
+                )
+                await create_notification(
+                    user_id=game_obj.creator_id,
+                    notification_type=NotificationTypeEnum.SYSTEM_MESSAGE,
+                    title="Bet Recreated",
+                    message=f"Your ${game_obj.bet_amount} bet has been recreated with a new move due to opponent timeout.",
+                    payload=creator_payload,
+                    priority=NotificationPriorityEnum.INFO
+                )
+                
+                # Notify opponent about the timeout
+                opponent_name = await get_user_name_for_notification(game_obj.opponent_id)
+                opponent_payload = NotificationPayload(
+                    game_id=game_id,
+                    opponent_name=creator.get("username", "Unknown"),
+                    amount=game_obj.bet_amount
+                )
+                await create_notification(
+                    user_id=game_obj.opponent_id,
+                    notification_type=NotificationTypeEnum.SYSTEM_MESSAGE,
+                    title="Game Timeout",
+                    message=f"You didn't choose a move in time for the ${game_obj.bet_amount} bet. Your gems and commission have been returned.",
+                    payload=opponent_payload,
+                    priority=NotificationPriorityEnum.WARNING
+                )
+                
+                logger.info(f"📬 Sent timeout notifications to both players")
+                
+            except Exception as e:
+                logger.error(f"Error sending timeout notifications: {e}")
+            
+            logger.info(f"✅ Game {game_id} timeout handled - bet recreated for creator with new commit-reveal")
+            return
+            
+        # Handle timeout for other phases (legacy support)
+        elif game_obj.status == GameStatus.REVEAL:
+            logger.info(f"🕐 Handling timeout for REVEAL game {game_id} (legacy)")
+            # ... existing REVEAL timeout logic if needed
+            pass
         
     except Exception as e:
-        logger.error(f"Error handling game timeout: {e}")
+        logger.error(f"Error handling game timeout for {game_id}: {e}")
 
 @api_router.get("/games/can-join")
 async def can_join_games(current_user: User = Depends(get_current_user)):
