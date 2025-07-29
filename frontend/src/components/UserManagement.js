@@ -1664,6 +1664,107 @@ const UserManagement = ({ user: currentUser }) => {
         </button>
       </div>
 
+      {/* Расширенные фильтры */}
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Фильтр по роли */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-secondary">Роль</label>
+            <select
+              value={roleFilter}
+              onChange={(e) => handleRoleFilter(e.target.value)}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            >
+              <option value="">Все роли</option>
+              <option value="USER">Игрок</option>
+              <option value="ADMIN">Админ</option>
+              <option value="SUPER_ADMIN">Супер-админ</option>
+              <option value="HUMAN_BOT">Human-бот</option>
+              <option value="REGULAR_BOT">Обычный бот</option>
+            </select>
+          </div>
+
+          {/* Фильтр по статусу */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-secondary">Статус</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            >
+              <option value="">Все статусы</option>
+              <option value="ACTIVE">Активен</option>
+              <option value="BANNED">Заблокирован</option>
+              <option value="EMAIL_PENDING">Ожидает подтв.</option>
+            </select>
+          </div>
+
+          {/* Сортировка */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-secondary">Сортировка</label>
+            <select
+              value={`${sortBy}-${sortOrder}`}
+              onChange={(e) => {
+                const [field, order] = e.target.value.split('-');
+                setSortBy(field);
+                setSortOrder(order);
+                pagination.handlePageChange(1);
+              }}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            >
+              <option value="-">По умолчанию</option>
+              <option value="name-asc">Имя (А-Я)</option>
+              <option value="name-desc">Имя (Я-А)</option>
+              <option value="role-asc">Роль (возр.)</option>
+              <option value="role-desc">Роль (убыв.)</option>
+              <option value="status-asc">Статус (возр.)</option>
+              <option value="status-desc">Статус (убыв.)</option>
+              <option value="balance-asc">Баланс (возр.)</option>
+              <option value="balance-desc">Баланс (убыв.)</option>
+              <option value="registration_date-asc">Дата рег. (старые)</option>
+              <option value="registration_date-desc">Дата рег. (новые)</option>
+            </select>
+          </div>
+
+          {/* Кнопка очистки фильтров */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-secondary">Действия</label>
+            <button
+              onClick={clearFilters}
+              className="w-full px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-rajdhani font-bold transition-colors"
+            >
+              Очистить фильтры
+            </button>
+          </div>
+        </div>
+
+        {/* Фильтр по балансу */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-secondary">Минимальный баланс</label>
+            <input
+              type="number"
+              placeholder="0"
+              value={balanceMin}
+              onChange={(e) => setBalanceMin(e.target.value)}
+              onBlur={handleBalanceFilter}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-secondary">Максимальный баланс</label>
+            <input
+              type="number"
+              placeholder="∞"
+              value={balanceMax}
+              onChange={(e) => setBalanceMax(e.target.value)}
+              onBlur={handleBalanceFilter}
+              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Массовые действия */}
       {showBulkActions && (
         <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 mb-4">
