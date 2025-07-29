@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
+from pymongo.errors import ServerSelectionTimeoutError, NetworkTimeout, AutoReconnect
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, timedelta
