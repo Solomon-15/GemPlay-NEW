@@ -1706,8 +1706,14 @@ const UserManagement = ({ user: currentUser }) => {
               value={`${sortBy}-${sortOrder}`}
               onChange={(e) => {
                 const [field, order] = e.target.value.split('-');
-                setSortBy(field);
-                setSortOrder(order);
+                // Обрабатываем случай "По умолчанию" когда value="-"
+                if (field === '' && order === '') {
+                  setSortBy('');
+                  setSortOrder('asc');
+                } else {
+                  setSortBy(field);
+                  setSortOrder(order);
+                }
                 pagination.handlePageChange(1);
               }}
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
