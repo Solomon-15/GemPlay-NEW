@@ -9335,7 +9335,7 @@ async def get_all_users(
             sort_fields_map = {
                 "name": "username",
                 "email": "email", 
-                "role": "role",
+                "role": None,  # Специальная обработка для role - будем сортировать после определения user_type
                 "status": "status",
                 "balance": "virtual_balance",
                 "total": None,  # Специальная обработка для total - будем сортировать после расчета
