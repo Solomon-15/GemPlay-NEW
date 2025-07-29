@@ -102,7 +102,9 @@ const UserManagement = ({ user: currentUser }) => {
       sortBy,
       sortOrder,
       balanceMin,
-      balanceMax
+      balanceMax,
+      totalMin,
+      totalMax
     };
     localStorage.setItem('userManagementFilters', JSON.stringify(filters));
   }, [searchTerm, statusFilter, roleFilter, sortBy, sortOrder, balanceMin, balanceMax]);
