@@ -379,7 +379,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
                         <div className="px-3 pb-3 border-t border-gray-600 bg-surface-sidebar bg-opacity-50">
                           <div className="pt-3 space-y-2">
                             <div className="flex items-center justify-between">
-                              <div className="text-xs text-gray-400 font-medium">Полный текст:</div>
+                              <div className="text-xs text-gray-400 font-medium">Full text:</div>
                               <button
                                 onClick={(e) => toggleExpandedNotification(notification.id, e)}
                                 className="text-gray-400 hover:text-white text-xs p-1"
