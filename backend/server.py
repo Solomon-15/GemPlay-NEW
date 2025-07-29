@@ -9371,7 +9371,9 @@ async def get_all_users(
         
         # Clean user data
         cleaned_users = []
-        for user in users:
+        users_to_process = all_users if sort_by_total else users
+        
+        for user in users_to_process:
             user_id = user.get("id")
             
             # Calculate gem statistics from user_gems collection
