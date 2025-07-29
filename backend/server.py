@@ -9545,12 +9545,11 @@ async def get_all_users(
                 
                 cleaned_users.sort(key=get_online_status_priority, reverse=(sort_direction == -1))
             
-            # Применяем пагинацию
-            total_after_filter = len(cleaned_users)
-            cleaned_users = cleaned_users[skip:skip + limit]
+            # Обновляем total для правильной пагинации ПОСЛЕ дедупликации и сортировки
+            total = len(cleaned_users)
             
-            # Обновляем total для правильной пагинации
-            total = total_after_filter
+            # Применяем пагинацию
+            cleaned_users = cleaned_users[skip:skip + limit]
         
         return {
             "users": cleaned_users,
