@@ -148,6 +148,8 @@ const UserManagement = ({ user: currentUser }) => {
       if (sortOrder) params.append('sort_order', sortOrder);
       if (balanceMin) params.append('balance_min', balanceMin);
       if (balanceMax) params.append('balance_max', balanceMax);
+      if (totalMin) params.append('total_min', totalMin);
+      if (totalMax) params.append('total_max', totalMax);
       
       const response = await axios.get(`${API}/admin/users?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
