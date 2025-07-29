@@ -374,7 +374,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
                         </div>
                       </div>
 
-                      {/* Расширенный контент */}
+                      {/* Expanded content */}
                       {expandedNotificationId === notification.id && (
                         <div className="px-3 pb-3 border-t border-gray-600 bg-surface-sidebar bg-opacity-50">
                           <div className="pt-3 space-y-2">
