@@ -9502,20 +9502,19 @@ async def get_all_users(
         # Если сортируем по TOTAL, ROLE или ONLINE_STATUS, сортируем cleaned_users и применяем пагинацию
         if sort_by_total or sort_by_role or sort_by_online_status:
             if sort_by_total:
-                # Сортируем по total_balance с проверкой типов и отладкой
+                # Сортируем по total_balance с гарантированным приведением к числу
                 def get_total_balance_safe(x):
                     val = x.get("total_balance", 0)
                     try:
-                        result = float(val) if val is not None else 0.0
-                        # Отладочная информация
-                        print(f"DEBUG: user {x.get('username', 'unknown')}, total_balance raw: {val}, converted: {result}")
-                        return result
-                    except (ValueError, TypeError) as e:
-                        print(f"DEBUG: Error converting total_balance for user {x.get('username', 'unknown')}: {val}, error: {e}")
+                        # Принудительное приведение к float
+                        if isinstance(val, str):
+                            # Удаляем символы валюты и запятые если есть
+                            val = val.replace('$', '').replace(',', '').replace(' ', '')
+                        return float(val) if val is not None else 0.0
+                    except (ValueError, TypeError):
                         return 0.0
                 
-                # Проверим направление сортировки
-                print(f"DEBUG: Sorting TOTAL by {'DESC' if sort_direction == -1 else 'ASC'}, sort_direction: {sort_direction}")
+                # Сортируем: reverse=True для убывания (desc), reverse=False для возрастания (asc)
                 cleaned_users.sort(key=get_total_balance_safe, reverse=(sort_direction == -1))
             elif sort_by_role:
                 # Сортируем по приоритету ролей
