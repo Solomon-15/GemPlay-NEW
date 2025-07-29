@@ -21186,7 +21186,15 @@ async def get_detailed_notification_analytics(
         # Get total count of unique notifications
         count_pipeline = [
             {"$match": query},
-            {"$group": {"_id": "$_id"}},  # Use _id instead of id
+            {"$group": {
+                "_id": {
+                    "notification_id": {"$ifNull": ["$notification_id", "$_id"]},
+                    "title": "$title",
+                    "message": "$message",
+                    "type": "$type", 
+                    "created_at": "$created_at"
+                }
+            }},
             {"$count": "total"}
         ]
         count_result = await db.notifications.aggregate(count_pipeline).to_list(1)
