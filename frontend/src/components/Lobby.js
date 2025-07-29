@@ -138,6 +138,26 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         game.status === 'ACTIVE' || game.status === 'REVEAL'
       );
       
+      // Also include ACTIVE games from Available Bets (all human games that became ACTIVE)
+      const activeHumanGames = allGames.filter(game => {
+        // Only include ACTIVE games
+        if (game.status !== 'ACTIVE') {
+          return false;
+        }
+        
+        // Include human player games
+        if (!game.is_bot_game) {
+          return true;
+        }
+        
+        // Include human-bot games
+        if (game.is_bot_game && game.is_human_bot) {
+          return true;
+        }
+        
+        return false;
+      });
+      
       // Get active Human-bot games for display in ongoing battles
       try {
         const token = localStorage.getItem('token');
@@ -154,12 +174,23 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         
         const humanBotGames = humanBotGamesResponse.data?.games || [];
         
-        // Combine user ongoing battles with Human-bot games
-        const allOngoingBattles = [...userOngoingBattles, ...humanBotGames];
-        setOngoingBattles(allOngoingBattles);
+        // Combine user ongoing battles with ACTIVE human games and Human-bot games
+        const allOngoingBattles = [...userOngoingBattles, ...activeHumanGames, ...humanBotGames];
+        
+        // Remove duplicates based on game ID
+        const uniqueOngoingBattles = allOngoingBattles.filter((game, index, self) => 
+          index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
+        );
+        
+        setOngoingBattles(uniqueOngoingBattles);
       } catch (error) {
         console.error('Error fetching Human-bot games:', error);
-        setOngoingBattles(userOngoingBattles);
+        // Fallback: combine user battles with active human games
+        const fallbackOngoingBattles = [...userOngoingBattles, ...activeHumanGames];
+        const uniqueFallbackBattles = fallbackOngoingBattles.filter((game, index, self) => 
+          index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
+        );
+        setOngoingBattles(uniqueFallbackBattles);
       }
       
       setOngoingBotBattles(userGames.filter(game => 
