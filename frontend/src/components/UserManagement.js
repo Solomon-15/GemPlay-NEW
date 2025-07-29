@@ -1871,11 +1871,23 @@ const UserManagement = ({ user: currentUser }) => {
                       <span className="text-accent-primary">{getSortIcon('role')}</span>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    Баланс
+                  <th 
+                    onClick={() => handleColumnSort('balance')}
+                    className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-main transition-colors"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Баланс</span>
+                      <span className="text-accent-primary">{getSortIcon('balance')}</span>
+                    </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
-                    TOTAL
+                  <th 
+                    onClick={() => handleColumnSort('total')}
+                    className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider cursor-pointer hover:bg-surface-main transition-colors"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>TOTAL</span>
+                      <span className="text-accent-primary">{getSortIcon('total')}</span>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider">
                     Гемы
