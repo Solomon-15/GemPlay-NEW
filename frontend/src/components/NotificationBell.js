@@ -383,7 +383,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
                               <button
                                 onClick={(e) => toggleExpandedNotification(notification.id, e)}
                                 className="text-gray-400 hover:text-white text-xs p-1"
-                                aria-label="Закрыть расширенный вид"
+                                aria-label="Close expanded view"
                               >
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
