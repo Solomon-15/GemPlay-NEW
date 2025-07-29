@@ -46,6 +46,37 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     { id: 'scissors', name: 'Scissors', icon: '/Scissors.svg' }
   ];
 
+  // ЛОГИКА ВЫБОРА ХОДА (для ACTIVE игр)
+  const chooseMove = async (gameId, move) => {
+    console.log('🎯 Choosing move for active game:', { gameId, move });
+    
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/${gameId}/choose-move`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          move: move
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка при выборе хода');
+      }
+      
+      const result = await response.json();
+      console.log('🎯 Choose move response:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('🚨 Choose move error:', error);
+      throw error;
+    }
+  };
+
   // ЛОГИКА ПРИСОЕДИНЕНИЯ К БИТВЕ
   const joinBattle = async () => {
     setLoading(true);
