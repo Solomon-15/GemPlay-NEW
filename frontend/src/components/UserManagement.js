@@ -396,6 +396,10 @@ const UserManagement = ({ user: currentUser }) => {
     pagination.handlePageChange(1);
   };
   
+  const handleTotalFilter = () => {
+    pagination.handlePageChange(1);
+  };
+  
   const clearFilters = () => {
     setSearchTerm('');
     setStatusFilter('');
