@@ -144,10 +144,53 @@ def test_game_workflow():
         print("❌ Failed to check initial game status")
         return False
     
-    # Step 4: Get available games to verify our game appears
-    print("\n4. VERIFY GAME APPEARS IN AVAILABLE GAMES")
+    # Step 4: Create a second user to view available games (since creator can't see their own games)
+    print("\n4. CREATE SECOND USER TO VIEW AVAILABLE GAMES")
     
-    available_response, available_success = make_request("GET", "/games/available", auth_token=admin_token)
+    # Generate unique username and email
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    viewer_user_data = {
+        "username": f"viewer_{random_suffix}",
+        "email": f"viewer_{random_suffix}@test.com",
+        "password": "Test123!",
+        "gender": "female"
+    }
+    
+    register_response, register_success = make_request("POST", "/auth/register", viewer_user_data)
+    
+    if not register_success:
+        print("❌ Viewer user registration failed")
+        return False
+    
+    verification_token = register_response.get("verification_token")
+    if not verification_token:
+        print("❌ No verification token received")
+        return False
+    
+    # Verify email
+    verify_response, verify_success = make_request("POST", "/auth/verify-email", {"token": verification_token})
+    
+    if not verify_success:
+        print("❌ Email verification failed")
+        return False
+    
+    # Login as viewer user
+    viewer_login_data = {
+        "email": viewer_user_data["email"],
+        "password": viewer_user_data["password"]
+    }
+    
+    viewer_login_response, viewer_login_success = make_request("POST", "/auth/login", viewer_login_data)
+    
+    if not viewer_login_success:
+        print("❌ Viewer user login failed")
+        return False
+    
+    viewer_token = viewer_login_response["access_token"]
+    print("✅ Viewer user created and logged in")
+    
+    # Check initial status through available games (using viewer user)
+    available_response, available_success = make_request("GET", "/games/available", auth_token=viewer_token)
     
     if available_success and isinstance(available_response, list):
         our_game = None
@@ -157,25 +200,41 @@ def test_game_workflow():
                 break
         
         if our_game:
-            print(f"✅ Game found in available games")
-            print(f"   Status: {our_game.get('status')}")
-            print(f"   Creator: {our_game.get('creator_id')}")
-            print(f"   Bet amount: ${our_game.get('bet_amount')}")
+            initial_status = our_game.get("status")
+            print(f"Initial game status: {initial_status}")
+            
+            if initial_status == "WAITING":
+                print("✅ CORRECT: Game status is WAITING after creation")
+            else:
+                print(f"❌ INCORRECT: Expected WAITING, got {initial_status}")
+                return False
         else:
             print("❌ Game not found in available games")
             return False
     else:
-        print("❌ Failed to get available games")
+        print("❌ Failed to check initial game status")
         return False
     
-    # Step 5: Create a second user account to join the game
-    print("\n5. CREATE SECOND USER FOR JOINING")
+    # Step 5: Verify game appears in available games
+    print("\n5. VERIFY GAME APPEARS IN AVAILABLE GAMES")
+    
+    if our_game:
+        print(f"✅ Game found in available games")
+        print(f"   Status: {our_game.get('status')}")
+        print(f"   Creator: {our_game.get('creator_id')}")
+        print(f"   Bet amount: ${our_game.get('bet_amount')}")
+    else:
+        print("❌ Game not found in available games")
+        return False
+    
+    # Step 6: Create a third user to join the game
+    print("\n6. CREATE THIRD USER FOR JOINING")
     
     # Generate unique username and email
-    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    random_suffix2 = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
     second_user_data = {
-        "username": f"testuser_{random_suffix}",
-        "email": f"testuser_{random_suffix}@test.com",
+        "username": f"testuser_{random_suffix2}",
+        "email": f"testuser_{random_suffix2}@test.com",
         "password": "Test123!",
         "gender": "female"
     }
