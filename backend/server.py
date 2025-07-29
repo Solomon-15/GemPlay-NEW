@@ -5392,7 +5392,7 @@ async def join_game(
         else:
             logger.info(f"🤖 No commission frozen for regular bot game - user {current_user.id}")
         
-        # ATOMIC UPDATE: Try to update game with opponent only if it still has no opponent
+        # ATOMIC UPDATE: Try to update game with opponent only if it still has no opponent  
         # This prevents race conditions where multiple users try to join the same game
         update_result = await db.games.update_one(
             {
@@ -5403,11 +5403,10 @@ async def join_game(
             {
                 "$set": {
                     "opponent_id": current_user.id,
-                    "opponent_move": join_data.move,  # Save opponent's chosen move
                     "opponent_gems": join_data.gems,  # Save opponent's gem combination
                     "joined_at": datetime.utcnow(),
-                    "started_at": datetime.utcnow(), 
-                    "status": "COMPLETED",  # Mark as completed since we have both moves
+                    "status": "ACTIVE",  # Mark as active - waiting for opponent to choose move
+                    "active_deadline": datetime.utcnow() + timedelta(minutes=1),  # 1 minute for opponent to choose move
                     "is_regular_bot_game": is_regular_bot_game,
                     "updated_at": datetime.utcnow()
                 }
