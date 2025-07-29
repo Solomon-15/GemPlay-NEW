@@ -9488,6 +9488,17 @@ async def get_all_users(
                 
             cleaned_users.append(cleaned_user)
         
+        # Удаляем дубликаты по username (сохраняем только первое вхождение)
+        seen_usernames = set()
+        unique_users = []
+        for user in cleaned_users:
+            username = user.get("username")
+            if username and username not in seen_usernames:
+                seen_usernames.add(username)
+                unique_users.append(user)
+        
+        cleaned_users = unique_users
+        
         # Если сортируем по TOTAL, ROLE или ONLINE_STATUS, сортируем cleaned_users и применяем пагинацию
         if sort_by_total or sort_by_role or sort_by_online_status:
             if sort_by_total:
