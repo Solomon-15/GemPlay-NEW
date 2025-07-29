@@ -22394,11 +22394,11 @@ def test_notification_system_500_error_fix() -> None:
     print_success("- Russian error 'Ошибка загрузки детальной аналитики' should be resolved")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - NOTIFICATION SYSTEM 500 ERROR FIX")
+    print_header("GEMPLAY BACKEND API TESTING - NOTIFICATION DETAILED ANALYTICS INDIVIDUAL VS MASS LOGIC")
     
     try:
-        # Run the Notification System 500 Error Fix test as specifically requested in the review
-        test_notification_system_500_error_fix()
+        # Run the Notification Detailed Analytics Individual vs Mass Logic test as specifically requested in the review
+        test_notification_detailed_analytics_individual_vs_mass()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
