@@ -9335,7 +9335,7 @@ async def get_all_users(
                 "role": "role",
                 "status": "status",
                 "balance": "virtual_balance",
-                "total": "virtual_balance",  # Будем сортировать по virtual_balance как приблизительное значение total
+                "total": None,  # Специальная обработка для total - будем сортировать после расчета
                 "registration_date": "created_at",
                 "last_login": "last_login"
             }
