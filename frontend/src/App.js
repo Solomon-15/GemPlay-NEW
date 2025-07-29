@@ -296,8 +296,7 @@ function App() {
                   {/* Desktop: Page Title Only */}
                   <div className="block">
                     <h1 className="text-xl font-russo text-text-primary capitalize">
-                      {currentView === 'my-bets' ? 'My Bets' : 
-                       currentView === 'notifications' ? 'Notifications' :
+                      {currentView === 'notifications' ? 'Notifications' :
                        currentView}
                     </h1>
                   </div>
