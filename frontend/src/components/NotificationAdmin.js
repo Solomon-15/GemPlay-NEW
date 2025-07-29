@@ -144,16 +144,6 @@ const NotificationAdmin = ({ user }) => {
     searchUsers('');
   };
 
-  // Обработчик изменения режима поиска
-  const handleSearchModeChange = (newMode) => {
-    setSearchMode(newMode);
-    // Если список уже открыт (foundUsers не пустой), обновляем его отображение
-    if (foundUsers.length > 0) {
-      // Список остается тем же, изменится только отображение в зависимости от режима
-      setFoundUsers([...foundUsers]); // Принудительно обновляем для перерендера
-    }
-  };
-
   // Скрыть список при потере фокуса (с задержкой для возможности клика)
   const handleSearchBlur = () => {
     setTimeout(() => {
