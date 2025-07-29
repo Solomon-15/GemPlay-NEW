@@ -9483,8 +9483,8 @@ async def get_all_users(
                 
             cleaned_users.append(cleaned_user)
         
-        # Если сортируем по TOTAL или ROLE, сортируем cleaned_users и применяем пагинацию
-        if sort_by_total or sort_by_role:
+        # Если сортируем по TOTAL, ROLE или ONLINE_STATUS, сортируем cleaned_users и применяем пагинацию
+        if sort_by_total or sort_by_role or sort_by_online_status:
             if sort_by_total:
                 # Сортируем по total_balance
                 cleaned_users.sort(key=lambda x: x["total_balance"], reverse=(sort_direction == -1))
@@ -9506,6 +9506,15 @@ async def get_all_users(
                         return 6  # Неизвестный тип - в конец
                 
                 cleaned_users.sort(key=get_role_priority, reverse=(sort_direction == -1))
+            elif sort_by_online_status:
+                # Сортируем по онлайн статусу
+                def get_online_status_priority(user):
+                    # Определяем статус для ботов и пользователей
+                    status = user["bot_status"] if user["user_type"] in ["HUMAN_BOT", "REGULAR_BOT"] else user["online_status"]
+                    # ONLINE имеет приоритет над OFFLINE
+                    return 1 if status == "ONLINE" else 2
+                
+                cleaned_users.sort(key=get_online_status_priority, reverse=(sort_direction == -1))
             
             # Применяем пагинацию
             total_after_filter = len(cleaned_users)
