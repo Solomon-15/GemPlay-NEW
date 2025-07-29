@@ -1717,41 +1717,6 @@ const UserManagement = ({ user: currentUser }) => {
             </select>
           </div>
 
-          {/* Сортировка */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-text-secondary">Сортировка</label>
-            <select
-              value={`${sortBy}-${sortOrder}`}
-              onChange={(e) => {
-                const [field, order] = e.target.value.split('-');
-                // Обрабатываем случай "По умолчанию" когда value="--asc"
-                if (field === '' || field === '-') {
-                  setSortBy('');
-                  setSortOrder('asc');
-                } else {
-                  setSortBy(field);
-                  setSortOrder(order);
-                }
-                pagination.handlePageChange(1);
-              }}
-              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
-            >
-              <option value="--asc">По умолчанию</option>
-              <option value="name-asc">Имя (А-Я)</option>
-              <option value="name-desc">Имя (Я-А)</option>
-              <option value="role-asc">Роль (возр.)</option>
-              <option value="role-desc">Роль (убыв.)</option>
-              <option value="status-asc">Статус (возр.)</option>
-              <option value="status-desc">Статус (убыв.)</option>
-              <option value="balance-asc">Баланс (возр.)</option>
-              <option value="balance-desc">Баланс (убыв.)</option>
-              <option value="total-asc">TOTAL (возр.)</option>
-              <option value="total-desc">TOTAL (убыв.)</option>
-              <option value="registration_date-asc">Дата рег. (старые)</option>
-              <option value="registration_date-desc">Дата рег. (новые)</option>
-            </select>
-          </div>
-
           {/* Кнопка очистки фильтров */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-text-secondary">Действия</label>
