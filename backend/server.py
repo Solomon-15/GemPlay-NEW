@@ -9429,7 +9429,7 @@ async def get_all_users(
                 "gender": user.get("gender"),
                 "virtual_balance": user.get("virtual_balance", 0),
                 "frozen_balance": user.get("frozen_balance", 0),  # Добавляем замороженный баланс
-                "total_balance": user.get("virtual_balance", 0) + user.get("frozen_balance", 0),  # Общий баланс
+                "total_balance": user.get("virtual_balance", 0) + user.get("frozen_balance", 0) + round(total_gems_value, 2),  # Полный баланс включая стоимость гемов
                 "total_games_played": total_games_played,
                 "total_games_won": total_games_won,
                 "total_games_lost": total_games_lost,
