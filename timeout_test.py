@@ -254,9 +254,11 @@ def test_timeout_logic_live_vs_live():
     
     player_a_email = generate_unique_email()
     player_b_email = generate_unique_email()
+    player_a_username = generate_unique_username()
+    player_b_username = generate_unique_username()
     
     player_a_token = test_user_registration_and_verification(
-        "PlayerA_Timeout", player_a_email, "Test123!"
+        player_a_username, player_a_email, "Test123!"
     )
     
     if not player_a_token:
@@ -265,7 +267,7 @@ def test_timeout_logic_live_vs_live():
         return
     
     player_b_token = test_user_registration_and_verification(
-        "PlayerB_Timeout", player_b_email, "Test123!"
+        player_b_username, player_b_email, "Test123!"
     )
     
     if not player_b_token:
