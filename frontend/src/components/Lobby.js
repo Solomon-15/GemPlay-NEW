@@ -126,12 +126,15 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       setAvailableBots(activeBotGames.filter(game => game.is_bot_game && !game.is_human_bot));
       
       const userGames = myBetsResponse.data || [];
-      setMyBets(userGames.filter(game => game.status === 'WAITING'));
+      // My Bets: Only show WAITING games that user created
+      setMyBets(userGames.filter(game => 
+        game.status === 'WAITING' && game.is_creator === true
+      ));
       
-      // Ongoing battles should include ACTIVE and REVEAL statuses
-      // These are games where user is actively participating
+      // Ongoing battles should include ALL ACTIVE games where user participates (as creator or opponent)
       const userOngoingBattles = userGames.filter(game => 
-        game.status === 'ACTIVE' || game.status === 'REVEAL'
+        (game.status === 'ACTIVE' || game.status === 'REVEAL') && 
+        (game.is_creator === true || game.is_creator === false)
       );
       
       // Also include ACTIVE games from Available Bets (all human games that became ACTIVE)
