@@ -7398,6 +7398,9 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
         
         result = []
         for game in games:
+            # Get creator info
+            creator = await db.users.find_one({"id": game["creator_id"]})
+            
             # Get opponent info
             opponent_id = game["opponent_id"] if game["creator_id"] == current_user.id else game["creator_id"]
             opponent = None
@@ -7413,6 +7416,12 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
                 "bet_gems": game["bet_gems"],
                 "status": game["status"],
                 "created_at": game["created_at"],
+                "creator_username": creator["username"] if creator else "Unknown Player",
+                "creator": {
+                    "id": creator["id"],
+                    "username": creator["username"],
+                    "gender": creator["gender"]
+                } if creator else None,
                 "opponent": {
                     "id": opponent["id"],
                     "username": opponent["username"],
