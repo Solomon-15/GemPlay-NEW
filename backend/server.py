@@ -2947,6 +2947,10 @@ async def join_available_bet_as_human_bot(bot: HumanBot, bet_game: dict):
         bot_move = HumanBotBehavior.get_move_choice(bot.character)
         bot_gems = await generate_human_bot_gems_for_amount(bet_amount)
         
+        # Set random completion time for Human-bot games
+        random_completion_seconds = random.randint(15, 60)  # Random time between 15 seconds and 1 minute
+        completion_deadline = datetime.utcnow() + timedelta(seconds=random_completion_seconds)
+        
         # Update game with bot as opponent
         await db.games.update_one(
             {"id": game_id, "status": "WAITING"},
@@ -2957,13 +2961,16 @@ async def join_available_bet_as_human_bot(bot: HumanBot, bet_game: dict):
                     "opponent_move": bot_move,
                     "opponent_gems": bot_gems,
                     "status": GameStatus.ACTIVE,
-                    "started_at": datetime.utcnow(),  # Add started_at
-                    "active_deadline": datetime.utcnow() + timedelta(minutes=1),  # Add active_deadline for timeout
+                    "started_at": datetime.utcnow(),
+                    "active_deadline": completion_deadline,  # Random completion time
+                    "human_bot_completion_time": random_completion_seconds,  # Store for logging
                     "joined_at": datetime.utcnow(),
                     "updated_at": datetime.utcnow()
                 }
             }
         )
+        
+        logger.info(f"Human-bot {bot.name} will complete game {game_id} in {random_completion_seconds} seconds")
         
         # Update bot's last action time
         await db.human_bots.update_one(
