@@ -23996,11 +23996,11 @@ def print_summary() -> None:
         print(f"{category}: {status_color}{results['passed']}/{total_cat} ({success_rate_cat:.1f}%){Colors.ENDC}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - ADMIN BETS LIST ACTIVE STATUS")
+    print_header("GEMPLAY BACKEND API TESTING - REGULAR BOT COMMIT-REVEAL SYSTEM")
     
     try:
-        # Run the Admin Bets List test as specifically requested in the Russian review
-        test_admin_bets_list_active_status()
+        # Run the Regular Bot Commit-Reveal test as specifically requested in the Russian review
+        test_regular_bot_commit_reveal_system()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
