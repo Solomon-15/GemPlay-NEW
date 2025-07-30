@@ -108,6 +108,14 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       if (result.status === 'ACTIVE') {
         console.log('🎮 Game is now ACTIVE - need to choose move');
         
+        // Immediately update lobby to move game from Available Bets to Ongoing Battles
+        if (onUpdateUser) {
+          onUpdateUser();
+        }
+        const globalRefresh = getGlobalLobbyRefresh();
+        globalRefresh.triggerLobbyRefresh();
+        console.log('⚔️ Game status ACTIVE - triggering immediate lobby refresh');
+        
         const chooseMoveResult = await chooseMove(result.game_id, selectedMove);
         
         if (chooseMoveResult.game_id && chooseMoveResult.winner_id !== undefined) {
