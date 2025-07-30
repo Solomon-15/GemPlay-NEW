@@ -7355,6 +7355,7 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
             
             result.append({
                 "game_id": game["id"],
+                "creator_username": creator["username"],
                 "creator": {
                     "id": creator["id"],
                     "username": creator["username"],
