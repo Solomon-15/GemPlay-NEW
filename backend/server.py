@@ -5112,8 +5112,20 @@ async def handle_game_timeout(game_id: str):
                         )
                         logger.info(f"💎 Returned {quantity} {gem_type} gems to opponent {game_obj.opponent_id}")
             
+            # Check if the game creator is a regular bot (affects commission handling)
+            is_regular_bot_game = False
+            if hasattr(game_obj, 'is_regular_bot_game'):
+                is_regular_bot_game = game_obj.is_regular_bot_game
+            else:
+                # Fallback: check creator type for older games
+                if hasattr(game_obj, 'creator_type') and game_obj.creator_type == "bot":
+                    creator_bot = await db.bots.find_one({"id": game_obj.creator_id})
+                    if creator_bot and creator_bot.get("bot_type") == "REGULAR":
+                        is_regular_bot_game = True
+            
             # Return commission to opponent (if not a regular bot game)
-            if not game_obj.is_regular_bot_game:
+            # This applies to: Live Players vs Live Players, Live Players vs Human-bots, Human-bots vs Live Players
+            if not is_regular_bot_game:
                 commission = game_obj.bet_amount * 0.03
                 await db.users.update_one(
                     {"id": game_obj.opponent_id},
@@ -5125,7 +5137,9 @@ async def handle_game_timeout(game_id: str):
                         "$set": {"updated_at": datetime.utcnow()}
                     }
                 )
-                logger.info(f"💰 Returned ${commission} commission to opponent {game_obj.opponent_id}")
+                logger.info(f"💰 Returned ${commission} commission to opponent {game_obj.opponent_id} (live/human-bot game)")
+            else:
+                logger.info(f"🤖 No commission returned for regular bot game - opponent {game_obj.opponent_id}")
             
             # Generate NEW commit-reveal data for creator (ensure one-time use)
             new_salt = str(uuid.uuid4())
