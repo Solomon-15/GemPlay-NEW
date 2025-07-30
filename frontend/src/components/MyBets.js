@@ -628,13 +628,13 @@ const MyBets = ({ user, onUpdateUser }) => {
       {/* Details Modal */}
       {showDetailsModal && selectedBet && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-card border border-border-primary rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-russo text-white">Детали ставки</h3>
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="text-text-secondary hover:text-white"
+                  className="text-text-secondary hover:text-white transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -643,64 +643,68 @@ const MyBets = ({ user, onUpdateUser }) => {
               </div>
 
               <div className="space-y-4">
-                <div>
+                <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                   <label className="block text-text-secondary text-sm mb-1">ID игры</label>
-                  <div className="text-white">{selectedBet.game_id || selectedBet.id}</div>
+                  <div className="text-white font-rajdhani font-bold">{selectedBet.game_id || selectedBet.id}</div>
                 </div>
 
-                <div>
+                <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                   <label className="block text-text-secondary text-sm mb-1">Противник</label>
-                  <div className="text-white">
+                  <div className="text-white font-rajdhani font-bold">
                     {selectedBet.opponent ? selectedBet.opponent.username : (selectedBet.opponent_username || 'Ожидание')}
                   </div>
                 </div>
 
-                <div>
+                <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                   <label className="block text-text-secondary text-sm mb-1">Сумма ставки</label>
-                  <div className="text-accent-primary font-bold">${selectedBet.bet_amount.toFixed(2)}</div>
+                  <div className="text-accent-primary font-rajdhani font-bold text-lg">${selectedBet.bet_amount.toFixed(2)}</div>
                 </div>
 
-                <div>
+                <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                   <label className="block text-text-secondary text-sm mb-1">Выбранные гемы</label>
-                  {renderGems(selectedBet.bet_gems)}
+                  <div className="mt-2">
+                    {renderGems(selectedBet.bet_gems)}
+                  </div>
                 </div>
 
-                <div>
+                <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                   <label className="block text-text-secondary text-sm mb-1">Статус</label>
-                  {getStatusBadge(selectedBet.status, selectedBet.result)}
+                  <div className="mt-2">
+                    {getStatusBadge(selectedBet.status, selectedBet.result)}
+                  </div>
                 </div>
 
                 {selectedBet.status === 'COMPLETED' && selectedBet.my_move && (
                   <>
-                    <div>
+                    <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                       <label className="block text-text-secondary text-sm mb-1">Ваш ход</label>
-                      <div className="text-white">{selectedBet.my_move}</div>
+                      <div className="text-white font-rajdhani font-bold">{selectedBet.my_move}</div>
                     </div>
-                    <div>
+                    <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                       <label className="block text-text-secondary text-sm mb-1">Ход противника</label>
-                      <div className="text-white">{selectedBet.opponent_move || 'Неизвестно'}</div>
+                      <div className="text-white font-rajdhani font-bold">{selectedBet.opponent_move || 'Неизвестно'}</div>
                     </div>
                   </>
                 )}
 
                 {selectedBet.status === 'COMPLETED' && selectedBet.commission !== undefined && (
-                  <div>
+                  <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                     <label className="block text-text-secondary text-sm mb-1">Комиссия</label>
-                    <div className="text-text-secondary">${(selectedBet.commission || selectedBet.bet_amount * 0.03).toFixed(2)}</div>
+                    <div className="text-text-secondary font-rajdhani font-bold">${(selectedBet.commission || selectedBet.bet_amount * 0.03).toFixed(2)}</div>
                   </div>
                 )}
 
-                <div>
+                <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                   <label className="block text-text-secondary text-sm mb-1">Создана</label>
-                  <div className="text-white text-sm">
+                  <div className="text-white text-sm font-roboto">
                     {new Date(selectedBet.created_at).toLocaleString('ru-RU')}
                   </div>
                 </div>
 
                 {selectedBet.completed_at && (
-                  <div>
+                  <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                     <label className="block text-text-secondary text-sm mb-1">Завершена</label>
-                    <div className="text-white text-sm">
+                    <div className="text-white text-sm font-roboto">
                       {new Date(selectedBet.completed_at).toLocaleString('ru-RU')}
                     </div>
                   </div>
@@ -710,7 +714,7 @@ const MyBets = ({ user, onUpdateUser }) => {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setShowDetailsModal(false)}
-                  className="px-4 py-2 bg-surface-sidebar border border-border-primary rounded text-white hover:bg-surface-card transition-colors"
+                  className="px-4 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 hover:border-opacity-50 rounded text-white font-rajdhani font-bold transition-colors"
                 >
                   Закрыть
                 </button>
