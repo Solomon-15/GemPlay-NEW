@@ -133,15 +133,18 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       
       const userGames = myBetsResponse.data || [];
       // My Bets: Only show WAITING games that user created
-      setMyBets(userGames.filter(game => 
+      const myWaitingBets = userGames.filter(game => 
         game.status === 'WAITING' && game.is_creator === true
-      ));
+      );
+      setMyBets(myWaitingBets);
+      console.log(`💼 My Bets: ${myWaitingBets.length} WAITING games where user is creator`);
       
       // Ongoing battles should include ALL ACTIVE games where user participates (as creator or opponent)
       const userOngoingBattles = userGames.filter(game => 
         (game.status === 'ACTIVE' || game.status === 'REVEAL') && 
         (game.is_creator === true || game.is_creator === false)
       );
+      console.log(`⚔️ User Ongoing Battles from my-bets: ${userOngoingBattles.length} ACTIVE/REVEAL games`);
       
       // Also include ALL ACTIVE games where current user participates (creator or opponent)
       const activeUserGames = allGames.filter(game => {
