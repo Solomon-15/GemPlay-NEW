@@ -641,7 +641,7 @@ const MyBets = ({ user, onUpdateUser }) => {
           <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-russo text-white">Детали ставки</h3>
+                <h3 className="text-xl font-russo text-white">Bet Details</h3>
                 <button
                   onClick={() => setShowDetailsModal(false)}
                   className="text-text-secondary hover:text-white transition-colors"
@@ -654,31 +654,31 @@ const MyBets = ({ user, onUpdateUser }) => {
 
               <div className="space-y-4">
                 <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                  <label className="block text-text-secondary text-sm mb-1">ID игры</label>
+                  <label className="block text-text-secondary text-sm mb-1">Game ID</label>
                   <div className="text-white font-rajdhani font-bold">{selectedBet.game_id || selectedBet.id}</div>
                 </div>
 
                 <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                  <label className="block text-text-secondary text-sm mb-1">Противник</label>
+                  <label className="block text-text-secondary text-sm mb-1">Opponent</label>
                   <div className="text-white font-rajdhani font-bold">
-                    {selectedBet.opponent ? selectedBet.opponent.username : (selectedBet.opponent_username || 'Ожидание')}
+                    {selectedBet.opponent ? selectedBet.opponent.username : (selectedBet.opponent_username || 'Waiting')}
                   </div>
                 </div>
 
                 <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                  <label className="block text-text-secondary text-sm mb-1">Сумма ставки</label>
+                  <label className="block text-text-secondary text-sm mb-1">Bet Amount</label>
                   <div className="text-accent-primary font-rajdhani font-bold text-lg">${selectedBet.bet_amount.toFixed(2)}</div>
                 </div>
 
                 <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                  <label className="block text-text-secondary text-sm mb-1">Выбранные гемы</label>
+                  <label className="block text-text-secondary text-sm mb-1">Selected Gems</label>
                   <div className="mt-2">
                     {renderGems(selectedBet.bet_gems)}
                   </div>
                 </div>
 
                 <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                  <label className="block text-text-secondary text-sm mb-1">Статус</label>
+                  <label className="block text-text-secondary text-sm mb-1">Status</label>
                   <div className="mt-2">
                     {getStatusBadge(selectedBet.status, selectedBet.result)}
                   </div>
@@ -687,35 +687,35 @@ const MyBets = ({ user, onUpdateUser }) => {
                 {selectedBet.status === 'COMPLETED' && selectedBet.my_move && (
                   <>
                     <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                      <label className="block text-text-secondary text-sm mb-1">Ваш ход</label>
+                      <label className="block text-text-secondary text-sm mb-1">Your Move</label>
                       <div className="text-white font-rajdhani font-bold">{selectedBet.my_move}</div>
                     </div>
                     <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                      <label className="block text-text-secondary text-sm mb-1">Ход противника</label>
-                      <div className="text-white font-rajdhani font-bold">{selectedBet.opponent_move || 'Неизвестно'}</div>
+                      <label className="block text-text-secondary text-sm mb-1">Opponent Move</label>
+                      <div className="text-white font-rajdhani font-bold">{selectedBet.opponent_move || 'Unknown'}</div>
                     </div>
                   </>
                 )}
 
                 {selectedBet.status === 'COMPLETED' && selectedBet.commission !== undefined && (
                   <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                    <label className="block text-text-secondary text-sm mb-1">Комиссия</label>
+                    <label className="block text-text-secondary text-sm mb-1">Commission</label>
                     <div className="text-text-secondary font-rajdhani font-bold">${(selectedBet.commission || selectedBet.bet_amount * 0.03).toFixed(2)}</div>
                   </div>
                 )}
 
                 <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                  <label className="block text-text-secondary text-sm mb-1">Создана</label>
+                  <label className="block text-text-secondary text-sm mb-1">Created</label>
                   <div className="text-white text-sm font-roboto">
-                    {new Date(selectedBet.created_at).toLocaleString('ru-RU')}
+                    {new Date(selectedBet.created_at).toLocaleString('en-US')}
                   </div>
                 </div>
 
                 {selectedBet.completed_at && (
                   <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
-                    <label className="block text-text-secondary text-sm mb-1">Завершена</label>
+                    <label className="block text-text-secondary text-sm mb-1">Completed</label>
                     <div className="text-white text-sm font-roboto">
-                      {new Date(selectedBet.completed_at).toLocaleString('ru-RU')}
+                      {new Date(selectedBet.completed_at).toLocaleString('en-US')}
                     </div>
                   </div>
                 )}
@@ -726,7 +726,7 @@ const MyBets = ({ user, onUpdateUser }) => {
                   onClick={() => setShowDetailsModal(false)}
                   className="px-4 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 hover:border-opacity-50 rounded text-white font-rajdhani font-bold transition-colors"
                 >
-                  Закрыть
+                  Close
                 </button>
               </div>
             </div>
