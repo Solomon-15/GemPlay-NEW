@@ -2010,7 +2010,10 @@ async def join_human_bot_bet(human_bot: HumanBot):
             }
         )
         
-        # Update game with bot as opponent
+        # Update game with bot as opponent and set random completion time
+        random_completion_seconds = random.randint(15, 60)  # Random time between 15 seconds and 1 minute
+        completion_deadline = datetime.utcnow() + timedelta(seconds=random_completion_seconds)
+        
         await db.games.update_one(
             {"id": selected_game.id},
             {
@@ -2020,7 +2023,9 @@ async def join_human_bot_bet(human_bot: HumanBot):
                     "opponent_gems": selected_game.bet_gems,  # Same gems as creator
                     "status": GameStatus.ACTIVE,
                     "started_at": datetime.utcnow(),
-                    "active_deadline": datetime.utcnow() + timedelta(minutes=1),  # 1 minute to complete
+                    "active_deadline": completion_deadline,  # Random completion time
+                    "human_bot_completion_time": random_completion_seconds,  # Store for logging
+                    "updated_at": datetime.utcnow()
                 }
             }
         )
