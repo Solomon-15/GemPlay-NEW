@@ -5788,6 +5788,10 @@ async def timeout_checker_task():
                         creator_is_human_bot = await db.human_bots.find_one({"id": game_obj.creator_id})
                         opponent_is_human_bot = await db.human_bots.find_one({"id": game_obj.opponent_id})
                         
+                        # Log completion time info if available
+                        completion_time = game_data.get('human_bot_completion_time', 'N/A')
+                        logger.info(f"⏰ Processing expired game {game_data['id']} (planned completion: {completion_time}s)")
+                        
                         if creator_is_human_bot or opponent_is_human_bot:
                             # Handle Human-bot game completion
                             await handle_human_bot_game_completion(game_data["id"])
