@@ -378,6 +378,18 @@ const BetsManagement = () => {
         <h2 className="text-2xl font-rajdhani font-bold text-white">Управление Ставками</h2>
         
         <div className="flex space-x-3">
+          {/* Manual refresh button */}
+          <button
+            onClick={() => {
+              fetchStats();
+              fetchBets();
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-rajdhani font-bold transition-colors"
+            title="Обновить данные"
+          >
+            🔄 Обновить
+          </button>
+          
           {/* Cleanup stuck bets button */}
           {stats.stuck_bets > 0 && (
             <button
