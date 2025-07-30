@@ -271,130 +271,186 @@ const MyBets = ({ user, onUpdateUser }) => {
 
   if (loading && bets.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-white text-lg">Загрузка...</div>
+      <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
+        <div className="text-white text-xl font-roboto">Загрузка...</div>
       </div>
     );
   }
 
+  const InfoBlock = ({ title, value, icon, color }) => (
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 text-center">
+      <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${color}`}>
+        {icon}
+      </div>
+      <h3 className="font-rajdhani font-bold text-lg text-white">{title}</h3>
+      <p className="font-roboto text-2xl font-bold text-accent-primary">
+        {typeof value === 'number' ? (value >= 0 ? `$${value.toFixed(2)}` : `-$${Math.abs(value).toFixed(2)}`) : value}
+      </p>
+    </div>
+  );
+
+  const SectionBlock = ({ title, icon, children, color = 'text-blue-400' }) => (
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-2">
+          <div className={color}>{icon}</div>
+          <h3 className="font-rajdhani font-bold text-lg text-white">{title}</h3>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+
   return (
     <div className="p-6 min-h-screen">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 max-w-7xl mx-auto">
         <h1 className="text-3xl font-russo text-white mb-4">Мои Ставки</h1>
         
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-surface-card border border-border-primary rounded-lg p-4">
-            <div className="text-sm text-text-secondary mb-1">Всего игр</div>
-            <div className="text-2xl font-bold text-white">{stats.totalGames}</div>
-          </div>
-          <div className="bg-surface-card border border-border-primary rounded-lg p-4">
-            <div className="text-sm text-text-secondary mb-1">Побед</div>
-            <div className="text-2xl font-bold text-green-400">{stats.totalWon}</div>
-            <div className="text-xs text-text-secondary">({stats.winRate.toFixed(1)}%)</div>
-          </div>
-          <div className="bg-surface-card border border-border-primary rounded-lg p-4">
-            <div className="text-sm text-text-secondary mb-1">Поражений</div>
-            <div className="text-2xl font-bold text-red-400">{stats.totalLost}</div>
-          </div>
-          <div className="bg-surface-card border border-border-primary rounded-lg p-4">
-            <div className="text-sm text-text-secondary mb-1">Чистая прибыль</div>
-            <div className={`text-2xl font-bold ${stats.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              ${stats.netProfit.toFixed(2)}
-            </div>
-          </div>
+          <InfoBlock
+            title="Всего игр"
+            value={stats.totalGames}
+            color="bg-blue-600"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            }
+          />
+          <InfoBlock
+            title="Побед"
+            value={`${stats.totalWon} (${stats.winRate.toFixed(1)}%)`}
+            color="bg-green-600"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
+          <InfoBlock
+            title="Поражений"
+            value={stats.totalLost}
+            color="bg-red-600"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
+          <InfoBlock
+            title="Чистая прибыль"
+            value={stats.netProfit}
+            color={stats.netProfit >= 0 ? "bg-green-600" : "bg-red-600"}
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            }
+          />
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-surface-card border border-border-primary rounded-lg p-4 mb-6">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div>
-            <label className="block text-sm text-text-secondary mb-2">Статус</label>
-            <select 
-              value={filters.status} 
-              onChange={(e) => {
-                setFilters(prev => ({...prev, status: e.target.value}));
-                setCurrentPage(1);
-              }}
-              className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-2 text-white text-sm"
-            >
-              <option value="all">Все</option>
-              <option value="WAITING">Ожидание</option>
-              <option value="ACTIVE">Активные</option>
-              <option value="COMPLETED">Завершенные</option>
-            </select>
-          </div>
+      <div className="max-w-7xl mx-auto">
+        {/* Filters */}
+        <SectionBlock
+          title="Фильтры и сортировка"
+          color="text-purple-400"
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
+            </svg>
+          }
+        >
+          <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">Статус</label>
+                <select 
+                  value={filters.status} 
+                  onChange={(e) => {
+                    setFilters(prev => ({...prev, status: e.target.value}));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
+                >
+                  <option value="all">Все</option>
+                  <option value="WAITING">Ожидание</option>
+                  <option value="ACTIVE">Активные</option>
+                  <option value="COMPLETED">Завершенные</option>
+                </select>
+              </div>
 
-          <div>
-            <label className="block text-sm text-text-secondary mb-2">Период</label>
-            <select 
-              value={filters.dateRange} 
-              onChange={(e) => {
-                setFilters(prev => ({...prev, dateRange: e.target.value}));
-                setCurrentPage(1);
-              }}
-              className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-2 text-white text-sm"
-            >
-              <option value="all">Все время</option>
-              <option value="today">Сегодня</option>
-              <option value="week">Неделя</option>
-              <option value="month">Месяц</option>
-            </select>
-          </div>
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">Период</label>
+                <select 
+                  value={filters.dateRange} 
+                  onChange={(e) => {
+                    setFilters(prev => ({...prev, dateRange: e.target.value}));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
+                >
+                  <option value="all">Все время</option>
+                  <option value="today">Сегодня</option>
+                  <option value="week">Неделя</option>
+                  <option value="month">Месяц</option>
+                </select>
+              </div>
 
-          {filters.status === 'COMPLETED' && (
-            <div>
-              <label className="block text-sm text-text-secondary mb-2">Результат</label>
-              <select 
-                value={filters.result} 
-                onChange={(e) => {
-                  setFilters(prev => ({...prev, result: e.target.value}));
-                  setCurrentPage(1);
-                }}
-                className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-2 text-white text-sm"
-              >
-                <option value="all">Все</option>
-                <option value="won">Победы</option>
-                <option value="lost">Поражения</option>
-                <option value="draw">Ничьи</option>
-              </select>
+              {filters.status === 'COMPLETED' && (
+                <div>
+                  <label className="block text-sm text-text-secondary mb-2">Результат</label>
+                  <select 
+                    value={filters.result} 
+                    onChange={(e) => {
+                      setFilters(prev => ({...prev, result: e.target.value}));
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
+                  >
+                    <option value="all">Все</option>
+                    <option value="won">Победы</option>
+                    <option value="lost">Поражения</option>
+                    <option value="draw">Ничьи</option>
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">Сортировка</label>
+                <select 
+                  value={filters.sortBy} 
+                  onChange={(e) => {
+                    setFilters(prev => ({...prev, sortBy: e.target.value}));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
+                >
+                  <option value="created_at">По дате</option>
+                  <option value="bet_amount">По сумме</option>
+                  <option value="status">По статусу</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm text-text-secondary mb-2">Порядок</label>
+                <select 
+                  value={filters.sortOrder} 
+                  onChange={(e) => {
+                    setFilters(prev => ({...prev, sortOrder: e.target.value}));
+                    setCurrentPage(1);
+                  }}
+                  className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
+                >
+                  <option value="desc">По убыванию</option>
+                  <option value="asc">По возрастанию</option>
+                </select>
+              </div>
             </div>
-          )}
-
-          <div>
-            <label className="block text-sm text-text-secondary mb-2">Сортировка</label>
-            <select 
-              value={filters.sortBy} 
-              onChange={(e) => {
-                setFilters(prev => ({...prev, sortBy: e.target.value}));
-                setCurrentPage(1);
-              }}
-              className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-2 text-white text-sm"
-            >
-              <option value="created_at">По дате</option>
-              <option value="bet_amount">По сумме</option>
-              <option value="status">По статусу</option>
-            </select>
           </div>
-
-          <div>
-            <label className="block text-sm text-text-secondary mb-2">Порядок</label>
-            <select 
-              value={filters.sortOrder} 
-              onChange={(e) => {
-                setFilters(prev => ({...prev, sortOrder: e.target.value}));
-                setCurrentPage(1);
-              }}
-              className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-2 text-white text-sm"
-            >
-              <option value="desc">По убыванию</option>
-              <option value="asc">По возрастанию</option>
-            </select>
-          </div>
-        </div>
-      </div>
+        </SectionBlock>
 
       {/* Bets List */}
       <div className="bg-surface-card border border-border-primary rounded-lg">
