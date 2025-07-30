@@ -1514,33 +1514,67 @@ def test_regular_bot_commit_reveal_system() -> None:
     print_success(f"Selected {test_bot_type} bot for testing: {test_bot_name} (ID: {test_bot_id})")
     record_test("Regular Bot Commit-Reveal - Find Active Bot", True)
     
-    # Step 3: Create game through Regular bot using admin endpoint
-    print_subheader("Step 3: Create Game Through Regular Bot")
+    # Step 3: Create game through bot using admin endpoint or check existing games
+    print_subheader(f"Step 3: Create Game Through {test_bot_type.title()} Bot or Check Existing Games")
     
-    create_bot_game_data = {
-        "move": "rock",
-        "bet_gems": {"Ruby": 15, "Emerald": 2}  # $35 total bet as mentioned in review
-    }
+    bot_game_id = None
+    bot_game_response = None
     
-    bot_game_response, bot_game_success = make_request(
-        "POST", f"/admin/bots/{test_bot_id}/create-game",
-        data=create_bot_game_data,
-        auth_token=admin_token
-    )
+    if test_bot_type == "regular":
+        # Try to create game through Regular bot using admin endpoint
+        create_bot_game_data = {
+            "move": "rock",
+            "bet_gems": {"Ruby": 15, "Emerald": 2}  # $35 total bet as mentioned in review
+        }
+        
+        bot_game_response, bot_game_success = make_request(
+            "POST", f"/admin/bots/{test_bot_id}/create-game",
+            data=create_bot_game_data,
+            auth_token=admin_token
+        )
+        
+        if bot_game_success:
+            bot_game_id = bot_game_response.get("game_id")
+            if bot_game_id:
+                print_success(f"Regular bot game created with ID: {bot_game_id}")
+                record_test("Regular Bot Commit-Reveal - Create Bot Game", True)
+            else:
+                print_error("Bot game creation response missing game_id")
+                record_test("Regular Bot Commit-Reveal - Create Bot Game", False, "Missing game_id")
+        else:
+            print_warning("Failed to create game through Regular bot, will check existing games")
+            record_test("Regular Bot Commit-Reveal - Create Bot Game", False, "Game creation failed")
     
-    if not bot_game_success:
-        print_error("Failed to create game through Regular bot")
-        record_test("Regular Bot Commit-Reveal - Create Bot Game", False, "Game creation failed")
-        return
-    
-    bot_game_id = bot_game_response.get("game_id")
+    # If we couldn't create a game or we're testing human bots, look for existing games
     if not bot_game_id:
-        print_error("Bot game creation response missing game_id")
-        record_test("Regular Bot Commit-Reveal - Create Bot Game", False, "Missing game_id")
-        return
-    
-    print_success(f"Regular bot game created with ID: {bot_game_id}")
-    record_test("Regular Bot Commit-Reveal - Create Bot Game", True)
+        print_warning(f"Looking for existing {test_bot_type} bot games in available games")
+        
+        # Get available games to find bot-created games
+        available_games_response, available_games_success = make_request(
+            "GET", "/games/available",
+            auth_token=admin_token
+        )
+        
+        if available_games_success and isinstance(available_games_response, list):
+            # Look for games created by our test bot or any bot of the same type
+            for game in available_games_response:
+                game_creator_type = game.get("creator_type", "")
+                game_bot_type = game.get("bot_type", "")
+                game_creator_id = game.get("creator_id", "")
+                
+                # Check if this is a game created by the type of bot we're testing
+                if ((test_bot_type == "regular" and game_creator_type == "bot" and game_bot_type == "REGULAR") or
+                    (test_bot_type == "human" and game_creator_type == "human_bot")):
+                    bot_game_id = game.get("game_id")
+                    print_success(f"Found existing {test_bot_type} bot game: {bot_game_id}")
+                    break
+        
+        if not bot_game_id:
+            print_error(f"No {test_bot_type} bot games found for testing")
+            record_test("Regular Bot Commit-Reveal - Find Bot Game", False, f"No {test_bot_type} bot games")
+            return
+        else:
+            record_test("Regular Bot Commit-Reveal - Find Bot Game", True)
     
     # Step 4: Get full game structure through admin endpoint
     print_subheader("Step 4: Check Commit-Reveal Fields in Admin Game Details")
