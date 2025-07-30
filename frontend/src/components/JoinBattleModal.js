@@ -164,6 +164,12 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       globalRefresh.triggerLobbyRefresh();
       console.log('⚔️ Battle joined/completed - triggering lobby refresh');
       
+      // Additional forced refresh after short delay to ensure UI consistency
+      setTimeout(() => {
+        globalRefresh.triggerLobbyRefresh();
+        console.log('⚔️ Final delayed lobby refresh for UI consistency');
+      }, 800);
+      
       setCurrentStep(3);
       
       const resultText = battleOutcome === 'win' ? 'Victory!' : 
