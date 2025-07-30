@@ -166,8 +166,8 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         
         const humanBotGames = humanBotGamesResponse.data?.games || [];
         
-        // Combine user ongoing battles with ACTIVE human games and Human-bot games
-        const allOngoingBattles = [...userOngoingBattles, ...activeHumanGames, ...humanBotGames];
+        // Combine user ongoing battles with ACTIVE user games and Human-bot games
+        const allOngoingBattles = [...userOngoingBattles, ...activeUserGames, ...humanBotGames];
         
         // Remove duplicates based on game ID
         const uniqueOngoingBattles = allOngoingBattles.filter((game, index, self) => 
