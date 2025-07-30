@@ -255,13 +255,13 @@ const MyBets = ({ user, onUpdateUser }) => {
       <div className="flex space-x-1">
         {Object.entries(betGems).map(([gemType, quantity]) => (
           quantity > 0 && (
-            <div key={gemType} className="flex items-center space-x-1 bg-gray-700 rounded px-2 py-1">
+            <div key={gemType} className="flex items-center space-x-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded px-2 py-1">
               <img 
                 src={`/gems/gem-${gemType.toLowerCase()}.svg`} 
                 alt={gemType}
                 className="w-4 h-4"
               />
-              <span className="text-xs text-white">{quantity}</span>
+              <span className="text-xs text-white font-rajdhani font-bold">{quantity}</span>
             </div>
           )
         ))}
