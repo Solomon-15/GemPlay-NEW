@@ -219,10 +219,13 @@ def test_legacy_endpoints():
     
     if response["status"] == 200:
         data = response["data"]
-        if isinstance(data, list):
-            print(f"✅ Returns array with {len(data)} games")
+        if isinstance(data, dict) and "games" in data and "stats" in data:
+            games = data.get("games", [])
+            stats = data.get("stats", {})
+            print(f"✅ Returns dict with {len(games)} games and stats")
+            print(f"✅ Stats: {stats}")
         else:
-            print("❌ Response is not an array")
+            print("❌ Response is not a dict with games and stats")
 
 def test_game_cancellation():
     """Test game cancellation endpoint."""
