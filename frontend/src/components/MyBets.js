@@ -6,6 +6,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const MyBets = ({ user, onUpdateUser }) => {
+  const { getGemIconPath } = useGems();
   const [bets, setBets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
