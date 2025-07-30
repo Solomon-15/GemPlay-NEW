@@ -7820,7 +7820,15 @@ async def leave_game(game_id: str, current_user: User = Depends(get_current_user
                 }
             )
         
-        # Reset game to WAITING status and clear opponent data
+        # Generate NEW commit-reveal data for creator to ensure security
+        new_salt = str(uuid.uuid4())
+        possible_moves = ["rock", "paper", "scissors"]
+        new_move = secrets.choice(possible_moves)  # Generate new random move
+        new_move_hash = hash_move_with_salt(new_move, new_salt)
+        
+        logger.info(f"🔄 Regenerating commit-reveal for creator after opponent left game {game_id}")
+        
+        # Reset game to WAITING status with NEW commit-reveal data
         await db.games.update_one(
             {"id": game_id},
             {
@@ -7831,6 +7839,10 @@ async def leave_game(game_id: str, current_user: User = Depends(get_current_user
                     "opponent_gems": None,
                     "started_at": None,
                     "active_deadline": None,
+                    # NEW commit-reveal data for security
+                    "creator_move": new_move,
+                    "creator_move_hash": new_move_hash,
+                    "creator_salt": new_salt,
                     "updated_at": datetime.utcnow()
                 }
             }
