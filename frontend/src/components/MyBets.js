@@ -78,6 +78,7 @@ const MyBets = ({ user, onUpdateUser }) => {
       console.error('Error fetching my bets:', error);
       // Fall back to old API if new one fails
       try {
+        const token = localStorage.getItem('token');
         const betsResponse = await axios.get(`${API}/games/my-bets`, {
           headers: { Authorization: `Bearer ${token}` }
         });
