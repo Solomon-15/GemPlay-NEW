@@ -202,7 +202,7 @@ const MyBets = ({ user, onUpdateUser }) => {
     // This would navigate to create game with pre-filled data
     // For now, just log the bet data
     console.log('Repeat bet:', bet);
-    alert('Функция повтора ставки будет реализована в следующих версиях');
+    alert('Repeat bet functionality will be implemented in future versions');
   };
 
   const showBetDetails = (bet) => {
