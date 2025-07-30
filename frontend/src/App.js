@@ -298,6 +298,7 @@ function App() {
                   <div className="block">
                     <h1 className="text-xl font-russo text-text-primary capitalize">
                       {currentView === 'notifications' ? 'Notifications' :
+                       currentView === 'my-bets' ? 'My Bets' :
                        currentView}
                     </h1>
                   </div>
