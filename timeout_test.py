@@ -148,6 +148,12 @@ def generate_unique_email() -> str:
     random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
     return f"player_{timestamp}_{random_suffix}@test.com"
 
+def generate_unique_username() -> str:
+    """Generate a unique username for testing."""
+    timestamp = int(time.time())
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    return f"player_{timestamp}_{random_suffix}"
+
 def test_user_registration_and_verification(username: str, email: str, password: str) -> Optional[str]:
     """Test user registration and email verification, return token."""
     print_subheader(f"Testing User Registration: {username}")
