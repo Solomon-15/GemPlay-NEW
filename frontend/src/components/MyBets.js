@@ -261,32 +261,42 @@ const MyBets = ({ user, onUpdateUser }) => {
       <div className="text-text-secondary text-sm">No gems</div>
     );
     
-    // Split gems into 3 rows - maximum 3 gems per row
-    const gemsPerRow = Math.ceil(gemsArray.length / 3);
-    const rows = [];
-    for (let i = 0; i < gemsArray.length; i += gemsPerRow) {
-      rows.push(gemsArray.slice(i, i + gemsPerRow));
+    // Create 3x3 grid of gems
+    const grid = [];
+    for (let row = 0; row < 3; row++) {
+      const rowItems = [];
+      for (let col = 0; col < 3; col++) {
+        const index = row * 3 + col;
+        if (index < gemsArray.length) {
+          const [gemType, quantity] = gemsArray[index];
+          rowItems.push({ gemType, quantity });
+        } else {
+          rowItems.push(null); // Empty cell
+        }
+      }
+      grid.push(rowItems);
     }
     
     return (
-      <div className="flex flex-col gap-1 max-w-32">
-        {rows.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex flex-wrap gap-1 justify-start">
-            {row.map(([gemType, quantity]) => (
-              <div key={gemType} className="flex items-center space-x-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded px-1.5 py-0.5">
+      <div className="grid grid-cols-3 gap-1 max-w-24">
+        {grid.flat().map((item, index) => (
+          <div key={index} className="flex items-center justify-center">
+            {item ? (
+              <div className="flex items-center space-x-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded px-1 py-0.5">
                 <img 
-                  src={getGemIconPath(gemType)}
-                  alt={gemType}
+                  src={getGemIconPath(item.gemType)}
+                  alt={item.gemType}
                   className="w-3 h-3 object-contain"
                   onError={(e) => {
-                    // Fallback for gems that don't have icons
                     e.target.style.display = 'none';
-                    e.target.nextSibling.textContent = `${gemType}: ${quantity}`;
+                    e.target.nextSibling.textContent = item.quantity;
                   }}
                 />
-                <span className="text-xs text-white font-rajdhani font-bold">{quantity}</span>
+                <span className="text-xs text-white font-rajdhani font-bold">{item.quantity}</span>
               </div>
-            ))}
+            ) : (
+              <div className="w-3 h-3"></div> // Empty placeholder
+            )}
           </div>
         ))}
       </div>
