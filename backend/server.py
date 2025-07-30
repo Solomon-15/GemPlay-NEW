@@ -7605,6 +7605,7 @@ async def get_my_bets_paginated(
         logger.error(f"Error getting paginated user bets: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get paginated user bets"
         )
 
 @api_router.delete("/games/{game_id}/cancel", response_model=CancelGameResponse)
