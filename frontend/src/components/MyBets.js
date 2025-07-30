@@ -266,12 +266,13 @@ const MyBets = ({ user, onUpdateUser }) => {
         {gemsArray.map(([gemType, quantity]) => (
           <div key={gemType} className="flex items-center space-x-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded px-2 py-1">
             <img 
-              src={`/gems/gem-${gemType.toLowerCase()}.svg`} 
+              src={getGemIconPath(gemType)}
               alt={gemType}
-              className="w-4 h-4"
+              className="w-4 h-4 object-contain"
               onError={(e) => {
+                // Fallback for gems that don't have icons
                 e.target.style.display = 'none';
-                e.target.nextSibling.textContent = `${gemType.toUpperCase()}: ${quantity}`;
+                e.target.nextSibling.textContent = `${gemType}: ${quantity}`;
               }}
             />
             <span className="text-xs text-white font-rajdhani font-bold">{quantity}</span>
