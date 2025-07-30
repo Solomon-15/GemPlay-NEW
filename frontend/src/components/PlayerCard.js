@@ -56,8 +56,8 @@ const PlayerCard = React.memo(({
   }, []);
 
   const formattedUsername = useMemo(() => 
-    formatUsername(game.creator?.username || 'Player'), 
-    [game.creator?.username, formatUsername]
+    formatUsername(game.creator_username || game.creator?.username || 'Unknown Player'), 
+    [game.creator_username, game.creator?.username, formatUsername]
   );
 
   // Calculate total bet amount
