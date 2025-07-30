@@ -52,6 +52,16 @@ const BetsManagement = () => {
     fetchBets();
   }, [statusFilter, userFilter, pagination.currentPage]);
 
+  // Auto-refresh data every 10 seconds to show real-time status updates
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      fetchStats();
+      fetchBets();
+    }, 10000); // Refresh every 10 seconds
+
+    return () => clearInterval(refreshInterval);
+  }, []);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
