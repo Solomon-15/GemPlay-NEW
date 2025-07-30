@@ -452,168 +452,177 @@ const MyBets = ({ user, onUpdateUser }) => {
           </div>
         </SectionBlock>
 
-      {/* Bets List */}
-      <div className="bg-surface-card border border-border-primary rounded-lg">
-        {bets.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="text-text-secondary mb-4">Ставки не найдены</div>
-            <div className="text-sm text-text-secondary">
-              Попробуйте изменить фильтры или создать новую ставку
+        {/* Bets List */}
+        <SectionBlock
+          title="Мои ставки"
+          color="text-green-400"
+          icon={
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          }
+        >
+          {bets.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="text-text-secondary mb-4">Ставки не найдены</div>
+              <div className="text-sm text-text-secondary">
+                Попробуйте изменить фильтры или создать новую ставку
+              </div>
             </div>
-          </div>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-surface-sidebar border-b border-border-primary">
-                  <tr>
-                    <th className="text-left p-4 text-text-secondary font-medium">Дата</th>
-                    <th className="text-left p-4 text-text-secondary font-medium">Противник</th>
-                    <th className="text-left p-4 text-text-secondary font-medium">Ставка</th>
-                    <th className="text-left p-4 text-text-secondary font-medium">Гемы</th>
-                    <th className="text-left p-4 text-text-secondary font-medium">Статус</th>
-                    <th className="text-left p-4 text-text-secondary font-medium">Действия</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bets.map((bet, index) => (
-                    <tr key={bet.game_id || bet.id || index} className="border-b border-border-primary hover:bg-surface-sidebar/50">
-                      <td className="p-4">
-                        <div className="text-white text-sm">
-                          {new Date(bet.created_at).toLocaleString('ru-RU')}
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-white">
+          ) : (
+            <>
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg">
+                  <table className="w-full">
+                    <thead className="bg-surface-sidebar border-b border-accent-primary border-opacity-30">
+                      <tr>
+                        <th className="text-left p-4 text-text-secondary font-rajdhani font-bold">Дата</th>
+                        <th className="text-left p-4 text-text-secondary font-rajdhani font-bold">Противник</th>
+                        <th className="text-left p-4 text-text-secondary font-rajdhani font-bold">Ставка</th>
+                        <th className="text-left p-4 text-text-secondary font-rajdhani font-bold">Гемы</th>
+                        <th className="text-left p-4 text-text-secondary font-rajdhani font-bold">Статус</th>
+                        <th className="text-left p-4 text-text-secondary font-rajdhani font-bold">Действия</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bets.map((bet, index) => (
+                        <tr key={bet.game_id || bet.id || index} className="border-b border-accent-primary border-opacity-10 hover:bg-surface-sidebar/30">
+                          <td className="p-4">
+                            <div className="text-white text-sm font-roboto">
+                              {new Date(bet.created_at).toLocaleString('ru-RU')}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="text-white font-rajdhani font-bold">
+                              {bet.opponent ? bet.opponent.username : (bet.opponent_username || 'Ожидание')}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="text-accent-primary font-rajdhani font-bold text-lg">
+                              ${bet.bet_amount.toFixed(2)}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            {renderGems(bet.bet_gems)}
+                          </td>
+                          <td className="p-4">
+                            {getStatusBadge(bet.status, bet.result)}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex space-x-2">
+                              {bet.status === 'WAITING' && bet.is_creator && (
+                                <button
+                                  onClick={() => handleCancelBet(bet.game_id || bet.id)}
+                                  className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded font-rajdhani font-bold transition-colors"
+                                >
+                                  Отменить
+                                </button>
+                              )}
+                              {bet.status === 'COMPLETED' && (
+                                <button
+                                  onClick={() => handleRepeatBet(bet)}
+                                  className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded font-rajdhani font-bold transition-colors"
+                                >
+                                  Повторить
+                                </button>
+                              )}
+                              <button
+                                onClick={() => showBetDetails(bet)}
+                                className="px-3 py-1 bg-surface-sidebar border border-accent-primary border-opacity-30 hover:border-opacity-50 text-white text-xs rounded font-rajdhani font-bold transition-colors"
+                              >
+                                Детали
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden space-y-4">
+                {bets.map((bet, index) => (
+                  <div key={bet.game_id || bet.id || index} className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <div className="text-white font-rajdhani font-bold">
                           {bet.opponent ? bet.opponent.username : (bet.opponent_username || 'Ожидание')}
                         </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="text-accent-primary font-bold">
-                          ${bet.bet_amount.toFixed(2)}
+                        <div className="text-text-secondary text-sm font-roboto">
+                          {new Date(bet.created_at).toLocaleString('ru-RU')}
                         </div>
-                      </td>
-                      <td className="p-4">
-                        {renderGems(bet.bet_gems)}
-                      </td>
-                      <td className="p-4">
-                        {getStatusBadge(bet.status, bet.result)}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex space-x-2">
-                          {bet.status === 'WAITING' && bet.is_creator && (
-                            <button
-                              onClick={() => handleCancelBet(bet.game_id || bet.id)}
-                              className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
-                            >
-                              Отменить
-                            </button>
-                          )}
-                          {bet.status === 'COMPLETED' && (
-                            <button
-                              onClick={() => handleRepeatBet(bet)}
-                              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
-                            >
-                              Повторить
-                            </button>
-                          )}
-                          <button
-                            onClick={() => showBetDetails(bet)}
-                            className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition-colors"
-                          >
-                            Детали
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="md:hidden">
-              {bets.map((bet, index) => (
-                <div key={bet.game_id || bet.id || index} className="p-4 border-b border-border-primary last:border-b-0">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <div className="text-white font-medium">
-                        {bet.opponent ? bet.opponent.username : (bet.opponent_username || 'Ожидание')}
                       </div>
-                      <div className="text-text-secondary text-sm">
-                        {new Date(bet.created_at).toLocaleString('ru-RU')}
+                      {getStatusBadge(bet.status, bet.result)}
+                    </div>
+                    
+                    <div className="flex justify-between items-center mb-3">
+                      <div className="text-accent-primary font-rajdhani font-bold text-lg">
+                        ${bet.bet_amount.toFixed(2)}
                       </div>
+                      {renderGems(bet.bet_gems)}
                     </div>
-                    {getStatusBadge(bet.status, bet.result)}
-                  </div>
-                  
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="text-accent-primary font-bold">
-                      ${bet.bet_amount.toFixed(2)}
-                    </div>
-                    {renderGems(bet.bet_gems)}
-                  </div>
 
+                    <div className="flex space-x-2">
+                      {bet.status === 'WAITING' && bet.is_creator && (
+                        <button
+                          onClick={() => handleCancelBet(bet.game_id || bet.id)}
+                          className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded font-rajdhani font-bold transition-colors"
+                        >
+                          Отменить
+                        </button>
+                      )}
+                      {bet.status === 'COMPLETED' && (
+                        <button
+                          onClick={() => handleRepeatBet(bet)}
+                          className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded font-rajdhani font-bold transition-colors"
+                        >
+                          Повторить
+                        </button>
+                      )}
+                      <button
+                        onClick={() => showBetDetails(bet)}
+                        className="flex-1 px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 hover:border-opacity-50 text-white text-sm rounded font-rajdhani font-bold transition-colors"
+                      >
+                        Детали
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-6 flex justify-between items-center">
+                  <div className="text-text-secondary text-sm font-roboto">
+                    Показано {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, totalBets)}-{Math.min(currentPage * ITEMS_PER_PAGE, totalBets)} из {totalBets}
+                  </div>
                   <div className="flex space-x-2">
-                    {bet.status === 'WAITING' && bet.is_creator && (
-                      <button
-                        onClick={() => handleCancelBet(bet.game_id || bet.id)}
-                        className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
-                      >
-                        Отменить
-                      </button>
-                    )}
-                    {bet.status === 'COMPLETED' && (
-                      <button
-                        onClick={() => handleRepeatBet(bet)}
-                        className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-colors"
-                      >
-                        Повторить
-                      </button>
-                    )}
                     <button
-                      onClick={() => showBetDetails(bet)}
-                      className="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm rounded transition-colors"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed font-rajdhani font-bold"
                     >
-                      Детали
+                      Назад
+                    </button>
+                    <span className="px-3 py-1 text-white font-rajdhani font-bold">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50 disabled:cursor-not-allowed font-rajdhani font-bold"
+                    >
+                      Далее
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-border-primary">
-            <div className="flex justify-between items-center">
-              <div className="text-text-secondary text-sm">
-                Показано {Math.min((currentPage - 1) * ITEMS_PER_PAGE + 1, totalBets)}-{Math.min(currentPage * ITEMS_PER_PAGE, totalBets)} из {totalBets}
-              </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 bg-surface-sidebar border border-border-primary rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Назад
-                </button>
-                <span className="px-3 py-1 text-white">
-                  {currentPage} / {totalPages}
-                </span>
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 bg-surface-sidebar border border-border-primary rounded text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Далее
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+              )}
+            </>
+          )}
+        </SectionBlock>
       </div>
 
       {/* Details Modal */}
