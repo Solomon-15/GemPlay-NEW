@@ -261,21 +261,32 @@ const MyBets = ({ user, onUpdateUser }) => {
       <div className="text-text-secondary text-sm">No gems</div>
     );
     
+    // Split gems into 3 rows - maximum 3 gems per row
+    const gemsPerRow = Math.ceil(gemsArray.length / 3);
+    const rows = [];
+    for (let i = 0; i < gemsArray.length; i += gemsPerRow) {
+      rows.push(gemsArray.slice(i, i + gemsPerRow));
+    }
+    
     return (
-      <div className="flex flex-wrap gap-1">
-        {gemsArray.map(([gemType, quantity]) => (
-          <div key={gemType} className="flex items-center space-x-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded px-2 py-1">
-            <img 
-              src={getGemIconPath(gemType)}
-              alt={gemType}
-              className="w-4 h-4 object-contain"
-              onError={(e) => {
-                // Fallback for gems that don't have icons
-                e.target.style.display = 'none';
-                e.target.nextSibling.textContent = `${gemType}: ${quantity}`;
-              }}
-            />
-            <span className="text-xs text-white font-rajdhani font-bold">{quantity}</span>
+      <div className="flex flex-col gap-1 max-w-32">
+        {rows.map((row, rowIndex) => (
+          <div key={rowIndex} className="flex flex-wrap gap-1 justify-start">
+            {row.map(([gemType, quantity]) => (
+              <div key={gemType} className="flex items-center space-x-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded px-1.5 py-0.5">
+                <img 
+                  src={getGemIconPath(gemType)}
+                  alt={gemType}
+                  className="w-3 h-3 object-contain"
+                  onError={(e) => {
+                    // Fallback for gems that don't have icons
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.textContent = `${gemType}: ${quantity}`;
+                  }}
+                />
+                <span className="text-xs text-white font-rajdhani font-bold">{quantity}</span>
+              </div>
+            ))}
           </div>
         ))}
       </div>
