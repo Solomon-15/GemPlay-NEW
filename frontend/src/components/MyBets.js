@@ -37,84 +37,28 @@ const MyBets = ({ user, onUpdateUser }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Fetch current active bets
-      const betsResponse = await axios.get(`${API}/games/my-bets`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        per_page: ITEMS_PER_PAGE.toString(),
+        status_filter: filters.status,
+        date_filter: filters.dateRange,
+        result_filter: filters.result,
+        sort_by: filters.sortBy,
+        sort_order: filters.sortOrder
       });
 
-      // Fetch history with filters
-      const historyParams = new URLSearchParams();
-      if (filters.status !== 'all' && filters.status !== 'COMPLETED') {
-        historyParams.append('status_filter', filters.status.toLowerCase());
-      } else if (filters.result !== 'all' && filters.status === 'COMPLETED') {
-        historyParams.append('status_filter', filters.result);
-      }
-      if (filters.dateRange !== 'all') {
-        historyParams.append('date_filter', filters.dateRange);
-      }
-
-      const historyResponse = await axios.get(
-        `${API}/games/history?${historyParams.toString()}`,
+      const response = await axios.get(
+        `${API}/games/my-bets-paginated?${params.toString()}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Combine and process data
-      const activeBets = betsResponse.data.filter(bet => 
-        bet.status === 'WAITING' || bet.status === 'ACTIVE'
-      );
-      
-      const completedBets = historyResponse.data?.games || [];
-      const allBets = [...activeBets, ...completedBets];
+      if (response.data.success) {
+        setBets(response.data.games);
+        setTotalBets(response.data.pagination.total_count);
+        setTotalPages(response.data.pagination.total_pages);
 
-      // Apply filters
-      let filteredBets = allBets;
-      if (filters.status !== 'all') {
-        if (filters.status === 'COMPLETED') {
-          filteredBets = completedBets;
-          if (filters.result !== 'all') {
-            filteredBets = filteredBets.filter(bet => bet.result === filters.result);
-          }
-        } else {
-          filteredBets = activeBets.filter(bet => bet.status === filters.status);
-        }
-      }
-
-      // Sort bets
-      filteredBets.sort((a, b) => {
-        let aValue, bValue;
-        switch (filters.sortBy) {
-          case 'bet_amount':
-            aValue = a.bet_amount;
-            bValue = b.bet_amount;
-            break;
-          case 'status':
-            aValue = a.status;
-            bValue = b.status;
-            break;
-          default:
-            aValue = new Date(a.created_at);
-            bValue = new Date(b.created_at);
-        }
-        
-        if (filters.sortOrder === 'desc') {
-          return aValue > bValue ? -1 : 1;
-        } else {
-          return aValue > bValue ? 1 : -1;
-        }
-      });
-
-      // Pagination
-      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-      const endIndex = startIndex + ITEMS_PER_PAGE;
-      const paginatedBets = filteredBets.slice(startIndex, endIndex);
-
-      setBets(paginatedBets);
-      setTotalBets(filteredBets.length);
-      setTotalPages(Math.ceil(filteredBets.length / ITEMS_PER_PAGE));
-
-      // Update stats
-      if (historyResponse.data?.stats) {
-        const statsData = historyResponse.data.stats;
+        // Update stats
+        const statsData = response.data.stats;
         const commission = statsData.total_winnings * 0.03; // 3% commission
         const netProfit = statsData.total_winnings - statsData.total_losses - commission;
         
@@ -132,6 +76,91 @@ const MyBets = ({ user, onUpdateUser }) => {
 
     } catch (error) {
       console.error('Error fetching my bets:', error);
+      // Fall back to old API if new one fails
+      try {
+        const betsResponse = await axios.get(`${API}/games/my-bets`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const historyResponse = await axios.get(
+          `${API}/games/history`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        // Combine and process data (old logic)
+        const activeBets = betsResponse.data.filter(bet => 
+          bet.status === 'WAITING' || bet.status === 'ACTIVE'
+        );
+        
+        const completedBets = historyResponse.data?.games || [];
+        const allBets = [...activeBets, ...completedBets];
+
+        // Apply filters
+        let filteredBets = allBets;
+        if (filters.status !== 'all') {
+          if (filters.status === 'COMPLETED') {
+            filteredBets = completedBets;
+            if (filters.result !== 'all') {
+              filteredBets = filteredBets.filter(bet => bet.result === filters.result);
+            }
+          } else {
+            filteredBets = activeBets.filter(bet => bet.status === filters.status);
+          }
+        }
+
+        // Sort bets
+        filteredBets.sort((a, b) => {
+          let aValue, bValue;
+          switch (filters.sortBy) {
+            case 'bet_amount':
+              aValue = a.bet_amount;
+              bValue = b.bet_amount;
+              break;
+            case 'status':
+              aValue = a.status;
+              bValue = b.status;
+              break;
+            default:
+              aValue = new Date(a.created_at);
+              bValue = new Date(b.created_at);
+          }
+          
+          if (filters.sortOrder === 'desc') {
+            return aValue > bValue ? -1 : 1;
+          } else {
+            return aValue > bValue ? 1 : -1;
+          }
+        });
+
+        // Pagination
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        const paginatedBets = filteredBets.slice(startIndex, endIndex);
+
+        setBets(paginatedBets);
+        setTotalBets(filteredBets.length);
+        setTotalPages(Math.ceil(filteredBets.length / ITEMS_PER_PAGE));
+
+        // Update stats from history API
+        if (historyResponse.data?.stats) {
+          const statsData = historyResponse.data.stats;
+          const commission = statsData.total_winnings * 0.03; // 3% commission
+          const netProfit = statsData.total_winnings - statsData.total_losses - commission;
+          
+          setStats({
+            totalGames: statsData.total_games,
+            totalWon: statsData.total_won,
+            totalLost: statsData.total_lost,
+            totalDraw: statsData.total_draw,
+            netProfit: netProfit,
+            totalWinnings: statsData.total_winnings,
+            totalLosses: statsData.total_losses,
+            winRate: statsData.total_games > 0 ? (statsData.total_won / statsData.total_games * 100) : 0
+          });
+        }
+      } catch (fallbackError) {
+        console.error('Error with fallback API:', fallbackError);
+      }
     } finally {
       setLoading(false);
     }
