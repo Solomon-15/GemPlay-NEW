@@ -191,7 +191,7 @@ def test_human_bot_game_creation_and_joining(admin_token: str, available_games: 
         
         # Check for required fields in Human-bot games
         test_game = human_bot_games[0]
-        required_fields = ["id", "creator_name", "bet_amount", "status", "created_at"]
+        required_fields = ["game_id", "creator_username", "bet_amount", "status", "created_at"]
         missing_fields = [field for field in required_fields if field not in test_game]
         
         if not missing_fields:
