@@ -177,8 +177,8 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         setOngoingBattles(uniqueOngoingBattles);
       } catch (error) {
         console.error('Error fetching Human-bot games:', error);
-        // Fallback: combine user battles with active human games
-        const fallbackOngoingBattles = [...userOngoingBattles, ...activeHumanGames];
+        // Fallback: combine user battles with active user games
+        const fallbackOngoingBattles = [...userOngoingBattles, ...activeUserGames];
         const uniqueFallbackBattles = fallbackOngoingBattles.filter((game, index, self) => 
           index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
         );
