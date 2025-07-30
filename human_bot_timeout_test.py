@@ -333,7 +333,12 @@ def test_game_completion_flow(admin_token: str) -> bool:
         return False
     
     test_game = human_bot_games[0]
-    game_id = test_game["id"]
+    game_id = test_game.get("id")
+    
+    if not game_id:
+        print_error("Game ID not found in Human-bot game data")
+        record_test("Game Flow - Game ID", False, "Game ID missing")
+        return False
     
     print_success(f"Testing game flow with Human-bot game: {game_id}")
     
