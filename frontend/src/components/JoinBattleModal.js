@@ -116,6 +116,12 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         globalRefresh.triggerLobbyRefresh();
         console.log('⚔️ Game status ACTIVE - triggering immediate lobby refresh');
         
+        // Additional forced refresh after short delay to ensure UI update
+        setTimeout(() => {
+          globalRefresh.triggerLobbyRefresh();
+          console.log('⚔️ Additional delayed lobby refresh for UI consistency');
+        }, 500);
+        
         const chooseMoveResult = await chooseMove(result.game_id, selectedMove);
         
         if (chooseMoveResult.game_id && chooseMoveResult.winner_id !== undefined) {
