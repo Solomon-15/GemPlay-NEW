@@ -23558,11 +23558,11 @@ def print_summary() -> None:
         print(f"{category}: {status_color}{results['passed']}/{total_cat} ({success_rate_cat:.1f}%){Colors.ENDC}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - GAME STATUS FLOW FIX")
+    print_header("GEMPLAY BACKEND API TESTING - ADMIN BETS LIST ACTIVE STATUS")
     
     try:
-        # Run the Game Status Flow test as specifically requested in the review
-        test_game_status_flow_waiting_to_active()
+        # Run the Admin Bets List test as specifically requested in the Russian review
+        test_admin_bets_list_active_status()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
