@@ -290,6 +290,13 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
+      console.log('🚪 Game left - triggering immediate lobby refresh');
+      
+      // Additional delayed refresh to ensure recreated bet appears in Available Bets
+      setTimeout(() => {
+        globalRefresh.triggerLobbyRefresh();
+        console.log('🚪 Additional delayed lobby refresh for bet recreation');
+      }, 1000);
       
       showSuccess('Successfully left the game');
       
