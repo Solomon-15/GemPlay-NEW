@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-GemPlay Notification System API Testing
-Comprehensive testing of Phase 1 notification system implementation
+GemPlay API Comprehensive Testing
+Focus: ACTIVE Status Consistency Across All Endpoints
+Russian Review Requirements: Ensure ACTIVE status is correctly displayed everywhere
 """
 
 import requests
