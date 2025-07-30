@@ -7441,6 +7441,172 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
             detail="Failed to get user bets"
         )
 
+@api_router.get("/games/my-bets-paginated", response_model=dict)
+async def get_my_bets_paginated(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(10, ge=1, le=50),
+    status_filter: str = Query("all"),
+    date_filter: str = Query("all"),
+    result_filter: str = Query("all"),
+    sort_by: str = Query("created_at"),
+    sort_order: str = Query("desc"),
+    current_user: User = Depends(get_current_user)
+):
+    """Get user's bets with pagination and filters."""
+    try:
+        # Build base query
+        query = {
+            "$or": [
+                {"creator_id": current_user.id},
+                {"opponent_id": current_user.id}
+            ]
+        }
+        
+        # Add status filter
+        if status_filter != "all":
+            if status_filter.upper() in ["WAITING", "ACTIVE", "COMPLETED", "CANCELLED"]:
+                query["status"] = status_filter.upper()
+        
+        # Add date filter
+        if date_filter != "all":
+            now = datetime.utcnow()
+            if date_filter == "today":
+                start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                query["created_at"] = {"$gte": start_date}
+            elif date_filter == "week":
+                start_date = now - timedelta(days=7)
+                query["created_at"] = {"$gte": start_date}
+            elif date_filter == "month":
+                start_date = now - timedelta(days=30)
+                query["created_at"] = {"$gte": start_date}
+        
+        # Get total count
+        total_count = await db.games.count_documents(query)
+        
+        # Calculate pagination
+        total_pages = (total_count + per_page - 1) // per_page
+        skip = (page - 1) * per_page
+        
+        # Sort options
+        sort_field = "created_at"
+        if sort_by in ["bet_amount", "status", "created_at", "completed_at"]:
+            sort_field = sort_by
+        
+        sort_direction = -1 if sort_order == "desc" else 1
+        
+        # Get games
+        games = await db.games.find(query).sort(sort_field, sort_direction).skip(skip).limit(per_page).to_list(per_page)
+        
+        # Process games
+        processed_games = []
+        stats = {
+            "total_games": 0,
+            "total_won": 0,
+            "total_lost": 0,
+            "total_draw": 0,
+            "total_winnings": 0,
+            "total_losses": 0
+        }
+        
+        # Get all completed games for stats (separate query)
+        stats_query = {
+            "$or": [
+                {"creator_id": current_user.id},
+                {"opponent_id": current_user.id}
+            ],
+            "status": "COMPLETED"
+        }
+        all_completed_games = await db.games.find(stats_query).to_list(None)
+        
+        # Calculate stats
+        for game in all_completed_games:
+            stats["total_games"] += 1
+            is_creator = game["creator_id"] == current_user.id
+            
+            if game.get("winner_id"):
+                if game["winner_id"] == current_user.id:
+                    stats["total_won"] += 1
+                    stats["total_winnings"] += game["bet_amount"] * 1.94  # After 3% commission
+                else:
+                    stats["total_lost"] += 1
+                    stats["total_losses"] += game["bet_amount"]
+            else:
+                stats["total_draw"] += 1
+        
+        # Process current page games
+        for game in games:
+            is_creator = game["creator_id"] == current_user.id
+            opponent_id = game["opponent_id"] if is_creator else game["creator_id"]
+            
+            # Get opponent info
+            opponent = None
+            if opponent_id:
+                opponent = await db.users.find_one({"id": opponent_id})
+            
+            # Determine result for completed games
+            result = None
+            if game["status"] == "COMPLETED":
+                if game.get("winner_id"):
+                    result = "won" if game["winner_id"] == current_user.id else "lost"
+                else:
+                    result = "draw"
+                
+                # Apply result filter
+                if result_filter != "all" and result_filter != result:
+                    continue
+            
+            game_data = {
+                "game_id": game["id"],
+                "id": game["id"],  # Also include as 'id' for compatibility
+                "is_creator": is_creator,
+                "bet_amount": game["bet_amount"],
+                "bet_gems": game["bet_gems"],
+                "status": game["status"],
+                "result": result,
+                "created_at": game["created_at"],
+                "completed_at": game.get("completed_at"),
+                "opponent": {
+                    "id": opponent["id"] if opponent else None,
+                    "username": opponent["username"] if opponent else None,
+                    "gender": opponent["gender"] if opponent else None
+                } if opponent else None,
+                "opponent_username": opponent["username"] if opponent else None,
+                "opponent_id": opponent_id,
+                "my_move": game.get("creator_move" if is_creator else "opponent_move"),
+                "opponent_move": game.get("opponent_move" if is_creator else "creator_move"),
+                "commission": game.get("commission_amount", game["bet_amount"] * 0.03 if game["status"] == "COMPLETED" else 0),
+                "winnings": game["bet_amount"] * 1.94 if result == "won" else 0
+            }
+            
+            processed_games.append(game_data)
+        
+        return {
+            "success": True,
+            "games": processed_games,
+            "pagination": {
+                "current_page": page,
+                "per_page": per_page,
+                "total_pages": total_pages,
+                "total_count": total_count,
+                "has_next": page < total_pages,
+                "has_prev": page > 1
+            },
+            "stats": stats,
+            "filters": {
+                "status_filter": status_filter,
+                "date_filter": date_filter,
+                "result_filter": result_filter,
+                "sort_by": sort_by,
+                "sort_order": sort_order
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting paginated user bets: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
 @api_router.delete("/games/{game_id}/cancel", response_model=CancelGameResponse)
 async def cancel_game(game_id: str, current_user: User = Depends(get_current_user)):
     """Cancel a waiting game."""
