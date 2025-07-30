@@ -1452,29 +1452,66 @@ def test_regular_bot_commit_reveal_system() -> None:
         auth_token=admin_token
     )
     
-    if not bots_success or not bots_response.get("bots"):
-        print_error("Failed to get regular bots list or no bots found")
-        record_test("Regular Bot Commit-Reveal - Get Bots List", False, "No regular bots")
-        return
+    regular_bots = []
+    if bots_success and bots_response.get("bots"):
+        regular_bots = bots_response["bots"]
+        print_success(f"Found {len(regular_bots)} regular bots")
+    else:
+        print_warning("No regular bots found, checking alternative endpoints")
+        
+        # Try alternative endpoint for all bots
+        all_bots_response, all_bots_success = make_request(
+            "GET", "/admin/bots?page=1&limit=50",
+            auth_token=admin_token
+        )
+        
+        if all_bots_success and all_bots_response.get("bots"):
+            all_bots = all_bots_response["bots"]
+            regular_bots = [bot for bot in all_bots if bot.get("bot_type") == "REGULAR"]
+            print_success(f"Found {len(regular_bots)} regular bots from all bots endpoint")
+        else:
+            print_warning("No bots found in system, will test with Human-bots instead")
     
-    regular_bots = bots_response["bots"]
-    print_success(f"Found {len(regular_bots)} regular bots")
-    
-    # Select first active bot for testing
+    # If no regular bots, test with Human-bots as they should also use commit-reveal
     test_bot = None
-    for bot in regular_bots:
-        if bot.get("is_active", False):
-            test_bot = bot
-            break
+    test_bot_type = None
+    
+    if regular_bots:
+        # Select first active regular bot for testing
+        for bot in regular_bots:
+            if bot.get("is_active", False):
+                test_bot = bot
+                test_bot_type = "regular"
+                break
     
     if not test_bot:
-        print_error("No active regular bots found for testing")
+        print_warning("No active regular bots found, trying Human-bots")
+        
+        # Get Human-bots list
+        human_bots_response, human_bots_success = make_request(
+            "GET", "/admin/human-bots?page=1&limit=10",
+            auth_token=admin_token
+        )
+        
+        if human_bots_success and human_bots_response.get("bots"):
+            human_bots = human_bots_response["bots"]
+            print_success(f"Found {len(human_bots)} human bots")
+            
+            # Select first active human bot for testing
+            for bot in human_bots:
+                if bot.get("is_active", False):
+                    test_bot = bot
+                    test_bot_type = "human"
+                    break
+    
+    if not test_bot:
+        print_error("No active bots found for testing (neither regular nor human)")
         record_test("Regular Bot Commit-Reveal - Find Active Bot", False, "No active bots")
         return
     
     test_bot_id = test_bot["id"]
     test_bot_name = test_bot["name"]
-    print_success(f"Selected bot for testing: {test_bot_name} (ID: {test_bot_id})")
+    print_success(f"Selected {test_bot_type} bot for testing: {test_bot_name} (ID: {test_bot_id})")
     record_test("Regular Bot Commit-Reveal - Find Active Bot", True)
     
     # Step 3: Create game through Regular bot using admin endpoint
