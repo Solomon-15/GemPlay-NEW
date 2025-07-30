@@ -7848,7 +7848,28 @@ async def leave_game(game_id: str, current_user: User = Depends(get_current_user
             }
         )
         
-        logger.info(f"🚪 User {current_user.id} left game {game_id}, returned to WAITING")
+        logger.info(f"🚪 User {current_user.id} left game {game_id}, bet recreated with new commit-reveal")
+        
+        # Send notification to creator about opponent leaving and bet recreation
+        try:
+            creator = await db.users.find_one({"id": game_obj.creator_id})
+            if creator:
+                creator_payload = NotificationPayload(
+                    game_id=game_id,
+                    amount=game_obj.bet_amount,
+                    action_url=f"/games/{game_id}"
+                )
+                await create_notification(
+                    user_id=game_obj.creator_id,
+                    notification_type=NotificationTypeEnum.SYSTEM_MESSAGE,
+                    title="Opponent Left Game",
+                    message=f"Your opponent left the ${game_obj.bet_amount} bet. Your bet has been recreated with a new move and is available again.",
+                    payload=creator_payload,
+                    priority=NotificationPriorityEnum.INFO
+                )
+                logger.info(f"📬 Sent 'opponent left' notification to creator {game_obj.creator_id}")
+        except Exception as e:
+            logger.error(f"Error sending opponent left notification: {e}")
         
         return {
             "success": True,
