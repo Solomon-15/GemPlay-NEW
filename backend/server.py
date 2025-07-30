@@ -5791,11 +5791,11 @@ async def timeout_checker_task():
                         if creator_is_human_bot or opponent_is_human_bot:
                             # Handle Human-bot game completion
                             await handle_human_bot_game_completion(game_data["id"])
-                            logger.info(f"⏰ Successfully handled Human-bot game timeout for game {game_data['id']}")
+                            logger.info(f"⏰ ✅ Human-bot game {game_data['id']} completed successfully")
                         else:
                             # Handle regular game timeout - recreate bet with new commit-reveal
                             await handle_game_timeout(game_data["id"])
-                            logger.info(f"⏰ Successfully handled regular game timeout for game {game_data['id']}")
+                            logger.info(f"⏰ ✅ Regular game {game_data['id']} timeout handled successfully")
                     except Exception as e:
                         logger.error(f"❌ Error handling timeout for game {game_data['id']}: {e}")
             else:
