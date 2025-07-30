@@ -5476,25 +5476,45 @@ async def join_game(
         else:
             logger.info(f"🤖 No commission frozen for regular bot game - user {current_user.id}")
         
+        # Check if creator is Human-bot to set appropriate deadline
+        creator_is_human_bot = await db.human_bots.find_one({"id": game["creator_id"]})
+        
+        # Set deadline based on game type
+        if creator_is_human_bot:
+            # If creator is Human-bot, use random completion time (15-60 seconds)
+            random_completion_seconds = random.randint(15, 60)
+            active_deadline = datetime.utcnow() + timedelta(seconds=random_completion_seconds)
+            human_bot_completion_time = random_completion_seconds
+            logger.info(f"Human-bot creator detected - game {game_id} will complete in {random_completion_seconds} seconds")
+        else:
+            # Regular game with human creator - standard 1 minute for opponent move
+            active_deadline = datetime.utcnow() + timedelta(minutes=1)
+            human_bot_completion_time = None
+            logger.info(f"Human creator detected - game {game_id} has 1 minute standard deadline")
+        
         # ATOMIC UPDATE: Try to update game with opponent only if it still has no opponent  
         # This prevents race conditions where multiple users try to join the same game
+        update_data = {
+            "opponent_id": current_user.id,
+            "opponent_gems": join_data.gems,  # Save opponent's gem combination
+            "joined_at": datetime.utcnow(),
+            "status": "ACTIVE",  # Mark as active - waiting for opponent to choose move
+            "active_deadline": active_deadline,
+            "is_regular_bot_game": is_regular_bot_game,
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Add human_bot_completion_time only if it's a Human-bot game
+        if human_bot_completion_time:
+            update_data["human_bot_completion_time"] = human_bot_completion_time
+        
         update_result = await db.games.update_one(
             {
                 "id": game_id,
                 "opponent_id": None,  # Only update if opponent_id is still None
                 "status": "WAITING"   # And status is still WAITING
             },
-            {
-                "$set": {
-                    "opponent_id": current_user.id,
-                    "opponent_gems": join_data.gems,  # Save opponent's gem combination
-                    "joined_at": datetime.utcnow(),
-                    "status": "ACTIVE",  # Mark as active - waiting for opponent to choose move
-                    "active_deadline": datetime.utcnow() + timedelta(minutes=1),  # 1 minute for opponent to choose move
-                    "is_regular_bot_game": is_regular_bot_game,
-                    "updated_at": datetime.utcnow()
-                }
-            }
+            {"$set": update_data}
         )
         
         # Check if the update was successful
