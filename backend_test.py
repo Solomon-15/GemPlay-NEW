@@ -23164,6 +23164,74 @@ def test_game_status_flow_waiting_to_active() -> None:
     print_success("- Backend returns correct ACTIVE status on join")
     print_success("- Complete flow: WAITING → ACTIVE → COMPLETED")
 
+def test_login(email: str, password: str, user_type: str = "user") -> Optional[str]:
+    """Test user login and return access token."""
+    print_subheader(f"Testing Login for {user_type}: {email}")
+    
+    login_data = {
+        "email": email,
+        "password": password
+    }
+    
+    response, success = make_request("POST", "/auth/login", data=login_data)
+    
+    if success:
+        if "access_token" in response:
+            print_success(f"Login successful for {user_type}")
+            record_test(f"Login - {user_type}", True)
+            return response["access_token"]
+        else:
+            print_error(f"Login response missing access_token: {response}")
+            record_test(f"Login - {user_type}", False, "Missing access_token")
+    else:
+        print_error(f"Login failed for {user_type}: {response}")
+        record_test(f"Login - {user_type}", False, "Login request failed")
+    
+    return None
+
+def print_summary() -> None:
+    """Print test results summary."""
+    print_header("TEST RESULTS SUMMARY")
+    
+    total = test_results["total"]
+    passed = test_results["passed"]
+    failed = test_results["failed"]
+    
+    if total == 0:
+        print_warning("No tests were executed")
+        return
+    
+    success_rate = (passed / total) * 100
+    
+    print(f"Total Tests: {total}")
+    print(f"Passed: {Colors.OKGREEN}{passed}{Colors.ENDC}")
+    print(f"Failed: {Colors.FAIL}{failed}{Colors.ENDC}")
+    print(f"Success Rate: {Colors.OKGREEN if success_rate >= 80 else Colors.FAIL}{success_rate:.1f}%{Colors.ENDC}")
+    
+    if failed > 0:
+        print_subheader("Failed Tests:")
+        for test in test_results["tests"]:
+            if not test["passed"]:
+                print_error(f"❌ {test['name']}: {test['details']}")
+    
+    print_subheader("Test Categories Summary:")
+    categories = {}
+    for test in test_results["tests"]:
+        category = test["name"].split(" - ")[0] if " - " in test["name"] else "General"
+        if category not in categories:
+            categories[category] = {"passed": 0, "failed": 0}
+        
+        if test["passed"]:
+            categories[category]["passed"] += 1
+        else:
+            categories[category]["failed"] += 1
+    
+    for category, results in categories.items():
+        total_cat = results["passed"] + results["failed"]
+        success_rate_cat = (results["passed"] / total_cat) * 100 if total_cat > 0 else 0
+        status_color = Colors.OKGREEN if success_rate_cat >= 80 else Colors.FAIL
+        print(f"{category}: {status_color}{results['passed']}/{total_cat} ({success_rate_cat:.1f}%){Colors.ENDC}")
+
 if __name__ == "__main__":
     print_header("GEMPLAY BACKEND API TESTING - GAME STATUS FLOW FIX")
     
