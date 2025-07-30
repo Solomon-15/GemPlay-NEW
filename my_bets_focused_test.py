@@ -252,7 +252,7 @@ def test_game_cancellation():
         
         # Now test cancellation
         print(f"\n📋 Testing cancellation of game {game_id}")
-        cancel_response = make_request("POST", f"/games/{game_id}/cancel", auth_token=admin_token)
+        cancel_response = make_request("DELETE", f"/games/{game_id}/cancel", auth_token=admin_token)
         
         if cancel_response["status"] == 200:
             cancel_data = cancel_response["data"]
