@@ -282,7 +282,7 @@ const MyBets = ({ user, onUpdateUser }) => {
   if (loading && bets.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Загрузка...</div>
+        <div className="text-white text-xl font-roboto">Loading...</div>
       </div>
     );
   }
@@ -315,12 +315,12 @@ const MyBets = ({ user, onUpdateUser }) => {
     <div className="p-6 min-h-screen">
       {/* Header */}
       <div className="mb-6 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-russo text-white mb-4">Мои Ставки</h1>
+        <h1 className="text-3xl font-russo text-white mb-4">My Bets</h1>
         
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <InfoBlock
-            title="Всего игр"
+            title="Total Games"
             value={stats.totalGames}
             color="bg-blue-600"
             icon={
@@ -330,7 +330,7 @@ const MyBets = ({ user, onUpdateUser }) => {
             }
           />
           <InfoBlock
-            title="Побед"
+            title="Wins"
             value={`${stats.totalWon} (${stats.winRate.toFixed(1)}%)`}
             color="bg-green-600"
             icon={
@@ -340,7 +340,7 @@ const MyBets = ({ user, onUpdateUser }) => {
             }
           />
           <InfoBlock
-            title="Поражений"
+            title="Losses"
             value={stats.totalLost}
             color="bg-red-600"
             icon={
@@ -350,7 +350,7 @@ const MyBets = ({ user, onUpdateUser }) => {
             }
           />
           <InfoBlock
-            title="Чистая прибыль"
+            title="Net Profit"
             value={stats.netProfit}
             color={stats.netProfit >= 0 ? "bg-green-600" : "bg-red-600"}
             icon={
@@ -365,7 +365,7 @@ const MyBets = ({ user, onUpdateUser }) => {
       <div className="max-w-7xl mx-auto">
         {/* Filters */}
         <SectionBlock
-          title="Фильтры и сортировка"
+          title="Filters and Sorting"
           color="text-purple-400"
           icon={
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -376,7 +376,7 @@ const MyBets = ({ user, onUpdateUser }) => {
           <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-4">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div>
-                <label className="block text-sm text-text-secondary mb-2">Статус</label>
+                <label className="block text-sm text-text-secondary mb-2">Status</label>
                 <select 
                   value={filters.status} 
                   onChange={(e) => {
@@ -385,15 +385,15 @@ const MyBets = ({ user, onUpdateUser }) => {
                   }}
                   className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
                 >
-                  <option value="all">Все</option>
-                  <option value="WAITING">Ожидание</option>
-                  <option value="ACTIVE">Активные</option>
-                  <option value="COMPLETED">Завершенные</option>
+                  <option value="all">All</option>
+                  <option value="WAITING">Waiting</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="COMPLETED">Completed</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm text-text-secondary mb-2">Период</label>
+                <label className="block text-sm text-text-secondary mb-2">Period</label>
                 <select 
                   value={filters.dateRange} 
                   onChange={(e) => {
@@ -402,16 +402,16 @@ const MyBets = ({ user, onUpdateUser }) => {
                   }}
                   className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
                 >
-                  <option value="all">Все время</option>
-                  <option value="today">Сегодня</option>
-                  <option value="week">Неделя</option>
-                  <option value="month">Месяц</option>
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
                 </select>
               </div>
 
               {filters.status === 'COMPLETED' && (
                 <div>
-                  <label className="block text-sm text-text-secondary mb-2">Результат</label>
+                  <label className="block text-sm text-text-secondary mb-2">Result</label>
                   <select 
                     value={filters.result} 
                     onChange={(e) => {
@@ -420,16 +420,16 @@ const MyBets = ({ user, onUpdateUser }) => {
                     }}
                     className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
                   >
-                    <option value="all">Все</option>
-                    <option value="won">Победы</option>
-                    <option value="lost">Поражения</option>
-                    <option value="draw">Ничьи</option>
+                    <option value="all">All</option>
+                    <option value="won">Wins</option>
+                    <option value="lost">Losses</option>
+                    <option value="draw">Draws</option>
                   </select>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm text-text-secondary mb-2">Сортировка</label>
+                <label className="block text-sm text-text-secondary mb-2">Sort By</label>
                 <select 
                   value={filters.sortBy} 
                   onChange={(e) => {
@@ -438,14 +438,14 @@ const MyBets = ({ user, onUpdateUser }) => {
                   }}
                   className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
                 >
-                  <option value="created_at">По дате</option>
-                  <option value="bet_amount">По сумме</option>
-                  <option value="status">По статусу</option>
+                  <option value="created_at">By Date</option>
+                  <option value="bet_amount">By Amount</option>
+                  <option value="status">By Status</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm text-text-secondary mb-2">Порядок</label>
+                <label className="block text-sm text-text-secondary mb-2">Order</label>
                 <select 
                   value={filters.sortOrder} 
                   onChange={(e) => {
@@ -454,8 +454,8 @@ const MyBets = ({ user, onUpdateUser }) => {
                   }}
                   className="w-full bg-surface-card border border-accent-primary border-opacity-30 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-primary"
                 >
-                  <option value="desc">По убыванию</option>
-                  <option value="asc">По возрастанию</option>
+                  <option value="desc">Descending</option>
+                  <option value="asc">Ascending</option>
                 </select>
               </div>
             </div>
