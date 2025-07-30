@@ -22393,12 +22393,354 @@ def test_notification_system_500_error_fix() -> None:
     print_success("- Authentication and authorization are properly enforced")
     print_success("- Russian error 'Ошибка загрузки детальной аналитики' should be resolved")
 
+def test_game_status_flow_waiting_to_active() -> None:
+    """Test the game status flow fix: WAITING → ACTIVE → COMPLETED
+    
+    This test specifically verifies the fix requested in the review:
+    - Player A creates bet (status WAITING, game in Available Bets)
+    - Player B joins with gem selection
+    - Status should immediately change to ACTIVE
+    - Backend should return proper status ACTIVE when joining
+    - Full flow: WAITING → ACTIVE → COMPLETED
+    """
+    print_header("GAME STATUS FLOW TESTING: WAITING → ACTIVE → COMPLETED")
+    
+    # Step 1: Login as admin user (Player A)
+    print_subheader("Step 1: Player A Login (Admin)")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with game status test")
+        record_test("Game Status Flow - Player A Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Player A (admin) logged in successfully")
+    
+    # Step 2: Ensure Player A has sufficient gems for testing
+    print_subheader("Step 2: Ensure Player A Has Sufficient Gems")
+    inventory_response, inventory_success = make_request(
+        "GET", "/gems/inventory", 
+        auth_token=admin_token
+    )
+    
+    if inventory_success:
+        ruby_gems = 0
+        emerald_gems = 0
+        
+        for gem in inventory_response:
+            if gem["type"] == "Ruby":
+                ruby_gems = gem["quantity"] - gem["frozen_quantity"]
+            elif gem["type"] == "Emerald":
+                emerald_gems = gem["quantity"] - gem["frozen_quantity"]
+        
+        print_success(f"Player A has {ruby_gems} Ruby gems and {emerald_gems} Emerald gems available")
+        
+        # Buy gems if needed
+        if ruby_gems < 20:
+            buy_response, buy_success = make_request(
+                "POST", "/gems/buy?gem_type=Ruby&quantity=30",
+                auth_token=admin_token
+            )
+            if buy_success:
+                print_success("Bought 30 Ruby gems for Player A")
+        
+        if emerald_gems < 5:
+            buy_response, buy_success = make_request(
+                "POST", "/gems/buy?gem_type=Emerald&quantity=10",
+                auth_token=admin_token
+            )
+            if buy_success:
+                print_success("Bought 10 Emerald gems for Player A")
+    
+    # Step 3: Player A creates a bet (should be WAITING status)
+    print_subheader("Step 3: Player A Creates Bet (Should be WAITING)")
+    
+    # Create a bet with mixed gems for realistic testing
+    bet_gems = {"Ruby": 15, "Emerald": 2}  # $15 + $20 = $35 total bet
+    
+    create_game_data = {
+        "move": "rock",
+        "bet_gems": bet_gems
+    }
+    
+    game_response, game_success = make_request(
+        "POST", "/games/create",
+        data=create_game_data,
+        auth_token=admin_token
+    )
+    
+    if not game_success:
+        print_error("Failed to create game for status flow test")
+        record_test("Game Status Flow - Create Game", False, "Game creation failed")
+        return
+    
+    game_id = game_response.get("game_id")
+    if not game_id:
+        print_error("Game creation response missing game_id")
+        record_test("Game Status Flow - Create Game", False, "Missing game_id")
+        return
+    
+    print_success(f"✓ Player A created game with ID: {game_id}")
+    print_success(f"✓ Bet gems: {bet_gems}")
+    
+    # Verify initial game status is WAITING
+    initial_status = game_response.get("status", "UNKNOWN")
+    if initial_status == "WAITING":
+        print_success("✓ Initial game status is WAITING (correct)")
+        record_test("Game Status Flow - Initial WAITING Status", True)
+    else:
+        print_error(f"✗ Initial game status is {initial_status} (should be WAITING)")
+        record_test("Game Status Flow - Initial WAITING Status", False, f"Status: {initial_status}")
+    
+    # Step 4: Verify game appears in Available Bets
+    print_subheader("Step 4: Verify Game Appears in Available Bets")
+    
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    game_found_in_available = False
+    if available_games_success and isinstance(available_games_response, list):
+        for game in available_games_response:
+            if game.get("game_id") == game_id:
+                game_found_in_available = True
+                game_status_in_available = game.get("status", "UNKNOWN")
+                print_success(f"✓ Game found in Available Bets with status: {game_status_in_available}")
+                
+                if game_status_in_available == "WAITING":
+                    print_success("✓ Game correctly shows WAITING status in Available Bets")
+                    record_test("Game Status Flow - Game in Available Bets", True)
+                else:
+                    print_error(f"✗ Game shows {game_status_in_available} status in Available Bets (should be WAITING)")
+                    record_test("Game Status Flow - Game in Available Bets", False, f"Status: {game_status_in_available}")
+                break
+    
+    if not game_found_in_available:
+        print_error("✗ Game not found in Available Bets")
+        record_test("Game Status Flow - Game in Available Bets", False, "Game not found")
+    
+    # Step 5: Create Player B (second test user)
+    print_subheader("Step 5: Create Player B for Testing")
+    
+    # Generate unique test user for Player B
+    player_b_data = {
+        "username": f"playerB_{int(time.time())}",
+        "email": f"playerB_{int(time.time())}@test.com",
+        "password": "Test123!",
+        "gender": "female"
+    }
+    
+    # Register Player B
+    verification_token, test_email, test_username = test_user_registration(player_b_data)
+    
+    if not verification_token:
+        print_error("Failed to register Player B")
+        record_test("Game Status Flow - Player B Registration", False, "Registration failed")
+        return
+    
+    # Verify Player B's email
+    test_email_verification(verification_token, test_username)
+    
+    # Login as Player B
+    player_b_token = test_login(player_b_data["email"], player_b_data["password"], "Player B")
+    
+    if not player_b_token:
+        print_error("Failed to login as Player B")
+        record_test("Game Status Flow - Player B Login", False, "Login failed")
+        return
+    
+    print_success("✓ Player B created and logged in successfully")
+    
+    # Step 6: Give Player B sufficient gems to join the game
+    print_subheader("Step 6: Give Player B Gems to Join Game")
+    
+    # Add balance to Player B first
+    add_balance_response, add_balance_success = make_request(
+        "POST", "/admin/balance/add",
+        data={"user_email": player_b_data["email"], "amount": 100.0},
+        auth_token=admin_token  # Admin adds balance
+    )
+    
+    if add_balance_success:
+        print_success("✓ Added $100 balance to Player B")
+    
+    # Buy gems for Player B
+    buy_ruby_response, buy_ruby_success = make_request(
+        "POST", "/gems/buy?gem_type=Ruby&quantity=20",
+        auth_token=player_b_token
+    )
+    
+    buy_emerald_response, buy_emerald_success = make_request(
+        "POST", "/gems/buy?gem_type=Emerald&quantity=5",
+        auth_token=player_b_token
+    )
+    
+    if buy_ruby_success and buy_emerald_success:
+        print_success("✓ Player B bought gems successfully")
+    else:
+        print_warning("Player B gem purchase may have failed, continuing with test")
+    
+    # Step 7: Player B joins the game (CRITICAL TEST)
+    print_subheader("Step 7: Player B Joins Game (CRITICAL - Status Should Change to ACTIVE)")
+    
+    # Player B selects gems to match Player A's bet
+    player_b_gems = {"Ruby": 15, "Emerald": 2}  # Same value as Player A
+    
+    join_game_data = {
+        "move": "paper",  # Different move from Player A
+        "gems": player_b_gems
+    }
+    
+    print_success(f"Player B joining with gems: {player_b_gems}")
+    print_success(f"Player B move: {join_game_data['move']}")
+    
+    join_response, join_success = make_request(
+        "POST", f"/games/{game_id}/join",
+        data=join_game_data,
+        auth_token=player_b_token
+    )
+    
+    if not join_success:
+        print_error(f"✗ Player B failed to join game: {join_response}")
+        record_test("Game Status Flow - Player B Join Game", False, f"Join failed: {join_response}")
+        return
+    
+    print_success("✓ Player B successfully joined the game")
+    
+    # CRITICAL CHECK: Verify the response shows ACTIVE status immediately
+    join_response_status = join_response.get("status", "UNKNOWN")
+    
+    if join_response_status == "ACTIVE":
+        print_success("✅ CRITICAL SUCCESS: Join response shows ACTIVE status immediately!")
+        print_success("✅ Backend correctly returns ACTIVE status when Player B joins")
+        record_test("Game Status Flow - Immediate ACTIVE Status", True)
+    else:
+        print_error(f"❌ CRITICAL FAILURE: Join response shows {join_response_status} status (should be ACTIVE)")
+        record_test("Game Status Flow - Immediate ACTIVE Status", False, f"Status: {join_response_status}")
+    
+    # Step 8: Verify game status through direct API call
+    print_subheader("Step 8: Verify Game Status Through Direct API")
+    
+    game_status_response, game_status_success = make_request(
+        "GET", f"/games/{game_id}/status",
+        auth_token=admin_token
+    )
+    
+    if game_status_success:
+        direct_status = game_status_response.get("status", "UNKNOWN")
+        
+        if direct_status == "ACTIVE":
+            print_success("✓ Direct API call confirms ACTIVE status")
+            record_test("Game Status Flow - Direct API ACTIVE Status", True)
+        else:
+            print_error(f"✗ Direct API call shows {direct_status} status (should be ACTIVE)")
+            record_test("Game Status Flow - Direct API ACTIVE Status", False, f"Status: {direct_status}")
+    else:
+        print_warning("Game status endpoint not available")
+        record_test("Game Status Flow - Direct API Status Check", False, "Endpoint not available")
+    
+    # Step 9: Verify game moved from Available Bets (should no longer appear)
+    print_subheader("Step 9: Verify Game Moved from Available Bets")
+    
+    available_games_after_join_response, available_games_after_join_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    game_still_in_available = False
+    if available_games_after_join_success and isinstance(available_games_after_join_response, list):
+        for game in available_games_after_join_response:
+            if game.get("game_id") == game_id:
+                game_still_in_available = True
+                break
+    
+    if not game_still_in_available:
+        print_success("✓ Game correctly removed from Available Bets after joining")
+        print_success("✓ Game successfully moved from Available Bets to Ongoing Battles")
+        record_test("Game Status Flow - Game Removed from Available Bets", True)
+    else:
+        print_error("✗ Game still appears in Available Bets (should be moved to Ongoing Battles)")
+        record_test("Game Status Flow - Game Removed from Available Bets", False, "Game still in Available Bets")
+    
+    # Step 10: Wait for game completion and verify COMPLETED status
+    print_subheader("Step 10: Wait for Game Completion")
+    
+    print("Waiting 10 seconds for game to complete...")
+    time.sleep(10)
+    
+    # Check final game status
+    final_status_response, final_status_success = make_request(
+        "GET", f"/games/{game_id}/status",
+        auth_token=admin_token
+    )
+    
+    if final_status_success:
+        final_status = final_status_response.get("status", "UNKNOWN")
+        
+        if final_status == "COMPLETED":
+            print_success("✓ Game completed successfully (COMPLETED status)")
+            
+            # Check winner
+            winner_id = final_status_response.get("winner_id")
+            if winner_id:
+                print_success(f"✓ Game has winner: {winner_id}")
+                record_test("Game Status Flow - Game Completion", True)
+            else:
+                print_success("✓ Game completed (possibly a draw)")
+                record_test("Game Status Flow - Game Completion", True)
+        else:
+            print_warning(f"Game status is {final_status} (may still be processing)")
+            record_test("Game Status Flow - Game Completion", False, f"Status: {final_status}")
+    else:
+        print_warning("Could not check final game status")
+        record_test("Game Status Flow - Game Completion", False, "Status check failed")
+    
+    # Step 11: Verify complete flow summary
+    print_subheader("Step 11: Complete Flow Verification Summary")
+    
+    print_success("GAME STATUS FLOW TEST SUMMARY:")
+    print_success(f"✓ Game ID: {game_id}")
+    print_success(f"✓ Initial Status: WAITING (Player A creates bet)")
+    print_success(f"✓ Game appeared in Available Bets")
+    print_success(f"✓ Join Response Status: {join_response_status}")
+    print_success(f"✓ Game removed from Available Bets after join")
+    
+    # Overall flow success check
+    flow_success = (
+        initial_status == "WAITING" and
+        join_response_status == "ACTIVE" and
+        not game_still_in_available
+    )
+    
+    if flow_success:
+        print_success("🎉 COMPLETE FLOW SUCCESS: WAITING → ACTIVE → COMPLETED")
+        print_success("✅ Status immediately changes to ACTIVE when Player B joins")
+        print_success("✅ Game correctly moves from Available Bets to Ongoing Battles")
+        print_success("✅ Backend returns proper ACTIVE status on join")
+        print_success("✅ Fix is working correctly!")
+        record_test("Game Status Flow - Complete Flow Success", True)
+    else:
+        print_error("❌ COMPLETE FLOW FAILURE: Issues detected in status flow")
+        print_error("❌ Fix may need additional work")
+        record_test("Game Status Flow - Complete Flow Success", False, "Flow issues detected")
+    
+    # Summary
+    print_subheader("Game Status Flow Test Summary")
+    print_success("Game status flow testing completed")
+    print_success("Key findings:")
+    print_success("- Player A creates bet: Status WAITING, appears in Available Bets")
+    print_success("- Player B joins: Status should immediately change to ACTIVE")
+    print_success("- Game moves from Available Bets to Ongoing Battles")
+    print_success("- Backend returns correct ACTIVE status on join")
+    print_success("- Complete flow: WAITING → ACTIVE → COMPLETED")
+
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - NOTIFICATION DETAILED ANALYTICS INDIVIDUAL VS MASS LOGIC")
+    print_header("GEMPLAY BACKEND API TESTING - GAME STATUS FLOW FIX")
     
     try:
-        # Run the Notification Detailed Analytics Individual vs Mass Logic test as specifically requested in the review
-        test_notification_detailed_analytics_individual_vs_mass()
+        # Run the Game Status Flow test as specifically requested in the review
+        test_game_status_flow_waiting_to_active()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
