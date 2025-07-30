@@ -2061,7 +2061,7 @@ async def join_human_bot_bet(human_bot: HumanBot):
         # IMPORTANT: Never determine winner immediately for Human-bot games
         # All Human-bot games should be completed via the timeout mechanism
         # This ensures consistent 1-minute completion regardless of game type
-        logger.info(f"Human-bot game {selected_game.id} will be completed via timeout mechanism")
+        logger.info(f"Human-bot {human_bot.name} will complete game {selected_game.id} in {random_completion_seconds} seconds")
         
     except Exception as e:
         logger.error(f"Error joining human bot bet: {e}")
