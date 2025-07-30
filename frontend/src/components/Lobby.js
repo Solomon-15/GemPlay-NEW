@@ -152,6 +152,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         return game.status === 'ACTIVE' && 
                (game.creator_id === user?.id || game.opponent_id === user?.id);
       });
+      console.log(`⚔️ Active User Games from available: ${activeUserGames.length} ACTIVE games where user participates`);
       
       // Get active Human-bot games for display in ongoing battles
       try {
