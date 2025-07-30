@@ -179,6 +179,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         );
         
         setOngoingBattles(uniqueOngoingBattles);
+        console.log(`⚔️ Final Ongoing Battles: ${uniqueOngoingBattles.length} total battles (${userOngoingBattles.length} from my-bets + ${activeUserGames.length} from available + ${humanBotGames.length} human-bot games)`);
       } catch (error) {
         console.error('Error fetching Human-bot games:', error);
         // Fallback: combine user battles with active user games
@@ -187,6 +188,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
         );
         setOngoingBattles(uniqueFallbackBattles);
+        console.log(`⚔️ Fallback Ongoing Battles: ${uniqueFallbackBattles.length} total battles`);
       }
       
       setOngoingBotBattles(userGames.filter(game => 
