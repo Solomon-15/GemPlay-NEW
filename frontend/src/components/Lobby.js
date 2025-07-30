@@ -354,7 +354,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
             </div>
             <div>
               <h4 className="font-rajdhani font-bold text-white">
-                {game.creator_username || game.creator?.username || 'Player'}
+                {game.creator_username || game.creator?.username || 'Unknown Player'}
               </h4>
               <p className="font-roboto text-xs text-text-secondary">
                 {new Date(game.created_at).toLocaleTimeString()}
