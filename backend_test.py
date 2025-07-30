@@ -1411,6 +1411,331 @@ def test_is_human_bot_flag_logic_fix() -> None:
     print_success(f"- Числа идентичны: {'ДА' if numbers_identical else 'НЕТ'}")
     print_success(f"- is_human_bot логика корректна: {'ДА' if expected_human_bot_games == actual_human_bot_games else 'НЕТ'}")
 
+def test_admin_bets_list_active_status() -> None:
+    """Test the admin bets list endpoint to ensure it shows ACTIVE status correctly.
+    
+    This test specifically verifies the critical requirement from the Russian review:
+    ЗАДАЧА: Протестировать конкретно API endpoint /admin/bets/list - убедиться что он правильно отображает статус ACTIVE после присоединения Игрока B.
+    
+    СПЕЦИФИЧНЫЕ ТЕСТЫ:
+    1. Создать игру Игроком A
+    2. Присоединиться Игроком B  
+    3. КРИТИЧНО: Проверить endpoint GET /admin/bets/list 
+    4. Убедиться что ставка показывает статус ACTIVE в списке
+    5. Сравнить с другими endpoints для консистентности
+    """
+    print_header("ADMIN BETS LIST ACTIVE STATUS TESTING")
+    
+    # Step 1: Login as admin user (Player A)
+    print_subheader("Step 1: Login as Player A (Admin)")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with admin bets list test")
+        record_test("Admin Bets List - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Create a test user (Player B)
+    print_subheader("Step 2: Create Player B")
+    
+    # Generate unique test user
+    timestamp = int(time.time())
+    test_user_b = {
+        "username": f"playerB_{timestamp}",
+        "email": f"playerB_{timestamp}@test.com",
+        "password": "Test123!",
+        "gender": "female"
+    }
+    
+    # Register Player B
+    verification_token, test_email, test_username = test_user_registration(test_user_b)
+    
+    if not verification_token:
+        print_error("Failed to register Player B")
+        record_test("Admin Bets List - Player B Registration", False, "Registration failed")
+        return
+    
+    # Verify Player B email
+    test_email_verification(verification_token, test_username)
+    
+    # Login as Player B
+    player_b_token = test_login(test_user_b["email"], test_user_b["password"], "playerB")
+    
+    if not player_b_token:
+        print_error("Failed to login as Player B")
+        record_test("Admin Bets List - Player B Login", False, "Login failed")
+        return
+    
+    print_success(f"Player B logged in successfully")
+    
+    # Step 3: Buy gems for both players
+    print_subheader("Step 3: Buy Gems for Testing")
+    
+    # Buy gems for Player A (admin)
+    buy_response_a, buy_success_a = make_request(
+        "POST", "/gems/buy?gem_type=Ruby&quantity=20",
+        auth_token=admin_token
+    )
+    
+    if buy_success_a:
+        print_success("Player A bought 20 Ruby gems")
+    
+    # Buy gems for Player B
+    buy_response_b, buy_success_b = make_request(
+        "POST", "/gems/buy?gem_type=Ruby&quantity=20",
+        auth_token=player_b_token
+    )
+    
+    if buy_success_b:
+        print_success("Player B bought 20 Ruby gems")
+    
+    # Step 4: Player A creates a game
+    print_subheader("Step 4: Player A Creates Game")
+    
+    bet_gems = {"Ruby": 15, "Emerald": 2}  # $35 total bet
+    create_game_data = {
+        "move": "rock",
+        "bet_gems": bet_gems
+    }
+    
+    game_response, game_success = make_request(
+        "POST", "/games/create",
+        data=create_game_data,
+        auth_token=admin_token
+    )
+    
+    if not game_success:
+        print_error("Failed to create game")
+        record_test("Admin Bets List - Game Creation", False, "Game creation failed")
+        return
+    
+    game_id = game_response.get("game_id")
+    if not game_id:
+        print_error("Game creation response missing game_id")
+        record_test("Admin Bets List - Game Creation", False, "Missing game_id")
+        return
+    
+    print_success(f"Game created with ID: {game_id}")
+    record_test("Admin Bets List - Game Creation", True)
+    
+    # Step 5: Check admin bets list BEFORE Player B joins (should show WAITING)
+    print_subheader("Step 5: Check Admin Bets List BEFORE Player B Joins")
+    
+    admin_bets_before_response, admin_bets_before_success = make_request(
+        "GET", "/admin/bets/list",
+        auth_token=admin_token
+    )
+    
+    if admin_bets_before_success:
+        print_success("Admin bets list endpoint accessible")
+        
+        # Find our game in the list
+        game_found_before = False
+        game_status_before = None
+        
+        if isinstance(admin_bets_before_response, list):
+            for bet in admin_bets_before_response:
+                if bet.get("game_id") == game_id or bet.get("id") == game_id:
+                    game_found_before = True
+                    game_status_before = bet.get("status", "UNKNOWN")
+                    print_success(f"Found game in admin bets list with status: {game_status_before}")
+                    break
+        elif isinstance(admin_bets_before_response, dict) and "bets" in admin_bets_before_response:
+            for bet in admin_bets_before_response["bets"]:
+                if bet.get("game_id") == game_id or bet.get("id") == game_id:
+                    game_found_before = True
+                    game_status_before = bet.get("status", "UNKNOWN")
+                    print_success(f"Found game in admin bets list with status: {game_status_before}")
+                    break
+        
+        if game_found_before:
+            if game_status_before == "WAITING":
+                print_success("✓ Game shows WAITING status before Player B joins")
+                record_test("Admin Bets List - Status Before Join", True)
+            else:
+                print_warning(f"Game shows status {game_status_before} instead of WAITING")
+                record_test("Admin Bets List - Status Before Join", False, f"Status: {game_status_before}")
+        else:
+            print_warning("Game not found in admin bets list before join")
+            record_test("Admin Bets List - Game Found Before Join", False, "Game not found")
+    else:
+        print_error("Failed to access admin bets list endpoint")
+        record_test("Admin Bets List - Endpoint Access Before Join", False, "Endpoint failed")
+    
+    # Step 6: Player B joins the game
+    print_subheader("Step 6: Player B Joins Game")
+    
+    join_game_data = {
+        "move": "paper",
+        "gems": {"Ruby": 15, "Emerald": 2}  # Match Player A's bet
+    }
+    
+    join_response, join_success = make_request(
+        "POST", f"/games/{game_id}/join",
+        data=join_game_data,
+        auth_token=player_b_token
+    )
+    
+    if not join_success:
+        print_error("Failed for Player B to join game")
+        record_test("Admin Bets List - Player B Join", False, "Join failed")
+        return
+    
+    join_status = join_response.get("status", "UNKNOWN")
+    print_success(f"Player B joined game successfully, status: {join_status}")
+    
+    if join_status == "ACTIVE":
+        print_success("✓ Join response shows ACTIVE status")
+        record_test("Admin Bets List - Join Response Status", True)
+    else:
+        print_error(f"Join response shows status {join_status} instead of ACTIVE")
+        record_test("Admin Bets List - Join Response Status", False, f"Status: {join_status}")
+    
+    # Step 7: CRITICAL TEST - Check admin bets list AFTER Player B joins (should show ACTIVE)
+    print_subheader("Step 7: CRITICAL TEST - Check Admin Bets List AFTER Player B Joins")
+    
+    # Wait a moment for database update
+    time.sleep(2)
+    
+    admin_bets_after_response, admin_bets_after_success = make_request(
+        "GET", "/admin/bets/list",
+        auth_token=admin_token
+    )
+    
+    if admin_bets_after_success:
+        print_success("✓ Admin bets list endpoint accessible after join")
+        
+        # Find our game in the list
+        game_found_after = False
+        game_status_after = None
+        
+        if isinstance(admin_bets_after_response, list):
+            for bet in admin_bets_after_response:
+                if bet.get("game_id") == game_id or bet.get("id") == game_id:
+                    game_found_after = True
+                    game_status_after = bet.get("status", "UNKNOWN")
+                    print_success(f"Found game in admin bets list with status: {game_status_after}")
+                    
+                    # Print full bet details for debugging
+                    print_success(f"Full bet details: {json.dumps(bet, indent=2)}")
+                    break
+        elif isinstance(admin_bets_after_response, dict) and "bets" in admin_bets_after_response:
+            for bet in admin_bets_after_response["bets"]:
+                if bet.get("game_id") == game_id or bet.get("id") == game_id:
+                    game_found_after = True
+                    game_status_after = bet.get("status", "UNKNOWN")
+                    print_success(f"Found game in admin bets list with status: {game_status_after}")
+                    
+                    # Print full bet details for debugging
+                    print_success(f"Full bet details: {json.dumps(bet, indent=2)}")
+                    break
+        
+        if game_found_after:
+            if game_status_after == "ACTIVE":
+                print_success("✅ CRITICAL SUCCESS: Admin bets list shows ACTIVE status after Player B joins!")
+                print_success("✅ The endpoint GET /admin/bets/list correctly displays ACTIVE status!")
+                record_test("Admin Bets List - CRITICAL Status After Join", True)
+            else:
+                print_error(f"❌ CRITICAL FAILURE: Admin bets list shows status {game_status_after} instead of ACTIVE!")
+                print_error(f"❌ The endpoint GET /admin/bets/list does NOT correctly display ACTIVE status!")
+                record_test("Admin Bets List - CRITICAL Status After Join", False, f"Status: {game_status_after}")
+        else:
+            print_error("❌ CRITICAL FAILURE: Game not found in admin bets list after join!")
+            print_error("❌ The game may have moved to a different section or disappeared!")
+            record_test("Admin Bets List - Game Found After Join", False, "Game not found")
+            
+            # Print all games for debugging
+            print_warning("All games in admin bets list:")
+            if isinstance(admin_bets_after_response, list):
+                for i, bet in enumerate(admin_bets_after_response[:5]):  # Show first 5
+                    print_warning(f"  Game {i+1}: ID={bet.get('game_id', bet.get('id', 'unknown'))}, Status={bet.get('status', 'unknown')}")
+            elif isinstance(admin_bets_after_response, dict) and "bets" in admin_bets_after_response:
+                for i, bet in enumerate(admin_bets_after_response["bets"][:5]):  # Show first 5
+                    print_warning(f"  Game {i+1}: ID={bet.get('game_id', bet.get('id', 'unknown'))}, Status={bet.get('status', 'unknown')}")
+    else:
+        print_error("❌ CRITICAL FAILURE: Failed to access admin bets list endpoint after join!")
+        record_test("Admin Bets List - Endpoint Access After Join", False, "Endpoint failed")
+    
+    # Step 8: Compare with other endpoints for consistency
+    print_subheader("Step 8: Compare with Other Endpoints for Consistency")
+    
+    # Check available games (game should disappear from here)
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    if available_games_success and isinstance(available_games_response, list):
+        game_in_available = False
+        for game in available_games_response:
+            if game.get("game_id") == game_id:
+                game_in_available = True
+                break
+        
+        if not game_in_available:
+            print_success("✓ Game correctly removed from available games after join")
+            record_test("Admin Bets List - Game Removed from Available", True)
+        else:
+            print_error("✗ Game still appears in available games after join")
+            record_test("Admin Bets List - Game Removed from Available", False, "Game still available")
+    
+    # Check my bets endpoint
+    my_bets_response, my_bets_success = make_request(
+        "GET", "/games/my-bets",
+        auth_token=admin_token
+    )
+    
+    if my_bets_success:
+        game_in_my_bets = False
+        my_bets_status = None
+        
+        if isinstance(my_bets_response, list):
+            for bet in my_bets_response:
+                if bet.get("game_id") == game_id or bet.get("id") == game_id:
+                    game_in_my_bets = True
+                    my_bets_status = bet.get("status", "UNKNOWN")
+                    break
+        elif isinstance(my_bets_response, dict) and "bets" in my_bets_response:
+            for bet in my_bets_response["bets"]:
+                if bet.get("game_id") == game_id or bet.get("id") == game_id:
+                    game_in_my_bets = True
+                    my_bets_status = bet.get("status", "UNKNOWN")
+                    break
+        
+        if game_in_my_bets:
+            if my_bets_status == "ACTIVE":
+                print_success("✓ My bets endpoint also shows ACTIVE status")
+                record_test("Admin Bets List - My Bets Consistency", True)
+            else:
+                print_error(f"✗ My bets endpoint shows status {my_bets_status} instead of ACTIVE")
+                record_test("Admin Bets List - My Bets Consistency", False, f"Status: {my_bets_status}")
+        else:
+            print_warning("Game not found in my bets endpoint")
+            record_test("Admin Bets List - My Bets Game Found", False, "Game not found")
+    
+    # Step 9: Final verification summary
+    print_subheader("Step 9: Final Verification Summary")
+    
+    print_success("ADMIN BETS LIST ENDPOINT TESTING SUMMARY:")
+    print_success(f"  Game ID: {game_id}")
+    print_success(f"  Status before join: {game_status_before if 'game_status_before' in locals() else 'Not checked'}")
+    print_success(f"  Join response status: {join_status}")
+    print_success(f"  Admin bets list status after join: {game_status_after if 'game_status_after' in locals() else 'Not found'}")
+    
+    # Overall test result
+    if (game_found_after and game_status_after == "ACTIVE"):
+        print_success("🎉 OVERALL SUCCESS: Admin bets list endpoint correctly shows ACTIVE status!")
+        print_success("✅ The critical requirement from the review is MET!")
+        print_success("✅ GET /admin/bets/list properly displays ACTIVE status after Player B joins!")
+        record_test("Admin Bets List - Overall Test", True)
+    else:
+        print_error("❌ OVERALL FAILURE: Admin bets list endpoint does NOT correctly show ACTIVE status!")
+        print_error("❌ The critical requirement from the review is NOT MET!")
+        print_error("❌ GET /admin/bets/list does NOT properly display ACTIVE status after Player B joins!")
+        record_test("Admin Bets List - Overall Test", False, "Status not ACTIVE or game not found")
+
 def test_game_status_flow_waiting_to_active() -> None:
     """Test the game status flow from WAITING to ACTIVE when Player B joins Player A's game.
     
