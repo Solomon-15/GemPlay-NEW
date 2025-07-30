@@ -143,24 +143,11 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         (game.is_creator === true || game.is_creator === false)
       );
       
-      // Also include ACTIVE games from Available Bets (all human games that became ACTIVE)
-      const activeHumanGames = allGames.filter(game => {
-        // Only include ACTIVE games
-        if (game.status !== 'ACTIVE') {
-          return false;
-        }
-        
-        // Include human player games
-        if (!game.is_bot_game) {
-          return true;
-        }
-        
-        // Include human-bot games
-        if (game.is_bot_game && game.is_human_bot) {
-          return true;
-        }
-        
-        return false;
+      // Also include ALL ACTIVE games where current user participates (creator or opponent)
+      const activeUserGames = allGames.filter(game => {
+        // Only include ACTIVE games where user participates
+        return game.status === 'ACTIVE' && 
+               (game.creator_id === user?.id || game.opponent_id === user?.id);
       });
       
       // Get active Human-bot games for display in ongoing battles
