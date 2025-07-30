@@ -249,21 +249,31 @@ const MyBets = ({ user, onUpdateUser }) => {
   };
 
   const renderGems = (betGems) => {
-    if (!betGems || typeof betGems !== 'object') return null;
+    if (!betGems || typeof betGems !== 'object') return (
+      <div className="text-text-secondary text-sm">No gems</div>
+    );
+    
+    const gemsArray = Object.entries(betGems).filter(([gemType, quantity]) => quantity > 0);
+    
+    if (gemsArray.length === 0) return (
+      <div className="text-text-secondary text-sm">No gems</div>
+    );
     
     return (
-      <div className="flex space-x-1">
-        {Object.entries(betGems).map(([gemType, quantity]) => (
-          quantity > 0 && (
-            <div key={gemType} className="flex items-center space-x-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded px-2 py-1">
-              <img 
-                src={`/gems/gem-${gemType.toLowerCase()}.svg`} 
-                alt={gemType}
-                className="w-4 h-4"
-              />
-              <span className="text-xs text-white font-rajdhani font-bold">{quantity}</span>
-            </div>
-          )
+      <div className="flex flex-wrap gap-1">
+        {gemsArray.map(([gemType, quantity]) => (
+          <div key={gemType} className="flex items-center space-x-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded px-2 py-1">
+            <img 
+              src={`/gems/gem-${gemType.toLowerCase()}.svg`} 
+              alt={gemType}
+              className="w-4 h-4"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.textContent = `${gemType.toUpperCase()}: ${quantity}`;
+              }}
+            />
+            <span className="text-xs text-white font-rajdhani font-bold">{quantity}</span>
+          </div>
         ))}
       </div>
     );
