@@ -180,7 +180,7 @@ const MyBets = ({ user, onUpdateUser }) => {
   }, [fetchMyBets]);
 
   const handleCancelBet = async (gameId) => {
-    if (!window.confirm('Вы уверены, что хотите отменить эту ставку?')) {
+    if (!window.confirm('Are you sure you want to cancel this bet?')) {
       return;
     }
 
@@ -194,7 +194,7 @@ const MyBets = ({ user, onUpdateUser }) => {
       onUpdateUser && onUpdateUser();
     } catch (error) {
       console.error('Error canceling bet:', error);
-      alert('Ошибка при отмене ставки');
+      alert('Error canceling bet');
     }
   };
 
