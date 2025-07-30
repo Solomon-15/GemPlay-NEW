@@ -326,6 +326,9 @@ function App() {
                 {currentView === 'lobby' && (
                   <Lobby user={user} onUpdateUser={checkAuthStatus} setCurrentView={setCurrentView} />
                 )}
+                {currentView === 'my-bets' && (
+                  <MyBets user={user} onUpdateUser={checkAuthStatus} />
+                )}
                 {currentView === 'profile' && (
                   <Profile 
                     user={user} 
