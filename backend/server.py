@@ -7848,7 +7848,7 @@ async def leave_game(game_id: str, current_user: User = Depends(get_current_user
             }
         )
         
-        logger.info(f"🚪 User {current_user.id} left game {game_id}, bet recreated with new commit-reveal")
+        logger.info(f"🚪 User {current_user.username} ({current_user.id}) left game {game_id}, bet recreated with new commit-reveal for creator")
         
         # Send notification to creator about opponent leaving and bet recreation
         try:
