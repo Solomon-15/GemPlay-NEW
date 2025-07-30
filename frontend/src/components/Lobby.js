@@ -98,12 +98,18 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       // Filter games - separate human bots from regular bots
       const allGames = gamesResponse.data || [];
       
-      // Available bets should include only WAITING games:
+      // Available bets should include only WAITING games where current user is NOT a participant:
       // 1. All human player games (is_bot_game is false or undefined) with WAITING status
       // 2. Human-bot games (is_human_bot is true) with WAITING status
+      // 3. Exclude games where current user is creator or opponent
       setAvailableBets(allGames.filter(game => {
         // Only show WAITING games in Available Bets
         if (game.status !== 'WAITING') {
+          return false;
+        }
+        
+        // Exclude games where current user is already participating
+        if (game.creator_id === user?.id || game.opponent_id === user?.id) {
           return false;
         }
         
