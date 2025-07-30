@@ -216,24 +216,24 @@ const MyBets = ({ user, onUpdateUser }) => {
     if (status === 'WAITING') {
       bgColor = 'bg-yellow-500';
       textColor = 'text-white';
-      text = 'Ожидание';
+      text = 'Waiting';
     } else if (status === 'ACTIVE') {
       bgColor = 'bg-blue-500';
       textColor = 'text-white';
-      text = 'Активная';
+      text = 'Active';
     } else if (status === 'COMPLETED') {
       if (result === 'won') {
         bgColor = 'bg-green-500';
         textColor = 'text-white';
-        text = 'Победа';
+        text = 'Won';
       } else if (result === 'lost') {
         bgColor = 'bg-red-500';
         textColor = 'text-white';
-        text = 'Поражение';
+        text = 'Lost';
       } else {
         bgColor = 'bg-gray-500';
         textColor = 'text-white';
-        text = 'Ничья';
+        text = 'Draw';
       }
     } else {
       bgColor = 'bg-gray-500';
