@@ -5012,59 +5012,75 @@ async def check_human_bot_concurrent_games(bot_id: str, max_concurrent: int = 3)
         return False  # Conservative approach for bots
 
 async def handle_human_bot_game_completion(game_id: str):
-    """Auto-complete Human-bot games after 1 minute with random moves."""
+    """Auto-complete Human-bot games with proper commit-reveal handling."""
     try:
         game = await db.games.find_one({"id": game_id})
         if not game:
+            logger.warning(f"Game {game_id} not found for Human-bot completion")
             return
             
         game_obj = Game(**game)
         
-        # Only handle ACTIVE games for Human-bots
+        # Only handle ACTIVE games
         if game_obj.status != GameStatus.ACTIVE:
-            return
-            
-        # Check if at least 1 minute has passed since game started
-        if game_obj.started_at:
-            time_elapsed = (datetime.utcnow() - game_obj.started_at).total_seconds()
-            if time_elapsed < 60:  # Less than 1 minute
-                return
-        
-        # Check if game involves Human-bot
-        creator = await db.users.find_one({"id": game_obj.creator_id})
-        opponent = await db.users.find_one({"id": game_obj.opponent_id})
-        
-        if not creator or not opponent:
+            logger.info(f"Game {game_id} is not ACTIVE (status: {game_obj.status}), skipping")
             return
         
-        # Check if at least one player is a Human-bot
+        # Verify this is actually a Human-bot game
         creator_is_human_bot = await db.human_bots.find_one({"id": game_obj.creator_id})
         opponent_is_human_bot = await db.human_bots.find_one({"id": game_obj.opponent_id})
         
         if not creator_is_human_bot and not opponent_is_human_bot:
+            logger.warning(f"Game {game_id} has no Human-bots, should not be handled here")
             return
         
-        # Generate random moves for Human-bots
-        possible_moves = [GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS]
+        logger.info(f"🤖 Auto-completing Human-bot game {game_id}")
         
+        # Initialize moves
         creator_move = game_obj.creator_move
         opponent_move = game_obj.opponent_move
         
-        # Generate random move for Human-bot creator if not set
-        if creator_is_human_bot and not creator_move:
-            creator_move = random.choice(possible_moves)
-            
-        # Generate random move for Human-bot opponent if not set
-        if opponent_is_human_bot and not opponent_move:
-            opponent_move = random.choice(possible_moves)
-            
-        # If both moves are still None, generate random moves
-        if not creator_move:
-            creator_move = random.choice(possible_moves)
-        if not opponent_move:
-            opponent_move = random.choice(possible_moves)
+        # Handle commit-reveal for creator if they're human (not Human-bot)
+        if not creator_is_human_bot and game_obj.creator_move_hash and game_obj.creator_salt:
+            # This is a human player with commit-reveal - verify and extract move
+            try:
+                # The creator's move should already be set, but let's verify the hash
+                if creator_move and verify_move_hash(creator_move, game_obj.creator_salt, game_obj.creator_move_hash):
+                    logger.info(f"Verified creator's commit-reveal move: {creator_move}")
+                else:
+                    # If verification fails, generate random move for creator
+                    logger.warning(f"Creator's move verification failed, generating random move")
+                    creator_move = random.choice([GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS])
+            except Exception as e:
+                logger.error(f"Error handling creator commit-reveal: {e}")
+                creator_move = random.choice([GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS])
+        elif creator_is_human_bot:
+            # Creator is Human-bot - generate random move if not already set
+            if not creator_move:
+                creator_move = random.choice([GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS])
+                logger.info(f"Generated random move for Human-bot creator: {creator_move}")
         
-        # Update game with moves
+        # Handle opponent move (Human-bot should already have a move, but verify)
+        if opponent_is_human_bot:
+            if not opponent_move:
+                opponent_move = random.choice([GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS])
+                logger.info(f"Generated random move for Human-bot opponent: {opponent_move}")
+        else:
+            # Opponent is human - they should have made their move by now or we generate one
+            if not opponent_move:
+                opponent_move = random.choice([GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS])
+                logger.info(f"Generated random move for human opponent: {opponent_move}")
+        
+        # Ensure we have both moves
+        if not creator_move or not opponent_move:
+            logger.error(f"Missing moves for game {game_id}: creator={creator_move}, opponent={opponent_move}")
+            # Generate missing moves
+            if not creator_move:
+                creator_move = random.choice([GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS])
+            if not opponent_move:
+                opponent_move = random.choice([GameMove.ROCK, GameMove.PAPER, GameMove.SCISSORS])
+        
+        # Update game with final moves
         await db.games.update_one(
             {"id": game_id},
             {
@@ -5076,13 +5092,28 @@ async def handle_human_bot_game_completion(game_id: str):
             }
         )
         
-        # Determine winner and complete the game using existing function
+        # Determine winner and complete the game
         await determine_game_winner(game_id)
         
-        logger.info(f"Human-bot game {game_id} auto-completed after 1 minute")
+        logger.info(f"✅ Human-bot game {game_id} completed successfully - Creator: {creator_move}, Opponent: {opponent_move}")
         
     except Exception as e:
-        logger.error(f"Error auto-completing Human-bot game {game_id}: {e}")
+        logger.error(f"❌ Error auto-completing Human-bot game {game_id}: {e}")
+        # Try to mark game as completed with error status to prevent infinite loops
+        try:
+            await db.games.update_one(
+                {"id": game_id},
+                {
+                    "$set": {
+                        "status": GameStatus.COMPLETED,
+                        "error_reason": str(e),
+                        "completed_at": datetime.utcnow()
+                    }
+                }
+            )
+            logger.info(f"Marked game {game_id} as completed due to error")
+        except Exception as update_error:
+            logger.error(f"Failed to mark game {game_id} as completed: {update_error}")
 
 async def handle_game_timeout(game_id: str):
     """Handle game timeout - return funds and recreate bet with new commit-reveal."""
