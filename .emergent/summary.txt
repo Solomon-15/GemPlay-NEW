@@ -1,28 +1,44 @@
 <analysis>
-The previous AI engineer successfully addressed several critical areas of the GemPlay application. The trajectory shows an iterative process, starting with an in-depth understanding of existing issues and then systematically implementing fixes and enhancements. Key phases included: resolving frontend display issues for  game status in the lobby by updating filtering logic in , and ensuring the admin panel's Bets Management  automatically refreshed to show correct game statuses. A significant effort was made to refactor and clean the codebase by identifying and removing duplicate and unused frontend components (, , , , ), removing Russian comments, and optimizing imports. Finally, the engineer verified and confirmed that the commit-reveal logic, including timeout handling and re-betting for Player A, correctly applied to both Human-bots and live players, and also confirmed that Regular bots already utilized commit-reveal. The work demonstrated a strong focus on maintainability and correctness across both frontend and backend.
+The previous AI engineer effectively transitioned the GemPlay application from MVP to a more robust state. The work involved significant refactoring, including the removal of duplicate and unused components and cleanup of codebase comments. Key functional enhancements included fixing display issues in the Lobby for  game statuses and ensuring real-time data in the Bets Management admin panel. A major focus was on validating and correcting the commit-reveal logic for both Human-bots and live players, ensuring proper timeout handling and re-betting. The current trajectory demonstrates a shift in focus, with the previous engineer successfully implementing a complete re-creation of the My Bets section (frontend and backend), fixing player name display across various UI elements, correcting gem icon rendering and layout, and extensively overhauling the Human-bot game completion logic to prevent games from hanging. Finally, the commit-reveal re-creation logic was extended to cover scenarios where Player B leaves a game, ensuring consistency with timeout handling.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting platform with human-bots, requiring precise financial tracking and robust administrative controls. The user's primary goal is to enhance existing functionalities and resolve critical bugs for improved user experience and system stability.
+The GemPlay application is an asynchronous PvP gem betting platform featuring human-bots, requiring accurate financial tracking and comprehensive administrative controls. The overarching goal is to enhance existing features and resolve critical bugs for improved user experience and system stability.
 
-**Key Features & Fixes addressed so far:**
-1.  **Notification System:** Performance optimization for detailed analytics, UI fixes (dropdown, mobile modal), bot exclusion from broadcasts, and notification deletion.
-2.  **User Management Admin Panel:** Display Human-bot and Regular bot roles, Online/Offline status. Implement advanced filters/sorting. User search autocomplete in Send Notification should show all users on focus, filtered by name/email, excluding bots.
+**Key Features & Fixes Addressed So Far (as per previous engineer's work):**
+1.  **Notification System:** Optimized performance, UI fixes for dropdown/mobile modal, bot exclusion from broadcasts, and notification deletion.
+2.  **User Management Admin Panel:** Display Human-bot and Regular bot roles with Online/Offline status. Implement advanced filters/sorting. User search autocomplete should show all users on focus, filtered by name/email, excluding bots.
 3.  **Commit-Reveal Bet Logic:**
     *   Player A creates a bet (WAITING).
-    *   Player B joins: bet moves from Available Bets to Ongoing Battles, status becomes ACTIVE, and a 1-minute timer starts for Player B to choose a move.
-    *   If Player B times out, Player A's bet is recreated with new commit-reveal data, and Player A's frozen funds are returned/re-frozen.
-    *   Ensure no Unexpected API response structure errors.
-    *   Ensure ACTIVE status correctly propagates to Admin Panel and API endpoints.
-    *   Ensure this logic applies to live players and Human-bots, and verify Regular bots use commit-reveal.
-4.  **Codebase Clean-up:** Remove duplicate and unused code (frontend/backend), remove outdated comments (especially Russian language comments), and optimize imports.
+    *   Player B joins: bet moves from Available Bets to Ongoing Battles, status becomes ACTIVE, 1-minute timer starts.
+    *   If Player B times out or leaves, Player A's bet is recreated with new commit-reveal data, and frozen funds are returned/re-frozen.
+    *   Ensure ACTIVE status propagates correctly.
+    *   This logic applies to live players and Human-bots; Regular bots already use commit-reveal.
+4.  **Codebase Clean-up:** Removal of duplicate/unused code, outdated Russian comments, and optimized imports.
+
+**New Requirements/Re-creations from the Current Trajectory:**
+1.  **Re-create My Bets Section:**
+    *   Full re-development of My Bets for desktop and mobile, positioned after Lobby.
+    *   Display all user bets (WAITING, ACTIVE, win/lose, draw) with 10-record pagination.
+    *   Filters and sorting by status, creation date, bet amount, and result.
+    *   Action buttons: Cancel (for WAITING bets), Repeat (for completed bets), Details (info only: chosen gems, opponent's move, commission).
+    *   Display commit-reveal progress and opponent's timer.
+    *   Automatic status updates (WebSocket or polling, engineer's choice but user initially requested WebSocket).
+    *   Notifications for bet status changes (acceptance, completion, cancellation) integrated into existing system.
+    *   Display total winnings/losses and net profit (Winnings - Losses - 3% game commission).
+    *   Design must match existing app style (specifically Lobby), including icons.
+    *   Mobile version requires swipes, accordions, and other mobile UI patterns.
+2.  **Display Actual Usernames:** In My Bets and Ongoing Battles sections, show the username of the bet creator instead of Player or Unknown Player.
+3.  **Correct Gem Display:** In My Bets Gems column, display corresponding icons from Inventory (initially as 3 rows, then as a 3x3 grid) instead of text names.
+4.  **Human-Bot Auto-Completion:** Ensure all games involving Human-bots automatically complete within one minute (random duration between 15-60 seconds), including Human-bot vs Human-bot and Human-bot vs Live Player scenarios. Fix games hanging in Ongoing Battles.
+5.  **Timeout/Leave Game Re-creation Consistency:** Ensure that if Player B times out or explicitly leaves a game without making a move, Player A's bet is completely re-created with new commit-reveal data, and frozen funds/commission are correctly returned/re-frozen for both players. This should align with the behavior of a game timeout.
 </product_requirements>
 
 <key_technical_concepts>
 -   **MERN Stack Variant:** React.js (Frontend), FastAPI (Python Backend), MongoDB (NoSQL Database).
--   **WebSocket:** Real-time communication for notifications.
--   **Commit-Reveal Scheme:** For secure and fair betting.
--   **Performance Optimization:** Aggregation pipelines, retry mechanisms.
+-   **Commit-Reveal Scheme:** Secure betting protocol.
+-   **WebSocket/Polling:** Real-time updates (notifications via WebSocket, UI refresh via polling).
+-   **Frontend State Management:** React Context (GemsContext), Hooks (useApi, useLobbyRefresh).
 -   **Deployment/Management:** Kubernetes, Supervisor.
 </key_technical_concepts>
 
@@ -33,54 +49,46 @@ The application uses a MERN-stack variant (React.js, FastAPI, MongoDB) structure
 
 -   : The core backend, centralizing API endpoints.
     *   **Importance**: Handles all server-side logic, database interactions for users, notifications, and games.
-    *   **Changes Made**: The  logic was confirmed to correctly transition games to  status (line 5521). The  function was verified and slightly modified (line 5115) to correctly return Player B's funds and recreate Player A's bet with new commit-reveal data, moving it back to  status, ensuring it applies to live players and Human-bots. Russian comments were removed.
+    *   **Changes Made**: Significant modifications were made to  to set  randomly for Human-bot games.  was confirmed to be correct for timeouts.  and  were updated to correctly manage Human-bot game auto-completion and ensure commit-reveal consistency. The  endpoint was modified to re-create Player A's bet with new commit-reveal data (move, salt, hash) and return funds, making its behavior consistent with timeouts. APIs  and  were updated to include  and  object in their responses to correctly display user names.
 -   : Displays available, ongoing, and user's bets.
     *   **Importance**: Main user interface for interacting with games.
-    *   **Changes Made**: Filtering logic for Available Bets and Ongoing Battles (lines 108-121 and 132-134) was updated to correctly categorize games based on their  or  status.  was called after  in  to ensure immediate UI update.
+    *   **Changes Made**: Filtering logic for Available Bets, Ongoing Battles, and My Bets was extensively updated to ensure games correctly move between sections based on // statuses and user participation. Logging was added for debugging filter issues. Player text was replaced with actual usernames.
 -   : Modal for joining a battle (bet).
     *   **Importance**: User interface for Player B to join a game and select their move.
-    *   **Changes Made**:  prop (line 265) was added to be called immediately after a game transitions to  status from the backend, to trigger a lobby data refresh.
--   : Admin panel for managing bets.
-    *   **Importance**: Provides UI for viewing and managing game bets from an administrative perspective.
-    *   **Changes Made**: Automatic data refresh was added (every 10 seconds using  in ) and a manual refresh button was integrated into the header to ensure real-time status display.
--   , , , , :
-    *   **Importance**: Identified as duplicate or unused components.
-    *   **Changes Made**: These files were systematically deleted to clean up the codebase.  was removed as its functionality was duplicated within .  and  were identified as outdated and removed.  and  were found unused and removed.
--   : Component for displaying profit charts.
-    *   **Importance**: Visualizes financial data for users.
-    *   **Changes Made**: Fixed a parsing error due to a duplicated import statement.
+    *   **Changes Made**: Multiple delayed  calls (at 500ms and 800ms) were added after  and after leaving a game to ensure immediate UI updates for game status changes and bet re-creations.
+-   : Was previously deleted; re-created as the new user-facing bet history and management.
+    *   **Importance**: Provides detailed view of a user's active and completed bets, including filtering, sorting, pagination, and action buttons.
+    *   **Changes Made**: Re-created from scratch, including logic for displaying all bet statuses, pagination, filter/sort integration, cancel/repeat/details buttons. UI was styled to match . Gem display was updated from text to  from , and then further refined to display gems in a 3x3 grid. UI elements were translated to English.
+-   : Component for displaying player information.
+    *   **Importance**: Reusable UI component for displaying player details in various game contexts.
+    *   **Changes Made**: Modified to use  to correctly display the actual username of the bet creator, replacing generic Player or Unknown Player text.
 -   : Navigation sidebar.
     *   **Importance**: Provides main navigation links.
-    *   **Changes Made**: The My Bets menu item (lines 55-64) was removed to eliminate duplication with the My Bets section in .
+    *   **Changes Made**: The My Bets menu item was re-added and its icon was updated.
 -   : Main application component.
     *   **Importance**: Renders core application layout and routes components.
-    *   **Changes Made**: References to deleted components (, , ) were removed. Imports were cleaned.
--   : Utility file.
-    *   **Importance**: Contained shared game-related utilities.
-    *   **Changes Made**: Identified as unused and deleted.
--    (New file): Script to remove Russian comments.
--    (New file): Script to remove unused imports.
+    *   **Changes Made**: Updated to include the new routing for the re-created  component.
+-    and :
+    *   **Importance**:  provides a central way to access gem-related data and utility functions like .  displays a user's gems and contains logic for icon paths.
+    *   **Changes Made**: These files were read to understand how gem icons are managed and retrieved, informing the changes in  to correctly display gem icons.
 </code_architecture>
 
 <pending_tasks>
--   **User Management TOTAL Column Sorting**: The numeric sorting issue and duplicate entries in the TOTAL column of the User Management admin panel (as per initial  and ) remain unaddressed in the provided trajectory.
+-   **User Management TOTAL Column Sorting**: The numeric sorting issue and duplicate entries in the TOTAL column of the User Management admin panel (as per the initial problem statement) remain unaddressed.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was primarily focused on verifying the implementation of the commit-reveal betting logic for different bot types and live players, and ensuring all parts of the application (frontend lobby, admin panel, and backend APIs) correctly reflected the  game status.
+Immediately before this summary request, the AI engineer completed a series of quick fixes and enhancements primarily focused on the My Bets section and the game logic for live players and human-bots.
 
-Specifically, the work involved:
-1.  **Verification of Commit-Reveal for Live Players and Human-Bots**: The engineer confirmed that the backend's  function (, line 5434) correctly sets the game status to  upon Player B joining. Furthermore, the  function (, lines 5103-5160) was verified to correctly manage timeouts for  games by returning Player B's funds and re-creating Player A's bet with new commit-reveal data, ensuring this logic applies to both live players and Human-bots, and specifically modifying line 5115 to correctly determine user type.
-2.  **Verification of Commit-Reveal for Regular Bots**: The engineer extensively checked the backend logic for Regular bots (, lines 10937, 10943-10944) and confirmed that they already utilize the commit-reveal system for creating and joining games, rendering further changes unnecessary for this specific request.
-3.  **Frontend Synchronization**: To ensure the UI accurately reflects game status changes:
-    *    was updated to correctly filter and display games in Available Bets (status ) and Ongoing Battles (status ).
-    *    was modified to explicitly trigger a lobby data refresh () after Player B joins and the game transitions to , ensuring immediate UI update.
-    *    (Admin Panel) was enhanced with an automatic refresh mechanism (every 10 seconds) and a manual refresh button to display real-time game statuses, confirming that the backend API () correctly returns the  status.
-4.  **Codebase Cleanup**: A significant effort was made to remove duplicate or unused frontend components (, , , , ), remove outdated Russian comments across the codebase (using ), and optimize imports (using ). This was done to improve code cleanliness and maintainability.
+The work encompassed:
+1.  **My Bets Section Refinements**: The re-created My Bets section was updated to accurately display gem icons (using ) instead of text names. This involved importing  and updating the  function in . Further refinements were made to the visual layout of gems, first arranging them into three rows, and then into a compact 3x3 grid, adjusting their size and spacing for improved readability. The entire My Bets interface and its notifications were translated to English.
+2.  **Displaying Actual Usernames**: The logic for displaying player names was enhanced. Initially, changes were made to  and  to show . Following a user prompt,  was updated to use . To ensure actual usernames were always available, the backend API endpoints  and  in  were modified to consistently return  and the  object.
+3.  **Live Player Bet Relocation & UI Refresh**: The filtering logic in  was significantly improved for My Bets, Available Bets, and Ongoing Battles sections. This ensures that when Player B joins Player A's bet, games correctly disappear from My Bets (for Player A) and Available Bets (for all) and instantly appear in Ongoing Battles for both participants. To achieve near-instant UI updates,  was enhanced with multiple delayed calls to  after a successful join or game leave. Detailed logging was also added to  to aid in diagnosing UI synchronization issues.
+4.  **Timeout/Leave Game Re-creation Logic**: The critical task of ensuring consistency when Player B times out or leaves a game was addressed. The existing  in  was confirmed to correctly re-create Player A's bet with new commit-reveal data, return funds, and send notifications. The  API endpoint in  was *fixed* to match this behavior, ensuring that when Player B explicitly leaves the modal (before choosing a move), Player A's bet is also re-created with new commit-reveal data and funds are returned, maintaining security and game flow integrity. Frontend refresh logic was also adjusted for this scenario in .
 
-The last completed action was confirming that Regular bots use commit-reveal and updating  accordingly, with the user's subsequent instruction Прордорлжи (Continue).
+The last actions performed were final checks and logging consistency for the timeout/leave game re-creation logic in . The AI engineer confirmed these quick fixes were completed.
 </current_work>
 
 <optional_next_step>
-The next step is to address the remaining pending task from the initial product requirements: resolving the TOTAL column sorting issue and duplicate entries in the User Management admin panel.
+Address the TOTAL column sorting issue and duplicate entries in the User Management admin panel.
 </optional_next_step>
