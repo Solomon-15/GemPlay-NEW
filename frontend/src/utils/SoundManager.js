@@ -38,9 +38,34 @@ class SoundManager {
     this.setupUserInteractionListeners();
   }
 
+  setupUserInteractionListeners() {
+    const handleFirstInteraction = () => {
+      if (!this.userInteracted) {
+        this.userInteracted = true;
+        this.initAudioContext();
+        
+        // Удаляем слушатели после первого взаимодействия
+        document.removeEventListener('click', handleFirstInteraction);
+        document.removeEventListener('touchstart', handleFirstInteraction);
+        document.removeEventListener('keydown', handleFirstInteraction);
+        
+        console.log('🔊 Audio context activated after user interaction');
+      }
+    };
+
+    // Добавляем слушатели для различных типов взаимодействия
+    document.addEventListener('click', handleFirstInteraction, { passive: true });
+    document.addEventListener('touchstart', handleFirstInteraction, { passive: true });
+    document.addEventListener('keydown', handleFirstInteraction, { passive: true });
+  }
+
   initAudioContext() {
+    if (this.contextInitialized) return;
+    
     try {
       this.context = new (window.AudioContext || window.webkitAudioContext)();
+      this.contextInitialized = true;
+      console.log('🔊 AudioContext successfully initialized');
     } catch (error) {
       console.warn('AudioContext не поддерживается:', error);
     }
