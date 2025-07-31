@@ -199,12 +199,15 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       return false;
     }
     
-    // CRITICAL FIX: Refresh data before validation to ensure accuracy
-    console.log('🔄 Refreshing data before battle validation...');
+    // CRITICAL FIX: Get fresh gem data for validation to ensure consistency
+    console.log('🔄 Getting fresh gem data for battle validation...');
     await refreshAllData();
     
+    // Use fresh gemsData from context after refresh
+    const currentGemsData = gemsData;
+    
     const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
-      const gem = gemsData.find(g => g.type === gemType);
+      const gem = currentGemsData.find(g => g.type === gemType);
       return sum + (gem ? gem.price * quantity : 0);
     }, 0);
     
@@ -213,9 +216,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       return false;
     }
     
-    // CRITICAL FIX: Use current gemsData after refresh for validation
+    // CRITICAL FIX: Use same gem data source for consistency
     for (const [gemType, quantity] of Object.entries(selectedGems)) {
-      const gem = gemsData.find(g => g.type === gemType);
+      const gem = currentGemsData.find(g => g.type === gemType);
       if (!gem) {
         showError(`Invalid gem type: ${gemType}`);
         return false;
