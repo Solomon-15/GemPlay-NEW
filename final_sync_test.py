@@ -178,11 +178,11 @@ def create_test_user(username: str, email: str) -> Tuple[Optional[str], Optional
     )
     
     if not verify_success:
-        print_error(f"Failed to verify email for {username}")
-        record_test(f"Email Verification - {username}", False, "Verification failed")
+        print_error(f"Failed to verify email for {unique_username}")
+        record_test(f"Email Verification - {unique_username}", False, "Verification failed")
         return None, None
     
-    print_success(f"Email verified for {username}")
+    print_success(f"Email verified for {unique_username}")
     
     # Login user
     login_response, login_success = make_request(
