@@ -409,314 +409,361 @@ class SoundManager {
     if (!this.context || !this.userInteracted) return;
 
     try {
-
-    const baseTime = this.context.currentTime;
-    const frequencies = [440, 554, 659, 880];
-    
-    frequencies.forEach((freq, index) => {
-      const delay = index * 0.1;
-      const oscillator = this.context.createOscillator();
-      const gainNode = this.context.createGain();
+      const baseTime = this.context.currentTime;
+      const frequencies = [440, 554, 659, 880];
       
-      oscillator.frequency.setValueAtTime(freq, baseTime + delay);
-      oscillator.frequency.exponentialRampToValueAtTime(freq * 1.5, baseTime + delay + 0.5);
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0, baseTime + delay);
-      gainNode.gain.linearRampToValueAtTime(0.3 * this.volume * volume, baseTime + delay + 0.1);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, baseTime + delay + 0.8);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(this.context.destination);
-      
-      oscillator.start(baseTime + delay);
-      oscillator.stop(baseTime + delay + 0.8);
-    });
+      frequencies.forEach((freq, index) => {
+        const delay = index * 0.1;
+        const oscillator = this.context.createOscillator();
+        const gainNode = this.context.createGain();
+        
+        oscillator.frequency.setValueAtTime(freq, baseTime + delay);
+        oscillator.frequency.exponentialRampToValueAtTime(freq * 1.5, baseTime + delay + 0.5);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, baseTime + delay);
+        gainNode.gain.linearRampToValueAtTime(0.3 * this.volume * volume, baseTime + delay + 0.1);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, baseTime + delay + 0.8);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.context.destination);
+        
+        oscillator.start(baseTime + delay);
+        oscillator.stop(baseTime + delay + 0.8);
+      });
     } catch (error) {
       console.warn('Error creating magical sound:', error);
     }
   }
 
   createVictorySound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const baseTime = this.context.currentTime;
-    const melody = [523, 659, 784, 1047]; // C5, E5, G5, C6
-    
-    melody.forEach((freq, index) => {
-      const delay = index * 0.15;
-      const oscillator = this.context.createOscillator();
-      const gainNode = this.context.createGain();
+    try {
+      const baseTime = this.context.currentTime;
+      const melody = [523, 659, 784, 1047]; // C5, E5, G5, C6
       
-      oscillator.frequency.setValueAtTime(freq, baseTime + delay);
-      oscillator.type = 'triangle';
-      
-      gainNode.gain.setValueAtTime(0, baseTime + delay);
-      gainNode.gain.linearRampToValueAtTime(0.4 * this.volume * volume, baseTime + delay + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, baseTime + delay + 0.3);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(this.context.destination);
-      
-      oscillator.start(baseTime + delay);
-      oscillator.stop(baseTime + delay + 0.3);
-    });
+      melody.forEach((freq, index) => {
+        const delay = index * 0.15;
+        const oscillator = this.context.createOscillator();
+        const gainNode = this.context.createGain();
+        
+        oscillator.frequency.setValueAtTime(freq, baseTime + delay);
+        oscillator.type = 'triangle';
+        
+        gainNode.gain.setValueAtTime(0, baseTime + delay);
+        gainNode.gain.linearRampToValueAtTime(0.4 * this.volume * volume, baseTime + delay + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, baseTime + delay + 0.3);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.context.destination);
+        
+        oscillator.start(baseTime + delay);
+        oscillator.stop(baseTime + delay + 0.3);
+      });
+    } catch (error) {
+      console.warn('Error creating victory sound:', error);
+    }
   }
 
   createDefeatSound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const oscillator = this.context.createOscillator();
-    const gainNode = this.context.createGain();
-    
-    oscillator.frequency.setValueAtTime(220, this.context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(110, this.context.currentTime + 0.8);
-    oscillator.type = 'sawtooth';
-    
-    gainNode.gain.setValueAtTime(0, this.context.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.2 * this.volume * volume, this.context.currentTime + 0.1);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.8);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.context.destination);
-    
-    oscillator.start(this.context.currentTime);
-    oscillator.stop(this.context.currentTime + 0.8);
+    try {
+      const oscillator = this.context.createOscillator();
+      const gainNode = this.context.createGain();
+      
+      oscillator.frequency.setValueAtTime(220, this.context.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(110, this.context.currentTime + 0.8);
+      oscillator.type = 'sawtooth';
+      
+      gainNode.gain.setValueAtTime(0, this.context.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.2 * this.volume * volume, this.context.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.8);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.context.destination);
+      
+      oscillator.start(this.context.currentTime);
+      oscillator.stop(this.context.currentTime + 0.8);
+    } catch (error) {
+      console.warn('Error creating defeat sound:', error);
+    }
   }
 
   createDrawSound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const oscillator = this.context.createOscillator();
-    const gainNode = this.context.createGain();
-    
-    oscillator.frequency.setValueAtTime(330, this.context.currentTime);
-    oscillator.type = 'square';
-    
-    gainNode.gain.setValueAtTime(0, this.context.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.15 * this.volume * volume, this.context.currentTime + 0.1);
-    gainNode.gain.linearRampToValueAtTime(0, this.context.currentTime + 0.3);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.context.destination);
-    
-    oscillator.start(this.context.currentTime);
-    oscillator.stop(this.context.currentTime + 0.3);
+    try {
+      const oscillator = this.context.createOscillator();
+      const gainNode = this.context.createGain();
+      
+      oscillator.frequency.setValueAtTime(330, this.context.currentTime);
+      oscillator.type = 'square';
+      
+      gainNode.gain.setValueAtTime(0, this.context.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.15 * this.volume * volume, this.context.currentTime + 0.1);
+      gainNode.gain.linearRampToValueAtTime(0, this.context.currentTime + 0.3);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.context.destination);
+      
+      oscillator.start(this.context.currentTime);
+      oscillator.stop(this.context.currentTime + 0.3);
+    } catch (error) {
+      console.warn('Error creating draw sound:', error);
+    }
   }
 
   createCoinSound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const frequencies = [800, 1000, 1200];
-    frequencies.forEach((freq, index) => {
-      const delay = index * 0.05;
-      const oscillator = this.context.createOscillator();
-      const gainNode = this.context.createGain();
-      
-      oscillator.frequency.setValueAtTime(freq, this.context.currentTime + delay);
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0, this.context.currentTime + delay);
-      gainNode.gain.linearRampToValueAtTime(0.25 * this.volume * volume, this.context.currentTime + delay + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + delay + 0.2);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(this.context.destination);
-      
-      oscillator.start(this.context.currentTime + delay);
-      oscillator.stop(this.context.currentTime + delay + 0.2);
-    });
+    try {
+      const frequencies = [800, 1000, 1200];
+      frequencies.forEach((freq, index) => {
+        const delay = index * 0.05;
+        const oscillator = this.context.createOscillator();
+        const gainNode = this.context.createGain();
+        
+        oscillator.frequency.setValueAtTime(freq, this.context.currentTime + delay);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, this.context.currentTime + delay);
+        gainNode.gain.linearRampToValueAtTime(0.25 * this.volume * volume, this.context.currentTime + delay + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + delay + 0.2);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.context.destination);
+        
+        oscillator.start(this.context.currentTime + delay);
+        oscillator.stop(this.context.currentTime + delay + 0.2);
+      });
+    } catch (error) {
+      console.warn('Error creating coin sound:', error);
+    }
   }
 
   createCrystalSound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    for (let i = 0; i < 8; i++) {
-      const delay = i * 0.02;
-      const freq = 800 + Math.random() * 800;
-      
-      const oscillator = this.context.createOscillator();
-      const gainNode = this.context.createGain();
-      
-      oscillator.frequency.setValueAtTime(freq, this.context.currentTime + delay);
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0, this.context.currentTime + delay);
-      gainNode.gain.linearRampToValueAtTime(0.1 * this.volume * volume, this.context.currentTime + delay + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + delay + 0.3);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(this.context.destination);
-      
-      oscillator.start(this.context.currentTime + delay);
-      oscillator.stop(this.context.currentTime + delay + 0.3);
+    try {
+      for (let i = 0; i < 8; i++) {
+        const delay = i * 0.02;
+        const freq = 800 + Math.random() * 800;
+        
+        const oscillator = this.context.createOscillator();
+        const gainNode = this.context.createGain();
+        
+        oscillator.frequency.setValueAtTime(freq, this.context.currentTime + delay);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, this.context.currentTime + delay);
+        gainNode.gain.linearRampToValueAtTime(0.1 * this.volume * volume, this.context.currentTime + delay + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + delay + 0.3);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.context.destination);
+        
+        oscillator.start(this.context.currentTime + delay);
+        oscillator.stop(this.context.currentTime + delay + 0.3);
+      }
+    } catch (error) {
+      console.warn('Error creating crystal sound:', error);
     }
   }
 
   createGiftSound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const baseTime = this.context.currentTime;
-    const melody = [659, 784, 988]; // E5, G5, B5
-    
-    melody.forEach((freq, index) => {
-      const delay = index * 0.1;
-      const oscillator = this.context.createOscillator();
-      const gainNode = this.context.createGain();
+    try {
+      const baseTime = this.context.currentTime;
+      const melody = [659, 784, 988]; // E5, G5, B5
       
-      oscillator.frequency.setValueAtTime(freq, baseTime + delay);
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0, baseTime + delay);
-      gainNode.gain.linearRampToValueAtTime(0.2 * this.volume * volume, baseTime + delay + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, baseTime + delay + 0.25);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(this.context.destination);
-      
-      oscillator.start(baseTime + delay);
-      oscillator.stop(baseTime + delay + 0.25);
-    });
+      melody.forEach((freq, index) => {
+        const delay = index * 0.1;
+        const oscillator = this.context.createOscillator();
+        const gainNode = this.context.createGain();
+        
+        oscillator.frequency.setValueAtTime(freq, baseTime + delay);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, baseTime + delay);
+        gainNode.gain.linearRampToValueAtTime(0.2 * this.volume * volume, baseTime + delay + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, baseTime + delay + 0.25);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.context.destination);
+        
+        oscillator.start(baseTime + delay);
+        oscillator.stop(baseTime + delay + 0.25);
+      });
+    } catch (error) {
+      console.warn('Error creating gift sound:', error);
+    }
   }
 
   createHoverSound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const oscillator = this.context.createOscillator();
-    const gainNode = this.context.createGain();
-    
-    oscillator.frequency.setValueAtTime(500, this.context.currentTime);
-    oscillator.type = 'sine';
-    
-    gainNode.gain.setValueAtTime(0, this.context.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.1 * this.volume * volume, this.context.currentTime + 0.02);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.1);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.context.destination);
-    
-    oscillator.start(this.context.currentTime);
-    oscillator.stop(this.context.currentTime + 0.1);
+    try {
+      const oscillator = this.context.createOscillator();
+      const gainNode = this.context.createGain();
+      
+      oscillator.frequency.setValueAtTime(500, this.context.currentTime);
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0, this.context.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.1 * this.volume * volume, this.context.currentTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.1);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.context.destination);
+      
+      oscillator.start(this.context.currentTime);
+      oscillator.stop(this.context.currentTime + 0.1);
+    } catch (error) {
+      console.warn('Error creating hover sound:', error);
+    }
   }
 
   createWooshSound(opening = true, volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const oscillator = this.context.createOscillator();
-    const gainNode = this.context.createGain();
-    
-    if (opening) {
-      oscillator.frequency.setValueAtTime(200, this.context.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(800, this.context.currentTime + 0.3);
-    } else {
-      oscillator.frequency.setValueAtTime(800, this.context.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(200, this.context.currentTime + 0.3);
+    try {
+      const oscillator = this.context.createOscillator();
+      const gainNode = this.context.createGain();
+      
+      if (opening) {
+        oscillator.frequency.setValueAtTime(200, this.context.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(800, this.context.currentTime + 0.3);
+      } else {
+        oscillator.frequency.setValueAtTime(800, this.context.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(200, this.context.currentTime + 0.3);
+      }
+      
+      oscillator.type = 'sawtooth';
+      
+      gainNode.gain.setValueAtTime(0, this.context.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.15 * this.volume * volume, this.context.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.3);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.context.destination);
+      
+      oscillator.start(this.context.currentTime);
+      oscillator.stop(this.context.currentTime + 0.3);
+    } catch (error) {
+      console.warn('Error creating woosh sound:', error);
     }
-    
-    oscillator.type = 'sawtooth';
-    
-    gainNode.gain.setValueAtTime(0, this.context.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.15 * this.volume * volume, this.context.currentTime + 0.1);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.3);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.context.destination);
-    
-    oscillator.start(this.context.currentTime);
-    oscillator.stop(this.context.currentTime + 0.3);
   }
 
   createNotificationSound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const frequencies = [523, 659, 523]; // C5, E5, C5
-    frequencies.forEach((freq, index) => {
-      const delay = index * 0.15;
-      const oscillator = this.context.createOscillator();
-      const gainNode = this.context.createGain();
-      
-      oscillator.frequency.setValueAtTime(freq, this.context.currentTime + delay);
-      oscillator.type = 'square';
-      
-      gainNode.gain.setValueAtTime(0, this.context.currentTime + delay);
-      gainNode.gain.linearRampToValueAtTime(0.2 * this.volume * volume, this.context.currentTime + delay + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + delay + 0.2);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(this.context.destination);
-      
-      oscillator.start(this.context.currentTime + delay);
-      oscillator.stop(this.context.currentTime + delay + 0.2);
-    });
+    try {
+      const frequencies = [523, 659, 523]; // C5, E5, C5
+      frequencies.forEach((freq, index) => {
+        const delay = index * 0.15;
+        const oscillator = this.context.createOscillator();
+        const gainNode = this.context.createGain();
+        
+        oscillator.frequency.setValueAtTime(freq, this.context.currentTime + delay);
+        oscillator.type = 'square';
+        
+        gainNode.gain.setValueAtTime(0, this.context.currentTime + delay);
+        gainNode.gain.linearRampToValueAtTime(0.2 * this.volume * volume, this.context.currentTime + delay + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + delay + 0.2);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.context.destination);
+        
+        oscillator.start(this.context.currentTime + delay);
+        oscillator.stop(this.context.currentTime + delay + 0.2);
+      });
+    } catch (error) {
+      console.warn('Error creating notification sound:', error);
+    }
   }
 
   createErrorSound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const oscillator = this.context.createOscillator();
-    const gainNode = this.context.createGain();
-    
-    oscillator.frequency.setValueAtTime(300, this.context.currentTime);
-    oscillator.frequency.linearRampToValueAtTime(250, this.context.currentTime + 0.15);
-    oscillator.frequency.linearRampToValueAtTime(300, this.context.currentTime + 0.3);
-    oscillator.type = 'square';
-    
-    gainNode.gain.setValueAtTime(0, this.context.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.2 * this.volume * volume, this.context.currentTime + 0.05);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.3);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.context.destination);
-    
-    oscillator.start(this.context.currentTime);
-    oscillator.stop(this.context.currentTime + 0.3);
-  }
-
-  createExpireSound(volume = 1) {
-    if (!this.context) return;
-
-    const oscillator = this.context.createOscillator();
-    const gainNode = this.context.createGain();
-    
-    oscillator.frequency.setValueAtTime(400, this.context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(200, this.context.currentTime + 1.0);
-    oscillator.type = 'triangle';
-    
-    gainNode.gain.setValueAtTime(0, this.context.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.25 * this.volume * volume, this.context.currentTime + 0.1);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 1.0);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.context.destination);
-    
-    oscillator.start(this.context.currentTime);
-    oscillator.stop(this.context.currentTime + 1.0);
-  }
-
-  createRewardSound(volume = 1) {
-    if (!this.context) return;
-
-    const baseTime = this.context.currentTime;
-    const melody = [523, 659, 784, 1047, 1319]; // C5, E5, G5, C6, E6
-    
-    melody.forEach((freq, index) => {
-      const delay = index * 0.1;
+    try {
       const oscillator = this.context.createOscillator();
       const gainNode = this.context.createGain();
       
-      oscillator.frequency.setValueAtTime(freq, baseTime + delay);
-      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(300, this.context.currentTime);
+      oscillator.frequency.linearRampToValueAtTime(250, this.context.currentTime + 0.15);
+      oscillator.frequency.linearRampToValueAtTime(300, this.context.currentTime + 0.3);
+      oscillator.type = 'square';
       
-      gainNode.gain.setValueAtTime(0, baseTime + delay);
-      gainNode.gain.linearRampToValueAtTime(0.3 * this.volume * volume, baseTime + delay + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, baseTime + delay + 0.4);
+      gainNode.gain.setValueAtTime(0, this.context.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.2 * this.volume * volume, this.context.currentTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 0.3);
       
       oscillator.connect(gainNode);
       gainNode.connect(this.context.destination);
       
-      oscillator.start(baseTime + delay);
-      oscillator.stop(baseTime + delay + 0.4);
-    });
+      oscillator.start(this.context.currentTime);
+      oscillator.stop(this.context.currentTime + 0.3);
+    } catch (error) {
+      console.warn('Error creating error sound:', error);
+    }
+  }
+
+  createExpireSound(volume = 1) {
+    if (!this.context || !this.userInteracted) return;
+
+    try {
+      const oscillator = this.context.createOscillator();
+      const gainNode = this.context.createGain();
+      
+      oscillator.frequency.setValueAtTime(400, this.context.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(200, this.context.currentTime + 1.0);
+      oscillator.type = 'triangle';
+      
+      gainNode.gain.setValueAtTime(0, this.context.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.25 * this.volume * volume, this.context.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + 1.0);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.context.destination);
+      
+      oscillator.start(this.context.currentTime);
+      oscillator.stop(this.context.currentTime + 1.0);
+    } catch (error) {
+      console.warn('Error creating expire sound:', error);
+    }
+  }
+
+  createRewardSound(volume = 1) {
+    if (!this.context || !this.userInteracted) return;
+
+    try {
+      const baseTime = this.context.currentTime;
+      const melody = [523, 659, 784, 1047, 1319]; // C5, E5, G5, C6, E6
+      
+      melody.forEach((freq, index) => {
+        const delay = index * 0.1;
+        const oscillator = this.context.createOscillator();
+        const gainNode = this.context.createGain();
+        
+        oscillator.frequency.setValueAtTime(freq, baseTime + delay);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, baseTime + delay);
+        gainNode.gain.linearRampToValueAtTime(0.3 * this.volume * volume, baseTime + delay + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, baseTime + delay + 0.4);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.context.destination);
+        
+        oscillator.start(baseTime + delay);
+        oscillator.stop(baseTime + delay + 0.4);
+      });
+    } catch (error) {
+      console.warn('Error creating reward sound:', error);
+    }
   }
 }
 
