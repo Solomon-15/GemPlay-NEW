@@ -628,11 +628,11 @@ def main():
     record_test("Setup - Player B Registration", True)
     
     if not purchase_gems_for_user(player_b_token, player_b_data["username"]):
-        print_error("Failed to purchase gems for Player B")
-        record_test("Setup - Player B Gem Purchase", False)
+        print_error("Failed to check gems for Player B")
+        record_test("Setup - Player B Gem Check", False)
         return
     
-    record_test("Setup - Player B Gem Purchase", True)
+    record_test("Setup - Player B Gem Check", True)
     
     # Create game as Player A
     game_id = create_game_as_player_a(player_a_token, player_a_data["username"])
