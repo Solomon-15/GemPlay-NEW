@@ -413,14 +413,15 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     );
   }
 
-  // **FIX: Check total gem value instead of only available gems**
-  // This fixes the issue where users with 865 gems worth $865 but some frozen
-  // couldn't join $800 bets even though they have enough total gems
-  const totalGemValue = gemsData.reduce((sum, gem) => 
-    sum + (gem.quantity * gem.price), 0  // Use total quantity, not just available
-  );
+  // **OPTIMIZED: Memoized gem value calculation to prevent infinite re-renders**
+  const totalGemValue = useMemo(() => {
+    const value = gemsData.reduce((sum, gem) => 
+      sum + (gem.quantity * gem.price), 0
+    );
+    return value;
+  }, [gemsData]);
   
-  console.log(`💎 GEM VALIDATION DEBUG: Total gem value: $${totalGemValue}, Target: $${targetAmount}`);
+  // **REMOVED DEBUG LOG** that was causing infinite console spam
   
   if (totalGemValue < targetAmount) {
     return (
