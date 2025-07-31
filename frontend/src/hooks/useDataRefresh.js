@@ -10,6 +10,7 @@ export const useDataRefresh = (onUpdateUser, showNotifications = false) => {
   const { refreshInventory } = useGems();
 
   const refreshAllData = useCallback(async () => {
+    // Only log when explicitly requested
     if (showNotifications) {
       console.log('🔄 Starting centralized data refresh...');
     }
@@ -28,6 +29,7 @@ export const useDataRefresh = (onUpdateUser, showNotifications = false) => {
       
       await Promise.all(promises);
       
+      // Only log when explicitly requested
       if (showNotifications) {
         console.log('✅ Centralized data refresh completed successfully');
       }
