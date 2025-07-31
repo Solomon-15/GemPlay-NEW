@@ -5204,6 +5204,34 @@ async def handle_game_timeout(game_id: str):
             logger.info(f"🔄 Recreating bet for creator {game_obj.creator_id} with new commit-reveal")
             logger.info(f"🔄 New move: {new_move}, New salt: {new_salt[:8]}...")
             
+            # **FIX: Return creator's commission before recreating bet**
+            if not is_regular_bot_game:
+                creator_commission = game_obj.bet_amount * 0.03
+                await db.users.update_one(
+                    {"id": game_obj.creator_id},
+                    {
+                        "$inc": {
+                            "virtual_balance": creator_commission,  # Return to available balance
+                            "frozen_balance": -creator_commission   # Remove from frozen
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                logger.info(f"💰 Returned ${creator_commission} commission to creator {game_obj.creator_id} before recreating bet")
+                
+                # **Re-freeze commission for new bet creation**
+                await db.users.update_one(
+                    {"id": game_obj.creator_id},
+                    {
+                        "$inc": {
+                            "virtual_balance": -creator_commission,  # Deduct from available balance
+                            "frozen_balance": creator_commission     # Add to frozen balance
+                        },
+                        "$set": {"updated_at": datetime.utcnow()}
+                    }
+                )
+                logger.info(f"💰 Re-frozen ${creator_commission} commission for creator {game_obj.creator_id} during bet recreation")
+            
             # Recreate bet for creator with NEW commit-reveal data
             await db.games.update_one(
                 {"id": game_id},
