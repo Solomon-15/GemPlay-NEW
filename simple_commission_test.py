@@ -361,6 +361,11 @@ class SimpleCommissionTest:
             
         # Step 4: Purchase gems for both users
         print("\n💎 Purchasing gems for users...")
+        
+        # Check balance before gem purchase
+        user1_balance_check = self.get_user_balance(self.user1_token)
+        print(f"User1 balance before gem purchase: {user1_balance_check}")
+        
         if not self.purchase_gems_for_user(self.user1_token):
             print("❌ CRITICAL: Failed to purchase gems for User1")
             return False
