@@ -25,7 +25,7 @@ export const GemsProvider = ({ children }) => {
     
     const globalRefresh = getGlobalLobbyRefresh();
     const unregister = globalRefresh.registerRefreshCallback(() => {
-      console.log('💎 GemsContext auto-refresh triggered by global operation');
+      // Reduced logging for performance
       fetchInventoryData();
     });
     
