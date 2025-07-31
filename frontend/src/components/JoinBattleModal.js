@@ -446,10 +446,12 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   }
 
   const renderCurrentStep = () => {
-    const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
-      const gem = gemsData.find(g => g.type === gemType);
-      return sum + (gem ? gem.price * quantity : 0);
-    }, 0);
+    const selectedGemValue = useMemo(() => {
+      return Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
+        const gem = gemsData.find(g => g.type === gemType);
+        return sum + (gem ? gem.price * quantity : 0);
+      }, 0);
+    }, [selectedGems, gemsData]);
 
     switch (currentStep) {
       case 1:
