@@ -249,14 +249,9 @@ def add_gems_to_user(token: str, username: str, gems: Dict[str, int]) -> bool:
     total_gems = len(gems)
     
     for gem_type, quantity in gems.items():
-        purchase_data = {
-            "gem_type": gem_type,
-            "quantity": quantity
-        }
-        
+        # Use query parameters for gem purchase
         response, success = make_request(
-            "POST", "/gems/buy", 
-            data=purchase_data, 
+            "POST", f"/gems/buy?gem_type={gem_type}&quantity={quantity}", 
             auth_token=token
         )
         
