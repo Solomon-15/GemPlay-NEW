@@ -471,7 +471,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         return (
           <MoveSelectionStep
             targetAmount={targetAmount}
-            totalGemValue={totalGemValue}
+            totalGemValue={selectedGemValue}
             selectedMove={selectedMove}
             onSelectedMoveChange={setSelectedMove}
           />
@@ -482,7 +482,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             battleResult={battleResult}
             selectedMove={selectedMove}
             targetAmount={targetAmount}
-            totalGemValue={totalGemValue}
+            totalGemValue={selectedGemValue}
             commissionAmount={commissionAmount}
             playerData={{
               player: user,
