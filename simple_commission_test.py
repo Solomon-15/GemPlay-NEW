@@ -69,6 +69,48 @@ class SimpleCommissionTest:
         random_suffix = ''.join(random.choices(string.ascii_lowercase, k=4))
         return f"{prefix}_{timestamp}_{random_suffix}"
         
+    def try_existing_users(self) -> Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]:
+        """Try to use existing users that might already have balance"""
+        try:
+            # Try common test user credentials
+            test_users = [
+                {"email": "player1@test.com", "password": "Test123!"},
+                {"email": "player2@test.com", "password": "Test123!"},
+                {"email": "testuser@test.com", "password": "Test123!"},
+                {"email": "user1@test.com", "password": "Test123!"},
+                {"email": "user2@test.com", "password": "Test123!"}
+            ]
+            
+            successful_users = []
+            
+            for user_creds in test_users:
+                try:
+                    login_response = self.session.post(f"{BASE_URL}/auth/login", json=user_creds)
+                    if login_response.status_code == 200:
+                        login_data = login_response.json()
+                        user_token = login_data["access_token"]
+                        user_id = login_data["user"]["id"]
+                        
+                        # Check if user has balance
+                        balance = self.get_user_balance(user_token)
+                        if balance and balance["virtual_balance"] > 50:  # Need at least $50 for gems
+                            successful_users.append((user_id, user_token))
+                            print(f"Found existing user with balance: {user_creds['email']} - ${balance['virtual_balance']:.2f}")
+                            
+                            if len(successful_users) >= 2:
+                                break
+                except:
+                    continue
+                    
+            if len(successful_users) >= 2:
+                return successful_users[0][0], successful_users[0][1], successful_users[1][0], successful_users[1][1]
+            else:
+                return None, None, None, None
+                
+        except Exception as e:
+            print(f"Error trying existing users: {e}")
+            return None, None, None, None
+        
     def admin_login(self) -> bool:
         """Login as admin"""
         try:
