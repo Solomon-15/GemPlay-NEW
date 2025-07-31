@@ -217,6 +217,11 @@ class SimpleCommissionTest:
                 headers=headers
             )
             
+            if ruby_response.status_code != 200:
+                print(f"Ruby purchase error: {ruby_response.json()}")
+            if emerald_response.status_code != 200:
+                print(f"Emerald purchase error: {emerald_response.json()}")
+            
             if ruby_response.status_code == 200 and emerald_response.status_code == 200:
                 self.log_result("Purchase Gems", True, "Purchased Ruby: 15, Emerald: 2 ($35 total)")
                 return True
