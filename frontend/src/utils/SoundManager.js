@@ -355,23 +355,27 @@ class SoundManager {
 
   
   createClickSound(frequency = 800, duration = 0.1, waveType = 'sine') {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    const oscillator = this.context.createOscillator();
-    const gainNode = this.context.createGain();
-    
-    oscillator.frequency.setValueAtTime(frequency, this.context.currentTime);
-    oscillator.type = waveType;
-    
-    gainNode.gain.setValueAtTime(0, this.context.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3 * this.volume, this.context.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + duration);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.context.destination);
-    
-    oscillator.start(this.context.currentTime);
-    oscillator.stop(this.context.currentTime + duration);
+    try {
+      const oscillator = this.context.createOscillator();
+      const gainNode = this.context.createGain();
+      
+      oscillator.frequency.setValueAtTime(frequency, this.context.currentTime);
+      oscillator.type = waveType;
+      
+      gainNode.gain.setValueAtTime(0, this.context.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3 * this.volume, this.context.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + duration);
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.context.destination);
+      
+      oscillator.start(this.context.currentTime);
+      oscillator.stop(this.context.currentTime + duration);
+    } catch (error) {
+      console.warn('Error creating click sound:', error);
+    }
   }
 
   createTingSound(frequencies = [600, 800], duration = 0.3) {
