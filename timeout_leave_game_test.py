@@ -186,40 +186,41 @@ def register_and_verify_user(user_data: Dict[str, str]) -> Optional[str]:
     return auth_token
 
 def purchase_gems_for_user(auth_token: str, username: str) -> bool:
-    """Purchase gems for a user."""
-    print_subheader(f"Purchasing Gems for {username}")
+    """Check user's initial gems (users get gems automatically on registration)."""
+    print_subheader(f"Checking Initial Gems for {username}")
     
-    # Add balance first
-    balance_response, balance_success = make_request(
-        "POST", "/user/balance/add",
-        data={"amount": 100.0},
+    # Check user gems inventory
+    gems_response, gems_success = make_request(
+        "GET", "/gems/inventory",
         auth_token=auth_token
     )
     
-    if not balance_success:
-        print_error(f"Failed to add balance: {balance_response}")
+    if not gems_success:
+        print_error(f"Failed to get user gems: {gems_response}")
         return False
     
-    print_success("Added $100 to user balance")
+    if "gems" in gems_response:
+        gems = gems_response["gems"]
+    else:
+        gems = gems_response  # Response might be the gems array directly
     
-    # Purchase gems: Ruby: 20, Emerald: 5 (enough for $35 bet)
-    gem_purchases = [
-        {"gem_type": "Ruby", "quantity": 20},  # $20
-        {"gem_type": "Emerald", "quantity": 5}  # $50
-    ]
+    print_success(f"User has {len(gems)} gem types")
     
-    for purchase in gem_purchases:
-        purchase_response, purchase_success = make_request(
-            "POST", "/user/gems/purchase",
-            data=purchase,
-            auth_token=auth_token
-        )
-        
-        if not purchase_success:
-            print_error(f"Failed to purchase {purchase['quantity']} {purchase['gem_type']}: {purchase_response}")
-            return False
-        
-        print_success(f"Purchased {purchase['quantity']} {purchase['gem_type']} gems")
+    # Check if user has enough gems for a $35 bet (Ruby: 15, Emerald: 2)
+    ruby_gems = next((gem for gem in gems if gem["type"] == "Ruby"), None)
+    emerald_gems = next((gem for gem in gems if gem["type"] == "Emerald"), None)
+    
+    if ruby_gems and ruby_gems["quantity"] >= 15:
+        print_success(f"Ruby gems: {ruby_gems['quantity']} (need 15)")
+    else:
+        print_error(f"Not enough Ruby gems: {ruby_gems['quantity'] if ruby_gems else 0} (need 15)")
+        return False
+    
+    if emerald_gems and emerald_gems["quantity"] >= 2:
+        print_success(f"Emerald gems: {emerald_gems['quantity']} (need 2)")
+    else:
+        print_error(f"Not enough Emerald gems: {emerald_gems['quantity'] if emerald_gems else 0} (need 2)")
+        return False
     
     return True
 
