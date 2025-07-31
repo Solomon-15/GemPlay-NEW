@@ -248,6 +248,10 @@ function App() {
     setLoading(false);
   };
 
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
   const handleLogin = (userData) => {
     console.log('🚀 handleLogin called with userData:', userData);
     setUser(userData);
