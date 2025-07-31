@@ -179,7 +179,10 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         );
         
         setOngoingBattles(uniqueOngoingBattles);
-        console.log(`⚔️ Final Ongoing Battles: ${uniqueOngoingBattles.length} total battles (${userOngoingBattles.length} from my-bets + ${activeUserGames.length} from available + ${humanBotGames.length} human-bot games)`);
+        // Only log when there are significant changes
+        if (uniqueOngoingBattles.length > 0) {
+          console.log(`⚔️ Final Ongoing Battles: ${uniqueOngoingBattles.length} total battles`);
+        }
       } catch (error) {
         console.error('Error fetching Human-bot games:', error);
         // Fallback: combine user battles with active user games
