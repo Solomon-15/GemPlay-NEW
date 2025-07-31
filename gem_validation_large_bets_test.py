@@ -353,9 +353,9 @@ def test_player_b_join_large_bet(game_id: str):
     inventory_b_before = get_gem_inventory(token_b)
     if inventory_b_before:
         magic_gems_b_before = None
-        for gem in inventory_b_before.get("gems", []):
+        for gem in inventory_b_before:  # inventory_b_before is now a list
             if gem["type"] == "Magic":
-                magic_gems_b_before = gem["available_quantity"]
+                magic_gems_b_before = gem.get("quantity", 0) - gem.get("frozen_quantity", 0)  # Calculate available
                 break
         
         record_test("Player B Join - Inventory Check Before", True, 
@@ -374,10 +374,10 @@ def test_player_b_join_large_bet(game_id: str):
         if inventory_b_after:
             magic_gems_b_after = None
             magic_gems_b_frozen = None
-            for gem in inventory_b_after.get("gems", []):
+            for gem in inventory_b_after:  # inventory_b_after is now a list
                 if gem["type"] == "Magic":
-                    magic_gems_b_after = gem["available_quantity"]
-                    magic_gems_b_frozen = gem["frozen_quantity"]
+                    magic_gems_b_after = gem.get("quantity", 0) - gem.get("frozen_quantity", 0)  # Calculate available
+                    magic_gems_b_frozen = gem.get("frozen_quantity", 0)
                     break
             
             record_test("Player B Join - Gems Frozen After Join", True, 
