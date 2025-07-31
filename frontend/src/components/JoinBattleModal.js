@@ -496,8 +496,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  const canGoNext = () => {
-    const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
+  const canGoNext = useMemo(() => {
+    const selectedGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
       return sum + (gem ? gem.price * quantity : 0);
     }, 0);
@@ -505,13 +505,13 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     switch (currentStep) {
       case 1:
         return Object.keys(selectedGems).length > 0 && 
-               Math.abs(totalGemValue - targetAmount) <= 0.01;
+               Math.abs(selectedGemValue - targetAmount) <= 0.01;
       case 2:
         return selectedMove !== '';
       default:
         return false;
     }
-  };
+  }, [selectedGems, gemsData, currentStep, targetAmount, selectedMove]);
 
   const goToNextStep = () => {
     if (currentStep === 1) {
