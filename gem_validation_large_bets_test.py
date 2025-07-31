@@ -147,9 +147,15 @@ def buy_gems(token: str, gem_purchases: List[Dict[str, Any]]) -> bool:
             gem_type = purchase["gem_type"]
             quantity = purchase["quantity"]
             
+            # Use query parameters instead of JSON body
+            params = {
+                "gem_type": gem_type,
+                "quantity": quantity
+            }
+            
             response = requests.post(
                 f"{BASE_URL}/gems/buy",
-                json={"gem_type": gem_type, "quantity": quantity},
+                params=params,
                 headers=headers
             )
             
