@@ -284,9 +284,9 @@ def test_large_bet_creation():
     inventory_before = get_gem_inventory(token_a)
     if inventory_before:
         magic_gems_before = None
-        for gem in inventory_before.get("gems", []):
+        for gem in inventory_before:  # inventory_before is now a list
             if gem["type"] == "Magic":
-                magic_gems_before = gem["available_quantity"]
+                magic_gems_before = gem.get("quantity", 0) - gem.get("frozen_quantity", 0)  # Calculate available
                 break
         
         record_test("Large Bet Creation - Inventory Check Before", True, 
@@ -304,10 +304,10 @@ def test_large_bet_creation():
         if inventory_after:
             magic_gems_after = None
             magic_gems_frozen = None
-            for gem in inventory_after.get("gems", []):
+            for gem in inventory_after:  # inventory_after is now a list
                 if gem["type"] == "Magic":
-                    magic_gems_after = gem["available_quantity"]
-                    magic_gems_frozen = gem["frozen_quantity"]
+                    magic_gems_after = gem.get("quantity", 0) - gem.get("frozen_quantity", 0)  # Calculate available
+                    magic_gems_frozen = gem.get("frozen_quantity", 0)
                     break
             
             record_test("Large Bet Creation - Gems Frozen Check", True, 
