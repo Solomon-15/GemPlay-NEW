@@ -489,7 +489,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   };
 
   const goToNextStep = () => {
-    if (currentStep === 2) {
+    if (currentStep === 1) {
+      // Step 1 → Step 2: Join game and move to move selection
+      joinGame();
+    } else if (currentStep === 2) {
+      // Step 2 → Step 3: Complete battle (choose move and finish)
       startBattle();
     } else if (canGoNext()) {
       setCurrentStep(prev => prev + 1);
