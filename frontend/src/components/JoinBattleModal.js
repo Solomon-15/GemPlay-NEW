@@ -334,12 +334,19 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     return () => clearInterval(timer);
   }, [currentStep, hasJoinedGame]);
 
-  const handleStrategySelect = (strategy) => {
+  const handleStrategySelect = async (strategy) => {
     setLoading(true);
     
     try {
-      // Use new frontend algorithms
-      const result = calculateGemCombination(strategy, gemsData, targetAmount);
+      // CRITICAL FIX: Ensure we have fresh gem data before strategy selection
+      console.log('💎 Refreshing gem data before strategy selection...');
+      await refreshAllData();
+      
+      // Use updated gemsData after refresh
+      const currentGemsData = gemsData.length > 0 ? gemsData : await refreshInventory();
+      
+      // Use new frontend algorithms with fresh data
+      const result = calculateGemCombination(strategy, currentGemsData, targetAmount);
       
       if (result.success) {
         // Convert result to internal format
