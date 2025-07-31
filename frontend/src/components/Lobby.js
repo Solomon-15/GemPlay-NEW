@@ -56,7 +56,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     
     const globalRefresh = getGlobalLobbyRefresh();
     const unregister = globalRefresh.registerRefreshCallback(() => {
-      console.log('🔄 Lobby auto-refresh triggered by operation');
+      // Reduced logging for performance
       fetchLobbyData();
     });
     
