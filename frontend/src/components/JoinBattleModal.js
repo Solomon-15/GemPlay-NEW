@@ -200,7 +200,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
     
     // CRITICAL FIX: Get fresh gem data for validation to ensure consistency
-    console.log('🔄 Getting fresh gem data for battle validation...');
     await refreshAllData();
     
     // Use fresh gemsData from context after refresh
