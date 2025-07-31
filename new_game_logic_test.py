@@ -12,7 +12,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://b06afae6-fa27-406a-847e-fa79e0465691.preview.emergentagent.com/api"
+BACKEND_URL = "https://acffc923-2545-42ed-a41d-4e93fa17c383.preview.emergentagent.com/api"
 
 class NewGameLogicTester:
     def __init__(self):
