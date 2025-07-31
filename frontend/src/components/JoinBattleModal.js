@@ -107,19 +107,15 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       if (result.status === 'ACTIVE') {
         console.log('🎮 Game is now ACTIVE - moving to step 2 for move selection');
         
-        // Immediately update lobby to move game from Available Bets to Ongoing Battles
-        if (onUpdateUser) {
-          onUpdateUser();
-        }
+        // FIXED: Use centralized data refresh to prevent desynchronization
+        await refreshAllData();
+        
         const globalRefresh = getGlobalLobbyRefresh();
         globalRefresh.triggerLobbyRefresh();
         console.log('⚔️ Game status ACTIVE - triggering immediate lobby refresh');
         
-        // Additional forced refresh after short delay to ensure UI update
-        setTimeout(() => {
-          globalRefresh.triggerLobbyRefresh();
-          console.log('⚔️ Additional delayed lobby refresh for UI consistency');
-        }, 500);
+        // Additional delayed refresh with data synchronization
+        await refreshWithDelay(500);
         
         // Move to step 2 for move selection
         setCurrentStep(2);
@@ -132,6 +128,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       console.error('🚨 Join game error:', error);
       showError(error.message || 'Ошибка при присоединении к игре');
       setHasJoinedGame(false); // Reset if failed
+      
+      // FIXED: Refresh data even on error to ensure consistency
+      await refreshAllData();
     } finally {
       setLoading(false);
     }
