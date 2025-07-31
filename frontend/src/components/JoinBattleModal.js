@@ -656,7 +656,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
               <button
                 type="button"
                 onClick={goToNextStep}
-                disabled={loading || !canGoNext()}
+                disabled={loading || !canGoNext}
                 className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
               >
                 {currentStep === 2 ? 'Start Battle!' : 'Next'}
