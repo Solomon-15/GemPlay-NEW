@@ -339,7 +339,7 @@ export const calculateSmartStrategy = (gemsData, targetAmount) => {
           selectedGems[gem.type] = currentUsed + 1;
           remaining -= gem.price;
           foundGem = true;
-          console.log(`Smart Strategy Phase 2: Using ${gem.name} #${currentUsed + 1}/${gem.availableQuantity}, remaining: $${remaining.toFixed(2)}`);
+          // Using gem for smart strategy phase 2
           break;
         }
       }
