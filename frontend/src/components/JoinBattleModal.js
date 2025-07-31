@@ -223,7 +223,10 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         return false;
       }
       
-      console.log(`💎 Validating ${gemType}: Available ${gem.available_quantity}, Required ${quantity}`);
+      // Only log critical validation details for debugging
+      if (gem.available_quantity < quantity) {
+        console.log(`💎 Validating ${gemType}: Available ${gem.available_quantity}, Required ${quantity}`);
+      }
       
       if (gem.available_quantity < quantity) {
         showError(`Insufficient ${gem.name} gems. Available: ${gem.available_quantity}, Required: ${quantity}`);
