@@ -205,15 +205,13 @@ class SimpleCommissionTest:
             
             # Purchase Ruby gems (15 * $1 = $15)
             ruby_response = self.session.post(
-                f"{BASE_URL}/gems/buy",
-                json={"gem_type": "Ruby", "quantity": 15},
+                f"{BASE_URL}/gems/buy?gem_type=Ruby&quantity=15",
                 headers=headers
             )
             
             # Purchase Emerald gems (2 * $10 = $20)
             emerald_response = self.session.post(
-                f"{BASE_URL}/gems/buy", 
-                json={"gem_type": "Emerald", "quantity": 2},
+                f"{BASE_URL}/gems/buy?gem_type=Emerald&quantity=2",
                 headers=headers
             )
             
