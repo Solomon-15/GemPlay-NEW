@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useGems } from '../components/GemsContext';
 
 /**
@@ -8,8 +8,20 @@ import { useGems } from '../components/GemsContext';
  */
 export const useDataRefresh = (onUpdateUser, showNotifications = false) => {
   const { refreshInventory } = useGems();
+  const lastRefreshTime = useRef(0);
+  const THROTTLE_DELAY = 1000; // Prevent calls more than once per second
 
   const refreshAllData = useCallback(async () => {
+    // Throttle to prevent excessive calls
+    const now = Date.now();
+    if (now - lastRefreshTime.current < THROTTLE_DELAY) {
+      if (showNotifications) {
+        console.log('🔄 Data refresh throttled (too frequent)');
+      }
+      return true;
+    }
+    lastRefreshTime.current = now;
+    
     // Only log when explicitly requested
     if (showNotifications) {
       console.log('🔄 Starting centralized data refresh...');
