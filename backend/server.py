@@ -6320,57 +6320,14 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     )
                     await db.profit_entries.insert_one(profit_entry.dict())
             
-            # **FIX: Handle commission properly for Human-bot games**
-            # Check if any player is a Human-bot to determine commission rules
-            creator_is_human_bot = await is_human_bot_user(game.creator_id)
-            opponent_is_human_bot = await is_human_bot_user(game.opponent_id)
-            has_human_bot_player = creator_is_human_bot or opponent_is_human_bot
+            # **CORRECTED COMMISSION LOGIC according to new table:**
+            # For ALL game types (except Regular bot): ONLY WINNER pays commission
+            # No special logic for Human-bots - same rules for everyone
             
-            if not is_regular_bot_game and has_human_bot_player:
-                # **CORRECTED COMMISSION LOGIC for Human-bot games:**
-                # Both players pay commission (not just winner)
-                loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
-                loser = await db.users.find_one({"id": loser_id})
-                
-                if loser:
-                    loser_commission = game.bet_amount * 0.03
-                    await db.users.update_one(
-                        {"id": loser_id},
-                        {
-                            "$inc": {
-                                "frozen_balance": -loser_commission   # Remove from frozen_balance (commission taken)
-                            },
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
-                    logger.info(f"💰 HUMAN-BOT GAME - Collected ${loser_commission} commission from loser {loser_id}")
-                    
-                    # Record profit entry from loser's commission
-                    is_loser_human_bot = await is_human_bot_user(loser_id)
-                    entry_type = "HUMAN_BOT_COMMISSION" if is_loser_human_bot else "BET_COMMISSION"
-                    
-                    profit_entry = ProfitEntry(
-                        entry_type=entry_type,
-                        amount=loser_commission,
-                        source_user_id=loser_id,
-                        reference_id=game.id,
-                        description=f"3% commission from Human-bot game loser (${game.bet_amount} bet)"
-                    )
-                    await db.profit_entries.insert_one(profit_entry.dict())
-                    
-                    # Update Human-bot total commission if loser is a Human-bot
-                    if is_loser_human_bot:
-                        await db.human_bots.update_one(
-                            {"id": loser_id},
-                            {"$inc": {"total_commission_paid": loser_commission}}
-                        )
-                        
-                logger.info(f"💰 HUMAN-BOT GAME - Both winner and loser pay commission (${loser_commission} each)")
-                        
-            elif not is_regular_bot_game and not has_human_bot_player:
-                # **REGULAR HUMAN vs HUMAN game - only winner pays commission**
-                logger.info(f"💰 HUMAN vs HUMAN GAME - Only winner pays commission (${commission_amount})")
-                # Winner's commission is already handled above, no loser commission for human vs human
+            if not is_regular_bot_game:
+                # Winner's commission is already handled above in the winner section
+                # No additional commission processing needed for other players
+                logger.info(f"💰 ALL GAME TYPES - Only winner pays commission (${commission_amount})")
             
         else:
             # Draw - return frozen commissions to both players (only if commission was charged)
