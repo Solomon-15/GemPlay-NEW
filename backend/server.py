@@ -3469,21 +3469,29 @@ async def get_user_gems(current_user: User = Depends(get_current_user)):
     # Create a map of gem definitions
     gem_def_map = {gem["type"]: gem for gem in gem_definitions}
     
+    # Create a map of user gems for quick lookup
+    user_gem_map = {user_gem["gem_type"]: user_gem for user_gem in user_gems}
+    
     result = []
-    for user_gem in user_gems:
-        if user_gem["quantity"] > 0:  # Only return gems with positive quantity
-            gem_def = gem_def_map.get(user_gem["gem_type"])
-            if gem_def:
-                result.append(GemResponse(
-                    type=gem_def["type"],
-                    name=gem_def["name"],
-                    price=gem_def["price"],
-                    color=gem_def["color"],
-                    icon=gem_def["icon"],
-                    rarity=gem_def["rarity"],
-                    quantity=user_gem["quantity"],
-                    frozen_quantity=user_gem["frozen_quantity"]
-                ))
+    
+    # CRITICAL FIX: Return ALL gem types, even if user doesn't have any
+    # This ensures frontend always has complete gem data for validation
+    for gem_def in gem_definitions:
+        user_gem = user_gem_map.get(gem_def["type"], {
+            "quantity": 0,
+            "frozen_quantity": 0
+        })
+        
+        result.append(GemResponse(
+            type=gem_def["type"],
+            name=gem_def["name"],
+            price=gem_def["price"],
+            color=gem_def["color"],
+            icon=gem_def["icon"],
+            rarity=gem_def["rarity"],
+            quantity=user_gem["quantity"],
+            frozen_quantity=user_gem["frozen_quantity"]
+        ))
     
     # Sort by price ascending
     result.sort(key=lambda x: x.price)
