@@ -13,7 +13,7 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
       
       const token = localStorage.getItem('token');
       
-      const balanceResponse = await axios.get(`${API}/economy/balance`, {
+      const balanceResponse = await axios.get(`${API}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
