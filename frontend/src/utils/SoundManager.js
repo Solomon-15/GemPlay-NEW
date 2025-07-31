@@ -13,10 +13,12 @@ class SoundManager {
     this.sounds = new Map(); // Хранилище звуков по event_trigger
     this.audioCache = new Map(); // Кэш аудиофайлов
     this.context = null;
+    this.contextInitialized = false;
+    this.userInteracted = false;
     this.currentlyPlaying = null; // Для системы приоритетов
     this.criticalSounds = new Set(); // Критичные звуки для предзагрузки
     
-    this.initAudioContext();
+    // НЕ инициализируем AudioContext сразу - ждем пользовательского взаимодействия
     this.loadSettings();
     this.loadSounds();
     
@@ -31,6 +33,9 @@ class SoundManager {
       'покупка_гема',
       'продажа_гема'
     ]);
+
+    // Слушатели для первого пользовательского взаимодействия
+    this.setupUserInteractionListeners();
   }
 
   initAudioContext() {
