@@ -53,10 +53,12 @@ export const GemsProvider = ({ children }) => {
       });
 
       const userGems = inventoryResponse.data || [];
+      console.log('💎 Raw inventory data received:', userGems.length, 'gems');
       
       // Get gem definitions for types/prices
       const definitionsResponse = await axios.get(`${API}/gems/definitions`);
       const definitions = definitionsResponse.data || [];
+      console.log('💎 Raw definitions data received:', definitions.length, 'definitions');
       
       // Create complete gem data structure
       const completeGemsData = definitions.map(def => {
