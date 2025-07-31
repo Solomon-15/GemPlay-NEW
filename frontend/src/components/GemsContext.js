@@ -90,8 +90,8 @@ export const GemsProvider = ({ children }) => {
           last_updated: userGem ? userGem.updated_at : null
         };
         
-        // Log critical gem data for debugging
-        if (def.type === 'Magic') {
+        // Only log critical gem data for debugging Magic gems (most expensive)
+        if (def.type === 'Magic' && userGem && userGem.quantity > 0) {
           console.log(`💎 Magic gem data constructed:`, {
             total: gemData.quantity,
             frozen: gemData.frozen_quantity,
