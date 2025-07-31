@@ -116,10 +116,7 @@ const getAvailableGems = (gemsData) => {
       color: gem.color
     }));
   
-  // Debug logging
-  console.log('Available gems for strategy:', availableGems.map(g => 
-    `${g.name}: ${g.availableQuantity}/${g.totalQuantity} available (${g.frozenQuantity} frozen)`
-  ));
+  // Removed debug logging for performance optimization
   
   return availableGems;
 };
