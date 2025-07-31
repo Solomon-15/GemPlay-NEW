@@ -383,42 +383,58 @@ class SimpleCommissionTest:
             print("❌ CRITICAL: Admin login failed, cannot continue")
             return False
             
-        # Step 2: Create test users
-        print("\n📝 Creating test users...")
-        self.user1_id, self.user1_token = self.create_and_verify_user("User1_Creator")
-        if not self.user1_token:
-            print("❌ CRITICAL: User1 creation failed")
-            return False
-            
-        self.user2_id, self.user2_token = self.create_and_verify_user("User2_Joiner")  
-        if not self.user2_token:
-            print("❌ CRITICAL: User2 creation failed")
-            return False
-            
-        # Step 3: Add balance to both users
-        print("\n💰 Adding balance to users...")
-        if not self.add_balance_to_user(self.user1_token, 100.0):
-            print("❌ CRITICAL: Failed to add balance to User1")
-            return False
-            
-        if not self.add_balance_to_user(self.user2_token, 100.0):
-            print("❌ CRITICAL: Failed to add balance to User2")
-            return False
-            
-        # Step 4: Purchase gems for both users
-        print("\n💎 Purchasing gems for users...")
+        # Step 2: Try existing users first, then create new ones if needed
+        print("\n📝 Trying existing users first...")
+        self.user1_id, self.user1_token, self.user2_id, self.user2_token = self.try_existing_users()
         
-        # Check balance before gem purchase
-        user1_balance_check = self.get_user_balance(self.user1_token)
-        print(f"User1 balance before gem purchase: {user1_balance_check}")
-        
-        if not self.purchase_gems_for_user(self.user1_token):
-            print("❌ CRITICAL: Failed to purchase gems for User1")
-            return False
+        if not self.user1_token or not self.user2_token:
+            print("No suitable existing users found, creating new ones...")
+            self.user1_id, self.user1_token = self.create_and_verify_user("User1_Creator")
+            if not self.user1_token:
+                print("❌ CRITICAL: User1 creation failed")
+                return False
+                
+            self.user2_id, self.user2_token = self.create_and_verify_user("User2_Joiner")  
+            if not self.user2_token:
+                print("❌ CRITICAL: User2 creation failed")
+                return False
+                
+            # Step 3: Add balance to both users
+            print("\n💰 Adding balance to users...")
+            if not self.add_balance_to_user(self.user1_token, 100.0):
+                print("❌ CRITICAL: Failed to add balance to User1")
+                return False
+                
+            if not self.add_balance_to_user(self.user2_token, 100.0):
+                print("❌ CRITICAL: Failed to add balance to User2")
+                return False
+                
+            # Step 4: Purchase gems for both users
+            print("\n💎 Purchasing gems for users...")
             
-        if not self.purchase_gems_for_user(self.user2_token):
-            print("❌ CRITICAL: Failed to purchase gems for User2")
-            return False
+            # Check balance before gem purchase
+            user1_balance_check = self.get_user_balance(self.user1_token)
+            print(f"User1 balance before gem purchase: {user1_balance_check}")
+            
+            if not self.purchase_gems_for_user(self.user1_token):
+                print("❌ CRITICAL: Failed to purchase gems for User1")
+                return False
+                
+            if not self.purchase_gems_for_user(self.user2_token):
+                print("❌ CRITICAL: Failed to purchase gems for User2")
+                return False
+        else:
+            print("✅ Using existing users with sufficient balance")
+            
+            # Check if they have enough gems, if not purchase them
+            print("\n💎 Ensuring users have required gems...")
+            if not self.purchase_gems_for_user(self.user1_token):
+                print("❌ CRITICAL: Failed to purchase gems for User1")
+                return False
+                
+            if not self.purchase_gems_for_user(self.user2_token):
+                print("❌ CRITICAL: Failed to purchase gems for User2")
+                return False
             
         # Step 5: Record balances BEFORE game
         print("\n📊 Recording balances BEFORE game creation...")
