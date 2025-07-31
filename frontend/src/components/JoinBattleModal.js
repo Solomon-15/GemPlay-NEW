@@ -69,14 +69,13 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  const joinBattle = async () => {
+  const joinGame = async () => {
     setLoading(true);
     
     try {
-      console.log('🎮 === ASYNC BATTLE JOIN ===');
-      console.log('🎮 Joining battle:', {
+      console.log('🎮 === JOINING GAME (STEP 1→2) ===');
+      console.log('🎮 Joining game with gems:', {
         gameId: bet.id,
-        selectedMove: selectedMove,
         selectedGems: selectedGems,
         userId: user.id
       });
@@ -88,7 +87,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          move: selectedMove,
+          move: 'rock', // Temporary move, will be overridden when user selects actual move
           gems: selectedGems
         })
       });
@@ -103,10 +102,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       const result = await response.json();
       console.log('🎮 Join game response:', result);
       
-      let battleOutcome = null;
-      
       if (result.status === 'ACTIVE') {
-        console.log('🎮 Game is now ACTIVE - need to choose move');
+        console.log('🎮 Game is now ACTIVE - moving to step 2 for move selection');
         
         // Immediately update lobby to move game from Available Bets to Ongoing Battles
         if (onUpdateUser) {
@@ -122,63 +119,71 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           console.log('⚔️ Additional delayed lobby refresh for UI consistency');
         }, 500);
         
-        const chooseMoveResult = await chooseMove(result.game_id, selectedMove);
+        // Move to step 2 for move selection
+        setCurrentStep(2);
         
-        if (chooseMoveResult.game_id && chooseMoveResult.winner_id !== undefined) {
-          console.log('🎮 Game completed after choosing move');
-          
-          battleOutcome = chooseMoveResult.winner_id === user.id ? 'win' : 
-                         (chooseMoveResult.winner_id ? 'lose' : 'draw');
-          
-          setBattleResult({
-            result: battleOutcome,
-            opponentMove: chooseMoveResult.creator_move,
-            gameData: chooseMoveResult
-          });
-        } else {
-          throw new Error(`Ошибка завершения игры. Неожиданная структура ответа от choose-move.`);
-        }
+      } else {
+        throw new Error(`Неожиданная структура ответа API. Ожидался статус ACTIVE.`);
+      }
+      
+    } catch (error) {
+      console.error('🚨 Join game error:', error);
+      showError(error.message || 'Ошибка при присоединении к игре');
+      setHasJoinedGame(false); // Reset if failed
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const completeBattle = async () => {
+    setLoading(true);
+    
+    try {
+      console.log('🎮 === COMPLETING BATTLE (STEP 2→3) ===');
+      console.log('🎮 Player selected move:', selectedMove);
+      
+      const chooseMoveResult = await chooseMove(bet.id, selectedMove);
+      
+      if (chooseMoveResult.game_id && chooseMoveResult.winner_id !== undefined) {
+        console.log('🎮 Game completed after choosing move');
         
-      } else if (result.game_id && result.winner_id !== undefined) {
-        console.log('🎮 Game completed immediately (legacy)');
-        
-        battleOutcome = result.winner_id === user.id ? 'win' : 
-                       (result.winner_id ? 'lose' : 'draw');
+        const battleOutcome = chooseMoveResult.winner_id === user.id ? 'win' : 
+                             (chooseMoveResult.winner_id ? 'lose' : 'draw');
         
         setBattleResult({
           result: battleOutcome,
-          opponentMove: result.creator_move,
-          gameData: result
+          opponentMove: chooseMoveResult.creator_move,
+          gameData: chooseMoveResult
         });
         
-      } else {
-        throw new Error(`Неожиданная структура ответа API. Ожидался статус ACTIVE или завершенная игра.`);
-      }
-      
-      await refreshInventory();
-      if (onUpdateUser) {
-        onUpdateUser();
-      }
-      
-      const globalRefresh = getGlobalLobbyRefresh();
-      globalRefresh.triggerLobbyRefresh();
-      console.log('⚔️ Battle joined/completed - triggering lobby refresh');
-      
-      // Additional forced refresh after short delay to ensure UI consistency
-      setTimeout(() => {
+        await refreshInventory();
+        if (onUpdateUser) {
+          onUpdateUser();
+        }
+        
+        const globalRefresh = getGlobalLobbyRefresh();
         globalRefresh.triggerLobbyRefresh();
-        console.log('⚔️ Final delayed lobby refresh for UI consistency');
-      }, 800);
-      
-      setCurrentStep(3);
-      
-      const resultText = battleOutcome === 'win' ? 'Victory!' : 
-                        (battleOutcome === 'lose' ? 'Defeat!' : 'Draw!');
-      showSuccess(`Battle completed! ${resultText}`);
+        console.log('⚔️ Battle completed - triggering lobby refresh');
+        
+        // Additional forced refresh after short delay to ensure UI consistency
+        setTimeout(() => {
+          globalRefresh.triggerLobbyRefresh();
+          console.log('⚔️ Final delayed lobby refresh for UI consistency');
+        }, 800);
+        
+        setCurrentStep(3);
+        
+        const resultText = battleOutcome === 'win' ? 'Victory!' : 
+                          (battleOutcome === 'lose' ? 'Defeat!' : 'Draw!');
+        showSuccess(`Battle completed! ${resultText}`);
+        
+      } else {
+        throw new Error(`Ошибка завершения игры. Неожиданная структура ответа от choose-move.`);
+      }
       
     } catch (error) {
-      console.error('🚨 Async battle join error:', error);
-      showError(error.message || 'Ошибка при присоединении к битве');
+      console.error('🚨 Complete battle error:', error);
+      showError(error.message || 'Ошибка при завершении битвы');
     } finally {
       setLoading(false);
     }
