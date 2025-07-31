@@ -175,7 +175,7 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
           selectedGems[gem.type] = currentUsed + 1;
           remaining = 0;
           exactMatch = true;
-          console.log(`Small Strategy: Found exact match with ${gem.name} #${currentUsed + 1}/${gem.availableQuantity}`);
+          // Found exact match with gem
           break;
         }
       }
