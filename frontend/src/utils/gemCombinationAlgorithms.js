@@ -583,7 +583,7 @@ export const calculateGemCombination = (strategy, gemsData, targetAmount) => {
     };
   }
   
-  console.log(`Strategy: ${strategy}, Target: $${targetAmount}, Max possible: $${maxPossibleValue}`);
+  // Strategy calculation with optimization for performance
   
   try {
     switch (strategy) {
