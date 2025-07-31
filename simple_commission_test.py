@@ -103,9 +103,14 @@ class SimpleCommissionTest:
             
             print(f"Creating user: {username} with email: {email}")
             response = self.session.post(f"{BASE_URL}/auth/register", json=user_data)
+            print(f"Registration response: {response.status_code}")
             if response.status_code not in [200, 201]:
                 self.log_result(f"Create {username_prefix}", False, f"Registration failed: {response.status_code}")
                 return None, None
+                
+            # Check if user needs email verification
+            reg_data = response.json()
+            print(f"Registration data: {reg_data}")
                 
             # Try to login (assuming auto-verification for testing)
             login_response = self.session.post(f"{BASE_URL}/auth/login", json={
@@ -113,6 +118,51 @@ class SimpleCommissionTest:
                 "password": password
             })
             
+            print(f"Login response: {login_response.status_code}")
+            if login_response.status_code != 200:
+                login_data = login_response.json()
+                print(f"Login error: {login_data}")
+                
+                # If email verification is needed, try to verify
+                if login_response.status_code == 403 and "email" in str(login_data).lower():
+                    print("Attempting email verification...")
+                    # Try to get verification token from admin or use a default one
+                    # For testing, we'll try to use admin to activate the user
+                    admin_headers = {"Authorization": f"Bearer {self.admin_token}"}
+                    
+                    # Try to find the user and activate them
+                    users_response = self.session.get(f"{BASE_URL}/admin/users", headers=admin_headers)
+                    if users_response.status_code == 200:
+                        users_data = users_response.json()
+                        users_list = users_data.get("users", [])
+                        
+                        # Find our user
+                        target_user = None
+                        for user in users_list:
+                            if user.get("email") == email:
+                                target_user = user
+                                break
+                                
+                        if target_user:
+                            user_id = target_user["id"]
+                            print(f"Found user ID: {user_id}, attempting to activate...")
+                            
+                            # Try to update user status to ACTIVE
+                            update_response = self.session.put(
+                                f"{BASE_URL}/admin/users/{user_id}",
+                                json={"status": "ACTIVE", "email_verified": True},
+                                headers=admin_headers
+                            )
+                            
+                            if update_response.status_code == 200:
+                                print("User activated via admin, retrying login...")
+                                # Retry login
+                                login_response = self.session.post(f"{BASE_URL}/auth/login", json={
+                                    "email": email,
+                                    "password": password
+                                })
+                                print(f"Retry login response: {login_response.status_code}")
+                
             if login_response.status_code == 200:
                 login_data = login_response.json()
                 user_token = login_data["access_token"]
