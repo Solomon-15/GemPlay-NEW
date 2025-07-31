@@ -6365,10 +6365,11 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                             {"$inc": {"total_commission_paid": loser_commission}}
                         )
                         
-                logger.info(f"💰 HUMAN-BOT GAME - Both winner and loser pay commission (${commission_amount} each)")
+                logger.info(f"💰 HUMAN-BOT GAME - Both winner and loser pay commission (${loser_commission} each)")
                         
             elif not is_regular_bot_game and not has_human_bot_player:
                 # **REGULAR HUMAN vs HUMAN game - only winner pays commission**
+                commission_amount = game.bet_amount * 0.03
                 logger.info(f"💰 HUMAN vs HUMAN GAME - Only winner pays commission (${commission_amount})")
                 
             elif not is_regular_bot_game:
