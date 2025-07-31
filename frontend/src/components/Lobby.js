@@ -137,14 +137,14 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         game.status === 'WAITING' && game.is_creator === true
       );
       setMyBets(myWaitingBets);
-      console.log(`💼 My Bets: ${myWaitingBets.length} WAITING games where user is creator`);
+      // Reduced logging for performance
       
       // Ongoing battles should include ALL ACTIVE games where user participates (as creator or opponent)
       const userOngoingBattles = userGames.filter(game => 
         (game.status === 'ACTIVE' || game.status === 'REVEAL') && 
         (game.is_creator === true || game.is_creator === false)
       );
-      console.log(`⚔️ User Ongoing Battles from my-bets: ${userOngoingBattles.length} ACTIVE/REVEAL games`);
+      // Reduced logging for performance
       
       // Also include ALL ACTIVE games where current user participates (creator or opponent)
       const activeUserGames = allGames.filter(game => {
@@ -152,7 +152,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         return game.status === 'ACTIVE' && 
                (game.creator_id === user?.id || game.opponent_id === user?.id);
       });
-      console.log(`⚔️ Active User Games from available: ${activeUserGames.length} ACTIVE games where user participates`);
+      // Reduced logging for performance
       
       // Get active Human-bot games for display in ongoing battles
       try {
