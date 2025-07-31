@@ -6,6 +6,7 @@ import GemSelectionStep from './GemSelectionStep';
 import MoveSelectionStep from './MoveSelectionStep';
 import BattleResultStep from './BattleResultStep';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
+import useDataRefresh from '../hooks/useDataRefresh';
 
 const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   if (!bet || !user || !onClose) {
