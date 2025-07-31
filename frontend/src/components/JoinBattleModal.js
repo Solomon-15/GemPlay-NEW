@@ -245,7 +245,8 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   };
 
   const startBattle = async () => {
-    if (!validateBeforeBattle()) {
+    const isValid = await validateBeforeBattle();
+    if (!isValid) {
       return;
     }
     
