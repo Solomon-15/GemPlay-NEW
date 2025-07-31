@@ -1352,9 +1352,11 @@ async def validate_transaction_integrity(user_id: str, operation: str, amount: f
     
     return True
 
-def hash_move_with_salt(move: GameMove, salt: str) -> str:
+def hash_move_with_salt(move, salt: str) -> str:
     """Hash game move with salt for commit-reveal scheme."""
-    combined = f"{move.value}:{salt}"
+    # Handle both GameMove enum and string
+    move_str = move.value if hasattr(move, 'value') else move
+    combined = f"{move_str}:{salt}"
     return hashlib.sha256(combined.encode()).hexdigest()
 
 def verify_move_hash(move: GameMove, salt: str, hash_value: str) -> bool:
