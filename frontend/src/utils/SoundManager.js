@@ -379,26 +379,30 @@ class SoundManager {
   }
 
   createTingSound(frequencies = [600, 800], duration = 0.3) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
 
-    frequencies.forEach((freq, index) => {
-      const delay = index * 0.05;
-      const oscillator = this.context.createOscillator();
-      const gainNode = this.context.createGain();
-      
-      oscillator.frequency.setValueAtTime(freq, this.context.currentTime + delay);
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0, this.context.currentTime + delay);
-      gainNode.gain.linearRampToValueAtTime(0.2 * this.volume, this.context.currentTime + delay + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + delay + duration);
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(this.context.destination);
-      
-      oscillator.start(this.context.currentTime + delay);
-      oscillator.stop(this.context.currentTime + delay + duration);
-    });
+    try {
+      frequencies.forEach((freq, index) => {
+        const delay = index * 0.05;
+        const oscillator = this.context.createOscillator();
+        const gainNode = this.context.createGain();
+        
+        oscillator.frequency.setValueAtTime(freq, this.context.currentTime + delay);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, this.context.currentTime + delay);
+        gainNode.gain.linearRampToValueAtTime(0.2 * this.volume, this.context.currentTime + delay + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + delay + duration);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.context.destination);
+        
+        oscillator.start(this.context.currentTime + delay);
+        oscillator.stop(this.context.currentTime + delay + duration);
+      });
+    } catch (error) {
+      console.warn('Error creating ting sound:', error);
+    }
   }
 
   createMagicalSound(volume = 1) {
