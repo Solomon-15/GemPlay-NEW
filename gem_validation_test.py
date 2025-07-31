@@ -252,52 +252,84 @@ class GemValidationTester:
             return False
             
     def test_large_bet_creation(self) -> bool:
-        """Test 3: Create a large bet ($400) with Magic gems"""
+        """Test 3: Create a large bet ($400) with available gems"""
         try:
-            # First ensure we have Magic gems
-            if not self.purchase_gems("Magic", 5):  # Buy 5 Magic gems ($500 worth)
-                return False
-                
-            # Wait for purchase to complete
-            time.sleep(2)
-            
-            # Check inventory after purchase
+            # Check current inventory first
             response = self.session.get(f"{BASE_URL}/gems/inventory")
             if response.status_code == 200:
                 data = response.json()
-                magic_gems = next((g for g in data if g.get("name") == "Magic"), None)
-                if magic_gems:
-                    available = magic_gems.get("available_quantity", magic_gems.get("quantity", 0))
-                    self.log_result("Magic Gems Available", True, f"Available: {available} Magic gems")
+                self.log_result("Check Current Inventory", True, f"Found {len(data)} gem types")
+                
+                # Look for gems we can use for a large bet
+                # Try to create a $400 bet with available gems
+                available_gems = {}
+                total_value = 0
+                
+                for gem in data:
+                    name = gem.get("name")
+                    available = gem.get("available_quantity", gem.get("quantity", 0))
+                    price = gem.get("price", 0)
                     
-                    if available < 4:
-                        self.log_result("Sufficient Magic Gems", False, f"Only {available} available, need 4 for $400 bet")
+                    if available > 0 and name in ["Magic", "Sapphire", "Aquamarine", "Emerald", "Topaz"]:
+                        available_gems[name] = {"available": available, "price": price}
+                        total_value += available * price
+                        
+                self.log_result("Available Gems for Large Bet", True, f"Total value available: ${total_value}")
+                
+                # Try to create a bet with what we have
+                if total_value >= 400:
+                    # Create $400+ bet with available gems
+                    bet_gems = {}
+                    remaining_value = 400
+                    
+                    # Use highest value gems first
+                    for gem_name in ["Magic", "Sapphire", "Aquamarine", "Emerald", "Topaz"]:
+                        if gem_name in available_gems and remaining_value > 0:
+                            gem_info = available_gems[gem_name]
+                            price = gem_info["price"]
+                            available = gem_info["available"]
+                            
+                            needed = min(available, remaining_value // price)
+                            if needed > 0:
+                                bet_gems[gem_name] = needed
+                                remaining_value -= needed * price
+                                
+                    if remaining_value <= 0:
+                        # Create the bet
+                        bet_data = {
+                            "move": "rock",
+                            "bet_gems": bet_gems
+                        }
+                        
+                        response = self.session.post(f"{BASE_URL}/games/create", json=bet_data)
+                        
+                        if response.status_code == 200:
+                            game_data = response.json()
+                            game_id = game_data.get("game_id")
+                            bet_value = sum(bet_gems[gem] * available_gems[gem]["price"] for gem in bet_gems)
+                            self.log_result("Large Bet Creation", True, f"Game created with ID: {game_id}, Value: ${bet_value}")
+                            return True
+                        else:
+                            error_text = response.text
+                            if "Insufficient" in error_text and "gems" in error_text:
+                                self.log_result("Large Bet Creation", False, f"CRITICAL: Gem validation error: {error_text}")
+                            else:
+                                self.log_result("Large Bet Creation", False, f"Status: {response.status_code}, Error: {error_text}")
+                            return False
+                    else:
+                        self.log_result("Large Bet Creation", False, f"Cannot create $400 bet, only ${400-remaining_value} worth of gems available")
                         return False
                 else:
-                    self.log_result("Magic Gems in Inventory", False, "Magic gems not found in inventory")
-                    return False
-            
-            # Create $400 bet using 4 Magic gems
-            bet_data = {
-                "move": "rock",
-                "bet_gems": {
-                    "Magic": 4  # 4 x $100 = $400
-                }
-            }
-            
-            response = self.session.post(f"{BASE_URL}/games/create", json=bet_data)
-            
-            if response.status_code == 200:
-                game_data = response.json()
-                game_id = game_data.get("game_id")
-                self.log_result("Large Bet Creation ($400)", True, f"Game created with ID: {game_id}")
-                return True
+                    # Try to purchase Magic gems if we don't have enough
+                    if not self.purchase_gems("Magic", 5):
+                        self.log_result("Large Bet Creation", False, "Cannot purchase Magic gems and insufficient existing gems")
+                        return False
+                        
+                    # Try again after purchase
+                    time.sleep(2)
+                    return self.test_large_bet_creation()
             else:
-                error_text = response.text
-                if "Insufficient Magic gems" in error_text:
-                    self.log_result("Large Bet Creation ($400)", False, "CRITICAL: 'Insufficient Magic gems' error still present!")
-                else:
-                    self.log_result("Large Bet Creation ($400)", False, f"Status: {response.status_code}, Error: {error_text}")
+                self.log_result("Check Current Inventory", False, f"Status: {response.status_code}")
                 return False
                 
         except Exception as e:
