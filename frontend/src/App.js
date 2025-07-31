@@ -185,10 +185,8 @@ function App() {
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
+  const lastAuthCheckTime = useRef(0);
+  const AUTH_CHECK_THROTTLE_DELAY = 2000; // Prevent auth checks more than once per 2 seconds
 
   const checkAuthStatus = async () => {
     // Throttle auth checks to prevent excessive API calls
