@@ -302,19 +302,9 @@ def get_user_balance_and_gems(auth_token: str, username: str) -> Dict[str, Any]:
     """Get user's current balance and gems."""
     print_subheader(f"Getting Balance and Gems for {username}")
     
-    # Get user profile
-    profile_response, profile_success = make_request(
-        "GET", "/user/profile",
-        auth_token=auth_token
-    )
-    
-    if not profile_success:
-        print_error(f"Failed to get user profile: {profile_response}")
-        return {}
-    
     # Get user gems
     gems_response, gems_success = make_request(
-        "GET", "/user/gems",
+        "GET", "/gems/inventory",
         auth_token=auth_token
     )
     
@@ -322,11 +312,26 @@ def get_user_balance_and_gems(auth_token: str, username: str) -> Dict[str, Any]:
         print_error(f"Failed to get user gems: {gems_response}")
         return {}
     
-    balance_info = {
-        "virtual_balance": profile_response.get("virtual_balance", 0),
-        "frozen_balance": profile_response.get("frozen_balance", 0),
-        "gems": gems_response.get("gems", [])
-    }
+    # For balance, we'll need to check the user data from login response or use economy endpoint
+    balance_response, balance_success = make_request(
+        "GET", "/economy/balance",
+        auth_token=auth_token
+    )
+    
+    balance_info = {}
+    
+    if balance_success:
+        balance_info["virtual_balance"] = balance_response.get("virtual_balance", 0)
+        balance_info["frozen_balance"] = balance_response.get("frozen_balance", 0)
+    else:
+        print_warning("Could not get balance info, using defaults")
+        balance_info["virtual_balance"] = 0
+        balance_info["frozen_balance"] = 0
+    
+    if "gems" in gems_response:
+        balance_info["gems"] = gems_response["gems"]
+    else:
+        balance_info["gems"] = gems_response  # Response might be the gems array directly
     
     print_success(f"Virtual Balance: ${balance_info['virtual_balance']}")
     print_success(f"Frozen Balance: ${balance_info['frozen_balance']}")
