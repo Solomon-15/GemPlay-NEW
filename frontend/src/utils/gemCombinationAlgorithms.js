@@ -160,8 +160,7 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
         remaining -= gem.price;
         foundGem = true;
         
-        // Debug log for tracking
-        console.log(`Small Strategy: Using ${gem.name} #${currentUsed + 1}/${gem.availableQuantity}, remaining: $${remaining.toFixed(2)}`);
+        // Using gem for strategy calculation
         break;
       }
     }
