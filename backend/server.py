@@ -6369,44 +6369,8 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         
             elif not is_regular_bot_game and not has_human_bot_player:
                 # **REGULAR HUMAN vs HUMAN game - only winner pays commission**
-                commission_amount = game.bet_amount * 0.03
                 logger.info(f"💰 HUMAN vs HUMAN GAME - Only winner pays commission (${commission_amount})")
-                
-            elif not is_regular_bot_game:
-                loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
-                loser = await db.users.find_one({"id": loser_id})
-                
-                if loser:
-                    commission_to_deduct = game.bet_amount * 0.03
-                    await db.users.update_one(
-                        {"id": loser_id},
-                        {
-                            "$inc": {
-                                "frozen_balance": -commission_to_deduct   # Просто убираем комиссию из frozen_balance
-                            },
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
-                    
-                    # Record profit entry from loser's commission
-                    is_loser_human_bot = await is_human_bot_user(loser_id)
-                    entry_type = "HUMAN_BOT_COMMISSION" if is_loser_human_bot else "BET_COMMISSION"
-                    
-                    profit_entry = ProfitEntry(
-                        entry_type=entry_type,
-                        amount=commission_to_deduct,
-                        source_user_id=loser_id,
-                        reference_id=game.id,
-                        description=f"3% commission from PvP game loser (${game.bet_amount} bet)"
-                    )
-                    await db.profit_entries.insert_one(profit_entry.dict())
-                    
-                    # Update Human-bot total commission if loser is a Human-bot
-                    if is_loser_human_bot:
-                        await db.human_bots.update_one(
-                            {"id": loser_id},
-                            {"$inc": {"total_commission_paid": commission_to_deduct}}
-                        )
+                # Winner's commission is already handled above, no loser commission for human vs human
             
         else:
             # Draw - return frozen commissions to both players (only if commission was charged)
