@@ -223,7 +223,7 @@ def get_user_balance_and_gems(token: str, username: str) -> Tuple[Dict[str, Any]
     
     # Get user gems
     gems_response, gems_success = make_request(
-        "GET", "/users/gems", auth_token=token
+        "GET", "/gems/inventory", auth_token=token
     )
     
     gems_info = {}
