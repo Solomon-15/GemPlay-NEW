@@ -205,16 +205,9 @@ def add_gems_to_user(auth_token: str, username: str, gem_amounts: Dict[str, int]
     total_gems = len(gem_amounts)
     
     for gem_type, quantity in gem_amounts.items():
-        # Try GET request with query parameters first
-        response, success = make_request("GET", f"/gems/buy?gem_type={gem_type}&quantity={quantity}", 
-                                       auth_token=auth_token)
-        
-        if not success:
-            # Try POST request with JSON body
-            response, success = make_request("POST", "/gems/buy", data={
-                "gem_type": gem_type,
-                "quantity": quantity
-            }, auth_token=auth_token)
+        # Use POST with query parameters as expected by the API
+        url = f"/gems/buy?gem_type={gem_type}&quantity={quantity}"
+        response, success = make_request("POST", url, auth_token=auth_token)
         
         if success:
             print_success(f"Added {quantity} {gem_type} gems")
