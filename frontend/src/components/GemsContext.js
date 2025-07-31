@@ -64,7 +64,7 @@ export const GemsProvider = ({ children }) => {
       const completeGemsData = definitions.map(def => {
         const userGem = userGems.find(gem => gem.type === def.type);
         
-        return {
+        const gemData = {
           // Core gem definition
           type: def.type,
           name: def.name,
@@ -90,6 +90,19 @@ export const GemsProvider = ({ children }) => {
           // Metadata
           last_updated: userGem ? userGem.updated_at : null
         };
+        
+        // Log critical gem data for debugging
+        if (def.type === 'Magic') {
+          console.log(`💎 Magic gem data constructed:`, {
+            total: gemData.quantity,
+            frozen: gemData.frozen_quantity,
+            available: gemData.available_quantity,
+            userGemExists: !!userGem,
+            rawUserGem: userGem
+          });
+        }
+        
+        return gemData;
       });
       
       setGemsData(completeGemsData);
