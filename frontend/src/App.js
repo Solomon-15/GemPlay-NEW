@@ -191,17 +191,33 @@ function App() {
   }, []);
 
   const checkAuthStatus = async () => {
+    // Throttle auth checks to prevent excessive API calls
+    const now = Date.now();
+    if (now - lastAuthCheckTime.current < AUTH_CHECK_THROTTLE_DELAY) {
+      return; // Skip check if called too recently
+    }
+    lastAuthCheckTime.current = now;
+    
     const token = localStorage.getItem('token');
     const refreshToken = localStorage.getItem('refresh_token');
-    console.log('🔍 Checking auth status. Token exists:', !!token, 'Refresh token exists:', !!refreshToken);
+    // Reduce logging frequency
+    if (Math.random() < 0.1) { // Only log 10% of the time
+      console.log('🔍 Checking auth status. Token exists:', !!token, 'Refresh token exists:', !!refreshToken);
+    }
     
     if (token) {
       try {
-        console.log('📡 Making request to /api/auth/me with token:', token.substring(0, 20) + '...');
+        // Reduce logging frequency
+        if (Math.random() < 0.1) { // Only log 10% of the time
+          console.log('📡 Making request to /api/auth/me with token:', token.substring(0, 20) + '...');
+        }
         const response = await axios.get(`${API}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log('✅ Auth check successful. User:', response.data);
+        // Reduce logging frequency
+        if (Math.random() < 0.1) { // Only log 10% of the time
+          console.log('✅ Auth check successful. User:', response.data);
+        }
         setUser(response.data);
       } catch (error) {
         console.error('❌ Auth check failed:', error.response?.status, error.response?.data || error.message);
