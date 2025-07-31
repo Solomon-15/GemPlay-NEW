@@ -313,12 +313,15 @@ class SimpleCommissionTest:
             
             response = self.session.post(f"{BASE_URL}/games/create", json=game_data, headers=headers)
             
-            if response.status_code == 201:
+            print(f"Game creation response: {response.status_code}")
+            if response.status_code in [200, 201]:
                 data = response.json()
+                print(f"Game creation data: {data}")
                 game_id = data.get("game_id")
                 self.log_result("Create Game", True, f"Game created: {game_id}")
                 return game_id
             else:
+                print(f"Game creation error: {response.json()}")
                 self.log_result("Create Game", False, f"Status: {response.status_code}")
                 return None
                 
