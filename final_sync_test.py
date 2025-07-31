@@ -191,12 +191,12 @@ def create_test_user(username: str, email: str) -> Tuple[Optional[str], Optional
     )
     
     if not login_success or "access_token" not in login_response:
-        print_error(f"Failed to login user {username}")
-        record_test(f"User Login - {username}", False, "Login failed")
+        print_error(f"Failed to login user {unique_username}")
+        record_test(f"User Login - {unique_username}", False, "Login failed")
         return None, None
     
-    print_success(f"User {username} logged in successfully")
-    record_test(f"User Setup - {username}", True)
+    print_success(f"User {unique_username} logged in successfully")
+    record_test(f"User Setup - {unique_username}", True)
     
     return login_response["access_token"], unique_email
 
