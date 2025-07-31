@@ -215,7 +215,7 @@ def create_large_bet_game(token: str, bet_gems: Dict[str, int], move: str = "roc
         
         response = requests.post(f"{BASE_URL}/games/create", json=game_data, headers=headers)
         
-        if response.status_code == 201:
+        if response.status_code == 200:  # Changed from 201 to 200
             data = response.json()
             game_id = data.get("game_id")
             print_success(f"Successfully created large bet game: {game_id}")
