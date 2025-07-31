@@ -6322,12 +6322,53 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
             
             # **CORRECTED COMMISSION LOGIC according to new table:**
             # For ALL game types (except Regular bot): ONLY WINNER pays commission
-            # No special logic for Human-bots - same rules for everyone
+            # LOSER gets commission returned to their balance
             
             if not is_regular_bot_game:
                 # Winner's commission is already handled above in the winner section
-                # No additional commission processing needed for other players
-                logger.info(f"💰 ALL GAME TYPES - Only winner pays commission (${commission_amount})")
+                
+                # **URGENT FIX: Return frozen commission to the LOSER**
+                loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
+                loser = await db.users.find_one({"id": loser_id})
+                
+                # If loser not found, check if it's a Human-bot and create user profile
+                if not loser:
+                    human_bot = await db.human_bots.find_one({"id": loser_id})
+                    if human_bot:
+                        await create_human_bot_user_profile(human_bot)
+                        loser = await db.users.find_one({"id": loser_id})
+                        logger.info(f"Created user profile for Human-bot {human_bot['name']} during commission return")
+                
+                if loser:
+                    loser_commission = game.bet_amount * 0.03
+                    
+                    logger.info(f"💰 RETURNING ${loser_commission} commission to LOSER {loser_id} (virtual_balance: {loser.get('virtual_balance', 0)} -> {loser.get('virtual_balance', 0) + loser_commission})")
+                    
+                    await db.users.update_one(
+                        {"id": loser_id},
+                        {
+                            "$inc": {
+                                "virtual_balance": loser_commission,    # Return to virtual_balance
+                                "frozen_balance": -loser_commission     # Remove from frozen_balance
+                            },
+                            "$set": {"updated_at": datetime.utcnow()}
+                        }
+                    )
+                    
+                    # Record transaction for commission return to loser
+                    commission_return_transaction = Transaction(
+                        user_id=loser_id,
+                        transaction_type=TransactionType.COMMISSION,
+                        amount=loser_commission,
+                        currency="USD",
+                        balance_before=loser["virtual_balance"],
+                        balance_after=loser["virtual_balance"] + loser_commission,
+                        description=f"Commission returned to game loser (${game.bet_amount} bet)",
+                        reference_id=game.id
+                    )
+                    await db.transactions.insert_one(commission_return_transaction.dict())
+                    
+                logger.info(f"💰 COMMISSION LOGIC: Winner pays ${commission_amount}, Loser gets ${loser_commission} returned")
             
         else:
             # Draw - return frozen commissions to both players (only if commission was charged)
