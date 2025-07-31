@@ -460,7 +460,7 @@ def test_leave_scenario() -> bool:
         return False
     
     if not purchase_gems_for_user(player_a_token, player_a_data["username"]):
-        print_error("Failed to purchase gems for Player A")
+        print_error("Failed to check gems for Player A")
         return False
     
     # Register and setup Player B
@@ -470,7 +470,7 @@ def test_leave_scenario() -> bool:
         return False
     
     if not purchase_gems_for_user(player_b_token, player_b_data["username"]):
-        print_error("Failed to purchase gems for Player B")
+        print_error("Failed to check gems for Player B")
         return False
     
     # Create game as Player A
