@@ -255,22 +255,33 @@ export const GemsProvider = ({ children }) => {
   };
 
   // Check if user has enough gems for a specific operation
+  // CRITICAL FIX: Always validate against current fresh data
   const validateGemOperation = (requiredGems) => {
+    // Force fresh data check by using current gemsData directly
+    const currentTimestamp = Date.now();
+    console.log(`💎 Validating gem operation at ${currentTimestamp}:`, requiredGems);
+    
     for (const [gemType, requiredQuantity] of Object.entries(requiredGems)) {
-      const gem = getGemByType(gemType);
+      const gem = gemsData.find(g => g.type === gemType || g.name === gemType);
       
       if (!gem) {
+        console.error(`❌ Unknown gem type: ${gemType}`);
         return { valid: false, error: `Unknown gem type: ${gemType}` };
       }
       
+      console.log(`💎 ${gemType}: Required ${requiredQuantity}, Available ${gem.available_quantity} (Total: ${gem.quantity}, Frozen: ${gem.frozen_quantity})`);
+      
       if (gem.available_quantity < requiredQuantity) {
+        const error = `Insufficient ${gemType} gems. Available: ${gem.available_quantity}, Required: ${requiredQuantity}`;
+        console.error(`❌ ${error}`);
         return { 
           valid: false, 
-          error: `Insufficient ${gemType} gems. Available: ${gem.available_quantity}, Required: ${requiredQuantity}` 
+          error 
         };
       }
     }
     
+    console.log('✅ Gem operation validation passed');
     return { valid: true };
   };
 
