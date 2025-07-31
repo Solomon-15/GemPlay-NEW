@@ -253,7 +253,7 @@ def add_gems_to_user(token: str, username: str, gems: Dict[str, int]) -> bool:
         }
         
         response, success = make_request(
-            "POST", "/users/gems/purchase", 
+            "POST", "/gems/buy", 
             data=purchase_data, 
             auth_token=token
         )
