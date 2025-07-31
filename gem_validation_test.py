@@ -70,14 +70,21 @@ class GemValidationTester:
             verification_token = reg_data.get("verification_token")
             self.log_result("User Registration", True, f"User {username} registered successfully")
             
-            # Get verification token from response or database
-            # For testing, we'll try to login directly (assuming email verification is bypassed in test env)
+            # Verify email using the token
+            if verification_token:
+                verify_response = self.session.post(f"{BASE_URL}/auth/verify-email", json={"token": verification_token})
+                if verify_response.status_code == 200:
+                    self.log_result("Email Verification", True, "Email verified successfully")
+                else:
+                    self.log_result("Email Verification", False, f"Status: {verify_response.status_code}")
+            
+            # Login with credentials
             login_data = {
                 "email": email,
                 "password": "Test123!"
             }
             
-            # Wait a moment for user creation to complete
+            # Wait a moment for verification to complete
             time.sleep(1)
             
             response = self.session.post(f"{BASE_URL}/auth/login", json=login_data)
