@@ -230,7 +230,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
     
     if (!isBotGame) {
-      const commissionRequired = targetAmount * 0.06;
+      const commissionRequired = targetAmount * 0.03; // FIXED: Use 3% to match backend
       const totalBalance = user?.virtual_balance || 0;
       const frozenBalance = user?.frozen_balance || 0;
       const availableForSpending = totalBalance - frozenBalance;
