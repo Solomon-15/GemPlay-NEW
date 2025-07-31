@@ -15,7 +15,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   }
 
   const targetAmount = bet?.bet_amount || 0;
-  const COMMISSION_RATE = 0.03; // 3%
+  const COMMISSION_RATE = 0.03; // 3% - matches backend
   const isBotGame = bet?.is_bot_game || false; // Определяем, является ли это игрой с ботом
   const commissionAmount = isBotGame ? 0 : targetAmount * COMMISSION_RATE; // Для игр с ботами комиссия = 0
 
