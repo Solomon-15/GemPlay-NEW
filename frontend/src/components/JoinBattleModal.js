@@ -157,20 +157,15 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           gameData: chooseMoveResult
         });
         
-        await refreshInventory();
-        if (onUpdateUser) {
-          onUpdateUser();
-        }
+        // FIXED: Use centralized data refresh after battle completion
+        await refreshAllData();
         
         const globalRefresh = getGlobalLobbyRefresh();
         globalRefresh.triggerLobbyRefresh();
         console.log('⚔️ Battle completed - triggering lobby refresh');
         
-        // Additional forced refresh after short delay to ensure UI consistency
-        setTimeout(() => {
-          globalRefresh.triggerLobbyRefresh();
-          console.log('⚔️ Final delayed lobby refresh for UI consistency');
-        }, 800);
+        // Additional delayed refresh with data synchronization
+        await refreshWithDelay(800);
         
         setCurrentStep(3);
         
@@ -185,6 +180,9 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     } catch (error) {
       console.error('🚨 Complete battle error:', error);
       showError(error.message || 'Ошибка при завершении битвы');
+      
+      // FIXED: Refresh data on error to ensure consistency
+      await refreshAllData();
     } finally {
       setLoading(false);
     }
