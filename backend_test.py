@@ -24437,11 +24437,11 @@ def print_summary() -> None:
         print(f"{category}: {status_color}{results['passed']}/{total_cat} ({success_rate_cat:.1f}%){Colors.ENDC}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - REGULAR BOT COMMIT-REVEAL SYSTEM")
+    print_header("GEMPLAY BACKEND API TESTING - GAME JOIN FUNCTIONALITY")
     
     try:
-        # Run the Regular Bot Commit-Reveal test as specifically requested in the Russian review
-        test_regular_bot_commit_reveal_system()
+        # Run the Game Join Functionality test as specifically requested in the Russian review
+        test_game_join_functionality_russian_review()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
