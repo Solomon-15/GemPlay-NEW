@@ -30,8 +30,6 @@ const LoginForm = ({ onLogin }) => {
     gender: 'male'
   });
   const [loading, setLoading] = useState(false);
-  const lastAuthCheckTime = useRef(0);
-  const AUTH_CHECK_THROTTLE_DELAY = 2000; // Prevent auth checks more than once per 2 seconds
 
   const handleSubmit = async (e) => {
     e.preventDefault();
