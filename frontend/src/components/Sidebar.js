@@ -13,13 +13,19 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
       
       const token = localStorage.getItem('token');
       
-      const balanceResponse = await axios.get(`${API}/api/economy/balance`, {
+      const balanceResponse = await axios.get(`${API}/economy/balance`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
       const balance = balanceResponse.data;
       
-      const total = (balance.virtual_balance || 0) + (balance.frozen_balance || 0) + (balance.total_gem_value || 0);
+      // FIXED: Use available balance (virtual_balance - frozen_balance) instead of total
+      // This prevents showing incorrect balance like "$989.98, $991.27"
+      const availableBalance = (balance.virtual_balance || 0) - (balance.frozen_balance || 0);
+      const totalGemValue = balance.total_gem_value || 0;
+      
+      // Total shows available cash + gem portfolio value
+      const total = Math.max(0, availableBalance) + totalGemValue;
       setTotalBalance(total);
       
     } catch (error) {
