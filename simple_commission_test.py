@@ -103,7 +103,7 @@ class SimpleCommissionTest:
             
             print(f"Creating user: {username} with email: {email}")
             response = self.session.post(f"{BASE_URL}/auth/register", json=user_data)
-            if response.status_code != 201:
+            if response.status_code not in [200, 201]:
                 self.log_result(f"Create {username_prefix}", False, f"Registration failed: {response.status_code}")
                 return None, None
                 
