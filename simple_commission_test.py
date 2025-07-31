@@ -222,7 +222,7 @@ class SimpleCommissionTest:
             user_id = user_data["id"]
             
             # Add balance via admin endpoint
-            balance_data = {"amount": amount}
+            balance_data = {"balance": amount}  # Use "balance" not "amount"
             response = self.session.post(
                 f"{BASE_URL}/admin/users/{user_id}/balance", 
                 json=balance_data, 
