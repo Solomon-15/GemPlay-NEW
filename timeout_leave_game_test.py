@@ -612,11 +612,11 @@ def main():
     record_test("Setup - Player A Registration", True)
     
     if not purchase_gems_for_user(player_a_token, player_a_data["username"]):
-        print_error("Failed to purchase gems for Player A")
-        record_test("Setup - Player A Gem Purchase", False)
+        print_error("Failed to check gems for Player A")
+        record_test("Setup - Player A Gem Check", False)
         return
     
-    record_test("Setup - Player A Gem Purchase", True)
+    record_test("Setup - Player A Gem Check", True)
     
     # Register and setup Player B
     player_b_token = register_and_verify_user(player_b_data)
