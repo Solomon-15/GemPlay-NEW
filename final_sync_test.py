@@ -145,7 +145,9 @@ def create_test_user(username: str, email: str) -> Tuple[Optional[str], Optional
     
     # Generate unique email to avoid conflicts
     timestamp = str(int(time.time()))
-    unique_email = f"{username}_{timestamp}@test.com"
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    unique_email = f"{username}_{timestamp}_{random_suffix}@test.com"
+    unique_username = f"{username}_{random_suffix}"
     
     user_data = {
         "username": username,
