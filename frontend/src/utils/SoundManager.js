@@ -199,7 +199,13 @@ class SoundManager {
   }
 
   async playSound(eventTrigger, gameType = 'ALL', volumeMultiplier = 1) {
-    if (!this.enabled || !this.context) return;
+    if (!this.enabled) return;
+
+    // Если пользователь еще не взаимодействовал с страницей, не воспроизводим звук
+    if (!this.userInteracted || !this.context) {
+      console.log(`🔇 Sound skipped (no user interaction yet): ${eventTrigger}`);
+      return;
+    }
 
     const soundList = this.sounds.get(eventTrigger);
     if (!soundList || soundList.length === 0) {
@@ -238,6 +244,7 @@ class SoundManager {
     }
 
     try {
+      // Убеждаемся, что AudioContext запущен
       if (this.context.state === 'suspended') {
         await this.context.resume();
       }
