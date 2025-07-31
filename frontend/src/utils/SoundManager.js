@@ -432,7 +432,9 @@ class SoundManager {
       oscillator.start(baseTime + delay);
       oscillator.stop(baseTime + delay + 0.8);
     });
-  }
+    } catch (error) {
+      console.warn('Error creating magical sound:', error);
+    }
 
   createVictorySound(volume = 1) {
     if (!this.context) return;
