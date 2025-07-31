@@ -24023,6 +24023,376 @@ def test_login(email: str, password: str, user_type: str = "user") -> Optional[s
     
     return None
 
+def test_game_join_functionality_russian_review() -> None:
+    """
+    Test the game joining functionality as specifically requested in the Russian review:
+    
+    Протестировать функциональность присоединения к игре и убедиться, что статус корректно изменяется на ACTIVE при вызове API join.
+    
+    Конкретно нужно проверить:
+    1. Логин пользователя (админ или обычный пользователь)
+    2. Создание игры пользователем A
+    3. Регистрация и логин пользователя B (если нужно)
+    4. Присоединение пользователя B к игре - вызов API /api/games/[game_id]/join
+    5. Проверка, что после join статус игры изменился на "ACTIVE"
+    6. Проверка, что игра появляется в "Ongoing Battles" и исчезает из "Available Bets"
+    """
+    print_header("GAME JOIN FUNCTIONALITY TESTING - RUSSIAN REVIEW")
+    
+    # Step 1: Логин пользователя A (админ)
+    print_subheader("Step 1: Логин пользователя A (админ)")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with game join test")
+        record_test("Game Join - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("✅ Пользователь A (админ) успешно вошел в систему")
+    
+    # Ensure admin has sufficient gems for testing
+    print_subheader("Ensuring Admin Has Sufficient Gems")
+    inventory_response, inventory_success = make_request(
+        "GET", "/gems/inventory", 
+        auth_token=admin_token
+    )
+    
+    if inventory_success:
+        ruby_gems = 0
+        emerald_gems = 0
+        
+        for gem in inventory_response:
+            if gem["type"] == "Ruby":
+                ruby_gems = gem["quantity"] - gem["frozen_quantity"]
+            elif gem["type"] == "Emerald":
+                emerald_gems = gem["quantity"] - gem["frozen_quantity"]
+        
+        if ruby_gems < 20:
+            buy_response, buy_success = make_request(
+                "POST", "/gems/buy?gem_type=Ruby&quantity=30",
+                auth_token=admin_token
+            )
+            if buy_success:
+                print_success("Bought 30 Ruby gems for Player A")
+        
+        if emerald_gems < 5:
+            buy_response, buy_success = make_request(
+                "POST", "/gems/buy?gem_type=Emerald&quantity=10",
+                auth_token=admin_token
+            )
+            if buy_success:
+                print_success("Bought 10 Emerald gems for Player A")
+    
+    # Step 2: Создание игры пользователем A
+    print_subheader("Step 2: Создание игры пользователем A")
+    
+    # Use gems worth approximately $35 (15 Ruby + 2 Emerald = $15 + $20 = $35)
+    bet_gems = {"Ruby": 15, "Emerald": 2}
+    expected_bet_amount = 15 * 1 + 2 * 10  # $35 total
+    
+    create_game_data = {
+        "move": "rock",
+        "bet_gems": bet_gems
+    }
+    
+    game_response, game_success = make_request(
+        "POST", "/games/create",
+        data=create_game_data,
+        auth_token=admin_token
+    )
+    
+    if not game_success:
+        print_error("Failed to create game for join test")
+        record_test("Game Join - Create Game", False, "Game creation failed")
+        return
+    
+    game_id = game_response.get("game_id")
+    if not game_id:
+        print_error("Game creation response missing game_id")
+        record_test("Game Join - Create Game", False, "Missing game_id")
+        return
+    
+    print_success(f"✅ Игра создана пользователем A с ID: {game_id}")
+    print_success(f"✅ Ставка: Ruby: 15, Emerald: 2 (общая стоимость: ${expected_bet_amount})")
+    record_test("Game Join - Create Game", True)
+    
+    # Verify game is in WAITING status initially
+    available_games_response, available_games_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    game_found_in_available = False
+    if available_games_success and isinstance(available_games_response, list):
+        for game in available_games_response:
+            if game.get("game_id") == game_id:
+                game_found_in_available = True
+                game_status = game.get("status", "UNKNOWN")
+                print_success(f"✅ Игра найдена в Available Bets со статусом: {game_status}")
+                if game_status == "WAITING":
+                    print_success("✅ Статус игры корректно установлен как WAITING")
+                    record_test("Game Join - Initial WAITING Status", True)
+                else:
+                    print_error(f"❌ Неожиданный статус игры: {game_status}")
+                    record_test("Game Join - Initial WAITING Status", False, f"Status: {game_status}")
+                break
+    
+    if not game_found_in_available:
+        print_error("❌ Созданная игра не найдена в Available Bets")
+        record_test("Game Join - Game in Available Bets", False, "Game not found")
+    else:
+        record_test("Game Join - Game in Available Bets", True)
+    
+    # Step 3: Регистрация и логин пользователя B
+    print_subheader("Step 3: Регистрация и логин пользователя B")
+    
+    # Generate unique user B data
+    timestamp = int(time.time())
+    user_b_data = {
+        "username": f"playerB_{timestamp}",
+        "email": f"playerB_{timestamp}@test.com",
+        "password": "Test123!",
+        "gender": "female"
+    }
+    
+    # Register User B
+    verification_token, user_b_email, user_b_username = test_user_registration(user_b_data)
+    
+    if not verification_token:
+        print_error("Failed to register User B")
+        record_test("Game Join - User B Registration", False, "Registration failed")
+        return
+    
+    # Verify User B email
+    test_email_verification(verification_token, user_b_username)
+    
+    # Login User B
+    user_b_token = test_login(user_b_data["email"], user_b_data["password"], "User B")
+    
+    if not user_b_token:
+        print_error("Failed to login User B")
+        record_test("Game Join - User B Login", False, "Login failed")
+        return
+    
+    print_success("✅ Пользователь B успешно зарегистрирован и вошел в систему")
+    
+    # Ensure User B has sufficient gems
+    print_subheader("Ensuring User B Has Sufficient Gems")
+    
+    # Buy gems for User B to match the bet
+    buy_ruby_response, buy_ruby_success = make_request(
+        "POST", "/gems/buy?gem_type=Ruby&quantity=20",
+        auth_token=user_b_token
+    )
+    
+    buy_emerald_response, buy_emerald_success = make_request(
+        "POST", "/gems/buy?gem_type=Emerald&quantity=5",
+        auth_token=user_b_token
+    )
+    
+    if buy_ruby_success and buy_emerald_success:
+        print_success("✅ Пользователь B купил достаточно гемов для ставки")
+    else:
+        print_error("❌ Не удалось купить гемы для пользователя B")
+        record_test("Game Join - User B Gem Purchase", False, "Gem purchase failed")
+        return
+    
+    record_test("Game Join - User B Setup", True)
+    
+    # Step 4: Присоединение пользователя B к игре - вызов API /api/games/[game_id]/join
+    print_subheader("Step 4: Присоединение пользователя B к игре")
+    
+    # User B joins with matching gems
+    join_game_data = {
+        "move": "paper",
+        "gems": bet_gems  # Same gems as Player A
+    }
+    
+    print_success(f"Пользователь B присоединяется к игре {game_id} с гемами: {bet_gems}")
+    
+    join_response, join_success = make_request(
+        "POST", f"/games/{game_id}/join",
+        data=join_game_data,
+        auth_token=user_b_token
+    )
+    
+    if not join_success:
+        print_error(f"❌ Не удалось присоединиться к игре: {join_response}")
+        record_test("Game Join - Join Game API", False, f"Join failed: {join_response}")
+        return
+    
+    print_success("✅ Пользователь B успешно присоединился к игре")
+    record_test("Game Join - Join Game API", True)
+    
+    # Step 5: Проверка, что после join статус игры изменился на "ACTIVE"
+    print_subheader("Step 5: Проверка статуса игры после join")
+    
+    # Check the join response for immediate status
+    join_status = join_response.get("status", "UNKNOWN")
+    print_success(f"Статус в ответе join API: {join_status}")
+    
+    if join_status == "ACTIVE":
+        print_success("✅ КРИТИЧЕСКИЙ УСПЕХ: Backend немедленно вернул статус ACTIVE при join!")
+        record_test("Game Join - Immediate ACTIVE Status", True)
+    else:
+        print_error(f"❌ Backend не вернул статус ACTIVE при join. Статус: {join_status}")
+        record_test("Game Join - Immediate ACTIVE Status", False, f"Status: {join_status}")
+    
+    # Additional verification - check game status endpoint
+    game_status_response, game_status_success = make_request(
+        "GET", f"/games/{game_id}/status",
+        auth_token=admin_token,
+        expected_status=200
+    )
+    
+    if game_status_success:
+        game_status = game_status_response.get("status", "UNKNOWN")
+        print_success(f"Статус через game status endpoint: {game_status}")
+        
+        if game_status == "ACTIVE":
+            print_success("✅ Game status endpoint подтверждает статус ACTIVE")
+            record_test("Game Join - Status Endpoint Verification", True)
+        else:
+            print_warning(f"⚠️ Game status endpoint показывает статус: {game_status}")
+            record_test("Game Join - Status Endpoint Verification", False, f"Status: {game_status}")
+    else:
+        print_warning("⚠️ Game status endpoint недоступен")
+        record_test("Game Join - Status Endpoint Verification", False, "Endpoint unavailable")
+    
+    # Step 6: Проверка, что игра появляется в "Ongoing Battles" и исчезает из "Available Bets"
+    print_subheader("Step 6: Проверка движения игры между секциями лобби")
+    
+    # Check Available Bets - game should be removed
+    available_games_after_response, available_games_after_success = make_request(
+        "GET", "/games/available",
+        auth_token=admin_token
+    )
+    
+    game_still_in_available = False
+    if available_games_after_success and isinstance(available_games_after_response, list):
+        for game in available_games_after_response:
+            if game.get("game_id") == game_id:
+                game_still_in_available = True
+                break
+        
+        if not game_still_in_available:
+            print_success("✅ Игра корректно удалена из Available Bets")
+            record_test("Game Join - Removed from Available Bets", True)
+        else:
+            print_error("❌ Игра все еще находится в Available Bets")
+            record_test("Game Join - Removed from Available Bets", False, "Game still in available")
+    else:
+        print_error("❌ Не удалось получить Available Bets")
+        record_test("Game Join - Removed from Available Bets", False, "Failed to get available games")
+    
+    # Check Ongoing Battles - this would typically be done through user's ongoing games
+    # For admin, check their ongoing games
+    ongoing_games_response, ongoing_games_success = make_request(
+        "GET", "/games/my-ongoing",
+        auth_token=admin_token
+    )
+    
+    game_in_ongoing = False
+    if ongoing_games_success and isinstance(ongoing_games_response, list):
+        for game in ongoing_games_response:
+            if game.get("game_id") == game_id:
+                game_in_ongoing = True
+                game_status_ongoing = game.get("status", "UNKNOWN")
+                print_success(f"✅ Игра найдена в Ongoing Battles со статусом: {game_status_ongoing}")
+                break
+        
+        if game_in_ongoing:
+            print_success("✅ Игра корректно появилась в Ongoing Battles")
+            record_test("Game Join - Appears in Ongoing Battles", True)
+        else:
+            print_warning("⚠️ Игра не найдена в Ongoing Battles (возможно, уже завершилась)")
+            record_test("Game Join - Appears in Ongoing Battles", False, "Game not in ongoing")
+    else:
+        print_warning("⚠️ Не удалось получить Ongoing Battles")
+        record_test("Game Join - Appears in Ongoing Battles", False, "Failed to get ongoing games")
+    
+    # Additional verification - check admin bets list endpoint as mentioned in review
+    print_subheader("Дополнительная проверка: Admin Bets List")
+    
+    admin_bets_response, admin_bets_success = make_request(
+        "GET", "/admin/bets/list",
+        auth_token=admin_token
+    )
+    
+    if admin_bets_success:
+        admin_games = admin_bets_response.get("games", [])
+        game_found_in_admin = False
+        
+        for game in admin_games:
+            if game.get("game_id") == game_id:
+                game_found_in_admin = True
+                admin_game_status = game.get("status", "UNKNOWN")
+                print_success(f"✅ Игра найдена в Admin Bets List со статусом: {admin_game_status}")
+                
+                if admin_game_status == "ACTIVE":
+                    print_success("✅ Admin Bets List показывает корректный статус ACTIVE")
+                    record_test("Game Join - Admin Bets List Status", True)
+                else:
+                    print_error(f"❌ Admin Bets List показывает неверный статус: {admin_game_status}")
+                    record_test("Game Join - Admin Bets List Status", False, f"Status: {admin_game_status}")
+                break
+        
+        if not game_found_in_admin:
+            print_warning("⚠️ Игра не найдена в Admin Bets List")
+            record_test("Game Join - Admin Bets List Status", False, "Game not found")
+    else:
+        print_warning("⚠️ Admin Bets List endpoint недоступен")
+        record_test("Game Join - Admin Bets List Status", False, "Endpoint unavailable")
+    
+    # Summary of critical findings
+    print_subheader("КРИТИЧЕСКИЕ РЕЗУЛЬТАТЫ ТЕСТИРОВАНИЯ")
+    
+    critical_success = True
+    critical_issues = []
+    
+    # Check if join API returned ACTIVE status immediately
+    if join_status != "ACTIVE":
+        critical_success = False
+        critical_issues.append(f"Join API не вернул статус ACTIVE (вернул: {join_status})")
+    
+    # Check if game was removed from Available Bets
+    if game_still_in_available:
+        critical_success = False
+        critical_issues.append("Игра не была удалена из Available Bets")
+    
+    if critical_success:
+        print_success("🎉 ВСЕ КРИТИЧЕСКИЕ ТРЕБОВАНИЯ ВЫПОЛНЕНЫ:")
+        print_success("✅ Пользователь A успешно создал игру")
+        print_success("✅ Пользователь B успешно присоединился к игре")
+        print_success("✅ Backend немедленно вернул статус ACTIVE при join")
+        print_success("✅ Игра корректно удалена из Available Bets")
+        print_success("✅ Функциональность присоединения к игре работает корректно")
+        
+        record_test("Game Join - Overall Success", True)
+    else:
+        print_error("❌ ОБНАРУЖЕНЫ КРИТИЧЕСКИЕ ПРОБЛЕМЫ:")
+        for issue in critical_issues:
+            print_error(f"❌ {issue}")
+        
+        record_test("Game Join - Overall Success", False, f"Issues: {'; '.join(critical_issues)}")
+    
+    # Final summary
+    print_subheader("ЗАКЛЮЧЕНИЕ ПО РУССКОМУ ОБЗОРУ")
+    print_success("Тестирование функциональности присоединения к игре завершено")
+    print_success("Ключевые результаты:")
+    print_success(f"- Создание игры: {'✅ Успешно' if game_id else '❌ Неудачно'}")
+    print_success(f"- Присоединение к игре: {'✅ Успешно' if join_success else '❌ Неудачно'}")
+    print_success(f"- Статус ACTIVE при join: {'✅ Корректно' if join_status == 'ACTIVE' else '❌ Некорректно'}")
+    print_success(f"- Удаление из Available Bets: {'✅ Корректно' if not game_still_in_available else '❌ Некорректно'}")
+    print_success(f"- Общий результат: {'✅ УСПЕХ' if critical_success else '❌ ТРЕБУЕТСЯ ИСПРАВЛЕНИЕ'}")
+    
+    if critical_success:
+        print_success("🎯 КРИТИЧЕСКАЯ ПРОВЕРКА ИЗМЕНЕНИЙ ПРОЙДЕНА УСПЕШНО!")
+    else:
+        print_error("🚨 КРИТИЧЕСКАЯ ПРОВЕРКА ВЫЯВИЛА ПРОБЛЕМЫ!")
+    
+    return critical_success
+
 def print_summary() -> None:
     """Print test results summary."""
     print_header("TEST RESULTS SUMMARY")
