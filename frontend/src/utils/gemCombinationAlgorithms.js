@@ -457,7 +457,7 @@ export const calculateBigStrategy = (gemsData, targetAmount) => {
         selectedGems[gem.type] = currentUsed + 1;
         remaining -= gem.price;
         foundGem = true;
-        console.log(`Big Strategy: Using ${gem.name} #${currentUsed + 1}/${gem.availableQuantity}, remaining: $${remaining.toFixed(2)}`);
+        // Using gem for big strategy calculation
         break;
       }
     }
