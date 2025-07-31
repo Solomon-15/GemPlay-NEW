@@ -406,7 +406,9 @@ class SoundManager {
   }
 
   createMagicalSound(volume = 1) {
-    if (!this.context) return;
+    if (!this.context || !this.userInteracted) return;
+
+    try {
 
     const baseTime = this.context.currentTime;
     const frequencies = [440, 554, 659, 880];
