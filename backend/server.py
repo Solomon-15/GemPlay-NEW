@@ -6064,8 +6064,8 @@ async def determine_game_winner(game_id: str) -> dict:
         return {
             "game_id": game_id,
             "result": result_status,
-            "creator_move": game_obj.creator_move.value,
-            "opponent_move": game_obj.opponent_move.value,
+            "creator_move": game_obj.creator_move.value if hasattr(game_obj.creator_move, 'value') else game_obj.creator_move,
+            "opponent_move": game_obj.opponent_move.value if hasattr(game_obj.opponent_move, 'value') else game_obj.opponent_move,
             "winner_id": winner_id,
             "creator": creator,
             "opponent": opponent,
