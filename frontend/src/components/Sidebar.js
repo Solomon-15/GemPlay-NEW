@@ -5,7 +5,8 @@ import axios from 'axios';
 const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapsed, onOpenAdminPanel, onLogout }) => {
   const [totalBalance, setTotalBalance] = useState(0);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const API = process.env.REACT_APP_BACKEND_URL;
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const API = `${BACKEND_URL}/api`;
 
   const fetchTotalBalance = async () => {
     try {
