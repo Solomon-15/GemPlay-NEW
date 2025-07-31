@@ -352,7 +352,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     
     try {
       // CRITICAL FIX: Get fresh gem data and store it for consistent use
-      console.log('💎 Getting fresh gem data for strategy selection...');
       await refreshAllData();
       
       // Store current gems data in a variable to ensure consistency
