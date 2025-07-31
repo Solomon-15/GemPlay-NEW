@@ -150,7 +150,7 @@ def create_test_user(username: str, email: str) -> Tuple[Optional[str], Optional
     unique_username = f"{username}_{random_suffix}"
     
     user_data = {
-        "username": username,
+        "username": unique_username,
         "email": unique_email,
         "password": "Test123!",
         "gender": "male"
