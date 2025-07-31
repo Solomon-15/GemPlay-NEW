@@ -4758,11 +4758,7 @@ async def get_economy_balance(current_user: User = Depends(get_current_user)):
         "balance_breakdown": {
             "description": "Balance breakdown",
             "total_dollars": user["virtual_balance"],
-            "frozen_dollars": user["frozen_balancecommission_required
-            "commission_required
-            ]update_game_result
-            ,complete_game
-             
+            "frozen_dollars": user["frozen_balance"],
             "available_dollars": available_balance,
             "total_gems_value": total_gem_value,
             "available_gems_value": available_gem_value
