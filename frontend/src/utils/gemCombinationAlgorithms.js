@@ -182,7 +182,7 @@ export const calculateSmallStrategy = (gemsData, targetAmount) => {
       
       if (!exactMatch) {
         // Try advanced DP algorithm as fallback
-        console.log('Small Strategy: Trying DP algorithm as fallback');
+        // Trying DP algorithm as fallback
         const dpResult = findExactCombinationDP(availableGems, targetAmount);
         if (dpResult.success) {
           return {
