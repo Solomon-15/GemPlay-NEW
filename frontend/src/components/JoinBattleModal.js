@@ -520,7 +520,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     } else if (currentStep === 2) {
       // Step 2 → Step 3: Complete battle (choose move and finish)
       startBattle();
-    } else if (canGoNext()) {
+    } else if (canGoNext) {
       setCurrentStep(prev => prev + 1);
     }
   };
