@@ -187,6 +187,10 @@ class SimpleCommissionTest:
                 headers=headers
             )
             
+            print(f"Admin balance add response: {response.status_code}")
+            if response.status_code != 200:
+                print(f"Admin balance add error: {response.json()}")
+            
             if response.status_code == 200:
                 self.log_result("Add Balance", True, f"Added ${amount} to user")
                 return True
