@@ -47,6 +47,7 @@ export const useDataRefresh = (onUpdateUser, showNotifications = false) => {
     // Additional refresh after delay to ensure all backend operations are reflected
     setTimeout(async () => {
       await refreshAllData();
+      // Only log when explicitly requested
       if (showNotifications) {
         console.log('🔄 Delayed data refresh completed');
       }
