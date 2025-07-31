@@ -160,16 +160,16 @@ def create_test_user(username: str, email: str) -> Tuple[Optional[str], Optional
     response, success = make_request("POST", "/auth/register", data=user_data)
     
     if not success:
-        print_error(f"Failed to register user {username}")
-        record_test(f"User Registration - {username}", False, "Registration failed")
+        print_error(f"Failed to register user {unique_username}")
+        record_test(f"User Registration - {unique_username}", False, "Registration failed")
         return None, None
     
     if "verification_token" not in response:
-        print_error(f"No verification token in response for {username}")
-        record_test(f"User Registration - {username}", False, "No verification token")
+        print_error(f"No verification token in response for {unique_username}")
+        record_test(f"User Registration - {unique_username}", False, "No verification token")
         return None, None
     
-    print_success(f"User {username} registered successfully")
+    print_success(f"User {unique_username} registered successfully")
     
     # Verify email
     verify_response, verify_success = make_request(
