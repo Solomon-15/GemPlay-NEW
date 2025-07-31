@@ -33,6 +33,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
 
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
   const { showSuccess, showError } = useNotifications() || {};
+  const { refreshAllData, refreshWithDelay } = useDataRefresh(onUpdateUser, true);
 
   const moves = [
     { id: 'rock', name: 'Rock', icon: '/Rock.svg' },
