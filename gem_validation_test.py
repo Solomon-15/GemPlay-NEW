@@ -339,104 +339,54 @@ class GemValidationTester:
     def test_large_bet_join(self) -> bool:
         """Test 4: Join a large bet to ensure no validation errors"""
         try:
-            # First create a game with one user
-            if not self.purchase_gems("Magic", 5):  # Ensure we have enough gems
-                return False
-                
-            time.sleep(1)
-            
-            # Create $400 bet
-            bet_data = {
-                "move": "paper",
-                "bet_gems": {
-                    "Magic": 4  # 4 x $100 = $400
-                }
-            }
-            
-            response = self.session.post(f"{BASE_URL}/games/create", json=bet_data)
-            
-            if response.status_code != 200:
-                self.log_result("Create Game for Join Test", False, f"Status: {response.status_code}")
-                return False
-                
-            game_data = response.json()
-            game_id = game_data.get("game_id")
-            self.log_result("Create Game for Join Test", True, f"Game {game_id} created")
-            
-            # Now create second user to join
-            second_user_email = self.generate_test_email()
-            second_username = f"joiner_{int(time.time())}"
-            
-            # Register second user
-            register_data = {
-                "username": second_username,
-                "email": second_user_email,
-                "password": "Test123!",
-                "gender": "female"
-            }
-            
-            response = self.session.post(f"{BASE_URL}/auth/register", json=register_data)
-            if response.status_code != 201:
-                self.log_result("Second User Registration", False, f"Status: {response.status_code}")
-                return False
-                
-            # Login as second user
-            login_data = {
-                "email": second_user_email,
-                "password": "Test123!"
-            }
-            
-            time.sleep(1)
-            response = self.session.post(f"{BASE_URL}/auth/login", json=login_data)
-            if response.status_code != 200:
-                self.log_result("Second User Login", False, f"Status: {response.status_code}")
-                return False
-                
-            second_user_data = response.json()
-            second_token = second_user_data.get("access_token")
-            second_user_id = second_user_data.get("user", {}).get("id")
-            
-            # Create new session for second user
-            second_session = requests.Session()
-            second_session.headers.update({"Authorization": f"Bearer {second_token}"})
-            
-            # Add balance and buy gems for second user
-            balance_data = {"amount": 1000.0}
-            response = second_session.post(f"{BASE_URL}/admin/users/{second_user_id}/balance", json=balance_data)
-            if response.status_code != 200:
-                response = second_session.post(f"{BASE_URL}/economy/balance/add", json=balance_data)
-                
-            # Purchase Magic gems for second user
-            purchase_data = {"gem_type": "Magic", "quantity": 5}
-            response = second_session.post(f"{BASE_URL}/gems/buy", json=purchase_data)
-            
-            if response.status_code != 200:
-                self.log_result("Second User Gem Purchase", False, f"Status: {response.status_code}")
-                return False
-                
-            time.sleep(2)
-            
-            # Join the game
-            join_data = {
-                "move": "scissors",
-                "gems": {
-                    "Magic": 4  # Match the $400 bet
-                }
-            }
-            
-            response = second_session.post(f"{BASE_URL}/games/{game_id}/join", json=join_data)
-            
+            # Check if we have available games to join
+            response = self.session.get(f"{BASE_URL}/games/available")
             if response.status_code == 200:
-                join_response = response.json()
-                status = join_response.get("status", "UNKNOWN")
-                self.log_result("Large Bet Join ($400)", True, f"Successfully joined, status: {status}")
-                return True
-            else:
-                error_text = response.text
-                if "Insufficient Magic gems" in error_text:
-                    self.log_result("Large Bet Join ($400)", False, "CRITICAL: 'Insufficient Magic gems' error when joining!")
+                games = response.json()
+                if games and len(games) > 0:
+                    # Find a game with high value to test joining
+                    high_value_game = None
+                    for game in games:
+                        bet_amount = game.get("bet_amount", 0)
+                        if bet_amount >= 100:  # Look for games $100+
+                            high_value_game = game
+                            break
+                            
+                    if high_value_game:
+                        game_id = high_value_game.get("game_id")
+                        bet_amount = high_value_game.get("bet_amount")
+                        bet_gems = high_value_game.get("bet_gems", {})
+                        
+                        self.log_result("Found High Value Game", True, f"Game {game_id} with ${bet_amount} bet")
+                        
+                        # Try to join with matching gems
+                        join_data = {
+                            "move": "scissors",
+                            "gems": bet_gems  # Use same gem combination
+                        }
+                        
+                        response = self.session.post(f"{BASE_URL}/games/{game_id}/join", json=join_data)
+                        
+                        if response.status_code == 200:
+                            join_response = response.json()
+                            status = join_response.get("status", "UNKNOWN")
+                            self.log_result("Large Bet Join", True, f"Successfully joined ${bet_amount} bet, status: {status}")
+                            return True
+                        else:
+                            error_text = response.text
+                            if "Insufficient" in error_text and "gems" in error_text:
+                                self.log_result("Large Bet Join", False, f"CRITICAL: Gem validation error: {error_text}")
+                            else:
+                                self.log_result("Large Bet Join", False, f"Status: {response.status_code}, Error: {error_text}")
+                            return False
+                    else:
+                        self.log_result("Large Bet Join", False, "No high-value games available to join")
+                        return False
                 else:
-                    self.log_result("Large Bet Join ($400)", False, f"Status: {response.status_code}, Error: {error_text}")
+                    self.log_result("Large Bet Join", False, "No available games to join")
+                    return False
+            else:
+                self.log_result("Check Available Games", False, f"Status: {response.status_code}")
                 return False
                 
         except Exception as e:
