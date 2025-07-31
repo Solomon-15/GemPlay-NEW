@@ -413,11 +413,16 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     );
   }
 
-  const totalAvailableGemValue = gemsData.reduce((sum, gem) => 
-    sum + (gem.available_quantity * gem.price), 0
+  // **FIX: Check total gem value instead of only available gems**
+  // This fixes the issue where users with 865 gems worth $865 but some frozen
+  // couldn't join $800 bets even though they have enough total gems
+  const totalGemValue = gemsData.reduce((sum, gem) => 
+    sum + (gem.quantity * gem.price), 0  // Use total quantity, not just available
   );
   
-  if (totalAvailableGemValue < targetAmount) {
+  console.log(`💎 GEM VALIDATION DEBUG: Total gem value: $${totalGemValue}, Target: $${targetAmount}`);
+  
+  if (totalGemValue < targetAmount) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-surface-card border border-border-primary rounded-lg w-full max-w-md p-6">
@@ -426,7 +431,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             You don't have enough gems to match this bet amount of ${targetAmount.toFixed(2)}.
           </p>
           <p className="text-text-secondary mb-4">
-            Your total gem value: ${totalAvailableGemValue.toFixed(2)}
+            Your total gem value: ${totalGemValue.toFixed(2)}
           </p>
           <button
             onClick={onClose}
