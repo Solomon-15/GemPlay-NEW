@@ -289,7 +289,8 @@ def test_sidebar_balance_endpoint() -> None:
         expected_status=401
     )
     
-    if not no_auth_success and no_auth_response.get("detail") == "Not authenticated":
+    # no_auth_success will be True if we got the expected 401 status
+    if no_auth_success and no_auth_response.get("detail") == "Not authenticated":
         print_success("✓ Endpoint correctly requires authorization (HTTP 401 without token)")
         record_test("Sidebar Balance - Authorization Required", True)
     else:
