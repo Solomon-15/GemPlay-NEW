@@ -11,7 +11,7 @@ import sys
 from typing import Dict, Any, Optional, Tuple
 
 # Configuration
-BASE_URL = "https://b367228b-4052-4d8d-b206-b40fc66dd3c0.preview.emergentagent.com/api"
+BASE_URL = "https://85245bb1-9423-4f57-ad61-2213aa95b2ae.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
