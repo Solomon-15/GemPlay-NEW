@@ -349,15 +349,15 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     setLoading(true);
     
     try {
-      // CRITICAL FIX: Ensure we have fresh gem data before strategy selection
-      console.log('💎 Refreshing gem data before strategy selection...');
+      // CRITICAL FIX: Get fresh gem data and store it for consistent use
+      console.log('💎 Getting fresh gem data for strategy selection...');
       await refreshAllData();
       
-      // Use updated gemsData after refresh
-      const currentGemsData = gemsData.length > 0 ? gemsData : await refreshInventory();
+      // Store current gems data in a variable to ensure consistency
+      const freshGemsData = gemsData;
       
-      // Use new frontend algorithms with fresh data
-      const result = calculateGemCombination(strategy, currentGemsData, targetAmount);
+      // CRITICAL FIX: Use the same fresh data for strategy calculation
+      const result = calculateGemCombination(strategy, freshGemsData, targetAmount);
       
       if (result.success) {
         // Convert result to internal format
