@@ -61,10 +61,13 @@ class GemValidationTester:
             }
             
             response = self.session.post(f"{BASE_URL}/auth/register", json=register_data)
-            if response.status_code != 201:
+            if response.status_code not in [200, 201]:
                 self.log_result("User Registration", False, f"Status: {response.status_code}, Response: {response.text}")
                 return False
                 
+            # Extract verification token from response
+            reg_data = response.json()
+            verification_token = reg_data.get("verification_token")
             self.log_result("User Registration", True, f"User {username} registered successfully")
             
             # Get verification token from response or database
