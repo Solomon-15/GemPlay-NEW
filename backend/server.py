@@ -7866,6 +7866,37 @@ async def leave_game(game_id: str, current_user: User = Depends(get_current_user
         
         logger.info(f"🔄 Regenerating commit-reveal for creator after opponent left game {game_id}")
         
+        # **FIX: Handle creator's commission during bet recreation**
+        creator_commission_returned = 0.0
+        if not game_obj.is_regular_bot_game:
+            creator_commission_returned = game_obj.bet_amount * 0.03
+            
+            # Return creator's frozen commission
+            await db.users.update_one(
+                {"id": game_obj.creator_id},
+                {
+                    "$inc": {
+                        "virtual_balance": creator_commission_returned,
+                        "frozen_balance": -creator_commission_returned
+                    },
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+            logger.info(f"💰 Returned ${creator_commission_returned} commission to creator during bet recreation")
+            
+            # Re-freeze commission for recreated bet
+            await db.users.update_one(
+                {"id": game_obj.creator_id},
+                {
+                    "$inc": {
+                        "virtual_balance": -creator_commission_returned,
+                        "frozen_balance": creator_commission_returned
+                    },
+                    "$set": {"updated_at": datetime.utcnow()}
+                }
+            )
+            logger.info(f"💰 Re-frozen ${creator_commission_returned} commission for creator's recreated bet")
+        
         # Reset game to WAITING status with NEW commit-reveal data
         await db.games.update_one(
             {"id": game_id},
