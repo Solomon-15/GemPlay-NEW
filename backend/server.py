@@ -6414,15 +6414,9 @@ async def update_independent_counters(game: Game, winner_id: str, commission_amo
             
             # Update period revenue counter if there was commission
             if commission_amount > 0:
-                # For Human-bot games, we charge commission from both winner and loser
-                total_commission = commission_amount
-                
-                # If both players are Human-bots, double the commission
-                if creator_is_human_bot and opponent_is_human_bot:
-                    total_commission *= 2
-                elif winner_id:  # Not a draw
-                    # One Human-bot, one regular player - commission from both
-                    total_commission *= 2
+                # **CORRECTED: Only winner pays commission for ALL game types**
+                # No special logic for Human-bots - same commission rules for everyone
+                total_commission = commission_amount  # Only winner's commission
                 
                 await db.human_bot_counters.update_one(
                     {"type": "global"},
