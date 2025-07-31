@@ -171,14 +171,14 @@ def buy_gems(token: str, gem_purchases: List[Dict[str, Any]]) -> bool:
         print_error(f"Error buying gems: {str(e)}")
         return False
 
-def get_gem_inventory(token: str) -> Optional[Dict[str, Any]]:
+def get_gem_inventory(token: str) -> Optional[List[Dict[str, Any]]]:
     """Get user's gem inventory."""
     try:
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(f"{BASE_URL}/gems/inventory", headers=headers)
         
         if response.status_code == 200:
-            return response.json()
+            return response.json()  # Returns list directly
         else:
             print_error(f"Failed to get gem inventory: {response.status_code} - {response.text}")
             return None
