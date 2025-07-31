@@ -188,7 +188,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  const validateBeforeBattle = () => {
+  const validateBeforeBattle = async () => {
     if (!selectedMove) {
       showError('Please select your move');
       return false;
@@ -198,6 +198,10 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       showError('Please select gems to match opponent\'s bet');
       return false;
     }
+    
+    // CRITICAL FIX: Refresh data before validation to ensure accuracy
+    console.log('🔄 Refreshing data before battle validation...');
+    await refreshAllData();
     
     const totalGemValue = Object.entries(selectedGems).reduce((sum, [gemType, quantity]) => {
       const gem = gemsData.find(g => g.type === gemType);
@@ -209,12 +213,15 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       return false;
     }
     
+    // CRITICAL FIX: Use current gemsData after refresh for validation
     for (const [gemType, quantity] of Object.entries(selectedGems)) {
       const gem = gemsData.find(g => g.type === gemType);
       if (!gem) {
         showError(`Invalid gem type: ${gemType}`);
         return false;
       }
+      
+      console.log(`💎 Validating ${gemType}: Available ${gem.available_quantity}, Required ${quantity}`);
       
       if (gem.available_quantity < quantity) {
         showError(`Insufficient ${gem.name} gems. Available: ${gem.available_quantity}, Required: ${quantity}`);
