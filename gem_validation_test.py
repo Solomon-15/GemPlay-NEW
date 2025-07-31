@@ -120,21 +120,7 @@ class GemValidationTester:
     def purchase_gems(self, gem_type: str, quantity: int) -> bool:
         """Purchase gems for testing"""
         try:
-            # First add balance
-            balance_data = {"amount": 1000.0}  # Add $1000 for testing
-            response = self.session.post(f"{BASE_URL}/admin/users/{self.user_id}/balance", json=balance_data)
-            
-            if response.status_code != 200:
-                self.log_result(f"Add Balance for {gem_type} Purchase", False, f"Status: {response.status_code}")
-                # Try alternative endpoint
-                response = self.session.post(f"{BASE_URL}/economy/balance/add", json=balance_data)
-                if response.status_code != 200:
-                    self.log_result(f"Add Balance Alternative for {gem_type} Purchase", False, f"Status: {response.status_code}")
-                    return False
-                    
-            self.log_result(f"Add Balance for {gem_type} Purchase", True, "Balance added successfully")
-            
-            # Purchase gems
+            # Try to purchase gems directly (user starts with $1000 balance)
             purchase_data = {
                 "gem_type": gem_type,
                 "quantity": quantity
@@ -144,6 +130,34 @@ class GemValidationTester:
             if response.status_code == 200:
                 self.log_result(f"Purchase {quantity} {gem_type} Gems", True, "Gems purchased successfully")
                 return True
+            elif response.status_code == 400 and "insufficient balance" in response.text.lower():
+                # Try to add balance first
+                self.log_result(f"Initial {gem_type} Purchase", False, "Insufficient balance, trying to add balance")
+                
+                # Try admin endpoint to add balance
+                balance_data = {"amount": 1000.0}
+                response = self.session.post(f"{BASE_URL}/admin/users/{self.user_id}/balance", json=balance_data)
+                
+                if response.status_code != 200:
+                    # Try alternative balance endpoints
+                    response = self.session.post(f"{BASE_URL}/economy/balance/add", json=balance_data)
+                    if response.status_code != 200:
+                        # Try gems/purchase endpoint with balance
+                        response = self.session.post(f"{BASE_URL}/gems/purchase", json={"amount": 1000.0})
+                        if response.status_code != 200:
+                            self.log_result(f"Add Balance for {gem_type} Purchase", False, f"All balance endpoints failed")
+                            return False
+                            
+                self.log_result(f"Add Balance for {gem_type} Purchase", True, "Balance added successfully")
+                
+                # Try purchase again
+                response = self.session.post(f"{BASE_URL}/gems/buy", json=purchase_data)
+                if response.status_code == 200:
+                    self.log_result(f"Purchase {quantity} {gem_type} Gems", True, "Gems purchased successfully after balance add")
+                    return True
+                else:
+                    self.log_result(f"Purchase {quantity} {gem_type} Gems", False, f"Status: {response.status_code}, Response: {response.text}")
+                    return False
             else:
                 self.log_result(f"Purchase {quantity} {gem_type} Gems", False, f"Status: {response.status_code}, Response: {response.text}")
                 return False
