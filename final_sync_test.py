@@ -206,7 +206,7 @@ def get_user_balance_and_gems(token: str, username: str) -> Tuple[Dict[str, Any]
     
     # Get user profile
     profile_response, profile_success = make_request(
-        "GET", "/users/profile", auth_token=token
+        "GET", "/auth/me", auth_token=token
     )
     
     if not profile_success:
