@@ -95,13 +95,27 @@ def register_and_verify_user(username: str, email: str, password: str, gender: s
         }
         
         response = requests.post(f"{BASE_URL}/auth/register", json=register_data)
-        if response.status_code != 201:
+        if response.status_code != 200:  # Changed from 201 to 200
             print_error(f"Registration failed: {response.status_code} - {response.text}")
             return None
         
-        # Auto-verify user (simulate email verification)
-        # In a real scenario, we'd need to extract the token from email
-        # For testing, we'll try to login directly
+        # Extract verification token from response
+        data = response.json()
+        verification_token = data.get("verification_token")
+        
+        if not verification_token:
+            print_error("No verification token received")
+            return None
+        
+        print_success(f"User registered, verification token: {verification_token}")
+        
+        # Verify email
+        verify_response = requests.post(f"{BASE_URL}/auth/verify-email", json={"token": verification_token})
+        if verify_response.status_code != 200:
+            print_error(f"Email verification failed: {verify_response.status_code} - {verify_response.text}")
+            return None
+        
+        print_success("Email verified successfully")
         time.sleep(1)
         
         # Login user
@@ -113,7 +127,9 @@ def register_and_verify_user(username: str, email: str, password: str, gender: s
         response = requests.post(f"{BASE_URL}/auth/login", json=login_data)
         if response.status_code == 200:
             data = response.json()
-            return data.get("access_token")
+            access_token = data.get("access_token")
+            print_success(f"User logged in successfully")
+            return access_token
         else:
             print_error(f"Login failed after registration: {response.status_code} - {response.text}")
             return None
