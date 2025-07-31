@@ -262,7 +262,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       }, 1000);
     });
     
-    await joinBattle();
+    await completeBattle();
   };
 
   const leaveGame = async () => {
