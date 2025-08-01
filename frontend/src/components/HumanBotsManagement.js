@@ -264,6 +264,15 @@ const HumanBotsManagement = () => {
     max_delay: 120,
     use_commit_reveal: true,
     logging_level: 'INFO',
+    // Additional settings for bulk creation
+    can_play_with_other_bots: true,
+    can_play_with_players: true,
+    // Delay ranges for bot-to-bot games
+    bot_min_delay_range: [30, 120],
+    bot_max_delay_range: [30, 120],
+    // Delay ranges for bot-to-player games
+    player_min_delay_range: [30, 120], 
+    player_max_delay_range: [30, 120],
     bots: []
   });
 
