@@ -21785,7 +21785,7 @@ async def get_human_bot_names(current_admin: User = Depends(get_current_admin)):
             detail=f"Failed to get names: {str(e)}"
         )
 
-@api_router.put("/admin/human-bots/names", response_model=dict)
+@api_router.put("/admin/human-bots/names")
 async def update_human_bot_names(
     request: UpdateHumanBotNamesRequest,
     current_admin: User = Depends(get_current_admin)
