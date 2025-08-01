@@ -474,15 +474,23 @@ const HumanBotsList = ({
       return;
     }
     
+    setLoadingTogglePlayWithPlayers(prev => new Set(prev).add(bot.id));
+    
     try {
       await executeOperation(`/admin/human-bots/${bot.id}/toggle-play-with-players`, 'POST', {
         can_play_with_players: canPlay
       });
-      addNotification(`Настройки Human-бота "${bot.name}" изменены: игра с игроками ${canPlay ? 'включена' : 'отключена'}`, 'success');
-      if (onRefresh) onRefresh(); // Use parent refresh function
-      // await fetchStats(); // Remove duplicate call
+      addNotification(`Human-бот "${bot.name}": игра с игроками ${canPlay ? 'включена' : 'отключена'}`, 'success');
+      if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Ошибка переключения игры с игроками:', error);
+      addNotification(`Ошибка изменения настроек Human-бота "${bot.name}": ${error.message}`, 'error');
+    } finally {
+      setLoadingTogglePlayWithPlayers(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(bot.id);
+        return newSet;
+      });
     }
   };
 
