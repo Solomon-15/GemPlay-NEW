@@ -19513,37 +19513,17 @@ async def get_human_bots_settings(current_admin: User = Depends(get_current_admi
             # Create default settings if not exists
             default_settings = {
                 "id": "bot_settings",
-                "max_active_bets_human": 100,
-                "auto_play_enabled": False,
-                "min_delay_seconds": 1,
-                "max_delay_seconds": 3600,
-                "play_with_players_enabled": False,
+                "max_concurrent_games": 3,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }
             await db.bot_settings.insert_one(default_settings)
             settings = default_settings
         
-        # Get current usage statistics
-        all_bots = await db.human_bots.find({}).to_list(None)
-        total_individual_limits = sum(bot.get("bet_limit", 12) for bot in all_bots)
-        max_limit = settings.get("max_active_bets_human", 100)
-        
         return JSONResponse(content={
             "success": True,
             "settings": {
-                "max_active_bets_human": max_limit,
-                "auto_play_enabled": settings.get("auto_play_enabled", False),
-                "min_delay_seconds": settings.get("min_delay_seconds", 1),
-                "max_delay_seconds": settings.get("max_delay_seconds", 3600),
-                "play_with_players_enabled": settings.get("play_with_players_enabled", False),
-                "max_concurrent_games": settings.get("max_concurrent_games", 3),
-                "current_usage": {
-                    "total_individual_limits": total_individual_limits,
-                    "max_limit": max_limit,
-                    "available": max_limit - total_individual_limits,
-                    "usage_percentage": round((total_individual_limits / max_limit) * 100, 1) if max_limit > 0 else 0
-                }
+                "max_concurrent_games": settings.get("max_concurrent_games", 3)
             }
         })
         
