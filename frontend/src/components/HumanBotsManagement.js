@@ -127,7 +127,7 @@ const HumanBotsManagement = () => {
   }, [searchDebounceTimeout]);
 
   // Enhanced API operation with caching
-  const executeOperation = async (endpoint, method = 'GET', data = null, useCache = false) => {
+  const executeOperation = useCallback(async (endpoint, method = 'GET', data = null, useCache = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -205,7 +205,7 @@ const HumanBotsManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, filters, priorityFields, addNotification]);
 
   const characters = [
     { value: 'STABLE', label: 'Стабильный', description: 'Ровные небольшие ставки' },
