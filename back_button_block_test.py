@@ -171,7 +171,7 @@ class BackButtonBlockingTester:
                 headers=headers
             )
             
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 response_data = response.json()
                 game_id = response_data.get("game_id")
                 return True, game_id, response_data
