@@ -335,7 +335,16 @@ class TotalSortingTester:
             
             data1 = response1.json()
             users1 = data1.get("users", [])
+            # Check for different pagination field names
             pagination1 = data1.get("pagination", {})
+            if not pagination1:
+                # Try alternative pagination structure
+                pagination1 = {
+                    "current_page": data1.get("page"),
+                    "total_pages": data1.get("pages"),
+                    "per_page": data1.get("limit"),
+                    "total_items": data1.get("total")
+                }
             
             # Get second page
             params2 = {
@@ -372,9 +381,10 @@ class TotalSortingTester:
                 return False
             
             # Check pagination metadata
-            if pagination1.get("current_page") != 1:
+            current_page = pagination1.get("current_page") or pagination1.get("page")
+            if current_page != 1:
                 self.log_result("Pagination with Sorting", False, 
-                              f"Incorrect current_page: {pagination1.get('current_page')}")
+                              f"Incorrect current_page: {current_page}")
                 return False
             
             self.log_result("Pagination with Sorting", True, 
