@@ -1650,10 +1650,22 @@ const UserManagement = ({ user: currentUser }) => {
 
     } catch (error) {
       console.error('Error creating user:', error);
-      if (window.addNotification) {
-        window.addNotification(`Ошибка создания пользователя: ${error.message}`, 'error');
+      let errorMessage = 'Ошибка создания пользователя';
+      
+      if (error.message.includes('Email already exists')) {
+        errorMessage = 'Пользователь с таким email уже существует. Используйте другой email.';
+      } else if (error.message.includes('Username already exists')) {
+        errorMessage = 'Пользователь с таким именем уже существует. Используйте другое имя.';
+      } else if (error.message.includes('Passwords do not match')) {
+        errorMessage = 'Пароли не совпадают. Проверьте правильность ввода.';
       } else {
-        alert(`Ошибка создания пользователя: ${error.message}`);
+        errorMessage = `Ошибка создания пользователя: ${error.message}`;
+      }
+      
+      if (window.addNotification) {
+        window.addNotification(errorMessage, 'error');
+      } else {
+        alert(errorMessage);
       }
     } finally {
       setCreateUserLoading(false);
