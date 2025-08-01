@@ -298,8 +298,10 @@ def test_gem_validation_fix():
     print_subheader("TEST SCENARIO 1: Large Sapphire Bet (800+ gems value)")
     
     # Create Player A
+    timestamp = int(time.time())
     player_a_email = generate_unique_email()
-    player_a_token, player_a_success = register_and_verify_user("PlayerA_LargeBet", player_a_email, "Test123!")
+    player_a_username = f"PlayerA_LargeBet_{timestamp}"
+    player_a_token, player_a_success = register_and_verify_user(player_a_username, player_a_email, "Test123!")
     
     if not player_a_success:
         print_error("Failed to create Player A")
