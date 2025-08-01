@@ -761,6 +761,16 @@ const HumanBotsManagement = () => {
             📋 Список ботов
           </button>
           <button
+            onClick={() => setActiveTab('names')}
+            className={`flex-1 px-6 py-4 text-center font-rajdhani font-bold transition-colors ${
+              activeTab === 'names'
+                ? 'bg-accent-primary text-white border-b-2 border-accent-primary'
+                : 'text-text-secondary hover:text-white hover:bg-surface-sidebar'
+            }`}
+          >
+            📝 Имена ботов
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`flex-1 px-6 py-4 text-center font-rajdhani font-bold transition-colors ${
               activeTab === 'settings'
