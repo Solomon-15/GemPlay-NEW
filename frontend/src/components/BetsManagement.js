@@ -531,7 +531,7 @@ const BetsManagement = () => {
                 Все
               </button>
               <button
-                onClick={() => setStatusFilter('WAITING')}
+                onClick={() => setStatusFilter(statusFilter === 'WAITING' ? statusFilter : 'WAITING')}
                 className={`px-3 py-1 text-sm rounded-lg font-rajdhani font-bold transition-colors ${
                   statusFilter === 'WAITING' ? 'bg-accent-primary text-white' : 'bg-surface-sidebar text-text-secondary hover:text-white'
                 }`}
@@ -539,7 +539,7 @@ const BetsManagement = () => {
                 Ожидают
               </button>
               <button
-                onClick={() => setStatusFilter('ACTIVE')}
+                onClick={() => setStatusFilter(statusFilter === 'ACTIVE' ? statusFilter : 'ACTIVE')}
                 className={`px-3 py-1 text-sm rounded-lg font-rajdhani font-bold transition-colors ${
                   statusFilter === 'ACTIVE' ? 'bg-accent-primary text-white' : 'bg-surface-sidebar text-text-secondary hover:text-white'
                 }`}
@@ -547,7 +547,7 @@ const BetsManagement = () => {
                 Активные
               </button>
               <button
-                onClick={() => setStatusFilter('COMPLETED')}
+                onClick={() => setStatusFilter(statusFilter === 'COMPLETED' ? statusFilter : 'COMPLETED')}
                 className={`px-3 py-1 text-sm rounded-lg font-rajdhani font-bold transition-colors ${
                   statusFilter === 'COMPLETED' ? 'bg-accent-primary text-white' : 'bg-surface-sidebar text-text-secondary hover:text-white'
                 }`}
@@ -555,7 +555,7 @@ const BetsManagement = () => {
                 Завершённые
               </button>
               <button
-                onClick={() => setStatusFilter('CANCELLED')}
+                onClick={() => setStatusFilter(statusFilter === 'CANCELLED' ? statusFilter : 'CANCELLED')}
                 className={`px-3 py-1 text-sm rounded-lg font-rajdhani font-bold transition-colors ${
                   statusFilter === 'CANCELLED' ? 'bg-accent-primary text-white' : 'bg-surface-sidebar text-text-secondary hover:text-white'
                 }`}
