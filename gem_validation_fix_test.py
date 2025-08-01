@@ -129,22 +129,22 @@ def register_and_verify_user(username: str, email: str, password: str, gender: s
     
     print_success(f"User registered successfully: {username}")
     
-    # Get admin token to verify email
-    admin_login_data = {
-        "email": "admin@gemplay.com",
-        "password": "Admin123!"
-    }
+    # Get verification token from registration response
+    verification_token = register_response.get("verification_token")
+    if not verification_token:
+        print_error("No verification token received")
+        return "", False
     
-    admin_login_response, admin_login_success = make_request("POST", "/auth/login", admin_login_data)
+    # Verify email
+    verify_response, verify_success = make_request("POST", "/auth/verify-email", {"token": verification_token})
     
-    if admin_login_success:
-        admin_token = admin_login_response.get("access_token")
-        if admin_token:
-            # Try to find and verify the user's email
-            # First, let's try to login and see if we can get the verification token
-            pass
+    if not verify_success:
+        print_error(f"Email verification failed: {verify_response}")
+        return "", False
     
-    # Try to login directly (some systems auto-verify for testing)
+    print_success(f"Email verified successfully for: {username}")
+    
+    # Login to get token
     login_data = {
         "email": email,
         "password": password
@@ -152,25 +152,17 @@ def register_and_verify_user(username: str, email: str, password: str, gender: s
     
     login_response, login_success = make_request("POST", "/auth/login", login_data)
     
-    if login_success:
-        token = login_response.get("access_token")
-        if token:
-            print_success(f"User logged in successfully: {username}")
-            return token, True
-    
-    # If login failed due to email verification, try to verify programmatically
-    if not login_success and "Email not verified" in str(login_response):
-        print_info("Attempting to verify email programmatically...")
-        
-        # For testing purposes, let's try to create a user that's already verified
-        # by using a different approach - create via admin if possible
-        
-        # For now, let's skip email verification and return failure
-        print_error(f"Email verification required but not implemented in test: {login_response}")
+    if not login_success:
+        print_error(f"Login failed: {login_response}")
         return "", False
     
-    print_error(f"Login failed: {login_response}")
-    return "", False
+    token = login_response.get("access_token")
+    if not token:
+        print_error("No access token in login response")
+        return "", False
+    
+    print_success(f"User logged in successfully: {username}")
+    return token, True
 
 def purchase_gems(auth_token: str, gem_purchases: Dict[str, int]) -> bool:
     """Purchase gems for user."""
