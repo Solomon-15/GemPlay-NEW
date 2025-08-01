@@ -24436,12 +24436,234 @@ def print_summary() -> None:
         status_color = Colors.OKGREEN if success_rate_cat >= 80 else Colors.FAIL
         print(f"{category}: {status_color}{results['passed']}/{total_cat} ({success_rate_cat:.1f}%){Colors.ENDC}")
 
+def test_human_bots_management_apis_comprehensive() -> None:
+    """
+    Comprehensive testing of Human Bots Management APIs after frontend fix.
+    Tests all CRUD operations and global settings to ensure backend functionality.
+    """
+    print_header("HUMAN BOTS MANAGEMENT APIs COMPREHENSIVE TESTING")
+    print("Testing backend APIs after frontend 'Maximum update depth exceeded' fix")
+    print("Focus: Ensure all Human Bots Management endpoints work correctly")
+    
+    # Step 1: Admin Authentication
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = test_admin_login()
+    if not admin_token:
+        print_error("Failed to authenticate as admin - cannot proceed with Human Bots Management testing")
+        record_test("Human Bots Management - Admin Authentication", False, "Admin login failed")
+        return
+    
+    record_test("Human Bots Management - Admin Authentication", True)
+    
+    # Step 2: Test Global Settings Endpoint (fetchGlobalSettings)
+    print_subheader("Step 2: Test Global Settings Endpoint")
+    global_settings_response, global_settings_success = make_request(
+        "GET", "/admin/global-settings",
+        auth_token=admin_token
+    )
+    
+    if global_settings_success:
+        print_success("Global settings endpoint accessible")
+        if isinstance(global_settings_response, dict):
+            print_success(f"Global settings structure: {list(global_settings_response.keys())}")
+            record_test("Human Bots Management - Global Settings Endpoint", True)
+        else:
+            print_error("Global settings response is not a dictionary")
+            record_test("Human Bots Management - Global Settings Endpoint", False, "Invalid response structure")
+    else:
+        print_error("Failed to access global settings endpoint")
+        record_test("Human Bots Management - Global Settings Endpoint", False, "Endpoint not accessible")
+    
+    # Step 3: Test GET /api/admin/human-bots (List Human Bots)
+    print_subheader("Step 3: Test GET Human Bots List")
+    list_response, list_success = make_request(
+        "GET", "/admin/human-bots?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if list_success:
+        print_success("Human bots list endpoint accessible")
+        if "bots" in list_response and "pagination" in list_response:
+            print_success(f"Found {len(list_response['bots'])} human bots")
+            print_success(f"Pagination info: {list_response['pagination']}")
+            record_test("Human Bots Management - GET List", True)
+        else:
+            print_error("Human bots list response missing expected fields")
+            record_test("Human Bots Management - GET List", False, "Missing bots or pagination fields")
+    else:
+        print_error("Failed to get human bots list")
+        record_test("Human Bots Management - GET List", False, "Endpoint not accessible")
+    
+    # Step 4: Test POST /api/admin/human-bots (Create Human Bot)
+    print_subheader("Step 4: Test POST Create Human Bot")
+    test_bot_data = {
+        "name": f"TestBot_{int(time.time())}",
+        "character": "BALANCED",
+        "gender": "male",
+        "min_bet": 10.0,
+        "max_bet": 100.0,
+        "bet_limit": 12,
+        "bet_limit_amount": 300.0,
+        "win_percentage": 40.0,
+        "loss_percentage": 40.0,
+        "draw_percentage": 20.0,
+        "min_delay": 30,
+        "max_delay": 120,
+        "use_commit_reveal": True,
+        "logging_level": "INFO",
+        "can_play_with_other_bots": True,
+        "can_play_with_players": True
+    }
+    
+    create_response, create_success = make_request(
+        "POST", "/admin/human-bots",
+        data=test_bot_data,
+        auth_token=admin_token
+    )
+    
+    created_bot_id = None
+    if create_success:
+        print_success("Human bot creation endpoint accessible")
+        if "id" in create_response:
+            created_bot_id = create_response["id"]
+            print_success(f"Created human bot with ID: {created_bot_id}")
+            record_test("Human Bots Management - POST Create", True)
+        else:
+            print_error("Create response missing bot ID")
+            record_test("Human Bots Management - POST Create", False, "Missing bot ID in response")
+    else:
+        print_error("Failed to create human bot")
+        record_test("Human Bots Management - POST Create", False, "Creation endpoint failed")
+    
+    # Step 5: Test PUT /api/admin/human-bots/{id} (Update Human Bot)
+    if created_bot_id:
+        print_subheader("Step 5: Test PUT Update Human Bot")
+        update_data = {
+            "name": f"UpdatedTestBot_{int(time.time())}",
+            "min_bet": 15.0,
+            "max_bet": 150.0,
+            "win_percentage": 45.0
+        }
+        
+        update_response, update_success = make_request(
+            "PUT", f"/admin/human-bots/{created_bot_id}",
+            data=update_data,
+            auth_token=admin_token
+        )
+        
+        if update_success:
+            print_success("Human bot update endpoint accessible")
+            if "id" in update_response and update_response["id"] == created_bot_id:
+                print_success(f"Successfully updated human bot {created_bot_id}")
+                record_test("Human Bots Management - PUT Update", True)
+            else:
+                print_error("Update response missing or incorrect bot ID")
+                record_test("Human Bots Management - PUT Update", False, "Invalid update response")
+        else:
+            print_error("Failed to update human bot")
+            record_test("Human Bots Management - PUT Update", False, "Update endpoint failed")
+    else:
+        print_error("Skipping update test - no bot ID available")
+        record_test("Human Bots Management - PUT Update", False, "No bot to update")
+    
+    # Step 6: Test Human Bot Statistics
+    print_subheader("Step 6: Test Human Bot Statistics")
+    stats_response, stats_success = make_request(
+        "GET", "/admin/human-bots/stats",
+        auth_token=admin_token
+    )
+    
+    if stats_success:
+        print_success("Human bot statistics endpoint accessible")
+        expected_stats_fields = ["total_bots", "active_bots", "active_games", "total_games_played"]
+        missing_fields = [field for field in expected_stats_fields if field not in stats_response]
+        
+        if not missing_fields:
+            print_success("All expected statistics fields present")
+            print_success(f"Statistics: {stats_response}")
+            record_test("Human Bots Management - Statistics", True)
+        else:
+            print_error(f"Missing statistics fields: {missing_fields}")
+            record_test("Human Bots Management - Statistics", False, f"Missing fields: {missing_fields}")
+    else:
+        print_error("Failed to get human bot statistics")
+        record_test("Human Bots Management - Statistics", False, "Statistics endpoint failed")
+    
+    # Step 7: Test DELETE /api/admin/human-bots/{id} (Delete Human Bot)
+    if created_bot_id:
+        print_subheader("Step 7: Test DELETE Human Bot")
+        delete_response, delete_success = make_request(
+            "DELETE", f"/admin/human-bots/{created_bot_id}",
+            auth_token=admin_token
+        )
+        
+        if delete_success:
+            print_success("Human bot deletion endpoint accessible")
+            if "success" in delete_response and delete_response["success"]:
+                print_success(f"Successfully deleted human bot {created_bot_id}")
+                record_test("Human Bots Management - DELETE", True)
+            else:
+                print_error("Delete response indicates failure")
+                record_test("Human Bots Management - DELETE", False, "Delete operation failed")
+        else:
+            print_error("Failed to delete human bot")
+            record_test("Human Bots Management - DELETE", False, "Delete endpoint failed")
+    else:
+        print_error("Skipping delete test - no bot ID available")
+        record_test("Human Bots Management - DELETE", False, "No bot to delete")
+    
+    # Step 8: Test API Performance (No excessive requests)
+    print_subheader("Step 8: Test API Performance")
+    start_time = time.time()
+    
+    # Make multiple requests to test performance
+    performance_requests = 0
+    performance_failures = 0
+    
+    for i in range(5):
+        perf_response, perf_success = make_request(
+            "GET", "/admin/human-bots?page=1&limit=5",
+            auth_token=admin_token
+        )
+        performance_requests += 1
+        if not perf_success:
+            performance_failures += 1
+    
+    end_time = time.time()
+    total_time = end_time - start_time
+    avg_response_time = total_time / performance_requests
+    
+    print_success(f"Performance test: {performance_requests} requests in {total_time:.2f}s")
+    print_success(f"Average response time: {avg_response_time:.2f}s per request")
+    print_success(f"Failures: {performance_failures}/{performance_requests}")
+    
+    if avg_response_time < 2.0 and performance_failures == 0:
+        print_success("API performance is acceptable")
+        record_test("Human Bots Management - API Performance", True)
+    else:
+        print_error(f"API performance issues: avg {avg_response_time:.2f}s, failures {performance_failures}")
+        record_test("Human Bots Management - API Performance", False, f"Performance issues detected")
+    
+    # Summary
+    print_subheader("Human Bots Management Testing Summary")
+    human_bot_tests = [test for test in test_results["tests"] if "Human Bots Management" in test["name"]]
+    passed_tests = sum(1 for test in human_bot_tests if test["passed"])
+    total_tests = len(human_bot_tests)
+    success_rate = (passed_tests / total_tests) * 100 if total_tests > 0 else 0
+    
+    print_success(f"Human Bots Management Tests: {passed_tests}/{total_tests} ({success_rate:.1f}%)")
+    
+    if success_rate >= 80:
+        print_success("✅ Human Bots Management APIs are working correctly after frontend fix")
+    else:
+        print_error("❌ Human Bots Management APIs have issues that need attention")
+
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - GAME JOIN FUNCTIONALITY")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN BOTS MANAGEMENT")
     
     try:
-        # Run the Game Join Functionality test as specifically requested in the Russian review
-        test_game_join_functionality_russian_review()
+        # Run the Human Bots Management API testing as specifically requested in the Russian review
+        test_human_bots_management_apis_comprehensive()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
