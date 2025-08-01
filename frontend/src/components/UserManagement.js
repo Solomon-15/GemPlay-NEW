@@ -2421,6 +2421,223 @@ const UserManagement = ({ user: currentUser }) => {
           </div>
         </div>
       )}
+
+      {/* Create User Modal */}
+      {isCreateUserModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-russo text-xl text-white">Создать нового пользователя</h3>
+              <button
+                onClick={() => setIsCreateUserModalOpen(false)}
+                className="text-text-secondary hover:text-white"
+                disabled={createUserLoading}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Username and Email */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Имя пользователя *
+                  </label>
+                  <input
+                    type="text"
+                    value={createUserForm.username}
+                    onChange={(e) => setCreateUserForm(prev => ({...prev, username: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder="user123"
+                    disabled={createUserLoading}
+                    pattern="[a-zA-Z0-9._+-]+"
+                    title="Только латиница, цифры, точка, минус/плюс, подчеркивания, тире"
+                  />
+                  <p className="text-xs text-text-secondary mt-1">
+                    Только латиница, цифры, точка, минус/плюс, подчеркивания, тире
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={createUserForm.email}
+                    onChange={(e) => setCreateUserForm(prev => ({...prev, email: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder="user@example.com"
+                    disabled={createUserLoading}
+                  />
+                </div>
+              </div>
+
+              {/* Password fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Пароль *
+                  </label>
+                  <input
+                    type="password"
+                    value={createUserForm.password}
+                    onChange={(e) => setCreateUserForm(prev => ({...prev, password: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder="Минимум 8 символов"
+                    disabled={createUserLoading}
+                    minLength="8"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Подтверждение пароля *
+                  </label>
+                  <input
+                    type="password"
+                    value={createUserForm.confirm_password}
+                    onChange={(e) => setCreateUserForm(prev => ({...prev, confirm_password: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder="Повторите пароль"
+                    disabled={createUserLoading}
+                    minLength="8"
+                  />
+                </div>
+              </div>
+
+              {/* Role and Gender */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Роль
+                  </label>
+                  <select
+                    value={createUserForm.role}
+                    onChange={(e) => setCreateUserForm(prev => ({...prev, role: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    disabled={createUserLoading}
+                  >
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
+                    <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Пол
+                  </label>
+                  <select
+                    value={createUserForm.gender}
+                    onChange={(e) => setCreateUserForm(prev => ({...prev, gender: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    disabled={createUserLoading}
+                  >
+                    <option value="male">Мужчина</option>
+                    <option value="female">Женщина</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Balance and Limit */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Начальный демо-баланс ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={createUserForm.virtual_balance}
+                    onChange={(e) => setCreateUserForm(prev => ({...prev, virtual_balance: Math.max(1, Math.min(10000, parseInt(e.target.value) || 1000))}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    min="1"
+                    max="10000"
+                    disabled={createUserLoading}
+                  />
+                  <p className="text-xs text-text-secondary mt-1">От 1 до 10000</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Дневной лимит пополнения ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={createUserForm.daily_limit_max}
+                    onChange={(e) => setCreateUserForm(prev => ({...prev, daily_limit_max: Math.max(1, Math.min(10000, parseInt(e.target.value) || 1000))}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    min="1"
+                    max="10000"
+                    disabled={createUserLoading}
+                  />
+                  <p className="text-xs text-text-secondary mt-1">От 1 до 10000</p>
+                </div>
+              </div>
+
+              {/* Status and Ban Reason */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Статус
+                  </label>
+                  <select
+                    value={createUserForm.status}
+                    onChange={(e) => setCreateUserForm(prev => ({...prev, status: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    disabled={createUserLoading}
+                  >
+                    <option value="ACTIVE">Активный</option>
+                    <option value="BANNED">Заблокирован</option>
+                  </select>
+                </div>
+                
+                {createUserForm.status === 'BANNED' && (
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Причина блокировки *
+                    </label>
+                    <textarea
+                      value={createUserForm.ban_reason}
+                      onChange={(e) => setCreateUserForm(prev => ({...prev, ban_reason: e.target.value}))}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
+                      rows="3"
+                      placeholder="Укажите причину блокировки..."
+                      disabled={createUserLoading}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex space-x-4 mt-6">
+              <button
+                onClick={handleCreateUser}
+                disabled={createUserLoading}
+                className="flex-1 py-2 bg-accent-primary text-white font-rajdhani font-bold rounded-lg hover:bg-opacity-80 transition-colors disabled:opacity-50"
+              >
+                {createUserLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Создание...
+                  </>
+                ) : (
+                  'Создать пользователя'
+                )}
+              </button>
+              <button
+                onClick={() => setIsCreateUserModalOpen(false)}
+                disabled={createUserLoading}
+                className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
