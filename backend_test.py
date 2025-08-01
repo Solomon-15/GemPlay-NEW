@@ -24542,7 +24542,9 @@ def test_human_bots_management_apis_comprehensive() -> None:
             "name": f"UpdatedTestBot_{int(time.time())}",
             "min_bet": 15.0,
             "max_bet": 150.0,
-            "win_percentage": 45.0
+            "win_percentage": 45.0,
+            "loss_percentage": 35.0,
+            "draw_percentage": 20.0
         }
         
         update_response, update_success = make_request(
