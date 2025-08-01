@@ -663,18 +663,27 @@ const HumanBotsManagement = () => {
   };
 
   const generateRandomName = () => {
+    // If bot names are available from the server, use them
+    if (botNames.length > 0) {
+      const randomName = botNames[Math.floor(Math.random() * botNames.length)];
+      const gender = Math.random() > 0.5 ? 'male' : 'female';
+      return { 
+        name: randomName, 
+        gender 
+      };
+    }
+    
+    // Fallback to static names if server names are not available
     const maleNames = ['Alikhan', 'Nurzhan', 'Ayan', 'Ruslan', 'Bekzat','Yerlan', 'Zhanibek', 'Omir', 'Azamat', 'Temirlan',   'Aleksandr', 'Dmitriy', 'Maksim', 'Andrey', 'Sergey', 'Aleksey', 'Vladimir', 'Pavel', 'Roman', 'Artem'];
     const femaleNames = ['Aigerim', 'Gulnara', 'Aizhan', 'Sabina', 'Saule', 'Dilnaz', 'Madina', 'Zhanar', 'Aruzhan', 'Gulzhana', 'Anna', 'Mariya', 'Elena', 'Natalya', 'Olga', 'Tatyana', 'Irina', 'Svetlana', 'Ekaterina', 'Viktoriya'];
-    const surnames = [];
     
     const gender = Math.random() > 0.5 ? 'male' : 'female';
     const firstName = gender === 'male' ? 
       maleNames[Math.floor(Math.random() * maleNames.length)] : 
       femaleNames[Math.floor(Math.random() * femaleNames.length)];
-    const surname = surnames[Math.floor(Math.random() * surnames.length)];
     
     return { 
-      name: `${firstName} ${surname}`, 
+      name: firstName, 
       gender 
     };
   };
