@@ -312,7 +312,8 @@ def test_gem_validation_fix():
     
     # Create Player B
     player_b_email = generate_unique_email()
-    player_b_token, player_b_success = register_and_verify_user("PlayerB_LargeBet", player_b_email, "Test123!")
+    player_b_username = f"PlayerB_LargeBet_{timestamp}"
+    player_b_token, player_b_success = register_and_verify_user(player_b_username, player_b_email, "Test123!")
     
     if not player_b_success:
         print_error("Failed to create Player B")
