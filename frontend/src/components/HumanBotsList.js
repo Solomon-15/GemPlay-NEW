@@ -267,6 +267,13 @@ const HumanBotsList = ({
           } catch (error) {
             console.error(`Ошибка удаления бота ${botId}:`, error);
             
+            let userFriendlyMessage = 'Ошибка удаления бота';
+            if (error.message.includes('Cannot delete bot with active games')) {
+              userFriendlyMessage = 'Невозможно удалить бота: у него есть активные игры. Дождитесь завершения игр или отмените их.';
+            } else if (error.message.includes('Bot not found')) {
+              userFriendlyMessage = 'Бот не найден. Возможно, он уже был удален.';
+            }
+            
             // Check if this bot has active games
             if (error.detailData && error.detailData.force_delete_required) {
               const bot = humanBots.find(b => b.id === botId);
