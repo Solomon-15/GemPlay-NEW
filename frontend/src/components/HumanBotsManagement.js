@@ -1268,7 +1268,6 @@ const HumanBotsManagement = () => {
                 pageSize={pageSize}
                 priorityFields={priorityFields}
                 stats={stats} // Pass stats to child component
-                globalSettings={globalSettings} // Pass global settings to child component
                 onPageChange={setCurrentPage}
                 onEditBot={(bot) => {
                   setEditingBot(bot);
