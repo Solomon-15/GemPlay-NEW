@@ -895,15 +895,15 @@ const HumanBotsList = ({
                     </label>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-center">
-                    <label className={`relative inline-flex items-center group ${globalSettings.play_with_players_enabled ? (loadingTogglePlayWithPlayers.has(bot.id) ? 'cursor-wait' : 'cursor-pointer') : 'cursor-not-allowed opacity-50'}`}>
+                    <label className={`relative inline-flex items-center group ${loadingTogglePlayWithPlayers.has(bot.id) ? 'cursor-wait' : 'cursor-pointer'}`}>
                       <input 
                         type="checkbox" 
                         checked={bot.can_play_with_players || false}
                         onChange={(e) => handleTogglePlayWithPlayers(bot, e.target.checked)}
-                        disabled={!globalSettings.play_with_players_enabled || loadingTogglePlayWithPlayers.has(bot.id)}
+                        disabled={loadingTogglePlayWithPlayers.has(bot.id)}
                         className="sr-only peer"
                       />
-                      <div className={`relative w-11 h-6 ${globalSettings.play_with_players_enabled ? 'bg-gray-700' : 'bg-gray-800'} rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-300 peer-focus:ring-opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-300 peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-emerald-600 shadow-lg ${globalSettings.play_with_players_enabled ? 'hover:shadow-xl transition-all duration-300 group-hover:scale-105' : ''} ${!globalSettings.play_with_players_enabled ? 'opacity-50' : ''} ${loadingTogglePlayWithPlayers.has(bot.id) ? 'opacity-50' : ''}`}>
+                      <div className={`relative w-11 h-6 bg-gray-700 rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-green-300 peer-focus:ring-opacity-50 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all after:duration-300 peer-checked:bg-gradient-to-r peer-checked:from-green-500 peer-checked:to-emerald-600 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105 ${loadingTogglePlayWithPlayers.has(bot.id) ? 'opacity-50' : ''}`}>
                         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-transparent to-white opacity-20"></div>
                         {loadingTogglePlayWithPlayers.has(bot.id) && (
                           <div className="absolute inset-0 flex items-center justify-center">
