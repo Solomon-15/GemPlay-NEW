@@ -59,7 +59,15 @@ const HumanBotsManagement = () => {
   const [priorityFields, setPriorityFields] = useState(true);
   const [loadingPriority, setLoadingPriority] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('bots'); // 'bots' или 'settings'
+  const [activeTab, setActiveTab] = useState('bots'); // 'bots', 'names' или 'settings'
+
+  // Human Bot Names Management State
+  const [botNames, setBotNames] = useState([]);
+  const [namesLoading, setNamesLoading] = useState(false);
+  const [namesSaving, setNamesSaving] = useState(false);
+  const [newNameInput, setNewNameInput] = useState('');
+  const [bulkNamesInput, setBulkNamesInput] = useState('');
+  const [showBulkNamesEditor, setShowBulkNamesEditor] = useState(false);
 
   const [humanBotSettings, setHumanBotSettings] = useState({
     max_active_bets_human: 100,
