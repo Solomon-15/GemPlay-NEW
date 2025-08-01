@@ -416,11 +416,14 @@ def test_gem_validation_fix():
     print_subheader("TEST SCENARIO 2: Mixed High-Value Gems")
     
     # Create new players for second scenario
+    timestamp2 = int(time.time()) + 1
     player_c_email = generate_unique_email()
-    player_c_token, player_c_success = register_and_verify_user("PlayerC_Mixed", player_c_email, "Test123!")
+    player_c_username = f"PlayerC_Mixed_{timestamp2}"
+    player_c_token, player_c_success = register_and_verify_user(player_c_username, player_c_email, "Test123!")
     
     player_d_email = generate_unique_email()
-    player_d_token, player_d_success = register_and_verify_user("PlayerD_Mixed", player_d_email, "Test123!")
+    player_d_username = f"PlayerD_Mixed_{timestamp2}"
+    player_d_token, player_d_success = register_and_verify_user(player_d_username, player_d_email, "Test123!")
     
     if not (player_c_success and player_d_success):
         print_error("Failed to create players for scenario 2")
