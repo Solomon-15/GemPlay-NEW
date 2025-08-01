@@ -754,10 +754,23 @@ const HumanBotsManagement = () => {
     const bots = [];
     for (let i = 0; i < count; i++) {
       const randomBot = generateRandomName();
+      
+      // Generate random delay values for each bot
+      const botMinDelay = Math.floor(Math.random() * (bulkCreateData.bot_min_delay_range[1] - bulkCreateData.bot_min_delay_range[0] + 1)) + bulkCreateData.bot_min_delay_range[0];
+      const botMaxDelay = Math.floor(Math.random() * (bulkCreateData.bot_max_delay_range[1] - bulkCreateData.bot_max_delay_range[0] + 1)) + bulkCreateData.bot_max_delay_range[0];
+      const playerMinDelay = Math.floor(Math.random() * (bulkCreateData.player_min_delay_range[1] - bulkCreateData.player_min_delay_range[0] + 1)) + bulkCreateData.player_min_delay_range[0];
+      const playerMaxDelay = Math.floor(Math.random() * (bulkCreateData.player_max_delay_range[1] - bulkCreateData.player_max_delay_range[0] + 1)) + bulkCreateData.player_max_delay_range[0];
+      
       bots.push({
         id: i,
         name: randomBot.name,
-        gender: randomBot.gender
+        gender: randomBot.gender,
+        can_play_with_other_bots: bulkCreateData.can_play_with_other_bots,
+        can_play_with_players: bulkCreateData.can_play_with_players,
+        bot_min_delay_seconds: Math.min(botMinDelay, botMaxDelay),
+        bot_max_delay_seconds: Math.max(botMinDelay, botMaxDelay),
+        player_min_delay_seconds: Math.min(playerMinDelay, playerMaxDelay),
+        player_max_delay_seconds: Math.max(playerMinDelay, playerMaxDelay)
       });
     }
     return bots;
