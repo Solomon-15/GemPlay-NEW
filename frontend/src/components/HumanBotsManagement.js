@@ -610,6 +610,13 @@ const HumanBotsManagement = () => {
         delay_range: [bulkCreateData.min_delay || 30, bulkCreateData.max_delay || 120],
         min_delay: bulkCreateData.min_delay || 30,
         max_delay: bulkCreateData.max_delay || 120,
+        // Include new delay settings
+        can_play_with_other_bots: bulkCreateData.can_play_with_other_bots,
+        can_play_with_players: bulkCreateData.can_play_with_players,
+        bot_min_delay_range: bulkCreateData.bot_min_delay_range,
+        bot_max_delay_range: bulkCreateData.bot_max_delay_range,
+        player_min_delay_range: bulkCreateData.player_min_delay_range,
+        player_max_delay_range: bulkCreateData.player_max_delay_range,
         bots: bulkCreateData.bots || []
       };
 
@@ -640,6 +647,13 @@ const HumanBotsManagement = () => {
           max_delay: 120,
           use_commit_reveal: true,
           logging_level: 'INFO',
+          // Reset additional settings
+          can_play_with_other_bots: true,
+          can_play_with_players: true,
+          bot_min_delay_range: [30, 120],
+          bot_max_delay_range: [30, 120],
+          player_min_delay_range: [30, 120],
+          player_max_delay_range: [30, 120],
           bots: []
         });
       }
