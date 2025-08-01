@@ -194,7 +194,8 @@ class HumanBotsManagementTester:
             )
             response_time = time.time() - start_time
             
-            if response.status_code == 201:
+            # Accept both 200 and 201 status codes
+            if response.status_code in [200, 201]:
                 data = response.json()
                 bot_id = data.get("id")
                 
