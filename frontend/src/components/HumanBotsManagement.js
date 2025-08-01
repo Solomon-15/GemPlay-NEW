@@ -2514,6 +2514,187 @@ const HumanBotsManagement = () => {
                 </div>
               </div>
 
+              {/* Дополнительные настройки */}
+              <div className="form-section">
+                <div className="section-header">
+                  <svg className="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <h4>Дополнительные настройки</h4>
+                </div>
+
+                <div className="form-group checkbox-section">
+                  <div className="checkbox-group">
+                    <div className="checkbox-item">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={bulkCreateData.can_play_with_other_bots || false}
+                          onChange={(e) => setBulkCreateData({...bulkCreateData, can_play_with_other_bots: e.target.checked})}
+                        />
+                        <svg className="checkbox-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        Играть с другими Human-ботами
+                      </label>
+                      <small className="form-help">Разрешить ботам автоматически играть с другими Human-ботами</small>
+                      
+                      {bulkCreateData.can_play_with_other_bots && (
+                        <div className="delay-settings mt-3 ml-6 p-3 bg-surface-sidebar rounded border border-border-primary">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-sm font-medium text-text-secondary mb-1">Диапазон мин. задержки (секунды) *</label>
+                              <div className="flex space-x-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="11000"
+                                  value={bulkCreateData.bot_min_delay_range[0]}
+                                  onChange={(e) => {
+                                    const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 30));
+                                    setBulkCreateData({...bulkCreateData, bot_min_delay_range: [value, bulkCreateData.bot_min_delay_range[1]]});
+                                  }}
+                                  className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                  required
+                                />
+                                <span className="self-center text-text-secondary">-</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="11000"
+                                  value={bulkCreateData.bot_min_delay_range[1]}
+                                  onChange={(e) => {
+                                    const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 120));
+                                    setBulkCreateData({...bulkCreateData, bot_min_delay_range: [bulkCreateData.bot_min_delay_range[0], value]});
+                                  }}
+                                  className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-text-secondary mb-1">Диапазон макс. задержки (секунды) *</label>
+                              <div className="flex space-x-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="11000"
+                                  value={bulkCreateData.bot_max_delay_range[0]}
+                                  onChange={(e) => {
+                                    const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 30));
+                                    setBulkCreateData({...bulkCreateData, bot_max_delay_range: [value, bulkCreateData.bot_max_delay_range[1]]});
+                                  }}
+                                  className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                  required
+                                />
+                                <span className="self-center text-text-secondary">-</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="11000"
+                                  value={bulkCreateData.bot_max_delay_range[1]}
+                                  onChange={(e) => {
+                                    const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 120));
+                                    setBulkCreateData({...bulkCreateData, bot_max_delay_range: [bulkCreateData.bot_max_delay_range[0], value]});
+                                  }}
+                                  className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-xs text-text-secondary mt-2">Каждый бот получит случайные значения из указанного диапазона</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="checkbox-item">
+                      <label>
+                        <input
+                          type="checkbox"
+                          checked={bulkCreateData.can_play_with_players || false}
+                          onChange={(e) => setBulkCreateData({...bulkCreateData, can_play_with_players: e.target.checked})}
+                        />
+                        <svg className="checkbox-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                        </svg>
+                        Играть с живыми игроками
+                      </label>
+                      <small className="form-help">Разрешить ботам автоматически играть с живыми игроками</small>
+                      
+                      {bulkCreateData.can_play_with_players && (
+                        <div className="delay-settings mt-3 ml-6 p-3 bg-surface-sidebar rounded border border-border-primary">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-sm font-medium text-text-secondary mb-1">Диапазон мин. задержки (секунды) *</label>
+                              <div className="flex space-x-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="11000"
+                                  value={bulkCreateData.player_min_delay_range[0]}
+                                  onChange={(e) => {
+                                    const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 30));
+                                    setBulkCreateData({...bulkCreateData, player_min_delay_range: [value, bulkCreateData.player_min_delay_range[1]]});
+                                  }}
+                                  className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                  required
+                                />
+                                <span className="self-center text-text-secondary">-</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="11000"
+                                  value={bulkCreateData.player_min_delay_range[1]}
+                                  onChange={(e) => {
+                                    const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 120));
+                                    setBulkCreateData({...bulkCreateData, player_min_delay_range: [bulkCreateData.player_min_delay_range[0], value]});
+                                  }}
+                                  className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-text-secondary mb-1">Диапазон макс. задержки (секунды) *</label>
+                              <div className="flex space-x-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="11000"
+                                  value={bulkCreateData.player_max_delay_range[0]}
+                                  onChange={(e) => {
+                                    const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 30));
+                                    setBulkCreateData({...bulkCreateData, player_max_delay_range: [value, bulkCreateData.player_max_delay_range[1]]});
+                                  }}
+                                  className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                  required
+                                />
+                                <span className="self-center text-text-secondary">-</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="11000"
+                                  value={bulkCreateData.player_max_delay_range[1]}
+                                  onChange={(e) => {
+                                    const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 120));
+                                    setBulkCreateData({...bulkCreateData, player_max_delay_range: [bulkCreateData.player_max_delay_range[0], value]});
+                                  }}
+                                  className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                  required
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-xs text-text-secondary mt-2">Каждый бот получит случайные значения из указанного диапазона</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Настройки отдельных ботов */}
               <div className="form-section">
                 <div className="section-header">
