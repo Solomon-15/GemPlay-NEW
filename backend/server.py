@@ -2798,65 +2798,6 @@ async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
         logger.error(f"Error finding available bets for bot {bot.id}: {e}")
         return []
 
-async def process_human_bot_join_available_bets(active_human_bots: list, settings: dict):
-    """Process human bots joining available bets from other bots and players."""
-    try:
-        if not active_human_bots:
-            return
-        
-        # Get delay settings
-        min_delay = settings.get("min_delay_seconds", 1)
-        max_delay = settings.get("max_delay_seconds", 3600)
-        
-        logger.info(f"🎯 Processing available bet joining for {len(active_human_bots)} human bots")
-        
-        for bot_data in active_human_bots:
-            try:
-                bot = HumanBot(**bot_data)
-                
-                # Check if bot should look for available bets
-                if not (bot.can_play_with_other_bots or bot.can_play_with_players):
-                    continue
-                
-                # Check delay constraints
-                current_time = datetime.utcnow()
-                if bot.last_action_time:
-                    time_since_last = (current_time - bot.last_action_time).total_seconds()
-                    required_delay = random.randint(min_delay, max_delay)
-                    if time_since_last < required_delay:
-                        continue
-                
-                # Check concurrent games limit
-                max_concurrent = settings.get("max_concurrent_games", 3)
-                can_join_more = await check_human_bot_concurrent_games(bot.id, max_concurrent)
-                if not can_join_more:
-                    continue
-                
-                # Check bet limit
-                current_active_bets = await get_human_bot_active_bets_count(bot.id)
-                bot_limit = bot.bet_limit or 12
-                if current_active_bets >= bot_limit:
-                    continue
-                
-                # Find available bets
-                available_bets = await find_available_bets_for_bot(bot, settings)
-                if not available_bets:
-                    continue
-                
-                # Randomly select a bet to join
-                selected_bet = random.choice(available_bets)
-                
-                # Join the selected bet
-                await join_available_bet_as_human_bot(bot, selected_bet)
-                
-                logger.info(f"🤖 Human bot {bot.name} joined available bet {selected_bet['id']}")
-                
-            except Exception as e:
-                logger.error(f"Error processing available bet joining for bot {bot_data.get('id')}: {e}")
-                
-    except Exception as e:
-        logger.error(f"Error in process_human_bot_join_available_bets: {e}")
-
 async def join_available_bet_as_human_bot(bot: HumanBot, bet_game: dict):
     """Join an available bet as a human bot."""
     try:
