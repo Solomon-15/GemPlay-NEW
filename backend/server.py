@@ -21765,6 +21765,194 @@ async def get_notifications_stats_by_type(
 # HUMAN BOTS API
 # ==============================================================================
 
+# Human Bot Names Management Models
+class UpdateHumanBotNamesRequest(BaseModel):
+    names: List[str] = Field(..., min_length=1, max_length=500, description="List of bot names")
+
+@api_router.get("/admin/human-bots/names", response_model=dict)
+async def get_human_bot_names(current_admin: User = Depends(get_current_admin)):
+    """Get the current list of Human-bot names."""
+    try:
+        return {
+            "success": True,
+            "names": HUMAN_BOT_NAMES,
+            "count": len(HUMAN_BOT_NAMES)
+        }
+    except Exception as e:
+        logger.error(f"Error getting Human-bot names: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get names: {str(e)}"
+        )
+
+@api_router.put("/admin/human-bots/names", response_model=dict)
+async def update_human_bot_names(
+    request: UpdateHumanBotNamesRequest,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Update the list of Human-bot names."""
+    try:
+        global HUMAN_BOT_NAMES
+        
+        # Validate names
+        cleaned_names = []
+        for name in request.names:
+            cleaned_name = name.strip()
+            if cleaned_name and len(cleaned_name) <= 50:
+                cleaned_names.append(cleaned_name)
+        
+        if not cleaned_names:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one valid name is required"
+            )
+        
+        # Remove duplicates while preserving order
+        unique_names = []
+        seen = set()
+        for name in cleaned_names:
+            if name not in seen:
+                unique_names.append(name)
+                seen.add(name)
+        
+        # Update the global list
+        HUMAN_BOT_NAMES.clear()
+        HUMAN_BOT_NAMES.extend(unique_names)
+        
+        # Log admin action
+        await db.admin_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "admin_id": current_admin.id,
+            "action": "UPDATE_HUMAN_BOT_NAMES",
+            "target_type": "system",
+            "target_id": "human_bot_names",
+            "details": {
+                "names_count": len(unique_names),
+                "names_updated": unique_names[:10]  # Log first 10 names for reference
+            },
+            "created_at": datetime.utcnow()
+        })
+        
+        return {
+            "success": True,
+            "message": "Human-bot names updated successfully",
+            "names": HUMAN_BOT_NAMES,
+            "count": len(HUMAN_BOT_NAMES),
+            "duplicates_removed": len(cleaned_names) - len(unique_names)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating Human-bot names: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update names: {str(e)}"
+        )
+
+@api_router.post("/admin/human-bots/names/add", response_model=dict)
+async def add_human_bot_names(
+    request: UpdateHumanBotNamesRequest,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Add new names to the Human-bot names list."""
+    try:
+        global HUMAN_BOT_NAMES
+        
+        # Validate and clean names
+        cleaned_names = []
+        for name in request.names:
+            cleaned_name = name.strip()
+            if cleaned_name and len(cleaned_name) <= 50 and cleaned_name not in HUMAN_BOT_NAMES:
+                cleaned_names.append(cleaned_name)
+        
+        if not cleaned_names:
+            return {
+                "success": True,
+                "message": "No new names to add (all names already exist or are invalid)",
+                "names": HUMAN_BOT_NAMES,
+                "count": len(HUMAN_BOT_NAMES),
+                "added_count": 0
+            }
+        
+        # Add new names
+        HUMAN_BOT_NAMES.extend(cleaned_names)
+        
+        # Log admin action
+        await db.admin_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "admin_id": current_admin.id,
+            "action": "ADD_HUMAN_BOT_NAMES",
+            "target_type": "system",
+            "target_id": "human_bot_names",
+            "details": {
+                "names_added": cleaned_names
+            },
+            "created_at": datetime.utcnow()
+        })
+        
+        return {
+            "success": True,
+            "message": f"Added {len(cleaned_names)} new names",
+            "names": HUMAN_BOT_NAMES,
+            "count": len(HUMAN_BOT_NAMES),
+            "added_count": len(cleaned_names),
+            "added_names": cleaned_names
+        }
+        
+    except Exception as e:
+        logger.error(f"Error adding Human-bot names: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to add names: {str(e)}"
+        )
+
+@api_router.delete("/admin/human-bots/names/{name}", response_model=dict)
+async def remove_human_bot_name(
+    name: str,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Remove a specific name from the Human-bot names list."""
+    try:
+        global HUMAN_BOT_NAMES
+        
+        if name not in HUMAN_BOT_NAMES:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Name not found in the list"
+            )
+        
+        HUMAN_BOT_NAMES.remove(name)
+        
+        # Log admin action
+        await db.admin_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "admin_id": current_admin.id,
+            "action": "REMOVE_HUMAN_BOT_NAME",
+            "target_type": "system",
+            "target_id": "human_bot_names",
+            "details": {
+                "removed_name": name
+            },
+            "created_at": datetime.utcnow()
+        })
+        
+        return {
+            "success": True,
+            "message": f"Name '{name}' removed successfully",
+            "names": HUMAN_BOT_NAMES,
+            "count": len(HUMAN_BOT_NAMES)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error removing Human-bot name: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to remove name: {str(e)}"
+        )
+
 # ==============================================================================
 # INCLUDE ROUTERS
 # ==============================================================================
