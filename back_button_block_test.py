@@ -99,8 +99,8 @@ class BackButtonBlockingTester:
             # Login user
             login_response = self.session.post(
                 f"{BASE_URL}/auth/login",
-                data={
-                    "username": user_data["email"],
+                json={
+                    "email": user_data["email"],
                     "password": user_data["password"]
                 }
             )
