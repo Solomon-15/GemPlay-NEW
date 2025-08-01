@@ -370,7 +370,7 @@ const HumanBotsManagement = () => {
       clearInterval(refreshInterval);
       setRefreshInterval(null);
     }
-  }, [autoRefresh, fetchHumanBots, fetchStats, fetchGlobalSettings]);
+  }, [autoRefresh, fetchHumanBots, fetchStats]);
 
   // Fetch data when dependencies change
   useEffect(() => {
