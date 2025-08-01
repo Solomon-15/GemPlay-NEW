@@ -419,6 +419,25 @@ const HumanBotsManagement = () => {
     }
   }, [showBulkCreateForm, bulkCreateData.count, botNames.length]);
 
+  // Regenerate bot names when botNames list changes (useful when names are updated via names management tab)
+  useEffect(() => {
+    if (showBulkCreateForm && botNames.length > 0 && bulkCreateData.bots.length > 0) {
+      // Regenerate names for existing bots using the new names list
+      const updatedBots = bulkCreateData.bots.map(bot => {
+        const randomName = generateRandomName();
+        return {
+          ...bot,
+          name: randomName.name,
+          gender: randomName.gender
+        };
+      });
+      setBulkCreateData(prev => ({
+        ...prev,
+        bots: updatedBots
+      }));
+    }
+  }, [botNames]);
+
   const fetchHumanBotSettings = async () => {
     try {
       setSettingsLoading(true);
