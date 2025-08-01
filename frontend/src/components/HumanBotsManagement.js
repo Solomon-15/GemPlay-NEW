@@ -69,22 +69,7 @@ const HumanBotsManagement = () => {
   const [bulkNamesInput, setBulkNamesInput] = useState('');
   const [showBulkNamesEditor, setShowBulkNamesEditor] = useState(false);
 
-  const [humanBotSettings, setHumanBotSettings] = useState({
-    max_active_bets_human: 100,
-    auto_play_enabled: false,
-    min_delay_seconds: 1,
-    max_delay_seconds: 3600,
-    play_with_players_enabled: false,
-    max_concurrent_games: 3,
-    current_usage: {
-      total_individual_limits: 0,
-      max_limit: 100,
-      available: 100,
-      usage_percentage: 0
-    }
-  });
-  const [settingsLoading, setSettingsLoading] = useState(false);
-  const [settingsSaving, setSettingsSaving] = useState(false);
+
 
   // Generate cache key based on current filters and pagination
   const generateCacheKey = useCallback(() => {
