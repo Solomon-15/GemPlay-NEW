@@ -1640,6 +1640,14 @@ const UserManagement = ({ user: currentUser }) => {
           </p>
         </div>
         <div className="flex space-x-3">
+          {/* Add user button */}
+          <button
+            onClick={() => setIsCreateUserModalOpen(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-rajdhani font-bold transition-colors"
+          >
+            ➕ Добавить пользователя
+          </button>
+          
           {/* Unfreeze stuck commission button (SUPER_ADMIN only) */}
           <button
             onClick={() => setIsUnfreezeCommissionModalOpen(true)}
