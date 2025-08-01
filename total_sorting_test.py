@@ -193,7 +193,7 @@ class TotalSortingTester:
             return False
 
     def test_total_balance_calculation(self) -> bool:
-        """Test that total_balance is calculated correctly (virtual_balance + frozen_balance + gems_value)"""
+        """Test that total_balance is calculated correctly (virtual_balance + frozen_balance + total_gems_value)"""
         try:
             params = {
                 "sort_by": "total",
@@ -222,7 +222,8 @@ class TotalSortingTester:
             for user in users:
                 virtual_balance = float(user.get("virtual_balance", 0))
                 frozen_balance = float(user.get("frozen_balance", 0))
-                gems_value = float(user.get("gems_value", 0))
+                # Use total_gems_value instead of gems_value
+                gems_value = float(user.get("total_gems_value", 0))
                 total_balance = float(user.get("total_balance", 0))
                 
                 expected_total = virtual_balance + frozen_balance + gems_value
@@ -233,7 +234,7 @@ class TotalSortingTester:
                         "username": user.get("username"),
                         "virtual_balance": virtual_balance,
                         "frozen_balance": frozen_balance,
-                        "gems_value": gems_value,
+                        "total_gems_value": gems_value,
                         "total_balance": total_balance,
                         "expected_total": expected_total,
                         "difference": total_balance - expected_total
