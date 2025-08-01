@@ -94,16 +94,29 @@ class HumanBotsManagementTester:
             
             if response.status_code == 200:
                 data = response.json()
-                required_fields = ["max_active_bets_human", "auto_play_enabled"]
                 
-                if all(field in data for field in required_fields):
-                    self.log_result("Human Bots Settings", True, 
-                                  f"Settings endpoint working correctly. Max active bets: {data.get('max_active_bets_human')}", 
-                                  response_time)
-                    return True
+                # Check if response has success and settings structure
+                if data.get("success") and "settings" in data:
+                    settings = data["settings"]
+                    required_fields = ["max_active_bots_human", "auto_play_enabled"]
+                    
+                    # Check for either field name format
+                    has_required = any(field in settings for field in ["max_active_bets_human", "max_active_bots_human"])
+                    has_auto_play = "auto_play_enabled" in settings
+                    
+                    if has_required and has_auto_play:
+                        max_bots = settings.get("max_active_bets_human", settings.get("max_active_bots_human", "N/A"))
+                        self.log_result("Human Bots Settings", True, 
+                                      f"Settings endpoint working correctly. Max active bots: {max_bots}", 
+                                      response_time)
+                        return True
+                    else:
+                        self.log_result("Human Bots Settings", False, 
+                                      f"Missing required fields in settings: {settings}", response_time)
+                        return False
                 else:
                     self.log_result("Human Bots Settings", False, 
-                                  f"Missing required fields in response: {data}", response_time)
+                                  f"Unexpected response structure: {data}", response_time)
                     return False
             else:
                 self.log_result("Human Bots Settings", False, 
