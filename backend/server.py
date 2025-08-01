@@ -1732,12 +1732,8 @@ async def human_bot_simulation_task():
                 except Exception as e:
                     logger.error(f"Error processing human bot {bot_data.get('id')}: {e}")
             
-            # Process auto-play between bots if enabled
-            if auto_play_enabled:
-                await process_human_bot_auto_play(active_human_bots, settings)
-            
-            # Process joining available bets (both bot and player bets)
-            await process_human_bot_join_available_bets(active_human_bots, settings)
+            # Process auto-play and joining available bets  
+            await process_human_bot_game_joining(active_human_bots, settings)
             
             # Wait before next cycle (shorter interval for human bots)
             await asyncio.sleep(15)  # Check every 15 seconds
