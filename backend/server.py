@@ -2852,11 +2852,10 @@ async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
     """Find available bets that a human bot can join."""
     try:
         available_bets = []
-        play_with_players_globally_enabled = settings.get("play_with_players_enabled", False)
         
-        # Get bot's play preferences
+        # Get bot's play preferences (no global settings anymore)
         can_play_with_bots = bot.can_play_with_other_bots
-        can_play_with_players = bot.can_play_with_players and play_with_players_globally_enabled
+        can_play_with_players = bot.can_play_with_players
         
         if not can_play_with_bots and not can_play_with_players:
             return []
@@ -2893,7 +2892,7 @@ async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
         
         # Execute query
         games_cursor = db.games.find({"$or": query_conditions})
-        available_games = await games_cursor.to_list(None)  # Removed limit to show all available games
+        available_games = await games_cursor.to_list(None)
         
         # Filter by bot constraints - remove bets exceeding bet_limit_amount
         filtered_bets = []
