@@ -533,6 +533,9 @@ class HumanBot(BaseModel):
     player_min_delay_seconds: int = Field(default=30, ge=1, le=3600, description="Минимальная задержка для игры с игроками (секунды)")  
     player_max_delay_seconds: int = Field(default=120, ge=1, le=3600, description="Максимальная задержка для игры с игроками (секунды)")
     
+    # Individual concurrent games limit
+    max_concurrent_games: int = Field(default=3, ge=1, le=100, description="Максимальное количество одновременных игр для бота")
+    
     total_games_played: int = 0
     total_games_won: int = 0  
     total_amount_wagered: float = 0.0
