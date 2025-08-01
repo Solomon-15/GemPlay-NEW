@@ -749,6 +749,108 @@ const HumanBotsManagement = () => {
     }
   };
 
+  // Human Bot Names Management Functions
+  const fetchBotNames = async () => {
+    setNamesLoading(true);
+    try {
+      const response = await executeOperation('/admin/human-bots/names', 'GET');
+      setBotNames(response.names || []);
+    } catch (error) {
+      console.error('Ошибка загрузки имен ботов:', error);
+      addNotification(`Ошибка загрузки имен: ${error.message}`, 'error');
+    } finally {
+      setNamesLoading(false);
+    }
+  };
+
+  const handleSaveBulkNames = async () => {
+    if (!bulkNamesInput.trim()) {
+      addNotification('Введите имена ботов', 'error');
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: 'Обновить список имен',
+      message: 'Вы уверены, что хотите заменить текущий список имен? Это действие нельзя отменить.',
+      type: 'warning'
+    });
+
+    if (confirmed) {
+      setNamesSaving(true);
+      try {
+        const names = bulkNamesInput
+          .split('\n')
+          .map(name => name.trim())
+          .filter(name => name);
+
+        await executeOperation('/admin/human-bots/names', 'PUT', { names });
+        addNotification('Список имен успешно обновлен', 'success');
+        await fetchBotNames();
+        setShowBulkNamesEditor(false);
+        setBulkNamesInput('');
+      } catch (error) {
+        console.error('Ошибка обновления имен:', error);
+        addNotification(`Ошибка обновления: ${error.message}`, 'error');
+      } finally {
+        setNamesSaving(false);
+      }
+    }
+  };
+
+  const handleAddName = async () => {
+    if (!newNameInput.trim()) {
+      addNotification('Введите имя бота', 'error');
+      return;
+    }
+
+    setNamesSaving(true);
+    try {
+      await executeOperation('/admin/human-bots/names/add', 'POST', { names: [newNameInput.trim()] });
+      addNotification('Имя успешно добавлено', 'success');
+      await fetchBotNames();
+      setNewNameInput('');
+    } catch (error) {
+      console.error('Ошибка добавления имени:', error);
+      addNotification(`Ошибка добавления: ${error.message}`, 'error');
+    } finally {
+      setNamesSaving(false);
+    }
+  };
+
+  const handleRemoveName = async (nameToRemove) => {
+    const confirmed = await confirm({
+      title: 'Удалить имя',
+      message: `Вы уверены, что хотите удалить имя "${nameToRemove}"?`,
+      type: 'warning'
+    });
+
+    if (confirmed) {
+      setNamesSaving(true);
+      try {
+        await executeOperation(`/admin/human-bots/names/${encodeURIComponent(nameToRemove)}`, 'DELETE');
+        addNotification('Имя успешно удалено', 'success');
+        await fetchBotNames();
+      } catch (error) {
+        console.error('Ошибка удаления имени:', error);
+        addNotification(`Ошибка удаления: ${error.message}`, 'error');
+      } finally {
+        setNamesSaving(false);
+      }
+    }
+  };
+
+  const handleOpenBulkEditor = () => {
+    setBulkNamesInput(botNames.join('\n'));
+    setShowBulkNamesEditor(true);
+  };
+
+  // Load bot names when names tab is selected
+  useEffect(() => {
+    if (activeTab === 'names' && botNames.length === 0) {
+      fetchBotNames();
+    }
+  }, [activeTab]);
+
   return (
     <div className="human-bots-management">
       <div className="bots-header">
