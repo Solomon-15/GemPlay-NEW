@@ -107,7 +107,7 @@ def generate_unique_email() -> str:
     """Generate unique email for testing."""
     timestamp = int(time.time())
     random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
-    return f"test_user_{timestamp}_{random_suffix}@gemplay.test"
+    return f"test_user_{timestamp}_{random_suffix}@test.com"
 
 def register_and_verify_user(username: str, email: str, password: str, gender: str = "male") -> Tuple[str, bool]:
     """Register user and return auth token."""
