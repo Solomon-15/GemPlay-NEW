@@ -1,90 +1,71 @@
 <analysis>
-The previous AI engineer successfully stabilized the GemPlay application by re-creating the My Bets section, correcting display issues for player names and gem icons, and refining Human-bot game completion logic. A major focus was on the commit-reveal flow, ensuring  status was set promptly and that Player B's timeout/leave scenarios correctly triggered Player A's bet re-creation. More recently, the engineer addressed critical data synchronization bugs causing incorrect gem validation and balance display. This involved creating a centralized data refresh hook, fixing balance calculation in the UI, and ensuring consistent commission rates between frontend and backend. The latest task involves debugging gem availability errors for large bets.
+The previous AI engineer effectively addressed critical issues and implemented new features in the GemPlay application. The trajectory shows an initial summary of past achievements (My Bets, commit-reveal flow, logging reduction, API throttling, audio fix). Subsequently, the engineer diagnosed and resolved a persistent Maximum update depth exceeded React error in  by correctly adjusting  dependencies and wrapping  in . Following this, they fixed a Insufficient gems validation error in , ensuring gems, once reserved, are not re-validated. Finally, the engineer implemented a user experience improvement in , blocking the BACK button after a player joins a game with a specific warning message. Each fix involved thorough investigation, targeted code modifications, and verification via screenshots and backend tests, demonstrating a methodical debugging and development approach.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting platform with human-bots, requiring accurate financial tracking and administrative controls.
-
-**Key Features & Fixes Implemented by Previous AI Engineer:**
-1.  **My Bets Section Re-creation:** Full re-development (desktop/mobile) displaying all user bets with pagination, filters, sorting, and action buttons (Cancel, Repeat, Details). Includes commit-reveal progress, opponent timer, automatic status updates (WebSocket/polling), notifications, profit/loss display, and GemPlay design consistency (including 3x3 gem grid).
-2.  **Display Actual Usernames:** Show  in My Bets and Ongoing Battles (e.g., , ) instead of generic Player.
-3.  **Correct Gem Display:** Render gem icons from Inventory in My Bets (initially 3 rows, then 3x3 grid) instead of text names.
-4.  **Human-Bot Auto-Completion:** Ensure all Human-bot games (Human-bot vs Human-bot, Human-bot vs Live Player) auto-complete within 15-60 seconds to prevent hanging.
-5.  **Commit-Reveal Bet Logic -  Status Transition:** When Player B accepts and chooses gems, the bet immediately transitions to  status, moving from Available Bets to Ongoing Battles for all, and My Bets to Ongoing Battles for Player A. The 1-minute timer starts simultaneously.
-6.  **Timeout/Leave Game Re-creation Consistency:** If Player B joins (bet is ) but does not complete their move (timeout, manual leave, disconnect), Player A's bet is entirely re-created with new commit-reveal data (random move, new salt/hash). Frozen gems and USD are returned to Player A's balance and then re-frozen. The bet status returns to  and reappears in Available Bets for all, and My Bets for Player A. Player A receives an English notification.
-7.  **Synchronization Bug Fixes (Recent):** Address issues where frozen gems are not returned on abrupt exit, Not enough gems errors occur despite availability, balance display is incorrect (e.g., 89.98, 91.27), and insufficient gem errors arise for live players due to stale frontend data. The goal is instant and correct frontend state updates (balance, inventory) after every API call (join, leave, timeout) to eliminate desynchronization.
-
+The GemPlay application is an asynchronous PvP gem betting platform with human-bots, requiring accurate financial tracking and robust administration. The primary objective is to ensure correct game state transitions, user data display (usernames, gem icons, balances), and sound financial logic, especially for gem availability and commission processing. Key implemented features include a My Bets section, correct user and gem icon display, Human-bot auto-completion (15-60 seconds delay), and a robust commit-reveal flow ensuring immediate ACTIVE status and correct fund/commission handling for Player B timeouts/leaves. Data synchronization and validation were improved, resolving Not enough gems errors via  and refined gem validation. A winner-pays-all 3% commission model for PvP games was implemented, with losers/draws/timeouts receiving commission back. Recent critical fixes addressed redundant gem validation when choosing a move and implemented a UI block for the BACK button in  once a game is joined, preventing gem combination changes.
 </product_requirements>
 
 <key_technical_concepts>
--   **MERN Stack Variant:** React.js (Frontend), FastAPI (Python Backend), MongoDB (NoSQL Database).
--   **Commit-Reveal Scheme:** Secure betting protocol for game fairness.
--   **WebSocket/Polling:** Mechanisms for real-time UI updates (notifications via WebSocket, UI refresh via polling).
--   **Frontend State Management:** React Context (GemsContext, UserContext implied), custom React Hooks (useApi, useLobbyRefresh, useDataRefresh).
--   **Deployment/Management:** Kubernetes, Supervisor.
+-   **MERN Stack Variant:** React.js, FastAPI, MongoDB.
+-   **Commit-Reveal Scheme:** Asynchronous game protocol.
+-   **Frontend State Management:** React Context, Custom React Hooks (, , , ).
+-   **Performance Optimization:** Throttling API calls, reducing logging, React render optimization.
+-   **Browser API Best Practices:** Lazy  initialization.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a MERN-stack variant (React.js, FastAPI, MongoDB) structured into  and  directories.
 
 
-
--   : Core backend, centralizing API endpoints.
-    *   **Importance**: Handles all server-side logic, database interactions, user management, notifications, and game state transitions.
-    *   **Changes Made**:
-        *   : Modified to set  randomly for Human-bot games and ensure  status is returned immediately upon Player B's gem selection.
-        *    & : Confirmed to correctly re-create Player A's bet with new commit-reveal data (move, salt, hash), return frozen funds/commission, transition game status to , and send notifications. Fixed  error in  and  by ensuring compatibility with both enum and string inputs for moves.
-        *   API  and : Updated to include  and  object for correct display.
-        *   Commission rate: Updated from 0.06 to 0.03 for consistency with frontend.
--   : Displays available, ongoing, and user's bets.
-    *   **Importance**: Main user interface for interacting with games and reflecting game status changes.
-    *   **Changes Made**: Filtering logic for Available Bets, Ongoing Battles, and My Bets was updated to ensure games correctly move between sections based on // statuses. Player text was replaced with actual usernames. Logging was added for debugging.
--   : Modal for Player B to join a game and select their move.
-    *   **Importance**: Crucial for Player B's interaction with the game, handling gem selection, move commitment, and game joining/leaving.
-    *   **Changes Made**:
-        *   Logic modified to call the  API after Player B's gem selection (Step 1) to immediately set game status to .
-        *   Multiple  calls (delayed) added after  and after leaving a game to ensure immediate UI updates.
-        *   Updated to use the new  hook to ensure immediate synchronization of user balance and inventory after , , and  operations.
-        *   , , and  functions were updated to work with fresh data and asynchronous validation.
-        *    updated from 0.06 to 0.03 for consistency with backend.
--   : Re-created section for user's bet history.
-    *   **Importance**: Provides a detailed view of a user's active and completed bets with filtering, sorting, pagination, and action buttons.
-    *   **Changes Made**: Re-created from scratch. Updated to display gem icons using  from , refined layout to a 3x3 grid, and translated UI elements to English.
--   : Component for displaying player information.
-    *   **Importance**: Reusable UI component for displaying player details.
-    *   **Changes Made**: Modified to use  for correct username display.
--   : Navigation sidebar.
-    *   **Importance**: Provides main navigation and displays user's balance.
-    *   **Changes Made**: My Bets menu item re-added. Balance display logic fixed to show available balance () instead of an incorrect total, and corrected the API endpoint URL from  to  (removing duplicate  prefix).
--   : Main application component.
-    *   **Importance**: Renders core application layout and routes components.
-    *   **Changes Made**: Updated to include the new routing for .  logic was reviewed in the context of data synchronization.
--   : Provides gem-related data and utilities.
-    *   **Importance**: Centralized access to gem inventory and icon paths.
-    *   **Changes Made**: Read to understand gem management; updated to include forced data refresh on initialization and potentially refined validation logic to ensure fresh gem data.
--   : (NEW FILE) Custom hook for centralized data refreshing.
-    *   **Importance**: Ensures synchronized updates of user data and gem inventory across the frontend.
-    *   **Changes Made**: Created to encapsulate calls to  and .
+-   : Core FastAPI backend. Manages API, DB, game logic, auth, finance.
+    *   **Importance:** Central server-side logic.
+    *   **Changes Made:** (From initial summary): Logic for commit-reveal, fund/commission, , , , , .
+    *   **During Trajectory:** No direct code modifications were made. The  endpoint was reviewed and confirmed to correctly *not* perform gem re-validation.
+-   : Manages human-bot data in the admin panel.
+    *   **Importance:** Admin interface for human-bot statistics and operations.
+    *   **Changes Made:** Fixed Maximum update depth exceeded error.  dependency array was updated to include . The  function was wrapped in  with  and  as dependencies to prevent infinite re-renders.
+-   : Handles Player B joining a game and move selection.
+    *   **Importance:** Crucial for player game interaction.
+    *   **Changes Made:**
+        1.  The redundant gem validation logic within the  function (lines 231-234) was removed. Previously, it re-checked gem availability even after they were reserved, causing Insufficient gems errors.
+        2.  The  function was modified to prevent returning to the previous step (gem combination selection) once a player has joined a game (indicated by  state). If  is true, an error message You cannot change gem combination now is displayed upon clicking BACK.
+-   : Manages gem inventory and utility functions.
+    *   **Importance:** Centralized access to gem data and validation.
+    *   **Changes Made:** (From initial summary): Reviewed, enhanced logging, implicitly updated for zero-quantity gems.
+    *   **During Trajectory:** The  function was investigated and confirmed to be correctly used only for *creating new bets* (), not for active games, thus not requiring changes for the Insufficient gems fix.
+-   : Main application component, authentication, core data fetching.
+    *   **Importance:** Overall application state and core data.
+    *   **Changes Made:** (From initial summary): Refactored , implemented throttling with .
+    *   **During Trajectory:** No new changes.
 </code_architecture>
 
 <pending_tasks>
--   **User Management TOTAL Column Sorting**: The numeric sorting issue and duplicate entries in the TOTAL column of the User Management admin panel (as per the initial problem statement) remain unaddressed.
--   **Gem Availability Error (Latest Bug)**: Fix the Insufficient Ruby gems. Available: 0, Required: 40 error that occurs when a player attempts to join large bets, even when sufficient gems are available. This points to a persistent data synchronization or calculation issue specifically for gem validation during larger transactions.
+-   **User Management TOTAL Column Sorting**: The numeric sorting issue and duplicate entries in the TOTAL column of the User Management admin panel remain unaddressed.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer completed a series of fixes addressing critical frontend-backend data synchronization issues and incorrect calculations.
+Immediately before this summary request, the AI engineer completed two critical bug fixes and one UX improvement:
 
-The work encompassed:
-1.  **Centralized Data Refresh Hook ()**: A new React hook was created to consolidate and centralize the fetching and updating of user data () and gem inventory (). This was crucial for ensuring that the frontend always has the most up-to-date information.
-2.  **Correct Balance Display**: The balance display in  was corrected. Previously, it showed an incorrect total by summing , , and . This was fixed to correctly display the *available* balance (), resolving the paradoxical 89.98, 91.27 display. Additionally, an incorrect  prefix in the URL for fetching balance was removed from .
-3.  ** Synchronization**: This component was heavily modified to integrate the new  hook. It now explicitly calls for a data refresh after critical API operations like , , and . This ensures that gem inventory and balance data are instantly updated following any transaction, preventing stale data from causing errors.
-4.  **Improved Gem Validation**: Functions within  such as , , and  were updated to utilize the freshly synchronized data, preventing Not enough gems errors that previously occurred due to the frontend using outdated inventory information.
-5.  **Commission Rate Consistency**: A discrepancy in commission calculation was identified where the frontend (specifically ) was expecting a 6% commission (0.06) while the backend () was using 3% (0.03). Both the frontend and backend implementations were unified to consistently use a 3% commission rate.
+1.  **Resolved Maximum update depth exceeded in :**
+    *   The  component was causing an infinite re-render loop, leading to browser freezing.
+    *   The root cause was traced to a  hook that lacked  in its dependency array, and more critically, the  function was being re-created on every render because it wasn't memoized with .
+    *   **Fix:**  was modified:  was added to the  dependency array, and the  function (and its dependent functions like , , ) was wrapped in , ensuring it only changes when its  or  dependencies change.
+    *   **Status:** This critical issue is fully resolved, and the component now renders stably with no console errors.
 
-The last completed task, confirmed as fully resolved, was the synchronization and commission bug fixes, with testing showing 80% success (12/15 tests passed). However, a new bug regarding Insufficient Ruby gems for large bets was immediately reported by the user, indicating a lingering issue related to gem validation.
+2.  **Fixed Insufficient Sapphire gems error in :**
+    *   When Player B joined a game, gems were correctly reserved, but upon attempting to choose a move, an Insufficient gems error would sometimes occur, preventing the game from proceeding.
+    *   **Cause:** Redundant gem validation was happening in the  function within  (lines 231-234), which incorrectly re-checked gem availability despite them already being frozen for the active game.
+    *   **Fix:** The problematic re-validation logic in  was removed, as the backend correctly assumes gems are reserved after a player joins.
+    *   **Status:** This issue is fully resolved, and games can now proceed without this error.
+
+3.  **Implemented BACK button blocking in :**
+    *   The user requested that once Player B joins a game and the status becomes , they should not be allowed to go back to modify their gem combination.
+    *   **Fix:** The  function in  was modified. It now checks the  state. If , it prevents the step change and displays an exact message: .
+    *   **Status:** This UX improvement is fully implemented as per user specifications.
+
+All changes were confirmed through backend API testing and frontend screenshots, showing the application is stable and functional.
 </current_work>
 
 <optional_next_step>
-My next step is to investigate and fix the Insufficient Ruby gems error that occurs when joining large bets.
+The next step is to address the User Management TOTAL Column Sorting issue.
 </optional_next_step>
