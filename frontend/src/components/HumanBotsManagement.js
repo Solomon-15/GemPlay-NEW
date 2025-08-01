@@ -2731,6 +2731,44 @@ const HumanBotsManagement = () => {
                       )}
                     </div>
                   </div>
+                  
+                  {/* Concurrent games settings */}
+                  <div className="form-group">
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      <svg className="inline w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      Диапазон одновременных игр
+                    </label>
+                    <div className="flex space-x-2">
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={bulkCreateData.max_concurrent_games_range[0]}
+                        onChange={(e) => {
+                          const value = Math.max(1, Math.min(100, parseInt(e.target.value) || 3));
+                          setBulkCreateData({...bulkCreateData, max_concurrent_games_range: [value, bulkCreateData.max_concurrent_games_range[1]]});
+                        }}
+                        className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                        required
+                      />
+                      <span className="self-center text-text-secondary">-</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={bulkCreateData.max_concurrent_games_range[1]}
+                        onChange={(e) => {
+                          const value = Math.max(1, Math.min(100, parseInt(e.target.value) || 3));
+                          setBulkCreateData({...bulkCreateData, max_concurrent_games_range: [bulkCreateData.max_concurrent_games_range[0], value]});
+                        }}
+                        className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-text-secondary mt-2">Каждый бот получит случайное значение из указанного диапазона</p>
+                  </div>
                 </div>
               </div>
 
