@@ -25034,9 +25034,12 @@ def test_human_bot_names_usage_in_creation():
     created_bots = []
     used_names = []
     
-    for i in range(5):  # Create 5 bots to test name selection
+    # Use names from the current list for testing
+    test_names_for_bots = current_names[:5] if len(current_names) >= 5 else current_names
+    
+    for i, test_name in enumerate(test_names_for_bots):  # Create bots using names from the list
         create_bot_data = {
-            "name": "",  # Let the system generate the name
+            "name": f"TestUsage_{test_name}_{int(time.time())}",  # Use a unique variation of the name
             "character": "BALANCED",
             "gender": "male",
             "min_bet": 10.0,
