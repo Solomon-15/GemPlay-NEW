@@ -402,14 +402,22 @@ const HumanBotsManagement = () => {
 
   // Initialize bot list when bulk create form opens
   useEffect(() => {
-    if (showBulkCreateForm && bulkCreateData.bots.length !== bulkCreateData.count) {
-      const bots = initializeBots(bulkCreateData.count);
-      setBulkCreateData(prev => ({
-        ...prev,
-        bots: bots
-      }));
+    if (showBulkCreateForm) {
+      // Load bot names if not already loaded
+      if (botNames.length === 0) {
+        fetchBotNames();
+      }
+      
+      // Initialize bots if needed
+      if (bulkCreateData.bots.length !== bulkCreateData.count) {
+        const bots = initializeBots(bulkCreateData.count);
+        setBulkCreateData(prev => ({
+          ...prev,
+          bots: bots
+        }));
+      }
     }
-  }, [showBulkCreateForm, bulkCreateData.count]);
+  }, [showBulkCreateForm, bulkCreateData.count, botNames.length]);
 
   const fetchHumanBotSettings = async () => {
     try {
