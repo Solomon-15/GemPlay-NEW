@@ -1089,7 +1089,6 @@ const HumanBotsManagement = () => {
                       onClick={() => {
                         fetchHumanBots(false);
                         fetchStats();
-                        fetchGlobalSettings(); // Add global settings refresh
                         addNotification('Данные обновлены', 'success');
                       }}
                       disabled={loading || loadingPriority}
