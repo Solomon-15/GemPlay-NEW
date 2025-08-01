@@ -780,6 +780,7 @@ const HumanBotsManagement = () => {
       const botMaxDelay = Math.floor(Math.random() * (bulkCreateData.bot_max_delay_range[1] - bulkCreateData.bot_max_delay_range[0] + 1)) + bulkCreateData.bot_max_delay_range[0];
       const playerMinDelay = Math.floor(Math.random() * (bulkCreateData.player_min_delay_range[1] - bulkCreateData.player_min_delay_range[0] + 1)) + bulkCreateData.player_min_delay_range[0];
       const playerMaxDelay = Math.floor(Math.random() * (bulkCreateData.player_max_delay_range[1] - bulkCreateData.player_max_delay_range[0] + 1)) + bulkCreateData.player_max_delay_range[0];
+      const concurrentGames = Math.floor(Math.random() * (bulkCreateData.max_concurrent_games_range[1] - bulkCreateData.max_concurrent_games_range[0] + 1)) + bulkCreateData.max_concurrent_games_range[0];
       
       bots.push({
         id: i,
