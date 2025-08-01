@@ -215,24 +215,10 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       return false;
     }
     
-    // CRITICAL FIX: Use same gem data source for consistency
-    for (const [gemType, quantity] of Object.entries(selectedGems)) {
-      const gem = currentGemsData.find(g => g.type === gemType);
-      if (!gem) {
-        showError(`Invalid gem type: ${gemType}`);
-        return false;
-      }
-      
-      // Only log critical validation details for debugging
-      if (gem.available_quantity < quantity) {
-        console.log(`💎 Validating ${gemType}: Available ${gem.available_quantity}, Required ${quantity}`);
-      }
-      
-      if (gem.available_quantity < quantity) {
-        showError(`Insufficient ${gem.name} gems. Available: ${gem.available_quantity}, Required: ${quantity}`);
-        return false;
-      }
-    }
+    // CRITICAL FIX: Skip gem availability validation for active games
+    // When step 2 (move selection) is reached, gems are already reserved during game join
+    // No need to validate availability again as gems are frozen for this game
+    console.log('💎 Skipping gem availability validation - gems already reserved for active game');
     
     if (!isBotGame) {
       const commissionRequired = targetAmount * 0.03; // FIXED: Use 3% to match backend
