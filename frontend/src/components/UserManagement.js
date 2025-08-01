@@ -57,6 +57,21 @@ const UserManagement = ({ user: currentUser }) => {
   const [deleteReason, setDeleteReason] = useState('');
   const [notificationText, setNotificationText] = useState('');
   
+  // Create user form
+  const [createUserForm, setCreateUserForm] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirm_password: '',
+    role: 'USER',
+    virtual_balance: 1000,
+    daily_limit_max: 1000,
+    gender: 'male',
+    status: 'ACTIVE',
+    ban_reason: ''
+  });
+  const [createUserLoading, setCreateUserLoading] = useState(false);
+  
   // Edit form
   const [editForm, setEditForm] = useState({
     username: '',
