@@ -84,7 +84,10 @@ def make_request(method: str, endpoint: str, data: Dict = None, auth_token: str 
         if method == "GET":
             response = requests.get(url, headers=headers, params=params, timeout=30)
         elif method == "POST":
-            response = requests.post(url, headers=headers, json=data, timeout=30)
+            if params:
+                response = requests.post(url, headers=headers, params=params, timeout=30)
+            else:
+                response = requests.post(url, headers=headers, json=data, timeout=30)
         elif method == "PUT":
             response = requests.put(url, headers=headers, json=data, timeout=30)
         elif method == "DELETE":
