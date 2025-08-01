@@ -791,7 +791,8 @@ const HumanBotsManagement = () => {
         bot_min_delay_seconds: Math.min(botMinDelay, botMaxDelay),
         bot_max_delay_seconds: Math.max(botMinDelay, botMaxDelay),
         player_min_delay_seconds: Math.min(playerMinDelay, playerMaxDelay),
-        player_max_delay_seconds: Math.max(playerMinDelay, playerMaxDelay)
+        player_max_delay_seconds: Math.max(playerMinDelay, playerMaxDelay),
+        max_concurrent_games: concurrentGames
       });
     }
     return bots;
