@@ -2442,6 +2442,127 @@ const HumanBotsManagement = () => {
         </div>
       )}
 
+      {/* Bulk Names Editor Modal */}
+      {showBulkNamesEditor && (
+        <div className="modal-overlay">
+          <div className="modal-content large-modal styled-modal">
+            <div className="modal-header">
+              <div className="modal-title">
+                <svg className="modal-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <h3>Массовое редактирование имен</h3>
+              </div>
+              <button 
+                type="button" 
+                className="modal-close"
+                onClick={() => {
+                  setShowBulkNamesEditor(false);
+                  setBulkNamesInput('');
+                }}
+              >
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-section">
+                <div className="section-header">
+                  <svg className="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <h4>Редактирование списка имен</h4>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg">
+                    <div className="flex items-center">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <div>
+                        <p className="font-bold">Внимание!</p>
+                        <p className="text-sm">Это действие заменит весь текущий список имен. Убедитесь, что все имена корректны.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-white font-rajdhani font-bold mb-2">
+                      Список имен (по одному на строку):
+                    </label>
+                    <textarea
+                      value={bulkNamesInput}
+                      onChange={(e) => setBulkNamesInput(e.target.value)}
+                      placeholder="Введите имена ботов, по одному на строку..."
+                      className="w-full h-96 px-4 py-3 bg-surface-card border border-border-primary rounded-lg text-white font-roboto resize-none focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                      disabled={namesSaving}
+                    />
+                    <div className="flex items-center justify-between mt-2">
+                      <p className="text-text-secondary text-sm">
+                        Строк: {bulkNamesInput.split('\n').filter(line => line.trim()).length}
+                      </p>
+                      <div className="flex space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => setBulkNamesInput('')}
+                          disabled={namesSaving}
+                          className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 disabled:opacity-50"
+                        >
+                          Очистить
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const lines = bulkNamesInput.split('\n');
+                            const uniqueLines = [...new Set(lines.map(line => line.trim()).filter(line => line))];
+                            setBulkNamesInput(uniqueLines.join('\n'));
+                          }}
+                          disabled={namesSaving}
+                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          Удалить дубликаты
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button 
+                type="button"
+                onClick={handleSaveBulkNames}
+                disabled={namesSaving || !bulkNamesInput.trim()}
+                className="styled-btn btn-primary"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                {namesSaving ? 'Сохранение...' : 'Сохранить список'}
+              </button>
+              <button 
+                type="button" 
+                className="styled-btn btn-secondary"
+                onClick={() => {
+                  setShowBulkNamesEditor(false);
+                  setBulkNamesInput('');
+                }}
+                disabled={namesSaving}
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modals */}
       <ConfirmationModal {...confirmationModal} />
       <InputModal {...inputModal} />
