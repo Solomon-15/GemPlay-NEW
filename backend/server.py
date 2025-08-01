@@ -852,6 +852,14 @@ class HumanBotResponse(BaseModel):
     logging_level: str
     can_play_with_other_bots: bool
     can_play_with_players: bool
+    # Individual delay settings for playing with other bots
+    bot_min_delay_seconds: int
+    bot_max_delay_seconds: int
+    # Individual delay settings for playing with players
+    player_min_delay_seconds: int  
+    player_max_delay_seconds: int
+    # Individual concurrent games limit
+    max_concurrent_games: int
     total_games_played: int
     total_games_won: int
     total_amount_wagered: float
