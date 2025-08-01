@@ -495,11 +495,14 @@ def test_gem_validation_fix():
     print_subheader("TEST SCENARIO 3: Edge Case - Exact Gem Matching")
     
     # Create players for edge case
+    timestamp3 = int(time.time()) + 2
     player_e_email = generate_unique_email()
-    player_e_token, player_e_success = register_and_verify_user("PlayerE_Edge", player_e_email, "Test123!")
+    player_e_username = f"PlayerE_Edge_{timestamp3}"
+    player_e_token, player_e_success = register_and_verify_user(player_e_username, player_e_email, "Test123!")
     
     player_f_email = generate_unique_email()
-    player_f_token, player_f_success = register_and_verify_user("PlayerF_Edge", player_f_email, "Test123!")
+    player_f_username = f"PlayerF_Edge_{timestamp3}"
+    player_f_token, player_f_success = register_and_verify_user(player_f_username, player_f_email, "Test123!")
     
     if not (player_e_success and player_f_success):
         print_error("Failed to create players for edge case")
