@@ -2456,123 +2456,20 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
         if not active_human_bots:
             return
         
-        # Get auto-play settings
-        auto_play_enabled = settings.get("auto_play_enabled", False)
-        min_delay = settings.get("min_delay_seconds", 1)
-        max_delay = settings.get("max_delay_seconds", 3600)
-        max_concurrent_games = settings.get("max_concurrent_games", 3)
-        
         logger.info(f"🎯 Processing game joining for {len(active_human_bots)} human bots")
         
-        # Process auto-play between bots if enabled
-        if auto_play_enabled:
-            # Find bots that can play with other bots
-            auto_play_bots = [
-                bot for bot in active_human_bots 
-                if bot.get("can_play_with_other_bots", True)
-            ]
-            
-            if auto_play_bots:
-                logger.info(f"🤖 Processing auto-play for {len(auto_play_bots)} human bots")
-                
-                # Get all available bets (WAITING status) from other Human-bots and players
-                available_bets = await db.games.find({
-                    "status": "WAITING",
-                    "opponent_id": None  # Only bets without opponents
-                }).to_list(100)
-                
-                if available_bets:
-                    logger.info(f"🎯 Found {len(available_bets)} available bets to join")
-                    
-                    # Process each bot for auto-play
-                    for bot_data in auto_play_bots:
-                        try:
-                            bot = HumanBot(**bot_data)
-                            current_time = datetime.utcnow()
-                            
-                            # Check if bot should take action based on delay
-                            if bot.last_action_time:
-                                time_since_last = (current_time - bot.last_action_time).total_seconds()
-                                random_delay = random.uniform(min_delay, max_delay)
-                                if time_since_last < random_delay:
-                                    continue  # Not enough time passed
-                            
-                            # Check concurrent games limit
-                            bot_active_games = await db.games.count_documents({
-                                "$or": [
-                                    {"creator_id": bot.id, "status": {"$in": ["WAITING", "ACTIVE"]}},
-                                    {"opponent_id": bot.id, "status": {"$in": ["WAITING", "ACTIVE"]}}
-                                ]
-                            })
-                            
-                            if bot_active_games >= max_concurrent_games:
-                                continue  # Bot has reached max concurrent games
-                            
-                            # Find suitable bets this bot can join
-                            suitable_bets = []
-                            for bet in available_bets:
-                                # Skip own bets
-                                if bet["creator_id"] == bot.id:
-                                    continue
-                                
-                                # Check if bet amount is within bot's range
-                                bet_amount = bet["bet_amount"]
-                                if bet_amount < bot.min_bet or bet_amount > bot.max_bet:
-                                    continue
-                                
-                                # Check if bot can play with the creator
-                                creator_id = bet["creator_id"]
-                                
-                                # Check if creator is a Human-bot
-                                creator_human_bot = await db.human_bots.find_one({"id": creator_id})
-                                if creator_human_bot:
-                                    # Both are Human-bots - check if they can play together
-                                    if not creator_human_bot.get("can_play_with_other_bots", True):
-                                        continue
-                                else:
-                                    # Creator is a player - check if bot can play with players
-                                    if not bot.can_play_with_players:
-                                        continue
-                                
-                                suitable_bets.append(bet)
-                            
-                            if suitable_bets:
-                                # Randomly select a bet to join
-                                selected_bet = random.choice(suitable_bets)
-                                
-                                # Join the selected bet
-                                await join_human_bot_to_existing_bet(bot, selected_bet)
-                                
-                                logger.info(f"🎮 Bot {bot.name} joined bet {selected_bet['id']} for ${selected_bet['bet_amount']}")
-                                
-                                # Update last action time
-                                await db.human_bots.update_one(
-                                    {"id": bot.id},
-                                    {"$set": {"last_action_time": current_time}}
-                                )
-                            
-                        except Exception as e:
-                            logger.error(f"Error processing auto-play for bot {bot_data.get('id')}: {e}")
-                            continue
-        
-        # Process joining available bets (both bot and player bets)
+        # Process each bot individually
         for bot_data in active_human_bots:
             try:
                 bot = HumanBot(**bot_data)
+                current_time = datetime.utcnow()
                 
                 # Check if bot should look for available bets
                 if not (bot.can_play_with_other_bots or bot.can_play_with_players):
                     continue
                 
-                # Check delay constraints
-                current_time = datetime.utcnow()
-                if bot.last_action_time:
-                    time_since_last = (current_time - bot.last_action_time).total_seconds()
-                    required_delay = random.randint(min_delay, max_delay)
-                    if time_since_last < required_delay:
-                        continue
-                
                 # Check concurrent games limit
+                max_concurrent_games = settings.get("max_concurrent_games", 3)
                 can_join_more = await check_human_bot_concurrent_games(bot.id, max_concurrent_games)
                 if not can_join_more:
                     continue
@@ -2583,9 +2480,41 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                 if current_active_bets >= bot_limit:
                     continue
                 
-                # Find available bets
+                # Find available bets this bot can join
                 available_bets = await find_available_bets_for_bot(bot, settings)
                 if not available_bets:
+                    continue
+                
+                # Check delay constraints based on the type of bet creator
+                should_skip = False
+                for bet in available_bets:
+                    creator_id = bet["creator_id"]
+                    creator_human_bot = await db.human_bots.find_one({"id": creator_id})
+                    
+                    if creator_human_bot:
+                        # Creator is a Human-bot - use bot delay settings
+                        if not bot.can_play_with_other_bots:
+                            continue
+                        
+                        if bot.last_action_time:
+                            time_since_last = (current_time - bot.last_action_time).total_seconds()
+                            required_delay = random.randint(bot.bot_min_delay_seconds, bot.bot_max_delay_seconds)
+                            if time_since_last < required_delay:
+                                should_skip = True
+                                break
+                    else:
+                        # Creator is a live player - use player delay settings
+                        if not bot.can_play_with_players:
+                            continue
+                        
+                        if bot.last_action_time:
+                            time_since_last = (current_time - bot.last_action_time).total_seconds()
+                            required_delay = random.randint(bot.player_min_delay_seconds, bot.player_max_delay_seconds)
+                            if time_since_last < required_delay:
+                                should_skip = True
+                                break
+                
+                if should_skip:
                     continue
                 
                 # Randomly select a bet to join
@@ -2594,10 +2523,18 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                 # Join the selected bet
                 await join_available_bet_as_human_bot(bot, selected_bet)
                 
-                logger.info(f"🤖 Human bot {bot.name} joined available bet {selected_bet['id']}")
+                # Update last action time
+                await db.human_bots.update_one(
+                    {"id": bot.id},
+                    {"$set": {"last_action_time": current_time}}
+                )
+                
+                creator_human_bot = await db.human_bots.find_one({"id": selected_bet["creator_id"]})
+                creator_type = "Human-bot" if creator_human_bot else "live player"
+                logger.info(f"🤖 Bot {bot.name} joined {creator_type} bet {selected_bet['id']} for ${selected_bet['bet_amount']}")
                 
             except Exception as e:
-                logger.error(f"Error processing available bet joining for bot {bot_data.get('id')}: {e}")
+                logger.error(f"Error processing game joining for bot {bot_data.get('id')}: {e}")
         
     except Exception as e:
         logger.error(f"Error in process_human_bot_game_joining: {e}")
