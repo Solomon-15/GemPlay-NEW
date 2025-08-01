@@ -97,9 +97,9 @@ const InputModal = ({
           
           {/* Message */}
           <div className="mt-4">
-            <p className="text-sm text-text-secondary font-roboto leading-relaxed mb-4">
+            <div className="text-sm text-text-secondary font-roboto leading-relaxed mb-4">
               {message}
-            </p>
+            </div>
             
             {/* Input */}
             <div className="space-y-2">
