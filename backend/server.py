@@ -210,9 +210,6 @@ class BotSettingsRequest(BaseModel):
     autoActivateFromQueue: bool = True
     priorityType: str = Field(default="order")  # 'order' or 'manual'
 
-class HumanBotSettingsRequest(BaseModel):
-    max_concurrent_games: Optional[int] = Field(default=3, ge=1, le=1000000, description="Максимальное количество одновременных игр для Human-ботов")
-
 # Interface Settings model
 class InterfaceSettings(BaseModel):
     live_players: dict = Field(default={
