@@ -20,7 +20,7 @@ const HumanBotsList = ({
   pageSize = 10,
   priorityFields = true,
   stats = {}, // Получаем статистику от родительского компонента
-  globalSettings = {}, // Получаем глобальные настройки от родительского компонента
+  // globalSettings удалены - используются индивидуальные настройки ботов
   onEditBot, 
   onCreateBot,
   onPageChange,
