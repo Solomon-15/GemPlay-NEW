@@ -2171,6 +2171,23 @@ const HumanBotsManagement = () => {
                       </div>
                     )}
                   </div>
+                  <div className="form-group">
+                    <label>
+                      <svg className="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                      Максимальное количество одновременных игр
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={createFormData.max_concurrent_games}
+                      onChange={(e) => setCreateFormData({...createFormData, max_concurrent_games: Math.max(1, Math.min(100, parseInt(e.target.value) || 3))})}
+                      placeholder="3"
+                    />
+                    <small className="form-help">Максимальное количество игр, в которых бот может участвовать одновременно</small>
+                  </div>
                 </div>
               </div>
 
