@@ -275,6 +275,8 @@ const HumanBotsManagement = () => {
     // Delay ranges for bot-to-player games
     player_min_delay_range: [30, 120], 
     player_max_delay_range: [30, 120],
+    // Concurrent games settings for bulk creation
+    max_concurrent_games_range: [3, 3],
     bots: []
   });
 
