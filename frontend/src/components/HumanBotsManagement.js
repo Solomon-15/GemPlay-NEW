@@ -1340,7 +1340,6 @@ const HumanBotsManagement = () => {
                 onRefresh={() => {
                   fetchHumanBots(false);
                   fetchStats();
-                  fetchGlobalSettings(); // Add global settings refresh
                 }}
               />
             </div>
