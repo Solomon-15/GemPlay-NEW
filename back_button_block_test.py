@@ -139,7 +139,10 @@ class BackButtonBlockingTester:
                 json={"gem_type": gem_type, "quantity": quantity},
                 headers=headers
             )
-            return response.status_code == 200
+            print(f"   Gem purchase response for {quantity} {gem_type}: {response.status_code}")
+            if response.status_code not in [200, 201]:
+                print(f"   Gem purchase failed: {response.text}")
+            return response.status_code in [200, 201]
         except Exception as e:
             print(f"Error purchasing gems: {e}")
             return False
