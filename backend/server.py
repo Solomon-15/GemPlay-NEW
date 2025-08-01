@@ -21791,6 +21791,7 @@ async def update_human_bot_names(
     current_admin: User = Depends(get_current_admin)
 ):
     """Update the list of Human-bot names."""
+    logger.info(f"PUT /admin/human-bots/names called with {len(request.names)} names")
     try:
         # Simple test - just return the request data
         return {
