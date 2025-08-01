@@ -21785,22 +21785,51 @@ async def get_human_bot_names(current_admin: User = Depends(get_current_admin)):
             detail=f"Failed to get names: {str(e)}"
         )
 
-@api_router.put("/admin/human-bots/names")
-async def update_human_bot_names(
+@api_router.post("/admin/human-bots/names/update")
+async def update_human_bot_names_post(
     request: UpdateHumanBotNamesRequest,
     current_admin: User = Depends(get_current_admin)
 ):
-    """Update the list of Human-bot names."""
-    logger.info(f"PUT /admin/human-bots/names called with {len(request.names)} names")
+    """Update the list of Human-bot names (POST version for testing)."""
+    logger.info(f"POST /admin/human-bots/names/update called with {len(request.names)} names")
     try:
-        # Simple test - just return the request data
+        global HUMAN_BOT_NAMES
+        
+        # Validate names
+        cleaned_names = []
+        for name in request.names:
+            cleaned_name = name.strip()
+            if cleaned_name and len(cleaned_name) <= 50:
+                cleaned_names.append(cleaned_name)
+        
+        if not cleaned_names:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one valid name is required"
+            )
+        
+        # Remove duplicates while preserving order
+        unique_names = []
+        seen = set()
+        for name in cleaned_names:
+            if name not in seen:
+                unique_names.append(name)
+                seen.add(name)
+        
+        # Update the global list
+        HUMAN_BOT_NAMES.clear()
+        HUMAN_BOT_NAMES.extend(unique_names)
+        
         return {
             "success": True,
-            "message": "Test response",
-            "received_names": request.names,
-            "count": len(request.names)
+            "message": "Human-bot names updated successfully",
+            "names": HUMAN_BOT_NAMES,
+            "count": len(HUMAN_BOT_NAMES),
+            "duplicates_removed": len(cleaned_names) - len(unique_names)
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error updating Human-bot names: {e}")
         raise HTTPException(
