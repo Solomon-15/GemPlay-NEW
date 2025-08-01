@@ -24463,16 +24463,16 @@ def test_human_bots_management_apis_comprehensive() -> None:
     )
     
     if global_settings_success:
-        print_success("Global settings endpoint accessible")
+        print_success("Human bots settings endpoint accessible")
         if isinstance(global_settings_response, dict):
-            print_success(f"Global settings structure: {list(global_settings_response.keys())}")
-            record_test("Human Bots Management - Global Settings Endpoint", True)
+            print_success(f"Human bots settings structure: {list(global_settings_response.keys())}")
+            record_test("Human Bots Management - Human Bots Settings Endpoint", True)
         else:
-            print_error("Global settings response is not a dictionary")
-            record_test("Human Bots Management - Global Settings Endpoint", False, "Invalid response structure")
+            print_error("Human bots settings response is not a dictionary")
+            record_test("Human Bots Management - Human Bots Settings Endpoint", False, "Invalid response structure")
     else:
-        print_error("Failed to access global settings endpoint")
-        record_test("Human Bots Management - Global Settings Endpoint", False, "Endpoint not accessible")
+        print_error("Failed to access human bots settings endpoint")
+        record_test("Human Bots Management - Human Bots Settings Endpoint", False, "Endpoint not accessible")
     
     # Step 3: Test GET /api/admin/human-bots (List Human Bots)
     print_subheader("Step 3: Test GET Human Bots List")
