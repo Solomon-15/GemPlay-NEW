@@ -172,12 +172,13 @@ def purchase_gems(auth_token: str, gem_purchases: Dict[str, int]) -> bool:
     total_purchases = len(gem_purchases)
     
     for gem_type, quantity in gem_purchases.items():
-        purchase_data = {
+        # Use query parameters instead of JSON body
+        params = {
             "gem_type": gem_type,
             "quantity": quantity
         }
         
-        purchase_response, purchase_success = make_request("POST", "/gems/buy", purchase_data, auth_token)
+        purchase_response, purchase_success = make_request("POST", "/gems/buy", params=params, auth_token=auth_token)
         
         if purchase_success:
             print_success(f"✓ Purchased {quantity} {gem_type} gems")
