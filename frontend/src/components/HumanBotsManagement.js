@@ -1278,6 +1278,126 @@ const HumanBotsManagement = () => {
             </div>
           )}
 
+          {activeTab === 'names' && (
+            <div className="space-y-6">
+              {/* Управление именами Human-ботов */}
+              <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-rajdhani text-xl font-bold text-white">
+                        Управление именами Human-ботов
+                      </h3>
+                      <p className="text-text-secondary font-roboto">
+                        Редактирование списка имен для массового создания ботов
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-text-secondary text-sm">
+                      Всего имен: {botNames.length}
+                    </span>
+                    <button
+                      onClick={() => fetchBotNames()}
+                      disabled={namesLoading}
+                      className="px-3 py-1 bg-accent-primary text-white text-sm rounded hover:bg-accent-primary-dark disabled:opacity-50 transition-colors"
+                    >
+                      {namesLoading ? '⏳' : '🔄'} Обновить
+                    </button>
+                  </div>
+                </div>
+
+                {namesLoading ? (
+                  <div className="text-center py-8">
+                    <div className="text-accent-primary text-2xl mb-2">⏳</div>
+                    <p className="text-text-secondary">Загрузка имен...</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Быстрое добавление имени */}
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <h4 className="font-rajdhani font-bold text-white mb-3">➕ Добавить новое имя</h4>
+                      <div className="flex items-center space-x-4">
+                        <input
+                          type="text"
+                          value={newNameInput}
+                          onChange={(e) => setNewNameInput(e.target.value)}
+                          placeholder="Введите имя бота..."
+                          maxLength={50}
+                          className="flex-1 px-4 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent"
+                          disabled={namesSaving}
+                          onKeyPress={(e) => e.key === 'Enter' && handleAddName()}
+                        />
+                        <button
+                          onClick={handleAddName}
+                          disabled={namesSaving || !newNameInput.trim()}
+                          className="px-6 py-2 bg-accent-primary text-white rounded-lg hover:bg-opacity-80 transition-colors disabled:opacity-50"
+                        >
+                          {namesSaving ? 'Добавление...' : 'Добавить'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Массовое редактирование */}
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-rajdhani font-bold text-white">📝 Массовое редактирование</h4>
+                        <button
+                          onClick={handleOpenBulkEditor}
+                          disabled={namesSaving}
+                          className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50"
+                        >
+                          Редактировать все
+                        </button>
+                      </div>
+                      <p className="text-text-secondary text-sm">
+                        💡 Используйте массовое редактирование для замены всего списка имен сразу
+                      </p>
+                    </div>
+
+                    {/* Список текущих имен */}
+                    <div className="bg-surface-sidebar rounded-lg p-4">
+                      <h4 className="font-rajdhani font-bold text-white mb-3">📋 Текущие имена ({botNames.length})</h4>
+                      {botNames.length === 0 ? (
+                        <div className="text-center py-4 text-text-secondary">
+                          Список имен пуст
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 max-h-96 overflow-y-auto">
+                          {botNames.map((name, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between bg-surface-card border border-border-primary rounded-lg px-3 py-2"
+                            >
+                              <span className="text-white font-roboto text-sm truncate flex-1 mr-2">
+                                {name}
+                              </span>
+                              <button
+                                onClick={() => handleRemoveName(name)}
+                                disabled={namesSaving}
+                                className="text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors"
+                                title="Удалить имя"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'settings' && (
             <div className="space-y-6">
               {/* Настройки лимитов Human-ботов */}
