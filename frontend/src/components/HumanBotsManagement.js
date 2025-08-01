@@ -348,19 +348,7 @@ const HumanBotsManagement = () => {
     }
   }, [executeOperation]);
 
-  const fetchGlobalSettings = useCallback(async () => {
-    try {
-      const response = await executeOperation('/admin/human-bots/settings', 'GET');
-      if (response.success !== false) {
-        setGlobalSettings(response.settings || {});
-      }
-    } catch (error) {
-      console.error('Ошибка получения глобальных настроек:', error);
-    }
-  }, [executeOperation]);
-
-  // Add missing state for global settings
-  const [globalSettings, setGlobalSettings] = useState({});
+  // Глобальные настройки удалены - используются индивидуальные настройки ботов
 
   // Auto-refresh functionality
   useEffect(() => {
