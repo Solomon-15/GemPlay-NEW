@@ -54,11 +54,11 @@ class HumanBotsManagementTester:
             start_time = time.time()
             response = requests.post(
                 f"{BASE_URL}/auth/login",
-                data={
-                    "username": ADMIN_USER["email"],
+                json={
+                    "email": ADMIN_USER["email"],
                     "password": ADMIN_USER["password"]
                 },
-                headers={"Content-Type": "application/x-www-form-urlencoded"}
+                headers={"Content-Type": "application/json"}
             )
             response_time = time.time() - start_time
             
