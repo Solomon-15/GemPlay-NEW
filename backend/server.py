@@ -19502,38 +19502,6 @@ async def get_human_bots_stats(current_admin: User = Depends(get_current_admin))
             detail="Failed to fetch human bots stats"
         )
 
-@api_router.get("/admin/human-bots/settings")
-async def get_human_bots_settings(current_admin: User = Depends(get_current_admin)):
-    """Get human bots global settings."""
-    try:
-        # Get bot settings from database
-        settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        
-        if not settings:
-            # Create default settings if not exists
-            default_settings = {
-                "id": "bot_settings",
-                "max_concurrent_games": 3,
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-            await db.bot_settings.insert_one(default_settings)
-            settings = default_settings
-        
-        return JSONResponse(content={
-            "success": True,
-            "settings": {
-                "max_concurrent_games": settings.get("max_concurrent_games", 3)
-            }
-        })
-        
-    except Exception as e:
-        logger.error(f"Error fetching human bots settings: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch human bots settings"
-        )
-
 @api_router.get("/admin/human-bots/{bot_id}/logs", response_model=dict)
 async def get_human_bot_logs(
     bot_id: str,
