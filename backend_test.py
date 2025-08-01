@@ -24660,12 +24660,478 @@ def test_human_bots_management_apis_comprehensive() -> None:
     else:
         print_error("❌ Human Bots Management APIs have issues that need attention")
 
+def test_human_bot_names_management_apis():
+    """
+    Test Human-bot names management API endpoints as requested in Russian review:
+    1. GET /api/admin/human-bots/names - получение списка имен
+    2. PUT /api/admin/human-bots/names - обновление всего списка имен 
+    3. POST /api/admin/human-bots/names/add - добавление новых имен
+    4. DELETE /api/admin/human-bots/names/{name} - удаление конкретного имени
+    """
+    print_header("HUMAN-BOT NAMES MANAGEMENT API TESTING")
+    
+    # Step 1: Admin Authentication
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = None
+    
+    admin_login_response, admin_login_success = make_request(
+        "POST", "/auth/login",
+        data=ADMIN_USER
+    )
+    
+    if admin_login_success and "access_token" in admin_login_response:
+        admin_token = admin_login_response["access_token"]
+        print_success("Admin authentication successful")
+        record_test("Human-bot Names Management - Admin Authentication", True)
+    else:
+        print_error("Admin authentication failed")
+        record_test("Human-bot Names Management - Admin Authentication", False, "Login failed")
+        return
+    
+    # Step 2: GET /api/admin/human-bots/names - получение списка имен
+    print_subheader("Step 2: GET Human-bot Names List")
+    
+    get_names_response, get_names_success = make_request(
+        "GET", "/admin/human-bots/names",
+        auth_token=admin_token
+    )
+    
+    if get_names_success:
+        print_success("GET /admin/human-bots/names endpoint accessible")
+        
+        # Validate response structure
+        if isinstance(get_names_response, dict):
+            if "success" in get_names_response and "names" in get_names_response and "count" in get_names_response:
+                original_names = get_names_response["names"]
+                original_count = get_names_response["count"]
+                print_success(f"Response structure valid: {original_count} names found")
+                print_success(f"Sample names: {original_names[:5] if len(original_names) >= 5 else original_names}")
+                record_test("Human-bot Names Management - GET Names Structure", True)
+            else:
+                print_error("Invalid response structure for GET names")
+                record_test("Human-bot Names Management - GET Names Structure", False, "Invalid structure")
+                return
+        else:
+            print_error("GET names response is not a dictionary")
+            record_test("Human-bot Names Management - GET Names Response Type", False, "Not dict")
+            return
+    else:
+        print_error("Failed to access GET /admin/human-bots/names endpoint")
+        record_test("Human-bot Names Management - GET Names Access", False, "Endpoint failed")
+        return
+    
+    # Step 3: POST /api/admin/human-bots/names/add - добавление новых имен
+    print_subheader("Step 3: POST Add New Names")
+    
+    # Generate unique test names
+    timestamp = int(time.time())
+    test_names_to_add = [
+        f"TestBot_{timestamp}_1",
+        f"TestBot_{timestamp}_2",
+        f"TestBot_{timestamp}_3"
+    ]
+    
+    add_names_data = {
+        "names": test_names_to_add
+    }
+    
+    add_names_response, add_names_success = make_request(
+        "POST", "/admin/human-bots/names/add",
+        data=add_names_data,
+        auth_token=admin_token
+    )
+    
+    if add_names_success:
+        print_success("POST /admin/human-bots/names/add endpoint accessible")
+        
+        # Validate response structure
+        if isinstance(add_names_response, dict):
+            if "success" in add_names_response and "added_count" in add_names_response:
+                added_count = add_names_response.get("added_count", 0)
+                new_total_count = add_names_response.get("count", 0)
+                print_success(f"Added {added_count} new names, total count now: {new_total_count}")
+                
+                if added_count == len(test_names_to_add):
+                    print_success("✓ All test names added successfully")
+                    record_test("Human-bot Names Management - POST Add Names", True)
+                else:
+                    print_warning(f"Expected to add {len(test_names_to_add)} names, but added {added_count}")
+                    record_test("Human-bot Names Management - POST Add Names Count", False, f"Added {added_count}/{len(test_names_to_add)}")
+            else:
+                print_error("Invalid response structure for POST add names")
+                record_test("Human-bot Names Management - POST Add Names Structure", False, "Invalid structure")
+        else:
+            print_error("POST add names response is not a dictionary")
+            record_test("Human-bot Names Management - POST Add Names Response Type", False, "Not dict")
+    else:
+        print_error("Failed to access POST /admin/human-bots/names/add endpoint")
+        record_test("Human-bot Names Management - POST Add Names Access", False, "Endpoint failed")
+        return
+    
+    # Step 4: Verify names were added by getting the list again
+    print_subheader("Step 4: Verify Names Were Added")
+    
+    verify_get_response, verify_get_success = make_request(
+        "GET", "/admin/human-bots/names",
+        auth_token=admin_token
+    )
+    
+    if verify_get_success and isinstance(verify_get_response, dict):
+        current_names = verify_get_response.get("names", [])
+        current_count = verify_get_response.get("count", 0)
+        
+        # Check if our test names are in the list
+        names_found = 0
+        for test_name in test_names_to_add:
+            if test_name in current_names:
+                names_found += 1
+        
+        if names_found == len(test_names_to_add):
+            print_success(f"✓ All {len(test_names_to_add)} test names found in updated list")
+            record_test("Human-bot Names Management - Names Verification After Add", True)
+        else:
+            print_error(f"Only {names_found}/{len(test_names_to_add)} test names found in updated list")
+            record_test("Human-bot Names Management - Names Verification After Add", False, f"Found {names_found}/{len(test_names_to_add)}")
+    else:
+        print_error("Failed to verify names after adding")
+        record_test("Human-bot Names Management - Names Verification After Add", False, "Verification failed")
+    
+    # Step 5: DELETE /api/admin/human-bots/names/{name} - удаление конкретного имени
+    print_subheader("Step 5: DELETE Specific Name")
+    
+    # Delete the first test name we added
+    name_to_delete = test_names_to_add[0]
+    
+    delete_name_response, delete_name_success = make_request(
+        "DELETE", f"/admin/human-bots/names/{name_to_delete}",
+        auth_token=admin_token
+    )
+    
+    if delete_name_success:
+        print_success(f"DELETE /admin/human-bots/names/{name_to_delete} endpoint accessible")
+        
+        # Validate response structure
+        if isinstance(delete_name_response, dict):
+            if "success" in delete_name_response and "message" in delete_name_response:
+                message = delete_name_response.get("message", "")
+                new_count = delete_name_response.get("count", 0)
+                print_success(f"Delete response: {message}")
+                print_success(f"New total count: {new_count}")
+                record_test("Human-bot Names Management - DELETE Name", True)
+            else:
+                print_error("Invalid response structure for DELETE name")
+                record_test("Human-bot Names Management - DELETE Name Structure", False, "Invalid structure")
+        else:
+            print_error("DELETE name response is not a dictionary")
+            record_test("Human-bot Names Management - DELETE Name Response Type", False, "Not dict")
+    else:
+        print_error(f"Failed to delete name {name_to_delete}")
+        record_test("Human-bot Names Management - DELETE Name Access", False, "Endpoint failed")
+    
+    # Step 6: Verify name was deleted
+    print_subheader("Step 6: Verify Name Was Deleted")
+    
+    verify_delete_response, verify_delete_success = make_request(
+        "GET", "/admin/human-bots/names",
+        auth_token=admin_token
+    )
+    
+    if verify_delete_success and isinstance(verify_delete_response, dict):
+        current_names_after_delete = verify_delete_response.get("names", [])
+        
+        if name_to_delete not in current_names_after_delete:
+            print_success(f"✓ Name '{name_to_delete}' successfully removed from list")
+            record_test("Human-bot Names Management - Delete Verification", True)
+        else:
+            print_error(f"Name '{name_to_delete}' still found in list after deletion")
+            record_test("Human-bot Names Management - Delete Verification", False, "Name still exists")
+    else:
+        print_error("Failed to verify name deletion")
+        record_test("Human-bot Names Management - Delete Verification", False, "Verification failed")
+    
+    # Step 7: PUT /api/admin/human-bots/names - обновление всего списка имен
+    print_subheader("Step 7: PUT Update Entire Names List")
+    
+    # Create a test list with some original names plus our remaining test names
+    test_update_names = [
+        "AssemS", "Aruzhan123", "DanelMax", "Roman777", "Madina",  # Some original names
+        test_names_to_add[1],  # One of our test names that wasn't deleted
+        test_names_to_add[2],  # Another test name
+        f"UpdatedBot_{timestamp}_1",  # New name for this test
+        f"UpdatedBot_{timestamp}_2"   # Another new name
+    ]
+    
+    update_names_data = {
+        "names": test_update_names
+    }
+    
+    update_names_response, update_names_success = make_request(
+        "PUT", "/admin/human-bots/names",
+        data=update_names_data,
+        auth_token=admin_token
+    )
+    
+    if update_names_success:
+        print_success("PUT /admin/human-bots/names endpoint accessible")
+        
+        # Validate response structure
+        if isinstance(update_names_response, dict):
+            if "success" in update_names_response and "names" in update_names_response:
+                updated_names = update_names_response.get("names", [])
+                updated_count = update_names_response.get("count", 0)
+                duplicates_removed = update_names_response.get("duplicates_removed", 0)
+                
+                print_success(f"Names list updated successfully")
+                print_success(f"New count: {updated_count}, duplicates removed: {duplicates_removed}")
+                
+                # Verify the list matches what we sent (accounting for deduplication)
+                expected_unique_names = list(dict.fromkeys(test_update_names))  # Remove duplicates preserving order
+                if len(updated_names) == len(expected_unique_names):
+                    print_success("✓ Updated names count matches expected")
+                    record_test("Human-bot Names Management - PUT Update Names", True)
+                else:
+                    print_warning(f"Updated count {len(updated_names)} doesn't match expected {len(expected_unique_names)}")
+                    record_test("Human-bot Names Management - PUT Update Names Count", False, f"Count mismatch")
+            else:
+                print_error("Invalid response structure for PUT update names")
+                record_test("Human-bot Names Management - PUT Update Names Structure", False, "Invalid structure")
+        else:
+            print_error("PUT update names response is not a dictionary")
+            record_test("Human-bot Names Management - PUT Update Names Response Type", False, "Not dict")
+    else:
+        print_error("Failed to access PUT /admin/human-bots/names endpoint")
+        record_test("Human-bot Names Management - PUT Update Names Access", False, "Endpoint failed")
+    
+    # Step 8: Final verification - get the list one more time
+    print_subheader("Step 8: Final Names List Verification")
+    
+    final_get_response, final_get_success = make_request(
+        "GET", "/admin/human-bots/names",
+        auth_token=admin_token
+    )
+    
+    if final_get_success and isinstance(final_get_response, dict):
+        final_names = final_get_response.get("names", [])
+        final_count = final_get_response.get("count", 0)
+        
+        print_success(f"Final names list contains {final_count} names")
+        print_success(f"Sample final names: {final_names[:5] if len(final_names) >= 5 else final_names}")
+        record_test("Human-bot Names Management - Final Verification", True)
+    else:
+        print_error("Failed final names list verification")
+        record_test("Human-bot Names Management - Final Verification", False, "Final check failed")
+    
+    # Step 9: Test error handling - try to delete non-existent name
+    print_subheader("Step 9: Error Handling - Delete Non-existent Name")
+    
+    non_existent_name = f"NonExistentBot_{timestamp}"
+    
+    delete_nonexistent_response, delete_nonexistent_success = make_request(
+        "DELETE", f"/admin/human-bots/names/{non_existent_name}",
+        auth_token=admin_token
+    )
+    
+    # This should fail with 404
+    if not delete_nonexistent_success:
+        print_success("✓ Correctly returned error for non-existent name deletion")
+        record_test("Human-bot Names Management - Error Handling Delete", True)
+    else:
+        print_warning("DELETE non-existent name should have failed but succeeded")
+        record_test("Human-bot Names Management - Error Handling Delete", False, "Should have failed")
+    
+    # Step 10: Test admin logging
+    print_subheader("Step 10: Admin Action Logging Verification")
+    
+    # Try to access admin logs to verify our actions were logged
+    admin_logs_response, admin_logs_success = make_request(
+        "GET", "/admin/logs",
+        auth_token=admin_token
+    )
+    
+    if admin_logs_success:
+        print_success("Admin logs endpoint accessible")
+        
+        # Look for our actions in the logs
+        if isinstance(admin_logs_response, dict) and "logs" in admin_logs_response:
+            logs = admin_logs_response["logs"]
+            names_actions_found = 0
+            
+            for log in logs:
+                action = log.get("action", "")
+                if action in ["UPDATE_HUMAN_BOT_NAMES", "ADD_HUMAN_BOT_NAMES", "REMOVE_HUMAN_BOT_NAME"]:
+                    names_actions_found += 1
+            
+            if names_actions_found > 0:
+                print_success(f"✓ Found {names_actions_found} Human-bot names management actions in admin logs")
+                record_test("Human-bot Names Management - Admin Logging", True)
+            else:
+                print_warning("No Human-bot names management actions found in admin logs")
+                record_test("Human-bot Names Management - Admin Logging", False, "No actions logged")
+        else:
+            print_warning("Admin logs response structure unexpected")
+            record_test("Human-bot Names Management - Admin Logging Structure", False, "Unexpected structure")
+    else:
+        print_warning("Could not access admin logs endpoint")
+        record_test("Human-bot Names Management - Admin Logging Access", False, "Endpoint failed")
+    
+    # Summary
+    print_subheader("Human-bot Names Management Testing Summary")
+    names_tests = [test for test in test_results["tests"] if "Human-bot Names Management" in test["name"]]
+    passed_tests = sum(1 for test in names_tests if test["passed"])
+    total_tests = len(names_tests)
+    success_rate = (passed_tests / total_tests) * 100 if total_tests > 0 else 0
+    
+    print_success(f"Human-bot Names Management Tests: {passed_tests}/{total_tests} ({success_rate:.1f}%)")
+    
+    if success_rate >= 80:
+        print_success("✅ Human-bot Names Management APIs are working correctly")
+    else:
+        print_error("❌ Human-bot Names Management APIs have issues that need attention")
+
+def test_human_bot_names_usage_in_creation():
+    """
+    Test that updated HUMAN_BOT_NAMES list is correctly used when creating new Human-bots
+    """
+    print_header("HUMAN-BOT NAMES USAGE IN CREATION TESTING")
+    
+    # Step 1: Admin Authentication
+    print_subheader("Step 1: Admin Authentication")
+    admin_token = None
+    
+    admin_login_response, admin_login_success = make_request(
+        "POST", "/auth/login",
+        data=ADMIN_USER
+    )
+    
+    if admin_login_success and "access_token" in admin_login_response:
+        admin_token = admin_login_response["access_token"]
+        print_success("Admin authentication successful")
+        record_test("Human-bot Names Usage - Admin Authentication", True)
+    else:
+        print_error("Admin authentication failed")
+        record_test("Human-bot Names Usage - Admin Authentication", False, "Login failed")
+        return
+    
+    # Step 2: Get current names list
+    print_subheader("Step 2: Get Current Names List")
+    
+    get_names_response, get_names_success = make_request(
+        "GET", "/admin/human-bots/names",
+        auth_token=admin_token
+    )
+    
+    if not get_names_success:
+        print_error("Failed to get current names list")
+        record_test("Human-bot Names Usage - Get Names", False, "Failed to get names")
+        return
+    
+    current_names = get_names_response.get("names", [])
+    print_success(f"Current names list has {len(current_names)} names")
+    
+    # Step 3: Create multiple Human-bots to test name usage
+    print_subheader("Step 3: Create Human-bots to Test Name Usage")
+    
+    created_bots = []
+    used_names = []
+    
+    for i in range(5):  # Create 5 bots to test name selection
+        create_bot_data = {
+            "name": "",  # Let the system generate the name
+            "character": "BALANCED",
+            "gender": "male",
+            "min_bet": 10.0,
+            "max_bet": 100.0,
+            "win_percentage": 40.0,
+            "loss_percentage": 40.0,
+            "draw_percentage": 20.0
+        }
+        
+        create_response, create_success = make_request(
+            "POST", "/admin/human-bots",
+            data=create_bot_data,
+            auth_token=admin_token
+        )
+        
+        if create_success and isinstance(create_response, dict):
+            bot_id = create_response.get("id")
+            bot_name = create_response.get("name")
+            
+            if bot_id and bot_name:
+                created_bots.append({"id": bot_id, "name": bot_name})
+                used_names.append(bot_name)
+                print_success(f"Created Human-bot {i+1}: {bot_name}")
+            else:
+                print_error(f"Failed to get bot ID or name from creation response {i+1}")
+        else:
+            print_error(f"Failed to create Human-bot {i+1}")
+    
+    if len(created_bots) > 0:
+        print_success(f"Successfully created {len(created_bots)} Human-bots")
+        record_test("Human-bot Names Usage - Bot Creation", True)
+        
+        # Step 4: Verify names are from the current list
+        print_subheader("Step 4: Verify Names Are From Current List")
+        
+        names_from_list = 0
+        for bot_name in used_names:
+            if bot_name in current_names:
+                names_from_list += 1
+                print_success(f"✓ Bot name '{bot_name}' is from the current names list")
+            else:
+                print_warning(f"Bot name '{bot_name}' is NOT from the current names list")
+        
+        if names_from_list == len(used_names):
+            print_success("✅ All created Human-bot names are from the current names list")
+            record_test("Human-bot Names Usage - Names From List", True)
+        else:
+            print_error(f"Only {names_from_list}/{len(used_names)} names are from the current list")
+            record_test("Human-bot Names Usage - Names From List", False, f"Only {names_from_list}/{len(used_names)} from list")
+        
+        # Step 5: Clean up - delete the test bots
+        print_subheader("Step 5: Clean Up Test Bots")
+        
+        deleted_count = 0
+        for bot in created_bots:
+            delete_response, delete_success = make_request(
+                "DELETE", f"/admin/human-bots/{bot['id']}",
+                auth_token=admin_token
+            )
+            
+            if delete_success:
+                deleted_count += 1
+                print_success(f"Deleted test bot: {bot['name']}")
+            else:
+                print_warning(f"Failed to delete test bot: {bot['name']}")
+        
+        print_success(f"Cleaned up {deleted_count}/{len(created_bots)} test bots")
+        record_test("Human-bot Names Usage - Cleanup", True)
+    else:
+        print_error("No Human-bots were created successfully")
+        record_test("Human-bot Names Usage - Bot Creation", False, "No bots created")
+    
+    # Summary
+    print_subheader("Human-bot Names Usage Testing Summary")
+    usage_tests = [test for test in test_results["tests"] if "Human-bot Names Usage" in test["name"]]
+    passed_tests = sum(1 for test in usage_tests if test["passed"])
+    total_tests = len(usage_tests)
+    success_rate = (passed_tests / total_tests) * 100 if total_tests > 0 else 0
+    
+    print_success(f"Human-bot Names Usage Tests: {passed_tests}/{total_tests} ({success_rate:.1f}%)")
+    
+    if success_rate >= 80:
+        print_success("✅ Human-bot names are correctly used in bot creation")
+    else:
+        print_error("❌ Human-bot names usage has issues that need attention")
+
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - HUMAN BOTS MANAGEMENT")
+    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT NAMES MANAGEMENT")
     
     try:
-        # Run the Human Bots Management API testing as specifically requested in the Russian review
-        test_human_bots_management_apis_comprehensive()
+        # Test Human-bot names management API endpoints
+        test_human_bot_names_management_apis()
+        
+        # Test that updated names are used in Human-bot creation
+        test_human_bot_names_usage_in_creation()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
