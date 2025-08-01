@@ -548,7 +548,12 @@ const HumanBotsManagement = () => {
           use_commit_reveal: true,
           logging_level: 'INFO',
           can_play_with_other_bots: true,
-          can_play_with_players: true
+          can_play_with_players: true,
+          // Reset delay settings
+          bot_min_delay_seconds: 30,
+          bot_max_delay_seconds: 120,
+          player_min_delay_seconds: 30,
+          player_max_delay_seconds: 120
         });
       }
       
