@@ -24455,10 +24455,10 @@ def test_human_bots_management_apis_comprehensive() -> None:
     
     record_test("Human Bots Management - Admin Authentication", True)
     
-    # Step 2: Test Global Settings Endpoint (fetchGlobalSettings)
-    print_subheader("Step 2: Test Global Settings Endpoint")
+    # Step 2: Test Human Bots Settings Endpoint (fetchGlobalSettings equivalent)
+    print_subheader("Step 2: Test Human Bots Settings Endpoint")
     global_settings_response, global_settings_success = make_request(
-        "GET", "/admin/global-settings",
+        "GET", "/admin/human-bots/settings",
         auth_token=admin_token
     )
     
