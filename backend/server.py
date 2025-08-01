@@ -9826,6 +9826,116 @@ async def get_all_users(
             detail="Failed to fetch users"
         )
 
+# Admin create user request model
+class CreateUserRequest(BaseModel):
+    username: str = Field(..., min_length=1, max_length=50, pattern=r'^[a-zA-Z0-9._+-]+$')
+    email: EmailStr
+    password: str = Field(..., min_length=8)
+    confirm_password: str = Field(..., min_length=8)
+    role: UserRole = UserRole.USER
+    virtual_balance: float = Field(default=1000.0, ge=1, le=10000)
+    daily_limit_max: float = Field(default=1000.0, ge=1, le=10000)
+    gender: str = Field(default="male", pattern=r'^(male|female)$')
+    status: UserStatus = UserStatus.ACTIVE
+    ban_reason: Optional[str] = None
+
+@api_router.post("/admin/users", response_model=dict)
+async def create_user(
+    user_data: CreateUserRequest,
+    current_user: User = Depends(get_current_admin)
+):
+    """Create a new user (admin only)."""
+    try:
+        # Validate password confirmation
+        if user_data.password != user_data.confirm_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Passwords do not match"
+            )
+
+        # Check if username already exists
+        existing_username = await db.users.find_one({"username": user_data.username})
+        if existing_username:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already exists"
+            )
+
+        # Check if email already exists
+        existing_email = await db.users.find_one({"email": user_data.email})
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already exists"
+            )
+
+        # Validate ban reason if status is BANNED
+        if user_data.status == UserStatus.BANNED and not user_data.ban_reason:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Ban reason is required when status is BANNED"
+            )
+
+        # Create new user
+        new_user = User(
+            username=user_data.username,
+            email=user_data.email,
+            password_hash=get_password_hash(user_data.password),
+            role=user_data.role,
+            virtual_balance=user_data.virtual_balance,
+            daily_limit_max=user_data.daily_limit_max,
+            gender=user_data.gender,
+            status=user_data.status,
+            ban_reason=user_data.ban_reason if user_data.status == UserStatus.BANNED else None,
+            email_verified=True,  # Auto-activate account
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+
+        # Insert user into database
+        await db.users.insert_one(new_user.dict())
+
+        # Log admin action
+        await db.admin_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "admin_id": current_user.id,
+            "action": "CREATE_USER",
+            "target_type": "user",
+            "target_id": new_user.id,
+            "details": {
+                "username": new_user.username,
+                "email": new_user.email,
+                "role": new_user.role,
+                "initial_balance": new_user.virtual_balance,
+                "daily_limit": new_user.daily_limit_max
+            },
+            "created_at": datetime.utcnow()
+        })
+
+        return {
+            "success": True,
+            "message": "User created successfully",
+            "user": {
+                "id": new_user.id,
+                "username": new_user.username,
+                "email": new_user.email,
+                "role": new_user.role,
+                "status": new_user.status,
+                "virtual_balance": new_user.virtual_balance,
+                "daily_limit_max": new_user.daily_limit_max,
+                "gender": new_user.gender
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating user: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create user"
+        )
+
 @api_router.put("/admin/users/{user_id}", response_model=dict)
 async def update_user(
     user_id: str,
