@@ -241,7 +241,13 @@ const HumanBotsManagement = () => {
     use_commit_reveal: true,
     logging_level: 'INFO',
     can_play_with_other_bots: true,
-    can_play_with_players: true
+    can_play_with_players: true,
+    // Individual delay settings for bot-to-bot games
+    bot_min_delay_seconds: 30,
+    bot_max_delay_seconds: 120,
+    // Individual delay settings for bot-to-player games  
+    player_min_delay_seconds: 30,
+    player_max_delay_seconds: 120
   });
 
   const [bulkCreateData, setBulkCreateData] = useState({
