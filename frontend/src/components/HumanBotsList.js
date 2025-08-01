@@ -47,6 +47,10 @@ const HumanBotsList = ({
   const [showAllBets, setShowAllBets] = useState(false);
   const [allBetsData, setAllBetsData] = useState(null);
   const [allBetsPage, setAllBetsPage] = useState(1);
+  
+  // Toggle loading states
+  const [loadingToggleAutoPlay, setLoadingToggleAutoPlay] = useState(new Set());
+  const [loadingTogglePlayWithPlayers, setLoadingTogglePlayWithPlayers] = useState(new Set());
 
   // Commission modal states
   const [isCommissionModalOpen, setIsCommissionModalOpen] = useState(false);
