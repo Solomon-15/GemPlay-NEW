@@ -428,51 +428,7 @@ const HumanBotsManagement = () => {
     }
   }, [botNames]);
 
-  const fetchHumanBotSettings = async () => {
-    try {
-      setSettingsLoading(true);
-      const response = await executeOperation('/admin/human-bots/settings', 'GET');
-      if (response.success !== false) {
-        setHumanBotSettings(response.settings);
-      }
-    } catch (error) {
-      console.error('Ошибка получения настроек Human-ботов:', error);
-    } finally {
-      setSettingsLoading(false);
-    }
-  };
-
-  const handleSaveSettings = async () => {
-    try {
-      setSettingsSaving(true);
-      const response = await executeOperation('/admin/human-bots/update-settings', 'POST', {
-        max_active_bets_human: humanBotSettings.max_active_bets_human,
-        auto_play_enabled: humanBotSettings.auto_play_enabled || false,
-        min_delay_seconds: humanBotSettings.min_delay_seconds || 1,
-        max_delay_seconds: humanBotSettings.max_delay_seconds || 3600,
-        play_with_players_enabled: humanBotSettings.play_with_players_enabled || false,
-        max_concurrent_games: humanBotSettings.max_concurrent_games || 3
-      });
-      
-      if (response.success !== false) {
-        addNotification(response.message || 'Настройки сохранены успешно', 'success');
-        await fetchHumanBotSettings();
-        if (response.adjusted_bots_count > 0) {
-          await fetchHumanBots();
-        }
-      }
-    } catch (error) {
-      console.error('Ошибка сохранения настроек:', error);
-    } finally {
-      setSettingsSaving(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'settings') {
-      fetchHumanBotSettings();
-    }
-  }, [activeTab]);
+  // Settings-related functions removed - using individual bot settings
 
   const handleCreateBot = async () => {
     if (loading) {
