@@ -2072,6 +2072,46 @@ const HumanBotsManagement = () => {
                       Играть с живыми игроками
                     </label>
                     <small className="form-help">Разрешить боту автоматически играть с живыми игроками</small>
+                    
+                    {createFormData.can_play_with_players && (
+                      <div className="delay-settings mt-3 ml-6 p-3 bg-surface-sidebar rounded border border-border-primary">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-sm font-medium text-text-secondary mb-1">Минимальная задержка (секунды) *</label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="11000"
+                              value={createFormData.player_min_delay_seconds}
+                              onChange={(e) => {
+                                const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 30));
+                                setCreateFormData({...createFormData, player_min_delay_seconds: value});
+                              }}
+                              className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-text-secondary mb-1">Максимальная задержка (секунды) *</label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="11000"
+                              value={createFormData.player_max_delay_seconds}
+                              onChange={(e) => {
+                                const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 120));
+                                setCreateFormData({...createFormData, player_max_delay_seconds: value});
+                              }}
+                              className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                              required
+                            />
+                          </div>
+                        </div>
+                        {createFormData.player_min_delay_seconds >= createFormData.player_max_delay_seconds && (
+                          <p className="text-red-400 text-xs mt-1">⚠️ Минимальная задержка должна быть меньше максимальной</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
