@@ -447,15 +447,23 @@ const HumanBotsList = ({
   };
 
   const handleToggleAutoPlay = async (bot, canPlay) => {
+    setLoadingToggleAutoPlay(prev => new Set(prev).add(bot.id));
+    
     try {
       await executeOperation(`/admin/human-bots/${bot.id}/toggle-auto-play`, 'POST', {
         can_play_with_other_bots: canPlay
       });
-      addNotification(`Настройки Human-бота "${bot.name}" изменены: автоигра с другими ботами ${canPlay ? 'включена' : 'отключена'}`, 'success');
-      if (onRefresh) onRefresh(); // Use parent refresh function
-      // await fetchStats(); // Remove duplicate call
+      addNotification(`Human-бот "${bot.name}": автоигра с другими ботами ${canPlay ? 'включена' : 'отключена'}`, 'success');
+      if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Ошибка переключения автоигры:', error);
+      addNotification(`Ошибка изменения настроек Human-бота "${bot.name}": ${error.message}`, 'error');
+    } finally {
+      setLoadingToggleAutoPlay(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(bot.id);
+        return newSet;
+      });
     }
   };
 
