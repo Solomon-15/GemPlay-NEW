@@ -194,11 +194,15 @@ class BackButtonBlockingTester:
                 "gems": gems
             }
             
+            print(f"   Joining game {game_id} with gems: {gems}")
             response = self.session.post(
                 f"{BASE_URL}/games/{game_id}/join",
                 json=join_data,
                 headers=headers
             )
+            
+            print(f"   Join response status: {response.status_code}")
+            print(f"   Join response content: {response.text}")
             
             if response.status_code == 200:
                 return True, response.json()
