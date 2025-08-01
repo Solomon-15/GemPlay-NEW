@@ -513,6 +513,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   };
 
   const goToPrevStep = () => {
+    // CRITICAL FIX: Block going back after joining active game
+    if (hasJoinedGame) {
+      showError('You cannot change gem combination now');
+      return;
+    }
     setCurrentStep(prev => Math.max(1, prev - 1));
   };
 
