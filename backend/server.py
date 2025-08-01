@@ -18707,6 +18707,12 @@ async def list_human_bots(
                 logging_level=bot["logging_level"],
                 can_play_with_other_bots=bot.get("can_play_with_other_bots", True),  # Add missing field
                 can_play_with_players=bot.get("can_play_with_players", True),  # Add new field
+                # Individual delay settings
+                bot_min_delay_seconds=bot.get("bot_min_delay_seconds", 30),
+                bot_max_delay_seconds=bot.get("bot_max_delay_seconds", 120), 
+                player_min_delay_seconds=bot.get("player_min_delay_seconds", 30),
+                player_max_delay_seconds=bot.get("player_max_delay_seconds", 120),
+                max_concurrent_games=bot.get("max_concurrent_games", 3),
                 total_games_played=bot.get("total_games_played", 0),
                 total_games_won=bot.get("total_games_won", 0),
                 total_amount_wagered=bot.get("total_amount_wagered", 0.0),
