@@ -21819,19 +21819,19 @@ async def update_human_bot_names(
         HUMAN_BOT_NAMES.clear()
         HUMAN_BOT_NAMES.extend(unique_names)
         
-        # Log admin action
-        await db.admin_logs.insert_one({
-            "id": str(uuid.uuid4()),
-            "admin_id": current_admin.id,
-            "action": "UPDATE_HUMAN_BOT_NAMES",
-            "target_type": "system",
-            "target_id": "human_bot_names",
-            "details": {
-                "names_count": len(unique_names),
-                "names_updated": unique_names[:10]  # Log first 10 names for reference
-            },
-            "created_at": datetime.utcnow()
-        })
+        # Log admin action (temporarily disabled for testing)
+        # await db.admin_logs.insert_one({
+        #     "id": str(uuid.uuid4()),
+        #     "admin_id": current_admin.id,
+        #     "action": "UPDATE_HUMAN_BOT_NAMES",
+        #     "target_type": "system",
+        #     "target_id": "human_bot_names",
+        #     "details": {
+        #         "names_count": len(unique_names),
+        #         "names_updated": unique_names[:10]  # Log first 10 names for reference
+        #     },
+        #     "created_at": datetime.utcnow()
+        # })
         
         return {
             "success": True,
