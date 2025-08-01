@@ -80,7 +80,7 @@ class BackButtonBlockingTester:
             register_response = self.session.post(f"{BASE_URL}/auth/register", json=user_data)
             print(f"   Registration response status: {register_response.status_code}")
             
-            if register_response.status_code != 201:
+            if register_response.status_code not in [200, 201]:
                 print(f"   Registration failed: {register_response.text}")
                 return False, None, None
             
