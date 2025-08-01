@@ -211,11 +211,6 @@ class BotSettingsRequest(BaseModel):
     priorityType: str = Field(default="order")  # 'order' or 'manual'
 
 class HumanBotSettingsRequest(BaseModel):
-    max_active_bets_human: int = Field(ge=1, le=1000000, description="Максимальное количество активных ставок для всех Human ботов")
-    auto_play_enabled: Optional[bool] = Field(default=False, description="Глобальное включение автоигры между Human-ботами")
-    min_delay_seconds: Optional[int] = Field(default=1, ge=1, le=3600, description="Минимальная задержка между играми (секунды)")
-    max_delay_seconds: Optional[int] = Field(default=3600, ge=1, le=3600, description="Максимальная задержка между играми (секунды)")
-    play_with_players_enabled: Optional[bool] = Field(default=False, description="Глобальное включение игры Human-ботов с живыми игроками")
     max_concurrent_games: Optional[int] = Field(default=3, ge=1, le=1000000, description="Максимальное количество одновременных игр для Human-ботов")
 
 # Interface Settings model
