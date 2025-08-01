@@ -166,26 +166,33 @@ const UserManagement = ({ user: currentUser }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      const sortedUsers = (response.data.users || []).sort((a, b) => {
-        const roleOrder = {
-          'SUPER_ADMIN': 1,
-          'ADMIN': 2, 
-          'USER': 3,
-          'HUMAN_BOT': 4,
-          'REGULAR_BOT': 5
-        };
-        
-        const aOrder = roleOrder[a.user_type] || roleOrder[a.role] || 5;
-        const bOrder = roleOrder[b.user_type] || roleOrder[b.role] || 5;
-        
-        if (aOrder === bOrder) {
-          return a.username.localeCompare(b.username);
-        }
-        
-        return aOrder - bOrder;
-      });
+      // Применяем локальную сортировку по ролям только если нет явной сортировки
+      let finalUsers = response.data.users || [];
       
-      setUsers(sortedUsers);
+      if (!sortBy) {
+        // Применяем дефолтную сортировку по ролям только если пользователь не выбрал другую сортировку
+        finalUsers = finalUsers.sort((a, b) => {
+          const roleOrder = {
+            'SUPER_ADMIN': 1,
+            'ADMIN': 2, 
+            'USER': 3,
+            'HUMAN_BOT': 4,
+            'REGULAR_BOT': 5
+          };
+          
+          const aOrder = roleOrder[a.user_type] || roleOrder[a.role] || 5;
+          const bOrder = roleOrder[b.user_type] || roleOrder[b.role] || 5;
+          
+          if (aOrder === bOrder) {
+            return a.username.localeCompare(b.username);
+          }
+          
+          return aOrder - bOrder;
+        });
+      }
+      // Если sortBy установлен, используем сортировку от backend
+      
+      setUsers(finalUsers);
       pagination.updatePagination(response.data.total || 0);
       setLoading(false);
     } catch (error) {
