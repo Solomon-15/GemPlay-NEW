@@ -76,27 +76,36 @@ class BackButtonBlockingTester:
         """Register user and return success status, token, and user_id"""
         try:
             # Register user
+            print(f"   Registering user: {user_data['email']}")
             register_response = self.session.post(f"{BASE_URL}/auth/register", json=user_data)
+            print(f"   Registration response status: {register_response.status_code}")
             
             if register_response.status_code != 201:
+                print(f"   Registration failed: {register_response.text}")
                 return False, None, None
             
             register_data = register_response.json()
             verification_token = register_data.get("verification_token")
+            print(f"   Got verification token: {verification_token}")
             
             if not verification_token:
+                print("   No verification token received")
                 return False, None, None
             
             # Verify email
+            print("   Verifying email...")
             verify_response = self.session.post(
                 f"{BASE_URL}/auth/verify-email",
                 json={"token": verification_token}
             )
+            print(f"   Verification response status: {verify_response.status_code}")
             
             if verify_response.status_code != 200:
+                print(f"   Email verification failed: {verify_response.text}")
                 return False, None, None
             
             # Login user
+            print("   Logging in user...")
             login_response = self.session.post(
                 f"{BASE_URL}/auth/login",
                 json={
@@ -104,13 +113,16 @@ class BackButtonBlockingTester:
                     "password": user_data["password"]
                 }
             )
+            print(f"   Login response status: {login_response.status_code}")
             
             if login_response.status_code != 200:
+                print(f"   Login failed: {login_response.text}")
                 return False, None, None
             
             login_data = login_response.json()
             token = login_data.get("access_token")
             user_id = login_data.get("user", {}).get("id")
+            print(f"   Login successful, got token and user_id: {user_id}")
             
             return True, token, user_id
             
