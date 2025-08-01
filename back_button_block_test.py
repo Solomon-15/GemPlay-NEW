@@ -135,8 +135,7 @@ class BackButtonBlockingTester:
         try:
             headers = {"Authorization": f"Bearer {token}"}
             response = self.session.post(
-                f"{BASE_URL}/gems/buy",
-                json={"gem_type": gem_type, "quantity": quantity},
+                f"{BASE_URL}/gems/buy?gem_type={gem_type}&quantity={quantity}",
                 headers=headers
             )
             print(f"   Gem purchase response for {quantity} {gem_type}: {response.status_code}")
