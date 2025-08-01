@@ -80,9 +80,9 @@ const ConfirmationModal = ({
           
           {/* Message */}
           <div className="mt-4">
-            <p className="text-sm text-text-secondary font-roboto leading-relaxed">
+            <div className="text-sm text-text-secondary font-roboto leading-relaxed">
               {message}
-            </p>
+            </div>
           </div>
         </div>
 
