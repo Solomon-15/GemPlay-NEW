@@ -510,6 +510,21 @@ const HumanBotsManagement = () => {
       }
     }
 
+    // Validate delay settings
+    if (createFormData.can_play_with_other_bots) {
+      if (createFormData.bot_min_delay_seconds >= createFormData.bot_max_delay_seconds) {
+        addNotification('Минимальная задержка для ботов должна быть меньше максимальной', 'error');
+        return;
+      }
+    }
+    
+    if (createFormData.can_play_with_players) {  
+      if (createFormData.player_min_delay_seconds >= createFormData.player_max_delay_seconds) {
+        addNotification('Минимальная задержка для игроков должна быть меньше максимальной', 'error');
+        return;
+      }
+    }
+
     try {
       let response;
       const isCreating = !editingBot;
