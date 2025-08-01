@@ -22,18 +22,18 @@ def test_put_endpoint():
     token = login_response.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
     
-    # Test PUT with minimal data
+    # Test POST version with minimal data
     test_data = {
         "names": ["TestName1", "TestName2", "TestName3"]
     }
     
-    print("Testing PUT endpoint...")
-    put_response = requests.put(f"{BASE_URL}/admin/human-bots/names", json=test_data, headers=headers)
-    print(f"PUT Status: {put_response.status_code}")
-    if put_response.status_code != 200:
-        print(f"PUT Error: {put_response.text}")
+    print("Testing POST endpoint...")
+    post_response = requests.post(f"{BASE_URL}/admin/human-bots/names/update", json=test_data, headers=headers)
+    print(f"POST Status: {post_response.status_code}")
+    if post_response.status_code != 200:
+        print(f"POST Error: {post_response.text}")
     else:
-        print(f"PUT Success: {put_response.json()}")
+        print(f"POST Success: {post_response.json()}")
 
 if __name__ == "__main__":
     test_put_endpoint()
