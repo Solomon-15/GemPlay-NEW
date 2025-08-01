@@ -1576,6 +1576,90 @@ const UserManagement = ({ user: currentUser }) => {
     </div>
   );
 
+  // Create user function
+  const handleCreateUser = async () => {
+    try {
+      // Validate form
+      if (!createUserForm.username.trim()) {
+        alert('Имя пользователя обязательно');
+        return;
+      }
+      
+      if (!createUserForm.email.trim()) {
+        alert('Email обязательно');
+        return;
+      }
+      
+      if (createUserForm.password.length < 8) {
+        alert('Пароль должен содержать минимум 8 символов');
+        return;
+      }
+      
+      if (createUserForm.password !== createUserForm.confirm_password) {
+        alert('Пароли не совпадают');
+        return;
+      }
+      
+      if (createUserForm.status === 'BANNED' && !createUserForm.ban_reason.trim()) {
+        alert('Причина блокировки обязательна при статусе "заблокирован"');
+        return;
+      }
+
+      setCreateUserLoading(true);
+
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/users`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(createUserForm)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Ошибка создания пользователя');
+      }
+
+      const result = await response.json();
+      
+      // Show success notification
+      if (window.addNotification) {
+        window.addNotification('Пользователь успешно создан', 'success');
+      } else {
+        alert('Пользователь успешно создан');
+      }
+
+      // Reset form and close modal
+      setCreateUserForm({
+        username: '',
+        email: '',
+        password: '',
+        confirm_password: '',
+        role: 'USER',
+        virtual_balance: 1000,
+        daily_limit_max: 1000,
+        gender: 'male',
+        status: 'ACTIVE',
+        ban_reason: ''
+      });
+      setIsCreateUserModalOpen(false);
+
+      // Refresh users list
+      await fetchUsers();
+
+    } catch (error) {
+      console.error('Error creating user:', error);
+      if (window.addNotification) {
+        window.addNotification(`Ошибка создания пользователя: ${error.message}`, 'error');
+      } else {
+        alert(`Ошибка создания пользователя: ${error.message}`);
+      }
+    } finally {
+      setCreateUserLoading(false);
+    }
+  };
+
   const DeleteModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-surface-card border border-red-500 border-opacity-30 rounded-lg p-6 max-w-md w-full mx-4">
