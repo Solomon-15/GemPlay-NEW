@@ -43,6 +43,7 @@ const UserManagement = ({ user: currentUser }) => {
   const [isResetUserBetsModalOpen, setIsResetUserBetsModalOpen] = useState(false);
   const [isResetUserBalanceModalOpen, setIsResetUserBalanceModalOpen] = useState(false);
   const [isUnfreezeCommissionModalOpen, setIsUnfreezeCommissionModalOpen] = useState(false);
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
   const [resettingBalances, setResettingBalances] = useState(false);
   const [resettingUserBets, setResettingUserBets] = useState(null);
   const [resettingUserBalance, setResettingUserBalance] = useState(null);
