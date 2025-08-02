@@ -2510,6 +2510,7 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                     if creator_human_bot:
                         # Creator is a Human-bot - use bot delay settings
                         if not bot.can_play_with_other_bots:
+                            logger.debug(f"🚫 Bot {bot.name} skipped bet from Human-bot {creator_id} - can_play_with_other_bots disabled")
                             continue
                         
                         if bot.last_action_time:
