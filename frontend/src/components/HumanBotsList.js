@@ -1042,6 +1042,7 @@ const HumanBotsList = ({
           setShowAllBets(false);
         }}
         bot={selectedBotForActiveBets}
+        user={currentUser}
         addNotification={addNotification}
       />
 
