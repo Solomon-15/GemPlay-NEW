@@ -1814,7 +1814,7 @@ async def should_human_bot_take_action(human_bot: HumanBot) -> bool:
     return True
 
 async def create_human_bot_bet(human_bot: HumanBot):
-    """Create a bet as a human bot (only if bet_limit allows)."""
+    """Create a bet as a human bot (bet_limit restricts CREATION only, not joining)."""
     try:
         # Check current active bets count vs bet_limit
         current_active_bets = await get_human_bot_active_bets_count(human_bot.id)
