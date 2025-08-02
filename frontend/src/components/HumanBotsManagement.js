@@ -16,7 +16,7 @@ const API = `${BACKEND_URL}/api`;
 const CACHE_DURATION = 60000; // 1 minute in milliseconds
 const AUTO_REFRESH_INTERVAL = 60000; // Auto-refresh every 1 minute
 
-const HumanBotsManagement = () => {
+const HumanBotsManagement = ({ user: currentUser }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { addNotification } = useNotifications();
