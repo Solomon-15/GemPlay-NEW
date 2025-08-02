@@ -19963,6 +19963,9 @@ async def toggle_human_bot_auto_play(
             }
         )
         
+        # Log the toggle action
+        logger.info(f"🎯 Human-bot {bot_data['name']} (ID: {bot_id}) - can_play_with_other_bots set to {request.can_play_with_other_bots}")
+        
         # Log admin action
         admin_log = AdminLog(
             admin_id=current_admin.id,
@@ -19971,7 +19974,8 @@ async def toggle_human_bot_auto_play(
             target_id=bot_id,
             details={
                 "name": bot_data["name"],
-                "can_play_with_other_bots": request.can_play_with_other_bots
+                "can_play_with_other_bots": request.can_play_with_other_bots,
+                "description": f"Toggled can_play_with_other_bots to {request.can_play_with_other_bots} for bot {bot_data['name']} (ID: {bot_id})"
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
