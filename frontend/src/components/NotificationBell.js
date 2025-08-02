@@ -167,14 +167,17 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     
   };
 
-  // Format time as HH:MM:SS (time when message arrived)
+  // Format time as HH:MM:SS (time when message arrived) with user's timezone offset
   const formatTimeAgo = (dateString) => {
     const date = new Date(dateString);
+    // Apply user's timezone offset (if available)
+    const userTimezoneOffset = user?.timezone_offset || 0;
+    const adjustedTime = new Date(date.getTime() + (userTimezoneOffset * 3600000));
     
     // Format as HH:MM:SS
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
+    const hours = adjustedTime.getHours().toString().padStart(2, '0');
+    const minutes = adjustedTime.getMinutes().toString().padStart(2, '0');
+    const seconds = adjustedTime.getSeconds().toString().padStart(2, '0');
     
     return `${hours}:${minutes}:${seconds}`;
   };
