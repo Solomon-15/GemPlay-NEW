@@ -19278,6 +19278,28 @@ async def bulk_create_human_bots(
                 # Generate bet_limit within range
                 bet_limit = random.randint(bulk_data.bet_limit_range[0], bulk_data.bet_limit_range[1])
                 
+                # Generate individual delay settings from ranges
+                bot_min_delay = random.randint(bulk_data.bot_min_delay_range[0], bulk_data.bot_min_delay_range[1])
+                bot_max_delay = random.randint(bulk_data.bot_max_delay_range[0], bulk_data.bot_max_delay_range[1])
+                
+                # Ensure bot_min_delay < bot_max_delay
+                if bot_min_delay >= bot_max_delay:
+                    bot_min_delay, bot_max_delay = min(bot_min_delay, bot_max_delay), max(bot_min_delay, bot_max_delay)
+                    if bot_min_delay == bot_max_delay:
+                        bot_max_delay = bot_min_delay + 30  # Минимальная разность 30 секунд
+                
+                player_min_delay = random.randint(bulk_data.player_min_delay_range[0], bulk_data.player_min_delay_range[1])
+                player_max_delay = random.randint(bulk_data.player_max_delay_range[0], bulk_data.player_max_delay_range[1])
+                
+                # Ensure player_min_delay < player_max_delay
+                if player_min_delay >= player_max_delay:
+                    player_min_delay, player_max_delay = min(player_min_delay, player_max_delay), max(player_min_delay, player_max_delay)
+                    if player_min_delay == player_max_delay:
+                        player_max_delay = player_min_delay + 30  # Минимальная разность 30 секунд
+                
+                # Generate concurrent games limit
+                max_concurrent_games = random.randint(bulk_data.max_concurrent_games_range[0], bulk_data.max_concurrent_games_range[1])
+                
                 human_bot = HumanBot(
                     name=bot_name,
                     character=bulk_data.character,
@@ -19291,7 +19313,15 @@ async def bulk_create_human_bots(
                     min_delay=min_delay,
                     max_delay=max_delay,
                     use_commit_reveal=bulk_data.use_commit_reveal,
-                    logging_level=bulk_data.logging_level
+                    logging_level=bulk_data.logging_level,
+                    # Add individual settings from bulk data
+                    can_play_with_other_bots=bulk_data.can_play_with_other_bots,
+                    can_play_with_players=bulk_data.can_play_with_players,
+                    bot_min_delay_seconds=bot_min_delay,
+                    bot_max_delay_seconds=bot_max_delay,
+                    player_min_delay_seconds=player_min_delay,
+                    player_max_delay_seconds=player_max_delay,
+                    max_concurrent_games=max_concurrent_games
                 )
                 
                 await db.human_bots.insert_one(human_bot.dict())
