@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 """
-Human-Bot Delay Fields Fixes Testing - Russian Review
-Протестировать исправления полей задержек Human-ботов после внесения правок.
+Human-bot Delay Fields Backend Model Fix Testing - Russian Review
+Focus: Testing the corrected delay field defaults and validation ranges
+
+CONTEXT: Fixed HumanBot model in backend/server.py:
+- bot_max_delay_seconds: default=120 → default=2000, le=3600 → le=2000
+- player_max_delay_seconds: default=120 → default=2000, le=3600 → le=2000  
+- max_concurrent_games: default=3 → default=1, le=100 → le=3
+- Minimum values: ge=1 → ge=30 for all delays
 
 FOCUSED TESTING:
-1. CREATE Human-bot with individual settings
-2. UPDATE Human-bot - change individual settings  
-3. BULK CREATE - mass creation with ranges
+1. CREATE Human-bot - verify correct default values
+2. UPDATE Human-bot - test individual settings changes
+3. VALIDATION - verify range validation works correctly
 
-Testing the fixes:
-- Default values corrected (bot_max_delay_seconds: 120 → 2000, player_max_delay_seconds: 120 → 2000, max_concurrent_games: 3 → 1)
-- HTML field validation (min="30" max="2000")
-- Checkboxes automatically set default values
-- Edit form correctly loads individual settings
+CRITICAL BUG FOUND: UpdateHumanBotRequest model missing individual delay fields!
 """
 
 import requests
