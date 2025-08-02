@@ -207,7 +207,7 @@ class HumanBotActivityTester:
                 headers=self.get_auth_headers()
             )
             
-            if create_response.status_code != 201:
+            if create_response.status_code not in [200, 201]:
                 self.log_result("UPDATE Human-bot Activity", False, "Failed to create bot for update test")
                 return False
                 
