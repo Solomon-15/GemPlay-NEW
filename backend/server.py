@@ -1144,7 +1144,7 @@ class HumanBotBehavior:
         
         if character == HumanBotCharacter.IMPULSIVE:
             if random.random() < 0.3:
-                return min(min_delay, 10)  # Очень быстро
+                return min_delay  # Use actual min_delay instead of hardcoded 10
             else:
                 return random.randint(min_delay, max_delay)
                 
