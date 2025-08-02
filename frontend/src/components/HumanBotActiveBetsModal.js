@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatDollarsAsGems, formatBetAmountAsGems, preloadGemPrices } from '../utils/gemUtils';
+import { formatTimeWithOffset, formatDateWithOffset } from '../utils/timeUtils';
 import useConfirmation from '../hooks/useConfirmation';
 import ConfirmationModal from './ConfirmationModal';
 
