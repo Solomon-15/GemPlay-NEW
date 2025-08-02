@@ -1,9 +1,11 @@
 import { formatAsGems } from '../utils/economy';
+import { formatTimeWithOffset } from '../utils/timeUtils';
 
 const HumanBotCommissionModal = ({
   isOpen,
   onClose,
   bot,
+  user: currentUser,
   data,
   loading,
   onPageChange
