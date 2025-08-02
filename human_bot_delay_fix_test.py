@@ -296,16 +296,17 @@ class HumanBotDelayFixTester:
                     
                     # Check if values were properly sanitized/validated
                     sanitization_correct = True
+                    failed_fields = []
                     for field, expected_value in test["expected_sanitized_value"].items():
                         actual_value = bot_data.get(field)
                         if actual_value != expected_value:
                             sanitization_correct = False
-                            break
+                            failed_fields.append(f"{field}: expected {expected_value}, got {actual_value}")
                     
                     if sanitization_correct:
                         validation_details.append(f"✅ {test['name']}: Input properly sanitized/validated")
                     else:
-                        validation_details.append(f"❌ {test['name']}: Sanitization failed - expected {test['expected_sanitized_value']}, got {actual_value}")
+                        validation_details.append(f"❌ {test['name']}: Sanitization failed - {'; '.join(failed_fields)}")
                         all_validation_correct = False
                 else:
                     validation_details.append(f"❌ {test['name']}: Request failed ({response.status_code})")
