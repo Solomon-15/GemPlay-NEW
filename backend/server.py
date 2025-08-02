@@ -819,7 +819,7 @@ class BulkCreateHumanBotsRequest(BaseModel):
     # Concurrent games range for bulk creation
     max_concurrent_games_range: List[int] = Field(default=[1, 3], min_length=2, max_length=2, description="Диапазон максимального количества одновременных игр")
     # Bet amount limit range for bulk creation  
-    bet_limit_amount_range: List[float] = Field(default=[100.0, 250.0], min_length=2, max_length=2, description="Диапазон ограничения суммы ставок для участия как оппонент")
+    bet_limit_amount_range: List[int] = Field(default=[100, 250], min_length=2, max_length=2, description="Диапазон ограничения суммы ставок для участия как оппонент")
     bots: Optional[List[dict]] = Field(default=None)  # Данные отдельных ботов
 
 class CreateSoundRequest(BaseModel):
