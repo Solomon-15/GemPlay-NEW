@@ -256,7 +256,10 @@ const BetsManagement = ({ user: currentUser }) => {
 
   const formatTimeAge = (createdAt) => {
     const created = new Date(createdAt);
-    const diffInSeconds = Math.floor((currentTime - created) / 1000);
+    // Apply admin's timezone offset for correct age calculation
+    const adminTimezoneOffset = currentUser?.timezone_offset || 0;
+    const adjustedCreated = new Date(created.getTime() + (adminTimezoneOffset * 3600000));
+    const diffInSeconds = Math.floor((currentTime - adjustedCreated) / 1000);
     
     const totalSeconds = Math.max(0, diffInSeconds);
     
