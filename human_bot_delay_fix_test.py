@@ -256,26 +256,34 @@ class HumanBotDelayFixTester:
                     },
                     "expected_sanitized_value": {"max_concurrent_games": 1}
                 },
-                # Test valid ranges - should succeed with exact values
+                # Test valid ranges - should succeed with exact values (only for fields available in CreateHumanBotRequest)
                 {
-                    "name": "Valid Ranges (Exact Values)",
+                    "name": "Valid Ranges (Available Fields Only)",
                     "data": {
                         "name": f"TestBot_ValidationPass_{int(time.time())}",
                         "character": "STABLE",
                         "min_bet": 10.0,
                         "max_bet": 100.0,
-                        "bot_min_delay_seconds": 30,  # Minimum valid
-                        "bot_max_delay_seconds": 2000,  # Maximum valid
-                        "player_min_delay_seconds": 100,  # Valid range
-                        "player_max_delay_seconds": 1500,  # Valid range
-                        "max_concurrent_games": 3  # Maximum valid
+                        "min_delay": 60,  # Valid range for legacy delay field
+                        "max_delay": 180,  # Valid range for legacy delay field
+                        "bet_limit": 15,  # Valid range
+                        "win_percentage": 45.0,  # Valid percentage
+                        "loss_percentage": 35.0,  # Valid percentage
+                        "draw_percentage": 20.0   # Valid percentage
                     },
                     "expected_sanitized_value": {
+                        "min_delay": 60,
+                        "max_delay": 180,
+                        "bet_limit": 15,
+                        "win_percentage": 45.0,
+                        "loss_percentage": 35.0,
+                        "draw_percentage": 20.0,
+                        # Individual delay fields should use defaults since they're not in CreateHumanBotRequest
                         "bot_min_delay_seconds": 30,
                         "bot_max_delay_seconds": 2000,
-                        "player_min_delay_seconds": 100,
-                        "player_max_delay_seconds": 1500,
-                        "max_concurrent_games": 3
+                        "player_min_delay_seconds": 30,
+                        "player_max_delay_seconds": 2000,
+                        "max_concurrent_games": 1
                     }
                 }
             ]
