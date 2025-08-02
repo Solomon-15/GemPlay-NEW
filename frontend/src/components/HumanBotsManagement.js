@@ -1860,10 +1860,10 @@ const HumanBotsManagement = () => {
                     <input
                       type="number"
                       min="1"
-                      max="100"
+                      max="3"
                       value={createFormData.max_concurrent_games}
-                      onChange={(e) => setCreateFormData({...createFormData, max_concurrent_games: Math.max(1, Math.min(100, parseInt(e.target.value) || 3))})}
-                      placeholder="3"
+                      onChange={(e) => setCreateFormData({...createFormData, max_concurrent_games: Math.max(1, Math.min(3, parseInt(e.target.value) || 1))})}
+                      placeholder="1"
                     />
                     <small className="form-help">Максимальное количество игр, в которых бот может участвовать одновременно</small>
                   </div>
