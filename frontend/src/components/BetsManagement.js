@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNotifications } from './NotificationContext';
+import { formatTimeWithOffset } from '../utils/timeUtils';
 import Pagination from './Pagination';
 import usePagination from '../hooks/usePagination';
 import { formatDollarsAsGems } from '../utils/gemUtils';
