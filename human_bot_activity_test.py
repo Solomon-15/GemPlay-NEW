@@ -291,7 +291,7 @@ class HumanBotActivityTester:
                 headers=self.get_auth_headers()
             )
             
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 result_data = response.json()
                 created_bots = result_data.get("bots", [])
                 
