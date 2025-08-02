@@ -852,7 +852,7 @@ const AdminPanel = ({ user, onClose }) => {
       case 'regular-bots':
         return <RegularBotsManagement />;
       case 'human-bots':
-        return <HumanBotsManagement />;
+        return <HumanBotsManagement user={user} />;
       case 'bot-settings':
         return <BotSettings user={user} />;
       case 'bot-analytics':
