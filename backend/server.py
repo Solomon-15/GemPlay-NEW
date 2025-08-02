@@ -809,6 +809,8 @@ class BulkCreateHumanBotsRequest(BaseModel):
     # Auto-play settings for bulk creation
     can_play_with_other_bots: bool = Field(default=True, description="Can play with other bots automatically")
     can_play_with_players: bool = Field(default=True, description="Can play with live players")
+    # Bot creation activity control for bulk creation
+    is_bet_creation_active: bool = Field(default=True, description="Активность бота - создание новых ставок")
     # Individual delay settings ranges for bulk creation
     bot_min_delay_range: List[int] = Field(default=[30, 2000], min_length=2, max_length=2, description="Диапазон минимальных задержек для игры с ботами")
     bot_max_delay_range: List[int] = Field(default=[30, 2000], min_length=2, max_length=2, description="Диапазон максимальных задержек для игры с ботами")
