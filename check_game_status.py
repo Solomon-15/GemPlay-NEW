@@ -2,7 +2,7 @@
 import requests
 import json
 
-BASE_URL = 'https://27d5aabc-60c1-4cea-8910-9c833ddf3795.preview.emergentagent.com/api'
+BASE_URL = 'https://5bfabc99-1043-4213-a29d-540c7a2586c7.preview.emergentagent.com/api'
 game_id = '57339c4b-18a9-4ee5-bd21-00a0260871fb'
 user1_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmZjc1NTY1My1kYmI0LTQwZTItYTUxYy0wMjgzMGU1NjczMDUiLCJleHAiOjE3NTM5ODkwOTB9.OjqiP9U6XjiEdaIEbaAwxVZNwZSiVwzPkjsdPpqQIQg'
 user2_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5MGIzNjE2Yy1jZTU4LTQ5N2YtOGRkMi0wM2VmY2QwZjVkMzgiLCJleHAiOjE3NTM5ODkwOTB9.cfer4_SMbvQm3fTKrPMGBcN_iSLKJWcZdxLvvSlAjeg'
