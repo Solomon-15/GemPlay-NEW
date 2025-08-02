@@ -772,6 +772,8 @@ class UpdateHumanBotRequest(BaseModel):
     logging_level: Optional[str] = None
     can_play_with_other_bots: Optional[bool] = None
     can_play_with_players: Optional[bool] = None
+    # Bot creation activity control
+    is_bet_creation_active: Optional[bool] = Field(None, description="Активность бота - создание новых ставок")
     # Individual delay settings for playing with other bots
     bot_min_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Минимальная задержка для игры с ботами (секунды)")
     bot_max_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Максимальная задержка для игры с ботами (секунды)")
