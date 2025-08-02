@@ -251,7 +251,7 @@ const BetsManagement = ({ user: currentUser }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('ru-RU');
+    return formatTimeWithOffset(dateString, currentUser?.timezone_offset || 0);
   };
 
   const formatTimeAge = (createdAt) => {
