@@ -19339,6 +19339,10 @@ async def bulk_create_human_bots(
                 # Generate concurrent games limit
                 max_concurrent_games = random.randint(bulk_data.max_concurrent_games_range[0], bulk_data.max_concurrent_games_range[1])
                 
+                # Generate bet limit amount for opponent participation
+                bet_limit_amount = random.uniform(bulk_data.bet_limit_amount_range[0], bulk_data.bet_limit_amount_range[1])
+                bet_limit_amount = round(bet_limit_amount, 2)  # Round to 2 decimal places
+                
                 human_bot = HumanBot(
                     name=bot_name,
                     character=bulk_data.character,
@@ -19346,6 +19350,7 @@ async def bulk_create_human_bots(
                     min_bet=float(min_bet),  # Преобразуем в float для базы, но значение будет целым
                     max_bet=float(max_bet),  # Преобразуем в float для базы, но значение будет целым
                     bet_limit=bet_limit,
+                    bet_limit_amount=bet_limit_amount,  # Add generated bet limit amount
                     win_percentage=bulk_data.win_percentage,
                     loss_percentage=bulk_data.loss_percentage,
                     draw_percentage=bulk_data.draw_percentage,
