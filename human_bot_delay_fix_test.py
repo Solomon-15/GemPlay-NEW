@@ -359,7 +359,7 @@ class HumanBotDelayFixTester:
         print("-" * 60)
         test_results.append(self.test_update_human_bot_individual_settings())
         
-        print("\n📋 Test 3: VALIDATION - Delay and Concurrent Games Ranges")
+        print("\n📋 Test 3: VALIDATION - Input Sanitization for Delay and Concurrent Games")
         print("-" * 60)
         test_results.append(self.test_validation_ranges())
         
