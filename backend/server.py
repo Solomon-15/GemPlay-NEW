@@ -2546,11 +2546,8 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                 if not can_join_more:
                     continue
                 
-                # Check bet limit
-                current_active_bets = await get_human_bot_active_bets_count(bot.id)
-                bot_limit = bot.bet_limit or 12
-                if current_active_bets >= bot_limit:
-                    continue
+                # Note: bet_limit only restricts BET CREATION, not joining existing bets
+                # Bots can join bets even if they exceed bet_limit if toggles are enabled
                 
                 # Find available bets this bot can join
                 available_bets = await find_available_bets_for_bot(bot, settings)
