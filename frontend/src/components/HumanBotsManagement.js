@@ -262,6 +262,8 @@ const HumanBotsManagement = () => {
     player_max_delay_range: [30, 2000],
     // Concurrent games settings for bulk creation
     max_concurrent_games_range: [1, 3],
+    // Bet amount limit settings for bulk creation  
+    bet_limit_amount_range: [100, 250],
     bots: []
   });
 
