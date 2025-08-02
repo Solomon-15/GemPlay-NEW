@@ -1224,7 +1224,7 @@ const HumanBotsManagement = ({ user: currentUser }) => {
                     </span>
                     {cache.timestamp && (
                       <span className="text-text-secondary text-xs">
-                        Последнее обновление: {new Date(cache.timestamp).toLocaleTimeString('ru-RU')}
+                        Последнее обновление: {formatTimeWithOffset(new Date(cache.timestamp).toISOString(), currentUser?.timezone_offset || 0)}
                       </span>
                     )}
                     {(loading || loadingPriority) && (
