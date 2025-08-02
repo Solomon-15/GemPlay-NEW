@@ -1918,6 +1918,31 @@ async def join_human_bot_bet(human_bot: HumanBot):
             logger.info(f"🤖 No available games for human bot {human_bot.name}")
             return
         
+        # Filter games based on bot's play preferences
+        filtered_games = []
+        for game_data in available_games:
+            game = Game(**game_data)
+            
+            # Check if creator is a human bot
+            creator_human_bot = await db.human_bots.find_one({"id": game.creator_id})
+            
+            if creator_human_bot:
+                # Creator is a Human-bot - check if this bot can play with other bots
+                if not human_bot.can_play_with_other_bots:
+                    logger.debug(f"🚫 Bot {human_bot.name} skipped bet from Human-bot {game.creator_id} - can_play_with_other_bots disabled")
+                    continue
+            else:
+                # Creator is a live player - check if this bot can play with players
+                if not human_bot.can_play_with_players:
+                    logger.debug(f"🚫 Bot {human_bot.name} skipped bet from live player {game.creator_id} - can_play_with_players disabled")
+                    continue
+            
+            filtered_games.append(game)
+        
+        if not filtered_games:
+            logger.info(f"🤖 No games matching play preferences for human bot {human_bot.name}")
+            return
+        
         # Filter games based on character preferences
         suitable_games = []
         for game_data in available_games:
