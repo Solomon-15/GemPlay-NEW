@@ -1287,7 +1287,13 @@ const HumanBotsManagement = () => {
                     use_commit_reveal: bot.use_commit_reveal !== undefined ? bot.use_commit_reveal : true,
                     logging_level: bot.logging_level || 'INFO',
                     can_play_with_other_bots: bot.can_play_with_other_bots !== undefined ? bot.can_play_with_other_bots : true,
-                    can_play_with_players: bot.can_play_with_players !== undefined ? bot.can_play_with_players : true
+                    can_play_with_players: bot.can_play_with_players !== undefined ? bot.can_play_with_players : true,
+                    // Individual delay settings for editing
+                    bot_min_delay_seconds: bot.bot_min_delay_seconds || 30,
+                    bot_max_delay_seconds: bot.bot_max_delay_seconds || 2000,
+                    player_min_delay_seconds: bot.player_min_delay_seconds || 30,
+                    player_max_delay_seconds: bot.player_max_delay_seconds || 2000,
+                    max_concurrent_games: bot.max_concurrent_games || 1
                   });
                   setShowCreateForm(true);
                 }}
