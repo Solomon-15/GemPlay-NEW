@@ -293,31 +293,78 @@ class HumanBotActivityTester:
             
             if response.status_code in [200, 201]:
                 result_data = response.json()
-                created_bots = result_data.get("bots", [])
                 
-                if len(created_bots) == 3:
-                    # Track created bots for cleanup
-                    for bot in created_bots:
-                        self.created_bots.append(bot.get("id"))
+                # Handle different response structures
+                if "created_bots" in result_data:
+                    # New response structure
+                    created_bots = result_data.get("created_bots", [])
                     
-                    # Verify all bots have is_bet_creation_active=False
-                    all_correct = True
-                    for bot in created_bots:
-                        if bot.get("is_bet_creation_active") != False:
-                            all_correct = False
-                            break
+                    # Get full bot details for each created bot
+                    full_bots = []
+                    for bot_summary in created_bots:
+                        bot_id = bot_summary.get("id")
+                        if bot_id:
+                            self.created_bots.append(bot_id)
+                            # Get full bot details
+                            bot_response = requests.get(
+                                f"{BASE_URL}/admin/human-bots/{bot_id}",
+                                headers=self.get_auth_headers()
+                            )
+                            if bot_response.status_code == 200:
+                                full_bots.append(bot_response.json())
                     
-                    if all_correct:
-                        self.log_result("BULK CREATE Human-bots Activity", True, 
-                                      f"Successfully created 3 bots with is_bet_creation_active=False")
-                        return True
+                    if len(full_bots) == 3:
+                        # Verify all bots have is_bet_creation_active=False
+                        all_correct = True
+                        for bot in full_bots:
+                            if bot.get("is_bet_creation_active") != False:
+                                all_correct = False
+                                break
+                        
+                        if all_correct:
+                            self.log_result("BULK CREATE Human-bots Activity", True, 
+                                          f"Successfully created 3 bots with is_bet_creation_active=False")
+                            return True
+                        else:
+                            self.log_result("BULK CREATE Human-bots Activity", False, 
+                                          f"Not all bots have correct is_bet_creation_active value")
+                            return False
                     else:
                         self.log_result("BULK CREATE Human-bots Activity", False, 
-                                      f"Not all bots have correct is_bet_creation_active value")
+                                      f"Expected 3 bots, got {len(full_bots)}")
+                        return False
+                        
+                elif "bots" in result_data:
+                    # Old response structure
+                    created_bots = result_data.get("bots", [])
+                    
+                    if len(created_bots) == 3:
+                        # Track created bots for cleanup
+                        for bot in created_bots:
+                            self.created_bots.append(bot.get("id"))
+                        
+                        # Verify all bots have is_bet_creation_active=False
+                        all_correct = True
+                        for bot in created_bots:
+                            if bot.get("is_bet_creation_active") != False:
+                                all_correct = False
+                                break
+                        
+                        if all_correct:
+                            self.log_result("BULK CREATE Human-bots Activity", True, 
+                                          f"Successfully created 3 bots with is_bet_creation_active=False")
+                            return True
+                        else:
+                            self.log_result("BULK CREATE Human-bots Activity", False, 
+                                          f"Not all bots have correct is_bet_creation_active value")
+                            return False
+                    else:
+                        self.log_result("BULK CREATE Human-bots Activity", False, 
+                                      f"Expected 3 bots, got {len(created_bots)}")
                         return False
                 else:
                     self.log_result("BULK CREATE Human-bots Activity", False, 
-                                  f"Expected 3 bots, got {len(created_bots)}")
+                                  f"Unexpected response structure: {result_data}")
                     return False
             else:
                 self.log_result("BULK CREATE Human-bots Activity", False, 
