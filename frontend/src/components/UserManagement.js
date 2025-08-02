@@ -240,11 +240,11 @@ const UserManagement = ({ user: currentUser }) => {
 
   // Utility functions
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('ru-RU');
+    return formatDateWithOffset(dateString, currentUser?.timezone_offset || 0);
   };
 
   const formatDateTime = (dateString) => {
-    return new Date(dateString).toLocaleString('ru-RU');
+    return formatTimeWithOffset(dateString, currentUser?.timezone_offset || 0);
   };
 
   const getUserStatusBadge = (status) => {
