@@ -5947,11 +5947,13 @@ async def determine_game_winner(game_id: str) -> dict:
             
             # Send notification to creator
             if result_status == "creator_wins":
+                total_gems_won = game_obj.bet_amount * 2  # Total before commission
                 creator_payload = NotificationPayload(
                     game_id=game_id,
                     opponent_name=opponent_name,
                     result="won",
                     amount_won=winnings,
+                    total_gems=total_gems_won,
                     commission=commission_amount,
                     action_url="/games/history"
                 )
@@ -5964,6 +5966,7 @@ async def determine_game_winner(game_id: str) -> dict:
                     action_url="/games/history"
                 )
             elif result_status == "opponent_wins":
+                total_gems_won = game_obj.bet_amount * 2  # Total before commission
                 creator_payload = NotificationPayload(
                     game_id=game_id,
                     opponent_name=opponent_name,
@@ -5977,6 +5980,7 @@ async def determine_game_winner(game_id: str) -> dict:
                     opponent_name=creator_name,
                     result="won",
                     amount_won=winnings,
+                    total_gems=total_gems_won,
                     commission=commission_amount,
                     action_url="/games/history"
                 )
