@@ -55,14 +55,14 @@ class HumanBotDelayFieldsTest:
         """Login as admin to get authentication token"""
         try:
             login_data = {
-                "username": ADMIN_EMAIL,
+                "email": ADMIN_EMAIL,
                 "password": ADMIN_PASSWORD
             }
             
             response = self.session.post(
                 f"{BACKEND_URL}/auth/login",
-                data=login_data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"}
+                json=login_data,
+                headers={"Content-Type": "application/json"}
             )
             
             if response.status_code == 200:
