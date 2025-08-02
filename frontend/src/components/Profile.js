@@ -12,9 +12,9 @@ const API = `${BACKEND_URL}/api`;
 // Utility function to format time with user's timezone offset
 const formatTimeWithOffset = (dateString, timezoneOffset = 0) => {
   const date = new Date(dateString);
-  const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
-  const localTime = new Date(utcTime + (timezoneOffset * 3600000));
-  return localTime.toLocaleString();
+  // Assume the dateString is in UTC, apply user's timezone offset directly
+  const adjustedTime = new Date(date.getTime() + (timezoneOffset * 3600000));
+  return adjustedTime.toLocaleString();
 };
 
 // Utility function to format short ID
