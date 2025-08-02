@@ -887,6 +887,8 @@ class HumanBotResponse(BaseModel):
     logging_level: str
     can_play_with_other_bots: bool
     can_play_with_players: bool
+    # Bot creation activity control
+    is_bet_creation_active: bool
     # Individual delay settings for playing with other bots
     bot_min_delay_seconds: int
     bot_max_delay_seconds: int
