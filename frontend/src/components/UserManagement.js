@@ -1318,8 +1318,11 @@ const UserManagement = ({ user: currentUser }) => {
 
     const isStuckBet = (bet) => {
       const betTime = new Date(bet.created_at);
+      // Apply admin's timezone offset for correct comparison
+      const adminTimezoneOffset = currentUser?.timezone_offset || 0;
+      const adjustedBetTime = new Date(betTime.getTime() + (adminTimezoneOffset * 3600000));
       const now = new Date();
-      const hoursDiff = (now - betTime) / (1000 * 60 * 60);
+      const hoursDiff = (now - adjustedBetTime) / (1000 * 60 * 60);
       return hoursDiff > 24 && ['WAITING', 'ACTIVE', 'REVEAL'].includes(bet.status);
     };
 
