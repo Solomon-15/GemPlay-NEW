@@ -2273,11 +2273,11 @@ const HumanBotsManagement = () => {
                                 <span className="self-center text-text-secondary">-</span>
                                 <input
                                   type="number"
-                                  min="1"
-                                  max="11000"
+                                  min="30"
+                                  max="2000"
                                   value={bulkCreateData.bot_min_delay_range[1]}
                                   onChange={(e) => {
-                                    const value = Math.max(1, Math.min(11000, parseInt(e.target.value) || 120));
+                                    const value = Math.max(30, Math.min(2000, parseInt(e.target.value) || 2000));
                                     setBulkCreateData({...bulkCreateData, bot_min_delay_range: [bulkCreateData.bot_min_delay_range[0], value]});
                                   }}
                                   className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
