@@ -492,6 +492,33 @@ const HumanBotsList = ({
     }
   };
 
+  const handleToggleBetCreation = async (bot) => {
+    const newActiveState = !bot.is_bet_creation_active;
+    setLoadingToggleBetCreation(prev => new Set(prev).add(bot.id));
+
+    try {
+      const response = await axios.put(`${API}/admin/human-bots/${bot.id}`, {
+        is_bet_creation_active: newActiveState
+      }, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+
+      if (response.status === 200) {
+        addNotification(`Активность Human-бота "${bot.name}" ${newActiveState ? 'включена' : 'отключена'}`, 'success');
+        if (onRefresh) onRefresh();
+      }
+    } catch (error) {
+      console.error('Ошибка переключения активности бота:', error);
+      addNotification(`Ошибка изменения активности Human-бота: ${error.response?.data?.detail || error.message}`, 'error');
+    } finally {
+      setLoadingToggleBetCreation(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(bot.id);
+        return newSet;
+      });
+    }
+  };
+
   const handleRecalculateBets = async (bot) => {
     const confirmed = await confirm({
       title: `Пересчёт ставок Human-бота`,
