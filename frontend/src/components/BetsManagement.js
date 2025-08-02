@@ -9,7 +9,7 @@ import { formatDollarsAsGems } from '../utils/gemUtils';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const BetsManagement = () => {
+const BetsManagement = ({ user: currentUser }) => {
   const [stats, setStats] = useState({
     total_bets: 0,
     total_bets_value: 0,
