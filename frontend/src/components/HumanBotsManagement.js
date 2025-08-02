@@ -507,10 +507,10 @@ const HumanBotsManagement = () => {
           can_play_with_other_bots: true,
           can_play_with_players: true,
           // Reset delay settings
-          bot_min_delay_seconds: 30,
-          bot_max_delay_seconds: 2000,
-          player_min_delay_seconds: 30,
-          player_max_delay_seconds: 2000,
+          bot_min_delay_seconds: 20,
+          bot_max_delay_seconds: 800,
+          player_min_delay_seconds: 20,
+          player_max_delay_seconds: 800,
           // Reset concurrent games limit
           max_concurrent_games: 1
         });
