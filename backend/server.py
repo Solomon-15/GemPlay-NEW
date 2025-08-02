@@ -18775,6 +18775,7 @@ async def list_human_bots(
                 logging_level=bot["logging_level"],
                 can_play_with_other_bots=bot.get("can_play_with_other_bots", True),  # Add missing field
                 can_play_with_players=bot.get("can_play_with_players", True),  # Add new field
+                is_bet_creation_active=bot.get("is_bet_creation_active", True),  # Add activity field
                 # Individual delay settings
                 bot_min_delay_seconds=bot.get("bot_min_delay_seconds", 30),
                 bot_max_delay_seconds=bot.get("bot_max_delay_seconds", 120), 
