@@ -799,6 +799,16 @@ class BulkCreateHumanBotsRequest(BaseModel):
     max_delay: Optional[int] = Field(default=120, ge=1, le=3600)  # Максимальная задержка
     use_commit_reveal: bool = True
     logging_level: str = Field(default="INFO")
+    # Auto-play settings for bulk creation
+    can_play_with_other_bots: bool = Field(default=True, description="Can play with other bots automatically")
+    can_play_with_players: bool = Field(default=True, description="Can play with live players")
+    # Individual delay settings ranges for bulk creation
+    bot_min_delay_range: List[int] = Field(default=[30, 2000], min_length=2, max_length=2, description="Диапазон минимальных задержек для игры с ботами")
+    bot_max_delay_range: List[int] = Field(default=[30, 2000], min_length=2, max_length=2, description="Диапазон максимальных задержек для игры с ботами")
+    player_min_delay_range: List[int] = Field(default=[30, 2000], min_length=2, max_length=2, description="Диапазон минимальных задержек для игры с игроками")
+    player_max_delay_range: List[int] = Field(default=[30, 2000], min_length=2, max_length=2, description="Диапазон максимальных задержек для игры с игроками")
+    # Concurrent games range for bulk creation
+    max_concurrent_games_range: List[int] = Field(default=[1, 3], min_length=2, max_length=2, description="Диапазон максимального количества одновременных игр")
     bots: Optional[List[dict]] = Field(default=None)  # Данные отдельных ботов
 
 class CreateSoundRequest(BaseModel):
