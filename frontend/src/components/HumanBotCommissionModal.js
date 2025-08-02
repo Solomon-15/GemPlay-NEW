@@ -14,8 +14,7 @@ const HumanBotCommissionModal = ({
 
   const formatDate = (dateString) => {
     if (!dateString) return '—';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU') + ' ' + date.toLocaleTimeString('ru-RU');
+    return formatTimeWithOffset(dateString, currentUser?.timezone_offset || 0);
   };
 
   const getResultBadge = (result) => {
