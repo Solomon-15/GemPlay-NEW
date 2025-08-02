@@ -1056,6 +1056,7 @@ const HumanBotsList = ({
           setCommissionPage(1);
         }}
         bot={selectedBotForCommission}
+        user={currentUser}
         data={commissionData}
         loading={loadingCommission}
         onPageChange={handleCommissionPageChange}
