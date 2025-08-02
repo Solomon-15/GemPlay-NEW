@@ -255,11 +255,11 @@ const HumanBotsManagement = () => {
     can_play_with_other_bots: true,
     can_play_with_players: true,
     // Delay ranges for bot-to-bot games
-    bot_min_delay_range: [30, 2000],
-    bot_max_delay_range: [30, 2000],
+    bot_min_delay_range: [20, 800],
+    bot_max_delay_range: [20, 800],
     // Delay ranges for bot-to-player games
-    player_min_delay_range: [30, 2000], 
-    player_max_delay_range: [30, 2000],
+    player_min_delay_range: [20, 800], 
+    player_max_delay_range: [20, 800],
     // Concurrent games settings for bulk creation
     max_concurrent_games_range: [1, 3],
     // Bet amount limit settings for bulk creation  
