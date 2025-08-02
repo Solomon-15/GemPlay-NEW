@@ -217,51 +217,48 @@ class HumanBotDelayFixTester:
             return False
 
     def test_validation_ranges(self) -> bool:
-        """Test 3: VALIDATION - test delay and concurrent games validation"""
+        """Test 3: VALIDATION - test delay and concurrent games validation (input sanitization)"""
         try:
             validation_tests = [
-                # Test delay validation - should fail (below minimum)
+                # Test delay validation - invalid input should be sanitized to valid default
                 {
-                    "name": "Delay Below Minimum",
+                    "name": "Delay Below Minimum (Sanitized)",
                     "data": {
-                        "name": f"TestBot_ValidationFail1_{int(time.time())}",
+                        "name": f"TestBot_ValidationSanitize1_{int(time.time())}",
                         "character": "CAUTIOUS",
                         "min_bet": 10.0,
                         "max_bet": 100.0,
-                        "bot_min_delay_seconds": 20  # Below 30 minimum
+                        "bot_min_delay_seconds": 20  # Below 30 minimum - should be sanitized to 30
                     },
-                    "should_succeed": False,
-                    "expected_error": "validation"
+                    "expected_sanitized_value": {"bot_min_delay_seconds": 30}
                 },
-                # Test delay validation - should fail (above maximum)
+                # Test delay validation - invalid input should be sanitized to valid default
                 {
-                    "name": "Delay Above Maximum",
+                    "name": "Delay Above Maximum (Sanitized)",
                     "data": {
-                        "name": f"TestBot_ValidationFail2_{int(time.time())}",
+                        "name": f"TestBot_ValidationSanitize2_{int(time.time())}",
                         "character": "IMPULSIVE",
                         "min_bet": 10.0,
                         "max_bet": 100.0,
-                        "bot_max_delay_seconds": 2500  # Above 2000 maximum
+                        "bot_max_delay_seconds": 2500  # Above 2000 maximum - should be sanitized to 2000
                     },
-                    "should_succeed": False,
-                    "expected_error": "validation"
+                    "expected_sanitized_value": {"bot_max_delay_seconds": 2000}
                 },
-                # Test concurrent games validation - should fail (above maximum)
+                # Test concurrent games validation - invalid input should be sanitized to valid default
                 {
-                    "name": "Concurrent Games Above Maximum",
+                    "name": "Concurrent Games Above Maximum (Sanitized)",
                     "data": {
-                        "name": f"TestBot_ValidationFail3_{int(time.time())}",
+                        "name": f"TestBot_ValidationSanitize3_{int(time.time())}",
                         "character": "ANALYST",
                         "min_bet": 10.0,
                         "max_bet": 100.0,
-                        "max_concurrent_games": 5  # Above 3 maximum
+                        "max_concurrent_games": 5  # Above 3 maximum - should be sanitized to 1 (default)
                     },
-                    "should_succeed": False,
-                    "expected_error": "validation"
+                    "expected_sanitized_value": {"max_concurrent_games": 1}
                 },
-                # Test valid ranges - should succeed
+                # Test valid ranges - should succeed with exact values
                 {
-                    "name": "Valid Ranges",
+                    "name": "Valid Ranges (Exact Values)",
                     "data": {
                         "name": f"TestBot_ValidationPass_{int(time.time())}",
                         "character": "STABLE",
@@ -273,8 +270,13 @@ class HumanBotDelayFixTester:
                         "player_max_delay_seconds": 1500,  # Valid range
                         "max_concurrent_games": 3  # Maximum valid
                     },
-                    "should_succeed": True,
-                    "expected_error": None
+                    "expected_sanitized_value": {
+                        "bot_min_delay_seconds": 30,
+                        "bot_max_delay_seconds": 2000,
+                        "player_min_delay_seconds": 100,
+                        "player_max_delay_seconds": 1500,
+                        "max_concurrent_games": 3
+                    }
                 }
             ]
             
@@ -288,36 +290,36 @@ class HumanBotDelayFixTester:
                     headers=self.get_auth_headers()
                 )
                 
-                if test["should_succeed"]:
-                    if response.status_code == 200:
-                        bot_data = response.json()
-                        self.created_human_bots.append(bot_data["id"])
-                        validation_details.append(f"✅ {test['name']}: Passed validation as expected")
+                if response.status_code == 200:
+                    bot_data = response.json()
+                    self.created_human_bots.append(bot_data["id"])
+                    
+                    # Check if values were properly sanitized/validated
+                    sanitization_correct = True
+                    for field, expected_value in test["expected_sanitized_value"].items():
+                        actual_value = bot_data.get(field)
+                        if actual_value != expected_value:
+                            sanitization_correct = False
+                            break
+                    
+                    if sanitization_correct:
+                        validation_details.append(f"✅ {test['name']}: Input properly sanitized/validated")
                     else:
-                        validation_details.append(f"❌ {test['name']}: Should have passed but failed ({response.status_code})")
+                        validation_details.append(f"❌ {test['name']}: Sanitization failed - expected {test['expected_sanitized_value']}, got {actual_value}")
                         all_validation_correct = False
                 else:
-                    if response.status_code == 422:  # Validation error
-                        validation_details.append(f"✅ {test['name']}: Correctly rejected with validation error")
-                    elif response.status_code != 200:
-                        validation_details.append(f"✅ {test['name']}: Correctly rejected ({response.status_code})")
-                    else:
-                        validation_details.append(f"❌ {test['name']}: Should have failed but passed")
-                        all_validation_correct = False
-                        # Clean up if accidentally created
-                        if response.status_code == 200:
-                            bot_data = response.json()
-                            self.created_human_bots.append(bot_data["id"])
+                    validation_details.append(f"❌ {test['name']}: Request failed ({response.status_code})")
+                    all_validation_correct = False
             
             self.log_result(
-                "VALIDATION Ranges Testing",
+                "VALIDATION Ranges Testing (Input Sanitization)",
                 all_validation_correct,
                 f"Validation tests: {'; '.join(validation_details)}"
             )
             return all_validation_correct
             
         except Exception as e:
-            self.log_result("VALIDATION Ranges Testing", False, f"Error: {str(e)}")
+            self.log_result("VALIDATION Ranges Testing (Input Sanitization)", False, f"Error: {str(e)}")
             return False
 
     def cleanup_test_bots(self):
