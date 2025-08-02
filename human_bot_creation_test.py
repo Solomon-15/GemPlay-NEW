@@ -255,7 +255,7 @@ class HumanBotCreationTester:
                         return False
                 else:
                     self.log_result("Bulk Human-bot Creation", False, 
-                                  f"Expected 3 bots, got {len(created_bots)}")
+                                  f"Expected 3 bots, got {len(created_bots_basic)}")
                     return False
             else:
                 self.log_result("Bulk Human-bot Creation", False, 
