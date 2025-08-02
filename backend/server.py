@@ -740,6 +740,14 @@ class CreateHumanBotRequest(BaseModel):
     logging_level: str = Field(default="INFO")
     can_play_with_other_bots: bool = Field(default=True, description="Can play with other bots automatically")
     can_play_with_players: bool = Field(default=True, description="Can play with live players")
+    # Individual delay settings for playing with other bots
+    bot_min_delay_seconds: int = Field(default=30, ge=30, le=2000, description="Минимальная задержка для игры с ботами (секунды)")
+    bot_max_delay_seconds: int = Field(default=2000, ge=30, le=2000, description="Максимальная задержка для игры с ботами (секунды)")
+    # Individual delay settings for playing with players
+    player_min_delay_seconds: int = Field(default=30, ge=30, le=2000, description="Минимальная задержка для игры с игроками (секунды)")  
+    player_max_delay_seconds: int = Field(default=2000, ge=30, le=2000, description="Максимальная задержка для игры с игроками (секунды)")
+    # Individual concurrent games limit
+    max_concurrent_games: int = Field(default=1, ge=1, le=3, description="Максимальное количество одновременных игр для бота")
 
 class UpdateHumanBotRequest(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=50)
