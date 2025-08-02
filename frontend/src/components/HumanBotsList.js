@@ -642,13 +642,8 @@ const HumanBotsList = ({
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    if (!dateString) return '—';
+    return formatTimeWithOffset(dateString, currentUser?.timezone_offset || 0);
   };
 
   const formatTimeLeft = (seconds) => {
