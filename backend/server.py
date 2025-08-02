@@ -2482,6 +2482,7 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                 
                 # Check if bot should look for available bets
                 if not (bot.can_play_with_other_bots or bot.can_play_with_players):
+                    logger.debug(f"🚫 Bot {bot.name} skipped - both toggles disabled (can_play_with_other_bots={bot.can_play_with_other_bots}, can_play_with_players={bot.can_play_with_players})")
                     continue
                 
                 # Check concurrent games limit - use individual bot setting
