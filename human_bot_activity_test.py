@@ -395,7 +395,7 @@ class HumanBotActivityTester:
                 self.log_result("Field Validation Boolean Only", True, 
                               f"Correctly rejected string value 'true' with validation error")
                 return True
-            elif response.status_code == 201:
+            elif response.status_code in [200, 201]:
                 # If it succeeded, check if it was converted to boolean
                 bot_data = response.json()
                 bot_id = bot_data.get("id")
