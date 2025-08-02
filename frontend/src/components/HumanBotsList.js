@@ -21,6 +21,7 @@ const HumanBotsList = ({
   pageSize = 10,
   priorityFields = true,
   stats = {}, // Получаем статистику от родительского компонента
+  user: currentUser, // Получаем текущего пользователя для timezone
   // globalSettings удалены - используются индивидуальные настройки ботов
   onEditBot, 
   onCreateBot,
