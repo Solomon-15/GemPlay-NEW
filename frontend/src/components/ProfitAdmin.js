@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { formatCurrencyWithSymbol } from '../utils/economy';
+import { formatTimeWithOffset, formatDateWithOffset } from '../utils/timeUtils';
 import Pagination from './Pagination';
 import usePagination from '../hooks/usePagination';
 import ProfitChart from './ProfitChart';
