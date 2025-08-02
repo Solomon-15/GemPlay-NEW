@@ -19355,6 +19355,7 @@ async def bulk_create_human_bots(
                     # Add individual settings from bulk data
                     can_play_with_other_bots=bulk_data.can_play_with_other_bots,
                     can_play_with_players=bulk_data.can_play_with_players,
+                    is_bet_creation_active=bulk_data.is_bet_creation_active,
                     bot_min_delay_seconds=bot_min_delay,
                     bot_max_delay_seconds=bot_max_delay,
                     player_min_delay_seconds=player_min_delay,
