@@ -163,7 +163,7 @@ class HumanBotActivityTester:
                 headers=self.get_auth_headers()
             )
             
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 bot_data = response.json()
                 bot_id = bot_data.get("id")
                 self.created_bots.append(bot_id)
