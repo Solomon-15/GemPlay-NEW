@@ -20024,6 +20024,9 @@ async def toggle_human_bot_play_with_players(
             }
         )
         
+        # Log the toggle action
+        logger.info(f"🎮 Human-bot {bot_data['name']} (ID: {bot_id}) - can_play_with_players set to {request.can_play_with_players}")
+        
         # Log admin action
         admin_log = AdminLog(
             admin_id=current_admin.id,
