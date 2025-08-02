@@ -183,9 +183,23 @@ class HumanBotCreationTester:
             
             if response.status_code == 200:
                 result = response.json()
-                created_bots = result.get("bots", [])
+                created_bots_basic = result.get("created_bots", [])
                 
-                if len(created_bots) == 3:
+                if len(created_bots_basic) == 3:
+                    # Get detailed bot info from the list endpoint
+                    list_response = requests.get(
+                        f"{BASE_URL}/admin/human-bots?page=1&per_page=10",
+                        headers=self.get_auth_headers()
+                    )
+                    
+                    if list_response.status_code != 200:
+                        self.log_result("Bulk Human-bot Creation", False, 
+                                      f"Could not fetch bot details: {list_response.status_code}")
+                        return False
+                    
+                    all_bots = list_response.json().get("bots", [])
+                    created_bot_ids = [bot["id"] for bot in created_bots_basic]
+                    created_bots = [bot for bot in all_bots if bot["id"] in created_bot_ids]
                     # Track created bots for cleanup
                     for bot in created_bots:
                         self.created_bots.append(bot.get("id"))
