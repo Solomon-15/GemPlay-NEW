@@ -19752,6 +19752,8 @@ async def get_human_bot_active_bets(
             formatted_bets.append({
                 "id": game.get("id", ""),
                 "created_at": game.get("created_at").isoformat() if game.get("created_at") else "",
+                "updated_at": game.get("updated_at").isoformat() if game.get("updated_at") else "",
+                "joined_at": game.get("joined_at").isoformat() if game.get("joined_at") else "",
                 "bet_amount": game.get("bet_amount", 0),
                 "total_bet_amount": game.get("bet_amount", 0),
                 "creator_gem": bot_gem,  # Гем бота
