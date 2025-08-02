@@ -2558,7 +2558,7 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                     continue
                 
                 # Check delay constraints based on the type of bet creator
-                should_skip = False
+                filtered_bets = []
                 for bet in available_bets:
                     creator_id = bet["creator_id"]
                     creator_human_bot = await db.human_bots.find_one({"id": creator_id})
@@ -2573,8 +2573,7 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                             time_since_last = (current_time - bot.last_action_time).total_seconds()
                             required_delay = random.randint(bot.bot_min_delay_seconds, bot.bot_max_delay_seconds)
                             if time_since_last < required_delay:
-                                should_skip = True
-                                break
+                                continue  # Skip this specific bet, not all bets
                     else:
                         # Creator is a live player - use player delay settings
                         if not bot.can_play_with_players:
@@ -2585,14 +2584,16 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                             time_since_last = (current_time - bot.last_action_time).total_seconds()
                             required_delay = random.randint(bot.player_min_delay_seconds, bot.player_max_delay_seconds)
                             if time_since_last < required_delay:
-                                should_skip = True
-                                break
+                                continue  # Skip this specific bet, not all bets
+                    
+                    # This bet is valid, add to filtered list
+                    filtered_bets.append(bet)
                 
-                if should_skip:
-                    continue
+                if not filtered_bets:
+                    continue  # No valid bets for this bot
                 
-                # Randomly select a bet to join
-                selected_bet = random.choice(available_bets)
+                # Randomly select a bet to join from filtered bets
+                selected_bet = random.choice(filtered_bets)
                 
                 # Join the selected bet
                 await join_available_bet_as_human_bot(bot, selected_bet)
