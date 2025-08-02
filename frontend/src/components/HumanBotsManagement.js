@@ -2189,13 +2189,13 @@ const HumanBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Настройки задержки */}
+              {/* Настройки времени для создания ставки */}
               <div className="form-section">
                 <div className="section-header">
                   <svg className="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <h4>Настройки задержки</h4>
+                  <h4>Настройки времени для создания ставки</h4>
                 </div>
                 
                 <div className="form-row">
