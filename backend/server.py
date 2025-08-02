@@ -18301,6 +18301,7 @@ class NotificationPayload(BaseModel):
     amount_won: Optional[float] = None
     amount_lost: Optional[float] = None
     commission: Optional[float] = None  # Commission amount
+    total_gems: Optional[float] = None  # Total gems before commission
     sender_name: Optional[str] = None
     category: Optional[str] = None
     system_message: Optional[str] = None
