@@ -396,14 +396,14 @@ const HumanBotActiveBetsModal = ({
                       let botActivityTime;
                       if (bet.is_creator) {
                         // Bot created this bet - use creation time
-                        botActivityTime = new Date(bet.created_at);
+                        botActivityTime = bet.created_at;
                       } else {
                         // Bot joined this bet - use updated_at (join time) if available, otherwise created_at
-                        botActivityTime = new Date(bet.updated_at || bet.created_at);
+                        botActivityTime = bet.updated_at || bet.created_at;
                       }
                       
-                      const dateStr = botActivityTime.toLocaleDateString('ru-RU');
-                      const timeStr = botActivityTime.toLocaleTimeString('ru-RU');
+                      const dateStr = formatDateWithOffset(botActivityTime, currentUser?.timezone_offset || 0);
+                      const timeStr = formatTimeWithOffset(botActivityTime, currentUser?.timezone_offset || 0).split(' ')[1] || '';
                       
                       const isActiveBet = ['WAITING', 'ACTIVE', 'REVEAL'].includes(bet.status?.toUpperCase());
                       
