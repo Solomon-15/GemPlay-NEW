@@ -18294,6 +18294,7 @@ class NotificationPayload(BaseModel):
     result: Optional[str] = None  # won/lost/draw
     amount_won: Optional[float] = None
     amount_lost: Optional[float] = None
+    commission: Optional[float] = None  # Commission amount
     sender_name: Optional[str] = None
     category: Optional[str] = None
     system_message: Optional[str] = None
