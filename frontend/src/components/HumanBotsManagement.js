@@ -2430,10 +2430,10 @@ const HumanBotsManagement = () => {
                       <input
                         type="number"
                         min="1"
-                        max="100"
+                        max="3"
                         value={bulkCreateData.max_concurrent_games_range[1]}
                         onChange={(e) => {
-                          const value = Math.max(1, Math.min(100, parseInt(e.target.value) || 3));
+                          const value = Math.max(1, Math.min(3, parseInt(e.target.value) || 3));
                           setBulkCreateData({...bulkCreateData, max_concurrent_games_range: [bulkCreateData.max_concurrent_games_range[0], value]});
                         }}
                         className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
