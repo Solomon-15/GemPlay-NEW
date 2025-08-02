@@ -467,8 +467,8 @@ const ProfitAdmin = ({ user }) => {
     const csvContent = [
       headers.join(','),
       ...entries.map(entry => [
-        new Date(entry.created_at).toLocaleDateString('ru-RU'),
-        new Date(entry.created_at).toLocaleTimeString('ru-RU'),
+        formatDateWithOffset(entry.created_at, user?.timezone_offset || 0).split(' ')[0],
+        formatTimeWithOffset(entry.created_at, user?.timezone_offset || 0).split(' ')[1] || '',
         `"${getEntryTypeName(entry.type)}"`,
         entry.amount.toFixed(2),
         `"${entry.source || '—'}"`,
