@@ -151,7 +151,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
         {/* Left side - Notifications Bell and Logo */}
         <div className="flex items-center space-x-1">
           {/* Notifications Bell */}
-          <NotificationBell isCollapsed={false} setCurrentView={setCurrentView} />
+          <NotificationBell isCollapsed={false} setCurrentView={setCurrentView} user={user} />
           
           <div className="w-15 h-18 flex items-center justify-center">
             <img 
