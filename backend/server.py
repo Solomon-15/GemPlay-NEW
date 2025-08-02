@@ -18393,9 +18393,9 @@ async def generate_notification_content(notification_type: NotificationTypeEnum,
             "emoji_map": {"won": "🏆", "lost": "💔", "draw": "🤝"},
             "title": "Match Result",
             "message_map": {
-                "won": "You won against {opponent_name}! Received: ${amount_won:.2f}",
-                "lost": "You lost against {opponent_name}. Lost: ${amount_lost:.2f}",
-                "draw": "Draw against {opponent_name}. Bet returned: ${amount:.2f}"
+                "won": "You won against {opponent_name}! Received: {amount_won:.2f} Gems\n-3% комиссия. ${commission:.2f}",
+                "lost": "You lost against {opponent_name}. Lost: {amount_lost:.2f} Gems\n-3% комиссия. ${commission:.2f}",
+                "draw": "Draw against {opponent_name}. Bet returned: {amount:.2f} Gems"
             }
         },
         NotificationTypeEnum.COMMISSION_FREEZE: {
