@@ -5952,6 +5952,7 @@ async def determine_game_winner(game_id: str) -> dict:
                     opponent_name=opponent_name,
                     result="won",
                     amount_won=winnings,
+                    commission=commission_amount,
                     action_url="/games/history"
                 )
                 opponent_payload = NotificationPayload(
@@ -5959,6 +5960,7 @@ async def determine_game_winner(game_id: str) -> dict:
                     opponent_name=creator_name,
                     result="lost",
                     amount_lost=game_obj.bet_amount,
+                    commission=0.0,  # Loser doesn't pay commission in new system
                     action_url="/games/history"
                 )
             elif result_status == "opponent_wins":
@@ -5967,6 +5969,7 @@ async def determine_game_winner(game_id: str) -> dict:
                     opponent_name=opponent_name,
                     result="lost",
                     amount_lost=game_obj.bet_amount,
+                    commission=0.0,  # Loser doesn't pay commission in new system
                     action_url="/games/history"
                 )
                 opponent_payload = NotificationPayload(
@@ -5974,6 +5977,7 @@ async def determine_game_winner(game_id: str) -> dict:
                     opponent_name=creator_name,
                     result="won",
                     amount_won=winnings,
+                    commission=commission_amount,
                     action_url="/games/history"
                 )
             else:  # draw
@@ -5982,6 +5986,7 @@ async def determine_game_winner(game_id: str) -> dict:
                     opponent_name=opponent_name,
                     result="draw",
                     amount=game_obj.bet_amount,
+                    commission=0.0,  # No commission for draws
                     action_url="/games/history"
                 )
                 opponent_payload = NotificationPayload(
@@ -5989,6 +5994,7 @@ async def determine_game_winner(game_id: str) -> dict:
                     opponent_name=creator_name,
                     result="draw",
                     amount=game_obj.bet_amount,
+                    commission=0.0,  # No commission for draws
                     action_url="/games/history"
                 )
             
