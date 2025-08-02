@@ -1742,6 +1742,11 @@ async def human_bot_simulation_task():
                 try:
                     human_bot = HumanBot(**bot_data)
                     
+                    # Check if bot has any enabled play modes
+                    if not (human_bot.can_play_with_other_bots or human_bot.can_play_with_players):
+                        logger.debug(f"🚫 Bot {human_bot.name} skipped - both play modes disabled")
+                        continue
+                    
                     # Check if bot should take action based on delay
                     if await should_human_bot_take_action(human_bot):
                         # Decide action: create bet or join existing bet
