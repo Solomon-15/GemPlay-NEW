@@ -848,7 +848,7 @@ const AdminPanel = ({ user, onClose }) => {
       case 'users':
         return <UserManagement user={user} />;
       case 'bets':
-        return <BetsManagement />;
+        return <BetsManagement user={user} />;
       case 'regular-bots':
         return <RegularBotsManagement />;
       case 'human-bots':
