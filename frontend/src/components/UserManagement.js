@@ -1406,7 +1406,10 @@ const UserManagement = ({ user: currentUser }) => {
                           <span className="text-white">Возраст:</span> {
                             (() => {
                               const created = new Date(bet.created_at);
-                              const diffInSeconds = Math.floor((currentTime - created) / 1000);
+                              // Apply admin's timezone offset
+                              const adminTimezoneOffset = currentUser?.timezone_offset || 0;
+                              const adjustedCreated = new Date(created.getTime() + (adminTimezoneOffset * 3600000));
+                              const diffInSeconds = Math.floor((currentTime - adjustedCreated) / 1000);
                               const totalSeconds = Math.max(0, diffInSeconds);
                               
                               const hours = Math.floor(totalSeconds / 3600);
