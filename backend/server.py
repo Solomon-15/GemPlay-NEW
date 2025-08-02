@@ -1900,17 +1900,17 @@ async def create_human_bot_bet(human_bot: HumanBot):
         logger.error(f"Error creating human bot bet: {e}")
 
 async def join_human_bot_bet(human_bot: HumanBot):
-    """Join an existing bet as a human bot (only if bet_limit allows)."""
+    """Join an existing bet as a human bot (bet_limit does NOT restrict joining, only creation)."""
     try:
-        # Check current active bets count vs bet_limit
-        current_active_bets = await get_human_bot_active_bets_count(human_bot.id)
-        bot_limit = human_bot.bet_limit or 12  # Default to 12 if not set
-        
-        if current_active_bets >= bot_limit:
-            logger.debug(f"Human bot {human_bot.name} has reached bet limit ({current_active_bets}/{bot_limit}), skipping join attempt")
+        # Note: bet_limit only restricts BET CREATION, not joining existing bets
+        # Check concurrent games limit instead
+        can_join_more = await check_human_bot_concurrent_games(human_bot.id, human_bot.max_concurrent_games)
+        if not can_join_more:
+            logger.debug(f"Human bot {human_bot.name} has reached concurrent games limit ({human_bot.max_concurrent_games}), skipping join attempt")
             return
         
-        logger.info(f"Human bot {human_bot.name} attempting to join existing bet (active: {current_active_bets}/{bot_limit})")
+        current_active_bets = await get_human_bot_active_bets_count(human_bot.id)
+        logger.info(f"Human bot {human_bot.name} attempting to join existing bet (active: {current_active_bets}, concurrent limit: {human_bot.max_concurrent_games})")
         
         # Find available games that human bot can join
         available_games = await db.games.find({
