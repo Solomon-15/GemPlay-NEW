@@ -1291,10 +1291,10 @@ const HumanBotsManagement = () => {
                     can_play_with_other_bots: bot.can_play_with_other_bots !== undefined ? bot.can_play_with_other_bots : true,
                     can_play_with_players: bot.can_play_with_players !== undefined ? bot.can_play_with_players : true,
                     // Individual delay settings for editing
-                    bot_min_delay_seconds: bot.bot_min_delay_seconds || 30,
-                    bot_max_delay_seconds: bot.bot_max_delay_seconds || 2000,
-                    player_min_delay_seconds: bot.player_min_delay_seconds || 30,
-                    player_max_delay_seconds: bot.player_max_delay_seconds || 2000,
+                    bot_min_delay_seconds: bot.bot_min_delay_seconds || 20,
+                    bot_max_delay_seconds: bot.bot_max_delay_seconds || 800,
+                    player_min_delay_seconds: bot.player_min_delay_seconds || 20,
+                    player_max_delay_seconds: bot.player_max_delay_seconds || 800,
                     max_concurrent_games: bot.max_concurrent_games || 1
                   });
                   setShowCreateForm(true);
