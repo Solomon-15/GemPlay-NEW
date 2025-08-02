@@ -759,6 +759,14 @@ class UpdateHumanBotRequest(BaseModel):
     logging_level: Optional[str] = None
     can_play_with_other_bots: Optional[bool] = None
     can_play_with_players: Optional[bool] = None
+    # Individual delay settings for playing with other bots
+    bot_min_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Минимальная задержка для игры с ботами (секунды)")
+    bot_max_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Максимальная задержка для игры с ботами (секунды)")
+    # Individual delay settings for playing with players
+    player_min_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Минимальная задержка для игры с игроками (секунды)")  
+    player_max_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Максимальная задержка для игры с игроками (секунды)")
+    # Individual concurrent games limit
+    max_concurrent_games: Optional[int] = Field(None, ge=1, le=3, description="Максимальное количество одновременных игр для бота")
 
 class ToggleAutoPlayRequest(BaseModel):
     can_play_with_other_bots: bool
