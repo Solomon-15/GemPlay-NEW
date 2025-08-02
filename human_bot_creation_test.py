@@ -346,26 +346,33 @@ class HumanBotCreationTester:
                               f"Status: {response.status_code}, Response: {response.text}")
                 return False
             
-            # Verify the toggles persisted by fetching the bot again
+            # Verify the toggles persisted by fetching the bot from the list
             response = requests.get(
-                f"{BASE_URL}/admin/human-bots/{bot_id}",
+                f"{BASE_URL}/admin/human-bots?page=1&per_page=50",
                 headers=self.get_auth_headers()
             )
             
             if response.status_code == 200:
-                updated_bot = response.json()
-                if (updated_bot.get("can_play_with_other_bots") == True and 
-                    updated_bot.get("can_play_with_players") == True):
-                    self.log_result("Toggle Test - Persistence Verification", True, 
-                                  "Both toggles persisted correctly (now enabled)")
-                    return True
+                all_bots = response.json().get("bots", [])
+                updated_bot = next((bot for bot in all_bots if bot["id"] == bot_id), None)
+                
+                if updated_bot:
+                    if (updated_bot.get("can_play_with_other_bots") == True and 
+                        updated_bot.get("can_play_with_players") == True):
+                        self.log_result("Toggle Test - Persistence Verification", True, 
+                                      "Both toggles persisted correctly (now enabled)")
+                        return True
+                    else:
+                        self.log_result("Toggle Test - Persistence Verification", False, 
+                                      f"Toggles not persisted: bots={updated_bot.get('can_play_with_other_bots')}, players={updated_bot.get('can_play_with_players')}")
+                        return False
                 else:
                     self.log_result("Toggle Test - Persistence Verification", False, 
-                                  f"Toggles not persisted: bots={updated_bot.get('can_play_with_other_bots')}, players={updated_bot.get('can_play_with_players')}")
+                                  f"Could not find updated bot with ID: {bot_id}")
                     return False
             else:
                 self.log_result("Toggle Test - Persistence Verification", False, 
-                              f"Could not fetch updated bot: {response.status_code}")
+                              f"Could not fetch bot list: {response.status_code}")
                 return False
                 
         except Exception as e:
