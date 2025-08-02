@@ -2522,6 +2522,7 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                     else:
                         # Creator is a live player - use player delay settings
                         if not bot.can_play_with_players:
+                            logger.debug(f"🚫 Bot {bot.name} skipped bet from live player {creator_id} - can_play_with_players disabled")
                             continue
                         
                         if bot.last_action_time:
