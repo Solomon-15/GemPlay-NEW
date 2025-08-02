@@ -1808,15 +1808,8 @@ async def should_human_bot_take_action(human_bot: HumanBot) -> bool:
         if time_since_last.total_seconds() < min_delay:
             return False
     
-    # Character-based probability to act
-    if human_bot.character == HumanBotCharacter.IMPULSIVE:
-        return random.random() < 0.8  # 80% chance - very active
-    elif human_bot.character == HumanBotCharacter.AGGRESSIVE:
-        return random.random() < 0.6  # 60% chance - quite active
-    elif human_bot.character == HumanBotCharacter.CAUTIOUS:
-        return random.random() < 0.2  # 20% chance - less active
-    else:
-        return random.random() < 0.4  # 40% chance - moderate activity
+    # If delay has passed, bot should take action (no additional probability checks for timing)
+    return True
 
 async def create_human_bot_bet(human_bot: HumanBot):
     """Create a bet as a human bot (only if bet_limit allows)."""
