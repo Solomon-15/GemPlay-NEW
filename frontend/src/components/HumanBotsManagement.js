@@ -1597,65 +1597,7 @@ const HumanBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Ограничение суммы ставок */}
-              <div className="form-section">
-                <div className="section-header">
-                  <svg className="section-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  <h4>Ограничение суммы ставок</h4>
-                </div>
-                
-                <div className="form-help-block">
-                  <svg className="help-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Макс. сумма ставки для участия как оппонент (1–100000)
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>
-                      <svg className="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                      </svg>
-                      Мин. сумма ставок
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="100000"
-                      placeholder="100"
-                      value={bulkCreateData.bet_limit_amount_range[0]}
-                      onChange={(e) => setBulkCreateData({
-                        ...bulkCreateData, 
-                        bet_limit_amount_range: [parseInt(e.target.value) || 100, bulkCreateData.bet_limit_amount_range[1]]
-                      })}
-                      className="form-input"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>
-                      <svg className="label-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                      </svg>
-                      Макс. сумма ставок
-                    </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="100000"
-                      placeholder="250"
-                      value={bulkCreateData.bet_limit_amount_range[1]}
-                      onChange={(e) => setBulkCreateData({
-                        ...bulkCreateData, 
-                        bet_limit_amount_range: [bulkCreateData.bet_limit_amount_range[0], parseInt(e.target.value) || 250]
-                      })}
-                      className="form-input"
-                    />
-                  </div>
-                </div>
-              </div>
+
 
               {/* Настройки результатов */}
               <div className="form-section">
