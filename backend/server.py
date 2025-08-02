@@ -19340,8 +19340,8 @@ async def bulk_create_human_bots(
                 max_concurrent_games = random.randint(bulk_data.max_concurrent_games_range[0], bulk_data.max_concurrent_games_range[1])
                 
                 # Generate bet limit amount for opponent participation
-                bet_limit_amount = random.uniform(bulk_data.bet_limit_amount_range[0], bulk_data.bet_limit_amount_range[1])
-                bet_limit_amount = round(bet_limit_amount, 2)  # Round to 2 decimal places
+                bet_limit_amount = random.randint(bulk_data.bet_limit_amount_range[0], bulk_data.bet_limit_amount_range[1])
+                bet_limit_amount = float(bet_limit_amount)  # Convert to float for database storage
                 
                 human_bot = HumanBot(
                     name=bot_name,
