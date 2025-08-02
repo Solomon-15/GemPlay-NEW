@@ -2824,8 +2824,8 @@ frontend:
     needs_retesting: true
     status_history:
       - working: false
-        agent: "main"
-        comment: "Testing fix for Time column in HumanBotActiveBetsModal.js - shows bot's specific activity time (creation time if creator, join time if opponent instead of always showing bet.created_at)"
+        agent: "backend_testing"
+        comment: "HUMAN-BOT ACTIVE BETS TIME FIELDS BACKEND TESTING COMPLETED: Проверена поддержка бэкенда для исправления колонки 'Время'. РЕЗУЛЬТАТЫ: ✅ API endpoint /admin/human-bots/{bot_id}/active-bets доступен ✅ Поле created_at присутствует во всех ставках ❌ Поле updated_at отсутствует в API ответе ❌ Поле joined_at отсутствует в API ответе. ДЕЙСТВИЯ: Необходимо модифицировать endpoint /admin/human-bots/{bot_id}/active-bets в server.py чтобы включить поля updated_at и joined_at из данных игры в ответ API. База данных содержит эти поля, но API их не возвращает."
 
 agent_communication:
   - agent: "testing"
