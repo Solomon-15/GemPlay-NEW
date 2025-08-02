@@ -2484,9 +2484,8 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                 if not (bot.can_play_with_other_bots or bot.can_play_with_players):
                     continue
                 
-                # Check concurrent games limit
-                max_concurrent_games = settings.get("max_concurrent_games", 3)
-                can_join_more = await check_human_bot_concurrent_games(bot.id, max_concurrent_games)
+                # Check concurrent games limit - use individual bot setting
+                can_join_more = await check_human_bot_concurrent_games(bot.id, bot.max_concurrent_games)
                 if not can_join_more:
                     continue
                 
