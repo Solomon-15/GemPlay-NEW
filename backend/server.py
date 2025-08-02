@@ -743,6 +743,8 @@ class CreateHumanBotRequest(BaseModel):
     logging_level: str = Field(default="INFO")
     can_play_with_other_bots: bool = Field(default=True, description="Can play with other bots automatically")
     can_play_with_players: bool = Field(default=True, description="Can play with live players")
+    # Bot creation activity control
+    is_bet_creation_active: bool = Field(default=True, description="Активность бота - создание новых ставок")
     # Individual delay settings for playing with other bots
     bot_min_delay_seconds: int = Field(default=30, ge=30, le=2000, description="Минимальная задержка для игры с ботами (секунды)")
     bot_max_delay_seconds: int = Field(default=2000, ge=30, le=2000, description="Максимальная задержка для игры с ботами (секунды)")
