@@ -183,7 +183,7 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
         
         {/* Notifications Bell */}
         <div className={`${isCollapsed ? 'flex justify-center mt-2' : 'mt-3 flex justify-center'}`}>
-          <NotificationBell isCollapsed={isCollapsed} setCurrentView={setCurrentView} />
+          <NotificationBell isCollapsed={isCollapsed} setCurrentView={setCurrentView} user={user} />
         </div>
 
         {/* Collapse button when collapsed */}
