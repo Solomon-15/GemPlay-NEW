@@ -11,7 +11,8 @@ const API = `${BACKEND_URL}/api`;
 const HumanBotActiveBetsModal = ({ 
   isOpen, 
   onClose, 
-  bot, 
+  bot,
+  user: currentUser,
   addNotification 
 }) => {
   const [loading, setLoading] = useState(false);
