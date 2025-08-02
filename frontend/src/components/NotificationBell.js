@@ -167,20 +167,16 @@ const NotificationBell = ({ isCollapsed, setCurrentView }) => {
     
   };
 
-  // Format time ago helper
+  // Format time as HH:MM:SS (time when message arrived)
   const formatTimeAgo = (dateString) => {
     const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
     
-    if (diffInMinutes < 1) return 'just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    // Format as HH:MM:SS
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const seconds = date.getSeconds().toString().padStart(2, '0');
     
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays}d ago`;
+    return `${hours}:${minutes}:${seconds}`;
   };
 
   // Get priority color
