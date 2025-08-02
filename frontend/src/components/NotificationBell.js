@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNotifications } from './NotificationContext';
 
-const NotificationBell = ({ isCollapsed, setCurrentView }) => {
+const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const bellRef = useRef(null);
   const dropdownRef = useRef(null);
