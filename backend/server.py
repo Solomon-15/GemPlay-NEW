@@ -775,11 +775,11 @@ class UpdateHumanBotRequest(BaseModel):
     # Bot creation activity control
     is_bet_creation_active: Optional[bool] = Field(None, description="Активность бота - создание новых ставок")
     # Individual delay settings for playing with other bots
-    bot_min_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Минимальная задержка для игры с ботами (секунды)")
-    bot_max_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Максимальная задержка для игры с ботами (секунды)")
+    bot_min_delay_seconds: Optional[int] = Field(None, ge=1, le=12000, description="Минимальная задержка для игры с ботами (секунды)")
+    bot_max_delay_seconds: Optional[int] = Field(None, ge=1, le=12000, description="Максимальная задержка для игры с ботами (секунды)")
     # Individual delay settings for playing with players
-    player_min_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Минимальная задержка для игры с игроками (секунды)")  
-    player_max_delay_seconds: Optional[int] = Field(None, ge=30, le=2000, description="Максимальная задержка для игры с игроками (секунды)")
+    player_min_delay_seconds: Optional[int] = Field(None, ge=1, le=12000, description="Минимальная задержка для игры с игроками (секунды)")  
+    player_max_delay_seconds: Optional[int] = Field(None, ge=1, le=12000, description="Максимальная задержка для игры с игроками (секунды)")
     # Individual concurrent games limit
     max_concurrent_games: Optional[int] = Field(None, ge=1, le=3, description="Максимальное количество одновременных игр для бота")
 
