@@ -1945,8 +1945,7 @@ async def join_human_bot_bet(human_bot: HumanBot):
         
         # Filter games based on character preferences
         suitable_games = []
-        for game_data in available_games:
-            game = Game(**game_data)
+        for game in filtered_games:
             
             # Character-based game selection
             if human_bot.character == HumanBotCharacter.CAUTIOUS:
