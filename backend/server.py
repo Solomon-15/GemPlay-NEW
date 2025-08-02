@@ -1789,7 +1789,7 @@ async def human_bot_simulation_task():
             await process_human_bot_game_joining(active_human_bots, settings)
             
             # Wait before next cycle (shorter interval for human bots)
-            await asyncio.sleep(15)  # Check every 15 seconds
+            await asyncio.sleep(5)  # Check every 5 seconds for faster response
             
         except Exception as e:
             logger.error(f"Error in human bot simulation task: {e}")
