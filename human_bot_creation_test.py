@@ -201,7 +201,7 @@ class HumanBotCreationTester:
                     created_bot_ids = [bot["id"] for bot in created_bots_basic]
                     created_bots = [bot for bot in all_bots if bot["id"] in created_bot_ids]
                     # Track created bots for cleanup
-                    for bot in created_bots:
+                    for bot in created_bots_basic:
                         self.created_bots.append(bot.get("id"))
                     
                     # Verify all bots have disabled options
