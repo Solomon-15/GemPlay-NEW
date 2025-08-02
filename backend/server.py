@@ -1821,7 +1821,7 @@ async def create_human_bot_bet(human_bot: HumanBot):
         bot_limit = human_bot.bet_limit or 12  # Default to 12 if not set
         
         if current_active_bets >= bot_limit:
-            logger.debug(f"Human bot {human_bot.name} has reached bet limit ({current_active_bets}/{bot_limit}), skipping bet creation")
+            logger.debug(f"🚫 Human bot {human_bot.name} has reached bet_limit ({current_active_bets}/{bot_limit}), skipping BET CREATION (but can still JOIN existing bets)")
             return
         
         logger.info(f"Creating bet for Human bot {human_bot.name} (active: {current_active_bets}/{bot_limit})")
