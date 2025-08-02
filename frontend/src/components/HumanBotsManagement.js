@@ -1271,6 +1271,7 @@ const HumanBotsManagement = ({ user: currentUser }) => {
                 pageSize={pageSize}
                 priorityFields={priorityFields}
                 stats={stats} // Pass stats to child component
+                user={currentUser} // Pass current user for timezone
                 onPageChange={setCurrentPage}
                 onEditBot={(bot) => {
                   setEditingBot(bot);
