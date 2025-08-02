@@ -488,10 +488,9 @@ const ProfitAdmin = ({ user }) => {
   };
 
   const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
     return {
-      date: date.toLocaleDateString('ru-RU'),
-      time: date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+      date: formatDateWithOffset(dateString, user?.timezone_offset || 0).split(' ')[0],
+      time: formatTimeWithOffset(dateString, user?.timezone_offset || 0).split(' ')[1]
     };
   };
 
