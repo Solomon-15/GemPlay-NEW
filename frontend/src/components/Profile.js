@@ -203,8 +203,17 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
                     type="text"
                     value={editForm.username}
                     onChange={handleUsernameChange}
-                    className="w-full px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani focus:outline-none focus:border-accent-primary"
+                    className={`w-full px-3 py-2 bg-surface-sidebar border rounded-lg text-white font-rajdhani focus:outline-none ${
+                      usernameError 
+                        ? 'border-red-500 focus:border-red-500' 
+                        : 'border-accent-primary border-opacity-30 focus:border-accent-primary'
+                    }`}
                   />
+                  {usernameError && (
+                    <p className="mt-1 text-xs text-red-400 font-roboto">
+                      {usernameError}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block font-roboto text-text-secondary text-sm mb-1">Gender</label>
