@@ -76,20 +76,7 @@ const UserManagement = ({ user: currentUser }) => {
   const [createUsernameError, setCreateUsernameError] = useState(''); // Ошибка валидации при создании
   const [editUsernameError, setEditUsernameError] = useState(''); // Ошибка валидации при редактировании
   
-  // Edit form
-  const [editForm, setEditForm] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirm_password: '',
-    role: '',
-    gender: 'male',
-    virtual_balance: 0,
-    daily_limit_max: 1000,
-    status: 'ACTIVE',
-    ban_reason: ''
-  });
-  const [editUserLoading, setEditUserLoading] = useState(false);
+
 
   // User details states
   const [userGems, setUserGems] = useState([]);
