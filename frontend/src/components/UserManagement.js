@@ -992,15 +992,16 @@ const UserManagement = ({ user: currentUser }) => {
   // Modal Components
   const EditUserModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-md w-full mx-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-rajdhani text-xl font-bold text-white">Редактировать пользователя</h3>
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-russo text-xl text-white">Редактировать пользователя: {selectedUser?.username}</h3>
           <button
             onClick={() => {
               setIsEditModalOpen(false);
               setEditUsernameError(''); // Сбрасываем ошибку
             }}
-            className="text-gray-400 hover:text-white"
+            className="text-text-secondary hover:text-white"
+            disabled={editUserLoading}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1009,81 +1010,216 @@ const UserManagement = ({ user: currentUser }) => {
         </div>
 
         <form onSubmit={handleSubmitEdit} className="space-y-4">
-          <div>
-            <label className="block text-text-secondary text-sm font-rajdhani mb-1">Имя пользователя</label>
-            <input
-              type="text"
-              value={editForm.username}
-              onChange={(e) => {
-                handleUsernameInput(e.target.value,
-                  (value) => setEditForm({...editForm, username: value}),
-                  setEditUsernameError
-                );
-              }}
-              className={`w-full px-3 py-2 bg-surface-sidebar border rounded-lg text-white font-roboto ${
-                editUsernameError 
-                  ? 'border-red-500' 
-                  : 'border-border-primary'
-              }`}
-              required
-            />
-            {editUsernameError && (
-              <p className="text-xs text-red-400 mt-1">
-                {editUsernameError}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-text-secondary text-sm font-rajdhani mb-1">Email</label>
-            <input
-              type="email"
-              value={editForm.email}
-              onChange={(e) => setEditForm({...editForm, email: e.target.value})}
-              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-text-secondary text-sm font-rajdhani mb-1">Роль</label>
-            <select
-              value={editForm.role}
-              onChange={(e) => setEditForm({...editForm, role: e.target.value})}
-              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-              disabled={currentUser?.role !== 'SUPER_ADMIN'}
-            >
-              <option value="USER">USER</option>
-              <option value="MODERATOR">MODERATOR</option>
-              <option value="ADMIN">ADMIN</option>
-              {currentUser?.role === 'SUPER_ADMIN' && (
-                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+          {/* Username and Email */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Имя пользователя *
+              </label>
+              <input
+                type="text"
+                value={editForm.username}
+                onChange={(e) => {
+                  handleUsernameInput(e.target.value, 
+                    (value) => setEditForm(prev => ({...prev, username: value})),
+                    setEditUsernameError
+                  );
+                }}
+                className={`w-full px-3 py-2 bg-surface-sidebar border rounded-lg text-white font-roboto focus:outline-none focus:ring-2 ${
+                  editUsernameError 
+                    ? 'border-red-500 focus:ring-red-500' 
+                    : 'border-border-primary focus:ring-accent-primary'
+                }`}
+                placeholder="user123"
+                disabled={editUserLoading}
+              />
+              {editUsernameError ? (
+                <p className="text-xs text-red-400 mt-1">
+                  {editUsernameError}
+                </p>
+              ) : (
+                <p className="text-xs text-text-secondary mt-1">
+                  Длина: 3-15 символов. Разрешены: латиница, цифры, дефис, подчёркивание, точка, пробелы
+                </p>
               )}
-            </select>
-            {currentUser?.role !== 'SUPER_ADMIN' && (
-              <p className="text-xs text-yellow-400 mt-1">
-                Только SUPER_ADMIN может изменять роли
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Email *
+              </label>
+              <input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm(prev => ({...prev, email: e.target.value}))}
+                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                placeholder="user@example.com"
+                disabled={editUserLoading}
+              />
+            </div>
+          </div>
+
+          {/* Password fields - Необязательные при редактировании */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Новый пароль (необязательно)
+              </label>
+              <input
+                type="password"
+                value={editForm.password}
+                onChange={(e) => setEditForm(prev => ({...prev, password: e.target.value}))}
+                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                placeholder="Минимум 8 символов"
+                disabled={editUserLoading}
+                minLength="8"
+              />
+              <p className="text-xs text-text-secondary mt-1">
+                Оставьте пустым, чтобы не менять пароль
               </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Подтверждение пароля
+              </label>
+              <input
+                type="password"
+                value={editForm.confirm_password}
+                onChange={(e) => setEditForm(prev => ({...prev, confirm_password: e.target.value}))}
+                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                placeholder="Повторите новый пароль"
+                disabled={editUserLoading}
+                minLength="8"
+              />
+            </div>
+          </div>
+
+          {/* Role and Gender */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Роль
+              </label>
+              <select
+                value={editForm.role}
+                onChange={(e) => setEditForm(prev => ({...prev, role: e.target.value}))}
+                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                disabled={editUserLoading || currentUser?.role !== 'SUPER_ADMIN'}
+              >
+                <option value="USER">USER</option>
+                <option value="MODERATOR">MODERATOR</option>
+                <option value="ADMIN">ADMIN</option>
+                {currentUser?.role === 'SUPER_ADMIN' && (
+                  <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                )}
+              </select>
+              {currentUser?.role !== 'SUPER_ADMIN' && (
+                <p className="text-xs text-yellow-400 mt-1">
+                  Только SUPER_ADMIN может назначать любые роли
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Пол
+              </label>
+              <select
+                value={editForm.gender}
+                onChange={(e) => setEditForm(prev => ({...prev, gender: e.target.value}))}
+                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                disabled={editUserLoading}
+              >
+                <option value="male">Мужчина</option>
+                <option value="female">Женщина</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Balance and Limit */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Демо-баланс ($)
+              </label>
+              <input
+                type="number"
+                value={editForm.virtual_balance}
+                onChange={(e) => setEditForm(prev => ({...prev, virtual_balance: Math.max(1, Math.min(10000, parseInt(e.target.value) || 1000))}))}
+                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                min="1"
+                max="10000"
+                disabled={editUserLoading}
+              />
+              <p className="text-xs text-text-secondary mt-1">От 1 до 10000</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Дневной лимит пополнения ($)
+              </label>
+              <input
+                type="number"
+                value={editForm.daily_limit_max}
+                onChange={(e) => setEditForm(prev => ({...prev, daily_limit_max: Math.max(1, Math.min(10000, parseInt(e.target.value) || 1000))}))}
+                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                min="1"
+                max="10000"
+                disabled={editUserLoading}
+              />
+              <p className="text-xs text-text-secondary mt-1">От 1 до 10000</p>
+            </div>
+          </div>
+
+          {/* Status and Ban Reason */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-2">
+                Статус
+              </label>
+              <select
+                value={editForm.status}
+                onChange={(e) => setEditForm(prev => ({...prev, status: e.target.value}))}
+                className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                disabled={editUserLoading}
+              >
+                <option value="ACTIVE">Активный</option>
+                <option value="BANNED">Заблокирован</option>
+                <option value="EMAIL_PENDING">Ожидает подтверждения</option>
+              </select>
+            </div>
+            
+            {editForm.status === 'BANNED' && (
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Причина блокировки *
+                </label>
+                <textarea
+                  value={editForm.ban_reason}
+                  onChange={(e) => setEditForm(prev => ({...prev, ban_reason: e.target.value}))}
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
+                  rows="3"
+                  placeholder="Укажите причину блокировки..."
+                  disabled={editUserLoading}
+                />
+              </div>
             )}
           </div>
 
-          <div>
-            <label className="block text-text-secondary text-sm font-rajdhani mb-1">Баланс ($)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={editForm.virtual_balance}
-              onChange={(e) => setEditForm({...editForm, virtual_balance: parseFloat(e.target.value) || 0})}
-              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-            />
-          </div>
-
-          <div className="flex space-x-3 pt-4">
+          <div className="flex space-x-4 mt-6">
             <button
               type="submit"
-              className="flex-1 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity"
+              disabled={editUserLoading}
+              className="flex-1 py-2 bg-accent-primary text-white font-rajdhani font-bold rounded-lg hover:bg-opacity-80 transition-colors disabled:opacity-50"
             >
-              Сохранить
+              {editUserLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Сохранение...
+                </>
+              ) : (
+                'Сохранить изменения'
+              )}
             </button>
             <button
               type="button"
@@ -1091,7 +1227,8 @@ const UserManagement = ({ user: currentUser }) => {
                 setIsEditModalOpen(false);
                 setEditUsernameError(''); // Сбрасываем ошибку
               }}
-              className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors"
+              disabled={editUserLoading}
+              className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               Отмена
             </button>
