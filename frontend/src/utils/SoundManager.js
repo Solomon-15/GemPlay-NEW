@@ -17,10 +17,11 @@ class SoundManager {
     this.userInteracted = false;
     this.currentlyPlaying = null; // Для системы приоритетов
     this.criticalSounds = new Set(); // Критичные звуки для предзагрузки
+    this.initialized = false; // Track if sounds have been initialized
     
     // НЕ инициализируем AudioContext сразу - ждем пользовательского взаимодействия
     this.loadSettings();
-    this.loadSounds();
+    // Не загружаем звуки в конструкторе - будем загружать позже через initializeSounds
     
     this.criticalSounds = new Set([
       'создание_ставки',
