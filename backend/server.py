@@ -759,6 +759,19 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8)
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+class GoogleOAuthRequest(BaseModel):
+    token: str  # Google ID token
+
 class UpdateProfileRequest(BaseModel):
     username: Optional[str] = Field(None, min_length=3, max_length=15)
     gender: Optional[str] = Field(None, pattern=r'^(male|female)$')
