@@ -58,12 +58,6 @@ const LoginForm = ({ onLogin, setUser }) => {
         console.log('🚀 Setting user from login response:', response.data.user);
         setUser(response.data.user);
         onLogin(response.data.user);
-        
-        // Принудительная перезагрузка страницы для корректного отображения
-        console.log('🔄 Reloading page after successful login');
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
       } else {
         // Register
         // Валидация имени пользователя перед отправкой
