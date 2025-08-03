@@ -39,6 +39,19 @@ class SoundManager {
     this.setupUserInteractionListeners();
   }
 
+  async initializeSounds(userRole = null) {
+    if (this.initialized) return; // Avoid double initialization
+    
+    try {
+      await this.loadSounds(userRole);
+      this.initialized = true;
+    } catch (error) {
+      console.error('Error initializing sounds:', error);
+      this.createFallbackSounds();
+      this.initialized = true;
+    }
+  }
+
   setupUserInteractionListeners() {
     const handleFirstInteraction = () => {
       if (!this.userInteracted) {
