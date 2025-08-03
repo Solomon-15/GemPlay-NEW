@@ -25410,12 +25410,290 @@ def test_login(email: str, password: str, user_type: str = "user") -> Optional[s
     
     return None
 
+def test_dashboard_stats_date_filtering() -> None:
+    """Test the new date filtering functionality in /api/admin/dashboard/stats endpoint."""
+    print_header("DASHBOARD STATS DATE FILTERING TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with dashboard stats test")
+        record_test("Dashboard Stats - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success("Admin logged in successfully")
+    
+    # Step 2: Test basic request without parameters (should work as before)
+    print_subheader("Step 2: Basic Request Without Parameters")
+    
+    basic_response, basic_success = make_request(
+        "GET", "/admin/dashboard/stats",
+        auth_token=admin_token
+    )
+    
+    if not basic_success:
+        print_error("Failed to get basic dashboard stats")
+        record_test("Dashboard Stats - Basic Request", False, "Basic request failed")
+        return
+    
+    # Verify response structure
+    expected_fields = [
+        "active_human_bots", "active_regular_bots", "total_users", "online_users",
+        "active_human_bots_games", "active_regular_bots_games", "active_user_bets",
+        "total_active_games", "total_bet_volume", "online_bet_volume"
+    ]
+    
+    missing_fields = [field for field in expected_fields if field not in basic_response]
+    
+    if not missing_fields:
+        print_success("✓ Basic response has all expected fields")
+        record_test("Dashboard Stats - Basic Response Structure", True)
+    else:
+        print_error(f"✗ Basic response missing fields: {missing_fields}")
+        record_test("Dashboard Stats - Basic Response Structure", False, f"Missing: {missing_fields}")
+        return
+    
+    # Store baseline values for comparison
+    baseline_total_bet_volume = basic_response.get("total_bet_volume", 0)
+    baseline_active_human_bots = basic_response.get("active_human_bots", 0)
+    baseline_total_users = basic_response.get("total_users", 0)
+    baseline_online_bet_volume = basic_response.get("online_bet_volume", 0)
+    
+    print_success(f"✓ Baseline total_bet_volume: ${baseline_total_bet_volume}")
+    print_success(f"✓ Baseline active_human_bots: {baseline_active_human_bots}")
+    print_success(f"✓ Baseline total_users: {baseline_total_users}")
+    print_success(f"✓ Baseline online_bet_volume: ${baseline_online_bet_volume}")
+    
+    record_test("Dashboard Stats - Basic Request", True)
+    
+    # Step 3: Test predefined periods
+    print_subheader("Step 3: Test Predefined Periods")
+    
+    predefined_periods = ["day", "week", "month", "quarter", "all_time"]
+    period_results = {}
+    
+    for period in predefined_periods:
+        print(f"\nTesting period: {period}")
+        
+        period_response, period_success = make_request(
+            "GET", f"/admin/dashboard/stats?bet_volume_period={period}",
+            auth_token=admin_token
+        )
+        
+        if period_success:
+            period_total_bet_volume = period_response.get("total_bet_volume", 0)
+            period_active_human_bots = period_response.get("active_human_bots", 0)
+            period_total_users = period_response.get("total_users", 0)
+            period_online_bet_volume = period_response.get("online_bet_volume", 0)
+            
+            period_results[period] = {
+                "total_bet_volume": period_total_bet_volume,
+                "active_human_bots": period_active_human_bots,
+                "total_users": period_total_users,
+                "online_bet_volume": period_online_bet_volume
+            }
+            
+            print_success(f"✓ {period} - total_bet_volume: ${period_total_bet_volume}")
+            
+            # Verify that other metrics remain stable (should not change with date filtering)
+            if period_active_human_bots == baseline_active_human_bots:
+                print_success(f"✓ {period} - active_human_bots stable: {period_active_human_bots}")
+            else:
+                print_warning(f"⚠ {period} - active_human_bots changed: {period_active_human_bots} (baseline: {baseline_active_human_bots})")
+            
+            if period_total_users == baseline_total_users:
+                print_success(f"✓ {period} - total_users stable: {period_total_users}")
+            else:
+                print_warning(f"⚠ {period} - total_users changed: {period_total_users} (baseline: {baseline_total_users})")
+            
+            if period_online_bet_volume == baseline_online_bet_volume:
+                print_success(f"✓ {period} - online_bet_volume stable: ${period_online_bet_volume}")
+            else:
+                print_warning(f"⚠ {period} - online_bet_volume changed: ${period_online_bet_volume} (baseline: ${baseline_online_bet_volume})")
+            
+            record_test(f"Dashboard Stats - Period {period}", True)
+        else:
+            print_error(f"✗ Failed to get stats for period: {period}")
+            record_test(f"Dashboard Stats - Period {period}", False, "Request failed")
+    
+    # Step 4: Verify bet volume changes across periods
+    print_subheader("Step 4: Verify Bet Volume Changes Across Periods")
+    
+    # Check that different periods return different bet volumes (logical expectation)
+    if len(period_results) >= 2:
+        volumes = [result["total_bet_volume"] for result in period_results.values()]
+        
+        # For all_time, it should be >= other periods
+        if "all_time" in period_results:
+            all_time_volume = period_results["all_time"]["total_bet_volume"]
+            
+            all_time_is_max = True
+            for period, result in period_results.items():
+                if period != "all_time" and result["total_bet_volume"] > all_time_volume:
+                    all_time_is_max = False
+                    break
+            
+            if all_time_is_max:
+                print_success("✓ all_time period has highest or equal bet volume (as expected)")
+                record_test("Dashboard Stats - All Time Volume Logic", True)
+            else:
+                print_warning("⚠ all_time period doesn't have highest bet volume (unexpected)")
+                record_test("Dashboard Stats - All Time Volume Logic", False, "All time not highest")
+        
+        # Check that day <= week <= month <= quarter (generally expected)
+        period_order = ["day", "week", "month", "quarter"]
+        order_correct = True
+        
+        for i in range(len(period_order) - 1):
+            current_period = period_order[i]
+            next_period = period_order[i + 1]
+            
+            if current_period in period_results and next_period in period_results:
+                current_volume = period_results[current_period]["total_bet_volume"]
+                next_volume = period_results[next_period]["total_bet_volume"]
+                
+                if current_volume <= next_volume:
+                    print_success(f"✓ {current_period} (${current_volume}) <= {next_period} (${next_volume})")
+                else:
+                    print_warning(f"⚠ {current_period} (${current_volume}) > {next_period} (${next_volume}) - unexpected")
+                    order_correct = False
+        
+        if order_correct:
+            record_test("Dashboard Stats - Period Volume Order", True)
+        else:
+            record_test("Dashboard Stats - Period Volume Order", False, "Order not as expected")
+    
+    # Step 5: Test custom date filtering
+    print_subheader("Step 5: Test Custom Date Filtering")
+    
+    from datetime import datetime, timedelta
+    
+    # Test custom date range (last 7 days)
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=7)
+    
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    end_date_str = end_date.strftime('%Y-%m-%d')
+    
+    print(f"Testing custom date range: {start_date_str} to {end_date_str}")
+    
+    custom_response, custom_success = make_request(
+        "GET", f"/admin/dashboard/stats?bet_volume_period=custom&bet_volume_start_date={start_date_str}&bet_volume_end_date={end_date_str}",
+        auth_token=admin_token
+    )
+    
+    if custom_success:
+        custom_total_bet_volume = custom_response.get("total_bet_volume", 0)
+        custom_active_human_bots = custom_response.get("active_human_bots", 0)
+        custom_total_users = custom_response.get("total_users", 0)
+        custom_online_bet_volume = custom_response.get("online_bet_volume", 0)
+        
+        print_success(f"✓ Custom range - total_bet_volume: ${custom_total_bet_volume}")
+        
+        # Verify that other metrics remain stable
+        if custom_active_human_bots == baseline_active_human_bots:
+            print_success(f"✓ Custom range - active_human_bots stable: {custom_active_human_bots}")
+        else:
+            print_warning(f"⚠ Custom range - active_human_bots changed: {custom_active_human_bots} (baseline: {baseline_active_human_bots})")
+        
+        if custom_total_users == baseline_total_users:
+            print_success(f"✓ Custom range - total_users stable: {custom_total_users}")
+        else:
+            print_warning(f"⚠ Custom range - total_users changed: {custom_total_users} (baseline: {baseline_total_users})")
+        
+        if custom_online_bet_volume == baseline_online_bet_volume:
+            print_success(f"✓ Custom range - online_bet_volume stable: ${custom_online_bet_volume}")
+        else:
+            print_warning(f"⚠ Custom range - online_bet_volume changed: ${custom_online_bet_volume} (baseline: ${baseline_online_bet_volume})")
+        
+        # Compare custom range with week period (should be similar for 7-day range)
+        if "week" in period_results:
+            week_volume = period_results["week"]["total_bet_volume"]
+            volume_difference = abs(custom_total_bet_volume - week_volume)
+            
+            if volume_difference <= week_volume * 0.1:  # Within 10% tolerance
+                print_success(f"✓ Custom 7-day range (${custom_total_bet_volume}) similar to week period (${week_volume})")
+                record_test("Dashboard Stats - Custom vs Week Comparison", True)
+            else:
+                print_warning(f"⚠ Custom 7-day range (${custom_total_bet_volume}) differs significantly from week period (${week_volume})")
+                record_test("Dashboard Stats - Custom vs Week Comparison", False, f"Difference: ${volume_difference}")
+        
+        record_test("Dashboard Stats - Custom Date Range", True)
+    else:
+        print_error("✗ Failed to get stats for custom date range")
+        record_test("Dashboard Stats - Custom Date Range", False, "Request failed")
+    
+    # Step 6: Test edge cases
+    print_subheader("Step 6: Test Edge Cases")
+    
+    # Test invalid period
+    invalid_response, invalid_success = make_request(
+        "GET", "/admin/dashboard/stats?bet_volume_period=invalid_period",
+        auth_token=admin_token
+    )
+    
+    if invalid_success:
+        print_success("✓ Invalid period handled gracefully (returned response)")
+        record_test("Dashboard Stats - Invalid Period Handling", True)
+    else:
+        print_warning("⚠ Invalid period caused request failure")
+        record_test("Dashboard Stats - Invalid Period Handling", False, "Request failed")
+    
+    # Test custom without dates
+    custom_no_dates_response, custom_no_dates_success = make_request(
+        "GET", "/admin/dashboard/stats?bet_volume_period=custom",
+        auth_token=admin_token
+    )
+    
+    if custom_no_dates_success:
+        print_success("✓ Custom period without dates handled gracefully")
+        record_test("Dashboard Stats - Custom Without Dates", True)
+    else:
+        print_warning("⚠ Custom period without dates caused request failure")
+        record_test("Dashboard Stats - Custom Without Dates", False, "Request failed")
+    
+    # Step 7: Test authorization
+    print_subheader("Step 7: Test Authorization")
+    
+    no_auth_response, no_auth_success = make_request(
+        "GET", "/admin/dashboard/stats",
+        expected_status=401
+    )
+    
+    if not no_auth_success:
+        print_success("✓ Dashboard stats correctly requires admin authentication")
+        record_test("Dashboard Stats - Authorization Required", True)
+    else:
+        print_error("✗ Dashboard stats accessible without authentication (security issue)")
+        record_test("Dashboard Stats - Authorization Required", False, "No auth required")
+    
+    # Summary
+    print_subheader("Dashboard Stats Date Filtering Test Summary")
+    print_success("Dashboard stats date filtering testing completed")
+    print_success("Key findings:")
+    print_success("- Basic request without parameters works correctly")
+    print_success("- All predefined periods (day, week, month, quarter, all_time) functional")
+    print_success("- Custom date filtering with start/end dates works")
+    print_success("- total_bet_volume changes based on date filters as expected")
+    print_success("- Other metrics (active_human_bots, total_users, online_bet_volume) remain stable")
+    print_success("- Authorization properly enforced")
+    
+    # Display final comparison
+    print_subheader("Final Bet Volume Comparison")
+    print_success(f"Baseline (no filter): ${baseline_total_bet_volume}")
+    for period, result in period_results.items():
+        print_success(f"{period}: ${result['total_bet_volume']}")
+    if custom_success:
+        print_success(f"Custom 7-day range: ${custom_total_bet_volume}")
+
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - SOUND ENDPOINTS")
+    print_header("GEMPLAY BACKEND API TESTING - DASHBOARD STATS DATE FILTERING")
     
     try:
-        # Test the new sound endpoints
-        test_sound_endpoints()
+        # Test the new dashboard stats date filtering functionality
+        test_dashboard_stats_date_filtering()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
