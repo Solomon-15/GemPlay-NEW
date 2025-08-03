@@ -162,13 +162,14 @@ export const getGemColor = (gemType) => {
  * This is the main formatter that should be used throughout the app
  * @param {number|Object} betData - Either dollar amount or bet object with gem combination
  * @param {Array} gemPrices - Array of gem prices (optional, will fetch if not provided)
+ * @param {string} userRole - User role for fetching gem prices
  * @returns {Promise<string>} Formatted gem display
  */
-export const formatBetAmountAsGems = async (betData, gemPrices = null) => {
+export const formatBetAmountAsGems = async (betData, gemPrices = null, userRole = null) => {
   try {
     // If no gem prices provided, fetch them
     if (!gemPrices) {
-      gemPrices = await getGemPrices();
+      gemPrices = await getGemPrices(userRole);
     }
     
     // If betData is just a number (dollar amount)
