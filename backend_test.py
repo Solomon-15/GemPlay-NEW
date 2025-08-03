@@ -25737,9 +25737,9 @@ def test_edit_user_modal_security_fix() -> None:
     print_subheader("Step 2: Create Test ADMIN User")
     
     # Generate unique test admin user
-    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
     test_admin_data = {
-        "username": f"testadmin_{random_suffix}",
+        "username": f"tadmin_{random_suffix}",
         "email": f"testadmin_{random_suffix}@test.com",
         "password": "TestAdmin123!",
         "confirm_password": "TestAdmin123!",
