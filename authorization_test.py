@@ -250,7 +250,7 @@ def test_email_verification_resend() -> None:
     # First, register a new user to have an unverified email
     timestamp = int(time.time())
     test_user = {
-        "username": f"unverified_user_{timestamp}",
+        "username": f"unverif{timestamp % 10000}",  # Keep username under 15 chars
         "email": f"unverified_{timestamp}@test.com",
         "password": "testpass123",
         "gender": "male"
