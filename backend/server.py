@@ -9203,7 +9203,12 @@ async def get_games_stats(current_user: User = Depends(get_current_admin)):
         )
 
 @api_router.get("/admin/dashboard/stats", response_model=dict)
-async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
+async def get_dashboard_stats(
+    current_user: User = Depends(get_current_admin),
+    bet_volume_period: str = None,
+    bet_volume_start_date: str = None,
+    bet_volume_end_date: str = None
+):
     """Get comprehensive dashboard statistics for admin panel."""
     try:
         active_human_bots_count = await db.human_bots.count_documents({"is_active": True})
@@ -9247,10 +9252,47 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
-        # Get total bet volume (sum of all bet_amount from all games)
+        # Build date filter for bet volume calculations
+        bet_volume_filter = {}
+        if bet_volume_period or (bet_volume_start_date and bet_volume_end_date):
+            if bet_volume_period == 'custom' and bet_volume_start_date and bet_volume_end_date:
+                # Custom date range
+                start_datetime = datetime.strptime(bet_volume_start_date, '%Y-%m-%d')
+                end_datetime = datetime.strptime(bet_volume_end_date, '%Y-%m-%d') + timedelta(days=1)
+                bet_volume_filter["created_at"] = {"$gte": start_datetime, "$lt": end_datetime}
+            elif bet_volume_period and bet_volume_period != 'all_time':
+                # Predefined period
+                now = datetime.utcnow()
+                if bet_volume_period == 'day':
+                    start_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                elif bet_volume_period == 'week':
+                    start_date = now - timedelta(days=7)
+                elif bet_volume_period == 'month':
+                    start_date = now - timedelta(days=30)
+                elif bet_volume_period == 'quarter':
+                    start_date = now - timedelta(days=90)
+                elif bet_volume_period == 'half_year':
+                    start_date = now - timedelta(days=182)
+                elif bet_volume_period == 'year_1':
+                    start_date = now - timedelta(days=365)
+                elif bet_volume_period == 'year_2':
+                    start_date = now - timedelta(days=730)
+                elif bet_volume_period == 'year_3':
+                    start_date = now - timedelta(days=1095)
+                else:
+                    start_date = None
+                
+                if start_date:
+                    bet_volume_filter["created_at"] = {"$gte": start_date}
+        
+        # Get total bet volume with date filter
         total_bet_volume_pipeline = [
+            {"$match": bet_volume_filter} if bet_volume_filter else {"$match": {}},
             {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
         ]
+        if not bet_volume_filter:
+            total_bet_volume_pipeline = total_bet_volume_pipeline[1:]  # Remove empty match stage
+            
         total_bet_volume_result = await db.games.aggregate(total_bet_volume_pipeline).to_list(1)
         total_bet_volume = total_bet_volume_result[0]["total"] if total_bet_volume_result else 0
         
