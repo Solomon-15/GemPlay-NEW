@@ -19396,11 +19396,44 @@ async def bulk_create_human_bots(
         created_bots = []
         failed_bots = []
         
+        # Get all existing bot names to avoid duplicates
+        existing_bots = await db.human_bots.find({}, {"name": 1}).to_list(None)
+        existing_names = {bot["name"] for bot in existing_bots}
+        used_names_in_batch = set()  # Track names used in current batch
+        
         for i in range(bulk_data.count):
             try:
                 # Use individual bot data if provided, otherwise generate
                 bot_data = bulk_data.bots[i] if bulk_data.bots and i < len(bulk_data.bots) else {}
-                bot_name = bot_data.get('name') if bot_data.get('name') else await generate_unique_human_bot_name()
+                
+                if bot_data.get('name'):
+                    bot_name = bot_data.get('name')
+                    # Check if name is already used in this batch or exists in DB
+                    if bot_name in existing_names or bot_name in used_names_in_batch:
+                        # Generate unique name with suffix
+                        counter = 1
+                        original_name = bot_name
+                        while bot_name in existing_names or bot_name in used_names_in_batch:
+                            bot_name = f"{original_name}_{counter}"
+                            counter += 1
+                else:
+                    # Generate unique name from available names
+                    available_names = [name for name in HUMAN_BOT_NAMES 
+                                     if name not in existing_names and name not in used_names_in_batch]
+                    
+                    if available_names:
+                        bot_name = random.choice(available_names)
+                    else:
+                        # If all names are used, fall back to Player format
+                        counter = 1
+                        while True:
+                            bot_name = f"Player{counter}"
+                            if bot_name not in existing_names and bot_name not in used_names_in_batch:
+                                break
+                            counter += 1
+                
+                # Add name to used names set
+                used_names_in_batch.add(bot_name)
                 bot_gender = bot_data.get('gender', 'male')
                 
                 min_bet = random.randint(int(bulk_data.min_bet_range[0]), int(bulk_data.min_bet_range[1]))
