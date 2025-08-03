@@ -6522,17 +6522,9 @@ class RegularBotSystem:
     
     async def validate_bet_creation(self, bot_id: str):
         """Полная валидация перед созданием ставки."""
-        global_check = await self.check_global_limits("REGULAR")
-        if not global_check["passed"]:
-            return global_check
-        
         individual_check = await self.check_individual_limits(bot_id)
         if not individual_check["passed"]:
             return individual_check
-        
-        timing_check = await self.check_timing_constraints(bot_id)
-        if not timing_check["passed"]:
-            return timing_check
         
         return {"passed": True, "reason": None}
     
