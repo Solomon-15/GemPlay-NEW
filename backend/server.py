@@ -1683,7 +1683,7 @@ async def maintain_all_bots_active_bets():
                         profit_strategy=bot_doc.get("profit_strategy", "balanced")
                     )
                     
-                    await maintain_bot_active_bets_count(bot_id, cycle_games)
+
                     
             except Exception as e:
                 logger.error(f"Error maintaining bets for bot {bot_doc.get('name', 'unknown')}: {e}")
