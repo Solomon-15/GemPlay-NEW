@@ -175,8 +175,41 @@ def get_user_online_status(user_data):
 
 class UserRole(str, Enum):
     USER = "USER"
+    MODERATOR = "MODERATOR"  
     ADMIN = "ADMIN"
     SUPER_ADMIN = "SUPER_ADMIN"
+
+class Permission(str, Enum):
+    # User permissions
+    VIEW_PROFILE = "VIEW_PROFILE"
+    EDIT_PROFILE = "EDIT_PROFILE"
+    
+    # Game permissions  
+    CREATE_GAME = "CREATE_GAME"
+    JOIN_GAME = "JOIN_GAME"
+    VIEW_GAMES = "VIEW_GAMES"
+    
+    # Admin permissions
+    VIEW_ADMIN_PANEL = "VIEW_ADMIN_PANEL"
+    MANAGE_USERS = "MANAGE_USERS"
+    MANAGE_GAMES = "MANAGE_GAMES"
+    MANAGE_BOTS = "MANAGE_BOTS"
+    MANAGE_ECONOMY = "MANAGE_ECONOMY"
+    VIEW_ANALYTICS = "VIEW_ANALYTICS"
+    MANAGE_SOUNDS = "MANAGE_SOUNDS"
+    
+    # Super admin permissions
+    MANAGE_ROLES = "MANAGE_ROLES"
+    SYSTEM_SETTINGS = "SYSTEM_SETTINGS"
+
+class Role(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    description: str
+    permissions: List[Permission] = []
+    is_system_role: bool = False  # System roles cannot be deleted
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class BotType(str, Enum):
     REGULAR = "REGULAR"
