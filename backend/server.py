@@ -14863,35 +14863,7 @@ async def get_next_bot_in_queue() -> dict:
         logger.error(f"Error getting next bot in queue: {e}")
         return {"message": "Error occurred", "bot": None}
 
-@api_router.get("/admin/bots/settings", response_model=dict)
-async def get_bot_global_settings_old(current_user: User = Depends(get_current_admin)):
-    """Get bot settings."""
-    try:
-        settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        
-        if not settings:
-            # Create default settings if not exists
-            default_settings = {
-                "id": "bot_settings",
-                "max_active_bets_regular": 1000000,
-                "max_active_bets_human": 1000000,
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-            await db.bot_settings.insert_one(default_settings)
-            settings = default_settings
-        
-        return {
-            "max_active_bets_regular": settings.get("max_active_bets_regular", 1000000),
-            "max_active_bets_human": settings.get("max_active_bets_human", 1000000)
-        }
-        
-    except Exception as e:
-        logger.error(f"Error fetching bot settings: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch bot settings"
-        )
+
 
 @api_router.get("/admin/bots/queue-status", response_model=dict)
 async def get_bots_queue_status(current_user: User = Depends(get_current_admin)):
