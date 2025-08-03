@@ -410,25 +410,7 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const updateBotSettings = async (newSettings) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/admin/bots/settings`, newSettings, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setBotSettings(newSettings);
-      setIsGlobalSettingsOpen(false);
-      showSuccessRU(response.data.message);
-      
-      await fetchActiveBetsStats();
-      
-      await fetchBotsList();
-    } catch (error) {
-      console.error('Ошибка обновления настроек:', error);
-      showErrorRU('Ошибка при обновлении настроек');
-    }
-  };
+
 
   const toggleAllBots = async () => {
     try {
