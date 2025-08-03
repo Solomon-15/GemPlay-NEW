@@ -810,6 +810,11 @@ const UserManagement = ({ user: currentUser }) => {
     try {
       setEditUserLoading(true);
       
+      if (!selectedUser || !selectedUser.id) {
+        showErrorRU('Ошибка: пользователь не выбран');
+        return;
+      }
+      
       if (!editForm.username.trim()) {
         showErrorRU('Введите имя пользователя');
         return;
