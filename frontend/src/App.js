@@ -36,6 +36,11 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
   const [loading, setLoading] = useState(false);
   const [usernameError, setUsernameError] = useState(''); // Для ошибок валидации имени
 
+  // Show password reset form
+  if (authView === 'password-reset') {
+    return <PasswordReset onBackToLogin={() => setAuthView('login')} />;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
