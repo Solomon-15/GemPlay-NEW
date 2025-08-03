@@ -6995,79 +6995,16 @@ async def maintain_bot_active_bets(game: Game):
         
         bot_obj = Bot(**bot)
         
-        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
-        max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
-        
-        bot_type = bot.get("bot_type", "REGULAR")
-        
-        if bot_type == "REGULAR":
-            current_global_bets = await db.games.count_documents({
-                "creator_type": "bot",
-                "is_bot_game": True,
-                "status": "WAITING",
-                "$or": [
-                    {"bot_type": "REGULAR"},
-                    {"metadata.bot_type": "REGULAR"}
-                ]
-            })
-            max_limit = max_active_bets_regular
-        else:  # HUMAN
-            current_global_bets = await db.games.count_documents({
-                "creator_type": "bot",
-                "is_bot_game": True,
-                "status": "WAITING",
-                "$or": [
-                    {"bot_type": "HUMAN"},
-                    {"metadata.bot_type": "HUMAN"}
-                ]
-            })
-            max_limit = max_active_bets_human
-        
-        if current_global_bets >= max_limit:
-            logger.info(f"🚫 Global limit reached, skipping bet creation for {bot_type} bot {bot_id}: {current_global_bets}/{max_limit}")
-            return
-        
+        # Проверяем только индивидуальный лимит бота
         current_active_bets = await db.games.count_documents({
             "creator_id": bot_id,
             "status": "WAITING"
         })
         
-        target_active_bets = bot_obj.cycle_games
-        
         individual_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
         if current_active_bets >= individual_limit:
             logger.info(f"🚫 Individual limit reached for bot {bot_id}: {current_active_bets}/{individual_limit}")
             return
-        
-        needed_bets = min(target_active_bets - current_active_bets, individual_limit - current_active_bets)
-        
-        if needed_bets > 0:
-            logger.info(f"🎯 Bot {bot_id} needs {needed_bets} new bets to maintain {target_active_bets} active bets")
-            
-            for _ in range(needed_bets):
-                try:
-                    await bot_create_game_automatically(bot_obj)
-                    logger.info(f"✅ Created new bet for bot {bot_id}")
-                except Exception as e:
-                    logger.error(f"Failed to create new bet for bot {bot_id}: {e}")
-            
-            new_active_count = await db.games.count_documents({
-                "creator_id": bot_id,
-                "status": "WAITING"
-            })
-            
-            await db.bots.update_one(
-                {"id": bot_id},
-                {
-                    "$set": {
-                        "active_bets": new_active_count,
-                        "updated_at": datetime.utcnow()
-                    }
-                }
-            )
-            
-            logger.info(f"🎯 Bot {bot_id} now has {new_active_count} active bets (target: {target_active_bets})")
         
     except Exception as e:
         logger.error(f"Error maintaining bot active bets: {e}")
