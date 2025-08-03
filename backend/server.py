@@ -3468,9 +3468,254 @@ async def update_profile(
             detail="Failed to update profile"
         )
 
+# ===== NEW ENHANCED AUTHENTICATION ENDPOINTS =====
+
+@auth_router.post("/request-password-reset", response_model=dict)
+async def request_password_reset(request: PasswordResetRequest):
+    """Request password reset via email"""
+    try:
+        # Find user by email
+        user = await db.users.find_one({"email": request.email})
+        
+        # Don't reveal if user exists for security
+        if not user:
+            return {"message": "Если email существует, письмо для сброса пароля отправлено"}
+        
+        # Generate reset token
+        reset_token = generate_secure_token(32)
+        reset_expires = datetime.utcnow() + timedelta(hours=1)
+        
+        # Store hashed token in database
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {
+                "password_reset_token": hash_token(reset_token),
+                "password_reset_expires": reset_expires,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        # Send reset email
+        email_sent = send_password_reset_email(
+            user["email"], 
+            user["username"], 
+            reset_token
+        )
+        
+        if email_sent:
+            logger.info(f"Password reset email sent to {request.email}")
+        else:
+            logger.warning(f"Failed to send password reset email to {request.email}")
+            
+        return {"message": "Если email существует, письмо для сброса пароля отправлено"}
+        
+    except Exception as e:
+        logger.error(f"Error requesting password reset: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process password reset request"
+        )
+
+@auth_router.post("/reset-password", response_model=dict)
+async def reset_password(request: PasswordResetConfirm):
+    """Reset password using token"""
+    try:
+        # Hash the provided token
+        token_hash = hash_token(request.token)
+        
+        # Find user with matching token
+        user = await db.users.find_one({
+            "password_reset_token": token_hash,
+            "password_reset_expires": {"$gt": datetime.utcnow()}
+        })
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Недействительный или истёкший токен сброса пароля"
+            )
+        
+        # Hash new password
+        new_password_hash = pwd_context.hash(request.new_password)
+        
+        # Update user password and clear reset token
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {
+                "password_hash": new_password_hash,
+                "password_reset_token": None,
+                "password_reset_expires": None,
+                "last_password_change": datetime.utcnow(),
+                "failed_login_attempts": 0,  # Reset failed attempts
+                "locked_until": None,  # Clear any lockout
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        logger.info(f"Password reset successfully for user {user['username']}")
+        
+        return {"message": "Пароль успешно изменён"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error resetting password: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset password"
+        )
+
+@auth_router.post("/resend-verification", response_model=dict)
+async def resend_email_verification(request: ResendVerificationRequest):
+    """Resend email verification"""
+    try:
+        # Find user by email
+        user = await db.users.find_one({"email": request.email})
+        
+        if not user:
+            # Don't reveal if user exists
+            return {"message": "Если email существует, письмо подтверждения отправлено"}
+        
+        # Check if already verified
+        if user.get("email_verified") and user.get("status") == "ACTIVE":
+            return {"message": "Email уже подтверждён"}
+        
+        # Generate new verification token
+        verification_token = generate_secure_token(32)
+        
+        # Update user with new token
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {
+                "email_verification_token": verification_token,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        
+        # Send verification email
+        email_sent = send_verification_email(
+            user["email"],
+            user["username"], 
+            verification_token
+        )
+        
+        if email_sent:
+            logger.info(f"Verification email resent to {request.email}")
+        else:
+            logger.warning(f"Failed to resend verification email to {request.email}")
+            
+        return {"message": "Если email существует, письмо подтверждения отправлено"}
+        
+    except Exception as e:
+        logger.error(f"Error resending verification: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to resend verification email"
+        )
+
+@auth_router.post("/google-oauth", response_model=Token)
+async def google_oauth_login(request: GoogleOAuthRequest):
+    """Login/Register with Google OAuth"""
+    try:
+        # Verify Google token
+        google_user = verify_google_token(request.token)
+        if not google_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid Google token"
+            )
+        
+        # Check if user exists by Google ID or email
+        user = await db.users.find_one({
+            "$or": [
+                {"google_id": google_user["google_id"]},
+                {"email": google_user["email"]}
+            ]
+        })
+        
+        current_time = datetime.utcnow()
+        
+        if user:
+            # User exists, update Google ID if needed
+            update_fields = {
+                "last_login": current_time,
+                "updated_at": current_time
+            }
+            
+            if not user.get("google_id"):
+                update_fields["google_id"] = google_user["google_id"]
+                update_fields["oauth_provider"] = "google"
+            
+            # Ensure user is active if logging in via Google
+            if user.get("status") == "EMAIL_PENDING":
+                update_fields["status"] = "ACTIVE"
+                update_fields["email_verified"] = True
+                
+            await db.users.update_one(
+                {"id": user["id"]},
+                {"$set": update_fields}
+            )
+            
+            # Get updated user
+            user = await db.users.find_one({"id": user["id"]})
+            
+        else:
+            # Create new user from Google data
+            username = google_user.get("given_name", google_user["email"].split("@")[0])
+            
+            # Ensure unique username
+            base_username = sanitize_username(username)
+            final_username = base_username
+            counter = 1
+            
+            while await db.users.find_one({"username": final_username}):
+                final_username = f"{base_username}{counter}"
+                counter += 1
+            
+            # Create new user
+            new_user = User(
+                username=final_username,
+                email=google_user["email"],
+                password_hash="",  # No password for OAuth users
+                google_id=google_user["google_id"],
+                oauth_provider="google",
+                email_verified=True,
+                status=UserStatus.ACTIVE,
+                created_at=current_time,
+                updated_at=current_time,
+                last_login=current_time
+            )
+            
+            await db.users.insert_one(new_user.dict())
+            user = new_user.dict()
+            
+            logger.info(f"New Google OAuth user created: {final_username}")
+        
+        # Create tokens
+        access_token = create_access_token({"sub": user["id"]})
+        refresh_token_str = create_refresh_token({"sub": user["id"]})
+        
+        logger.info(f"Google OAuth login successful for user {user['username']}")
+        
+        return Token(
+            access_token=access_token,
+            token_type="bearer",
+            refresh_token=refresh_token_str,
+            user=UserResponse(**user)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error with Google OAuth: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to process Google OAuth"
+        )
+
 # ==============================================================================
 # ECONOMY API ROUTES
-# ==============================================================================
+# =============================================================================
 
 @api_router.get("/gems/definitions", response_model=List[GemDefinition])
 async def get_gem_definitions():
