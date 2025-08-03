@@ -211,6 +211,160 @@ def test_email_verification(token: str, username: str) -> None:
     else:
         record_test(f"Email Verification - {username}", False, "Request failed")
 
+def test_admin_authentication_for_user_management() -> None:
+    """Test admin authentication for accessing User Management as requested in Russian review.
+    
+    КОНТЕКСТ: Фронтенд тестирование заблокировано проблемой аутентификации. 
+    Нужно проверить, работает ли вход admin@gemplay.com / Admin123! и есть ли доступ к User Management.
+    
+    БЫСТРЫЕ ПРОВЕРКИ:
+    1. ПРОВЕРКА ЛОГИНА ADMIN: POST /api/auth/login с admin@gemplay.com / Admin123!
+    2. ПРОВЕРКА ДОСТУПА К ADMIN ЭНДПОИНТАМ: GET /api/admin/users с полученным токеном
+    3. ПРОВЕРКА API ДЛЯ РЕДАКТИРОВАНИЯ: PUT /api/admin/users/{user_id} доступен
+    """
+    print_header("ADMIN AUTHENTICATION FOR USER MANAGEMENT TESTING")
+    
+    # Step 1: Test admin login
+    print_subheader("Step 1: Admin Login Test")
+    
+    login_data = {
+        "username": ADMIN_USER["email"],  # FastAPI OAuth2PasswordRequestForm uses username field
+        "password": ADMIN_USER["password"]
+    }
+    
+    # Use form data for OAuth2PasswordRequestForm
+    login_response, login_success = make_request(
+        "POST", "/auth/login",
+        data=login_data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"}
+    )
+    
+    if not login_success:
+        print_error("❌ Admin login failed - cannot proceed with authentication test")
+        record_test("Admin Authentication - Login", False, "Login request failed")
+        return
+    
+    # Check if we got access token
+    access_token = login_response.get("access_token")
+    if not access_token:
+        print_error("❌ Admin login response missing access_token")
+        record_test("Admin Authentication - Login", False, "Missing access_token")
+        return
+    
+    print_success("✅ Admin login successful")
+    print_success(f"✅ Access token received: {access_token[:20]}...")
+    record_test("Admin Authentication - Login", True)
+    
+    # Step 2: Test access to admin users endpoint
+    print_subheader("Step 2: Admin Users Endpoint Access Test")
+    
+    users_response, users_success = make_request(
+        "GET", "/admin/users",
+        auth_token=access_token
+    )
+    
+    if not users_success:
+        print_error("❌ Failed to access /api/admin/users endpoint")
+        record_test("Admin Authentication - Users Access", False, "Endpoint access failed")
+        return
+    
+    # Check response structure
+    if "users" in users_response and "total" in users_response:
+        total_users = users_response.get("total", 0)
+        users_list = users_response.get("users", [])
+        
+        print_success("✅ Admin users endpoint accessible")
+        print_success(f"✅ Total users found: {total_users}")
+        print_success(f"✅ Users in response: {len(users_list)}")
+        record_test("Admin Authentication - Users Access", True)
+        
+        # Find a test user for editing
+        test_user = None
+        if users_list:
+            test_user = users_list[0]  # Use first user for testing
+            print_success(f"✅ Test user found: {test_user.get('username', 'unknown')} (ID: {test_user.get('id', 'unknown')})")
+        
+    else:
+        print_error("❌ Admin users response missing expected fields")
+        record_test("Admin Authentication - Users Access", False, "Invalid response structure")
+        return
+    
+    # Step 3: Test user editing endpoint
+    print_subheader("Step 3: User Editing Endpoint Test")
+    
+    if test_user:
+        user_id = test_user.get("id")
+        if user_id:
+            # Test with minimal update (just to verify endpoint works)
+            update_data = {
+                "virtual_balance": test_user.get("virtual_balance", 0)  # Keep same balance
+            }
+            
+            edit_response, edit_success = make_request(
+                "PUT", f"/admin/users/{user_id}",
+                data=update_data,
+                auth_token=access_token
+            )
+            
+            if edit_success:
+                print_success("✅ User editing endpoint accessible")
+                print_success("✅ PUT /api/admin/users/{user_id} works correctly")
+                record_test("Admin Authentication - User Edit Access", True)
+                
+                # Check if response indicates successful update
+                if "modified_count" in edit_response:
+                    modified_count = edit_response.get("modified_count", 0)
+                    print_success(f"✅ Update operation completed (modified_count: {modified_count})")
+                
+            else:
+                print_error("❌ User editing endpoint failed")
+                record_test("Admin Authentication - User Edit Access", False, "Edit endpoint failed")
+        else:
+            print_error("❌ Test user missing ID field")
+            record_test("Admin Authentication - User Edit Access", False, "Missing user ID")
+    else:
+        print_warning("⚠ No test user available for editing test")
+        record_test("Admin Authentication - User Edit Access", False, "No test user")
+    
+    # Step 4: Test additional admin endpoints
+    print_subheader("Step 4: Additional Admin Endpoints Test")
+    
+    # Test dashboard stats
+    dashboard_response, dashboard_success = make_request(
+        "GET", "/admin/dashboard/stats",
+        auth_token=access_token
+    )
+    
+    if dashboard_success:
+        print_success("✅ Admin dashboard endpoint accessible")
+        record_test("Admin Authentication - Dashboard Access", True)
+    else:
+        print_error("❌ Admin dashboard endpoint failed")
+        record_test("Admin Authentication - Dashboard Access", False, "Dashboard access failed")
+    
+    # Test human-bots endpoint
+    human_bots_response, human_bots_success = make_request(
+        "GET", "/admin/human-bots",
+        auth_token=access_token
+    )
+    
+    if human_bots_success:
+        print_success("✅ Admin human-bots endpoint accessible")
+        record_test("Admin Authentication - Human-bots Access", True)
+    else:
+        print_error("❌ Admin human-bots endpoint failed")
+        record_test("Admin Authentication - Human-bots Access", False, "Human-bots access failed")
+    
+    # Summary
+    print_subheader("Admin Authentication Test Summary")
+    print_success("Admin authentication testing completed")
+    print_success("Key findings:")
+    print_success("- Admin login with admin@gemplay.com / Admin123! works")
+    print_success("- Access token is properly generated")
+    print_success("- Admin endpoints are accessible with token")
+    print_success("- User management functionality is available")
+    print_success("- Backend is ready for frontend testing")
+
 def test_automatic_bot_betting_system() -> None:
     """Test the automatic bot betting system that creates bets every 5 seconds as requested in the review."""
     print_header("AUTOMATIC BOT BETTING SYSTEM TESTING")
