@@ -3061,7 +3061,7 @@ async def register(user_data: UserRegistration):
         )
     
     # Create user
-    verification_token = generate_verification_token()
+    verification_token = generate_secure_token(32)
     user = User(
         username=user_data.username,
         email=user_data.email,
@@ -3074,7 +3074,19 @@ async def register(user_data: UserRegistration):
     
     await db.users.insert_one(user.dict())
     
-    # Create email verification record
+    # Send verification email
+    email_sent = send_verification_email(
+        user_data.email,
+        user_data.username,
+        verification_token
+    )
+    
+    if email_sent:
+        logger.info(f"Verification email sent to {user_data.email}")
+    else:
+        logger.warning(f"Failed to send verification email to {user_data.email}")
+    
+    # Create email verification record (keeping existing logic)
     verification = EmailVerification(
         user_id=user.id,
         email=user_data.email,
