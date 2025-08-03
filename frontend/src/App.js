@@ -56,6 +56,13 @@ const LoginForm = ({ onLogin }) => {
         onLogin(response.data.user);
       } else {
         // Register
+        // Валидация имени пользователя перед отправкой
+        const validation = validateUsername(formData.username);
+        if (!validation.isValid) {
+          alert(validation.errors[0]);
+          return;
+        }
+        
         const response = await axios.post(`${API}/auth/register`, {
           username: formData.username,
           email: formData.email,
