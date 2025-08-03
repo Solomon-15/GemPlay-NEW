@@ -25326,7 +25326,7 @@ def test_sound_endpoints() -> None:
         expected_status=401
     )
     
-    if not no_auth_categories_success:
+    if no_auth_categories_success:  # Success means we got the expected 401
         print_success("✓ Categories endpoint correctly requires authentication")
         record_test("Sound Endpoints - Categories Auth", True)
     else:
@@ -25339,7 +25339,7 @@ def test_sound_endpoints() -> None:
         expected_status=401
     )
     
-    if not no_auth_events_success:
+    if no_auth_events_success:  # Success means we got the expected 401
         print_success("✓ Events endpoint correctly requires authentication")
         record_test("Sound Endpoints - Events Auth", True)
     else:
