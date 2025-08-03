@@ -25133,15 +25133,288 @@ def test_human_bot_names_usage_in_creation():
     else:
         print_error("❌ Human-bot names usage has issues that need attention")
 
+def test_sound_endpoints() -> None:
+    """Test the new sound endpoints that were added to fix SoundsAdmin.js errors."""
+    print_header("SOUND ENDPOINTS TESTING")
+    
+    # Step 1: Login as admin user
+    print_subheader("Step 1: Admin Login")
+    admin_token = test_login(ADMIN_USER["email"], ADMIN_USER["password"], "admin")
+    
+    if not admin_token:
+        print_error("Failed to login as admin - cannot proceed with sound endpoints test")
+        record_test("Sound Endpoints - Admin Login", False, "Admin login failed")
+        return
+    
+    print_success(f"Admin logged in successfully")
+    
+    # Step 2: Test GET /api/admin/sounds/categories
+    print_subheader("Step 2: Test GET /api/admin/sounds/categories")
+    
+    categories_response, categories_success = make_request(
+        "GET", "/admin/sounds/categories",
+        auth_token=admin_token
+    )
+    
+    if categories_success:
+        print_success("✓ GET /api/admin/sounds/categories endpoint accessible")
+        
+        # Verify response is a list
+        if isinstance(categories_response, list):
+            print_success(f"✓ Response is a list with {len(categories_response)} categories")
+            
+            # Check expected categories
+            expected_categories = ["GAMING", "UI", "SYSTEM", "BACKGROUND"]
+            missing_categories = [cat for cat in expected_categories if cat not in categories_response]
+            extra_categories = [cat for cat in categories_response if cat not in expected_categories]
+            
+            if not missing_categories:
+                print_success("✓ All expected categories present")
+                record_test("Sound Endpoints - Categories Content", True)
+            else:
+                print_error(f"✗ Missing categories: {missing_categories}")
+                record_test("Sound Endpoints - Categories Content", False, f"Missing: {missing_categories}")
+            
+            if not extra_categories:
+                print_success("✓ No unexpected categories")
+            else:
+                print_warning(f"⚠ Extra categories found: {extra_categories}")
+            
+            print_success(f"Categories returned: {categories_response}")
+            record_test("Sound Endpoints - GET Categories", True)
+        else:
+            print_error(f"✗ Response is not a list: {type(categories_response)}")
+            record_test("Sound Endpoints - GET Categories", False, "Response not a list")
+    else:
+        print_error("✗ GET /api/admin/sounds/categories failed")
+        record_test("Sound Endpoints - GET Categories", False, "Request failed")
+    
+    # Step 3: Test GET /api/admin/sounds/events
+    print_subheader("Step 3: Test GET /api/admin/sounds/events")
+    
+    events_response, events_success = make_request(
+        "GET", "/admin/sounds/events",
+        auth_token=admin_token
+    )
+    
+    if events_success:
+        print_success("✓ GET /api/admin/sounds/events endpoint accessible")
+        
+        # Verify response is a list
+        if isinstance(events_response, list):
+            print_success(f"✓ Response is a list with {len(events_response)} events")
+            
+            # Check some expected events
+            expected_events = [
+                "bet_created", "bet_joined", "game_started", "move_selected",
+                "game_won", "game_lost", "game_draw", "gems_received",
+                "commission_paid", "notification_received", "ui_click",
+                "ui_hover", "ui_success", "ui_error", "system_startup",
+                "system_shutdown", "background_music"
+            ]
+            
+            missing_events = [event for event in expected_events if event not in events_response]
+            
+            if not missing_events:
+                print_success("✓ All expected events present")
+                record_test("Sound Endpoints - Events Content", True)
+            else:
+                print_error(f"✗ Missing events: {missing_events}")
+                record_test("Sound Endpoints - Events Content", False, f"Missing: {missing_events}")
+            
+            print_success(f"Events returned: {len(events_response)} total")
+            print_success(f"Sample events: {events_response[:5]}...")
+            record_test("Sound Endpoints - GET Events", True)
+        else:
+            print_error(f"✗ Response is not a list: {type(events_response)}")
+            record_test("Sound Endpoints - GET Events", False, "Response not a list")
+    else:
+        print_error("✗ GET /api/admin/sounds/events failed")
+        record_test("Sound Endpoints - GET Events", False, "Request failed")
+    
+    # Step 4: Test existing sound endpoints still work
+    print_subheader("Step 4: Test Existing Sound Endpoints Still Work")
+    
+    # Test GET /api/admin/sounds
+    sounds_response, sounds_success = make_request(
+        "GET", "/admin/sounds",
+        auth_token=admin_token
+    )
+    
+    if sounds_success:
+        print_success("✓ GET /api/admin/sounds endpoint still works")
+        
+        if isinstance(sounds_response, list):
+            print_success(f"✓ Returns list of {len(sounds_response)} sounds")
+            
+            # Check structure of first sound if any exist
+            if sounds_response:
+                first_sound = sounds_response[0]
+                expected_fields = ["id", "name", "category", "event_trigger", "game_type", 
+                                 "is_enabled", "priority", "volume", "delay", "can_repeat",
+                                 "has_audio_file", "is_default", "created_at", "updated_at"]
+                
+                missing_fields = [field for field in expected_fields if field not in first_sound]
+                
+                if not missing_fields:
+                    print_success("✓ Sound response structure correct")
+                    record_test("Sound Endpoints - Existing Sounds Structure", True)
+                else:
+                    print_error(f"✗ Missing fields in sound response: {missing_fields}")
+                    record_test("Sound Endpoints - Existing Sounds Structure", False, f"Missing: {missing_fields}")
+            
+            record_test("Sound Endpoints - GET Sounds", True)
+        else:
+            print_error(f"✗ Response is not a list: {type(sounds_response)}")
+            record_test("Sound Endpoints - GET Sounds", False, "Response not a list")
+    else:
+        print_error("✗ GET /api/admin/sounds failed")
+        record_test("Sound Endpoints - GET Sounds", False, "Request failed")
+    
+    # Step 5: Test creating a sound (to verify POST still works)
+    print_subheader("Step 5: Test Creating a Sound")
+    
+    test_sound_data = {
+        "name": f"Test_Sound_{int(time.time())}",
+        "category": "UI",
+        "event_trigger": "ui_click",
+        "game_type": "ALL",
+        "is_enabled": True,
+        "priority": 5,
+        "volume": 0.7,
+        "delay": 0,
+        "can_repeat": True
+    }
+    
+    create_sound_response, create_sound_success = make_request(
+        "POST", "/admin/sounds",
+        data=test_sound_data,
+        auth_token=admin_token
+    )
+    
+    if create_sound_success:
+        print_success("✓ POST /api/admin/sounds still works")
+        
+        created_sound_id = create_sound_response.get("id")
+        if created_sound_id:
+            print_success(f"✓ Sound created with ID: {created_sound_id}")
+            record_test("Sound Endpoints - POST Sound", True)
+            
+            # Clean up - delete the test sound
+            delete_response, delete_success = make_request(
+                "DELETE", f"/admin/sounds/{created_sound_id}",
+                auth_token=admin_token
+            )
+            
+            if delete_success:
+                print_success("✓ Test sound cleaned up successfully")
+            else:
+                print_warning("⚠ Failed to clean up test sound")
+        else:
+            print_error("✗ Created sound missing ID")
+            record_test("Sound Endpoints - POST Sound", False, "Missing ID")
+    else:
+        print_error("✗ POST /api/admin/sounds failed")
+        record_test("Sound Endpoints - POST Sound", False, "Request failed")
+    
+    # Step 6: Test authorization (try without admin token)
+    print_subheader("Step 6: Test Authorization")
+    
+    # Test categories endpoint without auth
+    no_auth_categories_response, no_auth_categories_success = make_request(
+        "GET", "/admin/sounds/categories",
+        expected_status=401
+    )
+    
+    if not no_auth_categories_success:
+        print_success("✓ Categories endpoint correctly requires authentication")
+        record_test("Sound Endpoints - Categories Auth", True)
+    else:
+        print_error("✗ Categories endpoint accessible without authentication")
+        record_test("Sound Endpoints - Categories Auth", False, "No auth required")
+    
+    # Test events endpoint without auth
+    no_auth_events_response, no_auth_events_success = make_request(
+        "GET", "/admin/sounds/events",
+        expected_status=401
+    )
+    
+    if not no_auth_events_success:
+        print_success("✓ Events endpoint correctly requires authentication")
+        record_test("Sound Endpoints - Events Auth", True)
+    else:
+        print_error("✗ Events endpoint accessible without authentication")
+        record_test("Sound Endpoints - Events Auth", False, "No auth required")
+    
+    # Summary
+    print_subheader("Sound Endpoints Test Summary")
+    sound_tests = [test for test in test_results["tests"] if "Sound Endpoints" in test["name"]]
+    passed_tests = sum(1 for test in sound_tests if test["passed"])
+    total_tests = len(sound_tests)
+    success_rate = (passed_tests / total_tests) * 100 if total_tests > 0 else 0
+    
+    print_success(f"Sound Endpoints Tests: {passed_tests}/{total_tests} ({success_rate:.1f}%)")
+    
+    if success_rate >= 80:
+        print_success("✅ Sound endpoints are working correctly")
+        print_success("✅ New endpoints added successfully without breaking existing functionality")
+    else:
+        print_error("❌ Sound endpoints have issues that need attention")
+
+def print_summary() -> None:
+    """Print test summary."""
+    print_header("TEST SUMMARY")
+    
+    total = test_results["total"]
+    passed = test_results["passed"]
+    failed = test_results["failed"]
+    success_rate = (passed / total) * 100 if total > 0 else 0
+    
+    print_success(f"Total tests: {total}")
+    print_success(f"Passed: {passed}")
+    if failed > 0:
+        print_error(f"Failed: {failed}")
+    else:
+        print_success(f"Failed: {failed}")
+    print_success(f"Success rate: {success_rate:.1f}%")
+    
+    if failed > 0:
+        print_subheader("Failed Tests:")
+        for test in test_results["tests"]:
+            if not test["passed"]:
+                print_error(f"- {test['name']}: {test['details']}")
+
+def test_login(email: str, password: str, user_type: str = "user") -> Optional[str]:
+    """Test user login and return token."""
+    print_subheader(f"Testing {user_type.title()} Login")
+    
+    login_data = {
+        "email": email,
+        "password": password
+    }
+    
+    response, success = make_request("POST", "/auth/login", data=login_data)
+    
+    if success:
+        if "access_token" in response:
+            print_success(f"{user_type.title()} login successful")
+            record_test(f"{user_type.title()} Login", True)
+            return response["access_token"]
+        else:
+            print_error(f"{user_type.title()} login response missing access_token")
+            record_test(f"{user_type.title()} Login", False, "Missing access_token")
+    else:
+        print_error(f"{user_type.title()} login failed")
+        record_test(f"{user_type.title()} Login", False, "Login request failed")
+    
+    return None
+
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - HUMAN-BOT NAMES MANAGEMENT")
+    print_header("GEMPLAY BACKEND API TESTING - SOUND ENDPOINTS")
     
     try:
-        # Test Human-bot names management API endpoints
-        test_human_bot_names_management_apis()
-        
-        # Test that updated names are used in Human-bot creation
-        test_human_bot_names_usage_in_creation()
+        # Test the new sound endpoints
+        test_sound_endpoints()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
