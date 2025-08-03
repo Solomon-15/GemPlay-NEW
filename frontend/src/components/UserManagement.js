@@ -2711,7 +2711,10 @@ const UserManagement = ({ user: currentUser }) => {
                 )}
               </button>
               <button
-                onClick={() => setIsCreateUserModalOpen(false)}
+                onClick={() => {
+                  setIsCreateUserModalOpen(false);
+                  setCreateUsernameError(''); // Сбрасываем ошибку
+                }}
                 disabled={createUserLoading}
                 className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
               >
