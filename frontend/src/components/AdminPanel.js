@@ -405,7 +405,7 @@ const AdminPanel = ({ user, onClose }) => {
 
   // Add Role Management for SUPER_ADMIN
   if (user && user.role === 'SUPER_ADMIN') {
-    navItems.push({
+    adminSections.push({
       id: 'roles',
       title: 'Роли и права',
       icon: (
