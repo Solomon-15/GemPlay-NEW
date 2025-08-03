@@ -61,7 +61,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 # Enhanced JWT settings with stronger security
-SECRET_KEY = secrets.token_urlsafe(64)  # Generate secure random key
+SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-super-secret-jwt-key-change-in-production')  # Use consistent key from environment
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7  # 7 days for refresh tokens
