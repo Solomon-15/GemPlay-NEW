@@ -478,6 +478,18 @@ const AdminPanel = ({ user, onClose }) => {
             }
             color="text-green-400"
           />
+
+          {/* 7. Активных ставок пользователей */}
+          <StatCard
+            title="Активных ставок пользователей"
+            value={formatNumber(dashboardStats.active_user_bets)}
+            icon={
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 4v12l-4-2-4 2V4M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            }
+            color="text-emerald-400"
+          />
               
           {/* 2. Активных Human ботов */}
           <StatCard
