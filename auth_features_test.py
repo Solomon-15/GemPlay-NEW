@@ -36,7 +36,7 @@ TEST_USERS = {
     },
     "admin": {
         "email": "admin@gemplay.com", 
-        "password": "admin123",
+        "password": "Admin123!",
         "username": "admin"
     }
 }
