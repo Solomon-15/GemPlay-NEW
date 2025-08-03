@@ -1065,6 +1065,8 @@ const AdminPanel = ({ user, onClose }) => {
         return <NotificationDemo />;
       case 'monitoring':
         return <SecurityMonitoring />;
+      case 'roles':
+        return <RoleManagement user={user} />;
       default:
         return <DashboardContent />;
     }
