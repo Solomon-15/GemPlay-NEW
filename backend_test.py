@@ -25838,8 +25838,8 @@ def test_edit_user_modal_security_fix() -> None:
         expected_status=403
     )
     
-    if not admin_assign_super_success:
-        # Check if we got the expected 403 error
+    if admin_assign_super_success:
+        # We got the expected 403 error - this is good!
         if "detail" in admin_assign_super_response:
             error_message = admin_assign_super_response["detail"]
             if "Only SUPER_ADMIN can assign SUPER_ADMIN role" in error_message:
