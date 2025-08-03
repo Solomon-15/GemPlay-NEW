@@ -209,10 +209,16 @@ const RoleManagement = ({ user }) => {
     setUserEditForm({
       username: userToEdit.username || '',
       email: userToEdit.email || '',
+      password: '', // Пароль не загружаем из соображений безопасности
+      confirm_password: '',
       role: userToEdit.role || 'USER',
-      virtual_balance: userToEdit.virtual_balance || 0,
-      status: userToEdit.status || 'ACTIVE'
+      gender: userToEdit.gender || 'male',
+      virtual_balance: userToEdit.virtual_balance || 1000,
+      daily_limit_max: userToEdit.daily_limit_max || 1000,
+      status: userToEdit.status || 'ACTIVE',
+      ban_reason: userToEdit.ban_reason || ''
     });
+    setEditUsernameError(''); // Сбрасываем ошибки
     setIsEditUserModalOpen(true);
   };
 
