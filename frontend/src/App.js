@@ -92,11 +92,6 @@ const LoginForm = ({ onLogin, setUser }) => {
           localStorage.setItem('refresh_token', loginResponse.data.refresh_token);
         }
         onLogin(loginResponse.data.user);
-        
-        // Принудительная перезагрузка страницы
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
       }
     } catch (error) {
       alert(error.response?.data?.detail || 'An error occurred');
