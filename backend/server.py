@@ -6461,8 +6461,6 @@ class RegularBotSystem:
         if not settings:
             default_settings = {
                 "id": "bot_settings",
-                "max_active_bets_regular": 1000000,
-                "max_active_bets_human": 1000000,
                 "auto_queue_activation": True,
                 "priority_system_enabled": True,
                 "default_pause_between_games": 5,
