@@ -33,6 +33,14 @@ const AdminPanel = ({ user, onClose }) => {
   const [dashboardStats, setDashboardStats] = useState({});
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(null);
+  
+  // States for bet volume filters
+  const [betVolumeFilters, setBetVolumeFilters] = useState({
+    period: 'all_time',
+    startDate: '',
+    endDate: ''
+  });
+  const [showBetVolumeFilters, setShowBetVolumeFilters] = useState(false);
   const { showSuccessRU, showErrorRU } = useNotifications();
   const { confirm, confirmationModal } = useConfirmation();
 
