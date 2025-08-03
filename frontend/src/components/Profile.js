@@ -38,6 +38,7 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
   });
   const [updating, setUpdating] = useState(false);
   const [showFullId, setShowFullId] = useState(false);
+  const [usernameError, setUsernameError] = useState(''); // Для ошибок валидации имени
   
   // Sync editForm with user data
   useEffect(() => {
