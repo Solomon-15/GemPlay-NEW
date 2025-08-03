@@ -224,6 +224,8 @@ const RoleManagement = ({ user }) => {
 
   const handleSaveUser = async () => {
     try {
+      setEditUserLoading(true);
+      
       if (!userEditForm.username.trim()) {
         showError('Введите имя пользователя');
         return;
@@ -234,7 +236,35 @@ const RoleManagement = ({ user }) => {
         return;
       }
 
-      // Проверка прав доступа - только SUPER_ADMIN может назначать любые роли
+      // Валидация имени пользователя
+      if (userEditForm.username && userEditForm.username.trim()) {
+        const validation = validateUsername(userEditForm.username);
+        if (!validation.isValid) {
+          showError(validation.errors[0]);
+          return;
+        }
+      }
+
+      // Проверка паролей если они введены
+      if (userEditForm.password || userEditForm.confirm_password) {
+        if (userEditForm.password !== userEditForm.confirm_password) {
+          showError('Пароли не совпадают');
+          return;
+        }
+        
+        if (userEditForm.password.length < 8) {
+          showError('Пароль должен содержать минимум 8 символов');
+          return;
+        }
+      }
+
+      // Проверка причины блокировки
+      if (userEditForm.status === 'BANNED' && !userEditForm.ban_reason.trim()) {
+        showError('Причина блокировки обязательна при статусе "заблокирован"');
+        return;
+      }
+
+      // Проверка прав доступа - только SUPER_ADMIN может назначать роль SUPER_ADMIN
       if (user?.role !== 'SUPER_ADMIN') {
         if (userEditForm.role === 'SUPER_ADMIN') {
           showError('Только SUPER_ADMIN может назначать роль SUPER_ADMIN');
@@ -242,18 +272,42 @@ const RoleManagement = ({ user }) => {
         }
       }
 
+      // Подготавливаем данные для отправки
+      const updateData = {
+        username: userEditForm.username,
+        email: userEditForm.email,
+        role: userEditForm.role,
+        gender: userEditForm.gender,
+        virtual_balance: userEditForm.virtual_balance,
+        daily_limit_max: userEditForm.daily_limit_max,
+        status: userEditForm.status
+      };
+
+      // Добавляем пароль только если он введен
+      if (userEditForm.password) {
+        updateData.password = userEditForm.password;
+      }
+
+      // Добавляем причину блокировки если статус BANNED
+      if (userEditForm.status === 'BANNED') {
+        updateData.ban_reason = userEditForm.ban_reason;
+      }
+
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/admin/users/${editingUser.id}`, userEditForm, {
+      await axios.put(`${API}/admin/users/${editingUser.id}`, updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       showSuccess('Пользователь успешно обновлен');
       setIsEditUserModalOpen(false);
       setEditingUser(null);
+      setEditUsernameError('');
       fetchUsers(); // Обновляем список пользователей
     } catch (error) {
       console.error('Error updating user:', error);
       showError(error.response?.data?.detail || 'Ошибка обновления пользователя');
+    } finally {
+      setEditUserLoading(false);
     }
   };
 
