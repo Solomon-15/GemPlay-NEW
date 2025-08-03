@@ -360,20 +360,7 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const fetchBotSettings = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/settings`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setBotSettings({
-        max_active_bets_regular: response.data.max_active_bets_regular,
-        max_active_bets_human: response.data.max_active_bets_human
-      });
-    } catch (error) {
-      console.error('Ошибка загрузки настроек ботов:', error);
-    }
-  };
+
 
   const fetchActiveBetsStats = async () => {
     try {
