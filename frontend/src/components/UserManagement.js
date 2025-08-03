@@ -1744,7 +1744,7 @@ const UserManagement = ({ user: currentUser }) => {
   );
 
   // Create user function
-  const handleCreateUser = async () => {
+  const handleCreateUser = async (e) => {
     try {
       // Validate form
       if (!createUserForm.username.trim()) {
