@@ -473,6 +473,16 @@ const UserManagement = ({ user: currentUser }) => {
 
   const handleSubmitEdit = async (e) => {
     e.preventDefault();
+    
+    // Валидация имени пользователя
+    if (editForm.username && editForm.username.trim()) {
+      const validation = validateUsername(editForm.username);
+      if (!validation.isValid) {
+        showErrorRU(validation.errors[0]);
+        return;
+      }
+    }
+    
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/admin/users/${selectedUser.id}`, editForm, {
@@ -480,11 +490,12 @@ const UserManagement = ({ user: currentUser }) => {
       });
       
       setIsEditModalOpen(false);
+      setEditUsernameError(''); // Сбрасываем ошибку
       fetchUsers();
       showSuccessRU('Пользователь обновлен');
     } catch (error) {
       console.error('Ошибка обновления пользователя:', error);
-      showErrorRU('Ошибка при обновлении пользователя');
+      showErrorRU(error.response?.data?.detail || 'Ошибка при обновлении пользователя');
     }
   };
 
