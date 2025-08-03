@@ -140,7 +140,10 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
 
   // Handle form input changes
   const handleUsernameChange = useCallback((e) => {
-    setEditForm(prev => ({ ...prev, username: e.target.value }));
+    const processedValue = handleUsernameInput(e.target.value, 
+      (value) => setEditForm(prev => ({ ...prev, username: value })),
+      setUsernameError
+    );
   }, []);
 
   const handleGenderChange = useCallback((e) => {
