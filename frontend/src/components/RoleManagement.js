@@ -294,7 +294,7 @@ const RoleManagement = ({ user }) => {
       }
 
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/admin/users/${editingUser.id}`, updateData, {
+      await axios.put(`${API}/api/admin/users/${editingUser.id}`, updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
