@@ -709,9 +709,20 @@ class UserLogin(BaseModel):
     password: str
 
 class UpdateProfileRequest(BaseModel):
-    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    username: Optional[str] = Field(None, min_length=3, max_length=15)
     gender: Optional[str] = Field(None, pattern=r'^(male|female)$')
     timezone_offset: Optional[int] = Field(None, ge=-12, le=12)
+    
+    # Валидатор для username
+    @field_validator('username')
+    @classmethod
+    def validate_username_field(cls, v):
+        if v is not None:
+            is_valid, errors = validate_username(v)
+            if not is_valid:
+                raise ValueError(f"Недопустимое имя пользователя: {'; '.join(errors)}")
+            return sanitize_username(v)
+        return v
 
 class EmailVerificationRequest(BaseModel):
     token: str
