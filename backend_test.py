@@ -25783,9 +25783,9 @@ def test_edit_user_modal_security_fix() -> None:
     # Step 4: Create a regular USER to test role assignments on
     print_subheader("Step 4: Create Test USER for Role Assignment")
     
-    random_suffix2 = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    random_suffix2 = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
     test_user_data = {
-        "username": f"testuser_{random_suffix2}",
+        "username": f"tuser_{random_suffix2}",
         "email": f"testuser_{random_suffix2}@test.com",
         "password": "TestUser123!",
         "gender": "female"
