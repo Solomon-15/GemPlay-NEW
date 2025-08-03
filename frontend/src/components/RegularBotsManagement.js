@@ -114,7 +114,7 @@ const RegularBotsManagement = () => {
     errors: []
   });
 
-  const [activeTab, setActiveTab] = useState('bots'); // 'bots' или 'settings'
+  const [activeTab, setActiveTab] = useState('bots'); // только 'bots'
 
   const { showSuccessRU, showErrorRU } = useNotifications();
   
