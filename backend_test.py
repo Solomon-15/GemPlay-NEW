@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-Bot Settings Endpoints Testing - Russian Review
-Focus: Testing bot settings endpoints for global bot configuration
-Requirements: Check /api/admin/bot-settings, /api/admin/bot-settings-v2, /api/admin/bots/settings
+Sound Endpoints Testing - Russian Review
+Focus: Testing new sound endpoints that were added to fix SoundsAdmin.js errors
+Requirements: 
+1. GET /api/admin/sounds/categories - should return list of sound categories
+2. GET /api/admin/sounds/events - should return list of events for sounds
+3. Verify other sound endpoints still work after adding new ones
 """
 
 import requests
