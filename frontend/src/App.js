@@ -53,6 +53,12 @@ const LoginForm = ({ onLogin }) => {
           console.log('🔄 Refresh token saved');
         }
         console.log('💾 Token saved to localStorage');
+        
+        // Принудительно устанавливаем пользователя в состояние
+        console.log('🚀 Setting user from login response:', response.data.user);
+        setUser(response.data.user);
+        console.log('✅ User state set directly after login');
+        
         onLogin(response.data.user);
       } else {
         // Register
