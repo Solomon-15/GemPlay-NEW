@@ -3,6 +3,7 @@ import axios from 'axios';
 import { formatCurrencyWithSymbol, formatDollarAmount, validateDailyLimit, ECONOMY_CONFIG } from '../utils/economy';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 import { useNotifications } from './NotificationContext';
+import { handleUsernameInput, validateUsername } from '../utils/usernameValidation';
 import HeaderPortfolio from './HeaderPortfolio';
 import NotificationSettings from './NotificationSettings';
 
