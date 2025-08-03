@@ -819,16 +819,8 @@ const RegularBotsManagement = () => {
     let error = null;
     if (isNaN(limit) || limit < 1) {
       error = 'Лимит должен быть больше 0';
-    } else if (limit > 50) {
-      error = 'Лимит не может быть больше 50';
-    } else {
-      const otherBotsTotal = botsList
-        .filter(bot => bot.id !== botId)
-        .reduce((sum, bot) => sum + (bot.max_individual_bets || 12), 0);
-      
-      if (otherBotsTotal + limit > globalMaxBets) {
-        error = `Превышен глобальный лимит ${globalMaxBets}. Доступно: ${globalMaxBets - otherBotsTotal}`;
-      }
+    } else if (limit > 66) {
+      error = 'Лимит не может быть больше 66';
     }
     
     setEditingBotLimits(prev => ({
