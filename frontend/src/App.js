@@ -135,14 +135,30 @@ const LoginForm = ({ onLogin }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <>
-              <input
-                type="text"
-                placeholder="Username"
-                value={formData.username}
-                onChange={(e) => setFormData({...formData, username: e.target.value})}
-                className="w-full px-4 py-3 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
-                required
-              />
+              <div>
+                <input
+                  type="text"
+                  placeholder="Username"
+                  value={formData.username}
+                  onChange={(e) => {
+                    handleUsernameInput(e.target.value,
+                      (value) => setFormData({...formData, username: value}),
+                      setUsernameError
+                    );
+                  }}
+                  className={`w-full px-4 py-3 bg-surface-sidebar border rounded-lg text-white font-roboto ${
+                    usernameError 
+                      ? 'border-red-500' 
+                      : 'border-border-primary'
+                  }`}
+                  required
+                />
+                {usernameError && (
+                  <p className="mt-1 text-xs text-red-400 font-roboto">
+                    {usernameError}
+                  </p>
+                )}
+              </div>
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData({...formData, gender: e.target.value})}
