@@ -15971,7 +15971,7 @@ async def update_individual_bot_settings(
                 )
                 generated_bets = len(new_bets)
                 
-                await maintain_bot_active_bets_count(bot_id, updated_bot.get("cycle_length", 12))
+
                 
             except Exception as e:
                 logger.warning(f"Failed to auto-recalculate bets for bot {bot_id}: {e}")
