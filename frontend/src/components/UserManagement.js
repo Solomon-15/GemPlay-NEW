@@ -924,10 +924,24 @@ const UserManagement = ({ user: currentUser }) => {
             <input
               type="text"
               value={editForm.username}
-              onChange={(e) => setEditForm({...editForm, username: e.target.value})}
-              className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+              onChange={(e) => {
+                handleUsernameInput(e.target.value,
+                  (value) => setEditForm({...editForm, username: value}),
+                  setEditUsernameError
+                );
+              }}
+              className={`w-full px-3 py-2 bg-surface-sidebar border rounded-lg text-white font-roboto ${
+                editUsernameError 
+                  ? 'border-red-500' 
+                  : 'border-border-primary'
+              }`}
               required
             />
+            {editUsernameError && (
+              <p className="text-xs text-red-400 mt-1">
+                {editUsernameError}
+              </p>
+            )}
           </div>
 
           <div>
