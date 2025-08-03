@@ -1598,7 +1598,14 @@ const UserManagement = ({ user: currentUser }) => {
     try {
       // Validate form
       if (!createUserForm.username.trim()) {
-        alert('Имя пользователя обязательно');
+        showErrorRU('Имя пользователя обязательно');
+        return;
+      }
+      
+      // Валидация имени пользователя
+      const validation = validateUsername(createUserForm.username);
+      if (!validation.isValid) {
+        showErrorRU(validation.errors[0]);
         return;
       }
       
