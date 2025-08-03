@@ -97,8 +97,8 @@ def generate_unique_username():
 
 def generate_unique_email():
     """Generate unique email for testing."""
-    timestamp = str(int(time.time()))[-6:]
-    random_suffix = ''.join(random.choices(string.ascii_lowercase, k=4))
+    timestamp = str(int(time.time()))[-4:]
+    random_suffix = ''.join(random.choices(string.ascii_lowercase, k=3))
     return f"test{timestamp}{random_suffix}@example.com"
 
 def create_test_user(role: str = "USER") -> Tuple[Dict, str]:
