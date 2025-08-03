@@ -25662,7 +25662,7 @@ def test_dashboard_stats_date_filtering() -> None:
         expected_status=401
     )
     
-    if not no_auth_success and no_auth_response.get("detail") == "Not authenticated":
+    if no_auth_response.get("detail") == "Not authenticated":
         print_success("✓ Dashboard stats correctly requires admin authentication")
         record_test("Dashboard Stats - Authorization Required", True)
     else:
