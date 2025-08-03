@@ -19482,8 +19482,21 @@ async def bulk_create_human_bots(
                 bet_limit_amount = random.randint(bulk_data.bet_limit_amount_range[0], bulk_data.bet_limit_amount_range[1])
                 bet_limit_amount = float(bet_limit_amount)  # Convert to float for database storage
                 
+                # Validate bot data before creation
+                if not bot_name or len(bot_name.strip()) == 0:
+                    raise ValueError(f"Bot name is empty or invalid at index {i}")
+                
+                if min_bet >= max_bet:
+                    raise ValueError(f"min_bet ({min_bet}) must be less than max_bet ({max_bet}) for bot {bot_name}")
+                
+                if bot_min_delay >= bot_max_delay:
+                    raise ValueError(f"bot_min_delay ({bot_min_delay}) must be less than bot_max_delay ({bot_max_delay}) for bot {bot_name}")
+                
+                if player_min_delay >= player_max_delay:
+                    raise ValueError(f"player_min_delay ({player_min_delay}) must be less than player_max_delay ({player_max_delay}) for bot {bot_name}")
+                
                 human_bot = HumanBot(
-                    name=bot_name,
+                    name=bot_name.strip(),
                     character=bulk_data.character,
                     gender=bot_gender,
                     min_bet=float(min_bet),  # Преобразуем в float для базы, но значение будет целым
@@ -19500,13 +19513,16 @@ async def bulk_create_human_bots(
                     # Add individual settings from bulk data
                     can_play_with_other_bots=bulk_data.can_play_with_other_bots,
                     can_play_with_players=bulk_data.can_play_with_players,
-                    is_bet_creation_active=bulk_data.is_bet_creation_active,
+                    is_bet_creation_active=getattr(bulk_data, 'is_bet_creation_active', True),
                     bot_min_delay_seconds=bot_min_delay,
                     bot_max_delay_seconds=bot_max_delay,
                     player_min_delay_seconds=player_min_delay,
                     player_max_delay_seconds=player_max_delay,
                     max_concurrent_games=max_concurrent_games
                 )
+                
+                # Log bot creation details for debugging
+                logger.info(f"Creating human bot {i+1}/{bulk_data.count}: {bot_name} ({bot_gender}) - Min:{min_bet}, Max:{max_bet}, BetLimit:{bet_limit}")
                 
                 await db.human_bots.insert_one(human_bot.dict())
                 created_bots.append({
@@ -19518,10 +19534,12 @@ async def bulk_create_human_bots(
                 })
                 
             except Exception as e:
+                error_msg = str(e)
+                logger.error(f"Failed to create human bot {i+1}: {error_msg}")
                 failed_bots.append({
                     "index": i,
-                    "name": bot_data.get('name', f'Bot_{i}') if bulk_data.bots and i < len(bulk_data.bots) else f'Bot_{i}',
-                    "error": str(e)
+                    "name": bot_data.get('name', bot_name if 'bot_name' in locals() else f'Bot_{i}'),
+                    "error": error_msg
                 })
         
         # Log admin action
