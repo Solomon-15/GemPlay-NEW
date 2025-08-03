@@ -25,7 +25,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // Login Component
-const LoginForm = ({ onLogin, setUser }) => {
+const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
