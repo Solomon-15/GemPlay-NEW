@@ -298,13 +298,31 @@ class User(BaseModel):
     daily_limit_used: float = 0.0
     daily_limit_max: float = 1000.0
     last_daily_reset: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Email verification
     email_verification_token: Optional[str] = None
     email_verified: bool = False
+    
+    # Password reset
+    password_reset_token: Optional[str] = None
+    password_reset_expires: Optional[datetime] = None
+    
+    # OAuth providers
+    google_id: Optional[str] = None
+    oauth_provider: Optional[str] = None  # 'google', etc.
+    
+    # Security
+    last_password_change: Optional[datetime] = None
+    failed_login_attempts: int = 0
+    locked_until: Optional[datetime] = None
+    
     ban_reason: Optional[str] = None
     ban_until: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     last_login: Optional[datetime] = None
+    last_login_ip: Optional[str] = None
+    
     total_games_played: int = 0
     total_games_won: int = 0
     total_amount_wagered: float = 0.0
