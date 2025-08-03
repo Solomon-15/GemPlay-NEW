@@ -670,10 +670,10 @@ def test_updated_login_endpoint() -> None:
     # Test 1: Login and check IP tracking
     print_subheader("Test 7.1: Login with IP Tracking")
     
-    # Use admin credentials for testing
+    # Use the correct admin credentials
     login_data = {
         "email": "admin@gemplay.com",
-        "password": "admin123"
+        "password": "Admin123!"  # Use the correct password from .env
     }
     
     # Add custom headers to simulate different IP
