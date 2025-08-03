@@ -42,14 +42,21 @@ const RoleManagement = ({ user }) => {
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('roles'); // 'roles' or 'users'
   
-  // User edit form state
+  // User edit form state - копируем все поля из "Создать пользователя"
   const [userEditForm, setUserEditForm] = useState({
     username: '',
     email: '',
+    password: '',
+    confirm_password: '',
     role: 'USER',
-    virtual_balance: 0,
-    status: 'ACTIVE'
+    gender: 'male',
+    virtual_balance: 1000,
+    daily_limit_max: 1000,
+    status: 'ACTIVE',
+    ban_reason: ''
   });
+  const [editUserLoading, setEditUserLoading] = useState(false);
+  const [editUsernameError, setEditUsernameError] = useState('');
   
   const { showSuccess, showError } = useNotifications();
 
