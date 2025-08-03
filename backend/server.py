@@ -690,10 +690,19 @@ class AddBalanceRequest(BaseModel):
 # ==============================================================================
 
 class UserRegistration(BaseModel):
-    username: str
+    username: str = Field(..., min_length=3, max_length=15)
     email: EmailStr
     password: str
     gender: str = "male"
+    
+    # Валидатор для username
+    @field_validator('username')
+    @classmethod
+    def validate_username_field(cls, v):
+        is_valid, errors = validate_username(v)
+        if not is_valid:
+            raise ValueError(f"Недопустимое имя пользователя: {'; '.join(errors)}")
+        return sanitize_username(v)
 
 class UserLogin(BaseModel):
     email: EmailStr
