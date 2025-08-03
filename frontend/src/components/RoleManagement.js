@@ -76,25 +76,42 @@ const RoleManagement = ({ user }) => {
           name: 'SUPER_ADMIN',
           description: ROLE_DESCRIPTIONS.SUPER_ADMIN,
           permissions: Object.keys(PERMISSION_DESCRIPTIONS),
-          is_system_role: true, 
+          is_system_role: true,
           users_count: 0
         }
       ];
 
-      // Получаем количество пользователей для каждой роли
-      const usersResponse = await axios.get(`${API}/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const users = usersResponse.data.users || [];
-      systemRoles.forEach(role => {
-        role.users_count = users.filter(user => user.role === role.name).length;
-      });
+      // Пытаемся получить количество пользователей для каждой роли
+      try {
+        const usersResponse = await axios.get(`${API}/admin/users?limit=1000`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        const users = usersResponse.data.users || [];
+        systemRoles.forEach(role => {
+          role.users_count = users.filter(user => user.role === role.name).length;
+        });
+        
+        console.log('✅ Роли загружены с подсчетом пользователей');
+      } catch (userCountError) {
+        console.warn('⚠️ Не удалось получить количество пользователей для ролей:', userCountError.response?.data?.detail || userCountError.message);
+        // Продолжаем работать без подсчета пользователей
+      }
 
       setRoles(systemRoles);
+      console.log('✅ Роли успешно установлены:', systemRoles.length);
+      
     } catch (error) {
-      console.error('Error fetching roles:', error);
-      showError('Ошибка загрузки ролей');
+      console.error('❌ Ошибка загрузки ролей:', error);
+      
+      // Более детальная обработка ошибок
+      if (error.response?.status === 403) {
+        showError('Недостаточно прав для просмотра ролей. Требуется роль SUPER_ADMIN.');
+      } else if (error.response?.status === 401) {
+        showError('Необходима авторизация. Пожалуйста, войдите в систему снова.');
+      } else {
+        showError(`Ошибка загрузки ролей: ${error.response?.data?.detail || error.message || 'Неизвестная ошибка'}`);
+      }
     } finally {
       setLoading(false);
     }
