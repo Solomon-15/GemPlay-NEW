@@ -10343,13 +10343,7 @@ async def update_user(
             {"$set": update_fields}
         )
         
-        if result.modified_count == 0:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No changes were made"
-            )
-        
-        # Log admin action
+        # Always log admin action even if no changes
         admin_log = AdminLog(
             admin_id=current_user.id,
             action="UPDATE_USER",
@@ -10359,7 +10353,10 @@ async def update_user(
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        return {"message": "User updated successfully", "modified_count": result.modified_count}
+        if result.modified_count == 0:
+            return {"message": "No changes were made, but user data is up to date", "modified_count": 0}
+        else:
+            return {"message": "User updated successfully", "modified_count": result.modified_count}
         
     except HTTPException:
         raise
