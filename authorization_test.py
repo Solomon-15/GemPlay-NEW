@@ -585,7 +585,7 @@ def test_new_user_model_fields() -> None:
     
     timestamp = int(time.time())
     test_user = {
-        "username": f"newfields_test_{timestamp}",
+        "username": f"newfield{timestamp % 10000}",  # Keep username under 15 chars
         "email": f"newfields_{timestamp}@test.com",
         "password": "testpass123",
         "gender": "female"
