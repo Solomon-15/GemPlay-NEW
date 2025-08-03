@@ -73,6 +73,8 @@ const UserManagement = ({ user: currentUser }) => {
     ban_reason: ''
   });
   const [createUserLoading, setCreateUserLoading] = useState(false);
+  const [createUsernameError, setCreateUsernameError] = useState(''); // Ошибка валидации при создании
+  const [editUsernameError, setEditUsernameError] = useState(''); // Ошибка валидации при редактировании
   
   // Edit form
   const [editForm, setEditForm] = useState({
