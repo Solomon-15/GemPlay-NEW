@@ -285,8 +285,8 @@ function App() {
       }
     } else {
       console.log('🔒 No token found in localStorage');
+      setLoading(false); // Устанавливаем loading false если токена нет
     }
-    setLoading(false);
   };
 
   useEffect(() => {
