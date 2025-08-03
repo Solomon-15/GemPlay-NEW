@@ -293,6 +293,10 @@ function App() {
               localStorage.setItem('refresh_token', refreshResponse.data.refresh_token);
             }
             setUser(refreshResponse.data.user);
+            
+            // Initialize sound manager with user role
+            soundManager.initializeSounds(refreshResponse.data.user.role);
+            
             setLoading(false); // Устанавливаем loading false только после успешного обновления токена
             return; // Exit early, we're good now
           } catch (refreshError) {
