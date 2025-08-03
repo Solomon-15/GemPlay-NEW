@@ -157,7 +157,7 @@ async def migrate_usernames():
     except Exception as e:
         logger.error(f"Критическая ошибка миграции: {e}")
     finally:
-        await client.close()
+        client.close()
 
 async def check_usernames_status():
     """Проверяет статус имён пользователей без изменений"""
