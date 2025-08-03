@@ -69,7 +69,7 @@ const RoleManagement = ({ user }) => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/users?limit=100`, {
+      const response = await axios.get(`${API}/api/admin/users?limit=100`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
