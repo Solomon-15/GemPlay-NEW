@@ -10313,7 +10313,7 @@ async def update_user(
             update_fields["email"] = user_data["email"]
         if "role" in user_data:
             # Role-based restrictions: only SUPER_ADMIN can assign SUPER_ADMIN role
-            if user_data["role"] == "SUPER_ADMIN" and current_user.role != "SUPER_ADMIN":
+            if user_data["role"] == "SUPER_ADMIN" and current_user.role != UserRole.SUPER_ADMIN:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Only SUPER_ADMIN can assign SUPER_ADMIN role"
