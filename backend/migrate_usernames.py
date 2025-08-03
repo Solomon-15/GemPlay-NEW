@@ -222,7 +222,7 @@ async def check_usernames_status():
     except Exception as e:
         logger.error(f"Ошибка проверки статуса: {e}")
     finally:
-        await client.close()
+        client.close()
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "check":
