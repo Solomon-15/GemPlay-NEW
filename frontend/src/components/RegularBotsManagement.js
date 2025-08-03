@@ -50,10 +50,6 @@ const RegularBotsManagement = () => {
   
   const [editingBotLimits, setEditingBotLimits] = useState({}); // {botId: {limit: value, saving: false}}
   const [botLimitsValidation, setBotLimitsValidation] = useState({});
-  const [globalMaxBets, setGlobalMaxBets] = useState(50);
-  
-  const [priorityType, setPriorityType] = useState('order'); // 'order' или 'manual'
-  const [updatingPriority, setUpdatingPriority] = useState(null); // ID бота для которого обновляется приоритет
 
   const [isProfitAccumulatorsModalOpen, setIsProfitAccumulatorsModalOpen] = useState(false);
   const [profitAccumulators, setProfitAccumulators] = useState([]);
