@@ -32,7 +32,7 @@ const RegularBotsManagement = () => {
   const [allBotsEnabled, setAllBotsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isGlobalSettingsOpen, setIsGlobalSettingsOpen] = useState(false); // Удалить эту строку и весь связанный функционал
+
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedBot, setSelectedBot] = useState(null);
   const [editingBot, setEditingBot] = useState(null);
