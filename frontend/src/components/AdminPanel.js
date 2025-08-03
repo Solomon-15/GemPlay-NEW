@@ -95,7 +95,7 @@ const AdminPanel = ({ user, onClose }) => {
     return () => {
       axios.interceptors.response.eject(interceptor);
     };
-  }, []);
+  }, [betVolumeFilters]); // Re-fetch when bet volume filters change
 
   const handleTokenExpired = () => {
     console.log('🔒 AdminPanel: Token expired, cleaning up and closing');
