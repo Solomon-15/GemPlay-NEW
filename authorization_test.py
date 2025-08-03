@@ -377,7 +377,7 @@ def test_enhanced_login_security() -> None:
     # Create a test user for lockout testing
     timestamp = int(time.time())
     test_user = {
-        "username": f"lockout_test_{timestamp}",
+        "username": f"lockout{timestamp % 10000}",  # Keep username under 15 chars
         "email": f"lockout_test_{timestamp}@test.com",
         "password": "correctpass123",
         "gender": "male"
