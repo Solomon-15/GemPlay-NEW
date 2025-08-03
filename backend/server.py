@@ -202,13 +202,7 @@ class BotSettings(BaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-# Bot Settings Request model
-class BotSettingsRequest(BaseModel):
-    globalMaxActiveBets: int = Field(ge=1, le=200)
-    globalMaxHumanBots: int = Field(ge=1, le=1000)  # Увеличен лимит до 1000
-    paginationSize: int = Field(ge=5, le=50)
-    autoActivateFromQueue: bool = True
-    priorityType: str = Field(default="order")  # 'order' or 'manual'
+
 
 # Interface Settings model
 class InterfaceSettings(BaseModel):
