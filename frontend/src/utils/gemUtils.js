@@ -11,11 +11,18 @@ let cacheTimestamp = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Fetch gem prices from admin panel
+ * Fetch gem prices from admin endpoint (admin only)
+ * @param {string} userRole - User role (ADMIN, SUPER_ADMIN, etc.)
  * @returns {Promise<Array>} Array of gem objects with prices
  */
-export const fetchGemPrices = async () => {
+export const fetchGemPrices = async (userRole = null) => {
   try {
+    // Only admin users can access gem prices
+    if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
+      console.log('Non-admin user, returning empty gem prices');
+      return [];
+    }
+
     const token = localStorage.getItem('token');
     const response = await axios.get(`${API}/admin/gems`, {
       headers: { Authorization: `Bearer ${token}` }
