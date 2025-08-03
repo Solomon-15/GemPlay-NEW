@@ -858,24 +858,26 @@ const UserManagement = ({ user: currentUser }) => {
 
       // Подготавливаем данные для отправки
       const updateData = {
-        username: editForm.username,
-        email: editForm.email,
+        username: editForm.username.trim(),
+        email: editForm.email.trim(),
         role: editForm.role,
         gender: editForm.gender,
-        virtual_balance: editForm.virtual_balance,
-        daily_limit_max: editForm.daily_limit_max,
+        virtual_balance: Number(editForm.virtual_balance),
+        daily_limit_max: Number(editForm.daily_limit_max),
         status: editForm.status
       };
 
       // Добавляем пароль только если он введен
-      if (editForm.password) {
-        updateData.password = editForm.password;
+      if (editForm.password && editForm.password.trim()) {
+        updateData.password = editForm.password.trim();
       }
 
       // Добавляем причину блокировки если статус BANNED
-      if (editForm.status === 'BANNED') {
-        updateData.ban_reason = editForm.ban_reason;
+      if (editForm.status === 'BANNED' && editForm.ban_reason.trim()) {
+        updateData.ban_reason = editForm.ban_reason.trim();
       }
+
+      console.log('Sending update data:', updateData); // Для отладки
 
       const token = localStorage.getItem('token');
       await axios.put(`${API}/admin/users/${selectedUser.id}`, updateData, {
