@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import axios from "axios";
+import { handleUsernameInput, validateUsername } from "./utils/usernameValidation";
 import Sidebar from "./components/Sidebar";
 import Lobby from "./components/Lobby";
 import MyBets from "./components/MyBets";
