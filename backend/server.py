@@ -6474,39 +6474,7 @@ class RegularBotSystem:
     # ==========================================================================
     # ==========================================================================
     
-    async def check_global_limits(self, bot_type: str = "REGULAR"):
-        """Проверка глобальных лимитов системы."""
-        settings = await self.get_global_settings()
-        
-        if bot_type == "REGULAR":
-            max_limit = settings.get("max_active_bets_regular", 50)
-            current_bets = await self.db.games.count_documents({
-                "creator_type": "bot",
-                "is_bot_game": True,
-                "status": "WAITING",
-                "$or": [
-                    {"bot_type": "REGULAR"},
-                    {"metadata.bot_type": "REGULAR"}
-                ]
-            })
-        else:  # HUMAN
-            max_limit = settings.get("max_active_bets_human", 30)
-            current_bets = await self.db.games.count_documents({
-                "creator_type": "bot",
-                "is_bot_game": True,
-                "status": "WAITING",
-                "$or": [
-                    {"bot_type": "HUMAN"},
-                    {"metadata.bot_type": "HUMAN"}
-                ]
-            })
-        
-        return {
-            "passed": current_bets < max_limit,
-            "current": current_bets,
-            "max": max_limit,
-            "reason": f"Global limit reached: {current_bets}/{max_limit}" if current_bets >= max_limit else None
-        }
+
     
     async def check_individual_limits(self, bot_id: str):
         """Проверка индивидуальных лимитов бота."""
