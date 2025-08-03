@@ -37,6 +37,7 @@ const UserManagement = ({ user: currentUser }) => {
   const pagination = usePagination(1, 20);
   
   // Modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isBanModalOpen, setIsBanModalOpen] = useState(false);
   const [isGemsModalOpen, setIsGemsModalOpen] = useState(false);
   const [isBetsModalOpen, setIsBetsModalOpen] = useState(false);
