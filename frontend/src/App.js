@@ -68,6 +68,9 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
         setUser(response.data.user);
         onLogin(response.data.user);
         
+        // Initialize sound manager with user role
+        soundManager.initializeSounds(response.data.user.role);
+        
         // Принудительно перезагружаем страницу для обновления состояния
         console.log('🔄 Forcing page reload to update state');
         window.location.reload();
