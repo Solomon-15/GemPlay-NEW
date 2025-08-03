@@ -3152,10 +3152,48 @@ async def verify_email(request: EmailVerificationRequest):
     return {"message": "Email verified successfully"}
 
 @auth_router.post("/login", response_model=Token)
-async def login(user_credentials: UserLogin):
-    """Login user."""
+async def login(user_credentials: UserLogin, request: Request):
+    """Login user with enhanced security"""
+    current_time = datetime.utcnow()
+    client_ip = get_client_ip(request)
+    
+    # Find user
     user = await db.users.find_one({"email": user_credentials.email})
-    if not user or not verify_password(user_credentials.password, user["password_hash"]):
+    
+    # Track login attempt
+    if user:
+        # Check account lockout
+        if check_account_lockout(user):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Account is temporarily locked due to too many failed attempts"
+            )
+        
+        # Verify password
+        if not user.get("password_hash") or not verify_password(user_credentials.password, user["password_hash"]):
+            # Increment failed attempts
+            failed_attempts = user.get("failed_login_attempts", 0) + 1
+            update_fields = {
+                "failed_login_attempts": failed_attempts,
+                "updated_at": current_time
+            }
+            
+            # Lock account if too many failures
+            if should_lock_account(failed_attempts):
+                update_fields["locked_until"] = calculate_lockout_time(failed_attempts)
+            
+            await db.users.update_one(
+                {"id": user["id"]},
+                {"$set": update_fields}
+            )
+            
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    else:
+        # User doesn't exist
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
