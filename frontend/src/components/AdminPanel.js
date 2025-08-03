@@ -116,6 +116,16 @@ const AdminPanel = ({ user, onClose }) => {
         return;
       }
       
+      // Prepare params for bet volume filtering
+      let dashboardParams = {};
+      if (betVolumeFilters.period !== 'all_time') {
+        dashboardParams.bet_volume_period = betVolumeFilters.period;
+      }
+      if (betVolumeFilters.startDate && betVolumeFilters.endDate) {
+        dashboardParams.bet_volume_start_date = betVolumeFilters.startDate;
+        dashboardParams.bet_volume_end_date = betVolumeFilters.endDate;
+      }
+      
       const [usersResponse, botsResponse, gamesResponse, dashboardResponse] = await Promise.allSettled([
         axios.get(`${API}/admin/users/stats`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -127,7 +137,8 @@ const AdminPanel = ({ user, onClose }) => {
           headers: { Authorization: `Bearer ${token}` }
         }),
         axios.get(`${API}/admin/dashboard/stats`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+          params: dashboardParams
         })
       ]);
 
