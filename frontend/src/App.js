@@ -59,11 +59,9 @@ const LoginForm = ({ onLogin, setUser }) => {
         setUser(response.data.user);
         onLogin(response.data.user);
         
-        // Принудительно проверяем авторизацию для обновления состояния
-        console.log('🔍 Forcing auth check after login');
-        setTimeout(() => {
-          checkAuthStatus();
-        }, 100);
+        // Принудительно перезагружаем страницу для обновления состояния
+        console.log('🔄 Forcing page reload to update state');
+        window.location.reload();
       } else {
         // Register
         // Валидация имени пользователя перед отправкой
