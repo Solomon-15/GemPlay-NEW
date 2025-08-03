@@ -14937,63 +14937,7 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
             detail="Failed to get bot queue status"
         )
 
-@api_router.post("/admin/bots/settings", response_model=dict)
-async def update_bot_global_settings_old(
-    settings_data: dict,
-    current_user: User = Depends(get_current_admin)
-):
-    """Update bot settings."""
-    try:
-        max_active_bets_regular = settings_data.get("max_active_bets_regular", 1000000)
-        max_active_bets_human = settings_data.get("max_active_bets_human", 1000000)
-        
-        # Validation
-        if max_active_bets_regular < 0 or max_active_bets_regular > 1000000:
-            raise HTTPException(status_code=400, detail="Max active bets for regular bots must be between 0 and 1000000")
-        
-        if max_active_bets_human < 0 or max_active_bets_human > 1000000:
-            raise HTTPException(status_code=400, detail="Max active bets for human bots must be between 0 and 1000000")
-        
-        # Update settings
-        await db.bot_settings.update_one(
-            {"id": "bot_settings"},
-            {
-                "$set": {
-                    "max_active_bets_regular": max_active_bets_regular,
-                    "max_active_bets_human": max_active_bets_human,
-                    "updated_at": datetime.utcnow()
-                }
-            },
-            upsert=True
-        )
-        
-        # Log admin action
-        admin_log = AdminLog(
-            admin_id=current_user.id,
-            action="UPDATE_BOT_SETTINGS",
-            target_type="bot_settings",
-            target_id="bot_settings",
-            details={
-                "max_active_bets_regular": max_active_bets_regular,
-                "max_active_bets_human": max_active_bets_human
-            }
-        )
-        await db.admin_logs.insert_one(admin_log.dict())
-        
-        return {
-            "message": "Настройки ботов обновлены",
-            "max_active_bets_regular": max_active_bets_regular,
-            "max_active_bets_human": max_active_bets_human
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error updating bot settings: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update bot settings"
-        )
+
 
 @api_router.get("/admin/bots/stats/active-bets", response_model=dict)
 async def get_active_bets_stats(current_user: User = Depends(get_current_admin)):
