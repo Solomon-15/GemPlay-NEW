@@ -467,23 +467,7 @@ const UserManagement = ({ user: currentUser }) => {
     }
   };
 
-  const handleEditUser = (user) => {
-    setSelectedUser(user);
-    setEditForm({
-      username: user.username || '',
-      email: user.email || '',
-      password: '', // Пароль не загружаем из соображений безопасности
-      confirm_password: '',
-      role: user.role || 'USER',
-      gender: user.gender || 'male',
-      virtual_balance: user.virtual_balance || 0,
-      daily_limit_max: user.daily_limit_max || 1000,
-      status: user.status || 'ACTIVE',
-      ban_reason: user.ban_reason || ''
-    });
-    setEditUsernameError(''); // Сбрасываем ошибки
-    setIsEditModalOpen(true);
-  };
+
 
   const handleSubmitEdit = async (e) => {
     e.preventDefault();
