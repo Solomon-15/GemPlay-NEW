@@ -2496,7 +2496,10 @@ const UserManagement = ({ user: currentUser }) => {
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-russo text-xl text-white">Создать нового пользователя</h3>
               <button
-                onClick={() => setIsCreateUserModalOpen(false)}
+                onClick={() => {
+                  setIsCreateUserModalOpen(false);
+                  setCreateUsernameError(''); // Сбрасываем ошибку
+                }}
                 className="text-text-secondary hover:text-white"
                 disabled={createUserLoading}
               >
