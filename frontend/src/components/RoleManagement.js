@@ -300,59 +300,142 @@ const RoleManagement = ({ user }) => {
         </button>
       </div>
 
-      {/* Список ролей */}
-      <div className="space-y-4">
-        {roles.map((role, index) => (
-          <div key={index} className="bg-surface-primary rounded-lg p-4 border border-border-primary">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-bold text-white font-rajdhani">
-                    {role.name}
-                  </h3>
-                  {role.is_system_role && (
-                    <span className="px-2 py-1 bg-blue-900/30 text-blue-300 text-xs rounded-md font-roboto">
-                      Системная
-                    </span>
-                  )}
-                  <span className="px-2 py-1 bg-gray-700 text-gray-300 text-xs rounded-md font-roboto">
+      {/* Табы */}
+      <div className="mb-6">
+        <div className="border-b border-border-primary">
+          <nav className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('roles')}
+              className={`py-2 px-1 border-b-2 font-rajdhani font-medium text-sm ${
+                activeTab === 'roles'
+                  ? 'border-accent-primary text-accent-primary'
+                  : 'border-transparent text-text-secondary hover:text-white hover:border-gray-300'
+              }`}
+            >
+              Роли
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`py-2 px-1 border-b-2 font-rajdhani font-medium text-sm ${
+                activeTab === 'users'
+                  ? 'border-accent-primary text-accent-primary'
+                  : 'border-transparent text-text-secondary hover:text-white hover:border-gray-300'
+              }`}
+            >
+              Пользователи
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Содержимое табов */}
+      {activeTab === 'roles' && (
+        <div className="space-y-4">
+          {roles.map((role) => (
+            <div key={role.name} className="bg-surface-primary rounded-lg p-4 border border-border-primary">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-bold text-white font-rajdhani">
+                      {role.name}
+                    </h3>
+                    {role.is_system_role && (
+                      <span className="px-2 py-1 text-xs bg-blue-600 text-white rounded-full font-rajdhani">
+                        Системная
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-text-secondary font-roboto text-sm mb-3">
+                    {role.description}
+                  </p>
+                  
+                  <div className="text-text-secondary font-roboto text-sm mb-2">
                     {role.users_count} пользователей
-                  </span>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-1">
+                    {role.permissions.slice(0, 5).map((permission) => (
+                      <span key={permission} className="px-2 py-1 bg-accent-primary/20 text-accent-primary text-xs rounded font-roboto">
+                        {PERMISSION_DESCRIPTIONS[permission] || permission}
+                      </span>
+                    ))}
+                    {role.permissions.length > 5 && (
+                      <span className="px-2 py-1 bg-gray-600 text-white text-xs rounded font-roboto">
+                        +{role.permissions.length - 5} еще
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <p className="text-text-secondary font-roboto text-sm mb-3">
-                  {role.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {role.permissions.map((permission) => (
-                    <span
-                      key={permission}
-                      className="px-2 py-1 bg-accent-primary/20 text-accent-primary text-xs rounded-md font-roboto"
-                    >
-                      {PERMISSION_DESCRIPTIONS[permission] || permission}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEditRole(role)}
-                  className="text-text-secondary hover:text-white font-roboto text-sm"
-                >
-                  Редактировать
-                </button>
-                {!role.is_system_role && (
+                
+                <div className="flex gap-2">
                   <button
-                    onClick={() => {/* handleDeleteRole */}}
-                    className="text-red-400 hover:text-red-300 font-roboto text-sm"
+                    onClick={() => handleEditRole(role)}
+                    className="text-text-secondary hover:text-white font-roboto text-sm"
                   >
-                    Удалить
+                    Редактировать
                   </button>
-                )}
+                  {!role.is_system_role && (
+                    <button
+                      onClick={() => {/* handleDeleteRole */}}
+                      className="text-red-400 hover:text-red-300 font-roboto text-sm"
+                    >
+                      Удалить
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'users' && (
+        <div className="space-y-4">
+          <div className="text-text-secondary font-roboto text-sm mb-4">
+            Всего пользователей: {users.length}
           </div>
-        ))}
-      </div>
+          {users.map((userItem) => (
+            <div key={userItem.id} className="bg-surface-primary rounded-lg p-4 border border-border-primary">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-lg font-bold text-white font-rajdhani">
+                      {userItem.username}
+                    </h3>
+                    {getUserRoleBadge(userItem.role)}
+                    {getUserStatusBadge(userItem.status)}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div className="text-text-secondary">
+                      <span className="text-white">Email:</span> {userItem.email}
+                    </div>
+                    <div className="text-text-secondary">
+                      <span className="text-white">Баланс:</span> ${userItem.virtual_balance?.toFixed(2) || '0.00'}
+                    </div>
+                    <div className="text-text-secondary">
+                      <span className="text-white">ID:</span> {userItem.id}
+                    </div>
+                    <div className="text-text-secondary">
+                      <span className="text-white">Регистрация:</span> {new Date(userItem.created_at).toLocaleDateString('ru-RU')}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditUser(userItem)}
+                    className="text-text-secondary hover:text-white font-roboto text-sm bg-surface-sidebar px-3 py-1 rounded hover:bg-accent-primary/20 transition-colors"
+                  >
+                    Редактировать пользователя
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Модальное окно редактирования роли */}
       {editingRole && (
