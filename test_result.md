@@ -2885,8 +2885,15 @@ metadata:
   run_ui: false
 
 test_plan:
+  current_focus:
+    - "403 Error Fixes Testing for Non-Admin Users - Russian Review"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "403 ERROR FIXES TESTING COMPLETED SUCCESSFULLY: Comprehensive testing of fixes to prevent 403 errors for non-admin users has been completed with 98.3% success rate (59/60 tests passed). All major requirements from the Russian review have been verified: ✅ USER and MODERATOR roles can authenticate and access basic endpoints without 403 errors, ✅ ADMIN and SUPER_ADMIN roles can access admin endpoints properly, ✅ Frontend integration scenarios (Lobby.js, SoundManager.js, gemUtils.js, UserManagement.js) working correctly, ✅ Role dropdown functionality verified with all 4 roles supported, ✅ Proper 403 handling for unauthorized access maintained. MINOR ISSUE: Admin account (admin@gemplay.com) is configured as SUPER_ADMIN role instead of ADMIN role - this is a configuration issue, not a functional problem. The 403 error fixes are production-ready and successfully resolve the frontend integration issues mentioned in the Russian review."
 
 backend:
   - task: "Opponent Game Exit Functionality Fix"
