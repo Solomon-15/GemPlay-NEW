@@ -17871,9 +17871,53 @@ async def upload_sound_file(sound_id: str, file_data: UploadSoundFileRequest, cu
             detail="Failed to upload sound file"
         )
 
+@api_router.get("/admin/sounds/categories", response_model=List[str])
+async def get_sound_categories(current_user: User = Depends(get_current_admin)):
+    """Get available sound categories."""
+    try:
+        categories = ["GAMING", "UI", "SYSTEM", "BACKGROUND"]
+        return categories
+    except Exception as e:
+        logger.error(f"Error getting sound categories: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get sound categories"
+        )
+
+@api_router.get("/admin/sounds/events", response_model=List[str])
+async def get_sound_events(current_user: User = Depends(get_current_admin)):
+    """Get available sound events."""
+    try:
+        events = [
+            "bet_created",
+            "bet_joined", 
+            "game_started",
+            "move_selected",
+            "game_won",
+            "game_lost",
+            "game_draw",
+            "gems_received",
+            "commission_paid",
+            "notification_received",
+            "ui_click",
+            "ui_hover",
+            "ui_success",
+            "ui_error",
+            "system_startup",
+            "system_shutdown",
+            "background_music"
+        ]
+        return events
+    except Exception as e:
+        logger.error(f"Error getting sound events: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get sound events"
+        )
+
 # ==============================================================================
 # NOTIFICATION SYSTEM MODELS AND API
-# ==============================================================================
+# =============================================================================
 
 # Notification Models
 class NotificationTypeEnum(str, Enum):
