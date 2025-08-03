@@ -48,8 +48,8 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     fetchLobbyData();
     
     // Preload gem prices
-    preloadGemPrices().then(() => {
-      getGemPrices().then(setGemPrices);
+    preloadGemPrices(user?.role).then(() => {
+      getGemPrices(user?.role).then(setGemPrices);
     });
     
     const interval = setInterval(fetchLobbyData, 10000);
