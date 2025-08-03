@@ -263,7 +263,7 @@ def test_email_verification_resend() -> None:
     
     # First, create a new user for testing
     test_email = generate_test_email()
-    test_username = f"testuser_{int(time.time())}"
+    test_username = f"test{int(time.time()) % 10000}"  # Shorter username
     
     registration_data = {
         "username": test_username,
