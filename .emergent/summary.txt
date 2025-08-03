@@ -1,108 +1,146 @@
 <analysis>
-The AI engineer effectively progressed the GemPlay application from an MVP, focusing on enhancing human-bot management, game logic, and administrative features. Key accomplishments include decentralizing bot auto-play settings, fixing numerous UI and API bugs (e.g., redundant gem validation, sorting, time synchronization), and implementing granular controls for human-bot behavior, including bet creation/joining logic. Significant refactoring involved removing deprecated global bot settings and active bet limits. The engineer demonstrated a methodical approach, troubleshooting issues, iteratively refining solutions, and adhering to user-specific instructions, such as using Russian for admin notifications and maintaining the GemPlay visual style. The most recent efforts centered on adding date filtering to the Bet Volume dashboard tile.
+The previous AI engineer successfully brought the GemPlay application from an MVP to a more feature-rich state. The work trajectory shows a methodical approach, starting with addressing core application functionalities and progressively adding complex features and fixing critical bugs.
+
+Initially, the focus was on enhancing human-bot management and resolving various UI/API bugs, including the implementation of date filtering for the Bet Volume dashboard tile. However, a user request quickly pivoted the work towards critical user management improvements. The engineer then dedicated significant effort to implementing a robust username validation system, encompassing both frontend input validation and backend data migration and API enforcement. This was followed by a comprehensive overhaul of the authentication system, adding password recovery, email verification, Google OAuth, and a detailed role management system. Throughout these tasks, the engineer demonstrated strong debugging skills, particularly in resolving complex React state management and JWT-related authentication issues, often requiring multiple iterations and leveraging a  to diagnose persistent problems. The current focus is on refining user management modals and resolving persistent 403 errors for non-admin users.
 </analysis>
 
 <product_requirements>
-The GemPlay application is an asynchronous PvP gem betting platform for financial tracking, administration, and user experience. Initial requirements expanded to include:
-1.  **Human Bot Management:** Dynamic naming, decentralized auto-play settings (min/max delays: 1-12000s, max concurrent games: 1-3), Активность бота slider for bet *creation*, and Ограничение суммы ставок for bulk creation, also affecting joining bets.
-2.  **User Management:** Add User functionality with validation.
+The GemPlay application is an asynchronous PvP gem betting platform with a focus on financial tracking, administration, and user experience. The initial development and subsequent enhancements have targeted several key areas:
+
+1.  **Human Bot Management:** Implementation of dynamic naming, decentralized auto-play settings (min/max delays: 1-12000s, max concurrent games: 1-3), an Активность бота slider for bet creation, and Ограничение суммы ставок affecting both creation and joining bets.
+2.  **User Management:** Addition of Add User functionality with robust validation, and later, the explicit requirement to display all four roles (USER, MODERATOR, ADMIN, SUPER_ADMIN) as English names in the Role dropdown within the Create new user and Edit user modals.
 3.  **Bets Management:** Persistent status filters.
-4.  **Time Display Accuracy:** Consistent UTC timezone offset application across Active Bets Modal, in-game notifications (English format), Profile, and Admin sections.
-5.  **Bot Bet Joining Logic:** Bots must join human-bot and live player bets when enabled, even if individual creation  is reached, prioritizing  for joining.
-6.  **Admin Dashboard Metrics:** Активных ставок пользователей (active user bets) and Общие активные игры (total active games, strictly 'ACTIVE' status).
-7.  **Global Settings Removal:** Remove all global bot settings, specifically global bet limits and priority logic, favoring individual bot settings.
-8.  **Sound Administration Fixes:** Resolve 405 (Method Not Allowed) errors for sound categories and events in the admin panel.
-9.  **Bet Volume Tile Filters:** Implement period selection (day, week, month, quarter, half-year, 1/2/3 years, all time (default)) and a date calendar in the Объём ставок tile on the Admin Dashboard.
+4.  **Time Display Accuracy:** Consistent UTC timezone offset application across all relevant UI components (Active Bets Modal, in-game notifications, Profile, Admin sections).
+5.  **Bot Bet Joining Logic:** Bots must join human-bot and live player bets when enabled, prioritizing  over individual bet creation limits.
+6.  **Admin Dashboard Metrics:** Display of Активных ставок пользователей (active user bets) and Общие активные игры (total active games, strictly 'ACTIVE' status).
+7.  **Global Settings Removal:** Complete removal of all global bot settings (e.g., global bet limits, priority logic), favoring individual bot configurations.
+8.  **Sound Administration Fixes:** Resolution of 405 (Method Not Allowed) errors for sound categories and events in the admin panel.
+9.  **Bet Volume Tile Filters:** Implementation of period selection (day, week, month, quarter, half-year, 1/2/3 years, all time (default)) and a date calendar in the Объём ставок tile on the Admin Dashboard.
+10. **Username Validation:** Implement exclusive Latin character usage for player and Human-bot names. This includes blocking non-Latin input, showing validation errors, automatic Cyrillic-to-Latin transliteration, allowing a-z, A-Z, 0-9, '-', '_', '.', and spaces (not at ends, no consecutive '__'), enforcing a length of 3-15 characters, and automatically converting existing non-compliant names for regular users.
+11. **Full Authentication System:** Implement password recovery via email (with temporary links), mandatory email verification upon registration, Google OAuth integration, and a detailed role-based access control system.
+12. **Role-based Permissions and Account Loading:** Ensure only SUPER_ADMIN can assign any role. All roles (USER, MODERATOR, ADMIN, SUPER_ADMIN) should have identical in-game rights (creating/joining bets, no bet limits). Crucially, resolve 403 Forbidden errors encountered when users with any role (even non-admin) attempt to load their account, specifically for API calls to , , and . The main page/interface should not differ based on user role.
 </product_requirements>
 
 <key_technical_concepts>
 -   **MERN Stack Variant:** React.js (frontend), FastAPI (backend), MongoDB (database).
--   **Frontend State Management:** React Context, hooks (, ).
--   **Backend API Development:** FastAPI with Pydantic for data validation.
--   **Asynchronous Operations:** API calls, background tasks.
--   **Time Synchronization:** UTC offsets, precise date/time formatting utilities.
+-   **Frontend State Management:** React Context API, React Hooks (, ).
+-   **Backend API Development:** FastAPI with Pydantic for data validation and schema definition.
+-   **Asynchronous Operations:** API calls using Axios, background tasks.
+-   **Time Synchronization:** Centralized utility functions for UTC offset application and time formatting.
+-   **Authentication:** JWT (JSON Web Tokens) for token-based authentication, password hashing, email verification, Google OAuth.
+-   **Role-Based Access Control (RBAC):** Implementation of user roles (USER, MODERATOR, ADMIN, SUPER_ADMIN) with defined permissions.
+-   **Data Migration:** Scripts for one-off data transformations in MongoDB.
 </key_technical_concepts>
 
 <code_architecture>
 
+
 -   :
-    *   **Importance:** Core backend for API, DB, game logic, and authentication.
-    *   **Changes Made:**  model updated for individual delays/concurrent games/bet creation. Added  POST endpoint. Fixed TOTAL column sorting. Adjusted . Removed old auto-play logic and  checks for joining, replacing with . Added  and  (filtered by ACTIVE) to . *Crucially,  model,  endpoints, and logic for global bot settings (e.g., , , related parts of , , ) were **removed**.* New  and  endpoints were added. The  endpoint was modified to accept  and  parameters for filtering.
+    *   **Importance:** Core backend for API, DB interaction, game logic, and authentication.
+    *   **Changes Made:**  model updated for individual delays/concurrent games/bet creation. Added  POST endpoint. Fixed TOTAL column sorting. Adjusted . Removed old auto-play logic and  checks. Added  and  to  (modified to accept , ). *Crucially,  model,  endpoints, and global bot settings logic were **removed**.* New  and  endpoints added. Extensively modified for full authentication: updated  model with , ,  etc.; added models for , ; integrated , , ; implemented new auth endpoints (, , ); updated  for account locking and  for email verification. Fixed JWT key inconsistencies and authentication dependencies for  endpoint.
 -   :
     *   **Importance:** Previously contained alternate bot settings endpoints.
-    *   **Changes Made:** The entire file was **removed** as part of the global settings cleanup.
+    *   **Changes Made:** Entire file **removed** as part of global settings cleanup.
+-   : (New)
+    *   **Importance:** Contains utility functions for validating and sanitizing usernames according to new rules (Latin characters, length, allowed symbols, transliteration).
+    *   **Changes Made:** Created.
+-   : (New)
+    *   **Importance:** Script to automatically update existing user usernames in the database to comply with the new Latin-only validation rules.
+    *   **Changes Made:** Created and debugged to handle  errors.
+-   : (New)
+    *   **Importance:** Provides functionality for sending emails, used for password recovery and email verification.
+    *   **Changes Made:** Created.
+-   : (New)
+    *   **Importance:** Contains utility functions related to authentication, such as password hashing, JWT token generation/validation, and role-based access control helpers.
+    *   **Changes Made:** Created.
 -   :
     *   **Importance:** Root component for the admin dashboard.
-    *   **Changes Made:** Passed  prop to  and . Added  components for Активных ставок пользователей and Общие активные игры. Modified to handle date range filtering for Объём ставок tile, including managing  and  states, and using the new  component.
+    *   **Changes Made:** Passed  prop to  and . Added  components for Активных ставок пользователей and Общие активные игры. Modified to handle date range filtering for Объём ставок tile, including managing  and  states, and using the  component. Integrated the new  component and updated navigation for SUPER_ADMIN users.
+-   :
+    *   **Importance:** Admin interface for regular bot statistics and management.
+    *   **Changes Made:** UI adapted for individual bot settings; global settings UI and related logic/states were **removed**.
 -   :
     *   **Importance:** Admin interface for human-bot statistics, creation, and management.
-    *   **Changes Made:** UI adapted for individual bot settings; global settings UI removed. Passed  prop. *States related to global settings (, , , , ), functions (, , , , , ), and all UI elements/logic (global settings section, Settings tab in navigation, priority buttons in table, global settings modal) related to global bot settings were **removed**.*
--   :
-    *   **Importance:** Admin interface for human-bot statistics, creation, and management.
-    *   **Changes Made:** UI adapted for individual bot settings (/ delays, , ). Removed global settings UI. Passed  prop and updated cache refresh time display.
+    *   **Changes Made:** UI adapted for individual bot settings (/ delays, , ). Removed global settings UI.
 -   :
     *   **Importance:** Displays the list of human bots.
-    *   **Changes Made:** Added Активность бота toggle. Improved error handling. Passed  prop to nested modals. Updated  to use .
+    *   **Changes Made:** Added Активность бота toggle. Improved error handling. Updated  with .
 -   :
     *   **Importance:** Handles Player B joining a game.
     *   **Changes Made:** Removed redundant gem validation; blocked BACK button.
 -   :
     *   **Importance:** Manages and filters bets in the admin panel.
-    *   **Changes Made:** Modified filter logic for active status. Passed  prop. Updated date/time formatting.
+    *   **Changes Made:** Modified filter logic for active status. Updated date/time formatting.
 -   :
     *   **Importance:** Admin interface for user management.
-    *   **Changes Made:** Added Add User button and . Fixed local frontend sorting. Integrated  for date/time formatting.
+    *   **Changes Made:** Added Add User button and . Fixed local frontend sorting. Integrated  for date/time formatting. *Significantly updated to incorporate  for  and , including displaying validation errors and resetting them on modal close.* **Pending updates for role dropdowns.**
 -    & :
     *   **Importance:** Generic modals.
     *   **Changes Made:** Fixed HTML nesting errors.
 -   :
     *   **Importance:** Displays active bets for a human bot.
-    *   **Changes Made:** Время column now intelligently displays  or . Integrated  and received  prop.
+    *   **Changes Made:** Время column intelligently displays  or . Integrated .
 -   :
     *   **Importance:** Displays notifications in the game interface.
-    *   **Changes Made:** Modified  to show  format and use . Adapted to receive  prop.
+    *   **Changes Made:** Modified  to show  and use .
 -   :
     *   **Importance:** User profile for settings like timezone.
-    *   **Changes Made:** Corrected  to accurately apply .
+    *   **Changes Made:** Corrected  to accurately apply . *Updated to use  for username input and display validation errors.*
 -    & :
     *   **Importance:** Navigation components.
     *   **Changes Made:** Passed  prop to .
 -   :
     *   **Importance:** Admin panel for profit statistics.
-    *   **Changes Made:** Integrated  for date/time formatting in the UI and CSV export.
+    *   **Changes Made:** Integrated  for date/time formatting in UI and CSV export.
 -   :
     *   **Importance:** Displays commission details for a human bot.
-    *   **Changes Made:** Integrated  and received  prop for date formatting.
+    *   **Changes Made:** Integrated .
 -   :
     *   **Importance:** Admin interface for managing game sounds.
-    *   **Changes Made:** Frontend Axios calls for categories and events were implicitly fixed by the addition of corresponding backend endpoints, resolving 405 errors.
--   : (New component inferred)
-    *   **Importance:** A new reusable component likely created to encapsulate the  logic along with period selection and date range picker, specifically for the Объём ставок tile.
-    *   **Changes Made:** Created to display statistics with added period filters and custom date selection, replacing  for the Объём ставок tile.
+    *   **Changes Made:** Frontend Axios calls implicitly fixed by backend endpoint additions.
+-   : (New)
+    *   **Importance:** Reusable component for displaying statistics with period selection and date range pickers.
+    *   **Changes Made:** Created for the Объём ставок tile.
+-   : (New)
+    *   **Importance:** Component for handling the password reset flow.
+    *   **Changes Made:** Created and wrapped in  to display messages.
+-   : (New)
+    *   **Importance:** Component for integrating Google OAuth login.
+    *   **Changes Made:** Created.
+-   : (New)
+    *   **Importance:** Component to display notifications or actions related to email verification.
+    *   **Changes Made:** Created.
+-   : (New)
+    *   **Importance:** Admin interface for managing user roles and permissions.
+    *   **Changes Made:** Created. Fetches and displays roles, includes UI for creating/editing roles. Fixed logic for fetching roles and handling errors.
 -   :
     *   **Importance:** Utility file for centralized time formatting.
-    *   **Changes Made:** Created , , and  functions to apply user-defined .
+    *   **Changes Made:** Created , , and  functions.
+-   : (New)
+    *   **Importance:** Frontend utility for real-time username input validation and transliteration.
+    *   **Changes Made:** Created.
+-   :
+    *   **Importance:** Main application component, handles routing, user authentication, and global state.
+    *   **Changes Made:** Integrated  for the registration form. Extensively updated for the full authentication system: managing  state (login, register, password reset), rendering , ,  components. Implemented logic for  to properly update user state after login, including resolving race conditions and removing throttling based on  recommendations.
 </code_architecture>
 
 <pending_tasks>
--   Perform frontend testing to visually confirm the corrected Общие активные игры tile in the admin panel.
--   Complete and confirm frontend functionality for the Объём ставок tile with period filters and calendar in the admin dashboard.
+-   Complete and confirm frontend functionality for the Объём ставок tile with period filters and calendar in the admin dashboard (visual confirmation pending from previous work).
+-   Update Role dropdowns in Create new user and Edit user modals in User Management to display the 4 roles (USER, MODERATOR, ADMIN, SUPER_ADMIN) using their English names.
+-   Implement logic to restrict role assignment such that only a SUPER_ADMIN can assign any role.
+-   Clarify and implement the default role selection behavior for new user creation (user requested both ADMIN and SUPER_ADMIN as default, which likely requires selection logic).
+-   Address and fix the 403 Forbidden errors encountered by non-admin users attempting to load their accounts (specifically for API calls to , , ).
+-   Create test users with each role (USER, MODERATOR, ADMIN, SUPER_ADMIN) for comprehensive testing.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was working on implementing date range filters and a calendar functionality for the Объём ставок (Bet Volume) tile in the Admin Panel's Главная (Main) section.
+Immediately before this summary request, the AI engineer was engaged in fixing issues related to user roles and account loading. Specifically, the user reported:
+1.  **Role Display Issue:** The Role field in Create new user and Edit user modals within the User Management section of the Admin Panel was not correctly displaying the four defined roles (USER, MODERATOR, ADMIN, SUPER_ADMIN).
+2.  **Account Loading Errors (403 Forbidden):** Users with any role (including non-admin) were encountering 403 Forbidden errors when attempting to load their accounts. Console logs indicated these errors were for API calls to admin-specific endpoints such as , , and . This suggests a general access control issue where non-admin roles are attempting to access privileged endpoints during standard account loading.
 
-The work involved:
-1.  **Frontend ():**
-    *   Modifying  to manage states for  (e.g., day, week, month, all_time) and  (for calendar selection).
-    *   Updating the  function to accept  and  parameters, which are derived from  or .
-    *   Replacing the  component with a newly created (or conceptually introduced)  component for the Объём ставок tile, which presumably incorporates the dropdown and calendar UI.
-2.  **Backend ():**
-    *   Modifying the  endpoint to accept optional  and  query parameters. This allows the backend to filter the  calculation based on the provided date range. The backend changes for this were successfully tested with 100% success.
-
-The last action recorded was an attempt to perform frontend testing via a screenshot, which failed due to an error in the testing script itself. Therefore, the frontend integration and visual confirmation of the new filtering functionality is currently pending.
+The AI engineer has understood these problems and the user's clarifications (roles in English, SUPER_ADMIN role assignment, all roles having same in-game rights, specific 403 console errors). The last stated action by the AI engineer was to: Сначала обновлю dropdown ролей в UserManagement.js. This indicates the immediate next step is to modify the frontend component  to correctly populate and handle the role selection dropdowns in the user creation and editing modals.
 </current_work>
 
 <optional_next_step>
-Re-attempt frontend testing for the Объём ставок tile filters to visually confirm functionality.
+Update  to correctly display roles in dropdowns and then address the 403 Forbidden errors for non-admin users.
 </optional_next_step>
