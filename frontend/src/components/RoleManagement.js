@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNotifications } from './NotificationContext';
+import { handleUsernameInput, validateUsername } from '../utils/usernameValidation';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
