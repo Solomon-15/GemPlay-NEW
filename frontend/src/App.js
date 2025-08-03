@@ -273,6 +273,10 @@ function App() {
         });
         console.log('✅ Auth check successful. User:', response.data);
         setUser(response.data);
+        
+        // Initialize sound manager with user role
+        soundManager.initializeSounds(response.data.role);
+        
         setLoading(false); // Устанавливаем loading false только после успешной авторизации
       } catch (error) {
         console.error('❌ Auth check failed:', error.response?.status, error.response?.data || error.message);
