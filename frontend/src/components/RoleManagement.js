@@ -55,7 +55,28 @@ const RoleManagement = ({ user }) => {
 
   useEffect(() => {
     fetchRoles();
+    fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/users?limit=100`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.users) {
+        // Фильтруем только обычных пользователей (не ботов)
+        const regularUsers = response.data.users.filter(u => 
+          u.user_type !== 'HUMAN_BOT' && u.user_type !== 'REGULAR_BOT'
+        );
+        setUsers(regularUsers);
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      showError('Ошибка загрузки пользователей');
+    }
+  };
 
   const fetchRoles = async () => {
     try {
