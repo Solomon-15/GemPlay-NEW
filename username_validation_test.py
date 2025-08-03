@@ -262,6 +262,7 @@ def test_admin_user_creation_valid_username(admin_token: str, username: str) -> 
         "username": username,
         "email": test_email,
         "password": "Test123!",
+        "confirm_password": "Test123!",  # Add missing field
         "role": "USER",
         "gender": "male"
     }
