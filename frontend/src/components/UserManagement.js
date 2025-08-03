@@ -80,9 +80,16 @@ const UserManagement = ({ user: currentUser }) => {
   const [editForm, setEditForm] = useState({
     username: '',
     email: '',
+    password: '',
+    confirm_password: '',
     role: '',
-    virtual_balance: 0
+    gender: 'male',
+    virtual_balance: 0,
+    daily_limit_max: 1000,
+    status: 'ACTIVE',
+    ban_reason: ''
   });
+  const [editUserLoading, setEditUserLoading] = useState(false);
 
   // User details states
   const [userGems, setUserGems] = useState([]);
