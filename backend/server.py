@@ -15977,10 +15977,7 @@ async def update_individual_bot_settings(
                 logger.warning(f"Failed to auto-recalculate bets for bot {bot_id}: {e}")
         
         elif "cycle_length" in update_fields and bot.get("is_active", False):
-            try:
-                await maintain_bot_active_bets_count(bot_id, update_fields["cycle_length"])
-            except Exception as e:
-                logger.warning(f"Failed to maintain active bets count for bot {bot_id}: {e}")
+            pass
         
         # Log admin action
         admin_log = AdminLog(
