@@ -2211,7 +2211,6 @@ const UserManagement = ({ user: currentUser }) => {
       />
 
       {/* Модальные окна */}
-      {isEditModalOpen && <EditUserModal />}
       {isBanModalOpen && <BanUserModal />}
       {isGemsModalOpen && <GemsModal />}
       {isBetsModalOpen && <BetsModal />}
