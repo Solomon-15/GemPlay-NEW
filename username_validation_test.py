@@ -234,7 +234,8 @@ def test_profile_update_invalid_username(auth_token: str, invalid_username: str)
     
     response, success = make_request("PUT", "/profile", data=update_data, auth_token=auth_token, expected_status=422)
     
-    if not success and response.get("detail"):
+    # If we get 422 status, that means validation correctly rejected the invalid username
+    if success and response.get("detail"):
         error_detail = response.get("detail", "")
         if isinstance(error_detail, list) and len(error_detail) > 0:
             error_msg = error_detail[0].get("msg", "")
