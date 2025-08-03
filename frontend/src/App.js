@@ -17,6 +17,9 @@ import NotificationProvider from "./components/NotificationContext";
 import { GemsProvider } from './components/GemsContext';
 import NotificationContainer from "./components/NotificationContainer";
 import NotificationsPage from "./components/NotificationsPage";
+import PasswordReset from "./components/PasswordReset";
+import GoogleAuth from "./components/GoogleAuth";
+import EmailVerificationBanner from "./components/EmailVerificationBanner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
