@@ -9786,7 +9786,7 @@ async def get_all_users(
 
 # Admin create user request model
 class CreateUserRequest(BaseModel):
-    username: str = Field(..., min_length=1, max_length=50, pattern=r'^[a-zA-Z0-9._+-]+$')
+    username: str = Field(..., min_length=3, max_length=15)
     email: EmailStr
     password: str = Field(..., min_length=8)
     confirm_password: str = Field(..., min_length=8)
@@ -9796,6 +9796,15 @@ class CreateUserRequest(BaseModel):
     gender: str = Field(default="male", pattern=r'^(male|female)$')
     status: UserStatus = UserStatus.ACTIVE
     ban_reason: Optional[str] = None
+    
+    # Валидатор для username
+    @field_validator('username')
+    @classmethod
+    def validate_username_field(cls, v):
+        is_valid, errors = validate_username(v)
+        if not is_valid:
+            raise ValueError(f"Недопустимое имя пользователя: {'; '.join(errors)}")
+        return sanitize_username(v)
 
 @api_router.post("/admin/users", response_model=dict)
 async def create_user(
