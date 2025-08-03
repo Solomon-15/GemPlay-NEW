@@ -10042,11 +10042,11 @@ async def get_all_users(
             if user_type == "USER":
                 bot_status = get_user_online_status(user)
             
-                virtual_bal = float(user.get("virtual_balance") or 0)
-                frozen_bal = float(user.get("frozen_balance") or 0)
-                gems_val = float(round(total_gems_value, 2))
-                
-                cleaned_user = {
+            virtual_bal = float(user.get("virtual_balance") or 0)
+            frozen_bal = float(user.get("frozen_balance") or 0)
+            gems_val = float(round(total_gems_value, 2))
+            
+            cleaned_user = {
                 "id": user.get("id"),
                 "username": user.get("username"),
                 "email": user.get("email"),
