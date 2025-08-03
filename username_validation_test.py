@@ -188,7 +188,8 @@ def test_invalid_username_registration(username: str, expected_error: str) -> bo
     
     response, success = make_request("POST", "/auth/register", data=user_data, expected_status=422)
     
-    if not success and response.get("detail"):
+    # If we get 422 status, that means validation correctly rejected the invalid username
+    if success and response.get("detail"):
         # Check if error message is in Russian as expected
         error_detail = response.get("detail", "")
         if isinstance(error_detail, list) and len(error_detail) > 0:
