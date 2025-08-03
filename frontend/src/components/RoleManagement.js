@@ -196,6 +196,88 @@ const RoleManagement = ({ user }) => {
     }
   };
 
+  const handleEditUser = (userToEdit) => {
+    setEditingUser(userToEdit);
+    setUserEditForm({
+      username: userToEdit.username || '',
+      email: userToEdit.email || '',
+      role: userToEdit.role || 'USER',
+      virtual_balance: userToEdit.virtual_balance || 0,
+      status: userToEdit.status || 'ACTIVE'
+    });
+    setIsEditUserModalOpen(true);
+  };
+
+  const handleSaveUser = async () => {
+    try {
+      if (!userEditForm.username.trim()) {
+        showError('Введите имя пользователя');
+        return;
+      }
+
+      if (!userEditForm.email.trim()) {
+        showError('Введите email');
+        return;
+      }
+
+      // Проверка прав доступа - только SUPER_ADMIN может назначать любые роли
+      if (user?.role !== 'SUPER_ADMIN') {
+        if (userEditForm.role === 'SUPER_ADMIN') {
+          showError('Только SUPER_ADMIN может назначать роль SUPER_ADMIN');
+          return;
+        }
+      }
+
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/admin/users/${editingUser.id}`, userEditForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      showSuccess('Пользователь успешно обновлен');
+      setIsEditUserModalOpen(false);
+      setEditingUser(null);
+      fetchUsers(); // Обновляем список пользователей
+    } catch (error) {
+      console.error('Error updating user:', error);
+      showError(error.response?.data?.detail || 'Ошибка обновления пользователя');
+    }
+  };
+
+  const getUserRoleBadge = (userRole) => {
+    const roleColors = {
+      'USER': 'bg-blue-600',
+      'MODERATOR': 'bg-green-600',
+      'ADMIN': 'bg-purple-600',
+      'SUPER_ADMIN': 'bg-red-600'
+    };
+    
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold ${roleColors[userRole] || 'bg-gray-600'}`}>
+        {userRole}
+      </span>
+    );
+  };
+
+  const getUserStatusBadge = (status) => {
+    const statusColors = {
+      'ACTIVE': 'bg-green-600',
+      'BANNED': 'bg-red-600',
+      'EMAIL_PENDING': 'bg-yellow-600'
+    };
+    
+    const statusLabels = {
+      'ACTIVE': 'Активен',
+      'BANNED': 'Заблокирован',
+      'EMAIL_PENDING': 'Ожидает подтв.'
+    };
+    
+    return (
+      <span className={`px-2 py-1 text-xs rounded-full text-white font-rajdhani font-bold ${statusColors[status] || 'bg-gray-600'}`}>
+        {statusLabels[status] || status}
+      </span>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
