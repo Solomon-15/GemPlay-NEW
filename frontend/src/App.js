@@ -281,6 +281,7 @@ function App() {
         console.log('🗑️ Removing invalid tokens');
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
+        setLoading(false); // Устанавливаем loading false только после обработки ошибки
       }
     } else {
       console.log('🔒 No token found in localStorage');
