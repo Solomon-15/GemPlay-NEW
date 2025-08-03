@@ -28,6 +28,13 @@ import secrets
 from collections import defaultdict
 import ipaddress
 from username_utils import process_username, validate_username, sanitize_username
+from email_utils import send_verification_email, send_password_reset_email
+from auth_utils import (
+    generate_secure_token, hash_token, create_access_token, create_refresh_token,
+    verify_token, verify_google_token, check_account_lockout, should_lock_account,
+    calculate_lockout_time, has_permission, get_current_user, get_current_admin_user,
+    get_current_super_admin, get_user_permissions, get_client_ip, ROLE_PERMISSIONS
+)
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
