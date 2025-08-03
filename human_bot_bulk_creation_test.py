@@ -458,7 +458,7 @@ def test_bulk_creation_error_handling(admin_token: str) -> None:
     # Test 4.1: Missing required fields
     print_success("Test 4.1: Missing required fields")
     incomplete_data = {
-        "count": 2,
+        "count": 1,
         # Missing character field
         "min_bet_range": [1.0, 5.0]
     }
