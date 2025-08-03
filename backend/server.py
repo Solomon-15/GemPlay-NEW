@@ -9903,7 +9903,7 @@ async def get_all_users(
     total_min: Optional[float] = None,    # Фильтр по минимальному TOTAL балансу
     total_max: Optional[float] = None,    # Фильтр по максимальному TOTAL балансу
     exclude_bots: Optional[bool] = False,
-    current_user: dict = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin)
 ):
     """Get all users with pagination, filtering and sorting."""
     try:
