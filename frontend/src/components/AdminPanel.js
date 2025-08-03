@@ -439,6 +439,103 @@ const AdminPanel = ({ user, onClose }) => {
     </div>
   );
 
+  const StatCardWithFilters = ({ title, value, icon, color = 'text-accent-primary', onAction, actionIcon, actionTitle, filters, onFilterChange, showFilters, setShowFilters }) => {
+    const today = new Date().toISOString().split('T')[0];
+    
+    return (
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden hover:border-green-500 transition-colors duration-200">
+        {/* Main card content */}
+        <div className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2">
+                <p className="font-roboto text-text-secondary text-sm">{title}</p>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="p-1 text-text-secondary hover:text-white rounded transition-colors"
+                  title="Фильтры периода"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
+                  </svg>
+                </button>
+              </div>
+              <p className={`font-rajdhani text-3xl font-bold ${color}`}>{value}</p>
+              <p className="font-roboto text-xs text-text-secondary mt-1">{getBetVolumePeriodLabel()}</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={onAction}
+                className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                title={actionTitle}
+              >
+                {actionIcon}
+              </button>
+              <div className={`${color} opacity-60`}>
+                {icon}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters panel */}
+        {showFilters && (
+          <div className="border-t border-border-primary bg-surface-sidebar bg-opacity-30 p-4">
+            <div className="space-y-4">
+              {/* Period selector */}
+              <div>
+                <label className="block font-roboto text-text-secondary text-sm mb-2">Период</label>
+                <select
+                  value={filters.period}
+                  onChange={(e) => onFilterChange('period', e.target.value)}
+                  className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto text-sm focus:outline-none focus:border-accent-primary"
+                >
+                  <option value="all_time">За всё время</option>
+                  <option value="day">За день</option>
+                  <option value="week">За неделю</option>
+                  <option value="month">За месяц</option>
+                  <option value="quarter">За квартал</option>
+                  <option value="half_year">За полугодие</option>
+                  <option value="year_1">За 1 год</option>
+                  <option value="year_2">За 2 года</option>
+                  <option value="year_3">За 3 года</option>
+                  <option value="custom">Выбрать даты</option>
+                </select>
+              </div>
+
+              {/* Custom date range */}
+              {filters.period === 'custom' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-roboto text-text-secondary text-sm mb-1">С даты</label>
+                    <input
+                      type="date"
+                      value={filters.startDate}
+                      max={today}
+                      onChange={(e) => onFilterChange('startDate', e.target.value)}
+                      className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto text-sm focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-roboto text-text-secondary text-sm mb-1">До даты</label>
+                    <input
+                      type="date"
+                      value={filters.endDate}
+                      max={today}
+                      min={filters.startDate}
+                      onChange={(e) => onFilterChange('endDate', e.target.value)}
+                      className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto text-sm focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const DashboardContent = () => (
     <div className="space-y-8">
       <div>
