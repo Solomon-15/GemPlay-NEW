@@ -140,15 +140,14 @@ def test_admin_login() -> Optional[str]:
     print_subheader("Admin Authentication")
     
     login_data = {
-        "username": ADMIN_USER["email"],  # FastAPI OAuth2PasswordRequestForm uses username field
+        "email": ADMIN_USER["email"],
         "password": ADMIN_USER["password"]
     }
     
-    # Use form data for OAuth2PasswordRequestForm
+    # Use JSON data for UserLogin model
     login_response, login_success = make_request(
         "POST", "/auth/login",
-        data=login_data,
-        headers={"Content-Type": "application/x-www-form-urlencoded"}
+        data=login_data
     )
     
     if not login_success:
