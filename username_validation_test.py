@@ -354,8 +354,12 @@ def run_username_validation_tests():
         print_error("Cannot proceed without admin token")
         return
     
-    # Test cases from Russian review
-    valid_usernames = ["TestUser", "User123", "player.pro"]
+    # Test cases from Russian review - use unique variations
+    valid_usernames = [
+        f"TestUser{random.randint(1000, 9999)}", 
+        f"User123{random.randint(1000, 9999)}", 
+        f"player.pro{random.randint(100, 999)}"
+    ]
     invalid_usernames = [
         ("AB", "Too short (2 characters)"),
         ("VeryLongUsername123", "Too long (16+ characters)"),
