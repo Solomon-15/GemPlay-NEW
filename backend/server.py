@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 from pymongo.errors import ServerSelectionTimeoutError, NetworkTimeout, AutoReconnect
-from pydantic import BaseModel, Field, EmailStr, field_validator
+from pydantic import BaseModel, Field, EmailStr, field_validator, field_validator
 from typing import List, Optional, Dict, Any, Union
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
