@@ -889,7 +889,26 @@ const UserManagement = ({ user: currentUser }) => {
       fetchUsers(); // Обновляем список пользователей
     } catch (error) {
       console.error('Error updating user:', error);
-      showErrorRU(error.response?.data?.detail || 'Ошибка обновления пользователя');
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMessage = 'Ошибка обновления пользователя';
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.response?.status === 400) {
+        errorMessage = 'Некорректные данные пользователя';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Недостаточно прав для обновления пользователя';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Пользователь не найден';
+      } else if (error.response?.status === 409) {
+        errorMessage = 'Email или имя пользователя уже существует';
+      } else if (error.message) {
+        errorMessage = `Сетевая ошибка: ${error.message}`;
+      }
+      
+      showErrorRU(errorMessage);
     } finally {
       setEditUserLoading(false);
     }
