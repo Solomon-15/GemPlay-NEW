@@ -289,22 +289,32 @@ def test_admin_user_creation_invalid_username(admin_token: str, invalid_username
         "username": invalid_username,
         "email": test_email,
         "password": "Test123!",
+        "confirm_password": "Test123!",  # Add missing field
         "role": "USER",
         "gender": "male"
     }
     
     response, success = make_request("POST", "/admin/users", data=user_data, auth_token=admin_token, expected_status=422)
     
-    if not success and response.get("detail"):
-        error_detail = response.get("detail", "")
-        if isinstance(error_detail, list) and len(error_detail) > 0:
-            error_msg = error_detail[0].get("msg", "")
-        else:
-            error_msg = str(error_detail)
+    # If we get 422 status, check if it's due to username validation (not just missing confirm_password)
+    if success and response.get("detail"):
+        error_details = response.get("detail", [])
+        username_error = None
         
-        print_success(f"Admin user creation correctly rejected invalid username '{invalid_username}': {error_msg}")
-        record_test(f"Admin User Creation Invalid Username - {invalid_username}", True, f"Correctly rejected: {error_msg}")
-        return True
+        # Look for username-specific validation errors
+        for error in error_details:
+            if error.get("loc") and "username" in error.get("loc", []):
+                username_error = error.get("msg", "")
+                break
+        
+        if username_error:
+            print_success(f"Admin user creation correctly rejected invalid username '{invalid_username}': {username_error}")
+            record_test(f"Admin User Creation Invalid Username - {invalid_username}", True, f"Correctly rejected: {username_error}")
+            return True
+        else:
+            print_error(f"Admin user creation failed for other reasons, not username validation: {response}")
+            record_test(f"Admin User Creation Invalid Username - {invalid_username}", False, f"Failed for other reasons: {response}")
+            return False
     else:
         print_error(f"Admin user creation incorrectly accepted invalid username '{invalid_username}': {response}")
         record_test(f"Admin User Creation Invalid Username - {invalid_username}", False, f"Incorrectly accepted: {response}")
