@@ -693,6 +693,36 @@ const AdminPanel = ({ user, onClose }) => {
     }
   };
 
+  const handleBetVolumeFilterChange = (field, value) => {
+    setBetVolumeFilters(prev => ({
+      ...prev,
+      [field]: value,
+      // Reset custom dates when period is selected
+      ...(field === 'period' && value !== 'custom' ? { startDate: '', endDate: '' } : {})
+    }));
+  };
+
+  const getBetVolumePeriodLabel = () => {
+    const periodLabels = {
+      'all_time': 'за всё время',
+      'day': 'за день',
+      'week': 'за неделю', 
+      'month': 'за месяц',
+      'quarter': 'за квартал',
+      'half_year': 'за полугодие',
+      'year_1': 'за 1 год',
+      'year_2': 'за 2 года',
+      'year_3': 'за 3 года',
+      'custom': 'за выбранный период'
+    };
+    
+    if (betVolumeFilters.period === 'custom' && betVolumeFilters.startDate && betVolumeFilters.endDate) {
+      return `${betVolumeFilters.startDate} - ${betVolumeFilters.endDate}`;
+    }
+    
+    return periodLabels[betVolumeFilters.period] || 'за всё время';
+  };
+
   const BetsContent = () => (
     <div className="space-y-8">
       <div>
