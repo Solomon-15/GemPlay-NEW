@@ -440,10 +440,14 @@ def test_users_pagination_and_filtering(auth_token: str) -> None:
         auth_token=auth_token
     )
     
-    if success and "pagination" in response:
-        pagination = response["pagination"]
-        print_success(f"Page 1 with limit 5: {len(response['users'])} users returned")
-        print_success(f"Pagination info: {pagination}")
+    if success:
+        total = response.get("total", 0)
+        page = response.get("page", 1)
+        limit = response.get("limit", 5)
+        users = response.get("users", [])
+        
+        print_success(f"Page {page} with limit {limit}: {len(users)} users returned")
+        print_success(f"Total users: {total}")
         record_test("Users Pagination", True)
     else:
         print_error("Pagination test failed")
