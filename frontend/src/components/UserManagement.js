@@ -878,7 +878,7 @@ const UserManagement = ({ user: currentUser }) => {
       }
 
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/admin/users/${selectedUser.id}`, updateData, {
+      await axios.put(`${API}/admin/users/${selectedUser.id}`, updateData, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
