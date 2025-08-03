@@ -40,9 +40,10 @@ export const fetchGemPrices = async (userRole = null) => {
 
 /**
  * Get cached gem prices or fetch fresh ones
+ * @param {string} userRole - User role (ADMIN, SUPER_ADMIN, etc.)
  * @returns {Promise<Array>} Array of gem objects with prices
  */
-export const getGemPrices = async () => {
+export const getGemPrices = async (userRole = null) => {
   const now = Date.now();
   
   // Return cached data if it's still fresh
@@ -51,7 +52,7 @@ export const getGemPrices = async () => {
   }
   
   // Fetch fresh data
-  gemPricesCache = await fetchGemPrices();
+  gemPricesCache = await fetchGemPrices(userRole);
   cacheTimestamp = now;
   
   return gemPricesCache;
