@@ -9382,9 +9382,9 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
-        # Get total active games count (same as "Ongoing Battles")
+        # Get total active games count (same as "Ongoing Battles" - only ACTIVE status)
         total_active_games = await db.games.count_documents({
-            "status": {"$in": ["WAITING", "ACTIVE"]}
+            "status": "ACTIVE"
         })
         
         return {
