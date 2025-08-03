@@ -314,7 +314,7 @@ function App() {
   }
 
   if (!user) {
-    return <LoginForm onLogin={handleLogin} />;
+    return <LoginForm onLogin={handleLogin} setUser={setUser} />;
   }
 
   return (
