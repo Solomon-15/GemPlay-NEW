@@ -103,6 +103,43 @@ def generate_unique_email():
 
 def create_test_user(role: str = "USER") -> Tuple[Dict, str]:
     """Create a test user and return user data and auth token."""
+    
+    # For admin roles, use existing accounts
+    if role == "ADMIN":
+        login_data = {
+            "email": "admin@gemplay.com",
+            "password": "Admin123!"
+        }
+        
+        login_response, login_success = make_request("POST", "/auth/login", data=login_data)
+        
+        if login_success:
+            auth_token = login_response.get("access_token")
+            user_info = login_response.get("user", {})
+            print_success(f"Logged in as existing ADMIN user")
+            return user_info, auth_token
+        else:
+            print_error(f"Failed to login as admin: {login_response}")
+            return {}, ""
+    
+    elif role == "SUPER_ADMIN":
+        login_data = {
+            "email": "superadmin@gemplay.com",
+            "password": "SuperAdmin123!"
+        }
+        
+        login_response, login_success = make_request("POST", "/auth/login", data=login_data)
+        
+        if login_success:
+            auth_token = login_response.get("access_token")
+            user_info = login_response.get("user", {})
+            print_success(f"Logged in as existing SUPER_ADMIN user")
+            return user_info, auth_token
+        else:
+            print_error(f"Failed to login as super admin: {login_response}")
+            return {}, ""
+    
+    # For regular users, create new ones
     username = generate_unique_username()
     email = generate_unique_email()
     password = "TestPassword123!"
@@ -125,49 +162,30 @@ def create_test_user(role: str = "USER") -> Tuple[Dict, str]:
         return {}, ""
     
     user_id = register_response.get("user_id")
+    verification_token = register_response.get("verification_token")
+    
     if not user_id:
         print_error("No user_id in registration response")
         return {}, ""
     
-    # If we need to create admin users, we need to use admin endpoints
-    if role in ["ADMIN", "SUPER_ADMIN"]:
-        # First login as super admin to create admin users
-        super_admin_login = {
-            "email": "superadmin@gemplay.com",
-            "password": "SuperAdmin123!"
-        }
-        
-        admin_login_response, admin_login_success = make_request("POST", "/auth/login", data=super_admin_login)
-        if not admin_login_success:
-            print_error("Failed to login as super admin")
-            return {}, ""
-        
-        admin_token = admin_login_response.get("access_token")
-        
-        # Create admin user via admin endpoint
-        admin_user_data = {
-            "username": username,
-            "email": email,
-            "password": password,
-            "confirm_password": password,
-            "role": role,
-            "gender": "male"
-        }
-        
-        create_admin_response, create_admin_success = make_request(
-            "POST", "/admin/users", 
-            data=admin_user_data, 
-            auth_token=admin_token
+    # Verify email using the token
+    if verification_token:
+        verify_response, verify_success = make_request(
+            "POST", "/auth/verify-email", 
+            data={"token": verification_token}
         )
         
-        if not create_admin_success:
-            print_error(f"Failed to create admin user: {create_admin_response}")
+        if not verify_success:
+            print_error(f"Failed to verify email: {verify_response}")
             return {}, ""
+        
+        print_success("Email verified successfully")
     
-    elif role == "MODERATOR":
-        # For moderator, we need to update the user role via admin endpoint
+    # If we need to create moderator, update role via admin endpoint
+    if role == "MODERATOR":
+        # Login as super admin to update user role
         super_admin_login = {
-            "email": "superadmin@gemplay.com", 
+            "email": "superadmin@gemplay.com",
             "password": "SuperAdmin123!"
         }
         
