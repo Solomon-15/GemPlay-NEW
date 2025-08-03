@@ -3222,25 +3222,28 @@ async def login(user_credentials: UserLogin, request: Request):
             detail="Email not verified. Please check your email and verify your account."
         )
     
-    # Update last login
+    # Successful login - reset failed attempts and update login info
     await db.users.update_one(
         {"id": user_obj.id},
-        {"$set": {"last_login": datetime.utcnow()}}
+        {"$set": {
+            "last_login": current_time,
+            "last_login_ip": client_ip,
+            "failed_login_attempts": 0,  # Reset failed attempts
+            "locked_until": None,  # Clear any lockout
+            "updated_at": current_time
+        }}
     )
     
     # Create access token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user_obj.id}, expires_delta=access_token_expires
-    )
+    access_token = create_access_token({"sub": user_obj.id})
     
     # Create refresh token
-    refresh_token = await create_refresh_token(user_obj.id)
+    refresh_token_str = create_refresh_token({"sub": user_obj.id})
     
     return Token(
         access_token=access_token,
         token_type="bearer",
-        refresh_token=refresh_token,
+        refresh_token=refresh_token_str,
         user=UserResponse(**user_obj.dict())
     )
 
