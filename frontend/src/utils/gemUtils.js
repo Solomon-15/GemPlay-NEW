@@ -201,9 +201,10 @@ export const formatBetAmountAsGems = async (betData, gemPrices = null) => {
 /**
  * Preload gem prices for better performance
  * Call this on app startup or when gems might be needed
+ * @param {string} userRole - User role (ADMIN, SUPER_ADMIN, etc.)
  */
-export const preloadGemPrices = async () => {
-  await getGemPrices();
+export const preloadGemPrices = async (userRole = null) => {
+  await getGemPrices(userRole);
 };
 
 // Constants
