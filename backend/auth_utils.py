@@ -15,8 +15,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# JWT settings
-JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key-change-this')
+# JWT settings - Import from main server
+import secrets
+JWT_SECRET = secrets.token_urlsafe(64)  # Use same key generation as server.py
 JWT_ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 30
