@@ -31,6 +31,7 @@ const LoginForm = ({ onLogin }) => {
     gender: 'male'
   });
   const [loading, setLoading] = useState(false);
+  const [usernameError, setUsernameError] = useState(''); // Для ошибок валидации имени
 
   const handleSubmit = async (e) => {
     e.preventDefault();
