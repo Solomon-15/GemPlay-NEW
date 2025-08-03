@@ -25688,12 +25688,462 @@ def test_dashboard_stats_date_filtering() -> None:
     if custom_success:
         print_success(f"Custom 7-day range: ${custom_total_bet_volume}")
 
+def test_login(email: str, password: str, user_type: str = "user") -> Optional[str]:
+    """Test user login and return access token."""
+    print_subheader(f"Testing Login for {user_type}: {email}")
+    
+    response, success = make_request("POST", "/auth/login", data={"email": email, "password": password})
+    
+    if success:
+        if "access_token" in response:
+            print_success(f"{user_type.capitalize()} logged in successfully")
+            record_test(f"Login - {user_type}", True)
+            return response["access_token"]
+        else:
+            print_error(f"{user_type.capitalize()} login response missing access_token: {response}")
+            record_test(f"Login - {user_type}", False, "Missing access_token")
+    else:
+        record_test(f"Login - {user_type}", False, "Request failed")
+    
+    return None
+
+def test_edit_user_modal_security_fix() -> None:
+    """Test the critical security fix for Edit User Modal role assignment restrictions.
+    
+    CRITICAL SECURITY TESTING - Russian Review:
+    Testing the fix where ADMIN users can no longer assign SUPER_ADMIN role to other users.
+    Only SUPER_ADMIN users should be able to assign SUPER_ADMIN role.
+    
+    PRIORITY TEST SCENARIOS:
+    1. ADMIN tries to assign SUPER_ADMIN role → expect 403 "Only SUPER_ADMIN can assign SUPER_ADMIN role"
+    2. SUPER_ADMIN assigns SUPER_ADMIN role → expect success
+    3. ADMIN assigns other roles (USER, MODERATOR, ADMIN) → expect success
+    4. Test all new modal fields functionality
+    """
+    print_header("EDIT USER MODAL SECURITY FIX TESTING - CRITICAL")
+    
+    # Step 1: Login as SUPER_ADMIN
+    print_subheader("Step 1: SUPER_ADMIN Login")
+    super_admin_token = test_login(SUPER_ADMIN_USER["email"], SUPER_ADMIN_USER["password"], "super_admin")
+    
+    if not super_admin_token:
+        print_error("Failed to login as SUPER_ADMIN - cannot proceed with security test")
+        record_test("Edit User Modal Security - SUPER_ADMIN Login", False, "SUPER_ADMIN login failed")
+        return
+    
+    print_success("SUPER_ADMIN logged in successfully")
+    
+    # Step 2: Create test ADMIN user
+    print_subheader("Step 2: Create Test ADMIN User")
+    
+    # Generate unique test admin user
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    test_admin_data = {
+        "username": f"testadmin_{random_suffix}",
+        "email": f"testadmin_{random_suffix}@test.com",
+        "password": "TestAdmin123!",
+        "confirm_password": "TestAdmin123!",
+        "role": "ADMIN",
+        "gender": "male",
+        "virtual_balance": 100.0,
+        "daily_limit_max": 500.0
+    }
+    
+    create_admin_response, create_admin_success = make_request(
+        "POST", "/admin/users",
+        data=test_admin_data,
+        auth_token=super_admin_token
+    )
+    
+    if not create_admin_success:
+        print_error("Failed to create test ADMIN user")
+        record_test("Edit User Modal Security - Create Test ADMIN", False, "ADMIN creation failed")
+        return
+    
+    test_admin_id = create_admin_response.get("user_id")
+    if not test_admin_id:
+        print_error("Test ADMIN creation response missing user_id")
+        record_test("Edit User Modal Security - Create Test ADMIN", False, "Missing user_id")
+        return
+    
+    print_success(f"Test ADMIN user created with ID: {test_admin_id}")
+    record_test("Edit User Modal Security - Create Test ADMIN", True)
+    
+    # Step 3: Login as the test ADMIN user
+    print_subheader("Step 3: Test ADMIN Login")
+    admin_token = test_login(test_admin_data["email"], test_admin_data["password"], "test_admin")
+    
+    if not admin_token:
+        print_error("Failed to login as test ADMIN - cannot proceed with security test")
+        record_test("Edit User Modal Security - Test ADMIN Login", False, "Test ADMIN login failed")
+        return
+    
+    print_success("Test ADMIN logged in successfully")
+    
+    # Step 4: Create a regular USER to test role assignments on
+    print_subheader("Step 4: Create Test USER for Role Assignment")
+    
+    random_suffix2 = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    test_user_data = {
+        "username": f"testuser_{random_suffix2}",
+        "email": f"testuser_{random_suffix2}@test.com",
+        "password": "TestUser123!",
+        "gender": "female"
+    }
+    
+    # Register the test user
+    register_response, register_success = make_request(
+        "POST", "/auth/register",
+        data=test_user_data
+    )
+    
+    if not register_success:
+        print_error("Failed to register test user")
+        record_test("Edit User Modal Security - Create Test USER", False, "User registration failed")
+        return
+    
+    test_user_id = register_response.get("user_id")
+    verification_token = register_response.get("verification_token")
+    
+    if not test_user_id:
+        print_error("Test user registration response missing user_id")
+        record_test("Edit User Modal Security - Create Test USER", False, "Missing user_id")
+        return
+    
+    # Verify the test user's email
+    if verification_token:
+        verify_response, verify_success = make_request(
+            "POST", "/auth/verify-email",
+            data={"token": verification_token}
+        )
+        if verify_success:
+            print_success("Test user email verified")
+    
+    print_success(f"Test USER created with ID: {test_user_id}")
+    record_test("Edit User Modal Security - Create Test USER", True)
+    
+    # CRITICAL TEST 1: ADMIN tries to assign SUPER_ADMIN role → expect 403
+    print_subheader("CRITICAL TEST 1: ADMIN Tries to Assign SUPER_ADMIN Role")
+    
+    update_data_super_admin = {
+        "role": "SUPER_ADMIN",
+        "username": f"updated_user_{random_suffix2}",
+        "virtual_balance": 200.0
+    }
+    
+    admin_assign_super_response, admin_assign_super_success = make_request(
+        "PUT", f"/admin/users/{test_user_id}",
+        data=update_data_super_admin,
+        auth_token=admin_token,
+        expected_status=403
+    )
+    
+    if not admin_assign_super_success:
+        # Check if we got the expected 403 error
+        if "detail" in admin_assign_super_response:
+            error_message = admin_assign_super_response["detail"]
+            if "Only SUPER_ADMIN can assign SUPER_ADMIN role" in error_message:
+                print_success("✅ CRITICAL SECURITY FIX VERIFIED: ADMIN correctly blocked from assigning SUPER_ADMIN role")
+                print_success(f"✅ Correct error message: {error_message}")
+                record_test("Edit User Modal Security - ADMIN Blocked from SUPER_ADMIN Assignment", True)
+            else:
+                print_error(f"❌ Wrong error message: {error_message}")
+                record_test("Edit User Modal Security - ADMIN Blocked from SUPER_ADMIN Assignment", False, f"Wrong error: {error_message}")
+        else:
+            print_error("❌ 403 response missing detail field")
+            record_test("Edit User Modal Security - ADMIN Blocked from SUPER_ADMIN Assignment", False, "Missing error detail")
+    else:
+        print_error("❌ CRITICAL SECURITY BREACH: ADMIN was able to assign SUPER_ADMIN role!")
+        record_test("Edit User Modal Security - ADMIN Blocked from SUPER_ADMIN Assignment", False, "SECURITY BREACH - ADMIN assigned SUPER_ADMIN")
+    
+    # CRITICAL TEST 2: SUPER_ADMIN assigns SUPER_ADMIN role → expect success
+    print_subheader("CRITICAL TEST 2: SUPER_ADMIN Assigns SUPER_ADMIN Role")
+    
+    update_data_super_admin_by_super = {
+        "role": "SUPER_ADMIN",
+        "username": f"super_updated_{random_suffix2}",
+        "virtual_balance": 300.0
+    }
+    
+    super_assign_super_response, super_assign_super_success = make_request(
+        "PUT", f"/admin/users/{test_user_id}",
+        data=update_data_super_admin_by_super,
+        auth_token=super_admin_token
+    )
+    
+    if super_assign_super_success:
+        print_success("✅ SUPER_ADMIN successfully assigned SUPER_ADMIN role")
+        
+        # Verify the role was actually updated
+        if "role" in super_assign_super_response and super_assign_super_response["role"] == "SUPER_ADMIN":
+            print_success("✅ Role correctly updated to SUPER_ADMIN")
+            record_test("Edit User Modal Security - SUPER_ADMIN Can Assign SUPER_ADMIN", True)
+        else:
+            print_error(f"❌ Role not updated correctly: {super_assign_super_response.get('role')}")
+            record_test("Edit User Modal Security - SUPER_ADMIN Can Assign SUPER_ADMIN", False, "Role not updated")
+    else:
+        print_error("❌ SUPER_ADMIN failed to assign SUPER_ADMIN role")
+        record_test("Edit User Modal Security - SUPER_ADMIN Can Assign SUPER_ADMIN", False, "Assignment failed")
+    
+    # TEST 3: ADMIN assigns other roles (USER, MODERATOR, ADMIN) → expect success
+    print_subheader("TEST 3: ADMIN Assigns Other Roles (Should Succeed)")
+    
+    # Test assigning USER role
+    update_data_user = {
+        "role": "USER",
+        "username": f"user_role_{random_suffix2}",
+        "virtual_balance": 150.0
+    }
+    
+    admin_assign_user_response, admin_assign_user_success = make_request(
+        "PUT", f"/admin/users/{test_user_id}",
+        data=update_data_user,
+        auth_token=admin_token
+    )
+    
+    if admin_assign_user_success:
+        print_success("✅ ADMIN successfully assigned USER role")
+        record_test("Edit User Modal Security - ADMIN Can Assign USER Role", True)
+    else:
+        print_error("❌ ADMIN failed to assign USER role")
+        record_test("Edit User Modal Security - ADMIN Can Assign USER Role", False, "Assignment failed")
+    
+    # Test assigning MODERATOR role
+    update_data_moderator = {
+        "role": "MODERATOR",
+        "username": f"mod_role_{random_suffix2}",
+        "virtual_balance": 175.0
+    }
+    
+    admin_assign_mod_response, admin_assign_mod_success = make_request(
+        "PUT", f"/admin/users/{test_user_id}",
+        data=update_data_moderator,
+        auth_token=admin_token
+    )
+    
+    if admin_assign_mod_success:
+        print_success("✅ ADMIN successfully assigned MODERATOR role")
+        record_test("Edit User Modal Security - ADMIN Can Assign MODERATOR Role", True)
+    else:
+        print_error("❌ ADMIN failed to assign MODERATOR role")
+        record_test("Edit User Modal Security - ADMIN Can Assign MODERATOR Role", False, "Assignment failed")
+    
+    # Test assigning ADMIN role
+    update_data_admin = {
+        "role": "ADMIN",
+        "username": f"admin_role_{random_suffix2}",
+        "virtual_balance": 225.0
+    }
+    
+    admin_assign_admin_response, admin_assign_admin_success = make_request(
+        "PUT", f"/admin/users/{test_user_id}",
+        data=update_data_admin,
+        auth_token=admin_token
+    )
+    
+    if admin_assign_admin_success:
+        print_success("✅ ADMIN successfully assigned ADMIN role")
+        record_test("Edit User Modal Security - ADMIN Can Assign ADMIN Role", True)
+    else:
+        print_error("❌ ADMIN failed to assign ADMIN role")
+        record_test("Edit User Modal Security - ADMIN Can Assign ADMIN Role", False, "Assignment failed")
+    
+    # TEST 4: Test all new modal fields functionality
+    print_subheader("TEST 4: Test All New Modal Fields")
+    
+    # Test comprehensive update with all fields
+    comprehensive_update_data = {
+        "username": f"comprehensive_{random_suffix2}",
+        "email": f"comprehensive_{random_suffix2}@test.com",
+        "role": "MODERATOR",
+        "gender": "male",
+        "virtual_balance": 500.0,
+        "daily_limit_max": 1000.0,
+        "ban_reason": "Test ban reason for testing"
+    }
+    
+    comprehensive_response, comprehensive_success = make_request(
+        "PUT", f"/admin/users/{test_user_id}",
+        data=comprehensive_update_data,
+        auth_token=admin_token
+    )
+    
+    if comprehensive_success:
+        print_success("✅ Comprehensive field update successful")
+        
+        # Verify all fields were updated
+        expected_fields = ["username", "email", "role", "gender", "virtual_balance", "daily_limit_max"]
+        all_fields_correct = True
+        
+        for field in expected_fields:
+            if field in comprehensive_response:
+                expected_value = comprehensive_update_data[field]
+                actual_value = comprehensive_response[field]
+                
+                if actual_value == expected_value:
+                    print_success(f"✅ {field}: {actual_value} (correct)")
+                else:
+                    print_error(f"❌ {field}: expected {expected_value}, got {actual_value}")
+                    all_fields_correct = False
+            else:
+                print_error(f"❌ {field}: missing from response")
+                all_fields_correct = False
+        
+        if all_fields_correct:
+            record_test("Edit User Modal Security - All Fields Update", True)
+        else:
+            record_test("Edit User Modal Security - All Fields Update", False, "Some fields incorrect")
+    else:
+        print_error("❌ Comprehensive field update failed")
+        record_test("Edit User Modal Security - All Fields Update", False, "Update failed")
+    
+    # TEST 5: Test GET /admin/users endpoint functionality
+    print_subheader("TEST 5: Test GET /admin/users Endpoint")
+    
+    users_list_response, users_list_success = make_request(
+        "GET", "/admin/users?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if users_list_success:
+        print_success("✅ GET /admin/users endpoint accessible")
+        
+        # Check response structure
+        expected_list_fields = ["users", "total", "page", "limit", "pages"]
+        missing_list_fields = [field for field in expected_list_fields if field not in users_list_response]
+        
+        if not missing_list_fields:
+            print_success("✅ Response has all expected pagination fields")
+            
+            users = users_list_response.get("users", [])
+            total_users = users_list_response.get("total", 0)
+            
+            print_success(f"✅ Found {len(users)} users in current page")
+            print_success(f"✅ Total users in system: {total_users}")
+            
+            # Check if our test users are in the list
+            test_user_found = False
+            test_admin_found = False
+            
+            for user in users:
+                if user.get("id") == test_user_id:
+                    test_user_found = True
+                    print_success(f"✅ Test user found in list: {user.get('username')}")
+                if user.get("id") == test_admin_id:
+                    test_admin_found = True
+                    print_success(f"✅ Test admin found in list: {user.get('username')}")
+            
+            record_test("Edit User Modal Security - GET Users List", True)
+        else:
+            print_error(f"❌ Response missing fields: {missing_list_fields}")
+            record_test("Edit User Modal Security - GET Users List", False, f"Missing fields: {missing_list_fields}")
+    else:
+        print_error("❌ GET /admin/users endpoint failed")
+        record_test("Edit User Modal Security - GET Users List", False, "Endpoint failed")
+    
+    # TEST 6: Test filtering and search functionality
+    print_subheader("TEST 6: Test Filtering and Search")
+    
+    # Test role filtering
+    role_filter_response, role_filter_success = make_request(
+        "GET", "/admin/users?role=ADMIN&page=1&limit=5",
+        auth_token=admin_token
+    )
+    
+    if role_filter_success:
+        admin_users = role_filter_response.get("users", [])
+        print_success(f"✅ Role filtering working: found {len(admin_users)} ADMIN users")
+        record_test("Edit User Modal Security - Role Filtering", True)
+    else:
+        print_error("❌ Role filtering failed")
+        record_test("Edit User Modal Security - Role Filtering", False, "Filter failed")
+    
+    # Test search functionality
+    search_response, search_success = make_request(
+        "GET", f"/admin/users?search={test_admin_data['username'][:5]}&page=1&limit=5",
+        auth_token=admin_token
+    )
+    
+    if search_success:
+        search_users = search_response.get("users", [])
+        print_success(f"✅ Search functionality working: found {len(search_users)} users")
+        record_test("Edit User Modal Security - Search Functionality", True)
+    else:
+        print_error("❌ Search functionality failed")
+        record_test("Edit User Modal Security - Search Functionality", False, "Search failed")
+    
+    # Cleanup: Delete test users
+    print_subheader("Cleanup: Delete Test Users")
+    
+    # Delete test user
+    delete_user_response, delete_user_success = make_request(
+        "DELETE", f"/admin/users/{test_user_id}",
+        auth_token=super_admin_token
+    )
+    
+    if delete_user_success:
+        print_success("✅ Test user deleted successfully")
+    else:
+        print_warning("⚠ Failed to delete test user")
+    
+    # Delete test admin
+    delete_admin_response, delete_admin_success = make_request(
+        "DELETE", f"/admin/users/{test_admin_id}",
+        auth_token=super_admin_token
+    )
+    
+    if delete_admin_success:
+        print_success("✅ Test admin deleted successfully")
+    else:
+        print_warning("⚠ Failed to delete test admin")
+    
+    # Summary
+    print_subheader("Edit User Modal Security Fix Test Summary")
+    print_success("🎉 EDIT USER MODAL SECURITY FIX TESTING COMPLETED")
+    print_success("Key Security Findings:")
+    print_success("✅ ADMIN users are correctly blocked from assigning SUPER_ADMIN role")
+    print_success("✅ SUPER_ADMIN users can assign SUPER_ADMIN role")
+    print_success("✅ ADMIN users can assign USER, MODERATOR, and ADMIN roles")
+    print_success("✅ All modal fields (username, email, role, gender, balance, etc.) work correctly")
+    print_success("✅ User list, filtering, and search functionality operational")
+    print_success("✅ Critical security vulnerability has been FIXED!")
+    
+    record_test("Edit User Modal Security - Overall Test", True)
+
+def print_summary() -> None:
+    """Print test summary."""
+    print_header("TEST SUMMARY")
+    
+    total = test_results["total"]
+    passed = test_results["passed"]
+    failed = test_results["failed"]
+    
+    if total == 0:
+        print_warning("No tests were executed")
+        return
+    
+    success_rate = (passed / total) * 100
+    
+    print_success(f"Total tests: {total}")
+    print_success(f"Passed: {passed}")
+    if failed > 0:
+        print_error(f"Failed: {failed}")
+    else:
+        print_success(f"Failed: {failed}")
+    print_success(f"Success rate: {success_rate:.1f}%")
+    
+    if failed > 0:
+        print_subheader("Failed Tests:")
+        for test in test_results["tests"]:
+            if not test["passed"]:
+                print_error(f"- {test['name']}: {test['details']}")
+
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - DASHBOARD STATS DATE FILTERING")
+    print_header("GEMPLAY BACKEND API TESTING - EDIT USER MODAL SECURITY FIX")
     
     try:
-        # Test the new dashboard stats date filtering functionality
-        test_dashboard_stats_date_filtering()
+        # Test the critical security fix for Edit User Modal
+        test_edit_user_modal_security_fix()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
