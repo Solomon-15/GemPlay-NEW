@@ -218,6 +218,7 @@ function App() {
   const [currentView, setCurrentView] = useState('lobby');
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [authView, setAuthView] = useState('login'); // 'login', 'register', 'password-reset', 'email-verification'
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const lastAuthCheckTime = useRef(0);
   const AUTH_CHECK_THROTTLE_DELAY = 2000; // Prevent auth checks more than once per 2 seconds
