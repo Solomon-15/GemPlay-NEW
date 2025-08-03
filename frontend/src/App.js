@@ -58,6 +58,12 @@ const LoginForm = ({ onLogin, setUser }) => {
         console.log('🚀 Setting user from login response:', response.data.user);
         setUser(response.data.user);
         onLogin(response.data.user);
+        
+        // Принудительно проверяем авторизацию для обновления состояния
+        console.log('🔍 Forcing auth check after login');
+        setTimeout(() => {
+          checkAuthStatus();
+        }, 100);
       } else {
         // Register
         // Валидация имени пользователя перед отправкой
