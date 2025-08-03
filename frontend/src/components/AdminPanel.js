@@ -403,8 +403,8 @@ const AdminPanel = ({ user, onClose }) => {
     }
   ];
 
-  // Add Role Management for SUPER_ADMIN
-  if (user && user.role === 'SUPER_ADMIN') {
+  // Add Role Management for ADMIN and SUPER_ADMIN
+  if (user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) {
     adminSections.push({
       id: 'roles',
       title: 'Роли и права',
