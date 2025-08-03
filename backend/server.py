@@ -9375,6 +9375,18 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
         online_bet_volume_result = await db.games.aggregate(online_bet_volume_pipeline).to_list(1)
         online_bet_volume = online_bet_volume_result[0]["total"] if online_bet_volume_result else 0
         
+        # Get active user bets (created by live players, not bots)
+        all_bot_ids = human_bot_ids + regular_bot_ids
+        active_user_bets = await db.games.count_documents({
+            "creator_id": {"$nin": all_bot_ids},  # Exclude all bot IDs
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
+        # Get total active games count (same as "Ongoing Battles")
+        total_active_games = await db.games.count_documents({
+            "status": {"$in": ["WAITING", "ACTIVE"]}
+        })
+        
         return {
             "active_human_bots": active_human_bots_count,
             "active_regular_bots": active_regular_bots_in_game,
@@ -9382,6 +9394,8 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_admin)):
             "online_users": online_users_count,
             "active_human_bots_games": active_human_bots_games,  # Активные игры Human ботов
             "active_regular_bots_games": active_regular_bots_games,  # Активные игры обычных ботов
+            "active_user_bets": active_user_bets,  # Активные ставки пользователей (живых игроков)
+            "total_active_games": total_active_games,  # Общие активные игры
             "total_bet_volume": total_bet_volume,
             "online_bet_volume": online_bet_volume
         }
