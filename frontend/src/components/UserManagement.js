@@ -787,6 +787,114 @@ const UserManagement = ({ user: currentUser }) => {
     }
   };
 
+  // Edit user functions (перенесено из RoleManagement.js)
+  const handleEditUser = (userToEdit) => {
+    setSelectedUser(userToEdit);
+    setEditForm({
+      username: userToEdit.username || '',
+      email: userToEdit.email || '',
+      password: '', // Пароль не загружаем из соображений безопасности
+      confirm_password: '',
+      role: userToEdit.role || 'USER',
+      gender: userToEdit.gender || 'male',
+      virtual_balance: userToEdit.virtual_balance || 1000,
+      daily_limit_max: userToEdit.daily_limit_max || 1000,
+      status: userToEdit.status || 'ACTIVE',
+      ban_reason: userToEdit.ban_reason || ''
+    });
+    setEditUsernameError(''); // Сбрасываем ошибки
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveUser = async () => {
+    try {
+      setEditUserLoading(true);
+      
+      if (!editForm.username.trim()) {
+        showErrorRU('Введите имя пользователя');
+        return;
+      }
+
+      if (!editForm.email.trim()) {
+        showErrorRU('Введите email');
+        return;
+      }
+
+      // Валидация имени пользователя
+      if (editForm.username && editForm.username.trim()) {
+        const validation = validateUsername(editForm.username);
+        if (!validation.isValid) {
+          showErrorRU(validation.errors[0]);
+          return;
+        }
+      }
+
+      // Проверка паролей если они введены
+      if (editForm.password || editForm.confirm_password) {
+        if (editForm.password !== editForm.confirm_password) {
+          showErrorRU('Пароли не совпадают');
+          return;
+        }
+        
+        if (editForm.password.length < 8) {
+          showErrorRU('Пароль должен содержать минимум 8 символов');
+          return;
+        }
+      }
+
+      // Проверка причины блокировки
+      if (editForm.status === 'BANNED' && !editForm.ban_reason.trim()) {
+        showErrorRU('Причина блокировки обязательна при статусе "заблокирован"');
+        return;
+      }
+
+      // Проверка прав доступа - только SUPER_ADMIN может назначать роль SUPER_ADMIN
+      if (currentUser?.role !== 'SUPER_ADMIN') {
+        if (editForm.role === 'SUPER_ADMIN') {
+          showErrorRU('Только SUPER_ADMIN может назначать роль SUPER_ADMIN');
+          return;
+        }
+      }
+
+      // Подготавливаем данные для отправки
+      const updateData = {
+        username: editForm.username,
+        email: editForm.email,
+        role: editForm.role,
+        gender: editForm.gender,
+        virtual_balance: editForm.virtual_balance,
+        daily_limit_max: editForm.daily_limit_max,
+        status: editForm.status
+      };
+
+      // Добавляем пароль только если он введен
+      if (editForm.password) {
+        updateData.password = editForm.password;
+      }
+
+      // Добавляем причину блокировки если статус BANNED
+      if (editForm.status === 'BANNED') {
+        updateData.ban_reason = editForm.ban_reason;
+      }
+
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/admin/users/${selectedUser.id}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      showSuccessRU('Пользователь успешно обновлен');
+      setIsEditModalOpen(false);
+      setSelectedUser(null);
+      setEditUsernameError('');
+      fetchUsers(); // Обновляем список пользователей
+    } catch (error) {
+      console.error('Error updating user:', error);
+      showErrorRU(error.response?.data?.detail || 'Ошибка обновления пользователя');
+    } finally {
+      setEditUserLoading(false);
+    }
+  };
+
   // Gem management functions
   const handleFreezeGems = async (gemType, quantity, reason) => {
     try {
