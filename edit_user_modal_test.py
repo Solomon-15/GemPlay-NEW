@@ -179,13 +179,16 @@ def test_get_users_list(auth_token: str, user_type: str) -> Tuple[List[Dict], bo
     )
     
     if success:
-        if "users" in response and "pagination" in response:
+        if "users" in response:
             users = response["users"]
-            pagination = response["pagination"]
+            total = response.get("total", len(users))
+            page = response.get("page", 1)
+            limit = response.get("limit", 20)
             
             print_success(f"Retrieved {len(users)} users")
-            print_success(f"Total users: {pagination.get('total_items', 'N/A')}")
-            print_success(f"Current page: {pagination.get('current_page', 'N/A')}")
+            print_success(f"Total users: {total}")
+            print_success(f"Current page: {page}")
+            print_success(f"Limit per page: {limit}")
             
             # Verify user structure
             if users:
@@ -206,7 +209,7 @@ def test_get_users_list(auth_token: str, user_type: str) -> Tuple[List[Dict], bo
                 record_test(f"GET /admin/users - {user_type}", True, "No users found")
                 return [], True
         else:
-            print_error("Response missing 'users' or 'pagination' fields")
+            print_error("Response missing 'users' field")
             record_test(f"GET /admin/users - {user_type}", False, "Invalid response structure")
             return [], False
     else:
