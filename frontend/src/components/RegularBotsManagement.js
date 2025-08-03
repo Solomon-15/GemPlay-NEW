@@ -954,26 +954,12 @@ const RegularBotsManagement = () => {
 
       {/* Табы */}
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
-        <div className="flex border-b border-border-primary">
+        <div className="border-b border-border-primary">
           <button
             onClick={() => setActiveTab('bots')}
-            className={`flex-1 px-6 py-4 text-center font-rajdhani font-bold transition-colors ${
-              activeTab === 'bots'
-                ? 'bg-accent-primary text-white border-b-2 border-accent-primary'
-                : 'text-text-secondary hover:text-white hover:bg-surface-sidebar'
-            }`}
+            className="flex-1 px-6 py-4 text-center font-rajdhani font-bold bg-accent-primary text-white border-b-2 border-accent-primary w-full"
           >
             📋 Список ботов
-          </button>
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex-1 px-6 py-4 text-center font-rajdhani font-bold transition-colors ${
-              activeTab === 'settings'
-                ? 'bg-accent-primary text-white border-b-2 border-accent-primary'
-                : 'text-text-secondary hover:text-white hover:bg-surface-sidebar'
-            }`}
-          >
-            ⚙️ Настройки
           </button>
         </div>
 
