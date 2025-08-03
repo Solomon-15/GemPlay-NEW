@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-GemPlay API Comprehensive Testing
-Focus: ACTIVE Status Consistency Across All Endpoints
-Russian Review Requirements: Ensure ACTIVE status is correctly displayed everywhere
+Bot Settings Endpoints Testing - Russian Review
+Focus: Testing bot settings endpoints for global bot configuration
+Requirements: Check /api/admin/bot-settings, /api/admin/bot-settings-v2, /api/admin/bots/settings
 """
 
 import requests
