@@ -25760,10 +25760,10 @@ def test_edit_user_modal_security_fix() -> None:
         record_test("Edit User Modal Security - Create Test ADMIN", False, "ADMIN creation failed")
         return
     
-    test_admin_id = create_admin_response.get("user_id")
+    test_admin_id = create_admin_response.get("user", {}).get("id")
     if not test_admin_id:
-        print_error("Test ADMIN creation response missing user_id")
-        record_test("Edit User Modal Security - Create Test ADMIN", False, "Missing user_id")
+        print_error("Test ADMIN creation response missing user id")
+        record_test("Edit User Modal Security - Create Test ADMIN", False, "Missing user id")
         return
     
     print_success(f"Test ADMIN user created with ID: {test_admin_id}")
