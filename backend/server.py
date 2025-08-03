@@ -10312,6 +10312,12 @@ async def update_user(
         if "email" in user_data:
             update_fields["email"] = user_data["email"]
         if "role" in user_data:
+            # Role-based restrictions: only SUPER_ADMIN can assign SUPER_ADMIN role
+            if user_data["role"] == "SUPER_ADMIN" and current_user.role != "SUPER_ADMIN":
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Only SUPER_ADMIN can assign SUPER_ADMIN role"
+                )
             update_fields["role"] = user_data["role"]
         if "virtual_balance" in user_data:
             update_fields["virtual_balance"] = float(user_data["virtual_balance"])
