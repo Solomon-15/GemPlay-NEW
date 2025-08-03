@@ -14,6 +14,7 @@ import NotificationContainer from './NotificationContainer';
 import NotificationDemo from './NotificationDemo';
 import NotificationAdmin from './NotificationAdmin';
 import SecurityMonitoring from './SecurityMonitoring';
+import RoleManagement from './RoleManagement';
 import { useNotifications } from './NotificationContext';
 import useConfirmation from '../hooks/useConfirmation';
 import ConfirmationModal from './ConfirmationModal';
