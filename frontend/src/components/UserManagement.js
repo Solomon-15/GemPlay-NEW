@@ -1002,7 +1002,10 @@ const UserManagement = ({ user: currentUser }) => {
             </button>
             <button
               type="button"
-              onClick={() => setIsEditModalOpen(false)}
+              onClick={() => {
+                setIsEditModalOpen(false);
+                setEditUsernameError(''); // Сбрасываем ошибку
+              }}
               className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors"
             >
               Отмена
