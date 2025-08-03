@@ -483,9 +483,10 @@ def test_role_permissions_system() -> None:
     # Test 1: Login as admin user
     print_subheader("Test 5.1: Admin User Login and Permissions")
     
+    # Use the correct admin credentials from the environment
     admin_login_data = {
         "email": "admin@gemplay.com",
-        "password": "admin123"
+        "password": "Admin123!"  # Use the correct password from .env
     }
     
     response, success = make_request(
