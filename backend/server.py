@@ -17217,40 +17217,7 @@ async def get_bot_settings_v2(current_user: User = Depends(get_current_admin)):
             detail=f"Failed to fetch bot settings: {str(e)}"
         )
 
-@api_router.put("/admin/bot-settings-v2", response_model=dict)
-async def update_bot_settings_v2(
-    settings: BotSettingsRequest,
-    current_user: User = Depends(get_current_admin)
-):
-    """Update bot settings - version 2 with unique name."""
-    try:
-        # Update settings in database
-        await db.bot_settings.update_one(
-            {"id": "bot_settings"},
-            {
-                "$set": {
-                    "globalMaxActiveBets": settings.globalMaxActiveBets,
-                    "globalMaxHumanBots": settings.globalMaxHumanBots,
-                    "paginationSize": settings.paginationSize,
-                    "autoActivateFromQueue": settings.autoActivateFromQueue,
-                    "priorityType": settings.priorityType,
-                    "updated_at": datetime.utcnow()
-                }
-            },
-            upsert=True
-        )
-        
-        return {
-            "success": True,
-            "message": "Bot settings updated successfully"
-        }
-        
-    except Exception as e:
-        logger.error(f"Error updating bot settings: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to update bot settings: {str(e)}"
-        )
+
 
 @api_router.get("/admin/bot-queue-stats", response_model=dict)
 async def get_bot_queue_stats(current_user: User = Depends(get_current_admin)):
