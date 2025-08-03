@@ -80,7 +80,7 @@ def verify_token(token: str, expected_type: str = "access") -> Optional[dict]:
         return payload
     except jwt.ExpiredSignatureError:
         return None
-    except jwt.JWTError:
+    except jwt.InvalidTokenError:
         return None
 
 def verify_google_token(token: str) -> Optional[dict]:
