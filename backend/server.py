@@ -27,6 +27,7 @@ import json
 import secrets
 from collections import defaultdict
 import ipaddress
+import bcrypt
 from username_utils import process_username, validate_username, sanitize_username
 from email_utils import send_verification_email, send_password_reset_email
 from auth_utils import (
