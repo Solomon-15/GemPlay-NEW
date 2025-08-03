@@ -671,101 +671,250 @@ const RoleManagement = ({ user }) => {
         </div>
       )}
 
-      {/* Модальное окно редактирования пользователя */}
+      {/* Новое модальное окно редактирования пользователя */}
       {isEditUserModalOpen && editingUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-sidebar rounded-lg p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-white font-rajdhani mb-4">
-              Редактирование пользователя: {editingUser.username}
-            </h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-text-secondary font-roboto text-sm mb-1">
-                  Имя пользователя
-                </label>
-                <input
-                  type="text"
-                  value={userEditForm.username}
-                  onChange={(e) => setUserEditForm({...userEditForm, username: e.target.value})}
-                  className="w-full px-3 py-2 bg-surface-primary border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-text-secondary font-roboto text-sm mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={userEditForm.email}
-                  onChange={(e) => setUserEditForm({...userEditForm, email: e.target.value})}
-                  className="w-full px-3 py-2 bg-surface-primary border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-text-secondary font-roboto text-sm mb-1">
-                  Роль
-                </label>
-                <select
-                  value={userEditForm.role}
-                  onChange={(e) => setUserEditForm({...userEditForm, role: e.target.value})}
-                  className="w-full px-3 py-2 bg-surface-primary border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                >
-                  <option value="USER">USER</option>
-                  <option value="MODERATOR">MODERATOR</option>
-                  <option value="ADMIN">ADMIN</option>
-                  {user?.role === 'SUPER_ADMIN' && (
-                    <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-                  )}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-text-secondary font-roboto text-sm mb-1">
-                  Виртуальный баланс
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={userEditForm.virtual_balance}
-                  onChange={(e) => setUserEditForm({...userEditForm, virtual_balance: parseFloat(e.target.value) || 0})}
-                  className="w-full px-3 py-2 bg-surface-primary border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                />
-              </div>
-
-              <div>
-                <label className="block text-text-secondary font-roboto text-sm mb-1">
-                  Статус
-                </label>
-                <select
-                  value={userEditForm.status}
-                  onChange={(e) => setUserEditForm({...userEditForm, status: e.target.value})}
-                  className="w-full px-3 py-2 bg-surface-primary border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                >
-                  <option value="ACTIVE">Активен</option>
-                  <option value="BANNED">Заблокирован</option>
-                  <option value="EMAIL_PENDING">Ожидает подтверждения</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 mt-6">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-russo text-xl text-white">Редактировать пользователя: {editingUser.username}</h3>
               <button
                 onClick={() => {
                   setIsEditUserModalOpen(false);
                   setEditingUser(null);
+                  setEditUsernameError(''); // Сбрасываем ошибку
                 }}
-                className="px-4 py-2 text-text-secondary hover:text-white font-roboto"
+                className="text-text-secondary hover:text-white"
+                disabled={editUserLoading}
               >
-                Отмена
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Username and Email */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Имя пользователя *
+                  </label>
+                  <input
+                    type="text"
+                    value={userEditForm.username}
+                    onChange={(e) => {
+                      handleUsernameInput(e.target.value, 
+                        (value) => setUserEditForm(prev => ({...prev, username: value})),
+                        setEditUsernameError
+                      );
+                    }}
+                    className={`w-full px-3 py-2 bg-surface-sidebar border rounded-lg text-white font-roboto focus:outline-none focus:ring-2 ${
+                      editUsernameError 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-border-primary focus:ring-accent-primary'
+                    }`}
+                    placeholder="user123"
+                    disabled={editUserLoading}
+                  />
+                  {editUsernameError ? (
+                    <p className="text-xs text-red-400 mt-1">
+                      {editUsernameError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-text-secondary mt-1">
+                      Длина: 3-15 символов. Разрешены: латиница, цифры, дефис, подчёркивание, точка, пробелы
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={userEditForm.email}
+                    onChange={(e) => setUserEditForm(prev => ({...prev, email: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder="user@example.com"
+                    disabled={editUserLoading}
+                  />
+                </div>
+              </div>
+
+              {/* Password fields - Необязательные при редактировании */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Новый пароль (необязательно)
+                  </label>
+                  <input
+                    type="password"
+                    value={userEditForm.password}
+                    onChange={(e) => setUserEditForm(prev => ({...prev, password: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder="Минимум 8 символов"
+                    disabled={editUserLoading}
+                    minLength="8"
+                  />
+                  <p className="text-xs text-text-secondary mt-1">
+                    Оставьте пустым, чтобы не менять пароль
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Подтверждение пароля
+                  </label>
+                  <input
+                    type="password"
+                    value={userEditForm.confirm_password}
+                    onChange={(e) => setUserEditForm(prev => ({...prev, confirm_password: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    placeholder="Повторите новый пароль"
+                    disabled={editUserLoading}
+                    minLength="8"
+                  />
+                </div>
+              </div>
+
+              {/* Role and Gender */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Роль
+                  </label>
+                  <select
+                    value={userEditForm.role}
+                    onChange={(e) => setUserEditForm(prev => ({...prev, role: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    disabled={editUserLoading || user?.role !== 'SUPER_ADMIN'}
+                  >
+                    <option value="USER">USER</option>
+                    <option value="MODERATOR">MODERATOR</option>
+                    <option value="ADMIN">ADMIN</option>
+                    {user?.role === 'SUPER_ADMIN' && (
+                      <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+                    )}
+                  </select>
+                  {user?.role !== 'SUPER_ADMIN' && (
+                    <p className="text-xs text-yellow-400 mt-1">
+                      Только SUPER_ADMIN может назначать любые роли
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Пол
+                  </label>
+                  <select
+                    value={userEditForm.gender}
+                    onChange={(e) => setUserEditForm(prev => ({...prev, gender: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    disabled={editUserLoading}
+                  >
+                    <option value="male">Мужчина</option>
+                    <option value="female">Женщина</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Balance and Limit */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Демо-баланс ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={userEditForm.virtual_balance}
+                    onChange={(e) => setUserEditForm(prev => ({...prev, virtual_balance: Math.max(1, Math.min(10000, parseInt(e.target.value) || 1000))}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    min="1"
+                    max="10000"
+                    disabled={editUserLoading}
+                  />
+                  <p className="text-xs text-text-secondary mt-1">От 1 до 10000</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Дневной лимит пополнения ($)
+                  </label>
+                  <input
+                    type="number"
+                    value={userEditForm.daily_limit_max}
+                    onChange={(e) => setUserEditForm(prev => ({...prev, daily_limit_max: Math.max(1, Math.min(10000, parseInt(e.target.value) || 1000))}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    min="1"
+                    max="10000"
+                    disabled={editUserLoading}
+                  />
+                  <p className="text-xs text-text-secondary mt-1">От 1 до 10000</p>
+                </div>
+              </div>
+
+              {/* Status and Ban Reason */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-2">
+                    Статус
+                  </label>
+                  <select
+                    value={userEditForm.status}
+                    onChange={(e) => setUserEditForm(prev => ({...prev, status: e.target.value}))}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    disabled={editUserLoading}
+                  >
+                    <option value="ACTIVE">Активный</option>
+                    <option value="BANNED">Заблокирован</option>
+                    <option value="EMAIL_PENDING">Ожидает подтверждения</option>
+                  </select>
+                </div>
+                
+                {userEditForm.status === 'BANNED' && (
+                  <div>
+                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                      Причина блокировки *
+                    </label>
+                    <textarea
+                      value={userEditForm.ban_reason}
+                      onChange={(e) => setUserEditForm(prev => ({...prev, ban_reason: e.target.value}))}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary resize-none"
+                      rows="3"
+                      placeholder="Укажите причину блокировки..."
+                      disabled={editUserLoading}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex space-x-4 mt-6">
               <button
                 onClick={handleSaveUser}
-                className="bg-accent-primary text-white px-4 py-2 rounded-lg font-rajdhani font-bold hover:bg-accent-primary/90"
+                disabled={editUserLoading}
+                className="flex-1 py-2 bg-accent-primary text-white font-rajdhani font-bold rounded-lg hover:bg-opacity-80 transition-colors disabled:opacity-50"
               >
-                Сохранить
+                {editUserLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Сохранение...
+                  </>
+                ) : (
+                  'Сохранить изменения'
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditUserModalOpen(false);
+                  setEditingUser(null);
+                  setEditUsernameError(''); // Сбрасываем ошибку
+                }}
+                disabled={editUserLoading}
+                className="flex-1 py-2 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                Отмена
               </button>
             </div>
           </div>
