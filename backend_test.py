@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-Sound Endpoints Testing - Russian Review
-Focus: Testing new sound endpoints that were added to fix SoundsAdmin.js errors
+Dashboard Stats Date Filtering Testing - Russian Review
+Focus: Testing new date filtering functionality in /api/admin/dashboard/stats endpoint
 Requirements: 
-1. GET /api/admin/sounds/categories - should return list of sound categories
-2. GET /api/admin/sounds/events - should return list of events for sounds
-3. Verify other sound endpoints still work after adding new ones
+1. Basic request without parameters (should work as before)
+2. Filtering by predefined periods: day, week, month, quarter, all_time
+3. Custom date filtering: bet_volume_period=custom with start/end dates
+4. Ensure total_bet_volume changes based on filters, other metrics remain stable
 """
 
 import requests
