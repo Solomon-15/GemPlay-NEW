@@ -343,7 +343,7 @@ def test_enhanced_login_security() -> None:
     print_subheader("Step 1: Create Test User for Lockout Testing")
     
     test_email = generate_test_email()
-    test_username = f"lockout_test_{int(time.time())}"
+    test_username = f"lock{int(time.time()) % 10000}"  # Shorter username
     test_password = "TestPassword123!"
     
     registration_data = {
