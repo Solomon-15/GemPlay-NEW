@@ -2478,16 +2478,29 @@ const UserManagement = ({ user: currentUser }) => {
                   <input
                     type="text"
                     value={createUserForm.username}
-                    onChange={(e) => setCreateUserForm(prev => ({...prev, username: e.target.value}))}
-                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                    onChange={(e) => {
+                      handleUsernameInput(e.target.value, 
+                        (value) => setCreateUserForm(prev => ({...prev, username: value})),
+                        setCreateUsernameError
+                      );
+                    }}
+                    className={`w-full px-3 py-2 bg-surface-sidebar border rounded-lg text-white font-roboto focus:outline-none focus:ring-2 ${
+                      createUsernameError 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-border-primary focus:ring-accent-primary'
+                    }`}
                     placeholder="user123"
                     disabled={createUserLoading}
-                    pattern="[a-zA-Z0-9._+-]+"
-                    title="Только латиница, цифры, точка, минус/плюс, подчеркивания, тире"
                   />
-                  <p className="text-xs text-text-secondary mt-1">
-                    Только латиница, цифры, точка, минус/плюс, подчеркивания, тире
-                  </p>
+                  {createUsernameError ? (
+                    <p className="text-xs text-red-400 mt-1">
+                      {createUsernameError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-text-secondary mt-1">
+                      Длина: 3-15 символов. Разрешены: латиница, цифры, дефис, подчёркивание, точка, пробелы
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-2">
