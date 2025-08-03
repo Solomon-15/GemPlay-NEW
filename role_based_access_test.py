@@ -91,9 +91,9 @@ def make_request(method: str, endpoint: str, data: Dict = None, auth_token: str 
 
 def generate_unique_username():
     """Generate unique username for testing."""
-    timestamp = str(int(time.time()))[-6:]
-    random_suffix = ''.join(random.choices(string.ascii_lowercase, k=4))
-    return f"testuser{timestamp}{random_suffix}"
+    timestamp = str(int(time.time()))[-4:]
+    random_suffix = ''.join(random.choices(string.ascii_lowercase, k=3))
+    return f"test{timestamp}{random_suffix}"
 
 def generate_unique_email():
     """Generate unique email for testing."""
