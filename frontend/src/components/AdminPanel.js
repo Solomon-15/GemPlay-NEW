@@ -656,7 +656,7 @@ const AdminPanel = ({ user, onClose }) => {
           />
               
           {/* 6. Объём ставок */}
-          <StatCardWithAction
+          <StatCardWithFilters
             title="Объём ставок"
             value={formatNumber(dashboardStats.total_bet_volume)}
             icon={
@@ -672,6 +672,10 @@ const AdminPanel = ({ user, onClose }) => {
               </svg>
             }
             actionTitle="Сброс"
+            filters={betVolumeFilters}
+            onFilterChange={handleBetVolumeFilterChange}
+            showFilters={showBetVolumeFilters}
+            setShowFilters={setShowBetVolumeFilters}
           />
           
           {/* 7. Объём ставок онлайн */}
