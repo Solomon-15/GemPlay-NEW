@@ -3250,7 +3250,7 @@ async def login(user_credentials: UserLogin, request: Request):
     access_token = create_access_token({"sub": user_obj.id})
     
     # Create refresh token
-    refresh_token_str = create_refresh_token({"sub": user_obj.id})
+    refresh_token_str = await create_refresh_token(user_obj.id)
     
     return Token(
         access_token=access_token,
