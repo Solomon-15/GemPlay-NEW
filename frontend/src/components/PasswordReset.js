@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNotifications } from './NotificationContext';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
@@ -11,8 +10,18 @@ const PasswordReset = ({ onBackToLogin }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const { showSuccess, showError } = useNotifications();
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const showSuccess = (msg) => {
+    setMessage(msg);
+    setError('');
+  };
+
+  const showError = (msg) => {
+    setError(msg);
+    setMessage('');
+  };
 
   const handleRequestReset = async (e) => {
     e.preventDefault();
