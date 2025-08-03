@@ -100,6 +100,13 @@ const Profile = ({ user, onUpdateUser, setCurrentView, onOpenAdminPanel, onLogou
       return;
     }
     
+    // Валидация имени пользователя
+    const validation = validateUsername(editForm.username);
+    if (!validation.isValid) {
+      showError(validation.errors[0]);
+      return;
+    }
+    
     setUpdating(true);
     try {
       const token = localStorage.getItem('token');
