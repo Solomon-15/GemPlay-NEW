@@ -197,8 +197,6 @@ class BotMode(str, Enum):
 # Bot Settings model
 class BotSettings(BaseModel):
     id: str = Field(default="bot_settings")
-    max_active_bets_regular: int = 50  # Максимальное количество активных ставок для обычных ботов
-    max_active_bets_human: int = 100    # Максимальное количество активных ставок для Human ботов (обновлено с 30 до 100)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
