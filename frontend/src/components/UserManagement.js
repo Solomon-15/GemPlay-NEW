@@ -482,6 +482,14 @@ const UserManagement = ({ user: currentUser }) => {
         return;
       }
     }
+
+    // Проверка ролей - только SUPER_ADMIN может назначать любые роли
+    if (currentUser?.role !== 'SUPER_ADMIN') {
+      if (editForm.role === 'SUPER_ADMIN') {
+        showErrorRU('Только SUPER_ADMIN может назначать роль SUPER_ADMIN');
+        return;
+      }
+    }
     
     try {
       const token = localStorage.getItem('token');
