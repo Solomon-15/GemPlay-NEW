@@ -220,33 +220,17 @@ function App() {
   const AUTH_CHECK_THROTTLE_DELAY = 2000; // Prevent auth checks more than once per 2 seconds
 
   const checkAuthStatus = async () => {
-    // Throttle auth checks to prevent excessive API calls
-    const now = Date.now();
-    if (now - lastAuthCheckTime.current < AUTH_CHECK_THROTTLE_DELAY) {
-      return; // Skip check if called too recently
-    }
-    lastAuthCheckTime.current = now;
-    
     const token = localStorage.getItem('token');
     const refreshToken = localStorage.getItem('refresh_token');
-    // Reduce logging frequency
-    if (Math.random() < 0.1) { // Only log 10% of the time
-      console.log('🔍 Checking auth status. Token exists:', !!token, 'Refresh token exists:', !!refreshToken);
-    }
+    console.log('🔍 Checking auth status. Token exists:', !!token, 'Refresh token exists:', !!refreshToken);
     
     if (token) {
       try {
-        // Reduce logging frequency
-        if (Math.random() < 0.1) { // Only log 10% of the time
-          console.log('📡 Making request to /api/auth/me with token:', token.substring(0, 20) + '...');
-        }
+        console.log('📡 Making request to /api/auth/me');
         const response = await axios.get(`${API}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        // Reduce logging frequency
-        if (Math.random() < 0.1) { // Only log 10% of the time
-          console.log('✅ Auth check successful. User:', response.data);
-        }
+        console.log('✅ Auth check successful. User:', response.data);
         setUser(response.data);
         setLoading(false); // Устанавливаем loading false только после успешной авторизации
       } catch (error) {
