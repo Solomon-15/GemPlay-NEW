@@ -920,7 +920,10 @@ const UserManagement = ({ user: currentUser }) => {
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-rajdhani text-xl font-bold text-white">Редактировать пользователя</h3>
           <button
-            onClick={() => setIsEditModalOpen(false)}
+            onClick={() => {
+              setIsEditModalOpen(false);
+              setEditUsernameError(''); // Сбрасываем ошибку
+            }}
             className="text-gray-400 hover:text-white"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
