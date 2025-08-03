@@ -285,6 +285,7 @@ function App() {
   const handleLogin = (userData) => {
     console.log('🚀 handleLogin called with userData:', userData);
     setUser(userData);
+    setLoading(false); // Убеждаемся что loading выключен после успешного входа
     console.log('✅ User state updated');
   };
 
