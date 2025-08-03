@@ -1,7 +1,25 @@
 #!/usr/bin/env python3
 """
-GemPlay User Management Advanced Filters and Bot Types Testing
-Comprehensive testing of the enhanced User Management system implementation
+User Management Testing - Russian Review
+Focus: Testing the new "Edit User" modal window functionality in Role Management section
+
+КОНТЕКСТ:
+Тестирование нового модального окна "Редактировать пользователя" в разделе "Управление Ролями и Разрешениями"
+
+ЦЕЛИ ТЕСТИРОВАНИЯ:
+1. Проверить функциональность эндпоинтов для списка пользователей
+2. Протестировать обновление пользователей через PUT /api/admin/users/{user_id}
+3. Проверить правильность роль-based ограничений при назначении ролей
+4. Убедиться что все поля корректно обновляются
+
+ТЕСТОВЫЕ СЦЕНАРИИ:
+1. GET /api/admin/users - получение списка пользователей для отображения в табе
+2. PUT /api/admin/users/{user_id} с обновлением username, email, role, virtual_balance, status
+3. Проверка ограничений: 
+   - ADMIN не может назначить роль SUPER_ADMIN другому пользователю
+   - SUPER_ADMIN может назначить любую роль
+4. Валидация полей (проверка обязательных полей username, email)
+5. Обновление каждого поля по отдельности
 """
 
 import requests
