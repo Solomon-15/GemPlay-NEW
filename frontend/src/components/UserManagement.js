@@ -975,11 +975,20 @@ const UserManagement = ({ user: currentUser }) => {
               value={editForm.role}
               onChange={(e) => setEditForm({...editForm, role: e.target.value})}
               className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
+              disabled={currentUser?.role !== 'SUPER_ADMIN'}
             >
               <option value="USER">USER</option>
+              <option value="MODERATOR">MODERATOR</option>
               <option value="ADMIN">ADMIN</option>
-              <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+              {currentUser?.role === 'SUPER_ADMIN' && (
+                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+              )}
             </select>
+            {currentUser?.role !== 'SUPER_ADMIN' && (
+              <p className="text-xs text-yellow-400 mt-1">
+                Только SUPER_ADMIN может изменять роли
+              </p>
+            )}
           </div>
 
           <div>
