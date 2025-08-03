@@ -31,12 +31,25 @@ const ROLE_DESCRIPTIONS = {
 
 const RoleManagement = ({ user }) => {
   const [roles, setRoles] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingRole, setEditingRole] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleDescription, setNewRoleDescription] = useState('');
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('roles'); // 'roles' or 'users'
+  
+  // User edit form state
+  const [userEditForm, setUserEditForm] = useState({
+    username: '',
+    email: '',
+    role: 'USER',
+    virtual_balance: 0,
+    status: 'ACTIVE'
+  });
   
   const { showSuccess, showError } = useNotifications();
 
