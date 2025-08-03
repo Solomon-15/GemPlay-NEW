@@ -27,6 +27,7 @@ import json
 import secrets
 from collections import defaultdict
 import ipaddress
+from username_utils import process_username, validate_username, sanitize_username
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
