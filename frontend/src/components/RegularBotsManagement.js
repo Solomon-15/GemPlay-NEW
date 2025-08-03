@@ -278,7 +278,6 @@ const RegularBotsManagement = () => {
   useEffect(() => {
     fetchStats();
     fetchBotsList();
-    fetchBotSettings();
     fetchActiveBetsStats();
   }, []);
 
