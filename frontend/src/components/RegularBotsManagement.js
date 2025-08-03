@@ -1705,6 +1705,7 @@ const RegularBotsManagement = () => {
         className="mt-6"
       />
             </div>
+          )}
         </div>
       </div>
 
