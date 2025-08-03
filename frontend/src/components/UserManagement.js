@@ -1669,6 +1669,15 @@ const UserManagement = ({ user: currentUser }) => {
         return;
       }
 
+      // Проверка ролей - только SUPER_ADMIN может назначать любые роли
+      if (currentUser?.role !== 'SUPER_ADMIN') {
+        // Не-SUPER_ADMIN пользователи могут назначать только USER, MODERATOR, ADMIN
+        if (createUserForm.role === 'SUPER_ADMIN') {
+          showErrorRU('Только SUPER_ADMIN может назначать роль SUPER_ADMIN');
+          return;
+        }
+      }
+
       setCreateUserLoading(true);
 
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/users`, {
