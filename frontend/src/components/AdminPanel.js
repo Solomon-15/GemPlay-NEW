@@ -729,6 +729,12 @@ const AdminPanel = ({ user, onClose }) => {
               👥 User Management
             </button>
             <button
+              onClick={() => setActiveSection('roles')}
+              className="w-full px-4 py-3 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity text-left"
+            >
+              🛡️ Role Management
+            </button>
+            <button
               onClick={() => setActiveSection('human-bots')}
               className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-rajdhani font-bold rounded-lg hover:opacity-90 transition-opacity text-left"
             >
