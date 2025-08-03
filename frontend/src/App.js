@@ -211,6 +211,37 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
           >
             {loading ? 'LOADING...' : (isLogin ? 'LOGIN' : 'REGISTER')}
           </button>
+          
+          {/* Google OAuth */}
+          <div className="mt-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border-primary" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-surface-primary text-text-secondary font-roboto">или</span>
+              </div>
+            </div>
+            <div className="mt-4">
+              <GoogleAuth 
+                onLogin={onLogin} 
+                onError={(error) => alert(error)} 
+              />
+            </div>
+          </div>
+          
+          {/* Password reset link */}
+          {isLogin && (
+            <div className="text-center mt-4">
+              <button
+                type="button"
+                onClick={() => setAuthView('password-reset')}
+                className="text-accent-primary hover:text-accent-primary/80 font-roboto text-sm"
+              >
+                Забыли пароль?
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>
