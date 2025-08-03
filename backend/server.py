@@ -17171,45 +17171,7 @@ async def test_simple():
     """Test simple endpoint."""
     return {"message": "simple test working"}
 
-@api_router.get("/admin/bot-settings-v2", response_model=dict)
-async def get_bot_settings_v2(current_user: User = Depends(get_current_admin)):
-    """Get bot settings - version 2 with unique name."""
-    try:
-        # Get bot settings from database
-        settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        
-        if not settings:
-            # Create default settings if not exists
-            default_settings = {
-                "id": "bot_settings",
-                "globalMaxActiveBets": 1000000,
-                "globalMaxHumanBots": 1000000,
-                "paginationSize": 10,
-                "autoActivateFromQueue": True,
-                "priorityType": "order",
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-            await db.bot_settings.insert_one(default_settings)
-            settings = default_settings
-        
-        return {
-            "success": True,
-            "settings": {
-                "globalMaxActiveBets": settings.get("globalMaxActiveBets", settings.get("max_active_bets_regular", 1000000)),
-                "globalMaxHumanBots": settings.get("globalMaxHumanBots", settings.get("max_active_bets_human", 1000000)),
-                "paginationSize": settings.get("paginationSize", 10),
-                "autoActivateFromQueue": settings.get("autoActivateFromQueue", True),
-                "priorityType": settings.get("priorityType", "order")
-            }
-        }
-        
-    except Exception as e:
-        logger.error(f"Error fetching bot settings: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch bot settings: {str(e)}"
-        )
+
 
 
 
