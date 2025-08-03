@@ -125,7 +125,7 @@ const RoleManagement = ({ user }) => {
 
       // Пытаемся получить количество пользователей для каждой роли
       try {
-        const usersResponse = await axios.get(`${API}/admin/users?limit=1000`, {
+        const usersResponse = await axios.get(`${API}/api/admin/users?limit=1000`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
