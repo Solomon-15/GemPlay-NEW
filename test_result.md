@@ -3202,6 +3202,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Bot Settings Endpoints Testing - Russian Review"
     - "GemPlay Notification System API Testing (Phase 1)"
     - "Human-Bot Auto-Completion Testing"
     - "Human-Bot Active Bets Endpoint Testing" 
