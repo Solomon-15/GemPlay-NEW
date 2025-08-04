@@ -19014,6 +19014,7 @@ async def list_human_bots(
                 total_amount_wagered=bot.get("total_amount_wagered", 0.0),
                 average_bet_amount=average_bet_amount,  # Add average bet amount
                 total_amount_won=bot.get("total_amount_won", 0.0),
+                virtual_balance=bot.get("virtual_balance", float('inf')),  # Set to infinity as requested
                 total_commission_paid=bot.get("total_commission_paid", 0.0),
                 win_rate=round(win_rate, 2),
                 last_action_time=bot.get("last_action_time"),
