@@ -73,6 +73,10 @@ const HumanBotsManagement = ({ user: currentUser }) => {
   // Duplicates cleanup state
   const [cleanupLoading, setCleanupLoading] = useState(false);
   const [cleanupResults, setCleanupResults] = useState(null);
+  
+  // Migration state
+  const [migrationLoading, setMigrationLoading] = useState(false);
+  const [migrationResults, setMigrationResults] = useState(null);
 
 
 
