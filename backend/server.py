@@ -2386,33 +2386,6 @@ async def generate_human_bot_gem_combination(target_amount: float) -> dict:
     
     return combination
 
-async def create_human_bot_user_profile(human_bot: HumanBot):
-    """Create a user profile for human bot if it doesn't exist."""
-    try:
-        # Check if user profile already exists
-        existing_user = await db.users.find_one({"id": human_bot.id})
-        if existing_user:
-            return
-        
-        # Create user profile
-        bot_user = User(
-            id=human_bot.id,
-            username=human_bot.name,
-            email=f"{human_bot.name.lower().replace(' ', '_')}@example.com",  # Use valid domain
-            password_hash="",  # Human bots don't need passwords
-            role=UserRole.USER,
-            status=UserStatus.ACTIVE,
-            email_verified=True,
-            virtual_balance=2000.0,  # Give initial balance
-            gender=random.choice(["male", "female"])
-        )
-        
-        await db.users.insert_one(bot_user.dict())
-        logger.info(f"Created user profile for human bot: {human_bot.name}")
-        
-    except Exception as e:
-        logger.error(f"Error creating human bot user profile: {e}")
-
 async def ensure_human_bot_balance(human_bot: HumanBot):
     """Ensure Human-bot has sufficient balance by updating the Human-bot record directly."""
     try:
