@@ -15098,7 +15098,7 @@ async def get_next_bot_in_queue() -> dict:
             return {"message": "Global bet limit reached", "bot": None}
         
         all_bots = await db.bots.find({
-            "type": "REGULAR",
+            "bot_type": "REGULAR",
             "is_active": True
         }).to_list(100)
         
