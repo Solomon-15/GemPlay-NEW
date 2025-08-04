@@ -670,7 +670,20 @@ const UserManagement = ({ user: currentUser }) => {
 
   const submitDelete = async () => {
     if (!deleteReason.trim()) {
-      showWarningRU('Укажите причину удаления');
+      // Фокусируемся на поле ввода причины вместо показа ошибки
+      const textArea = document.querySelector('textarea[placeholder*="причину удаления"]');
+      if (textArea) {
+        textArea.focus();
+        textArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Добавляем визуальное выделение поля
+        textArea.style.borderColor = '#ef4444';
+        textArea.style.borderWidth = '2px';
+        setTimeout(() => {
+          textArea.style.borderColor = '';
+          textArea.style.borderWidth = '';
+        }, 3000);
+      }
+      showWarningRU('Причина удаления обязательна');
       return;
     }
 
