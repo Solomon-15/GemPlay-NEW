@@ -22102,28 +22102,56 @@ app.include_router(api_router)
 @api_router.post("/admin/cache/clear")
 async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
     """Очистить серверный кэш системы."""
-    logger.info(f"Cache clear endpoint called by admin: {current_admin.email}")
-    
-    cache_types_cleared = [
-        "Dashboard Statistics Cache",
-        "User Data Cache", 
-        "Game Statistics Cache",
-        "Bot Performance Cache",
-        "System Metrics Cache"
-    ]
-    
-    cache_cleared_count = len(cache_types_cleared)
-    
-    # Log admin action
-    logger.info(f"ADMIN ACTION: {current_admin.email} cleared server cache - {cache_cleared_count} cache types")
-    
-    return {
-        "success": True,
-        "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
-        "cache_types_cleared": cache_types_cleared,
-        "cleared_count": cache_cleared_count,
-        "timestamp": datetime.utcnow().isoformat()
-    }
+    try:
+        logger.info(f"Cache clear endpoint called by admin: {current_admin.email}")
+        
+        cache_types_cleared = [
+            "Dashboard Statistics Cache",
+            "User Data Cache", 
+            "Game Statistics Cache",
+            "Bot Performance Cache",
+            "System Metrics Cache"
+        ]
+        
+        cache_cleared_count = len(cache_types_cleared)
+        
+        # Log admin action
+        logger.info(f"ADMIN ACTION: {current_admin.email} cleared server cache - {cache_cleared_count} cache types")
+        
+        # Log admin action to database
+        try:
+            admin_log = AdminLog(
+                admin_id=current_admin.id,
+                action="CLEAR_SERVER_CACHE",
+                target_type="system",
+                target_id="server_cache",
+                details={
+                    "cache_types_cleared": cache_types_cleared,
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "admin_email": current_admin.email
+                }
+            )
+            await db.admin_logs.insert_one(admin_log.dict())
+        except Exception as log_error:
+            logger.warning(f"Failed to log admin action: {log_error}")
+        
+        return {
+            "success": True,
+            "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
+            "cache_types_cleared": cache_types_cleared,
+            "cleared_count": cache_cleared_count,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in clear_server_cache: {str(e)}")
+        logger.error(f"Exception type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка при очистке серверного кэша: {str(e)}"
+        )
 
 # ==============================================================================
 # ERROR HANDLERS
