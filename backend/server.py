@@ -10167,12 +10167,20 @@ async def get_all_users(
         bots_by_name = {bot.get("name"): bot for bot in bots}
         human_bots_by_name = {bot.get("name"): bot for bot in human_bots}
         
-        # Clean user data
+        # Clean user data and exclude Human-bot duplicates
         cleaned_users = []
         users_to_process = all_users if (sort_by_total or sort_by_role or sort_by_online_status) else users
         
+        # Get list of Human-bot IDs to exclude duplicates
+        human_bot_ids = {bot.get("id") for bot in human_bots}
+        
         for user in users_to_process:
             user_id = user.get("id")
+            
+            # Skip users that are actually Human-bots (prevent duplicates)
+            if user_id in human_bot_ids:
+                logger.debug(f"Skipping duplicate user entry for Human-bot ID: {user_id}")
+                continue
             
             # Calculate gem statistics from user_gems collection
             total_gems = 0
