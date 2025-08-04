@@ -423,16 +423,11 @@ const RoleManagement = ({ user }) => {
                   </div>
                   
                   <div className="flex flex-wrap gap-1">
-                    {role.permissions.slice(0, 5).map((permission) => (
+                    {role.permissions.map((permission) => (
                       <span key={permission} className="px-2 py-1 bg-accent-primary/20 text-accent-primary text-xs rounded font-roboto">
                         {PERMISSION_DESCRIPTIONS[permission] || permission}
                       </span>
                     ))}
-                    {role.permissions.length > 5 && (
-                      <span className="px-2 py-1 bg-gray-600 text-white text-xs rounded font-roboto">
-                        +{role.permissions.length - 5} еще
-                      </span>
-                    )}
                   </div>
                 </div>
                 
