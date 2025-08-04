@@ -7758,7 +7758,10 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                 "is_human_bot": (
                     game.get("creator_type") == "human_bot" or
                     (game.get("is_bot_game") == True and game.get("bot_type") == "HUMAN")
-                )  # Check both creator_type and bot_type for Human-bot identification
+                ),  # Check both creator_type and bot_type for Human-bot identification
+                "is_regular_bot": (
+                    game.get("creator_type") == "bot" and game.get("bot_type") == "REGULAR"
+                )  # Identify regular bot games
             })
         
         return result
