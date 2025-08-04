@@ -7853,6 +7853,73 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
             detail="Failed to get live games"
         )
 
+@api_router.get("/games/active-human-bots", response_model=List[dict])
+async def get_active_human_bot_games(current_user: User = Depends(get_current_user)):
+    """Get all active human-bot games for display in ongoing battles (public endpoint)."""
+    try:
+        # Get all active human-bot games
+        games = await db.games.find({
+            "status": "ACTIVE",
+            "is_human_bot": True
+        }).sort("created_at", -1).to_list(100)  # Limit to 100 most recent games
+        
+        result = []
+        for game in games:
+            # Get creator info (human bot)
+            creator_info = {"username": "Human Bot", "id": game.get("creator_id")}
+            if game.get("creator_id"):
+                human_bot = await db.human_bots.find_one({"id": game["creator_id"]})
+                if human_bot:
+                    creator_info = {
+                        "username": human_bot.get("name", "Human Bot"),
+                        "id": human_bot["id"]
+                    }
+            
+            # Get opponent info if exists
+            opponent_info = None
+            if game.get("opponent_id"):
+                # Check if opponent is a human bot
+                human_bot_opponent = await db.human_bots.find_one({"id": game["opponent_id"]})
+                if human_bot_opponent:
+                    opponent_info = {
+                        "username": human_bot_opponent.get("name", "Human Bot"),
+                        "id": human_bot_opponent["id"]
+                    }
+                else:
+                    # Regular user opponent
+                    user_opponent = await db.users.find_one({"id": game["opponent_id"]})
+                    if user_opponent:
+                        opponent_info = {
+                            "username": user_opponent.get("username", "Player"),
+                            "id": user_opponent["id"]
+                        }
+            
+            game_data = {
+                "id": game.get("_id", game.get("id")),
+                "game_id": game.get("id"),
+                "creator_id": game.get("creator_id"),
+                "opponent_id": game.get("opponent_id"),
+                "bet_amount": game.get("bet_amount", 0),
+                "status": game.get("status"),
+                "created_at": game.get("created_at"),
+                "is_human_bot": True,
+                "is_bot_game": True,
+                "creator_info": creator_info,
+                "opponent_info": opponent_info,
+                "total_value": game.get("bet_amount", 0) * 2
+            }
+            
+            result.append(game_data)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error getting active human-bot games: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get active human-bot games"
+        )
+
 @api_router.get("/games/my-bets", response_model=List[dict])
 async def get_my_bets(current_user: User = Depends(get_current_user)):
     """Get user's active and recent bets."""
