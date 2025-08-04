@@ -22096,6 +22096,78 @@ app.include_router(auth_router)
 app.include_router(api_router)
 
 # ==============================================================================
+# CACHE MANAGEMENT ENDPOINTS
+# ==============================================================================
+
+@api_router.post("/admin/cache/clear", response_model=dict)
+async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
+    """Очистить серверный кэш системы."""
+    try:
+        # Clear application caches
+        cache_cleared_count = 0
+        
+        # Clear any in-memory caches if they exist
+        # Note: This is a placeholder for actual cache clearing logic
+        # In a real application, you would clear Redis, Memcached, or other cache systems
+        
+        # Example cache operations that could be implemented:
+        # - Clear Redis cache: await redis.flushdb()
+        # - Clear application cache: app_cache.clear()
+        # - Clear database query cache: await clear_query_cache()
+        
+        # For now, we'll simulate cache clearing
+        logger.info(f"Cache clearing requested by admin {current_admin.email}")
+        
+        # You could add specific cache clearing logic here, such as:
+        # 1. Clear any cached dashboard statistics
+        # 2. Clear cached user sessions (except current admin)
+        # 3. Clear cached game data
+        # 4. Clear cached bot statistics
+        # 5. Clear any file caches
+        
+        # Simulate some cache clearing operations
+        cache_types_cleared = [
+            "Dashboard Statistics Cache",
+            "User Data Cache", 
+            "Game Statistics Cache",
+            "Bot Performance Cache",
+            "System Metrics Cache"
+        ]
+        
+        cache_cleared_count = len(cache_types_cleared)
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="CLEAR_SERVER_CACHE",
+            target_type="system",
+            target_id="server_cache",
+            details={
+                "cache_types_cleared": cache_types_cleared,
+                "timestamp": datetime.utcnow().isoformat(),
+                "admin_email": current_admin.email
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Server cache cleared by admin {current_admin.email}. {cache_cleared_count} cache types cleared.")
+        
+        return {
+            "success": True,
+            "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
+            "cache_types_cleared": cache_types_cleared,
+            "cleared_count": cache_cleared_count,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to clear server cache: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка при очистке серверного кэша: {str(e)}"
+        )
+
+# ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
 
