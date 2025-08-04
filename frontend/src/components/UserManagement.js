@@ -2449,6 +2449,8 @@ const UserManagement = ({ user: currentUser }) => {
       />
 
       {/* Модальные окна */}
+      {isConfirmDeleteModalOpen && <ConfirmDeleteModal />}
+      {isConfirmBulkDeleteModalOpen && <ConfirmBulkDeleteModal />}
       {isBanModalOpen && <BanUserModal />}
       {isGemsModalOpen && <GemsModal />}
       {isBetsModalOpen && <BetsModal />}
