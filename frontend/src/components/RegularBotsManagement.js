@@ -22,8 +22,8 @@ const RegularBotsManagement = () => {
   });
   const [botsList, setBotsList] = useState([]);
   const [botSettings, setBotSettings] = useState({
-    max_active_bets_regular: 50,
-    max_active_bets_human: 30
+    max_active_bets_regular: 5000000000,
+    max_active_bets_human: 300000000
   });
   const [activeBetsStats, setActiveBetsStats] = useState({
     regular_bots: { current: 0, max: 50, available: 50, percentage: 0 },
