@@ -22135,13 +22135,16 @@ async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
         except Exception as log_error:
             logger.warning(f"Failed to log admin action: {log_error}")
         
-        return {
-            "success": True,
-            "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
-            "cache_types_cleared": cache_types_cleared,
-            "cleared_count": cache_cleared_count,
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
+                "cache_types_cleared": cache_types_cleared,
+                "cleared_count": cache_cleared_count,
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        )
         
     except Exception as e:
         logger.error(f"Error in clear_server_cache: {str(e)}")
