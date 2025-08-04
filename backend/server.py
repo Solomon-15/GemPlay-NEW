@@ -22106,24 +22106,8 @@ async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
         # Clear application caches
         cache_cleared_count = 0
         
-        # Clear any in-memory caches if they exist
-        # Note: This is a placeholder for actual cache clearing logic
-        # In a real application, you would clear Redis, Memcached, or other cache systems
-        
-        # Example cache operations that could be implemented:
-        # - Clear Redis cache: await redis.flushdb()
-        # - Clear application cache: app_cache.clear()
-        # - Clear database query cache: await clear_query_cache()
-        
         # For now, we'll simulate cache clearing
         logger.info(f"Cache clearing requested by admin {current_admin.email}")
-        
-        # You could add specific cache clearing logic here, such as:
-        # 1. Clear any cached dashboard statistics
-        # 2. Clear cached user sessions (except current admin)
-        # 3. Clear cached game data
-        # 4. Clear cached bot statistics
-        # 5. Clear any file caches
         
         # Simulate some cache clearing operations
         cache_types_cleared = [
@@ -22136,24 +22120,8 @@ async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
         
         cache_cleared_count = len(cache_types_cleared)
         
-        # Log admin action
-        try:
-            admin_log = AdminLog(
-                admin_id=current_admin.id,
-                action="CLEAR_SERVER_CACHE",
-                target_type="system",
-                target_id="server_cache",
-                details={
-                    "cache_types_cleared": cache_types_cleared,
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "admin_email": current_admin.email
-                }
-            )
-            await db.admin_logs.insert_one(admin_log.dict())
-            logger.info("Admin log created successfully")
-        except Exception as log_error:
-            logger.error(f"Failed to create admin log: {str(log_error)}")
-            # Continue execution even if logging fails
+        # Log admin action (simplified - just log to server logs for now)
+        logger.info(f"ADMIN ACTION: {current_admin.email} cleared server cache - {cache_cleared_count} cache types")
         
         logger.info(f"Server cache cleared by admin {current_admin.email}. {cache_cleared_count} cache types cleared.")
         
