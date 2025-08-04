@@ -12607,7 +12607,7 @@ async def get_all_bets(
                         "type": "user"
                     })
                 else:
-                    # Check if it's a bot
+                    # Check if it's a regular bot
                     bot_doc = await db.bots.find_one({"id": opponent_id})
                     if bot_doc:
                         opponent_info.update({
@@ -12615,6 +12615,15 @@ async def get_all_bets(
                             "email": "",
                             "type": "bot"
                         })
+                    else:
+                        # Check if it's a human bot
+                        human_bot_doc = await db.human_bots.find_one({"id": opponent_id})
+                        if human_bot_doc:
+                            opponent_info.update({
+                                "username": human_bot_doc.get('name', 'Human Bot'),
+                                "email": "",
+                                "type": "human_bot"
+                            })
             
             # Calculate bet age in hours
             bet_age_hours = (datetime.utcnow() - game.get("created_at")).total_seconds() / 3600
