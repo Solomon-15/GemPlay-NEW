@@ -154,25 +154,19 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       });
       // Reduced logging for performance
       
-      // Get active Human-bot games for display in ongoing battles (only for admins)
+      // Get active Human-bot games for display in ongoing battles (for all users)
       try {
         const token = localStorage.getItem('token');
         let humanBotGames = [];
         
-        // Only fetch admin games if user is admin/super admin
-        if (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') {
-          const humanBotGamesResponse = await axios.get(`${API}/admin/games`, {
-            params: {
-              human_bot_only: true,
-              status: 'ACTIVE'
-            },
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-          humanBotGames = humanBotGamesResponse.data?.games || [];
-        }
+        // Fetch public active human-bot games for all users
+        const humanBotGamesResponse = await axios.get(`${API}/games/active-human-bots`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        humanBotGames = humanBotGamesResponse.data || [];
         
         // Combine user ongoing battles with ACTIVE user games and Human-bot games
         const allOngoingBattles = [...userOngoingBattles, ...activeUserGames, ...humanBotGames];
