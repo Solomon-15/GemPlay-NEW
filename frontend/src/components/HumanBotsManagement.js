@@ -605,6 +605,38 @@ const HumanBotsManagement = ({ user: currentUser }) => {
       }
     } catch (error) {
       console.error('Ошибка массового создания Human-ботов:', error);
+      
+      // Handle specific error messages
+      const errorMessage = error.message || error.toString();
+      
+      if (errorMessage.includes('exceed global limit')) {
+        // Parse the error to extract useful information
+        const capacityMatch = errorMessage.match(/Available capacity: (\d+)/);
+        const maxBotsMatch = errorMessage.match(/can create max (\d+) bots/);
+        
+        if (capacityMatch && maxBotsMatch) {
+          const availableCapacity = capacityMatch[1];
+          const maxBots = maxBotsMatch[1];
+          
+          addNotification(
+            `Превышен глобальный лимит ботов. Доступная емкость: ${availableCapacity}. ` +
+            `С текущими настройками можно создать максимум ${maxBots} ботов.`,
+            'error'
+          );
+          
+          // Suggest adjusting the count
+          if (parseInt(maxBots) > 0) {
+            addNotification(
+              `💡 Совет: Уменьшите количество ботов до ${maxBots} или снизьте их bet_limit`,
+              'warning'
+            );
+          }
+        } else {
+          addNotification('Превышен глобальный лимит создания Human-ботов', 'error');
+        }
+      } else {
+        addNotification(`Ошибка создания ботов: ${errorMessage}`, 'error');
+      }
     }
   };
 
