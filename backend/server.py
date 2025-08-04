@@ -15167,7 +15167,7 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
         max_active_bets = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
         
         all_bots = await db.bots.find({
-            "type": "REGULAR",
+            "bot_type": "REGULAR",
             "is_active": True
         }).to_list(100)
         
