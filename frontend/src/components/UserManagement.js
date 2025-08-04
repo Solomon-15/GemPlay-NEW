@@ -662,10 +662,28 @@ const UserManagement = ({ user: currentUser }) => {
     setIsInfoModalOpen(true);
   };
 
-  const handleDeleteUser = (user) => {
-    setSelectedUser(user);
-    setDeleteReason('');
-    setIsDeleteModalOpen(true);
+  const handleDeleteUser = async (user) => {
+    if (currentUser?.role !== 'SUPER_ADMIN') {
+      showErrorRU('Только SUPER_ADMIN может удалять аккаунты');
+      return;
+    }
+
+    const confirmed = window.confirm(`Вы уверены, что хотите удалить пользователя "${user.username}"?\n\nЭто действие необратимо!`);
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/admin/users/${user.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        data: { reason: "Deleted by admin" }
+      });
+
+      fetchUsers();
+      showSuccessRU('Пользователь удален');
+    } catch (error) {
+      console.error('Ошибка удаления:', error);
+      showErrorRU('Ошибка при удалении пользователя');
+    }
   };
 
   const submitDelete = async () => {
