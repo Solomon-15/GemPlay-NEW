@@ -224,6 +224,65 @@ const AdminPanel = ({ user, onClose }) => {
     showSuccessRU('Статистика обновлена');
   };
 
+  const clearCache = async () => {
+    if (clearCacheLoading) return;
+
+    const confirmed = await confirm({
+      title: 'Очистка кэша',
+      message: 'Вы уверены, что хотите очистить серверный и локальный кэш? Это может временно замедлить работу системы.',
+      type: 'warning'
+    });
+
+    if (confirmed) {
+      try {
+        setClearCacheLoading(true);
+
+        // Clear server cache
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${API}/admin/cache/clear`, {}, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.data.success) {
+          // Clear browser local cache
+          // Clear localStorage (except token and essential data)
+          const token = localStorage.getItem('token');
+          const user = localStorage.getItem('user');
+          localStorage.clear();
+          if (token) localStorage.setItem('token', token);
+          if (user) localStorage.setItem('user', user);
+
+          // Clear sessionStorage
+          sessionStorage.clear();
+
+          // Clear cache storage if supported
+          if ('caches' in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(
+              cacheNames.map(cacheName => caches.delete(cacheName))
+            );
+          }
+
+          // Clear memory caches by reloading page data
+          await fetchDashboardStats();
+
+          showSuccessRU(`Кэш успешно очищен! ${response.data.message}`);
+        } else {
+          throw new Error(response.data.message || 'Неизвестная ошибка');
+        }
+      } catch (error) {
+        console.error('Ошибка очистки кэша:', error);
+        const errorMessage = error.response?.data?.detail || error.message || 'Произошла ошибка при очистке кэша';
+        showErrorRU(`Ошибка очистки кэша: ${errorMessage}`);
+      } finally {
+        setClearCacheLoading(false);
+      }
+    }
+  };
+
   useEffect(() => {
     if (autoRefresh && activeSection === 'dashboard') {
       const interval = setInterval(fetchDashboardStats, 5000); // Обновление каждые 5 секунд
