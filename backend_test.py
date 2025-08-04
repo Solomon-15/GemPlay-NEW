@@ -26521,11 +26521,11 @@ def print_summary() -> None:
                 print_error(f"- {test['name']}: {test['details']}")
 
 if __name__ == "__main__":
-    print_header("GEMPLAY BACKEND API TESTING - EDIT USER MODAL SECURITY FIX")
+    print_header("GEMPLAY BACKEND API TESTING - ADMIN CACHE CLEAR ENDPOINT")
     
     try:
-        # Test the critical security fix for Edit User Modal
-        test_edit_user_modal_security_fix()
+        # Test the new admin cache clear endpoint as requested in Russian review
+        test_admin_cache_clear_endpoint()
         
     except KeyboardInterrupt:
         print("\n\nTesting interrupted by user")
