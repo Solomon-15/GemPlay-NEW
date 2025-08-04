@@ -294,6 +294,20 @@ const AdminPanel = ({ user, onClose }) => {
     }
   }, [autoRefresh, activeSection]);
 
+  // Permission-based section filtering
+  const hasPermission = (permission) => {
+    if (!user || !user.role) return false;
+    
+    const rolePermissions = {
+      'MODERATOR': ['VIEW_ADMIN_PANEL', 'MANAGE_USERS', 'MANAGE_GAMES'],
+      'ADMIN': ['VIEW_ADMIN_PANEL', 'MANAGE_USERS', 'MANAGE_GAMES', 'MANAGE_BOTS', 'MANAGE_ECONOMY', 'VIEW_ANALYTICS', 'MANAGE_SOUNDS'],
+      'SUPER_ADMIN': ['ALL'] // Super admin has all permissions
+    };
+    
+    const userPermissions = rolePermissions[user.role] || [];
+    return userPermissions.includes('ALL') || userPermissions.includes(permission);
+  };
+
   const adminSections = [
     {
       id: 'dashboard',
