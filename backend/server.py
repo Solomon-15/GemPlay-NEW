@@ -22408,6 +22408,31 @@ async def cleanup_human_bot_duplicates(
             detail=f"Failed to cleanup duplicates: {str(e)}"
         )
 
+@api_router.post("/admin/human-bots/migrate", response_model=dict)
+async def manual_migrate_human_bots(
+    current_admin: User = Depends(get_current_admin)
+):
+    """Manually trigger Human-bots field migration."""
+    try:
+        # Only SUPER_ADMIN can perform this operation
+        if current_admin.role != UserRole.SUPER_ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only SUPER_ADMIN can run migrations"
+            )
+        
+        result = await migrate_human_bots_fields()
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in manual migration endpoint: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to run migration: {str(e)}"
+        )
+
 # ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
