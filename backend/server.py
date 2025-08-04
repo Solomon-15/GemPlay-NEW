@@ -2096,7 +2096,7 @@ async def join_human_bot_bet(human_bot: HumanBot):
         bot_user = await db.users.find_one({"id": human_bot.id})
         if not bot_user:
             # Create user profile for human bot if it doesn't exist
-            await create_human_bot_user_profile(human_bot)
+            await ensure_human_bot_balance(human_bot)
             bot_user = await db.users.find_one({"id": human_bot.id})
             
         # Double check if user was created successfully
