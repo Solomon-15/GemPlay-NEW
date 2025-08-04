@@ -15039,40 +15039,10 @@ async def create_bot_bet(bot: Bot) -> bool:
         logger.info(f"🎯 Attempting to create bet for bot {bot.id} ({bot.name})")
         import random
         
-        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets_regular = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
-        max_active_bets_human = bot_settings.get("max_active_bets_human", 1000000) if bot_settings else 1000000
-        
+        # Removed global limit checks - check only individual bot limits
         bot_doc = await db.bots.find_one({"id": bot.id})
         creation_mode = bot_doc.get("creation_mode", "queue-based") if bot_doc else "queue-based"
         bot_type = bot_doc.get("bot_type", "REGULAR") if bot_doc else "REGULAR"
-        
-        if bot_type == "REGULAR":
-            current_active_bets = await db.games.count_documents({
-                "creator_type": "bot",
-                "is_bot_game": True,
-                "status": "WAITING",
-                "$or": [
-                    {"bot_type": "REGULAR"},
-                    {"metadata.bot_type": "REGULAR"}
-                ]
-            })
-            max_limit = max_active_bets_regular
-        else:  # HUMAN
-            current_active_bets = await db.games.count_documents({
-                "creator_type": "bot",
-                "is_bot_game": True,
-                "status": "WAITING",
-                "$or": [
-                    {"bot_type": "HUMAN"},
-                    {"metadata.bot_type": "HUMAN"}
-                ]
-            })
-            max_limit = max_active_bets_human
-        
-        if current_active_bets >= max_limit:
-            logger.info(f"🚫 Global limit reached for {bot_type} bots: {current_active_bets}/{max_limit}")
-            return False
         
         bot_active_bets = await db.games.count_documents({
             "creator_id": bot.id,
