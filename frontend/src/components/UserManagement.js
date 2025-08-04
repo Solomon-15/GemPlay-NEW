@@ -1014,6 +1014,175 @@ const UserManagement = ({ user: currentUser }) => {
   };
 
   // Modal Components
+  const ConfirmDeleteModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-surface-card border border-red-500 border-opacity-30 rounded-lg p-6 max-w-md w-full mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-rajdhani text-xl font-bold text-red-400">⚠️ Подтверждение удаления</h3>
+          <button
+            onClick={() => {
+              setIsConfirmDeleteModalOpen(false);
+              setUserToDelete(null);
+            }}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mb-6">
+          <div className="bg-red-900 bg-opacity-20 border border-red-500 border-opacity-30 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <div className="text-red-400 text-sm font-rajdhani font-bold">Внимание! Необратимое действие</div>
+                <div className="text-red-300 text-xs">Все данные пользователя будут удалены навсегда</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <p className="text-text-secondary">
+              Удалить пользователя: <span className="text-white font-bold font-rajdhani">{userToDelete?.username}</span>
+            </p>
+            <p className="text-text-secondary">
+              Email: <span className="text-accent-primary">{userToDelete?.email}</span>
+            </p>
+            <p className="text-text-secondary">
+              Роль: <span className="text-white">{userToDelete?.role}</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex space-x-3">
+          <button
+            onClick={confirmDeleteUser}
+            className="flex-1 py-3 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Да, удалить</span>
+          </button>
+          <button
+            onClick={() => {
+              setIsConfirmDeleteModalOpen(false);
+              setUserToDelete(null);
+            }}
+            className="flex-1 py-3 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Отмена</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const ConfirmBulkDeleteModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-surface-card border border-red-500 border-opacity-30 rounded-lg p-6 max-w-lg w-full mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-rajdhani text-xl font-bold text-red-400">⚠️ Массовое удаление</h3>
+          <button
+            onClick={() => setIsConfirmBulkDeleteModalOpen(false)}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mb-6">
+          <div className="bg-red-900 bg-opacity-20 border border-red-500 border-opacity-30 rounded-lg p-4 mb-4">
+            <div className="flex items-center space-x-2">
+              <svg className="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <div className="text-red-400 text-sm font-rajdhani font-bold">
+                  Критическое действие! Множественное удаление
+                </div>
+                <div className="text-red-300 text-xs">
+                  Все данные выбранных пользователей будут удалены навсегда
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-text-secondary">Количество пользователей:</span>
+              <span className="text-red-400 font-rajdhani font-bold text-lg">{selectedUsers.size}</span>
+            </div>
+            
+            <div className="bg-surface-sidebar rounded-lg p-3 max-h-32 overflow-y-auto">
+              <div className="text-xs text-text-secondary mb-1">Список удаляемых пользователей:</div>
+              <div className="flex flex-wrap gap-1">
+                {users
+                  .filter(user => selectedUsers.has(user.id))
+                  .slice(0, 10)
+                  .map((user, index) => (
+                    <span key={user.id} className="px-2 py-1 bg-red-900 bg-opacity-30 text-red-300 text-xs rounded font-rajdhani">
+                      {user.username}
+                    </span>
+                  ))
+                }
+                {selectedUsers.size > 10 && (
+                  <span className="px-2 py-1 bg-gray-600 text-gray-300 text-xs rounded font-rajdhani">
+                    +{selectedUsers.size - 10} ещё
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex space-x-3">
+          <button
+            onClick={confirmBulkDelete}
+            disabled={bulkActionLoading}
+            className="flex-1 py-3 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {bulkActionLoading ? (
+              <>
+                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Удаление...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Да, удалить всех</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => setIsConfirmBulkDeleteModalOpen(false)}
+            disabled={bulkActionLoading}
+            className="flex-1 py-3 bg-gray-600 text-white font-rajdhani font-bold rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Отмена</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   const BanUserModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-surface-card border border-red-500 border-opacity-30 rounded-lg p-6 max-w-md w-full mx-4">
