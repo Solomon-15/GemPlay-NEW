@@ -723,7 +723,7 @@ const UserManagement = ({ user: currentUser }) => {
     setShowBulkActions(false);
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedUsers.size === 0) return;
 
     if (currentUser?.role !== 'SUPER_ADMIN') {
@@ -740,9 +740,10 @@ const UserManagement = ({ user: currentUser }) => {
       return;
     }
 
-    const confirmed = window.confirm(`Вы уверены, что хотите удалить ${selectedUsers.size} выбранных пользователей?\n\nЭто действие необратимо!`);
-    if (!confirmed) return;
+    setIsConfirmBulkDeleteModalOpen(true);
+  };
 
+  const confirmBulkDelete = async () => {
     setBulkActionLoading(true);
     const selectedUserIds = Array.from(selectedUsers);
     let successCount = 0;
@@ -769,6 +770,7 @@ const UserManagement = ({ user: currentUser }) => {
         showWarningRU(`Не удалось удалить ${errorCount} пользователей`);
       }
 
+      setIsConfirmBulkDeleteModalOpen(false);
       clearSelection();
       fetchUsers();
     } catch (error) {
