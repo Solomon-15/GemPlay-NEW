@@ -80,7 +80,18 @@ const PlayerCard = React.memo(({
 
   // Get sorted gems by price (ascending) - ONLY from Inventory data
   const getSortedGems = () => {
-    if (!game.bet_gems) return [];
+    if (!game.bet_gems) {
+      // For new format with bet_amount, show the equivalent in gems
+      if (game.bet_amount && gemsDefinitions.length > 0) {
+        // Convert dollars to gems using the first gem type
+        const firstGem = gemsDefinitions[0];
+        if (firstGem && firstGem.price) {
+          const gemCount = Math.floor(game.bet_amount / firstGem.price);
+          return gemCount > 0 ? [{ ...firstGem, quantity: gemCount }] : [];
+        }
+      }
+      return [];
+    }
     
     return Object.entries(game.bet_gems)
       .map(([gemType, quantity]) => {
