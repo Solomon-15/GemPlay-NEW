@@ -2273,7 +2273,6 @@ const UserManagement = ({ user: currentUser }) => {
       {isGemsModalOpen && <GemsModal />}
       {isBetsModalOpen && <BetsModal />}
       {isInfoModalOpen && <InfoModal />}
-      {isDeleteModalOpen && <DeleteModal />}
 
       {/* Reset All Balances Modal */}
       {isResetBalancesModalOpen && (
