@@ -611,6 +611,8 @@ const HumanBotsManagement = ({ user: currentUser }) => {
           player_max_delay_range: [30, 120],
           // Reset concurrent games range
           max_concurrent_games_range: [3, 3],
+          // Reset bet amount limit range (MISSING FIELD - FIXED)
+          bet_limit_amount_range: [100, 250],
           bots: []
         });
       }
