@@ -1678,6 +1678,24 @@ const RegularBotsManagement = () => {
               </button>
             </div>
 
+              {/* Имя бота */}
+              <div>
+                <label className="block text-text-secondary text-sm mb-2">Имя бота (опционально):</label>
+                <input
+                  type="text"
+                  value={botForm.name}
+                  onChange={(e) => {
+                    setBotForm({...botForm, name: e.target.value});
+                    validateExtendedFormInRealTime({...botForm, name: e.target.value});
+                  }}
+                  placeholder="Оставьте пустым для автоматической генерации"
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                />
+                <div className="text-xs text-text-secondary mt-1">
+                  Отображается только в админке, игрокам показывается просто "Bot"
+                </div>
+              </div>
+
             <div className="space-y-6">
               {/* Количество ботов */}
               <div>
@@ -1863,24 +1881,6 @@ const RegularBotsManagement = () => {
                 </div>
                 <div className="text-xs text-text-secondary mt-1">
                   Приоритет для queue-based режима (1-100) и пауза между играми (1-300 сек)
-                </div>
-              </div>
-
-              {/* Имя бота */}
-              <div>
-                <label className="block text-text-secondary text-sm mb-2">Имя бота (опционально):</label>
-                <input
-                  type="text"
-                  value={botForm.name}
-                  onChange={(e) => {
-                    setBotForm({...botForm, name: e.target.value});
-                    validateExtendedFormInRealTime({...botForm, name: e.target.value});
-                  }}
-                  placeholder="Оставьте пустым для автоматической генерации"
-                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                />
-                <div className="text-xs text-text-secondary mt-1">
-                  Отображается только в админке, игрокам показывается просто "Bot"
                 </div>
               </div>
 
