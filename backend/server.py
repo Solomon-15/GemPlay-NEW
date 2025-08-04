@@ -15129,17 +15129,7 @@ async def create_bot_bet(bot: Bot) -> bool:
 async def get_next_bot_in_queue() -> dict:
     """Get the next bot in queue based on creation mode and priority."""
     try:
-        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
-        
-        current_active_bets = await db.games.count_documents({
-            "creator_type": "bot",
-            "bot_type": "REGULAR",
-            "status": {"$in": ["WAITING", "ACTIVE"]}
-        })
-        
-        if current_active_bets >= max_active_bets:
-            return {"message": "Global bet limit reached", "bot": None}
+        # Removed global limit check - select bots based only on individual limits
         
         all_bots = await db.bots.find({
             "bot_type": "REGULAR",
