@@ -22102,42 +22102,28 @@ app.include_router(api_router)
 @api_router.post("/admin/cache/clear")
 async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
     """Очистить серверный кэш системы."""
-    try:
-        logger.info(f"Cache clear endpoint called by admin: {current_admin.email}")
-        
-        cache_types_cleared = [
-            "Dashboard Statistics Cache",
-            "User Data Cache", 
-            "Game Statistics Cache",
-            "Bot Performance Cache",
-            "System Metrics Cache"
-        ]
-        
-        cache_cleared_count = len(cache_types_cleared)
-        logger.info(f"Cache types prepared: {cache_cleared_count}")
-        
-        # Log admin action
-        logger.info(f"ADMIN ACTION: {current_admin.email} cleared server cache - {cache_cleared_count} cache types")
-        
-        result = {
-            "success": True,
-            "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
-            "cache_types_cleared": cache_types_cleared,
-            "cleared_count": cache_cleared_count,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-        
-        logger.info("Cache clear endpoint completed successfully")
-        return JSONResponse(content=result)
-        
-    except Exception as e:
-        logger.error(f"Cache clear endpoint error: {str(e)}")
-        import traceback
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка при очистке серверного кэша: {str(e)}"
-        )
+    logger.info(f"Cache clear endpoint called by admin: {current_admin.email}")
+    
+    cache_types_cleared = [
+        "Dashboard Statistics Cache",
+        "User Data Cache", 
+        "Game Statistics Cache",
+        "Bot Performance Cache",
+        "System Metrics Cache"
+    ]
+    
+    cache_cleared_count = len(cache_types_cleared)
+    
+    # Log admin action
+    logger.info(f"ADMIN ACTION: {current_admin.email} cleared server cache - {cache_cleared_count} cache types")
+    
+    return {
+        "success": True,
+        "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
+        "cache_types_cleared": cache_types_cleared,
+        "cleared_count": cache_cleared_count,
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 # ==============================================================================
 # ERROR HANDLERS
