@@ -22099,28 +22099,39 @@ app.include_router(api_router)
 # CACHE MANAGEMENT ENDPOINTS
 # ==============================================================================
 
-@api_router.post("/admin/cache/clear", response_model=dict)
+@api_router.post("/admin/cache/clear")
 async def clear_server_cache():
     """Очистить серверный кэш системы."""
-    logger.info("Cache clear endpoint called")
-    
-    cache_types_cleared = [
-        "Dashboard Statistics Cache",
-        "User Data Cache", 
-        "Game Statistics Cache",
-        "Bot Performance Cache",
-        "System Metrics Cache"
-    ]
-    
-    cache_cleared_count = len(cache_types_cleared)
-    
-    return {
-        "success": True,
-        "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
-        "cache_types_cleared": cache_types_cleared,
-        "cleared_count": cache_cleared_count,
-        "timestamp": datetime.utcnow().isoformat()
-    }
+    try:
+        logger.info("Cache clear endpoint called - starting")
+        
+        cache_types_cleared = [
+            "Dashboard Statistics Cache",
+            "User Data Cache", 
+            "Game Statistics Cache",
+            "Bot Performance Cache",
+            "System Metrics Cache"
+        ]
+        
+        cache_cleared_count = len(cache_types_cleared)
+        logger.info(f"Cache types prepared: {cache_cleared_count}")
+        
+        result = {
+            "success": True,
+            "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
+            "cache_types_cleared": cache_types_cleared,
+            "cleared_count": cache_cleared_count,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+        logger.info("Cache clear endpoint completed successfully")
+        return result
+        
+    except Exception as e:
+        logger.error(f"Cache clear endpoint error: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise
 
 # ==============================================================================
 # ERROR HANDLERS
