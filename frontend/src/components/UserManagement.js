@@ -684,46 +684,6 @@ const UserManagement = ({ user: currentUser }) => {
     }
   };
 
-  const submitDelete = async () => {
-    if (!deleteReason.trim()) {
-      // Фокусируемся на поле ввода причины вместо показа ошибки
-      const textArea = document.querySelector('textarea[placeholder*="причину удаления"]');
-      if (textArea) {
-        textArea.focus();
-        textArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Добавляем визуальное выделение поля
-        textArea.style.borderColor = '#ef4444';
-        textArea.style.borderWidth = '2px';
-        setTimeout(() => {
-          textArea.style.borderColor = '';
-          textArea.style.borderWidth = '';
-        }, 3000);
-      }
-      showWarningRU('Причина удаления обязательна');
-      return;
-    }
-
-    if (currentUser?.role !== 'SUPER_ADMIN') {
-      showErrorRU('Только SUPER_ADMIN может удалять аккаунты');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API}/admin/users/${selectedUser.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        data: { reason: deleteReason }
-      });
-
-      setIsDeleteModalOpen(false);
-      fetchUsers();
-      showSuccessRU('Пользователь удален');
-    } catch (error) {
-      console.error('Ошибка удаления:', error);
-      showErrorRU('Ошибка при удалении пользователя');
-    }
-  };
-
   // Multiple selection functions
   const handleUserSelect = (userId) => {
     const newSelected = new Set(selectedUsers);
