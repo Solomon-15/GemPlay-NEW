@@ -7873,6 +7873,52 @@ async def get_active_human_bot_games(current_user: User = Depends(get_current_us
         
         result = []
         for game in games:
+            # Get creator and opponent info
+            creator_info = {"username": "Unknown", "id": game.get("creator_id")}
+            opponent_info = {"username": "Unknown", "id": game.get("opponent_id")} if game.get("opponent_id") else None
+            
+            # Try to get creator username
+            if game.get("creator_id"):
+                # Check if it's a human bot first
+                if game.get("is_human_bot") or game.get("is_bot_game"):
+                    # Try to find human bot
+                    human_bot = await db.human_bots.find_one({"id": game.get("creator_id")})
+                    if human_bot:
+                        creator_info["username"] = human_bot.get("name", "Bot")
+                    else:
+                        # Try to find regular user
+                        user = await db.users.find_one({"id": game.get("creator_id")})
+                        if user:
+                            creator_info["username"] = user.get("username", "Player")
+                        else:
+                            creator_info["username"] = "Bot"
+                else:
+                    # Regular user game
+                    user = await db.users.find_one({"id": game.get("creator_id")})
+                    if user:
+                        creator_info["username"] = user.get("username", "Player")
+            
+            # Try to get opponent username if exists
+            if game.get("opponent_id") and opponent_info:
+                # Check if it's a human bot first
+                if game.get("is_human_bot") or game.get("is_bot_game"):
+                    # Try to find human bot
+                    human_bot = await db.human_bots.find_one({"id": game.get("opponent_id")})
+                    if human_bot:
+                        opponent_info["username"] = human_bot.get("name", "Bot")
+                    else:
+                        # Try to find regular user
+                        user = await db.users.find_one({"id": game.get("opponent_id")})
+                        if user:
+                            opponent_info["username"] = user.get("username", "Player")
+                        else:
+                            opponent_info["username"] = "Bot"
+                else:
+                    # Regular user game
+                    user = await db.users.find_one({"id": game.get("opponent_id")})
+                    if user:
+                        opponent_info["username"] = user.get("username", "Player")
+            
             # Simple game data without complex lookups first
             game_data = {
                 "id": str(game.get("_id", game.get("id", "unknown"))),
@@ -7884,8 +7930,8 @@ async def get_active_human_bot_games(current_user: User = Depends(get_current_us
                 "created_at": game.get("created_at"),
                 "is_human_bot": bool(game.get("is_human_bot", False)),
                 "is_bot_game": bool(game.get("is_bot_game", False)),
-                "creator_info": {"username": "Player", "id": game.get("creator_id")},
-                "opponent_info": {"username": "Player", "id": game.get("opponent_id")} if game.get("opponent_id") else None,
+                "creator_info": creator_info,
+                "opponent_info": opponent_info,
                 "total_value": game.get("bet_amount", 0) * 2
             }
             
