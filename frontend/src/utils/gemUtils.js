@@ -11,26 +11,40 @@ let cacheTimestamp = null;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 /**
- * Fetch gem prices from admin endpoint (admin only)
+ * Fetch gem prices from appropriate endpoint
  * @param {string} userRole - User role (ADMIN, SUPER_ADMIN, etc.)
  * @returns {Promise<Array>} Array of gem objects with prices
  */
 export const fetchGemPrices = async (userRole = null) => {
   try {
-    // Only admin users can access gem prices
-    if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
-      console.log('Non-admin user, returning empty gem prices');
-      return [];
-    }
-
     const token = localStorage.getItem('token');
-    const response = await axios.get(`${API}/admin/gems`, {
-      headers: { Authorization: `Bearer ${token}` }
+    let response;
+    
+    // Super admin uses admin endpoint for full gem management data
+    if (userRole === 'SUPER_ADMIN') {
+      try {
+        response = await axios.get(`${API}/admin/gems`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (response.data) {
+          return response.data; // Admin endpoint returns array directly
+        }
+      } catch (adminError) {
+        console.log('Admin endpoint failed, falling back to public endpoint');
+        // Fall through to public endpoint
+      }
+    }
+    
+    // For all other users (including ADMIN) use public endpoint
+    response = await axios.get(`${API}/gems/definitions`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
     
-    if (response.data && response.data.gems) {
-      return response.data.gems;
+    if (response.data) {
+      return response.data; // Public endpoint returns array directly
     }
+    
     return [];
   } catch (error) {
     console.error('Error fetching gem prices:', error);
