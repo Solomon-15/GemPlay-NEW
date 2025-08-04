@@ -6689,15 +6689,27 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 loser_id = game.opponent_id if winner_id == game.creator_id else game.creator_id
                 loser = await db.users.find_one({"id": loser_id})
                 
-                # If loser not found, check if it's a Human-bot and create user profile
+                # If loser not found in users, check if it's a Human-bot
                 if not loser:
                     human_bot = await db.human_bots.find_one({"id": loser_id})
                     if human_bot:
-                        await ensure_human_bot_balance(human_bot)
-                        loser = await db.users.find_one({"id": loser_id})
-                        logger.info(f"Created user profile for Human-bot {human_bot['name']} during commission return")
+                        # Return commission directly to Human-bot
+                        loser_commission = game.bet_amount * 0.03
+                        logger.info(f"💰 RETURNING ${loser_commission} commission to Human-bot {human_bot['name']}")
+                        
+                        await db.human_bots.update_one(
+                            {"id": loser_id},
+                            {
+                                "$inc": {"virtual_balance": loser_commission},
+                                "$set": {"updated_at": datetime.utcnow()}
+                            }
+                        )
+                        logger.info(f"Commission returned to Human-bot {human_bot['name']}")
+                        # Skip the rest of the processing for this loser since it's handled
+                        loser = None  # Ensure we don't process this as a regular user
                 
                 if loser:
+                    # This is a human player, handle normally
                     loser_commission = game.bet_amount * 0.03
                     
                     logger.info(f"💰 RETURNING ${loser_commission} commission to LOSER {loser_id} (virtual_balance: {loser.get('virtual_balance', 0)} -> {loser.get('virtual_balance', 0) + loser_commission})")
