@@ -3259,40 +3259,6 @@ async def verify_email(request: EmailVerificationRequest):
     
     return {"message": "Email verified successfully"}
 
-@auth_router.post("/test-login")
-async def test_login(email: str = "smukhammedali@gmail.com"):
-    """Test login endpoint for debugging"""
-    try:
-        user = await db.users.find_one({"email": email})
-        
-        if not user:
-            return {"status": "error", "message": "User not found"}
-        
-        password_hash = user.get("password_hash")
-        test_password = "Pass19750609P"
-        
-        if password_hash:
-            is_valid = verify_password(test_password, password_hash)
-            return {
-                "status": "success",
-                "user_found": True,
-                "has_password_hash": True,
-                "password_valid": is_valid,
-                "email_verified": user.get("email_verified"),
-                "status_field": user.get("status"),
-                "failed_attempts": user.get("failed_login_attempts", 0),
-                "locked_until": user.get("locked_until")
-            }
-        else:
-            return {
-                "status": "error", 
-                "message": "No password hash",
-                "user_found": True,
-                "has_password_hash": False
-            }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
 @auth_router.post("/login", response_model=Token)
 async def login(user_credentials: UserLogin, request: Request):
     """Login user with enhanced security"""
