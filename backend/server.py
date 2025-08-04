@@ -22207,6 +22207,127 @@ app.include_router(api_router)
 # ==============================================================================
 
 # ==============================================================================
+# HUMAN BOT DUPLICATES CLEANUP
+# ==============================================================================
+
+@api_router.post("/admin/human-bots/cleanup-duplicates", response_model=dict)
+async def cleanup_human_bot_duplicates(
+    current_admin: User = Depends(get_current_admin)
+):
+    """Clean up duplicate user entries for Human-bots."""
+    try:
+        # Only SUPER_ADMIN can perform this operation
+        if current_admin.role != UserRole.SUPER_ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only SUPER_ADMIN can clean up duplicates"
+            )
+        
+        # Get all Human-bots
+        human_bots = await db.human_bots.find({}).to_list(None)
+        logger.info(f"Found {len(human_bots)} Human-bots to check for duplicates")
+        
+        cleaned_duplicates = []
+        preserved_data = []
+        
+        for human_bot in human_bots:
+            bot_id = human_bot["id"]
+            bot_name = human_bot["name"]
+            
+            # Check if there's a duplicate user entry
+            duplicate_user = await db.users.find_one({"id": bot_id, "role": {"$ne": "HUMAN_BOT"}})
+            
+            if duplicate_user:
+                logger.info(f"Found duplicate user entry for Human-bot: {bot_name} (ID: {bot_id})")
+                
+                # Preserve important data before deletion
+                preserved_data.append({
+                    "bot_id": bot_id,
+                    "bot_name": bot_name,
+                    "user_balance": duplicate_user.get("virtual_balance", 0),
+                    "user_role": duplicate_user.get("role"),
+                    "user_email": duplicate_user.get("email")
+                })
+                
+                # Transfer balance and other important data to Human-bot if needed
+                if duplicate_user.get("virtual_balance", 0) > 0:
+                    # Update Human-bot's balance (if Human-bot model supports it)
+                    # For now, we'll just log it for manual review
+                    logger.warning(f"Human-bot {bot_name} has user balance ${duplicate_user.get('virtual_balance', 0)} that needs manual review")
+                
+                # Check for related data that might need to be preserved or transferred
+                user_gems = await db.user_gems.find({"user_id": bot_id}).to_list(None)
+                if user_gems:
+                    logger.warning(f"Human-bot {bot_name} has {len(user_gems)} gem records that need manual review")
+                
+                user_notifications = await db.notifications.find({"user_id": bot_id}).to_list(None)
+                if user_notifications:
+                    logger.warning(f"Human-bot {bot_name} has {len(user_notifications)} notifications that will be cleaned up")
+                    # Clean up notifications
+                    await db.notifications.delete_many({"user_id": bot_id})
+                
+                # Delete the duplicate user entry
+                result = await db.users.delete_one({"id": bot_id})
+                if result.deleted_count > 0:
+                    cleaned_duplicates.append({
+                        "bot_id": bot_id,
+                        "bot_name": bot_name,
+                        "deleted_user_role": duplicate_user.get("role")
+                    })
+                    logger.info(f"Deleted duplicate user entry for Human-bot: {bot_name}")
+        
+        # Update Human-bot records to ensure they have proper user_type
+        updated_bots = 0
+        for human_bot in human_bots:
+            if not human_bot.get("user_type") or human_bot.get("user_type") != "HUMAN_BOT":
+                await db.human_bots.update_one(
+                    {"id": human_bot["id"]},
+                    {"$set": {"user_type": "HUMAN_BOT"}}
+                )
+                updated_bots += 1
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="CLEANUP_HUMAN_BOT_DUPLICATES",
+            target_type="human_bot",
+            target_id="bulk",
+            details={
+                "total_bots_checked": len(human_bots),
+                "duplicates_found": len(cleaned_duplicates),
+                "duplicates_cleaned": len(cleaned_duplicates),
+                "bots_updated": updated_bots,
+                "preserved_data_count": len(preserved_data)
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Cleanup completed: {len(cleaned_duplicates)} duplicates removed, {updated_bots} bots updated")
+        
+        return {
+            "success": True,
+            "message": f"Cleaned up {len(cleaned_duplicates)} duplicate entries",
+            "total_bots_checked": len(human_bots),
+            "duplicates_cleaned": len(cleaned_duplicates),
+            "bots_updated": updated_bots,
+            "cleaned_duplicates": cleaned_duplicates,
+            "preserved_data": preserved_data,
+            "warnings": [
+                f"Found {len([p for p in preserved_data if p.get('user_balance', 0) > 0])} bots with user balances that need manual review",
+                "Please review logs for any gem records or other data that may need manual handling"
+            ] if preserved_data else []
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cleaning up Human-bot duplicates: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cleanup duplicates: {str(e)}"
+        )
+
+# ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
 
