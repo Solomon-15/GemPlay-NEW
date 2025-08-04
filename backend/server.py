@@ -15197,8 +15197,7 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
-        bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets = bot_settings.get("max_active_bets_regular", 1000000) if bot_settings else 1000000
+        # Removed global limit check - show only individual bot stats
         
         all_bots = await db.bots.find({
             "bot_type": "REGULAR",
@@ -15240,8 +15239,6 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
         
         return {
             "total_active_bets": total_active_bets,
-            "max_active_bets": max_active_bets,
-            "available_slots": max(0, max_active_bets - total_active_bets),
             "modes": modes_info,
             "next_bot": next_bot_info,
             "queue_summary": {
