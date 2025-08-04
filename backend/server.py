@@ -7857,8 +7857,32 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
 async def get_active_human_bot_games(current_user: User = Depends(get_current_user)):
     """Get all active games for display in ongoing battles (public endpoint for all users)."""
     try:
-        # Simple test first
-        return {"message": "test", "games": []}
+        # Get all active games (not just human-bot games)
+        games = await db.games.find({
+            "status": "ACTIVE"
+        }).sort("created_at", -1).to_list(100)  # Limit to 100 most recent games
+        
+        result = []
+        for game in games:
+            # Simple game data without complex lookups first
+            game_data = {
+                "id": str(game.get("_id", game.get("id", "unknown"))),
+                "game_id": game.get("id"),
+                "creator_id": game.get("creator_id"),
+                "opponent_id": game.get("opponent_id"),
+                "bet_amount": game.get("bet_amount", 0),
+                "status": game.get("status"),
+                "created_at": game.get("created_at"),
+                "is_human_bot": bool(game.get("is_human_bot", False)),
+                "is_bot_game": bool(game.get("is_bot_game", False)),
+                "creator_info": {"username": "Player", "id": game.get("creator_id")},
+                "opponent_info": {"username": "Player", "id": game.get("opponent_id")} if game.get("opponent_id") else None,
+                "total_value": game.get("bet_amount", 0) * 2
+            }
+            
+            result.append(game_data)
+        
+        return result
         
     except Exception as e:
         logger.error(f"Error getting active games for ongoing battles: {e}")
