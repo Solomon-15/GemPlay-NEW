@@ -1141,3 +1141,119 @@ button {
 .gender-toggle input:not(:checked) ~ .gender-label.female {
   opacity: 0.5;
 }
+
+/* Cleanup Results Modal Styles */
+.cleanup-results-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.cleanup-results-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--surface-card);
+  border-radius: 8px 8px 0 0;
+}
+
+.cleanup-results-modal .modal-header h3 {
+  color: var(--text-primary);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: bold;
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.cleanup-results-modal .close-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.cleanup-results-modal .close-btn:hover {
+  color: var(--text-primary);
+  background: var(--surface-sidebar);
+}
+
+.cleanup-results-modal .modal-content {
+  background: var(--surface-card);
+  padding: 1.5rem;
+  max-width: 600px;
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: 0 0 8px 8px;
+  border: 1px solid var(--border-primary);
+}
+
+.cleanup-results-modal .result-item {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  background: var(--surface-sidebar);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: 'Roboto', sans-serif;
+}
+
+.cleanup-results-modal .result-item strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.cleanup-results-modal .result-section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-primary);
+}
+
+.cleanup-results-modal .result-section h4 {
+  color: var(--accent-primary);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.cleanup-results-modal .result-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cleanup-results-modal .result-section li {
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: var(--surface-sidebar);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.9rem;
+}
+
+.cleanup-results-modal .warnings {
+  border-top: 2px solid #f59e0b;
+}
+
+.cleanup-results-modal .warnings h4 {
+  color: #f59e0b;
+}
+
+.cleanup-results-modal .warning-item {
+  background: rgba(245, 158, 11, 0.1);
+  border-left: 4px solid #f59e0b;
+  color: #f59e0b;
+}
