@@ -154,7 +154,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       });
       // Reduced logging for performance
       
-      // Get active Human-bot games for display in ongoing battles (for all users)
+      // Get active games for display in ongoing battles (for all users)
       try {
         const token = localStorage.getItem('token');
         let humanBotGames = [];
