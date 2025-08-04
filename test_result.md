@@ -1,4 +1,16 @@
 frontend:
+  - task: "Ongoing Battles Display Fix"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Lobby.js, /app/frontend/src/components/PlayerCard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main_agent"
+        comment: "FIXED ONGOING BATTLES DISPLAY: Successfully fixed display of player names and bet amounts in 'Ongoing Battles' section. Now shows real player names like 'EgorZ', 'AlexeyPro', 'NurAs' instead of 'Unknown Player', and correct gem amounts like '94 Gems', '105 Gems' instead of '0 Gems'."
+
   - task: "SVG Icons Error Fix"
     implemented: true
     working: true
