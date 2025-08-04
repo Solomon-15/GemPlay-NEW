@@ -18937,7 +18937,7 @@ async def list_human_bots(
     sort_order: Optional[str] = Query("desc", description="Sort order (asc/desc)"),
     # Performance optimization
     priority_fields: Optional[bool] = Query(True, description="Load priority fields first"),
-    current_admin: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_bot_manager)  # Changed from get_current_admin
 ):
     """List human bots with enhanced search, filtering, and pagination."""
     try:
