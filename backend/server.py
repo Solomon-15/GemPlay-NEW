@@ -987,6 +987,8 @@ class HumanBotResponse(BaseModel):
     player_max_delay_seconds: int
     # Individual concurrent games limit
     max_concurrent_games: int
+    # Balance for Human-bot operations
+    virtual_balance: float
     total_games_played: int
     total_games_won: int
     total_amount_wagered: float
