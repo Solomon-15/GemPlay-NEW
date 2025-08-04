@@ -3278,18 +3278,7 @@ async def login(user_credentials: UserLogin, request: Request):
             )
         
         # Verify password
-        password_hash = user.get("password_hash")
-        password_provided = user_credentials.password
-        logger.info(f"LOGIN DEBUG: Email={user_credentials.email}, HasHash={bool(password_hash)}, Password={'*' * len(password_provided) if password_provided else 'None'}")
-        
-        if password_hash:
-            password_valid = verify_password(password_provided, password_hash)
-            logger.info(f"LOGIN DEBUG: Password verification result = {password_valid}")
-        else:
-            password_valid = False
-            logger.info("LOGIN DEBUG: No password hash found")
-            
-        if not password_hash or not password_valid:
+        if not user.get("password_hash") or not verify_password(user_credentials.password, user["password_hash"]):
             # Increment failed attempts
             failed_attempts = user.get("failed_login_attempts", 0) + 1
             update_fields = {
