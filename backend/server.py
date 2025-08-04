@@ -22137,18 +22137,23 @@ async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
         cache_cleared_count = len(cache_types_cleared)
         
         # Log admin action
-        admin_log = AdminLog(
-            admin_id=current_admin.id,
-            action="CLEAR_SERVER_CACHE",
-            target_type="system",
-            target_id="server_cache",
-            details={
-                "cache_types_cleared": cache_types_cleared,
-                "timestamp": datetime.utcnow().isoformat(),
-                "admin_email": current_admin.email
-            }
-        )
-        await db.admin_logs.insert_one(admin_log.dict())
+        try:
+            admin_log = AdminLog(
+                admin_id=current_admin.id,
+                action="CLEAR_SERVER_CACHE",
+                target_type="system",
+                target_id="server_cache",
+                details={
+                    "cache_types_cleared": cache_types_cleared,
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "admin_email": current_admin.email
+                }
+            )
+            await db.admin_logs.insert_one(admin_log.dict())
+            logger.info("Admin log created successfully")
+        except Exception as log_error:
+            logger.error(f"Failed to create admin log: {str(log_error)}")
+            # Continue execution even if logging fails
         
         logger.info(f"Server cache cleared by admin {current_admin.email}. {cache_cleared_count} cache types cleared.")
         
@@ -22162,6 +22167,8 @@ async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
         
     except Exception as e:
         logger.error(f"Failed to clear server cache: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Ошибка при очистке серверного кэша: {str(e)}"
