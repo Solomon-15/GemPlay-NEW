@@ -588,6 +588,9 @@ class HumanBot(BaseModel):
     # Individual concurrent games limit
     max_concurrent_games: int = Field(default=1, ge=1, le=3, description="Максимальное количество одновременных игр для бота")
     
+    # Balance for Human-bot operations (commissions, etc.)
+    virtual_balance: float = Field(default=2000.0, description="Виртуальный баланс Human-бота")
+    
     total_games_played: int = 0
     total_games_won: int = 0  
     total_amount_wagered: float = 0.0
