@@ -50,7 +50,7 @@ const AdminPanel = ({ user, onClose }) => {
     console.log('🔍 AdminPanel: Checking user access. User:', user);
     console.log('🔍 AdminPanel: Token in localStorage:', localStorage.getItem('token') ? 'EXISTS' : 'MISSING');
     
-    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
+    if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && user.role !== 'MODERATOR')) {
       console.log('❌ AdminPanel: Access denied. User role:', user?.role);
     } else {
       console.log('✅ AdminPanel: Access granted. User role:', user.role);
