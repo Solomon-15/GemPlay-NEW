@@ -2450,10 +2450,10 @@ const HumanBotsManagement = ({ user: currentUser }) => {
                       min="1"
                       max="100000"
                       placeholder="250"
-                      value={bulkCreateData.bet_limit_amount_range[1]}
+                      value={bulkCreateData.bet_limit_amount_range ? bulkCreateData.bet_limit_amount_range[1] : 250}
                       onChange={(e) => setBulkCreateData({
                         ...bulkCreateData, 
-                        bet_limit_amount_range: [bulkCreateData.bet_limit_amount_range[0], parseInt(e.target.value) || 250]
+                        bet_limit_amount_range: [(bulkCreateData.bet_limit_amount_range && bulkCreateData.bet_limit_amount_range[0]) || 100, parseInt(e.target.value) || 250]
                       })}
                       className="form-input"
                     />
