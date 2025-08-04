@@ -6725,7 +6725,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 if not loser:
                     human_bot = await db.human_bots.find_one({"id": loser_id})
                     if human_bot:
-                        await create_human_bot_user_profile(human_bot)
+                        await ensure_human_bot_balance(human_bot)
                         loser = await db.users.find_one({"id": loser_id})
                         logger.info(f"Created user profile for Human-bot {human_bot['name']} during commission return")
                 
