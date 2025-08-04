@@ -4535,7 +4535,7 @@ async def get_bot_profit_integration(current_admin: User = Depends(get_current_a
         ]).to_list(10)
         
         # Get active bots count
-        active_bots = await db.bots.count_documents({"type": "REGULAR", "is_active": True})
+        active_bots = await db.bots.count_documents({"bot_type": "REGULAR", "is_active": True})
         
         # Get bot win rate statistics
         bot_win_stats = await db.bots.aggregate([
