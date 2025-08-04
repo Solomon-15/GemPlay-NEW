@@ -7857,73 +7857,8 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
 async def get_active_human_bot_games(current_user: User = Depends(get_current_user)):
     """Get all active games for display in ongoing battles (public endpoint for all users)."""
     try:
-        # Get all active games (not just human-bot games)
-        games = await db.games.find({
-            "status": "ACTIVE"
-        }).sort("created_at", -1).to_list(100)  # Limit to 100 most recent games
-        
-        result = []
-        for game in games:
-            # Get creator info
-            creator_info = {"username": "Unknown", "id": game.get("creator_id")}
-            if game.get("creator_id"):
-                # Check if creator is a human bot
-                human_bot_creator = await db.human_bots.find_one({"id": game["creator_id"]})
-                if human_bot_creator:
-                    creator_info = {
-                        "username": human_bot_creator.get("name", "Human Bot"),
-                        "id": human_bot_creator["id"],
-                        "is_human_bot": True
-                    }
-                else:
-                    # Regular user creator
-                    user_creator = await db.users.find_one({"id": game["creator_id"]})
-                    if user_creator:
-                        creator_info = {
-                            "username": user_creator.get("username", "Player"),
-                            "id": user_creator["id"],
-                            "is_human_bot": False
-                        }
-            
-            # Get opponent info if exists
-            opponent_info = None
-            if game.get("opponent_id"):
-                # Check if opponent is a human bot
-                human_bot_opponent = await db.human_bots.find_one({"id": game["opponent_id"]})
-                if human_bot_opponent:
-                    opponent_info = {
-                        "username": human_bot_opponent.get("name", "Human Bot"),
-                        "id": human_bot_opponent["id"],
-                        "is_human_bot": True
-                    }
-                else:
-                    # Regular user opponent
-                    user_opponent = await db.users.find_one({"id": game["opponent_id"]})
-                    if user_opponent:
-                        opponent_info = {
-                            "username": user_opponent.get("username", "Player"),
-                            "id": user_opponent["id"],
-                            "is_human_bot": False
-                        }
-            
-            game_data = {
-                "id": game.get("_id", game.get("id")),
-                "game_id": game.get("id"),
-                "creator_id": game.get("creator_id"),
-                "opponent_id": game.get("opponent_id"),
-                "bet_amount": game.get("bet_amount", 0),
-                "status": game.get("status"),
-                "created_at": game.get("created_at"),
-                "is_human_bot": bool(game.get("is_human_bot", False)),
-                "is_bot_game": bool(game.get("is_bot_game", False)),
-                "creator_info": creator_info,
-                "opponent_info": opponent_info,
-                "total_value": game.get("bet_amount", 0) * 2
-            }
-            
-            result.append(game_data)
-        
-        return result
+        # Simple test first
+        return {"message": "test", "games": []}
         
     except Exception as e:
         logger.error(f"Error getting active games for ongoing battles: {e}")
