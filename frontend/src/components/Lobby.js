@@ -159,7 +159,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         const token = localStorage.getItem('token');
         let humanBotGames = [];
         
-        // Fetch public active human-bot games for all users
+        // Fetch public active games for all users (renamed for clarity)
         const humanBotGamesResponse = await axios.get(`${API}/games/active-human-bots`, {
           headers: {
             'Authorization': `Bearer ${token}`,
