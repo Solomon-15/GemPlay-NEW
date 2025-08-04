@@ -3063,6 +3063,61 @@ async def generate_human_bot_gems_for_amount(bet_amount: float) -> list:
         return [{"name": "ruby", "count": int(bet_amount)}]
 
 # ==============================================================================
+# DATABASE MIGRATION AND STARTUP
+# ==============================================================================
+
+async def migrate_human_bots_fields():
+    """Migrate existing Human-bots to add missing virtual_balance and total_commission_paid fields."""
+    try:
+        logger.info("Starting Human-bots field migration...")
+        
+        # Find all Human-bots that are missing the new fields
+        bots_to_update = await db.human_bots.find({
+            "$or": [
+                {"virtual_balance": {"$exists": False}},
+                {"total_commission_paid": {"$exists": False}}
+            ]
+        }).to_list(None)
+        
+        if not bots_to_update:
+            logger.info("No Human-bots require field migration")
+            return
+        
+        updated_count = 0
+        for bot in bots_to_update:
+            # Update with default values
+            update_fields = {}
+            
+            if "virtual_balance" not in bot:
+                update_fields["virtual_balance"] = float('inf')  # Set to infinity as requested
+                
+            if "total_commission_paid" not in bot:
+                update_fields["total_commission_paid"] = 0.0
+                
+            if update_fields:
+                await db.human_bots.update_one(
+                    {"id": bot["id"]},
+                    {"$set": update_fields}
+                )
+                updated_count += 1
+                logger.info(f"Migrated Human-bot {bot['name']} (ID: {bot['id']}) - added fields: {list(update_fields.keys())}")
+        
+        logger.info(f"Human-bots migration completed: {updated_count} bots updated")
+        
+    except Exception as e:
+        logger.error(f"Error during Human-bots migration: {e}")
+
+@app.on_event("startup")
+async def startup_event():
+    """Run startup tasks including migrations."""
+    try:
+        # Run database migrations
+        await migrate_human_bots_fields()
+        logger.info("Application startup completed successfully")
+    except Exception as e:
+        logger.error(f"Error during application startup: {e}")
+
+# ==============================================================================
 # API ROUTES
 # ==============================================================================
 
