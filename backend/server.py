@@ -7927,6 +7927,9 @@ async def get_active_human_bot_games(current_user: User = Depends(get_current_us
         
     except Exception as e:
         logger.error(f"Error getting active games for ongoing battles: {e}")
+        logger.error(f"Error details: {type(e).__name__}: {str(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get active games"
