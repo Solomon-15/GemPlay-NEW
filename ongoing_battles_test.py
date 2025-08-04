@@ -178,10 +178,10 @@ def create_test_user(role: str = "USER") -> Optional[str]:
     """Create a test user and return access token."""
     print_subheader(f"Creating Test {role} User")
     
-    # Generate unique user data
-    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    # Generate unique user data (username max 15 chars)
+    random_suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=4))
     user_data = {
-        "username": f"test{role.lower()}_{random_suffix}",
+        "username": f"t{role.lower()[:1]}{random_suffix}",  # Keep under 15 chars
         "email": f"test{role.lower()}_{random_suffix}@test.com",
         "password": "Test123!",
         "gender": "male"
