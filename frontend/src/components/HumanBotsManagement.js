@@ -70,6 +70,10 @@ const HumanBotsManagement = ({ user: currentUser }) => {
   const [bulkNamesInput, setBulkNamesInput] = useState('');
   const [showBulkNamesEditor, setShowBulkNamesEditor] = useState(false);
 
+  // Duplicates cleanup state
+  const [cleanupLoading, setCleanupLoading] = useState(false);
+  const [cleanupResults, setCleanupResults] = useState(null);
+
 
 
   // Generate cache key based on current filters and pagination
