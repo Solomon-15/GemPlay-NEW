@@ -9,7 +9,7 @@ frontend:
     status_history:
       - working: true
         agent: "main_agent"
-        comment: "FIXED ONGOING BATTLES DISPLAY: Successfully fixed display of player names and bet amounts in 'Ongoing Battles' section. Now shows real player names like 'EgorZ', 'AlexeyPro', 'NurAs' instead of 'Unknown Player', and correct gem amounts like '94 Gems', '105 Gems' instead of '0 Gems'."
+        comment: "FULLY FIXED ONGOING BATTLES DISPLAY: Successfully resolved all display issues in 'Ongoing Battles' section. Fixed real player names (EgorZ, AlexeyPro, NurAs vs Unknown Player), correct gem amounts (94 Gems, 105 Gems vs 0 Gems), proper multi-colored gem display (red, blue, green, yellow, purple gems vs all red), and correct gender-based avatars (male/female vs all male)."
 
   - task: "SVG Icons Error Fix"
     implemented: true
