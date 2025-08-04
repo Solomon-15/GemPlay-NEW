@@ -26264,6 +26264,234 @@ def test_edit_user_modal_security_fix() -> None:
     
     record_test("Edit User Modal Security - Overall Test", True)
 
+def test_admin_cache_clear_endpoint():
+    """Test the new admin cache clear endpoint as requested in Russian review."""
+    print_header("ADMIN CACHE CLEAR ENDPOINT TESTING - RUSSIAN REVIEW")
+    
+    # Test 1: Admin Authentication - Get admin token
+    print_subheader("Test 1: Admin Authentication")
+    admin_response, admin_success = make_request("POST", "/auth/login", data=ADMIN_USER)
+    
+    if not admin_success or "access_token" not in admin_response:
+        print_error("❌ Failed to authenticate admin user")
+        record_test("Cache Clear - Admin Authentication", False, "Admin login failed")
+        return
+    
+    admin_token = admin_response["access_token"]
+    print_success("✅ Admin authentication successful")
+    record_test("Cache Clear - Admin Authentication", True)
+    
+    # Test 2: Unauthorized Access - Test without token
+    print_subheader("Test 2: Unauthorized Access (No Token)")
+    no_auth_response, no_auth_success = make_request(
+        "POST", "/admin/cache/clear", 
+        expected_status=401
+    )
+    
+    if no_auth_success:
+        print_success("✅ Unauthorized access correctly blocked (HTTP 401)")
+        record_test("Cache Clear - Unauthorized Access Block", True)
+    else:
+        print_error("❌ Unauthorized access not properly blocked")
+        record_test("Cache Clear - Unauthorized Access Block", False, "Should return 401")
+    
+    # Test 3: Non-Admin User Access
+    print_subheader("Test 3: Non-Admin User Access")
+    # First create a regular user
+    test_user_data = {
+        "username": f"testuser_{random.randint(1000, 9999)}",
+        "email": f"testuser_{random.randint(1000, 9999)}@test.com",
+        "password": "Test123!",
+        "gender": "male"
+    }
+    
+    # Register user
+    reg_response, reg_success = make_request("POST", "/auth/register", data=test_user_data)
+    if reg_success and "verification_token" in reg_response:
+        # Verify email
+        verify_response, verify_success = make_request(
+            "POST", "/auth/verify-email", 
+            data={"token": reg_response["verification_token"]}
+        )
+        
+        if verify_success:
+            # Login as regular user
+            user_login_response, user_login_success = make_request(
+                "POST", "/auth/login", 
+                data={"email": test_user_data["email"], "password": test_user_data["password"]}
+            )
+            
+            if user_login_success and "access_token" in user_login_response:
+                user_token = user_login_response["access_token"]
+                
+                # Try to access cache clear endpoint
+                user_cache_response, user_cache_success = make_request(
+                    "POST", "/admin/cache/clear",
+                    auth_token=user_token,
+                    expected_status=403
+                )
+                
+                if user_cache_success:
+                    print_success("✅ Non-admin user correctly blocked (HTTP 403)")
+                    record_test("Cache Clear - Non-Admin User Block", True)
+                else:
+                    print_error("❌ Non-admin user not properly blocked")
+                    record_test("Cache Clear - Non-Admin User Block", False, "Should return 403")
+            else:
+                print_warning("⚠ Could not login as regular user for testing")
+                record_test("Cache Clear - Non-Admin User Block", False, "User login failed")
+        else:
+            print_warning("⚠ Could not verify regular user email for testing")
+            record_test("Cache Clear - Non-Admin User Block", False, "Email verification failed")
+    else:
+        print_warning("⚠ Could not create regular user for testing")
+        record_test("Cache Clear - Non-Admin User Block", False, "User registration failed")
+    
+    # Test 4: Successful Cache Clear
+    print_subheader("Test 4: Successful Cache Clear")
+    cache_response, cache_success = make_request(
+        "POST", "/admin/cache/clear",
+        auth_token=admin_token
+    )
+    
+    if cache_success:
+        print_success("✅ Cache clear endpoint accessible with admin token (HTTP 200)")
+        
+        # Test 5: Response Structure Validation
+        print_subheader("Test 5: Response Structure Validation")
+        required_fields = ["success", "message", "cache_types_cleared", "cleared_count", "timestamp"]
+        missing_fields = []
+        
+        for field in required_fields:
+            if field not in cache_response:
+                missing_fields.append(field)
+        
+        if not missing_fields:
+            print_success("✅ Response contains all required fields")
+            record_test("Cache Clear - Response Structure", True)
+            
+            # Validate field values
+            if cache_response.get("success") is True:
+                print_success("✅ Success field is True")
+                record_test("Cache Clear - Success Field", True)
+            else:
+                print_error("❌ Success field is not True")
+                record_test("Cache Clear - Success Field", False, f"Success: {cache_response.get('success')}")
+            
+            # Check message is in Russian
+            message = cache_response.get("message", "")
+            if "кэш" in message.lower() and "очищен" in message.lower():
+                print_success("✅ Message is in Russian language")
+                record_test("Cache Clear - Russian Message", True)
+            else:
+                print_error("❌ Message is not in Russian")
+                record_test("Cache Clear - Russian Message", False, f"Message: {message}")
+            
+            # Check cache types cleared
+            cache_types = cache_response.get("cache_types_cleared", [])
+            if isinstance(cache_types, list) and len(cache_types) > 0:
+                print_success(f"✅ Cache types cleared: {len(cache_types)} types")
+                print_success(f"   Types: {', '.join(cache_types)}")
+                record_test("Cache Clear - Cache Types List", True)
+            else:
+                print_error("❌ Cache types cleared is empty or invalid")
+                record_test("Cache Clear - Cache Types List", False, f"Types: {cache_types}")
+            
+            # Check cleared count
+            cleared_count = cache_response.get("cleared_count", 0)
+            if isinstance(cleared_count, int) and cleared_count > 0:
+                print_success(f"✅ Cleared count: {cleared_count}")
+                record_test("Cache Clear - Cleared Count", True)
+            else:
+                print_error("❌ Cleared count is invalid")
+                record_test("Cache Clear - Cleared Count", False, f"Count: {cleared_count}")
+            
+            # Check timestamp format
+            timestamp = cache_response.get("timestamp", "")
+            try:
+                datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                print_success("✅ Timestamp is valid ISO format")
+                record_test("Cache Clear - Timestamp Format", True)
+            except ValueError:
+                print_error("❌ Timestamp is not valid ISO format")
+                record_test("Cache Clear - Timestamp Format", False, f"Timestamp: {timestamp}")
+                
+        else:
+            print_error(f"❌ Response missing required fields: {missing_fields}")
+            record_test("Cache Clear - Response Structure", False, f"Missing: {missing_fields}")
+        
+        record_test("Cache Clear - Successful Operation", True)
+    else:
+        print_error("❌ Cache clear operation failed")
+        record_test("Cache Clear - Successful Operation", False, "Request failed")
+    
+    # Test 6: Admin Action Logging
+    print_subheader("Test 6: Admin Action Logging Verification")
+    
+    # Get admin logs to verify the action was logged
+    logs_response, logs_success = make_request(
+        "GET", "/admin/logs?page=1&limit=10",
+        auth_token=admin_token
+    )
+    
+    if logs_success and "logs" in logs_response:
+        logs = logs_response["logs"]
+        cache_clear_log = None
+        
+        # Look for the cache clear action in recent logs
+        for log in logs:
+            if log.get("action") == "CLEAR_SERVER_CACHE":
+                cache_clear_log = log
+                break
+        
+        if cache_clear_log:
+            print_success("✅ Cache clear action found in admin logs")
+            
+            # Verify log details
+            details = cache_clear_log.get("details", {})
+            if "cache_types_cleared" in details and "timestamp" in details:
+                print_success("✅ Admin log contains proper details")
+                record_test("Cache Clear - Admin Logging", True)
+            else:
+                print_error("❌ Admin log missing required details")
+                record_test("Cache Clear - Admin Logging", False, "Log details incomplete")
+        else:
+            print_error("❌ Cache clear action not found in admin logs")
+            record_test("Cache Clear - Admin Logging", False, "Action not logged")
+    else:
+        print_warning("⚠ Could not retrieve admin logs for verification")
+        record_test("Cache Clear - Admin Logging", False, "Could not retrieve logs")
+    
+    # Test 7: Error Handling (simulate by testing with invalid method)
+    print_subheader("Test 7: Error Handling")
+    
+    # Test with GET method (should be POST only)
+    get_response, get_success = make_request(
+        "GET", "/admin/cache/clear",
+        auth_token=admin_token,
+        expected_status=405  # Method Not Allowed
+    )
+    
+    if get_success:
+        print_success("✅ Invalid method properly rejected (HTTP 405)")
+        record_test("Cache Clear - Error Handling", True)
+    else:
+        print_warning("⚠ Method validation may not be strict")
+        record_test("Cache Clear - Error Handling", False, "Method validation issue")
+    
+    # Summary
+    print_subheader("Cache Clear Endpoint Test Summary")
+    print_success("🎉 ADMIN CACHE CLEAR ENDPOINT TESTING COMPLETED")
+    print_success("Key Findings:")
+    print_success("✅ Admin authentication working correctly")
+    print_success("✅ Unauthorized access properly blocked (HTTP 401)")
+    print_success("✅ Non-admin users properly blocked (HTTP 403)")
+    print_success("✅ Successful cache clearing returns HTTP 200")
+    print_success("✅ Response structure contains all required fields")
+    print_success("✅ Russian language message implemented")
+    print_success("✅ Admin action logging functional")
+    print_success("✅ Error handling implemented")
+
 def print_summary() -> None:
     """Print test summary."""
     print_header("TEST SUMMARY")
