@@ -22099,16 +22099,6 @@ app.include_router(api_router)
 # CACHE MANAGEMENT ENDPOINTS
 # ==============================================================================
 
-@api_router.get("/admin/test-endpoint")
-async def test_endpoint(current_admin: User = Depends(get_current_admin)):
-    """Test endpoint to verify admin functionality."""
-    return {"success": True, "message": "Test endpoint working", "admin_email": current_admin.email}
-
-@api_router.post("/admin/cache/clear")
-async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
-    """Очистить серверный кэш системы."""
-    return {"success": True, "message": "Cache cleared"}
-
 # ==============================================================================
 # ERROR HANDLERS
 # ==============================================================================
