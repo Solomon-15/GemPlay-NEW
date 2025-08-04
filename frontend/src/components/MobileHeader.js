@@ -190,7 +190,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
               <div className="absolute right-0 mt-2 w-48 bg-surface-card border border-accent-primary border-opacity-30 rounded-lg shadow-lg z-50">
                 {profileMenuItems.map((item) => {
                   // Show admin items only for admins
-                  if (item.adminOnly && (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN'))) {
+                  if (item.adminOnly && (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && user.role !== 'MODERATOR'))) {
                     return null;
                   }
 
