@@ -6747,16 +6747,24 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     # Check if player exists in users collection
                     player = await db.users.find_one({"id": player_id})
                     
-                    # If player not found, check if it's a Human-bot and create user profile
+                    # If player not found in users, check if it's a Human-bot
                     if not player:
                         human_bot = await db.human_bots.find_one({"id": player_id})
                         if human_bot:
-                            # Create user profile for Human-bot if needed
-                            await ensure_human_bot_balance(human_bot)
-                            player = await db.users.find_one({"id": player_id})
-                            logger.info(f"Created user profile for Human-bot {human_bot['name']} during draw commission return")
+                            # Return commission directly to Human-bot
+                            commission_to_return = game.bet_amount * 0.03
+                            logger.info(f"DRAW - Returning {commission_to_return} commission to Human-bot {human_bot['name']}")
+                            
+                            await db.human_bots.update_one(
+                                {"id": player_id},
+                                {
+                                    "$inc": {"virtual_balance": commission_to_return},
+                                    "$set": {"updated_at": datetime.utcnow()}
+                                }
+                            )
+                            continue  # Skip regular user processing for this player
                     
-                    # Process commission return for both human players and Human-bots
+                    # Process commission return for human players only
                     if player:
                         commission_to_return = game.bet_amount * 0.03
                         
