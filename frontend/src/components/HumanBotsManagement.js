@@ -1067,7 +1067,76 @@ const HumanBotsManagement = ({ user: currentUser }) => {
                     </>
                   )}
                 </button>
+                <button
+                  className="styled-btn btn-info"
+                  onClick={handleMigrateFields}
+                  disabled={migrationLoading}
+                >
+                  {migrationLoading ? (
+                    <>
+                      <svg className="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Миграция...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Миграция полей
+                    </>
+                  )}
+                </button>
               </div>
+
+              {/* Migration Results Modal */}
+              {migrationResults && (
+                <div className="cleanup-results-modal">
+                  <div className="modal-header">
+                    <h3>Результаты миграции полей</h3>
+                    <button 
+                      className="close-btn" 
+                      onClick={() => setMigrationResults(null)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="modal-content">
+                    <div className="result-item">
+                      <strong>Обновлено ботов:</strong> {migrationResults.migrated}
+                    </div>
+                    <div className="result-item">
+                      <strong>Статус:</strong> {migrationResults.message}
+                    </div>
+                    
+                    {migrationResults.updated_bots && migrationResults.updated_bots.length > 0 && (
+                      <div className="result-section">
+                        <h4>Обновленные боты:</h4>
+                        <ul>
+                          {migrationResults.updated_bots.map((bot, index) => (
+                            <li key={index}>
+                              <strong>{bot.name}</strong> (ID: {bot.id})
+                              <br />
+                              <span style={{fontSize: '0.8em', opacity: 0.7}}>
+                                Добавленные поля: {bot.added_fields.join(', ')}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {migrationResults.error && (
+                      <div className="result-section warnings">
+                        <h4>Ошибка миграции:</h4>
+                        <div className="warning-item">{migrationResults.error}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Cleanup Results Modal */}
               {cleanupResults && (
