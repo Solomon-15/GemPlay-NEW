@@ -15276,23 +15276,16 @@ async def get_active_bets_stats(current_user: User = Depends(get_current_admin))
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
-        # Get current settings
-        settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_regular = settings.get("max_active_bets_regular", 1000000) if settings else 1000000
-        max_human = settings.get("max_active_bets_human", 1000000) if settings else 1000000
+        # Removed global limits - just return current counts
         
         return {
             "regular_bots": {
                 "current": regular_bots_active_bets,
-                "max": max_regular,
-                "available": max(0, max_regular - regular_bots_active_bets),
-                "percentage": round((regular_bots_active_bets / max_regular * 1000000), 1) if max_regular > 0 else 0
+                "unlimited": True
             },
             "human_bots": {
                 "current": human_bots_active_bets,
-                "max": max_human,
-                "available": max(0, max_human - human_bots_active_bets),
-                "percentage": round((human_bots_active_bets / max_human * 1000000), 1) if max_human > 0 else 0
+                "unlimited": True
             }
         }
         
