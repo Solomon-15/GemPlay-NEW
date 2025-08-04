@@ -131,15 +131,15 @@ def test_login(email: str, password: str, role_name: str) -> Optional[str]:
     print_subheader(f"Testing {role_name} Login")
     
     login_data = {
-        "username": email,  # FastAPI OAuth2PasswordRequestForm uses username field
+        "email": email,
         "password": password
     }
     
-    # Use form data for OAuth2PasswordRequestForm
+    # Use JSON data for login endpoint
     response = requests.post(
         f"{BASE_URL}/auth/login",
-        data=login_data,
-        headers={"Content-Type": "application/x-www-form-urlencoded"}
+        json=login_data,
+        headers={"Content-Type": "application/json"}
     )
     
     print(f"Login response status: {response.status_code}")
