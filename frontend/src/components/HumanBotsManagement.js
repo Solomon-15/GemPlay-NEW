@@ -546,19 +546,20 @@ const HumanBotsManagement = ({ user: currentUser }) => {
   };
 
   const handleBulkCreate = async () => {
+    // Prevent multiple simultaneous requests
+    if (bulkCreateLoading) {
+      addNotification('Создание уже выполняется, подождите...', 'warning');
+      return;
+    }
+
+    if (bulkCreateData.win_percentage + bulkCreateData.loss_percentage + bulkCreateData.draw_percentage !== 100) {
+      addNotification('Сумма процентов должна равняться 100%', 'error');
+      return;
+    }
+
+    setBulkCreateLoading(true);
+
     try {
-      // Prevent multiple simultaneous requests
-      if (bulkCreateLoading) {
-        addNotification('Создание уже выполняется, подождите...', 'warning');
-        return;
-      }
-
-      setBulkCreateLoading(true);
-
-      if (bulkCreateData.win_percentage + bulkCreateData.loss_percentage + bulkCreateData.draw_percentage !== 100) {
-        addNotification('Сумма процентов должна равняться 100%', 'error');
-        return;
-      }
       const payload = {
         ...bulkCreateData,
         delay_range: [bulkCreateData.min_delay || 30, bulkCreateData.max_delay || 120],
