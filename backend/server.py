@@ -14930,27 +14930,7 @@ async def start_regular_bots(
 ):
     """Start all regular bots to create bets."""
     try:
-        settings = await db.bot_settings.find_one({"id": "bot_settings"})
-        max_active_bets = settings.get("max_active_bets_regular", 1000000) if settings else 1000000
-        
-        current_active_bets = await db.games.count_documents({
-            "creator_type": "bot",
-            "is_bot_game": True,
-            "status": "WAITING",
-            "$or": [
-                {"bot_type": "REGULAR"},
-                {"metadata.bot_type": "REGULAR"}
-            ]
-        })
-        
-        if current_active_bets >= max_active_bets:
-            return {
-                "message": f"Лимит активных ставок достигнут ({current_active_bets}/{max_active_bets})",
-                "started_bots": 0,
-                "current_active_bets": current_active_bets,
-                "max_active_bets": max_active_bets,
-                "limit_reached": True
-            }
+        # Removed global limit check - start bots without restrictions
         
         active_bots = await db.bots.find({
             "bot_type": "REGULAR",
@@ -14991,12 +14971,8 @@ async def start_regular_bots(
         sorted_bots = sort_bots_by_creation_mode(active_bots)
         
         started_bots = 0
-        available_slots = max_active_bets - current_active_bets
         
         for bot_doc in sorted_bots:
-            if started_bots >= available_slots:
-                break  # Достигнут лимит активных ставок
-                
             bot = Bot(**bot_doc)
             creation_mode = bot_doc.get("creation_mode", "queue-based")
             
@@ -15043,16 +15019,11 @@ async def start_regular_bots(
                     }
                 )
         
-        final_active_bets = current_active_bets + started_bots
-        
         return {
             "message": f"Запущено {started_bots} ботов",
             "started_bots": started_bots,
             "total_active_bots": len(active_bots),
-            "current_active_bets": final_active_bets,
-            "max_active_bets": max_active_bets,
-            "available_slots": max(0, max_active_bets - final_active_bets),
-            "limit_reached": final_active_bets >= max_active_bets
+            "limit_reached": False
         }
         
     except Exception as e:
