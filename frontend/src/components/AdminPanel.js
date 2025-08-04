@@ -34,6 +34,7 @@ const AdminPanel = ({ user, onClose }) => {
   const [dashboardStats, setDashboardStats] = useState({});
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(null);
+  const [clearCacheLoading, setClearCacheLoading] = useState(false);
   
   // States for bet volume filters
   const [betVolumeFilters, setBetVolumeFilters] = useState({
