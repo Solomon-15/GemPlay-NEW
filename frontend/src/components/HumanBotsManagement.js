@@ -647,6 +647,8 @@ const HumanBotsManagement = ({ user: currentUser }) => {
       } else {
         addNotification(`Ошибка создания ботов: ${errorMessage}`, 'error');
       }
+    } finally {
+      setBulkCreateLoading(false);
     }
   };
 
