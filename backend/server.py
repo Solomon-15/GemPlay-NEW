@@ -14866,7 +14866,7 @@ async def start_regular_bots(
                 current_user
             )
             active_bots = await db.bots.find({
-                "type": "REGULAR",
+                "bot_type": "REGULAR",
                 "is_active": True
             }).to_list(100)
         
