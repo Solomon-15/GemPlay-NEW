@@ -1697,26 +1697,6 @@ const RegularBotsManagement = () => {
               </div>
 
             <div className="space-y-6">
-              {/* Количество ботов */}
-              <div>
-                <label className="block text-text-secondary text-sm mb-2">Количество ботов:</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={botForm.count}
-                  onChange={(e) => {
-                    const newForm = {...botForm, count: parseInt(e.target.value) || 1};
-                    setBotForm(newForm);
-                    validateExtendedFormInRealTime(newForm);
-                  }}
-                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                />
-                <div className="text-xs text-text-secondary mt-1">
-                  Сколько ботов создать одновременно (1-100)
-                </div>
-              </div>
-
               {/* Диапазон ставок */}
               <div className="border border-border-primary rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-white mb-3">Диапазон ставок</h4>
