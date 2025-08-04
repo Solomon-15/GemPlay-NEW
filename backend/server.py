@@ -2413,6 +2413,29 @@ async def create_human_bot_user_profile(human_bot: HumanBot):
     except Exception as e:
         logger.error(f"Error creating human bot user profile: {e}")
 
+async def ensure_human_bot_balance(human_bot: HumanBot):
+    """Ensure Human-bot has sufficient balance by updating the Human-bot record directly."""
+    try:
+        # Check current balance
+        bot_record = await db.human_bots.find_one({"id": human_bot.id})
+        if not bot_record:
+            logger.error(f"Human-bot record not found: {human_bot.id}")
+            return
+        
+        current_balance = bot_record.get("virtual_balance", 0.0)
+        
+        # If balance is too low, add more funds
+        if current_balance < 500.0:  # Minimum balance threshold
+            new_balance = 2000.0  # Reset to default balance
+            await db.human_bots.update_one(
+                {"id": human_bot.id},
+                {"$set": {"virtual_balance": new_balance}}
+            )
+            logger.info(f"Replenished Human-bot {human_bot.name} balance: {current_balance} -> {new_balance}")
+        
+    except Exception as e:
+        logger.error(f"Error ensuring Human-bot balance: {e}")
+
 async def log_human_bot_action(
     human_bot_id: str,
     action_type: str,
