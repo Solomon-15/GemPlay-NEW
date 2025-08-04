@@ -51,6 +51,9 @@ const UserManagement = ({ user: currentUser }) => {
   const [resettingUserBalance, setResettingUserBalance] = useState(null);
   const [unfreezingCommission, setUnfreezingCommission] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isConfirmDeleteModalOpen, setIsConfirmDeleteModalOpen] = useState(false);
+  const [isConfirmBulkDeleteModalOpen, setIsConfirmBulkDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
   
   // Form states
   const [banReason, setBanReason] = useState('');
