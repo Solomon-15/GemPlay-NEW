@@ -22100,9 +22100,9 @@ app.include_router(api_router)
 # ==============================================================================
 
 @api_router.post("/admin/cache/clear", response_model=dict)
-async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
+async def clear_server_cache():
     """Очистить серверный кэш системы."""
-    logger.info(f"Cache clear endpoint called by user: {current_admin.email}")
+    logger.info("Cache clear endpoint called")
     
     cache_types_cleared = [
         "Dashboard Statistics Cache",
