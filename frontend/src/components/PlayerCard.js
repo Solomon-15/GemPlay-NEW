@@ -132,13 +132,13 @@ const PlayerCard = React.memo(({
   // Determine avatar based on gender or bot type
   const getAvatarIcon = () => {
     if (game.is_human_bot || game.creator_type === 'human_bot' || game.bot_type === 'HUMAN') {
-      const gender = game.creator?.gender || 'male';
+      const gender = game.creator_info?.gender || game.creator?.gender || 'male';
       return gender === 'female' ? '/Women.svg' : '/Men.svg';
     }
     if (isBot) {
       return '🤖'; // Bot emoji
     }
-    const gender = game.creator?.gender || 'male';
+    const gender = game.creator_info?.gender || game.creator?.gender || 'male';
     return gender === 'female' ? '/Women.svg' : '/Men.svg';
   };
 
