@@ -7717,9 +7717,9 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                         continue
             
             # For regular user games: exclude current user's own games
-            # For Human-bot games: show ALL games (no exclusion)
-            if not is_human_bot_game and game["creator_id"] == current_user.id:
-                continue  # Skip user's own games, but allow all Human-bot games
+            # For Human-bot games and Regular-bot games: show ALL games (no exclusion)
+            if not is_human_bot_game and not is_regular_bot_game and game["creator_id"] == current_user.id:
+                continue  # Skip user's own games, but allow all bot games
                 
             # Calculate time remaining (24 hour limit)
             created_time = game["created_at"]
