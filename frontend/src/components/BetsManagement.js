@@ -61,7 +61,7 @@ const BetsManagement = ({ user: currentUser }) => {
     }, 10000); // Refresh every 10 seconds
 
     return () => clearInterval(refreshInterval);
-  }, []);
+  }, [statusFilter, userFilter, pagination.currentPage]); // Added dependencies to preserve filters
 
   useEffect(() => {
     const interval = setInterval(() => {
