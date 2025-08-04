@@ -78,6 +78,9 @@ const HumanBotsManagement = ({ user: currentUser }) => {
   const [migrationLoading, setMigrationLoading] = useState(false);
   const [migrationResults, setMigrationResults] = useState(null);
 
+  // Bulk creation loading state
+  const [bulkCreateLoading, setBulkCreateLoading] = useState(false);
+
 
 
   // Generate cache key based on current filters and pagination
