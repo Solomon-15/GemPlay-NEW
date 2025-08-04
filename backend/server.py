@@ -19297,7 +19297,7 @@ async def update_human_bot(
             
             # Get global settings for max limit
             global_settings = await db.bot_settings.find_one({"id": "bot_settings"})
-            global_max = global_settings.get("max_active_bets_human", 100) if global_settings else 100
+            global_max = global_settings.get("max_active_bets_human", 10000) if global_settings else 10000
             
             # Get all other human bots to check total limit
             other_bots = await db.human_bots.find({
