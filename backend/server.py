@@ -15058,7 +15058,7 @@ async def create_bot_bet(bot: Bot) -> bool:
             bet_gems=bet_gems,
             status=GameStatus.WAITING,
             commission=round(total_value * 0.06, 2),
-            bot_type="REGULAR" if bot.type == BotType.REGULAR else "HUMAN"
+            bot_type="REGULAR" if bot_type == "REGULAR" else "HUMAN"
         )
         
         
