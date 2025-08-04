@@ -746,10 +746,18 @@ const UserManagement = ({ user: currentUser }) => {
       return;
     }
 
-    const reason = prompt('Укажите причину массового удаления:');
-    if (!reason || !reason.trim()) {
-      showWarningRU('Причина удаления обязательна');
-      return;
+    let reason = prompt('Укажите причину массового удаления:');
+    
+    // Если причина не указана, даем еще одну попытку с более подробным сообщением
+    while (!reason || !reason.trim()) {
+      showWarningRU('Причина удаления обязательна для проведения операции');
+      reason = prompt('Причина удаления обязательна!\n\nПожалуйста, укажите подробную причину массового удаления пользователей:');
+      
+      // Если пользователь нажал Отмена
+      if (reason === null) {
+        showWarningRU('Операция массового удаления отменена');
+        return;
+      }
     }
 
     // Check if any selected users are admins
