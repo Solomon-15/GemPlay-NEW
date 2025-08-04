@@ -3019,11 +3019,46 @@ async def generate_human_bot_gems_for_amount(bet_amount: float) -> list:
     """Generate gems for human bot based on bet amount."""
     try:
         # For human bots, we can generate unlimited gems
-        # Use existing gem generation logic but ensure we have enough value
-        from utils.gemCombinationAlgorithms import generate_combination_for_amount
-        
         # Generate gems that sum to the bet amount
-        gems = generate_combination_for_amount(bet_amount)
+        gems = {}
+        remaining_amount = bet_amount
+        
+        # Define gem types and their prices (from frontend gemCombinationAlgorithms.js)
+        gem_types = [
+            ("RUBY", 1.0),
+            ("EMERALD", 1.5), 
+            ("SAPPHIRE", 2.0),
+            ("DIAMOND", 5.0)
+        ]
+        
+        # Distribute the bet amount across different gem types
+        for i, (gem_type, gem_price) in enumerate(gem_types):
+            if remaining_amount <= 0:
+                break
+                
+            if i == len(gem_types) - 1:  # Last gem type gets remainder
+                quantity = max(1, int(remaining_amount / gem_price))
+            else:
+                # Allocate 10-40% of remaining amount to this gem type
+                max_for_this_gem = remaining_amount * 0.4
+                min_for_this_gem = min(remaining_amount * 0.1, gem_price)
+                
+                if max_for_this_gem > min_for_this_gem:
+                    allocated_amount = random.uniform(min_for_this_gem, max_for_this_gem)
+                else:
+                    allocated_amount = min_for_this_gem
+                    
+                quantity = max(1, int(allocated_amount / gem_price))
+            
+            if quantity > 0:
+                gems[gem_type] = quantity
+                remaining_amount -= quantity * gem_price
+        
+        # Ensure we have at least some gems
+        if not gems:
+            gems["RUBY"] = max(1, int(bet_amount))
+            
+        logger.info(f"Generated gems for ${bet_amount}: {gems}")
         return gems
         
     except Exception as e:
