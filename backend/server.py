@@ -14967,6 +14967,7 @@ async def start_regular_bots(
 async def create_bot_bet(bot: Bot) -> bool:
     """Create a bet for a bot with creation mode support."""
     try:
+        logger.info(f"🎯 Attempting to create bet for bot {bot.id} ({bot.name})")
         import random
         
         bot_settings = await db.bot_settings.find_one({"id": "bot_settings"})
