@@ -81,14 +81,41 @@ const PlayerCard = React.memo(({
   // Get sorted gems by price (ascending) - ONLY from Inventory data
   const getSortedGems = () => {
     if (!game.bet_gems) {
-      // For new format with bet_amount, show the equivalent in gems
+      // For new format with bet_amount, distribute across gem types like in Available Bets
       if (game.bet_amount && gemsDefinitions.length > 0) {
-        // Convert dollars to gems using the first gem type
-        const firstGem = gemsDefinitions[0];
-        if (firstGem && firstGem.price) {
-          const gemCount = Math.floor(game.bet_amount / firstGem.price);
-          return gemCount > 0 ? [{ ...firstGem, quantity: gemCount }] : [];
+        const gems = [];
+        let remainingAmount = game.bet_amount;
+        
+        // Sort gems by price (highest to lowest) to distribute efficiently
+        const sortedGemDefs = [...gemsDefinitions].sort((a, b) => b.price - a.price);
+        
+        for (const gem of sortedGemDefs) {
+          if (remainingAmount <= 0) break;
+          
+          const maxQuantity = Math.floor(remainingAmount / gem.price);
+          if (maxQuantity > 0) {
+            // Take some gems of this type (not all to create variety)
+            const quantity = Math.min(maxQuantity, Math.max(1, Math.floor(Math.random() * 3) + 1));
+            gems.push({ ...gem, quantity });
+            remainingAmount -= quantity * gem.price;
+          }
         }
+        
+        // If there's still remaining amount, add it to the cheapest gem
+        if (remainingAmount > 0 && sortedGemDefs.length > 0) {
+          const cheapestGem = sortedGemDefs[sortedGemDefs.length - 1];
+          const additionalQuantity = Math.floor(remainingAmount / cheapestGem.price);
+          if (additionalQuantity > 0) {
+            const existingGem = gems.find(g => g.type === cheapestGem.type);
+            if (existingGem) {
+              existingGem.quantity += additionalQuantity;
+            } else {
+              gems.push({ ...cheapestGem, quantity: additionalQuantity });
+            }
+          }
+        }
+        
+        return gems.sort((a, b) => a.price - b.price);
       }
       return [];
     }
