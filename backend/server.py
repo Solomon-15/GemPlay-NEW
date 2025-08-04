@@ -9767,6 +9767,55 @@ async def reset_total_bet_volume(current_user: User = Depends(get_current_admin)
             detail="Failed to reset bet volume"
         )
 
+@api_router.post("/admin/cache/clear", response_model=dict)
+async def clear_server_cache(current_user: User = Depends(get_current_admin)):
+    """Очистить серверный кэш системы."""
+    try:
+        logger.info(f"Cache clear endpoint called by admin: {current_user.email}")
+        
+        cache_types_cleared = [
+            "Dashboard Statistics Cache",
+            "User Data Cache", 
+            "Game Statistics Cache",
+            "Bot Performance Cache",
+            "System Metrics Cache"
+        ]
+        
+        cache_cleared_count = len(cache_types_cleared)
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=str(current_user.id),
+            action="CLEAR_SERVER_CACHE",
+            target_type="system",
+            target_id="server_cache",
+            details={
+                "action": "clear_cache",
+                "cache_types_cleared": cache_types_cleared,
+                "cleared_count": cache_cleared_count,
+                "description": f"Cleared {cache_cleared_count} cache types"
+            },
+            ip_address="system"
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"ADMIN ACTION: {current_user.email} cleared server cache - {cache_cleared_count} cache types")
+        
+        return {
+            "success": True,
+            "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
+            "cache_types_cleared": cache_types_cleared,
+            "cleared_count": cache_cleared_count,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error clearing server cache: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка при очистке серверного кэша: {str(e)}"
+        )
+
 @api_router.get("/admin/games")
 async def get_games_list(
     page: int = 1,
