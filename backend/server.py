@@ -2093,33 +2093,28 @@ async def join_human_bot_bet(human_bot: HumanBot):
         commission_amount = selected_game.bet_amount * 0.03  # 3% commission
         
         # Check if human bot has enough balance for commission
-        bot_user = await db.users.find_one({"id": human_bot.id})
-        if not bot_user:
-            # Create user profile for human bot if it doesn't exist
-            await ensure_human_bot_balance(human_bot)
-            bot_user = await db.users.find_one({"id": human_bot.id})
-            
-        # Double check if user was created successfully
-        if not bot_user:
-            logger.error(f"Could not create or find user profile for human bot {human_bot.id}")
+        bot_record = await db.human_bots.find_one({"id": human_bot.id})
+        if not bot_record:
+            logger.error(f"Human-bot record not found: {human_bot.id}")
             return
         
-        if bot_user.get("virtual_balance", 0) < commission_amount:
+        current_balance = bot_record.get("virtual_balance", 0.0)
+        if current_balance < commission_amount:
             # Give human bot some balance for commission
-            await db.users.update_one(
+            await db.human_bots.update_one(
                 {"id": human_bot.id},
                 {"$inc": {"virtual_balance": 1000.0}}  # Add $1000 balance
             )
+            current_balance += 1000.0
         
-        # Freeze commission
-        await db.users.update_one(
+        # Deduct commission from Human-bot balance
+        await db.human_bots.update_one(
             {"id": human_bot.id},
             {
                 "$inc": {
-                    "frozen_balance": commission_amount,
-                    "virtual_balance": -commission_amount
-                },
-                "$set": {"updated_at": datetime.utcnow()}
+                    "virtual_balance": -commission_amount,
+                    "total_commission_paid": commission_amount
+                }
             }
         )
         
