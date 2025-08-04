@@ -4539,7 +4539,7 @@ async def get_bot_profit_integration(current_admin: User = Depends(get_current_a
         
         # Get bot win rate statistics
         bot_win_stats = await db.bots.aggregate([
-            {"$match": {"type": "REGULAR"}},
+            {"$match": {"bot_type": "REGULAR"}},
             {"$group": {
                 "_id": None,
                 "avg_win_rate": {"$avg": "$win_rate_percent"},
