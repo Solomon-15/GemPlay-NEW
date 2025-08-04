@@ -210,7 +210,7 @@ const Sidebar = ({ currentView, setCurrentView, user, isCollapsed, setIsCollapse
       <nav className="flex-1 py-4">
         <ul className={`space-y-1 ${isCollapsed ? 'px-1' : 'px-2'}`}>
           {menuItems.map((item) => {
-            if (item.adminOnly && (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN'))) {
+            if (item.adminOnly && (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && user.role !== 'MODERATOR'))) {
               return null;
             }
             
