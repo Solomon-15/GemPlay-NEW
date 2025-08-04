@@ -3081,9 +3081,11 @@ async def migrate_human_bots_fields():
         
         if not bots_to_update:
             logger.info("No Human-bots require field migration")
-            return
+            return {"migrated": 0, "message": "No migration needed"}
         
         updated_count = 0
+        updated_bots = []
+        
         for bot in bots_to_update:
             # Update with default values
             update_fields = {}
@@ -3100,12 +3102,19 @@ async def migrate_human_bots_fields():
                     {"$set": update_fields}
                 )
                 updated_count += 1
+                updated_bots.append({
+                    "id": bot["id"], 
+                    "name": bot["name"],
+                    "added_fields": list(update_fields.keys())
+                })
                 logger.info(f"Migrated Human-bot {bot['name']} (ID: {bot['id']}) - added fields: {list(update_fields.keys())}")
         
         logger.info(f"Human-bots migration completed: {updated_count} bots updated")
+        return {"migrated": updated_count, "updated_bots": updated_bots, "message": "Migration completed successfully"}
         
     except Exception as e:
         logger.error(f"Error during Human-bots migration: {e}")
+        return {"error": str(e), "migrated": 0}
 
 @app.on_event("startup")
 async def startup_event():
