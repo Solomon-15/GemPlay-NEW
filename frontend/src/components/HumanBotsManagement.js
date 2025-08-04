@@ -1005,7 +1005,79 @@ const HumanBotsManagement = ({ user: currentUser }) => {
                   </svg>
                   Деактивировать всех
                 </button>
+                <button
+                  className="styled-btn btn-danger"
+                  onClick={handleCleanupDuplicates}
+                  disabled={cleanupLoading}
+                >
+                  {cleanupLoading ? (
+                    <>
+                      <svg className="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Очистка...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Очистить дубликаты
+                    </>
+                  )}
+                </button>
               </div>
+
+              {/* Cleanup Results Modal */}
+              {cleanupResults && (
+                <div className="cleanup-results-modal">
+                  <div className="modal-header">
+                    <h3>Результаты очистки дубликатов</h3>
+                    <button 
+                      className="close-btn" 
+                      onClick={() => setCleanupResults(null)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div className="modal-content">
+                    <div className="result-item">
+                      <strong>Проверено ботов:</strong> {cleanupResults.total_bots_checked}
+                    </div>
+                    <div className="result-item">
+                      <strong>Удалено дубликатов:</strong> {cleanupResults.duplicates_cleaned}
+                    </div>
+                    <div className="result-item">
+                      <strong>Обновлено ботов:</strong> {cleanupResults.bots_updated}
+                    </div>
+                    
+                    {cleanupResults.cleaned_duplicates && cleanupResults.cleaned_duplicates.length > 0 && (
+                      <div className="result-section">
+                        <h4>Удаленные дубликаты:</h4>
+                        <ul>
+                          {cleanupResults.cleaned_duplicates.map((item, index) => (
+                            <li key={index}>
+                              {item.bot_name} (ID: {item.bot_id}) - роль: {item.deleted_user_role}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {cleanupResults.warnings && cleanupResults.warnings.length > 0 && (
+                      <div className="result-section warnings">
+                        <h4>Предупреждения:</h4>
+                        <ul>
+                          {cleanupResults.warnings.map((warning, index) => (
+                            <li key={index} className="warning-item">{warning}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Statistics */}
               <div className="stats-grid">
