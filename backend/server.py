@@ -7853,7 +7853,7 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
             detail="Failed to get live games"
         )
 
-@api_router.get("/games/active-human-bots", response_model=List[dict])
+@api_router.get("/games/active-human-bots")
 async def get_active_human_bot_games(current_user: User = Depends(get_current_user)):
     """Get all active games for display in ongoing battles (public endpoint for all users)."""
     try:
