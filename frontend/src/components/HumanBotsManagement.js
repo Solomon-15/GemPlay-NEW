@@ -706,6 +706,42 @@ const HumanBotsManagement = ({ user: currentUser }) => {
     }
   };
 
+  // Migration function
+  const handleMigrateFields = async () => {
+    const confirmed = await confirm({
+      title: "Миграция полей Human-ботов",
+      message: "Вы уверены, что хотите запустить миграцию для добавления отсутствующих полей?\n\nЭто действие:\n• Добавит поле virtual_balance (баланс) со значением бесконечность\n• Добавит поле total_commission_paid со значением 0\n• Не повлияет на существующие данные",
+      type: "info"
+    });
+    
+    if (confirmed) {
+      setMigrationLoading(true);
+      setMigrationResults(null);
+      
+      try {
+        const response = await executeOperation('/admin/human-bots/migrate', 'POST');
+        if (response.migrated !== undefined) {
+          setMigrationResults(response);
+          
+          if (response.migrated > 0) {
+            addNotification(`Миграция завершена: обновлено ${response.migrated} ботов`, 'success');
+          } else {
+            addNotification('Миграция не требуется - все боты уже имеют необходимые поля', 'info');
+          }
+          
+          // Refresh data
+          fetchHumanBots();
+          fetchStats();
+        }
+      } catch (error) {
+        console.error('Ошибка миграции:', error);
+        addNotification('Ошибка при выполнении миграции', 'error');
+      } finally {
+        setMigrationLoading(false);
+      }
+    }
+  };
+
   const getCharacterLabel = (character) => {
     const found = characters.find(c => c.value === character);
     return found ? found.label : character;
