@@ -663,6 +663,45 @@ const HumanBotsManagement = ({ user: currentUser }) => {
     }
   };
 
+  // Cleanup duplicates function
+  const handleCleanupDuplicates = async () => {
+    const confirmed = await confirm({
+      title: "Очистка дубликатов Human-ботов",
+      message: "Вы уверены, что хотите удалить дублированные записи пользователей для Human-ботов?\n\nЭто действие:\n• Удалит записи пользователей с ролью 'Игрок' для Human-ботов\n• Оставит только записи с ролью 'Human-бот'\n• Может повлиять на связанные данные",
+      type: "warning"
+    });
+    
+    if (confirmed) {
+      setCleanupLoading(true);
+      setCleanupResults(null);
+      
+      try {
+        const response = await executeOperation('/admin/human-bots/cleanup-duplicates', 'POST');
+        if (response.success) {
+          setCleanupResults(response);
+          addNotification(response.message, 'success');
+          
+          // Show detailed results if available
+          if (response.duplicates_cleaned > 0) {
+            addNotification(`Удалено дубликатов: ${response.duplicates_cleaned}`, 'info');
+          }
+          if (response.bots_updated > 0) {
+            addNotification(`Обновлено ботов: ${response.bots_updated}`, 'info');
+          }
+          
+          // Refresh data
+          fetchHumanBots();
+          fetchStats();
+        }
+      } catch (error) {
+        console.error('Ошибка очистки дубликатов:', error);
+        addNotification('Ошибка при очистке дубликатов', 'error');
+      } finally {
+        setCleanupLoading(false);
+      }
+    }
+  };
+
   const getCharacterLabel = (character) => {
     const found = characters.find(c => c.value === character);
     return found ? found.label : character;
