@@ -74,11 +74,13 @@ const RoleManagement = ({ user }) => {
       });
       
       if (response.data.users) {
-        // Фильтруем только обычных пользователей (не ботов)
-        const regularUsers = response.data.users.filter(u => 
-          u.user_type !== 'HUMAN_BOT' && u.user_type !== 'REGULAR_BOT'
+        // Фильтруем только пользователей с админскими ролями (не ботов и не обычных пользователей)
+        const adminUsers = response.data.users.filter(u => 
+          u.user_type !== 'HUMAN_BOT' && 
+          u.user_type !== 'REGULAR_BOT' &&
+          (u.role === 'SUPER_ADMIN' || u.role === 'ADMIN' || u.role === 'MODERATOR')
         );
-        setUsers(regularUsers);
+        setUsers(adminUsers);
       }
     } catch (error) {
       console.error('Error fetching users:', error);
