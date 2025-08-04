@@ -7682,9 +7682,10 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
         
         result = []
         for game in games:
-            # Get creator info (user or human bot)
+            # Get creator info (user, human bot, or regular bot)
             creator = await db.users.find_one({"id": game["creator_id"]})
             is_human_bot_game = False
+            is_regular_bot_game = False
             
             if not creator:
                 # Try to find as human bot
@@ -7700,7 +7701,20 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                     }
                     is_human_bot_game = True
                 else:
-                    continue
+                    # Try to find as regular bot
+                    regular_bot = await db.bots.find_one({"id": game["creator_id"]})
+                    if regular_bot:
+                        # Skip games from inactive regular bots
+                        if not regular_bot.get("is_active", False):
+                            continue
+                        creator = {
+                            "id": regular_bot["id"],
+                            "username": regular_bot["name"],
+                            "gender": regular_bot.get("avatar_gender", "male")
+                        }
+                        is_regular_bot_game = True
+                    else:
+                        continue
             
             # For regular user games: exclude current user's own games
             # For Human-bot games: show ALL games (no exclusion)
