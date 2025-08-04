@@ -19346,6 +19346,12 @@ async def delete_human_bot(
         # Delete bot
         await db.human_bots.delete_one({"id": bot_id})
         
+        # Delete corresponding user record if it exists (fix for duplicate user entries)
+        user_record = await db.users.find_one({"id": bot_id})
+        if user_record:
+            await db.users.delete_one({"id": bot_id})
+            logger.info(f"Deleted corresponding user record for Human-bot: {existing_bot['name']} (ID: {bot_id})")
+        
         # Delete bot logs
         await db.human_bot_logs.delete_many({"human_bot_id": bot_id})
         
