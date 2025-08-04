@@ -7910,18 +7910,22 @@ async def get_active_human_bot_games(current_user: User = Depends(get_current_us
                     human_bot = await db.human_bots.find_one({"id": game.get("opponent_id")})
                     if human_bot:
                         opponent_info["username"] = human_bot.get("name", "Bot")
+                        opponent_info["gender"] = human_bot.get("gender", "male")
                     else:
                         # Try to find regular user
                         user = await db.users.find_one({"id": game.get("opponent_id")})
                         if user:
                             opponent_info["username"] = user.get("username", "Player")
+                            opponent_info["gender"] = user.get("gender", "male")
                         else:
                             opponent_info["username"] = "Bot"
+                            opponent_info["gender"] = "male"
                 else:
                     # Regular user game
                     user = await db.users.find_one({"id": game.get("opponent_id")})
                     if user:
                         opponent_info["username"] = user.get("username", "Player")
+                        opponent_info["gender"] = user.get("gender", "male")
             
             # Simple game data without complex lookups first
             game_data = {
