@@ -57,7 +57,7 @@ const AdminPanel = ({ user, onClose }) => {
     }
   }, [user]);
 
-  if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) {
+  if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && user.role !== 'MODERATOR')) {
     console.log('❌ AdminPanel: Rendering access denied component');
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
