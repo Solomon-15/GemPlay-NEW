@@ -62,12 +62,20 @@ const PlayerCard = React.memo(({
 
   // Calculate total bet amount
   const getTotalBetAmount = () => {
-    if (!game.bet_gems) return 0;
+    // Check if we have bet_gems data (old format)
+    if (game.bet_gems) {
+      return Object.entries(game.bet_gems).reduce((total, [gemType, quantity]) => {
+        const gem = getGemByType(gemType);
+        return total + (gem ? gem.price * quantity : 0);
+      }, 0);
+    }
     
-    return Object.entries(game.bet_gems).reduce((total, [gemType, quantity]) => {
-      const gem = getGemByType(gemType);
-      return total + (gem ? gem.price * quantity : 0);
-    }, 0);
+    // Use bet_amount from API (new format)
+    if (game.bet_amount) {
+      return game.bet_amount;
+    }
+    
+    return 0;
   };
 
   // Get sorted gems by price (ascending) - ONLY from Inventory data
