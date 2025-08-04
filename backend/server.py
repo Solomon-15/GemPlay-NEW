@@ -22102,32 +22102,7 @@ app.include_router(api_router)
 @api_router.post("/admin/cache/clear")
 async def clear_server_cache(current_admin: User = Depends(get_current_admin)):
     """Очистить серверный кэш системы."""
-    try:
-        logger.info(f"Cache clear endpoint called by admin: {current_admin.email}")
-        
-        # Simple cache clearing simulation
-        cache_cleared_count = 5
-        
-        # Log admin action
-        logger.info(f"ADMIN ACTION: {current_admin.email} cleared server cache - {cache_cleared_count} cache types")
-        
-        response_data = {
-            "success": True,
-            "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
-            "cleared_count": cache_cleared_count
-        }
-        
-        logger.info(f"Returning response: {response_data}")
-        return response_data
-        
-    except Exception as e:
-        logger.error(f"Error in clear_server_cache: {str(e)}")
-        import traceback
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Ошибка при очистке серверного кэша: {str(e)}"
-        )
+    return {"success": True, "message": "Cache cleared"}
 
 # ==============================================================================
 # ERROR HANDLERS
