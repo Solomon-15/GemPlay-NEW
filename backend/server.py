@@ -8001,7 +8001,7 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                             continue
                         creator = {
                             "id": regular_bot["id"],
-                            "username": regular_bot["name"],
+                            "username": "Bot",  # Для обычных ботов всегда "Bot"
                             "gender": regular_bot.get("avatar_gender", "male")
                         }
                         is_regular_bot_game = True
