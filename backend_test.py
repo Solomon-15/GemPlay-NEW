@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 """
-Regular Bots Admin Panel Enhancements Testing - Russian Review
-Протестировать обновленную админ-панель для Regular Bots и новые поля
+Regular Bots Management Editing Functionality Testing - Russian Review
+Тестирование исправлений функционала редактирования обычных ботов в админ-панели
 
-Focus: Testing updated admin panel for Regular Bots with new fields:
-1. Creating Regular Bot with new fields: win_percentage, pause_on_draw
-2. Getting Regular Bots data with new fields: win_percentage, active_bets, cycle_progress
-3. Updating bot settings: win-percentage, pause-settings
-4. Modal data APIs for cycle history and active bets
-5. Field validation for new fields
+КОНТЕКСТ: Тестирование исправленного компонента RegularBotsManagement.js для корректной работы 
+инлайн-редактирования и модального окна редактирования бота.
 
-Requirements from Russian Review:
-1. POST /api/admin/bots/create-regular с полями: win_percentage, pause_on_draw
-2. GET /api/admin/bots - проверить что возвращаются win_percentage, active_bets, cycle_progress
-3. GET /api/admin/bots/regular/list - проверить структуру данных для новых колонок
-4. PUT /api/admin/bots/{bot_id}/win-percentage - тест редактирования процента побед
-5. PUT /api/admin/bots/{bot_id}/pause-settings - тест настроек пауз
-6. GET API для истории циклов и активных ставок Regular ботов
-7. Валидация win_percentage (0-100) и pause_on_draw (1-60 секунд)
+ТЕСТИРОВАТЬ:
+1. API эндпоинты для инлайн-редактирования:
+   - PUT /api/admin/bots/{bot_id}/win-percentage с JSON body {win_percentage: число}
+   - PUT /api/admin/bots/{bot_id}/pause-settings с JSON body {pause_between_games: число}
+   - Проверить что изменения сохраняются в базе данных
+
+2. API для модального окна редактирования:
+   - GET /api/admin/bots/{bot_id} должен возвращать все поля включая pause_between_cycles, pause_on_draw, creation_mode
+   - PUT /api/admin/bots/{bot_id} должен принимать JSON с полями: name, min_bet_amount, max_bet_amount, win_percentage, cycle_games, pause_between_cycles, pause_on_draw, creation_mode, profit_strategy
+
+3. Проверить что данные корректно возвращаются:
+   - GET /api/admin/bots/regular/list должен показывать обновленные значения после редактирования
+   - Убедиться что поля % и Пауза отображают актуальные значения
+
+ПРИОРИТЕТ: Критически важно для пользователя - он не может редактировать ботов
+ОЖИДАЕМЫЕ РЕЗУЛЬТАТЫ: Все API должны работать корректно, изменения должны сохраняться и отображаться
 """
 
 import requests
