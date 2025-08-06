@@ -78,7 +78,6 @@ const RegularBotsManagement = () => {
     win_percentage: 55.0, // 0-100% (по умолчанию 55%)
     
     cycle_games: 12, // 1-66 (по умолчанию 12)
-    individual_limit: 12, // 1-66 (по умолчанию = cycle_games)
     
     creation_mode: 'queue-based', // 'always-first', 'queue-based', 'after-all'
     priority_order: 50, // 1-100
