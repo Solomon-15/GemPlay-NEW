@@ -2183,36 +2183,11 @@ const RegularBotsManagement = () => {
                 <label className="block text-text-secondary text-sm mb-1">Имя бота:</label>
                 <input
                   type="text"
-                  value={editingBot.name}
-                  onChange={(e) => setEditingBot({...editingBot, name: e.target.value})}
+                  value={botForm.name}
+                  onChange={(e) => setBotForm({...botForm, name: e.target.value})}
                   placeholder="Bot #001"
                   className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
                 />
-              </div>
-
-              {/* Таймеры */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-text-secondary text-sm mb-1">Таймер паузы (мин):</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="1000"
-                    value={editingBot.pause_timer}
-                    onChange={(e) => setEditingBot({...editingBot, pause_timer: parseInt(e.target.value) || 5})}
-                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-text-secondary text-sm mb-1">Интервал пересоздания (сек):</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={editingBot.recreate_timer}
-                    onChange={(e) => setEditingBot({...editingBot, recreate_timer: parseInt(e.target.value) || 30})}
-                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                  />
-                </div>
               </div>
 
               {/* Настройки цикла */}
@@ -2224,18 +2199,9 @@ const RegularBotsManagement = () => {
                     <input
                       type="number"
                       min="1"
-                      value={editingBot.cycle_games}
-                      onChange={(e) => setEditingBot({...editingBot, cycle_games: parseInt(e.target.value) || 12})}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Сумма за цикл ($):</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={editingBot.cycle_total_amount}
-                      onChange={(e) => setEditingBot({...editingBot, cycle_total_amount: parseFloat(e.target.value) || 500})}
+                      max="66"
+                      value={botForm.cycle_games}
+                      onChange={(e) => setBotForm({...botForm, cycle_games: parseInt(e.target.value) || 12})}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
                     />
                   </div>
@@ -2245,9 +2211,20 @@ const RegularBotsManagement = () => {
                       type="number"
                       min="0"
                       max="100"
-                      value={editingBot.win_percentage}
-                      onChange={(e) => setEditingBot({...editingBot, win_percentage: parseFloat(e.target.value) || 60})}
+                      value={botForm.win_percentage}
+                      onChange={(e) => setBotForm({...botForm, win_percentage: parseFloat(e.target.value) || 55})}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Сумма за цикл ($):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={botForm.cycle_total_amount}
+                      readOnly
+                      className="w-full px-3 py-2 bg-gray-700 border border-border-primary rounded-lg text-gray-300 cursor-not-allowed"
+                      title="Автоматически рассчитывается"
                     />
                   </div>
                 </div>
@@ -2264,8 +2241,8 @@ const RegularBotsManagement = () => {
                       min="1"
                       max="10000"
                       step="1"
-                      value={editingBot.min_bet_amount}
-                      onChange={(e) => setEditingBot({...editingBot, min_bet_amount: parseInt(e.target.value) || 1})}
+                      value={botForm.min_bet_amount}
+                      onChange={(e) => setBotForm({...botForm, min_bet_amount: parseFloat(e.target.value) || 1})}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
                     />
                   </div>
@@ -2276,65 +2253,76 @@ const RegularBotsManagement = () => {
                       min="1"
                       max="10000"
                       step="1"
-                      value={editingBot.max_bet_amount}
-                      onChange={(e) => setEditingBot({...editingBot, max_bet_amount: parseInt(e.target.value) || 100})}
+                      value={botForm.max_bet_amount}
+                      onChange={(e) => setBotForm({...botForm, max_bet_amount: parseFloat(e.target.value) || 50})}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Дополнительные настройки */}
+              {/* Настройки таймингов */}
               <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Поведение и стратегия</h4>
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Настройки таймингов</h4>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Стратегия прибыли:</label>
-                    <select
-                      value={editingBot.profit_strategy || 'balanced'}
-                      onChange={(e) => setEditingBot({...editingBot, profit_strategy: e.target.value})}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                    >
-                      <option value="balanced">Сбалансированная</option>
-                      <option value="start_profit">Ранняя прибыль</option>
-                      <option value="end_loss">Поздние потери</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Поведение бота:</label>
-                    <select
-                      value={editingBot.bot_behavior || 'balanced'}
-                      onChange={(e) => setEditingBot({...editingBot, bot_behavior: e.target.value})}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                    >
-                      <option value="balanced">Сбалансированное</option>
-                      <option value="aggressive">Агрессивное</option>
-                      <option value="cautious">Осторожное</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Индивидуальный лимит:</label>
+                    <label className="block text-text-secondary text-sm mb-1">
+                      Пауза между циклами (сек):
+                      <span className="text-xs text-gray-400 block">После завершения всего цикла</span>
+                    </label>
                     <input
                       type="number"
                       min="1"
-                      max="50"
-                      value={editingBot.current_limit || editingBot.cycle_games || 12}
-                      onChange={(e) => setEditingBot({...editingBot, current_limit: parseInt(e.target.value) || 12})}
+                      max="300"
+                      value={botForm.pause_between_cycles}
+                      onChange={(e) => setBotForm({...botForm, pause_between_cycles: parseInt(e.target.value) || 5})}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Пауза между играми (сек):</label>
+                    <label className="block text-text-secondary text-sm mb-1">
+                      Пауза при ничье (сек):
+                      <span className="text-xs text-gray-400 block">Мгновенное пополнение при ничье</span>
+                    </label>
                     <input
                       type="number"
-                      min="0"
-                      max="300"
-                      value={editingBot.pause_between_games || 0}
-                      onChange={(e) => setEditingBot({...editingBot, pause_between_games: parseInt(e.target.value) || 0})}
+                      min="1"
+                      max="60"
+                      value={botForm.pause_on_draw}
+                      onChange={(e) => setBotForm({...botForm, pause_on_draw: parseInt(e.target.value) || 1})}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Стратегия */}
+              <div className="border border-border-primary rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-white mb-3">Стратегия и режим</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Стратегия прибыли:</label>
+                    <select
+                      value={botForm.profit_strategy}
+                      onChange={(e) => setBotForm({...botForm, profit_strategy: e.target.value})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    >
+                      <option value="balanced">Сбалансированная</option>
+                      <option value="start-positive">Ранняя прибыль</option>
+                      <option value="start-negative">Поздние потери</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Режим создания:</label>
+                    <select
+                      value={botForm.creation_mode}
+                      onChange={(e) => setBotForm({...botForm, creation_mode: e.target.value})}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    >
+                      <option value="queue-based">По очереди</option>
+                      <option value="always-first">Всегда первый</option>
+                      <option value="after-all">После всех</option>
+                    </select>
                   </div>
                 </div>
               </div>
@@ -2354,7 +2342,10 @@ const RegularBotsManagement = () => {
                   🔄 Пересчитать ставки
                 </button>
                 <button
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingBot(null);
+                  }}
                   className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
                 >
                   Отмена
