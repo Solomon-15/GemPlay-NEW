@@ -176,9 +176,12 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         });
         
         // Фильтруем только Human-боты (исключаем обычных ботов)
-        humanBotGames = (humanBotGamesResponse.data || []).filter(game => 
-          game.is_human_bot || !game.is_bot_game
-        );
+        humanBotGames = (humanBotGamesResponse.data || []).filter(game => {
+          // Исключаем игры где creator или opponent - обычные боты (username = "Unknown" и отсутствие is_human_bot)
+          const isRegularBotGame = (game.creator_info?.username === "Unknown" || game.opponent_info?.username === "Unknown") && 
+                                  !game.is_human_bot;
+          return !isRegularBotGame;
+        });
         
         // Объединить все ongoing battles для Live Players
         const allOngoingBattles = [...userOngoingBattles, ...activeUserGames, ...humanBotGames];
