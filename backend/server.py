@@ -9982,8 +9982,7 @@ async def get_active_bot_games(current_user: User = Depends(get_current_user)):
                 "is_human_bot": False,  # Явно указываем что это НЕ Human-бот
                 "is_regular_bot": True,  # Явно указываем что это обычный бот
                 "bot_id": bot["id"],
-                "bot_type": bot["bot_type"],
-                "can_accept_bets": bot.get("can_accept_bets", False)
+                "bot_type": bot["bot_type"]
             }
             result.append(game_data)
         
