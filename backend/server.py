@@ -15656,26 +15656,38 @@ async def create_bot_bet(bot: Bot) -> bool:
         
         bet_amount = round(random.uniform(bot.min_bet_amount, bot.max_bet_amount), 2)
         
-        gem_types = ["RUBY", "EMERALD", "SAPPHIRE", "DIAMOND"]
+        # Используем все доступные типы гемов из GEM_PRICES с правильным регистром
+        gem_types = list(GEM_PRICES.keys())  # ["Ruby", "Amber", "Topaz", "Emerald", "Aquamarine", "Sapphire", "Magic"]
         bet_gems = {}
         total_value = 0.0
         
+        # Генерируем случайную комбинацию гемов для ставки
+        selected_gems = random.sample(gem_types, random.randint(1, min(4, len(gem_types))))  # 1-4 случайных типа гемов
+        
         remaining_amount = bet_amount
-        for i, gem_type in enumerate(gem_types):
-            if i == len(gem_types) - 1:  # Последний гем получает остаток
+        for i, gem_type in enumerate(selected_gems):
+            if i == len(selected_gems) - 1:  # Последний гем получает остаток
                 gem_value = remaining_amount
             else:
                 max_for_this_gem = remaining_amount * 0.7  # Максимум 70% от остатка
-                gem_value = round(random.uniform(0.1, max_for_this_gem), 2)
+                min_for_this_gem = remaining_amount * 0.1  # Минимум 10% от остатка
+                gem_value = round(random.uniform(min_for_this_gem, max_for_this_gem), 2)
             
             if gem_value > 0:
                 gem_price = GEM_PRICES.get(gem_type, 1.0)
                 quantity = max(1, int(gem_value / gem_price))
-                bet_gems[gem_type] = quantity
-                total_value += quantity * gem_price
-                remaining_amount -= quantity * gem_price
                 
-                if remaining_amount <= 0:
+                # Коррекция количества, чтобы не превысить оставшуюся сумму
+                actual_value = quantity * gem_price
+                if actual_value > remaining_amount:
+                    quantity = max(1, int(remaining_amount / gem_price))
+                    actual_value = quantity * gem_price
+                
+                bet_gems[gem_type] = quantity
+                total_value += actual_value
+                remaining_amount -= actual_value
+                
+                if remaining_amount <= 0.01:  # Практически ничего не осталось
                     break
         
         game = Game(
