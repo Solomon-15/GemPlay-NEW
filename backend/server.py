@@ -15666,8 +15666,7 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
                 "name": bot["name"],
                 "active_bets": bot_active_bets,
                 "max_individual_bets": bot.get("max_individual_bets", 12),
-                "last_bet_time": bot.get("last_bet_time"),
-                "recreate_timer": bot.get("recreate_timer", 30)
+                "last_bet_time": bot.get("last_bet_time")
             }
             
             modes_info[creation_mode]["bots"].append(bot_info)
