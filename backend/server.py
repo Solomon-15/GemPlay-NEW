@@ -538,6 +538,8 @@ class Bot(BaseModel):
     pause_between_games: int = 5  # По умолчанию 5 секунд (теперь между циклами)
     pause_on_draw: int = 1  # Пауза при ничье (по умолчанию 1 секунда)
     
+    creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
+    
     profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
     
     last_game_time: Optional[datetime] = None
