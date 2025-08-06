@@ -388,8 +388,8 @@ const RegularBotsManagement = () => {
       errors.push('Количество игр в цикле должно быть от 1 до 66');
     }
     
-    if (formData.pause_between_games < 1 || formData.pause_between_games > 300) {
-      errors.push('Пауза между играми должна быть от 1 до 300 секунд');
+    if (formData.pause_between_cycles < 1 || formData.pause_between_cycles > 300) {
+      errors.push('Пауза между циклами должна быть от 1 до 300 секунд');
     }
     
     if (formData.pause_on_draw < 1 || formData.pause_on_draw > 60) {
