@@ -224,7 +224,7 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const handleBulkUpdateLimits = async () => {
+  const handleBulkAction = async (action) => {
     if (selectedBots.size === 0) return;
     
     const newLimit = await prompt({
