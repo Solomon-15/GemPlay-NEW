@@ -167,9 +167,9 @@ const PlayerCard = React.memo(({
     }
   }, [onCancel, game.game_id, game.id]);
 
-  const totalAmount = useMemo(() => getTotalBetAmount(), [game.bet_amount, game.gems, gemsDefinitions]);
+  const totalAmount = useMemo(() => getTotalBetAmount(), [game.bet_amount, game.bet_gems, gemsDefinitions]);
   const timeRemaining = useMemo(() => getTimeRemaining(), [game.created_at, currentTime]);
-  const sortedGems = useMemo(() => getSortedGems(), [game.gems, gemsDefinitions]);
+  const sortedGems = useMemo(() => getSortedGems(), [game.bet_gems, gemsDefinitions]);
   const avatarIcon = useMemo(() => getAvatarIcon(), [game.is_human_bot, game.creator_type, game.bot_type, game.creator?.gender, isBot]);
 
   return (
