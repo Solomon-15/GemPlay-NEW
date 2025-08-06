@@ -15675,8 +15675,7 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
             modes_info[creation_mode]["bots"].append(bot_info)
             modes_info[creation_mode]["active_bets"] += bot_active_bets
         
-        for mode in modes_info:
-            modes_info[mode]["bots"].sort(key=lambda x: x["priority_order"])
+        # Remove sorting by priority_order since it was removed
         
         next_bot_info = await get_next_bot_in_queue()
         
