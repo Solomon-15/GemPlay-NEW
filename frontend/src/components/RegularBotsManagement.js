@@ -558,18 +558,37 @@ const RegularBotsManagement = () => {
 
   const updateIndividualBotSettings = async () => {
     try {
+      const validation = validateExtendedBotForm(botForm);
+      if (!validation.isValid) {
+        setExtendedValidation(validation);
+        showErrorRU(`Ошибка валидации: ${validation.errors.join(', ')}`);
+        return;
+      }
+
       const token = localStorage.getItem('token');
-      const response = await axios.put(`${API}/admin/bots/${editingBot.id}`, editingBot, {
+      const botData = {
+        name: botForm.name,
+        min_bet_amount: botForm.min_bet_amount,
+        max_bet_amount: botForm.max_bet_amount,
+        win_percentage: botForm.win_percentage,
+        cycle_games: botForm.cycle_games,
+        pause_between_cycles: botForm.pause_between_cycles,
+        pause_on_draw: botForm.pause_on_draw,
+        creation_mode: botForm.creation_mode,
+        profit_strategy: botForm.profit_strategy
+      };
+
+      const response = await axios.put(`${API}/api/admin/bots/${editingBot.id}`, botData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      showSuccessRU(response.data.message);
+      showSuccessRU(response.data.message || 'Настройки бота успешно обновлены');
       setIsEditModalOpen(false);
       setEditingBot(null);
       await fetchBotsList();
     } catch (error) {
       console.error('Ошибка обновления настроек бота:', error);
-      showErrorRU('Ошибка при обновлении настроек бота');
+      showErrorRU(error.response?.data?.detail || 'Ошибка при обновлении настроек бота');
     }
   };
 
