@@ -387,10 +387,6 @@ const RegularBotsManagement = () => {
       errors.push('Количество игр в цикле должно быть от 1 до 66');
     }
     
-    if (formData.priority_order < 1 || formData.priority_order > 100) {
-      errors.push('Приоритет должен быть от 1 до 100');
-    }
-    
     if (formData.pause_between_games < 1 || formData.pause_between_games > 300) {
       errors.push('Пауза между играми должна быть от 1 до 300 секунд');
     }
