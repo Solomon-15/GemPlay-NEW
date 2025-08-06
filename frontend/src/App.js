@@ -49,30 +49,22 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
     try {
       if (isLogin) {
         // Login
-        console.log('🔐 Attempting login for:', formData.email);
         const response = await axios.post(`${API}/auth/login`, {
           email: formData.email,
           password: formData.password
         });
         
-        console.log('🎉 Login successful. Response:', response.data);
         localStorage.setItem('token', response.data.access_token);
         if (response.data.refresh_token) {
           localStorage.setItem('refresh_token', response.data.refresh_token);
-          console.log('🔄 Refresh token saved');
         }
-        console.log('💾 Token saved to localStorage');
         
-        // Принудительно устанавливаем пользователя в состояние
-        console.log('🚀 Setting user from login response:', response.data.user);
         setUser(response.data.user);
         onLogin(response.data.user);
         
         // Initialize sound manager with user role
         soundManager.initializeSounds(response.data.user.role);
         
-        // Принудительно перезагружаем страницу для обновления состояния
-        console.log('🔄 Forcing page reload to update state');
         window.location.reload();
       } else {
         // Register
