@@ -16816,10 +16816,6 @@ async def update_individual_bot_settings(
             update_fields["bet_distribution"] = bet_distribution  # новое поле
         if pause_between_games is not None:
             update_fields["pause_between_games"] = pause_between_games  # пауза между играми
-        if "can_accept_bets" in update_data:
-            update_fields["can_accept_bets"] = update_data["can_accept_bets"]
-        if "can_play_with_bots" in update_data:
-            update_fields["can_play_with_bots"] = update_data["can_play_with_bots"]
         
         # Update bot in database
         await db.bots.update_one(
