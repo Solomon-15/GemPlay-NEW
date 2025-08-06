@@ -7817,9 +7817,9 @@ async def maintain_bot_active_bets(game: Game):
             "status": "WAITING"
         })
         
-        individual_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
-        if current_active_bets >= individual_limit:
-            logger.info(f"🚫 Individual limit reached for bot {bot_id}: {current_active_bets}/{individual_limit}")
+        cycle_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
+        if current_active_bets >= cycle_limit:
+            logger.info(f"🚫 Cycle limit reached for bot {bot_id}: {current_active_bets}/{cycle_limit}")
             return
         
     except Exception as e:
