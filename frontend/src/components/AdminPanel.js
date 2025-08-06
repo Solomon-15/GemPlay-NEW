@@ -81,7 +81,6 @@ const AdminPanel = ({ user, onClose }) => {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          console.log('🔒 AdminPanel: Global axios interceptor caught 401 error');
           handleTokenExpired();
         }
         return Promise.reject(error);
