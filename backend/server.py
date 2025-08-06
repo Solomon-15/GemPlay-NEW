@@ -15693,6 +15693,8 @@ async def create_bot_bet(bot: Bot) -> bool:
         # Убеждаемся что total_value соответствует реальной сумме ставки
         actual_total = sum(quantity * GEM_PRICES.get(gem_type, 1.0) for gem_type, quantity in bet_gems.items())
         
+        logger.info(f"🎯 Bot {bot.id} created bet: amount={actual_total}, gems={bet_gems}")
+        
         game = Game(
             creator_id=bot.id,
             creator_type="bot",
