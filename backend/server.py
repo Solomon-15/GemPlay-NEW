@@ -521,7 +521,6 @@ class Bot(BaseModel):
     current_cycle_gem_value_won: float = 0.0  # Новое поле для стоимости выигранных гемов
     current_cycle_gem_value_total: float = 0.0  # Новое поле для общей стоимости ставок
     current_limit: Optional[int] = None  # 1-66 (по умолчанию = cycle_games)
-    individual_limit: int = 12  # 1-66 (индивидуальный лимит активных ставок)
     
     # Новые поля для системы циклов и прибыли
     completed_cycles: int = 0  # Количество завершенных циклов
