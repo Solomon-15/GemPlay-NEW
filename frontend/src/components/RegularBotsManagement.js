@@ -549,7 +549,6 @@ const RegularBotsManagement = () => {
         max_bet_amount: 50.0,
         win_percentage: 55.0,
         cycle_games: 12,
-        individual_limit: 12,
         creation_mode: 'queue-based',
         priority_order: 50,
         pause_between_games: 5,
