@@ -525,6 +525,10 @@ class Bot(BaseModel):
     total_net_profit: float = 0.0  # Чистая прибыль за все циклы
     win_percentage: float = 55.0  # Процент выигрышей (по умолчанию 55%)
     
+    # Поля для отслеживания цикла
+    current_cycle_gem_value_won: float = 0.0  # Сумма выигранных гемов в текущем цикле
+    current_cycle_gem_value_total: float = 0.0  # Общая сумма ставок в текущем цикле
+    
     
     creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
     priority_order: int = 50  # 1-100
