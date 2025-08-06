@@ -15597,7 +15597,7 @@ async def get_next_bot_in_queue() -> dict:
             
             if bot.get("last_bet_time"):
                 time_since_last_bet = (datetime.utcnow() - bot["last_bet_time"]).total_seconds()
-                if time_since_last_bet < bot.get("recreate_timer", 30):
+                if time_since_last_bet < bot.get("pause_between_games", 5):
                     continue  # Бот еще не готов к новой ставке
             
             creation_mode = bot.get("creation_mode", "queue-based")
