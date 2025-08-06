@@ -225,51 +225,6 @@ const RegularBotsManagement = () => {
   };
 
   const handleBulkAction = async (action) => {
-    if (selectedBots.size === 0) return;
-    
-    const newLimit = await prompt({
-      title: "Изменение лимитов",
-      message: "Введите новый лимит активных ставок для выбранных ботов:",
-      placeholder: "Введите число от 1 до 66",
-      type: "number",
-      min: 1,
-      max: 66
-    });
-    
-    if (!newLimit) return;
-    
-    const confirmed = await confirm({
-      title: "Изменение лимитов",
-      message: `Вы уверены, что хотите изменить лимит активных ставок на ${newLimit} для ${selectedBots.size} ботов?`,
-      confirmText: "Изменить",
-      cancelText: "Отмена",
-      type: "warning"
-    });
-    
-    if (!confirmed) return;
-    
-    setBulkActionLoading(true);
-    
-    try {
-      const token = localStorage.getItem('token');
-      const promises = Array.from(selectedBots).map(botId =>
-        axios.put(`${API}/admin/bots/${botId}`, {
-          individual_limit: parseInt(newLimit)
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-      );
-      
-      await Promise.all(promises);
-      showSuccessRU(`Успешно обновлены лимиты для ${selectedBots.size} ботов`);
-      await fetchBotsList();
-      clearSelection();
-    } catch (error) {
-      console.error('Error bulk update limits:', error);
-      showErrorRU('Ошибка при обновлении лимитов');
-    } finally {
-      setBulkActionLoading(false);
-    }
   };
 
   useEffect(() => {
