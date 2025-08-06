@@ -12205,10 +12205,6 @@ async def bot_join_game_automatically(bot: Bot):
         game_to_join = random.choice(available_games)
         game_obj = Game(**game_to_join)
         
-        # Check if bot can play with other bots
-        if game_obj.is_bot_game and not bot.can_play_with_bots:
-            return
-        
         # Ensure bot has required gems
         await BotGameLogic.setup_bot_gems(bot.id, db)
         
