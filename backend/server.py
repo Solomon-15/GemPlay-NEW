@@ -19445,6 +19445,60 @@ async def get_human_bot_average_bet_amount(bot_id: str) -> float:
         logger.error(f"Error calculating average bet amount for human bot {bot_id}: {e}")
         return 0.0
 
+@api_router.post("/admin/bots/cleanup-removed-fields", response_model=dict)
+async def cleanup_removed_bot_fields(
+    current_admin: User = Depends(get_current_admin)
+):
+    """Clean up removed fields from regular bots (can_accept_bets, can_play_with_bots)."""
+    try:
+        # Only SUPER_ADMIN can perform this operation
+        if current_admin.role != UserRole.SUPER_ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only SUPER_ADMIN can cleanup bot fields"
+            )
+        
+        # Remove fields from all regular bots
+        result = await db.bots.update_many(
+            {"bot_type": "REGULAR"},
+            {
+                "$unset": {
+                    "can_accept_bets": "",
+                    "can_play_with_bots": ""
+                }
+            }
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="CLEANUP_REGULAR_BOT_FIELDS",
+            target_type="bot",
+            target_id="bulk",
+            details={
+                "removed_fields": ["can_accept_bets", "can_play_with_bots"],
+                "bots_updated": result.modified_count
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Admin {current_admin.username} cleaned up removed fields from {result.modified_count} regular bots")
+        
+        return {
+            "message": f"Удалены устаревшие поля из {result.modified_count} обычных ботов",
+            "bots_updated": result.modified_count,
+            "removed_fields": ["can_accept_bets", "can_play_with_bots"]
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cleaning up bot fields: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cleanup bot fields: {str(e)}"
+        )
+
 @api_router.get("/admin/human-bots", response_model=HumanBotsListResponse)
 async def list_human_bots(
     page: int = Query(1, ge=1),
