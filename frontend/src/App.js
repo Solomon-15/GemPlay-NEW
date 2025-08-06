@@ -266,31 +266,24 @@ function App() {
   const checkAuthStatus = async () => {
     const token = localStorage.getItem('token');
     const refreshToken = localStorage.getItem('refresh_token');
-    console.log('🔍 Checking auth status. Token exists:', !!token, 'Refresh token exists:', !!refreshToken);
     
     if (token) {
       try {
-        console.log('📡 Making request to /api/auth/me');
         const response = await axios.get(`${API}/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log('✅ Auth check successful. User:', response.data);
         setUser(response.data);
         
         // Initialize sound manager with user role
         soundManager.initializeSounds(response.data.role);
         
-        setLoading(false); // Устанавливаем loading false только после успешной авторизации
+        setLoading(false);
       } catch (error) {
-        console.error('❌ Auth check failed:', error.response?.status, error.response?.data || error.message);
-        
         // If token is expired and we have a refresh token, try to refresh
         if (error.response?.status === 401 && refreshToken) {
-          console.log('🔄 Attempting to refresh token...');
           try {
             const refreshResponse = await axios.post(`${API}/auth/refresh?refresh_token=${refreshToken}`);
             
-            console.log('✅ Token refreshed successfully');
             localStorage.setItem('token', refreshResponse.data.access_token);
             if (refreshResponse.data.refresh_token) {
               localStorage.setItem('refresh_token', refreshResponse.data.refresh_token);
@@ -300,21 +293,19 @@ function App() {
             // Initialize sound manager with user role
             soundManager.initializeSounds(refreshResponse.data.user.role);
             
-            setLoading(false); // Устанавливаем loading false только после успешного обновления токена
-            return; // Exit early, we're good now
+            setLoading(false);
+            return;
           } catch (refreshError) {
-            console.error('❌ Token refresh failed:', refreshError.response?.data || refreshError.message);
+            console.error('Token refresh failed:', refreshError.response?.data || refreshError.message);
           }
         }
         
-        console.log('🗑️ Removing invalid tokens');
         localStorage.removeItem('token');
         localStorage.removeItem('refresh_token');
-        setLoading(false); // Устанавливаем loading false только после обработки ошибки
+        setLoading(false);
       }
     } else {
-      console.log('🔒 No token found in localStorage');
-      setLoading(false); // Устанавливаем loading false если токена нет
+      setLoading(false);
     }
   };
 
