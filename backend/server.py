@@ -15807,7 +15807,6 @@ async def create_individual_bot(
             "cycle_length": cycle_games,
             "cycle_total_amount": cycle_total_amount,
             "pause_timer": pause_timer,  # теперь в секундах
-            "recreate_timer": recreate_interval,
             "bet_distribution": bet_distribution,  # новое поле
             
             # Statistics
