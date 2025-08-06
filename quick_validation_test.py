@@ -58,7 +58,7 @@ if create_response.status_code == 200:
         bots_data = bots_response.json()
         bots = bots_data if isinstance(bots_data, list) else bots_data.get('bots', [])
         for bot in bots:
-            if isinstance(bot, dict) and bot.get('name') == 'Test Bot Fix Final':
+            if isinstance(bot, dict) and bot.get('name') == f'Test Bot Fix {unique_suffix}':
                 print(f'✅ Bot found in list with creation_mode: {bot.get("creation_mode", "MISSING")}')
                 print(f'   Active bets: {bot.get("active_bets", 0)}, Cycle games: {bot.get("cycle_games", 0)}')
                 break
