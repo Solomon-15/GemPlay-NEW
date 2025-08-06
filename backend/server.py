@@ -15410,9 +15410,7 @@ async def start_regular_bots(
                 else:  # queue-based
                     queue_based_bots.append(bot)
             
-            always_first_bots.sort(key=lambda x: x.get("priority_order", 999))
-            queue_based_bots.sort(key=lambda x: x.get("priority_order", 999))
-            after_all_bots.sort(key=lambda x: x.get("priority_order", 999))
+            # Remove sorting by priority_order since it was removed
             
             return always_first_bots + queue_based_bots + after_all_bots
         
