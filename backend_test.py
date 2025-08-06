@@ -1,13 +1,20 @@
 #!/usr/bin/env python3
 """
-Fixed PUT API Endpoints Testing - Russian Review
-Focus: Testing the fixed PUT API endpoints for regular bots system that now accept JSON body
+Performance Testing After Console Logs Optimization - Russian Review
+Focus: Testing system performance after console log cleanup and specific endpoints
 Requirements: 
-1. Test PUT /api/admin/bots/{bot_id}/pause-settings (now accepts JSON body)
-2. Test PUT /api/admin/bots/{bot_id}/win-percentage (now accepts JSON body)  
-3. Confirm other fixes continue working:
-   - GET /api/admin/bots/cycle-statistics
-   - GET /api/admin/bots (with correct active_bets)
+1. Authentication - GET /api/auth/me
+2. Regular Bots Management:
+   - GET /api/admin/bots (список обычных ботов)
+   - GET /api/admin/bots/regular/list (специальный эндпоинт для regular bots)
+   - PUT /api/admin/bots/{bot_id}/pause-settings
+   - PUT /api/admin/bots/{bot_id}/win-percentage
+3. Human Bots Management:
+   - GET /api/admin/human-bots
+   - POST /api/admin/human-bots/bulk-create
+4. Dashboard Statistics:
+   - GET /api/admin/dashboard/stats
+5. Verify active_bets field is correctly calculated for bots
 """
 
 import requests
