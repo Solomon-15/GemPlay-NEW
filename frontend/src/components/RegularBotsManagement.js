@@ -474,8 +474,6 @@ const RegularBotsManagement = () => {
         max_bet_amount: botForm.max_bet_amount,
         win_percentage: botForm.win_percentage,
         cycle_games: botForm.cycle_games,
-        creation_mode: botForm.creation_mode,
-        priority_order: botForm.priority_order,
         pause_between_games: botForm.pause_between_games,
         profit_strategy: botForm.profit_strategy
       };
