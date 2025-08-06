@@ -15287,7 +15287,6 @@ async def create_regular_bots(
         max_bet = bot_config.get("max_bet_amount", 50.0)  # 1-10000
         win_rate = bot_config.get("win_percentage", 55.0) / 100.0  # 0-100% -> 0.0-1.0
         cycle_games = bot_config.get("cycle_games", 12)  # 1-66
-        individual_limit = bot_config.get("individual_limit", cycle_games)  # 1-66
         creation_mode = bot_config.get("creation_mode", "queue-based")
         priority_order = bot_config.get("priority_order", 50)  # 1-100
         pause_between_games = bot_config.get("pause_between_games", 5)  # 1-300
