@@ -16783,6 +16783,9 @@ async def update_individual_bot_settings(
         if bet_distribution is not None and bet_distribution not in ["small", "medium", "large"]:
             raise HTTPException(status_code=400, detail="Bet distribution must be 'small', 'medium', or 'large'")
         
+        if pause_between_games is not None and (pause_between_games < 1 or pause_between_games > 3600):
+            raise HTTPException(status_code=400, detail="Pause between games must be between 1 and 3600 seconds")
+        
         # Prepare update data - only update provided fields
         update_fields = {"updated_at": datetime.utcnow()}
         
