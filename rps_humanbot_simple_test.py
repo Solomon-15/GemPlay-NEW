@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional, List, Tuple
 import random
 
 # Configuration
-BASE_URL = "https://3d63e28a-d18e-4616-aa0f-657afef77b95.preview.emergentagent.com/api"
+BASE_URL = "https://855c1c6b-3430-44a1-9946-fececb6b6343.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
