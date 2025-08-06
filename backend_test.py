@@ -1,19 +1,13 @@
 #!/usr/bin/env python3
 """
-Regular Bots System Fixes Testing - Russian Review
-Focus: Testing fixes for regular bots system as requested in Russian review
+Fixed PUT API Endpoints Testing - Russian Review
+Focus: Testing the fixed PUT API endpoints for regular bots system that now accept JSON body
 Requirements: 
-1. Test fixed API endpoints with /api prefix:
-   - GET /api/admin/bots/cycle-statistics 
-   - PUT /api/admin/bots/{bot_id}/pause-settings
-   - PUT /api/admin/bots/{bot_id}/win-percentage
-2. Test fixed active_bets field:
-   - GET /api/admin/bots (main list)
-   - GET /api/admin/bots/regular/list (detailed list)
-   - Verify active_bets shows real count, not 0
-3. Additional verification:
-   - Regular bots system continues working correctly
-   - Bots create bets
+1. Test PUT /api/admin/bots/{bot_id}/pause-settings (now accepts JSON body)
+2. Test PUT /api/admin/bots/{bot_id}/win-percentage (now accepts JSON body)  
+3. Confirm other fixes continue working:
+   - GET /api/admin/bots/cycle-statistics
+   - GET /api/admin/bots (with correct active_bets)
 """
 
 import requests
