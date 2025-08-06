@@ -1790,7 +1790,15 @@ async def maintain_all_bots_active_bets():
                         profit_strategy=bot_doc.get("profit_strategy", "balanced")
                     )
                     
-
+                    # Создаем недостающие ставки для бота
+                    for i in range(needed_bets):
+                        success = await create_bot_bet(bot_obj)
+                        if success:
+                            logger.info(f"✅ Bot {bot_obj.name} created bet {i+1}/{needed_bets}")
+                            await asyncio.sleep(0.1)  # Небольшая пауза между созданием
+                        else:
+                            logger.warning(f"❌ Failed to create bet {i+1}/{needed_bets} for bot {bot_obj.name}")
+                            break
                     
             except Exception as e:
                 logger.error(f"Error maintaining bets for bot {bot_doc.get('name', 'unknown')}: {e}")
