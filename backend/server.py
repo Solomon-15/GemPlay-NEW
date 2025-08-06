@@ -15610,9 +15610,7 @@ async def get_next_bot_in_queue() -> dict:
             else:
                 queue_based_bots.append(bot)
         
-        always_first_bots.sort(key=lambda x: x.get("priority_order", 999))
-        queue_based_bots.sort(key=lambda x: x.get("priority_order", 999))
-        after_all_bots.sort(key=lambda x: x.get("priority_order", 999))
+        # Remove sorting by priority_order since it was removed
         
         if always_first_bots:
             return {"message": "Always-first bot selected", "bot": always_first_bots[0]}
