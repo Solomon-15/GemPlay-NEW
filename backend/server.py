@@ -15507,7 +15507,7 @@ async def create_bot_bet(bot: Bot) -> bool:
             logger.info(f"Creating bet for always-first bot {bot.id}")
         
         elif creation_mode == "queue-based":
-            logger.info(f"Creating bet for queue-based bot {bot.id} with priority {bot_doc.get('priority_order', 999)}")
+            logger.info(f"Creating bet for queue-based bot {bot.id}")
         
         elif creation_mode == "after-all":
             logger.info(f"Creating bet for after-all bot {bot.id}")
