@@ -9289,8 +9289,6 @@ async def create_bot(
             max_bet=bot_data.get("max_bet", 1000.0),
             cycle_games=bot_data.get("cycle_games", 12),
             pause_between_games=bot_data.get("pause_between_games", 60),
-            can_accept_bets=bot_data.get("can_accept_bets", False),
-            can_play_with_bots=bot_data.get("can_play_with_bots", False),
             avatar_gender=bot_data.get("avatar_gender", "male"),
             simple_mode=bot_data.get("simple_mode", False)
         )
