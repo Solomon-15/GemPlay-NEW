@@ -26,8 +26,8 @@ from datetime import datetime
 # Configuration
 BASE_URL = "https://3d63e28a-d18e-4616-aa0f-657afef77b95.preview.emergentagent.com/api"
 SUPER_ADMIN_USER = {
-    "email": "admin@gemplay.com",
-    "password": "Admin123!"
+    "email": "superadmin@gemplay.com",
+    "password": "SuperAdmin123!"
 }
 
 # Test results tracking
