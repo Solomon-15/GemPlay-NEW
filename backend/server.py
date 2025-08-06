@@ -15496,9 +15496,9 @@ async def create_bot_bet(bot: Bot) -> bool:
             "status": "WAITING"
         })
         
-        individual_limit = bot_doc.get("current_limit") or bot_doc.get("cycle_games", 12)
-        if bot_active_bets >= individual_limit:
-            logger.info(f"🚫 Individual limit reached for bot {bot.id}: {bot_active_bets}/{individual_limit}")
+        current_limit = bot_doc.get("current_limit") or bot_doc.get("cycle_games", 12)
+        if bot_active_bets >= current_limit:
+            logger.info(f"🚫 Individual limit reached for bot {bot.id}: {bot_active_bets}/{current_limit}")
             return False
         
         if bot_doc:
