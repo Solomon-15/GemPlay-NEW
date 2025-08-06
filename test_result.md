@@ -3075,7 +3075,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "403 Error Fixes Testing for Non-Admin Users - Russian Review"
+    - "Bot Fields Removal Testing - Russian Review"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
