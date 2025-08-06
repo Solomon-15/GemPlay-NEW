@@ -53,9 +53,10 @@ if create_response.status_code == 200:
     # Check bot in list
     bots_response = requests.get(f'{BASE_URL}/admin/bots', headers=headers)
     if bots_response.status_code == 200:
-        bots = bots_response.json()
+        bots_data = bots_response.json()
+        bots = bots_data if isinstance(bots_data, list) else bots_data.get('bots', [])
         for bot in bots:
-            if bot.get('name') == 'Test Bot Fix Final':
+            if isinstance(bot, dict) and bot.get('name') == 'Test Bot Fix Final':
                 print(f'✅ Bot found in list with creation_mode: {bot.get("creation_mode", "MISSING")}')
                 print(f'   Active bets: {bot.get("active_bets", 0)}, Cycle games: {bot.get("cycle_games", 0)}')
                 break
