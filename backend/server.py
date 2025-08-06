@@ -16175,8 +16175,6 @@ async def get_bot_details(
                 "win_percentage": bot_doc.get("win_percentage"),
                 "min_bet_amount": bot_doc.get("min_bet_amount"),
                 "max_bet_amount": bot_doc.get("max_bet_amount"),
-                "can_accept_bets": bot_doc.get("can_accept_bets", False),
-                "can_play_with_bots": bot_doc.get("can_play_with_bots", False),
                 
                 # Statistics
                 "active_bets": active_bets,
