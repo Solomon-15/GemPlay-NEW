@@ -15323,6 +15323,15 @@ async def create_regular_bots(
         await db.bots.insert_one(bot.dict())
         created_bots.append(bot.id)
         
+        # Create initial cycle of bets for the bot
+        logger.info(f"🎯 Creating initial cycle of {cycle_games} bets for bot {bot.name}")
+        for i in range(cycle_games):
+            success = await create_bot_bet(bot)
+            if success:
+                logger.info(f"✅ Created initial bet {i+1}/{cycle_games} for bot {bot.name}")
+            else:
+                logger.warning(f"⚠️ Failed to create initial bet {i+1}/{cycle_games} for bot {bot.name}")
+        
         await regular_bot_system.log_bot_action(bot.id, "BOT_CREATED", {
             "config": bot_config,
             "admin_id": current_user.id
