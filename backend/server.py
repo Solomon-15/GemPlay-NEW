@@ -7298,9 +7298,9 @@ class RegularBotSystem:
         if not bot:
             return {"passed": False, "reason": "Bot not found"}
         
-        individual_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
-        if individual_limit is None:
-            individual_limit = 12  # fallback для старых ботов
+        cycle_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
+        if cycle_limit is None:
+            cycle_limit = 12  # fallback для старых ботов
         
         current_bets = await self.db.games.count_documents({
             "creator_id": bot_id,
@@ -7308,10 +7308,10 @@ class RegularBotSystem:
         })
         
         return {
-            "passed": current_bets < individual_limit,
+            "passed": current_bets < cycle_limit,
             "current": current_bets,
-            "max": individual_limit,
-            "reason": f"Individual limit reached: {current_bets}/{individual_limit}" if current_bets >= individual_limit else None
+            "max": cycle_limit,
+            "reason": f"Cycle limit reached: {current_bets}/{cycle_limit}" if current_bets >= cycle_limit else None
         }
     
     async def check_timing_constraints(self, bot_id: str):
