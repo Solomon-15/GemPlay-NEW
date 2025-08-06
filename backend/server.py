@@ -529,6 +529,9 @@ class Bot(BaseModel):
     current_cycle_gem_value_won: float = 0.0  # Сумма выигранных гемов в текущем цикле
     current_cycle_gem_value_total: float = 0.0  # Общая сумма ставок в текущем цикле
     
+    # Пауза между играми (секунды)
+    pause_between_games: int = 5  # По умолчанию 5 секунд
+    
     
     creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
     priority_order: int = 50  # 1-100
