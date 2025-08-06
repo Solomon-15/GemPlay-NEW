@@ -16759,6 +16759,7 @@ async def update_individual_bot_settings(
         min_bet_amount = update_data.get("min_bet_amount")
         avg_bet_amount = update_data.get("avg_bet_amount")  # новое поле
         bet_distribution = update_data.get("bet_distribution")  # новое поле
+        pause_between_games = update_data.get("pause_between_games")  # пауза между играми
         
         # Validation with new math
         if pause_timer is not None and (pause_timer < 1 or pause_timer > 3600):
