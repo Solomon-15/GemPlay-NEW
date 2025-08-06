@@ -15308,7 +15308,6 @@ async def create_regular_bots(
             cycle_games=cycle_games,
             current_limit=cycle_games,
             creation_mode=creation_mode,
-            priority_order=priority_order,
             pause_between_games=pause_between_games,
             profit_strategy=profit_strategy,
             is_active=True
