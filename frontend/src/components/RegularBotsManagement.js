@@ -1893,41 +1893,24 @@ const RegularBotsManagement = () => {
               {/* Игр в цикле и индивидуальный лимит */}
               <div className="border border-border-primary rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-white mb-3">Циклы и лимиты</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="66"
-                      value={botForm.cycle_games}
-                      onChange={(e) => {
-                        const newValue = parseInt(e.target.value) || 12;
-                        const newForm = {...botForm, cycle_games: newValue, individual_limit: newValue};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Индивидуальный лимит:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="66"
-                      value={botForm.individual_limit}
-                      onChange={(e) => {
-                        const newForm = {...botForm, individual_limit: parseInt(e.target.value) || 12};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="66"
+                    value={botForm.cycle_games}
+                    onChange={(e) => {
+                      const newValue = parseInt(e.target.value) || 12;
+                      const newForm = {...botForm, cycle_games: newValue};
+                      setBotForm(newForm);
+                      validateExtendedFormInRealTime(newForm);
+                    }}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                  />
                 </div>
                 <div className="text-xs text-text-secondary mt-1">
-                  Количество игр в цикле (1-66) и максимум активных ставок на бота
+                  Количество игр в одном цикле (1-66)
                 </div>
               </div>
 
