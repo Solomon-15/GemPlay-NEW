@@ -24,8 +24,10 @@ else:
     print(f'❌ Failed to get active games: {active_games_response.status_code}')
 
 # Verify bot creation with exact Russian review data
+import time
+unique_suffix = str(int(time.time()))
 bot_data = {
-    'name': 'Test Bot Fix Final',
+    'name': f'Test Bot Fix {unique_suffix}',
     'min_bet_amount': 1.0,
     'max_bet_amount': 50.0,
     'win_percentage': 55.0,
