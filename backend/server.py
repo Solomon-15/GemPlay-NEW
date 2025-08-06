@@ -1761,7 +1761,10 @@ async def bot_automation_loop():
             await asyncio.sleep(5)  # Пауза даже при ошибке
 
 async def maintain_all_bots_active_bets():
-    """Поддерживает количество активных ставок для всех активных ботов."""
+    """
+    Поддерживает количество активных ставок для всех активных ботов.
+    ВАЖНО: Создает новые ставки только после завершения полного цикла, НЕ после каждой игры.
+    """
     try:
         active_bots = await db.bots.find({
             "is_active": True,
@@ -1771,21 +1774,30 @@ async def maintain_all_bots_active_bets():
         if not active_bots:
             return
             
-        logger.info(f"🤖 Checking {len(active_bots)} active bots for bet maintenance")
+        logger.info(f"🤖 Checking {len(active_bots)} active bots for cycle completion")
         
         for bot_doc in active_bots:
             try:
                 bot_id = bot_doc["id"]
                 cycle_games = bot_doc.get("cycle_games", 12)
                 
+                # Подсчитываем активные ставки
                 current_active_bets = await db.games.count_documents({
                     "creator_id": bot_id,
                     "status": "WAITING"
                 })
                 
-                if current_active_bets < cycle_games:
-                    needed_bets = cycle_games - current_active_bets
-                    logger.info(f"🎯 Bot {bot_doc['name']} needs {needed_bets} more bets ({current_active_bets}/{cycle_games})")
+                # Получаем статистику текущего цикла
+                current_wins = bot_doc.get("current_cycle_wins", 0)
+                current_losses = bot_doc.get("current_cycle_losses", 0)
+                games_played = current_wins + current_losses
+                
+                # Создаем новые ставки только если цикл завершен И активных ставок меньше чем нужно
+                cycle_completed = games_played >= cycle_games
+                
+                if cycle_completed and current_active_bets == 0:
+                    # Цикл завершен и нет активных ставок - создаем новый полный цикл
+                    logger.info(f"🎯 Bot {bot_doc['name']} cycle completed, starting new cycle of {cycle_games} bets")
                     
                     bot_obj = Bot(
                         id=bot_doc["id"],
@@ -1795,22 +1807,59 @@ async def maintain_all_bots_active_bets():
                         max_bet_amount=bot_doc.get("max_bet_amount", bot_doc.get("max_bet", 100.0)),
                         win_rate=bot_doc.get("win_rate_percent", 60.0),
                         cycle_games=bot_doc.get("cycle_games", 12),
-                        pause_between_games=bot_doc.get("pause_between_games", 5),
+                        pause_between_games=bot_doc.get("pause_between_cycles", bot_doc.get("pause_between_games", 5)),
                         is_active=bot_doc.get("is_active", True),
                         created_at=bot_doc.get("created_at", datetime.utcnow()),
                         bot_behavior=bot_doc.get("bot_behavior", "balanced"),
                         profit_strategy=bot_doc.get("profit_strategy", "balanced")
                     )
                     
-                    # Создаем недостающие ставки для бота
-                    for i in range(needed_bets):
+                    # Пауза между циклами (по умолчанию 5 секунд)
+                    pause_between_cycles = bot_doc.get("pause_between_cycles", 5)
+                    await asyncio.sleep(pause_between_cycles)
+                    
+                    # Создаем новый полный цикл ставок
+                    for i in range(cycle_games):
                         success = await create_bot_bet(bot_obj)
                         if success:
-                            logger.info(f"✅ Bot {bot_obj.name} created bet {i+1}/{needed_bets}")
+                            logger.info(f"✅ Bot {bot_obj.name} created cycle bet {i+1}/{cycle_games}")
                             await asyncio.sleep(0.1)  # Небольшая пауза между созданием
                         else:
-                            logger.warning(f"❌ Failed to create bet {i+1}/{needed_bets} for bot {bot_obj.name}")
+                            logger.warning(f"❌ Failed to create cycle bet {i+1}/{cycle_games} for bot {bot_obj.name}")
                             break
+                elif not cycle_completed and current_active_bets < cycle_games:
+                    # Цикл не завершен, но не хватает ставок - это возможно только при старте бота
+                    needed_bets = cycle_games - current_active_bets
+                    if games_played == 0:  # Новый бот без игр
+                        logger.info(f"🎯 New bot {bot_doc['name']} needs initial {needed_bets} bets")
+                        
+                        bot_obj = Bot(
+                            id=bot_doc["id"],
+                            name=bot_doc["name"],
+                            bot_type=bot_doc.get("bot_type", "REGULAR"),
+                            min_bet_amount=bot_doc.get("min_bet_amount", bot_doc.get("min_bet", 1.0)),
+                            max_bet_amount=bot_doc.get("max_bet_amount", bot_doc.get("max_bet", 100.0)),
+                            win_rate=bot_doc.get("win_rate_percent", 60.0),
+                            cycle_games=bot_doc.get("cycle_games", 12),
+                            pause_between_games=bot_doc.get("pause_between_cycles", bot_doc.get("pause_between_games", 5)),
+                            is_active=bot_doc.get("is_active", True),
+                            created_at=bot_doc.get("created_at", datetime.utcnow()),
+                            bot_behavior=bot_doc.get("bot_behavior", "balanced"),
+                            profit_strategy=bot_doc.get("profit_strategy", "balanced")
+                        )
+                        
+                        # Создаем недостающие ставки для нового бота
+                        for i in range(needed_bets):
+                            success = await create_bot_bet(bot_obj)
+                            if success:
+                                logger.info(f"✅ Bot {bot_obj.name} created initial bet {i+1}/{needed_bets}")
+                                await asyncio.sleep(0.1)  # Небольшая пауза между созданием
+                            else:
+                                logger.warning(f"❌ Failed to create initial bet {i+1}/{needed_bets} for bot {bot_obj.name}")
+                                break
+                else:
+                    # Цикл в процессе - ничего не делаем, ждем завершения
+                    logger.debug(f"Bot {bot_doc['name']}: cycle in progress ({games_played}/{cycle_games}), active bets: {current_active_bets}")
                     
             except Exception as e:
                 logger.error(f"Error maintaining bets for bot {bot_doc.get('name', 'unknown')}: {e}")
