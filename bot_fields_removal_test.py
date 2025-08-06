@@ -277,7 +277,11 @@ class BotFieldsRemovalTester:
             async with self.session.get(f"{BACKEND_URL}/bots/active-games", headers=self.get_auth_headers()) as response:
                 if response.status == 200:
                     data = await response.json()
-                    active_games = data.get("games", [])
+                    # Handle both list and dict response formats
+                    if isinstance(data, list):
+                        active_games = data
+                    else:
+                        active_games = data.get("games", [])
                     
                     print(f"✅ Regular bots active games endpoint working")
                     print(f"   - Found {len(active_games)} active regular bot games")
