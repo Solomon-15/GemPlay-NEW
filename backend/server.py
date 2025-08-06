@@ -1949,6 +1949,121 @@ async def update_bot_cycle_stats(bot_id: str, outcome: str, game_value: float):
     except Exception as e:
         logger.error(f"Error updating bot cycle stats for {bot_id}: {e}")
 
+async def check_and_complete_bot_cycle(bot_id: str):
+    """
+    Проверяет завершение цикла бота и переводит прибыль в 'Доход от ботов'.
+    Вызывается после каждой игры бота.
+    """
+    try:
+        bot_doc = await db.bots.find_one({"id": bot_id})
+        if not bot_doc:
+            logger.warning(f"Bot {bot_id} not found for cycle completion check")
+            return False
+            
+        current_wins = bot_doc.get("current_cycle_wins", 0)
+        current_losses = bot_doc.get("current_cycle_losses", 0)
+        cycle_games = bot_doc.get("cycle_games", 12)
+        
+        # Проверяем завершение цикла (ничьи не считаются)
+        games_played = current_wins + current_losses
+        
+        if games_played >= cycle_games:
+            # Цикл завершен!
+            cycle_profit = bot_doc.get("current_cycle_profit", 0.0)
+            completed_cycles = bot_doc.get("completed_cycles", 0)
+            
+            logger.info(f"🎯 Bot {bot_doc.get('name', bot_id)} completed cycle #{completed_cycles + 1}")
+            logger.info(f"   Games: {current_wins}W/{current_losses}L (target: {cycle_games})")
+            logger.info(f"   Cycle profit: ${cycle_profit:.2f}")
+            
+            # Обновляем статистику бота
+            update_data = {
+                "completed_cycles": completed_cycles + 1,
+                "total_net_profit": bot_doc.get("total_net_profit", 0.0) + cycle_profit,
+                # Сброс текущего цикла
+                "current_cycle_wins": 0,
+                "current_cycle_losses": 0,
+                "current_cycle_draws": 0,
+                "current_cycle_gem_value_won": 0.0,
+                "current_cycle_gem_value_total": 0.0,
+                "current_cycle_profit": 0.0,
+                "updated_at": datetime.utcnow()
+            }
+            
+            # Переводим прибыль в "Доход от ботов" если она положительная
+            if cycle_profit > 0:
+                profit_entry = {
+                    "id": str(uuid.uuid4()),
+                    "entry_type": "REGULAR_BOT_CYCLE_PROFIT",
+                    "amount": cycle_profit,
+                    "source_user_id": bot_id,
+                    "description": f"Прибыль от цикла #{completed_cycles + 1} обычного бота {bot_doc.get('name', 'Bot')}",
+                    "reference_id": f"bot_cycle_{bot_id}_{completed_cycles + 1}",
+                    "created_at": datetime.utcnow(),
+                    "status": "CONFIRMED"
+                }
+                
+                await db.profit_entries.insert_one(profit_entry)
+                logger.info(f"💰 Transferred ${cycle_profit:.2f} profit from bot {bot_doc.get('name', 'Bot')} to profit pool")
+            
+            # Обновляем бота в базе данных
+            await db.bots.update_one({"id": bot_id}, {"$set": update_data})
+            
+            logger.info(f"✅ Bot {bot_doc.get('name', 'Bot')} cycle completed. Starting new cycle.")
+            return True
+            
+        else:
+            # Цикл еще не завершен
+            games_remaining = cycle_games - games_played
+            logger.debug(f"Bot {bot_doc.get('name', 'Bot')}: {games_remaining} games remaining in cycle")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error checking bot cycle completion for {bot_id}: {e}")
+        return False
+
+async def get_bot_cycle_statistics():
+    """
+    Получает статистику циклов всех обычных ботов для отображения в админ-панели.
+    """
+    try:
+        bots = await db.bots.find({"bot_type": "REGULAR"}).to_list(None)
+        
+        statistics = []
+        for bot in bots:
+            current_wins = bot.get("current_cycle_wins", 0)
+            current_losses = bot.get("current_cycle_losses", 0)
+            current_draws = bot.get("current_cycle_draws", 0)
+            cycle_games = bot.get("cycle_games", 12)
+            
+            games_in_current_cycle = current_wins + current_losses
+            games_remaining = max(0, cycle_games - games_in_current_cycle)
+            
+            stat = {
+                "bot_id": bot["id"],
+                "bot_name": bot.get("name", "Bot"),
+                "is_active": bot.get("is_active", False),
+                "completed_cycles": bot.get("completed_cycles", 0),
+                "current_cycle": {
+                    "wins": current_wins,
+                    "losses": current_losses,
+                    "draws": current_draws,
+                    "games_played": games_in_current_cycle,
+                    "games_remaining": games_remaining,
+                    "profit": bot.get("current_cycle_profit", 0.0),
+                },
+                "total_net_profit": bot.get("total_net_profit", 0.0),
+                "win_percentage": bot.get("win_percentage", 55.0)
+            }
+            
+            statistics.append(stat)
+        
+        return statistics
+        
+    except Exception as e:
+        logger.error(f"Error getting bot cycle statistics: {e}")
+        return []
+
 def reset_daily_limits():
     """Reset daily limits for all users."""
     asyncio.create_task(reset_daily_limits_async())
