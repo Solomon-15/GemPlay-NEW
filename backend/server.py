@@ -16787,8 +16787,6 @@ async def update_individual_bot_settings(
             update_fields["name"] = update_data["name"]
         if pause_timer is not None:
             update_fields["pause_timer"] = pause_timer
-        if recreate_timer is not None:
-            update_fields["recreate_timer"] = recreate_timer
         if cycle_games is not None:
             update_fields["cycle_length"] = cycle_games
         if cycle_total_amount is not None:
