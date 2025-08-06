@@ -8165,15 +8165,16 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
 async def get_active_human_bot_games(current_user: User = Depends(get_current_user)):
     """Get active human-bot games and live player games for display in ongoing battles."""
     try:
+        # Get all regular bot IDs to exclude them
+        regular_bot_ids = await db.bots.distinct("id")
+        
         # Get active games but EXCLUDE regular bot games  
         # Include: Human-bot games + Live player games
         # Exclude: Regular bot games (they belong in "Ongoing Bot Battles")
         games = await db.games.find({
             "status": "ACTIVE",
-            "$or": [
-                {"is_human_bot": True},  # Human-bot games
-                {"is_bot_game": {"$ne": True}}  # Live player games (not bot games)
-            ]
+            "creator_id": {"$nin": regular_bot_ids},  # Exclude games created by regular bots
+            "opponent_id": {"$nin": regular_bot_ids + [None]}  # Exclude games with regular bot opponents
         }).sort("created_at", -1).to_list(100)
         
         result = []
