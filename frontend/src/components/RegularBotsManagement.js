@@ -392,6 +392,10 @@ const RegularBotsManagement = () => {
       errors.push('Пауза между играми должна быть от 1 до 300 секунд');
     }
     
+    if (formData.pause_on_draw < 1 || formData.pause_on_draw > 60) {
+      errors.push('Пауза при ничье должна быть от 1 до 60 секунд');
+    }
+    
     const validModes = ['always-first', 'queue-based', 'after-all'];
     if (!validModes.includes(formData.creation_mode)) {
       errors.push('Неверный режим создания ставок');
