@@ -9348,10 +9348,6 @@ async def update_bot(
             update_fields["cycle_games"] = bot_data["cycle_games"]
         if "pause_between_games" in bot_data:
             update_fields["pause_between_games"] = bot_data["pause_between_games"]
-        if "can_accept_bets" in bot_data:
-            update_fields["can_accept_bets"] = bot_data["can_accept_bets"]
-        if "can_play_with_bots" in bot_data:
-            update_fields["can_play_with_bots"] = bot_data["can_play_with_bots"]
         if "avatar_gender" in bot_data:
             update_fields["avatar_gender"] = bot_data["avatar_gender"]
         if "simple_mode" in bot_data:
