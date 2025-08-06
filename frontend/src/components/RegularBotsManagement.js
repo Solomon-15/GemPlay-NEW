@@ -1501,9 +1501,12 @@ const RegularBotsManagement = () => {
                         {bot.remaining_slots || (bot.cycle_games - bot.current_cycle_games) || 0}
                       </button>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <div className="text-white font-roboto text-sm">
-                        {(bot.games_stats?.wins || 0)}/{(bot.games_stats?.losses || 0)}/{(bot.games_stats?.draws || 0)}
+                    <td className="px-4 py-4 whitespace-nowrap text-left">
+                      <div className="text-white font-roboto text-xs space-y-1">
+                        <div>Игры: {bot.completed_cycles || 0}</div>
+                        <div>W/L/D: {bot.current_cycle_wins || 0}/{bot.current_cycle_losses || 0}/{bot.current_cycle_draws || 0}</div>
+                        <div className="text-green-400">Прибыль: ${(bot.current_cycle_profit || 0).toFixed(2)}</div>
+                        <div className="text-blue-400">Чистая: ${(bot.total_net_profit || 0).toFixed(2)}</div>
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
