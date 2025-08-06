@@ -434,10 +434,6 @@ const RegularBotsManagement = () => {
       errors.push('Количество игр в цикле должно быть от 1 до 66');
     }
     
-    if (formData.individual_limit < 1 || formData.individual_limit > 66) {
-      errors.push('Индивидуальный лимит должен быть от 1 до 66');
-    }
-    
     if (formData.priority_order < 1 || formData.priority_order > 100) {
       errors.push('Приоритет должен быть от 1 до 100');
     }
