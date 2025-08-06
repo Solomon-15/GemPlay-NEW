@@ -16160,7 +16160,6 @@ async def get_bot_details(
                 
                 # User-defined parameters - return exactly as saved, not defaults!
                 "pause_timer": bot_doc.get("pause_timer"),
-                "recreate_timer": bot_doc.get("recreate_timer"),
                 "cycle_games": bot_doc.get("cycle_length"),
                 "cycle_total_amount": bot_doc.get("cycle_total_amount"),
                 "win_percentage": bot_doc.get("win_percentage"),
