@@ -480,6 +480,7 @@ const RegularBotsManagement = () => {
         win_percentage: botForm.win_percentage,
         cycle_games: botForm.cycle_games,
         pause_between_games: botForm.pause_between_games,
+        pause_on_draw: botForm.pause_on_draw,
         profit_strategy: botForm.profit_strategy
       };
       
