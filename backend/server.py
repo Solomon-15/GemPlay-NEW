@@ -517,6 +517,15 @@ class Bot(BaseModel):
     current_limit: Optional[int] = None  # 1-66 (по умолчанию = cycle_games)
     individual_limit: int = 12  # 1-66 (индивидуальный лимит активных ставок)
     
+    # Новые поля для системы циклов и прибыли
+    completed_cycles: int = 0  # Количество завершенных циклов
+    current_cycle_losses: int = 0  # Поражения в текущем цикле  
+    current_cycle_draws: int = 0  # Ничьи в текущем цикле
+    current_cycle_profit: float = 0.0  # Прибыль за текущий цикл
+    total_net_profit: float = 0.0  # Чистая прибыль за все циклы
+    win_percentage: float = 55.0  # Процент выигрышей (по умолчанию 55%)
+    
+    
     creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
     priority_order: int = 50  # 1-100
     pause_between_games: int = 5  # 1-300 секунд (по умолчанию 5)
