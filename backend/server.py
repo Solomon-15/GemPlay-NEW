@@ -15448,6 +15448,7 @@ async def create_regular_bots(
             current_limit=cycle_games,
             creation_mode=creation_mode,
             pause_between_games=pause_between_cycles,
+            pause_on_draw=pause_on_draw,
             profit_strategy=profit_strategy,
             is_active=True
         )
