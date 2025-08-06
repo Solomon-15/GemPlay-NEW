@@ -18248,53 +18248,6 @@ async def get_bot_analytics(
                 "maxCapacity": max_capacity
             })
         
-        # Calculate priority effectiveness
-        priority_effectiveness = {}
-        bots = await db.bots.find({
-            "is_active": True,
-            "$or": [
-                {"type": "REGULAR"},
-                {"bot_type": "REGULAR"}
-            ]
-        }).to_list(None)
-        
-        for bot in bots:
-            priority = bot.get("priority_order", 999)
-            
-            # Count successful activations for this bot
-            successful_activations = await db.games.count_documents({
-                "creator_id": bot["id"],
-                "status": {"$in": ["active", "completed"]},
-                "created_at": {"$gte": start_time}
-            })
-            
-            # Count total attempts
-            total_attempts = await db.games.count_documents({
-                "creator_id": bot["id"],
-                "created_at": {"$gte": start_time}
-            })
-            
-            activation_rate = (successful_activations / total_attempts * 100) if total_attempts > 0 else 0
-            
-            if priority not in priority_effectiveness:
-                priority_effectiveness[priority] = {
-                    "activationRate": 0,
-                    "totalAttempts": 0,
-                    "successfulActivations": 0
-                }
-            
-            priority_effectiveness[priority]["activationRate"] += activation_rate
-            priority_effectiveness[priority]["totalAttempts"] += total_attempts
-            priority_effectiveness[priority]["successfulActivations"] += successful_activations
-        
-        # Calculate average activation rate per priority
-        for priority in priority_effectiveness:
-            if priority_effectiveness[priority]["totalAttempts"] > 0:
-                priority_effectiveness[priority]["activationRate"] = round(
-                    priority_effectiveness[priority]["successfulActivations"] / 
-                    priority_effectiveness[priority]["totalAttempts"] * 100, 1
-                )
-        
         # Calculate activation statistics
         successful_activations = []
         failed_activations = []
@@ -18323,7 +18276,6 @@ async def get_bot_analytics(
             "data": {
                 "queueWaitTimes": queue_wait_times,
                 "botLoadingStats": bot_loading_stats,
-                "priorityEffectiveness": priority_effectiveness,
                 "activationStats": {
                     "successful": successful_activations,
                     "failed": failed_activations
