@@ -555,9 +555,7 @@ const RegularBotsManagement = () => {
         priority_order: 50,
         pause_between_games: 5,
         profit_strategy: 'balanced',
-        cycle_total_amount: 0,
-        can_accept_bets: false,
-        can_play_with_bots: true
+        cycle_total_amount: 0
       });
       
       await fetchStats();
