@@ -598,9 +598,7 @@ const RegularBotsManagement = () => {
         priority_order: response.data.bot.priority_order || 50,
         pause_between_games: response.data.bot.pause_between_games || 5,
         profit_strategy: response.data.bot.profit_strategy || 'balanced',
-        cycle_total_amount: response.data.bot.cycle_total_amount || 0,
-        can_accept_bets: response.data.bot.can_accept_bets || false,
-        can_play_with_bots: response.data.bot.can_play_with_bots || true
+        cycle_total_amount: response.data.bot.cycle_total_amount || 0
       });
       
       setEditingBot(response.data.bot);
