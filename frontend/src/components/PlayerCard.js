@@ -15,12 +15,6 @@ const PlayerCard = React.memo(({
   user
 }) => {
   const { gemsDefinitions, getGemByType } = useGems();
-  // const [showAcceptModal, setShowAcceptModal] = useState(false);
-
-  // console.log('🔄 PlayerCard render:', {
-  //   gameId: game.game_id || game.id,
-  //   timestamp: new Date().toISOString()
-  // });
 
   // Get time remaining for auto-cancel (24 hours format)
   const getTimeRemaining = () => {
