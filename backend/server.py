@@ -15666,7 +15666,6 @@ async def get_bots_queue_status(current_user: User = Depends(get_current_admin))
             bot_info = {
                 "id": bot["id"],
                 "name": bot["name"],
-                "priority_order": bot.get("priority_order", 999),
                 "active_bets": bot_active_bets,
                 "max_individual_bets": bot.get("max_individual_bets", 12),
                 "last_bet_time": bot.get("last_bet_time"),
