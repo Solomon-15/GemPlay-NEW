@@ -98,38 +98,44 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       // Filter games - separate human bots from regular bots
       const allGames = gamesResponse.data || [];
       
-      // Available bets should include only WAITING games where current user is NOT a participant:
-      // 1. All human player games (is_bot_game is false or undefined) with WAITING status
-      // 2. Human-bot games (is_human_bot is true) with WAITING status
-      // 3. Exclude games where current user is creator or opponent
+      // Available bets (Live Players) должны включать только:
+      // 1. Игры живых игроков (is_bot_game is false или undefined) со статусом WAITING
+      // 2. Human-bot игры (is_human_bot is true) со статусом WAITING
+      // 3. Исключить игры где текущий пользователь участвует
       setAvailableBets(allGames.filter(game => {
-        // Only show WAITING games in Available Bets
+        // Только WAITING игры в Available Bets
         if (game.status !== 'WAITING') {
           return false;
         }
         
-        // Exclude games where current user is already participating
+        // Исключить игры где пользователь уже участвует
         if (game.creator_id === user?.id || game.opponent_id === user?.id) {
           return false;
         }
         
-        // If it's not a bot game at all, include it (human players)
+        // Если это не бот-игра вообще, включаем (живые игроки)
         if (!game.is_bot_game) {
           return true;
         }
         
-        // If it's a bot game, only include if it's a human bot
+        // Если это бот-игра, включаем только если это Human-бот
         if (game.is_bot_game && game.is_human_bot) {
           return true;
         }
         
-        // Exclude regular bot games
+        // Исключаем игры обычных ботов из Live Players
         return false;
       }));
       
-      // Set bot games from dedicated endpoint (only regular bots)
+      // Available Bots (Bot Players) - только обычные боты со статусом WAITING
       const activeBotGames = botGamesResponse.data || [];
-      setAvailableBots(activeBotGames.filter(game => game.is_bot_game && !game.is_human_bot));
+      setAvailableBots(activeBotGames.filter(game => 
+        game.status === 'WAITING' && 
+        game.is_bot_game && 
+        !game.is_human_bot &&  // Исключаем Human-ботов
+        game.creator_id !== user?.id && 
+        game.opponent_id !== user?.id
+      ));
       
       const userGames = myBetsResponse.data || [];
       // My Bets: Only show WAITING games that user created
