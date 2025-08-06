@@ -15751,8 +15751,6 @@ async def create_individual_bot(
         win_percentage = bot_config.get("win_percentage", 60.0)
         min_bet = bot_config.get("min_bet_amount", 1.0)
         avg_bet = bot_config.get("avg_bet_amount", 50.0)  # новое поле
-        can_accept_bets = bot_config.get("can_accept_bets", False)
-        can_play_with_bots = bot_config.get("can_play_with_bots", False)
         bet_distribution = bot_config.get("bet_distribution", "medium")  # новое поле
         
         validation_errors = []
