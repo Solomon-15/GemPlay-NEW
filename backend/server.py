@@ -18426,68 +18426,16 @@ async def generate_queue_performance_report(start_time: datetime, end_time: date
         raise e
 
 async def generate_priority_effectiveness_report(start_time: datetime, end_time: datetime) -> dict:
-    """Generate priority system effectiveness report."""
-    try:
-        # Get bots with priorities
-        bots = await db.bots.find({
-            "is_active": True,
-            "$or": [
-                {"type": "REGULAR"},
-                {"bot_type": "REGULAR"}
-            ]
-        }).to_list(None)
-        
-        priority_stats = {}
-        
-        for bot in bots:
-            priority = bot.get("priority_order", 999)
-            
-            games_count = await db.games.count_documents({
-                "creator_id": bot["id"],
-                "created_at": {"$gte": start_time, "$lt": end_time}
-            })
-            
-            successful_games = await db.games.count_documents({
-                "creator_id": bot["id"],
-                "status": {"$in": ["active", "completed"]},
-                "created_at": {"$gte": start_time, "$lt": end_time}
-            })
-            
-            success_rate = (successful_games / games_count * 100) if games_count > 0 else 0
-            
-            if priority not in priority_stats:
-                priority_stats[priority] = {
-                    "priority": priority,
-                    "bots_count": 0,
-                    "total_games": 0,
-                    "successful_games": 0,
-                    "success_rate": 0
-                }
-            
-            priority_stats[priority]["bots_count"] += 1
-            priority_stats[priority]["total_games"] += games_count
-            priority_stats[priority]["successful_games"] += successful_games
-        
-        # Calculate average success rates
-        for priority in priority_stats:
-            stats = priority_stats[priority]
-            stats["success_rate"] = round(
-                (stats["successful_games"] / stats["total_games"] * 100) if stats["total_games"] > 0 else 0, 1
-            )
-        
-        return {
-            "name": "Эффективность приоритетов",
-            "priority_stats": list(priority_stats.values()),
-            "insights": [
-                "Высокоприоритетные боты показывают лучшие результаты",
-                "Система приоритетов работает эффективно",
-                "Рекомендуется регулярный пересмотр приоритетов"
-            ]
-        }
-        
-    except Exception as e:
-        logger.error(f"Error generating priority effectiveness report: {e}")
-        raise e
+    """Priority system has been removed."""
+    return {
+        "name": "Система приоритетов удалена",
+        "priority_stats": [],
+        "insights": [
+            "Система приоритетов была удалена из системы ботов",
+            "Боты теперь работают без приоритетного упорядочивания",
+            "Управление очередью упрощено"
+        ]
+    }
 
 async def generate_bot_utilization_report(start_time: datetime, end_time: datetime) -> dict:
     """Generate bot utilization analysis report."""
