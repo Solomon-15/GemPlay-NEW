@@ -12184,9 +12184,7 @@ async def bot_create_game_automatically(bot: Bot):
 async def bot_join_game_automatically(bot: Bot):
     """Make bot join an available game automatically."""
     try:
-        if not bot.can_accept_bets:
-            return
-            
+        # Regular bots cannot join other games automatically
         if bot.bot_type == BotType.REGULAR:
             logger.info(f"🚫 Regular bot {bot.name} cannot join live player games")
             return
