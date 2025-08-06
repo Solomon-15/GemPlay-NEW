@@ -862,9 +862,9 @@ const RegularBotsManagement = () => {
 
   const handleEditPause = async (bot) => {
     try {
-      const currentPause = bot.pause_between_games || 5;
+      const currentPause = bot.pause_between_cycles || bot.pause_between_games || 5;
       const userInput = window.prompt(
-        `Введите новую паузу между играми для бота ${bot.name || `Bot #${bot.id.substring(0, 3)}`}:\n\nТекущая: ${currentPause} секунд\n(Допустимые значения: 1-3600)`,
+        `Введите новую паузу между циклами для бота ${bot.name || `Bot #${bot.id.substring(0, 3)}`}:\n\nТекущая: ${currentPause} секунд\n(Допустимые значения: 1-3600)`,
         currentPause
       );
 
@@ -877,7 +877,9 @@ const RegularBotsManagement = () => {
       }
 
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/admin/bots/${bot.id}/pause-settings?pause_between_games=${newPause}`, {}, {
+      await axios.put(`${API}/api/admin/bots/${bot.id}/pause-settings`, {
+        pause_between_games: newPause
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
