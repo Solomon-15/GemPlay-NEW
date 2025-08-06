@@ -17041,19 +17041,14 @@ async def update_bot_pause_settings(
 @api_router.put("/admin/bots/{bot_id}/win-percentage", response_model=dict)
 async def update_bot_win_percentage(
     bot_id: str,
-    win_percentage: float,
+    request: UpdateBotWinPercentageRequest,
     current_user: User = Depends(get_current_admin)
 ):
     """
     Обновляет процент выигрышей для бота (0-100%).
     """
     try:
-        # Валидация входных данных
-        if win_percentage < 0 or win_percentage > 100:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Процент выигрышей должен быть от 0 до 100"
-            )
+        win_percentage = request.win_percentage
         
         # Проверяем существует ли бот
         bot = await db.bots.find_one({"id": bot_id})
