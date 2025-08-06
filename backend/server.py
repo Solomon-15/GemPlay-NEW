@@ -1816,6 +1816,139 @@ async def maintain_all_bots_active_bets():
     except Exception as e:
         logger.error(f"Error in maintain_all_bots_active_bets: {e}")
 
+async def calculate_bot_game_outcome(bot_id: str, game_value: float) -> str:
+    """
+    Определяет исход игры для достижения 55% выигрышей от общей суммы цикла.
+    Алгоритм анализирует прошлые ходы и рандомно распределяет выигрыши/поражения.
+    """
+    try:
+        # Получаем текущего бота
+        bot_doc = await db.bots.find_one({"id": bot_id})
+        if not bot_doc:
+            return "LOSS"  # По умолчанию проигрыш если бот не найден
+        
+        win_percentage = bot_doc.get("win_percentage", 55.0)
+        current_cycle_wins = bot_doc.get("current_cycle_wins", 0)
+        current_cycle_losses = bot_doc.get("current_cycle_losses", 0)
+        current_cycle_gem_value_won = bot_doc.get("current_cycle_gem_value_won", 0.0)
+        current_cycle_gem_value_total = bot_doc.get("current_cycle_gem_value_total", 0.0)
+        cycle_games = bot_doc.get("cycle_games", 12)
+        
+        # Общая сумма гемов с учетом новой ставки
+        total_gems_in_cycle = current_cycle_gem_value_total + game_value
+        
+        # Целевая сумма выигрышей (55% от общей суммы)
+        target_win_value = total_gems_in_cycle * (win_percentage / 100.0)
+        
+        # Сколько игр осталось в цикле (не считая ничьи)
+        games_played = current_cycle_wins + current_cycle_losses
+        games_remaining = cycle_games - games_played - 1  # -1 для текущей игры
+        
+        if games_remaining <= 0:
+            # Это последняя игра в цикле - определяем исход для достижения цели
+            current_win_value = current_cycle_gem_value_won
+            if current_win_value + game_value <= target_win_value:
+                return "WIN"
+            else:
+                return "LOSS"
+        
+        # Анализируем текущую ситуацию
+        current_win_value = current_cycle_gem_value_won
+        
+        # Если мы сильно отстаем от цели, увеличиваем шансы на победу
+        if current_win_value < target_win_value * 0.7:
+            win_probability = 0.8  # 80% шанс на победу
+        # Если мы близко к цели, балансируем
+        elif current_win_value < target_win_value:
+            win_probability = 0.6  # 60% шанс на победу
+        # Если мы превысили цель, уменьшаем шансы
+        else:
+            win_probability = 0.2  # 20% шанс на победу
+        
+        # Небольшой рандом для непредсказуемости
+        random_factor = random.uniform(-0.1, 0.1)
+        final_probability = max(0.1, min(0.9, win_probability + random_factor))
+        
+        # Определяем исход
+        if random.random() < final_probability:
+            return "WIN"
+        else:
+            return "LOSS"
+            
+    except Exception as e:
+        logger.error(f"Error in calculate_bot_game_outcome for bot {bot_id}: {e}")
+        return "LOSS"  # По умолчанию проигрыш при ошибке
+
+async def update_bot_cycle_stats(bot_id: str, outcome: str, game_value: float):
+    """
+    Обновляет статистику цикла бота после завершения игры.
+    """
+    try:
+        bot_doc = await db.bots.find_one({"id": bot_id})
+        if not bot_doc:
+            return
+        
+        update_data = {
+            "updated_at": datetime.utcnow(),
+            "current_cycle_gem_value_total": bot_doc.get("current_cycle_gem_value_total", 0.0) + game_value
+        }
+        
+        if outcome == "WIN":
+            update_data["current_cycle_wins"] = bot_doc.get("current_cycle_wins", 0) + 1
+            update_data["current_cycle_gem_value_won"] = bot_doc.get("current_cycle_gem_value_won", 0.0) + game_value
+            # Прибыль = выигранное - потраченное
+            profit = game_value  # При победе бот получает удвоенную ставку, минус свою ставку = чистый выигрыш
+            update_data["current_cycle_profit"] = bot_doc.get("current_cycle_profit", 0.0) + profit
+            
+        elif outcome == "LOSS":
+            update_data["current_cycle_losses"] = bot_doc.get("current_cycle_losses", 0) + 1
+            # При проигрыше бот теряет свою ставку
+            loss = -game_value
+            update_data["current_cycle_profit"] = bot_doc.get("current_cycle_profit", 0.0) + loss
+            
+        elif outcome == "DRAW":
+            update_data["current_cycle_draws"] = bot_doc.get("current_cycle_draws", 0) + 1
+            # При ничье ставка возвращается, прибыль не меняется
+        
+        # Проверяем завершение цикла (12 побед + поражений, ничьи не считаются)
+        current_wins = update_data.get("current_cycle_wins", bot_doc.get("current_cycle_wins", 0))
+        current_losses = update_data.get("current_cycle_losses", bot_doc.get("current_cycle_losses", 0))
+        cycle_games = bot_doc.get("cycle_games", 12)
+        
+        if current_wins + current_losses >= cycle_games:
+            # Цикл завершен
+            cycle_profit = update_data.get("current_cycle_profit", bot_doc.get("current_cycle_profit", 0.0))
+            
+            update_data.update({
+                "completed_cycles": bot_doc.get("completed_cycles", 0) + 1,
+                "total_net_profit": bot_doc.get("total_net_profit", 0.0) + cycle_profit,
+                # Сброс текущего цикла
+                "current_cycle_wins": 0,
+                "current_cycle_losses": 0,
+                "current_cycle_draws": 0,
+                "current_cycle_gem_value_won": 0.0,
+                "current_cycle_gem_value_total": 0.0,
+                "current_cycle_profit": 0.0
+            })
+            
+            # Переводим прибыль в "Доход от ботов"
+            if cycle_profit > 0:
+                profit_entry = ProfitEntry(
+                    entry_type="REGULAR_BOT_CYCLE_PROFIT",
+                    amount=cycle_profit,
+                    source_user_id=bot_id,
+                    description=f"Прибыль от цикла обычного бота {bot_doc.get('name', bot_id)}",
+                    reference_id=f"cycle_{bot_doc.get('completed_cycles', 0)}"
+                )
+                await db.profit_entries.insert_one(profit_entry.dict())
+                logger.info(f"💰 Bot {bot_doc.get('name', bot_id)} cycle completed. Profit: ${cycle_profit:.2f}")
+        
+        # Обновляем бота в базе
+        await db.bots.update_one({"id": bot_id}, {"$set": update_data})
+        
+    except Exception as e:
+        logger.error(f"Error updating bot cycle stats for {bot_id}: {e}")
+
 def reset_daily_limits():
     """Reset daily limits for all users."""
     asyncio.create_task(reset_daily_limits_async())
