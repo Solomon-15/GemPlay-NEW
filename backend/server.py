@@ -5245,8 +5245,6 @@ async def create_extended_bot(
         cycle_total_amount = bot_config.get("cycle_total_amount", 0)
         win_rate_percent = bot_config.get("win_rate_percent", 60)
         profit_strategy = bot_config.get("profit_strategy", "balanced")
-        can_accept_bets = bot_config.get("can_accept_bets", False)
-        can_play_with_bots = bot_config.get("can_play_with_bots", True)
         
         bot_types_map = {
             'type-1': {'min': 1, 'max': 2, 'name': 'Type 1: 1–2 $'},
