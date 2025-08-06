@@ -7292,7 +7292,7 @@ class RegularBotSystem:
     
 
     
-    async def check_individual_limits(self, bot_id: str):
+    async def check_cycle_limits(self, bot_id: str):
         """Проверка индивидуальных лимитов бота."""
         bot = await self.db.bots.find_one({"id": bot_id})
         if not bot:
