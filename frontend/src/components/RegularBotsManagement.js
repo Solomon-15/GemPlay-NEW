@@ -2086,8 +2086,17 @@ const RegularBotsManagement = () => {
                                 </div>
                               </td>
                               <td className="px-4 py-3">
-                                <div className="text-sm font-roboto text-white">
-                                  {bet.move || bet.selected_gem || '—'}
+                                <div className="text-sm font-roboto text-text-secondary">
+                                  {bet.bet_gems ? 
+                                    Object.entries(bet.bet_gems).map(([gem, qty]) => `${gem}: ${qty}`).join(', ') : 
+                                    'N/A'
+                                  }
+                                </div>
+                              </td>
+                              <td className="px-4 py-3">
+                                <div className="text-xs space-y-1">
+                                  <div className="text-blue-300">Бот: {bet.bot_move || bet.move || '—'}</div>
+                                  <div className="text-orange-300">Соперник: {bet.opponent_move || '—'}</div>
                                 </div>
                               </td>
                               <td className="px-4 py-3">
