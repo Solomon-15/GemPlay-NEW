@@ -889,6 +889,65 @@ const RegularBotsManagement = () => {
     }
   };
 
+  // Функции для редактирования процента выигрышей и паузы
+  const handleEditWinPercentage = async (bot) => {
+    try {
+      const newPercentage = await prompt(`Введите новый процент выигрышей для бота ${bot.name || `Bot #${bot.id.substring(0, 3)}`}:`, {
+        defaultValue: bot.win_percentage || 55,
+        placeholder: 'Процент (0-100)',
+        validation: (value) => {
+          const num = parseFloat(value);
+          if (isNaN(num) || num < 0 || num > 100) {
+            return 'Процент должен быть числом от 0 до 100';
+          }
+          return null;
+        }
+      });
+
+      if (newPercentage !== null) {
+        const token = localStorage.getItem('token');
+        await axios.put(`${API}/admin/bots/${bot.id}/win-percentage?win_percentage=${newPercentage}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        fetchRegularBots();
+        showSuccessRU(`Процент выигрышей обновлен на ${newPercentage}%`);
+      }
+    } catch (error) {
+      console.error('Error updating win percentage:', error);
+      showErrorRU('Ошибка при обновлении процента выигрышей');
+    }
+  };
+
+  const handleEditPause = async (bot) => {
+    try {
+      const newPause = await prompt(`Введите новую паузу между играми для бота ${bot.name || `Bot #${bot.id.substring(0, 3)}`}:`, {
+        defaultValue: bot.pause_between_games || 5,
+        placeholder: 'Секунды (1-3600)',
+        validation: (value) => {
+          const num = parseInt(value);
+          if (isNaN(num) || num < 1 || num > 3600) {
+            return 'Пауза должна быть числом от 1 до 3600 секунд';
+          }
+          return null;
+        }
+      });
+
+      if (newPause !== null) {
+        const token = localStorage.getItem('token');
+        await axios.put(`${API}/admin/bots/${bot.id}/pause-settings?pause_between_games=${newPause}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        fetchRegularBots();
+        showSuccessRU(`Пауза обновлена на ${newPause} секунд`);
+      }
+    } catch (error) {
+      console.error('Error updating pause settings:', error);
+      showErrorRU('Ошибка при обновлении настроек паузы');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Заголовок и кнопки управления */}
