@@ -15425,10 +15425,8 @@ async def start_regular_bots(
             now = datetime.utcnow()
             if bot.last_bet_time:
                 time_since_last_bet = (now - bot.last_bet_time).total_seconds()
-                recreate_timer = bot_doc.get("recreate_timer", bot.pause_between_games)
-                logger.info(f"Bot {bot.id} last bet was {time_since_last_bet} seconds ago, recreate_timer: {recreate_timer}")
-                if time_since_last_bet < recreate_timer:
-                    logger.info(f"Bot {bot.id} skipped due to recreate_timer ({time_since_last_bet} < {recreate_timer})")
+                if time_since_last_bet < bot.pause_between_games:
+                    logger.info(f"Bot {bot.id} skipped due to pause_between_games ({time_since_last_bet} < {bot.pause_between_games})")
                     continue
             else:
                 logger.info(f"Bot {bot.id} has no last_bet_time, proceeding with bet creation")
