@@ -846,7 +846,9 @@ const RegularBotsManagement = () => {
       }
 
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/admin/bots/${bot.id}/win-percentage?win_percentage=${newPercentage}`, {}, {
+      await axios.put(`${API}/api/admin/bots/${bot.id}/win-percentage`, {
+        win_percentage: newPercentage
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
