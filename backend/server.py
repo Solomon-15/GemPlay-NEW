@@ -7757,7 +7757,7 @@ class RegularBotSystem:
             else:  # queue-based
                 queue_based.append(bot)
         
-        queue_based.sort(key=lambda x: x.get("priority_order", 50))
+        # queue_based bots don't need sorting anymore since priority_order was removed
         
         return always_first + queue_based + after_all
 
