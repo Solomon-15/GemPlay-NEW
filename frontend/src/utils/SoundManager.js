@@ -62,8 +62,6 @@ class SoundManager {
         document.removeEventListener('click', handleFirstInteraction);
         document.removeEventListener('touchstart', handleFirstInteraction);
         document.removeEventListener('keydown', handleFirstInteraction);
-        
-        console.log('🔊 Audio context activated after user interaction');
       }
     };
 
