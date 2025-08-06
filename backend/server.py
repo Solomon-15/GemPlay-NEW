@@ -6085,6 +6085,44 @@ async def join_game(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Regular bots cannot play with each other"
                 )
+            
+            # Check if the creator is a human bot
+            creator_human_bot = await db.human_bots.find_one({"id": game_obj.creator_id})
+            if creator_human_bot:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Regular bots cannot play with Human-bots"
+                )
+        
+        # For Human-bot users, check segregation rules
+        current_user_human_bot = await db.human_bots.find_one({"id": current_user.id})
+        if current_user_human_bot:
+            # Check if the creator is a regular bot
+            creator_regular_bot = await db.bots.find_one({"id": game_obj.creator_id})
+            if creator_regular_bot and creator_regular_bot.get("bot_type") == "REGULAR":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Human-bots cannot play with Regular bots"
+                )
+            
+            # Check if Human-bot can play with other bots (when creator is another Human-bot)
+            creator_human_bot = await db.human_bots.find_one({"id": game_obj.creator_id})
+            if creator_human_bot:
+                if not current_user_human_bot.get("can_play_with_other_bots", True):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="This Human-bot cannot play with other bots"
+                    )
+            
+            # Check if Human-bot can play with live players (when creator is a regular user)
+            creator_user = await db.users.find_one({"id": game_obj.creator_id})
+            if creator_user and not creator_human_bot:  # It's a real player, not a Human-bot
+                if not current_user_human_bot.get("can_play_with_players", True):
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="This Human-bot cannot play with live players"
+                    )
+        
         
         # Check if user has enough gems for THEIR OWN combination (not creator's)
         total_gems_value = 0.0
