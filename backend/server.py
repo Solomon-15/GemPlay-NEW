@@ -15419,8 +15419,9 @@ async def create_regular_bots(
         max_bet = bot_config.get("max_bet_amount", 50.0)  # 1-10000
         win_rate = bot_config.get("win_percentage", 55.0) / 100.0  # 0-100% -> 0.0-1.0
         cycle_games = bot_config.get("cycle_games", 12)  # 1-66
-        creation_mode = bot_config.get("creation_mode", "queue-based")
-        pause_between_games = bot_config.get("pause_between_games", 5)  # 1-300
+        creation_mode = bot_config.get("creation_mode", "queue-based")  # Значение по умолчанию
+        pause_between_cycles = bot_config.get("pause_between_cycles", 5)  # Новое поле
+        pause_on_draw = bot_config.get("pause_on_draw", 1)  # Новое поле
         profit_strategy = bot_config.get("profit_strategy", "balanced")
         
         bot_name = bot_config.get("name", "").strip()
@@ -15445,7 +15446,7 @@ async def create_regular_bots(
             cycle_games=cycle_games,
             current_limit=cycle_games,
             creation_mode=creation_mode,
-            pause_between_games=pause_between_games,
+            pause_between_games=pause_between_cycles,
             profit_strategy=profit_strategy,
             is_active=True
         )
