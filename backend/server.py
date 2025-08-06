@@ -16089,7 +16089,6 @@ async def get_regular_bots_list(
                 "max_bet": bot_doc.get('max_bet_amount', 100.0),
                 "min_bet_amount": bot_doc.get('min_bet_amount', 1.0),
                 "max_bet_amount": bot_doc.get('max_bet_amount', 100.0),
-                "individual_limit": bot_doc.get('individual_limit', bot_doc.get('cycle_games', 12)),
                 "current_limit": bot_doc.get('current_limit', bot_doc.get('cycle_games', 12)),
                 "pause_timer": bot_doc.get('pause_timer', 5),
                 "recreate_timer": bot_doc.get('recreate_timer', 30),
