@@ -500,6 +500,7 @@ const RegularBotsManagement = () => {
         cycle_games: 12,
         pause_between_cycles: 5,
         pause_on_draw: 1,
+        creation_mode: 'queue-based',
         profit_strategy: 'balanced',
         cycle_total_amount: 0
       });
