@@ -15350,6 +15350,21 @@ async def create_regular_bots(
             detail="Failed to create regular bot"
         )
 
+@api_router.get("/admin/bots/cycle-statistics", response_model=List[dict])
+async def get_bots_cycle_statistics(current_user: User = Depends(get_current_admin)):
+    """
+    Получает подробную статистику циклов всех обычных ботов для админ-панели.
+    """
+    try:
+        statistics = await get_bot_cycle_statistics()
+        return statistics
+    except Exception as e:
+        logger.error(f"Error getting bots cycle statistics: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get bots cycle statistics"
+        )
+
 @api_router.post("/admin/bots/start-regular", response_model=dict)
 async def start_regular_bots(
     current_user: User = Depends(get_current_admin)
