@@ -1620,7 +1620,22 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <div className="text-purple-400 font-roboto text-sm">
+                      <span className={`px-3 py-1 text-xs rounded-full font-roboto font-medium ${
+                        (() => {
+                          const strategy = bot.profit_strategy || 'balanced';
+                          switch(strategy) {
+                            case 'start-positive': 
+                            case 'start_profit': 
+                              return 'bg-blue-600 text-white';
+                            case 'start-negative': 
+                            case 'end_loss': 
+                              return 'bg-red-600 text-white';
+                            case 'balanced': 
+                            default: 
+                              return 'bg-green-600 text-white';
+                          }
+                        })()
+                      }`}>
                         {(() => {
                           const strategy = bot.profit_strategy || 'balanced';
                           switch(strategy) {
@@ -1632,7 +1647,34 @@ const RegularBotsManagement = () => {
                             default: return 'Сбалансированная';
                           }
                         })()}
-                      </div>
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
+                      <span className={`px-3 py-1 text-xs rounded-full font-roboto font-medium ${
+                        (() => {
+                          const mode = bot.creation_mode || 'queue-based';
+                          switch(mode) {
+                            case 'always-first': 
+                              return 'bg-yellow-600 text-white';
+                            case 'queue-based': 
+                              return 'bg-indigo-600 text-white';
+                            case 'after-all': 
+                              return 'bg-purple-600 text-white';
+                            default: 
+                              return 'bg-indigo-600 text-white';
+                          }
+                        })()
+                      }`}>
+                        {(() => {
+                          const mode = bot.creation_mode || 'queue-based';
+                          switch(mode) {
+                            case 'always-first': return 'Always First';
+                            case 'queue-based': return 'Queue-Based';
+                            case 'after-all': return 'After All';
+                            default: return 'Queue-Based';
+                          }
+                        })()}
+                      </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-cyan-400 font-roboto text-sm">
