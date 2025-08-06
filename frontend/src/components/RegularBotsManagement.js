@@ -2514,26 +2514,6 @@ const RegularBotsManagement = () => {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={editingBot.can_accept_bets}
-                      onChange={(e) => setEditingBot({...editingBot, can_accept_bets: e.target.checked})}
-                      className="mr-2"
-                    />
-                    <span className="text-text-secondary text-sm">Может принимать чужие ставки</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={editingBot.can_play_with_bots}
-                      onChange={(e) => setEditingBot({...editingBot, can_play_with_bots: e.target.checked})}
-                      className="mr-2"
-                    />
-                    <span className="text-text-secondary text-sm">Может играть с другими ботами</span>
-                  </label>
-                </div>
               </div>
 
               {/* Кнопки */}
