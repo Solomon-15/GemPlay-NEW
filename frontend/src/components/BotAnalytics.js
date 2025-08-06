@@ -451,8 +451,8 @@ const BotAnalytics = () => {
                         <h4 className="font-rajdhani font-bold text-white text-sm">
                           {bot.name || `Bot #${bot.id.substring(0, 8)}`}
                         </h4>
-                        <span className="bg-accent-primary text-white px-2 py-1 rounded-full text-xs">
-                          Приоритет: {bot.priority_order || 'Не установлен'}
+                        <span className="bg-gray-600 text-white px-2 py-1 rounded-full text-xs">
+                          Цикл: {bot.cycle_games || 12}
                         </span>
                       </div>
                       
