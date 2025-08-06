@@ -2044,10 +2044,11 @@ const RegularBotsManagement = () => {
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">ID</th>
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Дата</th>
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Время</th>
-                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Сумма</th>
-                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Ход</th>
-                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Статус</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Ставка</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Гемы</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Ходы</th>
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Соперник</th>
+                          <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Статус</th>
                           <th className="px-4 py-3 text-left text-xs font-roboto font-bold text-text-secondary uppercase">Результат</th>
                         </tr>
                       </thead>
