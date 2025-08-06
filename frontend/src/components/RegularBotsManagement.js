@@ -1651,26 +1651,6 @@ const RegularBotsManagement = () => {
                           </svg>
                         </button>
                         <button
-                          onClick={() => toggleBotStatus(bot.id)}
-                          className={`p-1 text-white rounded ${
-                            bot.is_active 
-                              ? 'bg-red-600 hover:bg-red-700' 
-                              : 'bg-green-600 hover:bg-green-700'
-                          }`}
-                          title={bot.is_active ? "Отключить" : "Включить"}
-                        >
-                          {bot.is_active ? (
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-                            </svg>
-                          ) : (
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                          )}
-                        </button>
-                        <button
                           onClick={() => handleDeleteModal(bot)}
                           className="p-1 bg-red-600 text-white rounded hover:bg-red-700"
                           title="Удалить"
