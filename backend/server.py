@@ -15419,8 +15419,6 @@ async def create_regular_bots(
 ):
     """Create regular bots (admin only) - ОБНОВЛЕНО для новой системы."""
     try:
-        logger.info(f"🔍 Creating regular bot with config: {bot_config}")
-        
         min_bet = bot_config.get("min_bet_amount", 1.0)  # 1-10000
         max_bet = bot_config.get("max_bet_amount", 50.0)  # 1-10000
         win_rate = bot_config.get("win_percentage", 55.0) / 100.0  # 0-100% -> 0.0-1.0
@@ -15429,8 +15427,6 @@ async def create_regular_bots(
         pause_between_cycles = bot_config.get("pause_between_cycles", 5)  # Новое поле
         pause_on_draw = bot_config.get("pause_on_draw", 1)  # Новое поле
         profit_strategy = bot_config.get("profit_strategy", "balanced")
-        
-        logger.info(f"🔍 Parsed values - creation_mode: {creation_mode}, pause_between_cycles: {pause_between_cycles}, pause_on_draw: {pause_on_draw}")
         
         bot_name = bot_config.get("name", "").strip()
         if not bot_name:
