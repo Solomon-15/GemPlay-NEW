@@ -1803,8 +1803,6 @@ async def maintain_all_bots_active_bets():
                         cycle_games=bot_doc.get("cycle_games", 12),
                         pause_between_games=bot_doc.get("pause_between_games", 5),
                         is_active=bot_doc.get("is_active", True),
-                        can_accept_bets=bot_doc.get("can_accept_bets", True),
-                        can_play_with_bots=bot_doc.get("can_play_with_bots", True),
                         created_at=bot_doc.get("created_at", datetime.utcnow()),
                         bot_behavior=bot_doc.get("bot_behavior", "balanced"),
                         profit_strategy=bot_doc.get("profit_strategy", "balanced")
