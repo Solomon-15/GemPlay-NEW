@@ -15940,10 +15940,24 @@ async def get_regular_bots_simple(
         }).sort("created_at", -1).skip(offset).limit(limit)
         bots = await bots_cursor.to_list(length=limit)
         
-        # Convert ObjectId to string for JSON serialization
+        # Convert ObjectId to string and calculate active_bets for each bot
         for bot in bots:
             if "_id" in bot:
                 bot["_id"] = str(bot["_id"])
+            
+            # Calculate actual active bets for this bot
+            active_bets_count = await db.games.count_documents({
+                "$and": [
+                    {
+                        "$or": [
+                            {"creator_id": bot["id"]},
+                            {"opponent_id": bot["id"]}
+                        ]
+                    },
+                    {"status": {"$in": ["WAITING", "ACTIVE"]}}
+                ]
+            })
+            bot["active_bets"] = active_bets_count
         
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
