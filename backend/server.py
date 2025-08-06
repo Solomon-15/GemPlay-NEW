@@ -16931,6 +16931,80 @@ async def toggle_bot_status_admin(
             detail="Failed to toggle bot status"
         )
 
+@api_router.put("/admin/bots/{bot_id}/pause-settings", response_model=dict)
+async def update_bot_pause_settings(
+    bot_id: str,
+    pause_between_games: int,
+    current_user: User = Depends(get_current_admin)
+):
+    """
+    Обновляет настройки паузы между играми для бота.
+    """
+    try:
+        # Валидация входных данных
+        if pause_between_games < 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Пауза должна быть не менее 1 секунды"
+            )
+        
+        if pause_between_games > 3600:  # Максимум 1 час
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Пауза не может быть больше 3600 секунд (1 час)"
+            )
+        
+        # Проверяем существует ли бот
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Бот не найден"
+            )
+        
+        # Обновляем настройки паузы
+        await db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "pause_between_games": pause_between_games,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Логируем действие админа
+        admin_log = AdminLog(
+            admin_id=current_user.id,
+            action="UPDATE_BOT_PAUSE_SETTINGS",
+            target_type="bot",
+            target_id=bot_id,
+            details={
+                "old_pause": bot.get("pause_between_games", 5),
+                "new_pause": pause_between_games,
+                "bot_name": bot.get("name", f"Bot #{bot_id[:8]}")
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Admin {current_user.username} updated pause settings for bot {bot.get('name', bot_id)}: {pause_between_games}s")
+        
+        return {
+            "message": f"Настройки паузы обновлены на {pause_between_games} секунд",
+            "bot_id": bot_id,
+            "pause_between_games": pause_between_games,
+            "success": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating bot pause settings for {bot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Не удалось обновить настройки паузы"
+        )
+
 @api_router.get("/admin/bots/{bot_id}/active-bets", response_model=dict)
 async def get_bot_active_bets(
     bot_id: str,
