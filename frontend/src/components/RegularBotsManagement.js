@@ -1851,43 +1851,26 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Приоритет и пауза */}
+              {/* Пауза между играми */}
               <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Поведенческие настройки</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Приоритет в очереди:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={botForm.priority_order}
-                      onChange={(e) => {
-                        const newForm = {...botForm, priority_order: parseInt(e.target.value) || 50};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Пауза между играми (сек):</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="300"
-                      value={botForm.pause_between_games}
-                      onChange={(e) => {
-                        const newForm = {...botForm, pause_between_games: parseInt(e.target.value) || 5};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
+                <h4 className="font-rajdhani font-bold text-white mb-3">Настройки таймингов</h4>
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Пауза между играми (сек):</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="300"
+                    value={botForm.pause_between_games}
+                    onChange={(e) => {
+                      const newForm = {...botForm, pause_between_games: parseInt(e.target.value) || 5};
+                      setBotForm(newForm);
+                      validateExtendedFormInRealTime(newForm);
+                    }}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                  />
                 </div>
                 <div className="text-xs text-text-secondary mt-1">
-                  Приоритет для queue-based режима (1-100) и пауза между играми (1-300 сек)
+                  Пауза между созданием ставок (1-300 секунд)
                 </div>
               </div>
 
