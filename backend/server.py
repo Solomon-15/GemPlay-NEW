@@ -2269,6 +2269,12 @@ async def join_human_bot_bet(human_bot: HumanBot):
         for game_data in available_games:
             game = Game(**game_data)
             
+            # First check if creator is a regular bot - Human-bots cannot join regular bot games
+            creator_regular_bot = await db.bots.find_one({"id": game.creator_id})
+            if creator_regular_bot and creator_regular_bot.get("bot_type") == "REGULAR":
+                logger.debug(f"🚫 Bot {human_bot.name} skipped Regular bot game {game.creator_id} - Human-bots cannot play with Regular bots")
+                continue
+            
             # Check if creator is a human bot
             creator_human_bot = await db.human_bots.find_one({"id": game.creator_id})
             
