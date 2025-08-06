@@ -3154,27 +3154,27 @@ async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
         query_conditions = []
         
         if can_play_with_bots and can_play_with_players:
-            # Can play with both bots and players
+            # Can play with both bots and players - but EXCLUDE Regular bots
             query_conditions.append({
                 "status": "WAITING",
                 "creator_id": {"$ne": bot.id},  # Exclude own bets
                 "$or": [
                     {"creator_type": "human_bot"},  # Other human bots
-                    {"creator_type": {"$ne": "human_bot"}}  # Live players
+                    {"creator_type": {"$nin": ["human_bot", "bot"]}}  # Live players (exclude both human_bot and regular bot)
                 ]
             })
         elif can_play_with_bots:
-            # Only with other human bots
+            # Only with other human bots - EXCLUDE Regular bots
             query_conditions.append({
                 "status": "WAITING",
                 "creator_type": "human_bot",
                 "creator_id": {"$ne": bot.id}  # Exclude own bets
             })
         elif can_play_with_players:
-            # Only with live players
+            # Only with live players - EXCLUDE Regular bots and Human-bots
             query_conditions.append({
                 "status": "WAITING",
-                "creator_type": {"$ne": "human_bot"}  # Live players only
+                "creator_type": {"$nin": ["human_bot", "bot"]}  # Live players only (exclude both bot types)
             })
         
         if not query_conditions:
