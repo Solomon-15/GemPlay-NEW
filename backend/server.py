@@ -3184,16 +3184,23 @@ async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
         games_cursor = db.games.find({"$or": query_conditions})
         available_games = await games_cursor.to_list(None)
         
-        # Filter by bot constraints - remove bets exceeding bet_limit_amount
+        # Filter by bot constraints - remove bets exceeding bet_limit_amount and Regular bot games
         filtered_bets = []
         for game in available_games:
             bet_amount = game.get("bet_amount", 0)
             
             # Check if bet amount exceeds bot's limit
-            if bet_amount <= bot.bet_limit_amount:
-                filtered_bets.append(game)
-            else:
+            if bet_amount > bot.bet_limit_amount:
                 logger.debug(f"Bot {bot.name} cannot join bet {game.get('id')} - bet amount {bet_amount} exceeds limit {bot.bet_limit_amount}")
+                continue
+                
+            # Double-check: Ensure this game is not created by a Regular bot
+            creator_regular_bot = await db.bots.find_one({"id": game.get("creator_id")})
+            if creator_regular_bot and creator_regular_bot.get("bot_type") == "REGULAR":
+                logger.debug(f"Bot {bot.name} cannot join bet {game.get('id')} - creator is a Regular bot (segregation rule)")
+                continue
+                
+            filtered_bets.append(game)
         
         available_bets = filtered_bets
         
