@@ -1910,41 +1910,11 @@ async def update_bot_cycle_stats(bot_id: str, outcome: str, game_value: float):
             update_data["current_cycle_draws"] = bot_doc.get("current_cycle_draws", 0) + 1
             # При ничье ставка возвращается, прибыль не меняется
         
-        # Проверяем завершение цикла (12 побед + поражений, ничьи не считаются)
-        current_wins = update_data.get("current_cycle_wins", bot_doc.get("current_cycle_wins", 0))
-        current_losses = update_data.get("current_cycle_losses", bot_doc.get("current_cycle_losses", 0))
-        cycle_games = bot_doc.get("cycle_games", 12)
-        
-        if current_wins + current_losses >= cycle_games:
-            # Цикл завершен
-            cycle_profit = update_data.get("current_cycle_profit", bot_doc.get("current_cycle_profit", 0.0))
-            
-            update_data.update({
-                "completed_cycles": bot_doc.get("completed_cycles", 0) + 1,
-                "total_net_profit": bot_doc.get("total_net_profit", 0.0) + cycle_profit,
-                # Сброс текущего цикла
-                "current_cycle_wins": 0,
-                "current_cycle_losses": 0,
-                "current_cycle_draws": 0,
-                "current_cycle_gem_value_won": 0.0,
-                "current_cycle_gem_value_total": 0.0,
-                "current_cycle_profit": 0.0
-            })
-            
-            # Переводим прибыль в "Доход от ботов"
-            if cycle_profit > 0:
-                profit_entry = ProfitEntry(
-                    entry_type="REGULAR_BOT_CYCLE_PROFIT",
-                    amount=cycle_profit,
-                    source_user_id=bot_id,
-                    description=f"Прибыль от цикла обычного бота {bot_doc.get('name', bot_id)}",
-                    reference_id=f"cycle_{bot_doc.get('completed_cycles', 0)}"
-                )
-                await db.profit_entries.insert_one(profit_entry.dict())
-                logger.info(f"💰 Bot {bot_doc.get('name', bot_id)} cycle completed. Profit: ${cycle_profit:.2f}")
-        
         # Обновляем бота в базе
         await db.bots.update_one({"id": bot_id}, {"$set": update_data})
+        
+        # Проверяем завершение цикла
+        await check_and_complete_bot_cycle(bot_id)
         
     except Exception as e:
         logger.error(f"Error updating bot cycle stats for {bot_id}: {e}")
