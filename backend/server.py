@@ -1963,8 +1963,9 @@ async def update_bot_cycle_stats(bot_id: str, outcome: str, game_value: float):
             update_data["current_cycle_draws"] = bot_doc.get("current_cycle_draws", 0) + 1
             # При ничье ставка возвращается, прибыль не меняется
             
-            # ВАЖНО: При ничье создаем новую ставку через 1 секунду для восстановления цикла
-            await schedule_draw_replacement_bet(bot_id, 1)  # 1 секунда задержка
+            # ВАЖНО: При ничье создаем новую ставку через настроенное время для восстановления цикла
+            pause_on_draw = bot_doc.get("pause_on_draw", 1)  # Берем настройку из бота
+            await schedule_draw_replacement_bet(bot_id, pause_on_draw)
         
         # Обновляем бота в базе
         await db.bots.update_one({"id": bot_id}, {"$set": update_data})
