@@ -16762,9 +16762,6 @@ async def update_individual_bot_settings(
         if pause_timer is not None and (pause_timer < 1 or pause_timer > 3600):
             raise HTTPException(status_code=400, detail="Pause timer must be between 1 and 3600 seconds")
         
-        if recreate_timer is not None and recreate_timer < 1:
-            raise HTTPException(status_code=400, detail="Recreate timer must be at least 1 second")
-            
         if cycle_games is not None and cycle_games < 1:
             raise HTTPException(status_code=400, detail="Cycle games must be at least 1")
         
