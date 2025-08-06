@@ -81,6 +81,7 @@ const RegularBotsManagement = () => {
     pause_between_cycles: 5, // 1-300 секунд (пауза между циклами, по умолчанию 5)
     pause_on_draw: 1, // 1-60 секунд (пауза при ничье, по умолчанию 1)
     
+    creation_mode: 'queue-based', // 'always-first', 'queue-based', 'after-all' (по умолчанию queue-based)
     profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
     
     cycle_total_amount: 0 // calculated automatically
