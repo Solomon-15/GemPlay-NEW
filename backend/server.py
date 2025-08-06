@@ -535,7 +535,8 @@ class Bot(BaseModel):
     current_cycle_gem_value_total: float = 0.0  # Общая сумма ставок в текущем цикле
     
     # Пауза между играми (секунды)
-    pause_between_games: int = 5  # По умолчанию 5 секунд
+    pause_between_games: int = 5  # По умолчанию 5 секунд (теперь между циклами)
+    pause_on_draw: int = 1  # Пауза при ничье (по умолчанию 1 секунда)
     
     profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
     
