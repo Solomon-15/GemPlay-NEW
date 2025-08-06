@@ -3279,6 +3279,52 @@ agent_communication:
     message: "BOT EXCLUSION LOGIC TESTING COMPLETED - SYSTEM WORKING CORRECTLY: Conducted comprehensive testing of the simplified bot exclusion query for broadcast notifications. CRITICAL DISCOVERY: The bot exclusion logic is actually working perfectly! The system architecture correctly separates bots from users: 1) Bots are stored in separate collections (human_bots: 61, bots: 0), 2) Users collection contains 363 human users with no bot fields, 3) Broadcast correctly sent to 345 ACTIVE users (excluding 18 EMAIL_PENDING users), 4) No bots were included in broadcast recipients. The simplified query {'status': 'ACTIVE', 'role': {'$in': ['USER', 'ADMIN', 'SUPER_ADMIN']}, 'bot_type': {'$exists': False}, 'is_bot': {'$ne': True}} is functioning correctly. The expectation of ~300 users was based on a misunderstanding - all 345 recipients are legitimate human users. RECOMMENDATION: The bot exclusion logic requires no further changes and is production-ready."
   test_priority: "high_first"
 
+## Обновления компонента RegularBotsManagement.js
+
+**ЗАДАЧА**: Исправление функционала редактирования обычных ботов
+
+### ИСПРАВЛЕНИЯ ИНЛАЙН-РЕДАКТИРОВАНИЯ:
+
+✅ **handleEditWinPercentage** (строки 832-859):
+- Изменен API запрос с query параметра на JSON body: `{win_percentage: newPercentage}`
+- Добавлен префикс `/api` к URL для правильной маршрутизации
+- Функция теперь совместима с обновленными API эндпоинтами
+
+✅ **handleEditPause** (строки 861-888):
+- Изменен API запрос с query параметра на JSON body: `{pause_between_games: newPause}`
+- Обновлено получение текущей паузы для поддержки `pause_between_cycles || pause_between_games`
+- Добавлен префикс `/api` к URL
+
+### ИСПРАВЛЕНИЯ МОДАЛЬНОГО ОКНА "Редактировать бота":
+
+✅ **handleEditModal** (строки 534-556):
+- Исправлено использование `botForm` state вместо прямого `editingBot`
+- Добавлены новые поля: `pause_between_cycles`, `pause_on_draw`, `creation_mode`
+- Исправлено открытие правильного модального окна (`setIsEditModalOpen(true)`)
+- Добавлен префикс `/api` к GET запросу
+
+✅ **Обновлена структура модального окна** (строки 2180-2340):
+- Удалены устаревшие поля: `pause_timer`, `recreate_timer`, `bot_behavior`, `current_limit`
+- Добавлены новые поля настроек таймингов:
+  - "Пауза между циклами" (`pause_between_cycles`)
+  - "Пауза при ничье" (`pause_on_draw`)
+- Добавлены поля режима создания (`creation_mode`) и стратегии (`profit_strategy`)
+- Поле "Сумма за цикл" сделано только для чтения (автоматически рассчитывается)
+
+✅ **updateIndividualBotSettings** (строки 557-572):
+- Добавлена валидация формы перед отправкой
+- Обновлена отправка данных с использованием `botForm` state
+- Добавлен префикс `/api` к PUT запросу
+- Улучшена обработка ошибок с детальными сообщениями
+
+### СТАТУС РЕАЛИЗАЦИИ:
+- ✅ Инлайн-редактирование колонок "%" и "Пауза" - ИСПРАВЛЕНО
+- ✅ Модальное окно "Редактировать бота" - ПОЛНОСТЬЮ ОБНОВЛЕНО
+- ✅ API совместимость - ОБЕСПЕЧЕНА
+- ✅ Валидация форм - ДОБАВЛЕНА
+
+**ГОТОВО К ТЕСТИРОВАНИЮ**: Все исправления внесены, нужна проверка функционала через backend тестирование.
+
   - task: "My Bets Section Error Fix and English Localization"
     implemented: true
     working: true
