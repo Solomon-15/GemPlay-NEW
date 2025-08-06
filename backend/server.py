@@ -537,11 +537,6 @@ class Bot(BaseModel):
     # Пауза между играми (секунды)
     pause_between_games: int = 5  # По умолчанию 5 секунд
     
-    
-    creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
-    priority_order: int = 50  # 1-100
-    pause_between_games: int = 5  # 1-300 секунд (по умолчанию 5)
-    
     profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
     
     last_game_time: Optional[datetime] = None
