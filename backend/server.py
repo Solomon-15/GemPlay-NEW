@@ -7338,7 +7338,7 @@ class RegularBotSystem:
     
     async def validate_bet_creation(self, bot_id: str):
         """Полная валидация перед созданием ставки."""
-        individual_check = await self.check_individual_limits(bot_id)
+        individual_check = await self.check_cycle_limits(bot_id)
         if not individual_check["passed"]:
             return individual_check
         
