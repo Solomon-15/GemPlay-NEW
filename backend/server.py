@@ -2892,6 +2892,13 @@ async def process_human_bot_game_joining(active_human_bots: list, settings: dict
                 filtered_bets = []
                 for bet in available_bets:
                     creator_id = bet["creator_id"]
+                    
+                    # First check: Ensure creator is not a Regular bot
+                    creator_regular_bot = await db.bots.find_one({"id": creator_id})
+                    if creator_regular_bot and creator_regular_bot.get("bot_type") == "REGULAR":
+                        logger.debug(f"🚫 Bot {bot.name} skipped Regular bot bet from {creator_id} - segregation rule")
+                        continue
+                    
                     creator_human_bot = await db.human_bots.find_one({"id": creator_id})
                     
                     if creator_human_bot:
