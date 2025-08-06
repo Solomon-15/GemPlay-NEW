@@ -9911,7 +9911,6 @@ async def get_active_bots(current_user: User = Depends(get_current_user)):
                 "avatar_gender": bot["avatar_gender"],
                 "min_bet": bot["min_bet"],
                 "max_bet": bot["max_bet"],
-                "can_accept_bets": bot.get("can_accept_bets", False),
                 "last_game_time": bot.get("last_game_time"),
                 "current_cycle_games": bot.get("current_cycle_games", 0),
                 "current_cycle_wins": bot.get("current_cycle_wins", 0)
