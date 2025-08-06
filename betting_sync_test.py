@@ -37,7 +37,7 @@ import hashlib
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://8ed636ba-967a-4e07-b1b1-1eefdaf0a7f1.preview.emergentagent.com/api"
+BASE_URL = "https://3d63e28a-d18e-4616-aa0f-657afef77b95.preview.emergentagent.com/api"
 
 # Test users for synchronization testing
 TEST_USERS = [
