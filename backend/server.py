@@ -5327,9 +5327,6 @@ async def create_extended_bot(
             "min_bet_amount": min_bet,
             "max_bet_amount": max_bet,
             
-            "can_accept_bets": can_accept_bets,
-            "can_play_with_bots": can_play_with_bots,
-            
             "games_played": 0,
             "games_won": 0,
             "games_lost": 0,
