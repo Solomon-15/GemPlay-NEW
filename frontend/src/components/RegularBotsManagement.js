@@ -1375,13 +1375,6 @@ const RegularBotsManagement = () => {
                   {bulkActionLoading ? 'Загрузка...' : 'Выключить всех'}
                 </button>
                 <button
-                  onClick={handleBulkUpdateLimits}
-                  disabled={bulkActionLoading}
-                  className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                >
-                  {bulkActionLoading ? 'Загрузка...' : 'Изменить лимиты'}
-                </button>
-                <button
                   onClick={handleBulkDelete}
                   disabled={bulkActionLoading}
                   className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50 transition-colors"
