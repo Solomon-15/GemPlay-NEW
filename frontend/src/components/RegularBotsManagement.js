@@ -78,7 +78,7 @@ const RegularBotsManagement = () => {
     win_percentage: 55.0, // 0-100% (по умолчанию 55%)
     
     cycle_games: 12, // 1-66 (по умолчанию 12)
-    pause_between_games: 5, // 1-300 секунд (по умолчанию 5)
+    pause_between_cycles: 5, // 1-300 секунд (пауза между циклами, по умолчанию 5)
     pause_on_draw: 1, // 1-60 секунд (пауза при ничье, по умолчанию 1)
     
     profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
