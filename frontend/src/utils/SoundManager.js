@@ -169,9 +169,8 @@ class SoundManager {
 
     try {
       await Promise.all(preloadPromises);
-      console.log('Critical sounds preloaded');
     } catch (error) {
-      console.warn('Error preloading critical sounds:', error);
+      // Silent fail for audio preloading
     }
   }
 
