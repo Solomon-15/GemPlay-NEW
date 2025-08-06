@@ -2071,31 +2071,6 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Поведение */}
-              <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Дополнительные настройки</h4>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={botForm.can_accept_bets}
-                      onChange={(e) => setBotForm({...botForm, can_accept_bets: e.target.checked})}
-                      className="mr-2"
-                    />
-                    <span className="text-text-secondary text-sm">Может принимать чужие ставки</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={botForm.can_play_with_bots}
-                      onChange={(e) => setBotForm({...botForm, can_play_with_bots: e.target.checked})}
-                      className="mr-2"
-                    />
-                    <span className="text-text-secondary text-sm">Может играть с другими ботами</span>
-                  </label>
-                </div>
-              </div>
-
               {/* Отображение ошибок валидации */}
               {!extendedValidation.isValid && (
                 <div className="border border-red-500 bg-red-900 bg-opacity-20 rounded-lg p-4">
