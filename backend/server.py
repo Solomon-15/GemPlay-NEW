@@ -16978,25 +16978,14 @@ async def toggle_bot_status_admin(
 @api_router.put("/admin/bots/{bot_id}/pause-settings", response_model=dict)
 async def update_bot_pause_settings(
     bot_id: str,
-    pause_between_games: int,
+    request: UpdateBotPauseRequest,
     current_user: User = Depends(get_current_admin)
 ):
     """
     Обновляет настройки паузы между играми для бота.
     """
     try:
-        # Валидация входных данных
-        if pause_between_games < 1:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Пауза должна быть не менее 1 секунды"
-            )
-        
-        if pause_between_games > 3600:  # Максимум 1 час
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Пауза не может быть больше 3600 секунд (1 час)"
-            )
+        pause_between_games = request.pause_between_games
         
         # Проверяем существует ли бот
         bot = await db.bots.find_one({"id": bot_id})
