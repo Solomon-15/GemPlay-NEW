@@ -9251,8 +9251,6 @@ async def get_bots(current_user: User = Depends(get_current_admin)):
                 "current_cycle_wins": bot.get("current_cycle_wins", 0),
                 "pause_between_games": bot.get("pause_between_games", 60),
                 "last_game_time": bot.get("last_game_time"),
-                "can_accept_bets": bot.get("can_accept_bets", False),
-                "can_play_with_bots": bot.get("can_play_with_bots", False),
                 "avatar_gender": bot.get("avatar_gender", "male"),
                 "simple_mode": bot.get("simple_mode", False),
                 "created_at": bot.get("created_at")
