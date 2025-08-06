@@ -1522,20 +1522,24 @@ const RegularBotsManagement = () => {
                           ></div>
                         </div>
                         <div className="flex items-center justify-center space-x-2">
-                          <span className="text-green-400 font-roboto text-sm font-medium">
-                            {bot.cycle_progress || `${(bot.current_cycle_games || 0)}/${bot.cycle_games || 12}`}
-                          </span>
                           <button
                             onClick={() => handleCycleModal(bot)}
-                            className="text-green-400 hover:text-green-300 cursor-pointer p-1"
+                            className="text-green-400 hover:text-green-300 cursor-pointer font-roboto text-sm font-medium"
                             title="Показать историю цикла"
                           >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            {bot.cycle_progress || `${(bot.current_cycle_games || 0)}/${bot.cycle_games || 12}`}
                           </button>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => handleActiveBetsModal(bot)}
+                        className="text-yellow-400 hover:text-yellow-300 font-roboto text-sm font-bold cursor-pointer"
+                        title="Показать активные ставки"
+                      >
+                        {bot.active_bets || 0}
+                      </button>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-accent-primary font-roboto text-sm">
