@@ -18144,41 +18144,11 @@ async def move_bot_priority_down(
 
 @api_router.post("/admin/bots/priority/reset", response_model=dict)
 async def reset_bot_priorities(current_user: User = Depends(get_current_admin)):
-    """Reset all bot priorities to default order (by creation date)."""
-    try:
-        # Get all active regular bots sorted by creation date
-        bots = await db.bots.find({
-            "is_active": True,
-            "$or": [
-                {"type": "REGULAR"},
-                {"bot_type": "REGULAR"}
-            ]
-        }).sort("created_at", 1).to_list(None)
-        
-        # Update priorities in order
-        for index, bot in enumerate(bots, 1):
-            await db.bots.update_one(
-                {"id": bot["id"]},
-                {
-                    "$set": {
-                        "priority_order": index,
-                        "updated_at": datetime.utcnow()
-                    }
-                }
-            )
-        
-        return {
-            "success": True,
-            "message": f"Reset priorities for {len(bots)} bots",
-            "bots_updated": len(bots)
-        }
-        
-    except Exception as e:
-        logger.error(f"Error resetting bot priorities: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to reset bot priorities"
-        )
+    """Priority system has been removed."""
+    return {
+        "success": False,
+        "message": "Priority system has been removed from the bot system"
+    }
 
 @api_router.get("/admin/bots/analytics", response_model=dict)
 async def get_bot_analytics(
