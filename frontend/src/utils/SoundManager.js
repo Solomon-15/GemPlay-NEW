@@ -208,8 +208,6 @@ class SoundManager {
       }
       this.sounds.get(sound.event_trigger).push(sound);
     }
-
-    console.log('Fallback sounds created');
   }
 
   async playSound(eventTrigger, gameType = 'ALL', volumeMultiplier = 1) {
