@@ -910,7 +910,7 @@ const RegularBotsManagement = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        fetchRegularBots();
+        fetchBotsList();
         showSuccessRU(`Процент выигрышей обновлен на ${newPercentage}%`);
       }
     } catch (error) {
