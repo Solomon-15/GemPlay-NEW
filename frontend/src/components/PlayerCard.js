@@ -62,34 +62,21 @@ const PlayerCard = React.memo(({
 
   // Calculate total bet amount
   const getTotalBetAmount = () => {
-    console.log('🎮 PlayerCard Debug:', {
-      game_id: game.id,
-      bet_gems: game.bet_gems,
-      bet_amount: game.bet_amount,
-      isBot,
-      gameKeys: Object.keys(game),
-      gemsDefinitionsLength: gemsDefinitions.length
-    });
-    
     // Check if we have bet_gems data (old format)
     if (game.bet_gems && Object.keys(game.bet_gems).length > 0) {
       const total = Object.entries(game.bet_gems).reduce((total, [gemType, quantity]) => {
         const gem = getGemByType(gemType);
         const gemValue = gem ? gem.price * quantity : 0;
-        console.log(`  ${gemType}: ${quantity} x ${gem?.price || 0} = ${gemValue}`);
         return total + gemValue;
       }, 0);
-      console.log(`🎮 bet_gems total: ${total}`);
       return total;
     }
     
     // Use bet_amount from API (new format)
     if (game.bet_amount) {
-      console.log(`🎮 using bet_amount: ${game.bet_amount}`);
       return game.bet_amount;
     }
     
-    console.log('🎮 returning 0 - no bet data found');
     return 0;
   };
 
