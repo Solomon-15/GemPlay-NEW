@@ -1510,11 +1510,17 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <div className="text-orange-400 font-roboto text-sm">
-                        {(() => {
-                          const winPercentage = bot.win_percentage || (bot.win_rate ? bot.win_rate * 100 : 55);
-                          return Math.round(winPercentage);
-                        })()}%
+                      <div className="flex items-center justify-center space-x-1">
+                        <span className="text-orange-400 font-roboto text-sm font-bold">
+                          {Math.round(bot.win_percentage || 55)}%
+                        </span>
+                        <button
+                          onClick={() => handleEditWinPercentage(bot)}
+                          className="text-gray-400 hover:text-white transition-colors p-1"
+                          title="Редактировать процент выигрышей"
+                        >
+                          ✏️
+                        </button>
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
