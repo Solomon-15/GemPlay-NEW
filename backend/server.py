@@ -1953,49 +1953,6 @@ async def schedule_draw_replacement_bet(bot_id: str, delay_seconds: int = 1):
     except Exception as e:
         logger.error(f"Error scheduling draw replacement bet for bot {bot_id}: {e}")
 
-async def schedule_draw_replacement_bet(bot_id: str, delay_seconds: int = 1):
-    """
-    Планирует создание новой ставки через указанное время для восстановления цикла после ничьи.
-    """
-    try:
-        logger.info(f"🎯 Scheduling draw replacement bet for bot {bot_id} in {delay_seconds} seconds")
-        
-        # Ждем указанное время
-        await asyncio.sleep(delay_seconds)
-        
-        # Получаем актуальные данные бота
-        bot_doc = await db.bots.find_one({"id": bot_id})
-        if not bot_doc or not bot_doc.get("is_active", False):
-            logger.warning(f"Bot {bot_id} not found or inactive, skipping draw replacement bet")
-            return
-        
-        # Создаем объект Bot из данных БД
-        bot_obj = Bot(
-            id=bot_doc["id"],
-            name=bot_doc["name"],
-            bot_type=bot_doc.get("bot_type", "REGULAR"),
-            min_bet_amount=bot_doc.get("min_bet_amount", 1.0),
-            max_bet_amount=bot_doc.get("max_bet_amount", 100.0),
-            win_rate=bot_doc.get("win_rate_percent", 55.0),
-            cycle_games=bot_doc.get("cycle_games", 12),
-            pause_between_games=bot_doc.get("pause_between_cycles", bot_doc.get("pause_between_games", 5)),
-            is_active=bot_doc.get("is_active", True),
-            created_at=bot_doc.get("created_at", datetime.utcnow()),
-            bot_behavior=bot_doc.get("bot_behavior", "balanced"),
-            profit_strategy=bot_doc.get("profit_strategy", "balanced")
-        )
-        
-        # Создаем новую ставку для восстановления цикла
-        success = await create_bot_bet(bot_obj)
-        
-        if success:
-            logger.info(f"✅ Successfully created draw replacement bet for bot {bot_id}")
-        else:
-            logger.warning(f"❌ Failed to create draw replacement bet for bot {bot_id}")
-            
-    except Exception as e:
-        logger.error(f"Error scheduling draw replacement bet for bot {bot_id}: {e}")
-
 async def check_and_complete_bot_cycle(bot_id: str):
     """
     Проверяет завершение цикла бота и переводит прибыль в 'Доход от ботов'.
