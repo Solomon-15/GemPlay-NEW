@@ -1839,21 +1839,21 @@ const RegularBotsManagement = () => {
                 <h4 className="font-rajdhani font-bold text-white mb-3">Настройки таймингов</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Пауза между играми (сек):</label>
+                    <label className="block text-text-secondary text-sm mb-1">Пауза между циклами (сек):</label>
                     <input
                       type="number"
                       min="1"
                       max="300"
-                      value={botForm.pause_between_games}
+                      value={botForm.pause_between_cycles}
                       onChange={(e) => {
-                        const newForm = {...botForm, pause_between_games: parseInt(e.target.value) || 5};
+                        const newForm = {...botForm, pause_between_cycles: parseInt(e.target.value) || 5};
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
                       }}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                     />
                     <div className="text-xs text-text-secondary mt-1">
-                      Обычная пауза между созданием ставок
+                      Интервал после завершения цикла до начала нового
                     </div>
                   </div>
                   <div>
