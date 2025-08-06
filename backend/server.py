@@ -15690,13 +15690,16 @@ async def create_bot_bet(bot: Bot) -> bool:
                 if remaining_amount <= 0.01:  # Практически ничего не осталось
                     break
         
+        # Убеждаемся что total_value соответствует реальной сумме ставки
+        actual_total = sum(quantity * GEM_PRICES.get(gem_type, 1.0) for gem_type, quantity in bet_gems.items())
+        
         game = Game(
             creator_id=bot.id,
             creator_type="bot",
-            bet_amount=total_value,
+            bet_amount=round(actual_total, 2),  # Используем фактическую сумму
             bet_gems=bet_gems,
             status=GameStatus.WAITING,
-            commission=round(total_value * 0.06, 2),
+            commission=round(actual_total * 0.06, 2),
             bot_type="REGULAR" if bot_type == "REGULAR" else "HUMAN"
         )
         
