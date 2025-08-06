@@ -6082,6 +6082,16 @@ async def join_game(
                 detail="Game already has an opponent"
             )
         
+        # Prevent regular bots from playing with each other
+        if hasattr(current_user, 'bot_type') and current_user.bot_type == BotType.REGULAR:
+            # Check if the creator is also a regular bot
+            creator_bot = await db.bots.find_one({"id": game_obj.creator_id})
+            if creator_bot and creator_bot.get("bot_type") == "REGULAR":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Regular bots cannot play with each other"
+                )
+        
         # Check if user has enough gems for THEIR OWN combination (not creator's)
         total_gems_value = 0.0
         
