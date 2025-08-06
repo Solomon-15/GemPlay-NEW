@@ -9867,13 +9867,16 @@ async def get_active_bot_games(current_user: User = Depends(get_current_user)):
             if not bot:
                 continue
                 
+            # Determine display name for bot
+            bot_display_name = "Bot" if bot["bot_type"] == "REGULAR" else bot["name"]
+            
             game_data = {
                 "id": game["id"],
                 "game_id": game["id"],
                 "creator_id": game["creator_id"],
-                "creator_username": bot["name"],
+                "creator_username": bot_display_name,
                 "creator": {
-                    "username": bot["name"],
+                    "username": bot_display_name,
                     "gender": bot.get("avatar_gender", "male")
                 },
                 "bet_amount": game["bet_amount"],
