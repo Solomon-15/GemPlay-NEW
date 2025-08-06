@@ -16749,7 +16749,6 @@ async def update_individual_bot_settings(
         
         # Validate parameters
         pause_timer = update_data.get("pause_timer")
-        recreate_timer = update_data.get("recreate_timer")
         cycle_games = update_data.get("cycle_games")
         cycle_total_amount = update_data.get("cycle_total_amount")
         win_percentage = update_data.get("win_percentage")
