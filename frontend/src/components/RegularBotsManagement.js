@@ -939,7 +939,7 @@ const RegularBotsManagement = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        fetchRegularBots();
+        fetchBotsList();
         showSuccessRU(`Пауза обновлена на ${newPause} секунд`);
       }
     } catch (error) {
