@@ -2453,30 +2453,44 @@ const RegularBotsManagement = () => {
                     <tbody className="divide-y divide-border-primary">
                       {cycleData.games.map((game, index) => (
                         <tr key={game.game_id} className="hover:bg-surface-card hover:bg-opacity-50">
-                          <td className="px-4 py-3 text-white">{game.game_number}</td>
+                          <td className="px-4 py-3 text-white">{game.game_number || (index + 1)}</td>
+                          <td className="px-4 py-3 text-accent-primary text-sm font-mono">{game.game_id || 'N/A'}</td>
+                          <td className="px-4 py-3 text-text-secondary text-sm">
+                            {new Date(game.completed_at || game.created_at).toLocaleDateString('ru-RU')}
+                          </td>
+                          <td className="px-4 py-3 text-text-secondary text-sm">
+                            {new Date(game.completed_at || game.created_at).toLocaleTimeString('ru-RU')}
+                          </td>
                           <td className="px-4 py-3 text-accent-primary font-bold">${game.bet_amount}</td>
                           <td className="px-4 py-3 text-text-secondary text-xs">
-                            {Object.entries(game.bet_gems).map(([gem, qty]) => `${gem}: ${qty}`).join(', ')}
+                            {Object.entries(game.bet_gems || {}).map(([gem, qty]) => `${gem}: ${qty}`).join(', ') || 'N/A'}
                           </td>
-                          <td className="px-4 py-3 text-white">{game.opponent}</td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="text-xs space-y-1">
+                              <div>Бот: {game.bot_move || '—'}</div>
+                              <div>Соперник: {game.opponent_move || '—'}</div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-white">{game.opponent || 'N/A'}</td>
+                          <td className="px-4 py-3">
+                            <span className={`px-2 py-1 text-xs rounded-full font-rajdhani font-bold ${
+                              game.status === 'COMPLETED' ? 'bg-green-600 text-white' :
+                              game.status === 'ACTIVE' ? 'bg-blue-600 text-white' :
+                              game.status === 'WAITING' ? 'bg-yellow-600 text-white' :
+                              'bg-gray-600 text-white'
+                            }`}>
+                              {game.status || 'Unknown'}
+                            </span>
+                          </td>
                           <td className="px-4 py-3">
                             <span className={`px-2 py-1 text-xs rounded-full font-rajdhani font-bold ${
                               game.result === 'Победа' ? 'bg-green-600 text-white' :
                               game.result === 'Поражение' ? 'bg-red-600 text-white' :
-                              'bg-yellow-600 text-white'
+                              game.result === 'Ничья' ? 'bg-yellow-600 text-white' :
+                              'bg-gray-600 text-white'
                             }`}>
-                              {game.result}
+                              {game.result || '—'}
                             </span>
-                          </td>
-                          <td className={`px-4 py-3 font-bold ${
-                            game.winnings > 0 ? 'text-green-400' :
-                            game.winnings < 0 ? 'text-red-400' :
-                            'text-gray-400'
-                          }`}>
-                            {game.winnings > 0 ? '+' : ''}${game.winnings}
-                          </td>
-                          <td className="px-4 py-3 text-text-secondary text-sm">
-                            {new Date(game.completed_at).toLocaleString('ru-RU')}
                           </td>
                         </tr>
                       ))}
