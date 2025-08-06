@@ -145,59 +145,81 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       setMyBets(myWaitingBets);
       // Reduced logging for performance
       
-      // Ongoing battles should include ALL ACTIVE games where user participates (as creator or opponent)
+      // Ongoing battles (Live Players) должны включать только:
+      // 1. ACTIVE игры пользователя с живыми игроками
+      // 2. ACTIVE игры пользователя с Human-ботами
+      // 3. Public ACTIVE игры Human-ботов
       const userOngoingBattles = userGames.filter(game => 
         (game.status === 'ACTIVE' || game.status === 'REVEAL') && 
-        (game.is_creator === true || game.is_creator === false)
+        (game.is_creator === true || game.is_creator === false) &&
+        (!game.is_bot_game || game.is_human_bot)  // Исключаем обычных ботов
       );
-      // Reduced logging for performance
       
-      // Also include ALL ACTIVE games where current user participates (creator or opponent)
+      // Также включить все ACTIVE игры где пользователь участвует (только с живыми игроками и Human-ботами)
       const activeUserGames = allGames.filter(game => {
-        // Only include ACTIVE games where user participates
         return game.status === 'ACTIVE' && 
-               (game.creator_id === user?.id || game.opponent_id === user?.id);
+               (game.creator_id === user?.id || game.opponent_id === user?.id) &&
+               (!game.is_bot_game || game.is_human_bot);  // Исключаем обычных ботов
       });
-      // Reduced logging for performance
       
-      // Get active games for display in ongoing battles (for all users)
+      // Get active Human-bot games for display in ongoing battles (для всех пользователей)
       try {
         const token = localStorage.getItem('token');
         let humanBotGames = [];
         
-        // Fetch public active games for all users (renamed for clarity)
+        // Fetch public active Human-bot games
         const humanBotGamesResponse = await axios.get(`${API}/games/active-human-bots`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
         });
-        humanBotGames = humanBotGamesResponse.data || [];
         
-        // Combine user ongoing battles with ACTIVE user games and Human-bot games
+        // Фильтруем только Human-боты (исключаем обычных ботов)
+        humanBotGames = (humanBotGamesResponse.data || []).filter(game => 
+          game.is_human_bot || !game.is_bot_game
+        );
+        
+        // Объединить все ongoing battles для Live Players
         const allOngoingBattles = [...userOngoingBattles, ...activeUserGames, ...humanBotGames];
         
-        // Remove duplicates based on game ID
+        // Удалить дубликаты по game ID
         const uniqueOngoingBattles = allOngoingBattles.filter((game, index, self) => 
           index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
         );
         
         setOngoingBattles(uniqueOngoingBattles);
-        // Performance optimization: only log significant changes or errors
       } catch (error) {
         console.error('Error fetching Human-bot games:', error);
-        // Fallback: combine user battles with active user games
+        // Fallback: combine user battles with active user games (исключая обычных ботов)
         const fallbackOngoingBattles = [...userOngoingBattles, ...activeUserGames];
         const uniqueFallbackBattles = fallbackOngoingBattles.filter((game, index, self) => 
           index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
         );
         setOngoingBattles(uniqueFallbackBattles);
-        console.log(`⚔️ Fallback Ongoing Battles: ${uniqueFallbackBattles.length} total battles`);
       }
       
+      // Ongoing Bot Battles (Bot Players) - только обычные боты со статусом ACTIVE
       setOngoingBotBattles(userGames.filter(game => 
-        (game.status === 'ACTIVE' || game.status === 'REVEAL') && game.is_bot_game
+        (game.status === 'ACTIVE' || game.status === 'REVEAL') && 
+        game.is_bot_game && 
+        !game.is_human_bot  // Только обычные боты, исключаем Human-ботов
       ));
+      
+      // Также добавить активные игры обычных ботов из общего списка
+      const activeRegularBotGames = allGames.filter(game => 
+        game.status === 'ACTIVE' && 
+        game.is_bot_game && 
+        !game.is_human_bot &&  // Только обычные боты
+        (game.creator_id === user?.id || game.opponent_id === user?.id)  // Где пользователь участвует
+      );
+      
+      // Объединить Ongoing Bot Battles
+      const allOngoingBotBattles = [...ongoingBotBattles, ...activeRegularBotGames];
+      const uniqueOngoingBotBattles = allOngoingBotBattles.filter((game, index, self) => 
+        index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
+      );
+      setOngoingBotBattles(uniqueOngoingBotBattles);
       
       setLoading(false);
     } catch (error) {
