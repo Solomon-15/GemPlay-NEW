@@ -15784,9 +15784,6 @@ async def create_individual_bot(
         if pause_timer < 1 or pause_timer > 3600:
             validation_errors.append("Таймер паузы должен быть от 1 до 3600 секунд")
         
-        if recreate_interval < 1:
-            validation_errors.append("Интервал пересоздания должен быть минимум 1 секунда")
-        
         if bet_distribution not in ["small", "medium", "large"]:
             validation_errors.append("Характер распределения ставок должен быть 'small', 'medium' или 'large'")
         
