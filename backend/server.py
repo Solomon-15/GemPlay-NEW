@@ -8163,12 +8163,18 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
 
 @api_router.get("/games/active-human-bots")
 async def get_active_human_bot_games(current_user: User = Depends(get_current_user)):
-    """Get all active games for display in ongoing battles (public endpoint for all users)."""
+    """Get active human-bot games and live player games for display in ongoing battles."""
     try:
-        # Get all active games (not just human-bot games)
+        # Get active games but EXCLUDE regular bot games  
+        # Include: Human-bot games + Live player games
+        # Exclude: Regular bot games (they belong in "Ongoing Bot Battles")
         games = await db.games.find({
-            "status": "ACTIVE"
-        }).sort("created_at", -1).to_list(100)  # Limit to 100 most recent games
+            "status": "ACTIVE",
+            "$or": [
+                {"is_human_bot": True},  # Human-bot games
+                {"is_bot_game": {"$ne": True}}  # Live player games (not bot games)
+            ]
+        }).sort("created_at", -1).to_list(100)
         
         result = []
         for game in games:
