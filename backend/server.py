@@ -1922,6 +1922,34 @@ async def update_bot_cycle_stats(bot_id: str, outcome: str, game_value: float):
     except Exception as e:
         logger.error(f"Error updating bot cycle stats for {bot_id}: {e}")
 
+async def schedule_draw_replacement_bet(bot_id: str, delay_seconds: int = 1):
+    """
+    Планирует создание новой ставки через указанное время для восстановления цикла после ничьи.
+    """
+    try:
+        logger.info(f"🎯 Scheduling draw replacement bet for bot {bot_id} in {delay_seconds} seconds")
+        
+        # Ждем указанное время
+        await asyncio.sleep(delay_seconds)
+        
+        # Получаем актуальные данные бота
+        bot_doc = await db.bots.find_one({"id": bot_id})
+        if not bot_doc or not bot_doc.get("is_active", False):
+            logger.warning(f"Bot {bot_id} not found or inactive, skipping draw replacement bet")
+            return
+        
+        # Создаем новую ставку для восстановления цикла
+        bot = Bot(**bot_doc)
+        success = await create_bot_bet(bot)
+        
+        if success:
+            logger.info(f"✅ Successfully created draw replacement bet for bot {bot_id}")
+        else:
+            logger.warning(f"❌ Failed to create draw replacement bet for bot {bot_id}")
+            
+    except Exception as e:
+        logger.error(f"Error scheduling draw replacement bet for bot {bot_id}: {e}")
+
 async def check_and_complete_bot_cycle(bot_id: str):
     """
     Проверяет завершение цикла бота и переводит прибыль в 'Доход от ботов'.
