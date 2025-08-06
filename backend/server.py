@@ -16079,7 +16079,6 @@ async def get_regular_bots_list(
                 "max_bet_amount": bot_doc.get('max_bet_amount', 100.0),
                 "current_limit": bot_doc.get('current_limit', bot_doc.get('cycle_games', 12)),
                 "pause_timer": bot_doc.get('pause_timer', 5),
-                "recreate_timer": bot_doc.get('recreate_timer', 30),
                 "pause_between_games": bot_doc.get('pause_between_games', 5),
                 "win_percentage": bot_doc.get('win_percentage', bot_doc.get('win_rate', 0.55) * 100),
                 "created_at": bot.created_at,
