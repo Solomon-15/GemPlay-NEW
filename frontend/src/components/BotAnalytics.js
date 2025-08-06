@@ -408,8 +408,8 @@ const BotAnalytics = () => {
                           {bot.name || `Bot #${bot.id.substring(0, 8)}`}
                         </td>
                         <td className="px-4 py-4">
-                          <span className="bg-accent-primary text-white px-2 py-1 rounded-full text-xs">
-                            {bot.priority_order || 'Не установлен'}
+                          <span className="bg-gray-600 text-white px-2 py-1 rounded-full text-xs">
+                            Не используется
                           </span>
                         </td>
                         <td className="px-4 py-4 text-yellow-400">
