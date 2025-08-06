@@ -111,7 +111,6 @@ class SoundManager {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        console.log('No auth token, using fallback sounds');
         this.createFallbackSounds();
         return;
       }
@@ -119,7 +118,6 @@ class SoundManager {
       // Only try to load sounds from admin endpoint for admin users
       // Regular users will use fallback sounds
       if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
-        console.log('Non-admin user, using fallback sounds');
         this.createFallbackSounds();
         return;
       }
@@ -136,7 +134,6 @@ class SoundManager {
       }
 
       const soundsData = await response.json();
-      console.log(`Loaded ${soundsData.length} sounds from API`);
 
       for (const sound of soundsData) {
         if (!this.sounds.has(sound.event_trigger)) {
@@ -152,7 +149,6 @@ class SoundManager {
       await this.preloadCriticalSounds();
 
     } catch (error) {
-      console.warn('Ошибка загрузки звуков из API:', error);
       this.createFallbackSounds();
     }
   }
