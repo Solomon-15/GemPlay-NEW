@@ -548,8 +548,6 @@ class Bot(BaseModel):
     last_game_time: Optional[datetime] = None
     last_bet_time: Optional[datetime] = None  # Новое поле
     
-    can_accept_bets: bool = False
-    can_play_with_bots: bool = False
     avatar_gender: str = "male"
     simple_mode: bool = False  # Для Human ботов - простой режим
     
