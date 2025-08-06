@@ -1829,26 +1829,46 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Пауза между играми */}
+              {/* Настройки таймингов */}
               <div className="border border-border-primary rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-white mb-3">Настройки таймингов</h4>
-                <div>
-                  <label className="block text-text-secondary text-sm mb-1">Пауза между играми (сек):</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="300"
-                    value={botForm.pause_between_games}
-                    onChange={(e) => {
-                      const newForm = {...botForm, pause_between_games: parseInt(e.target.value) || 5};
-                      setBotForm(newForm);
-                      validateExtendedFormInRealTime(newForm);
-                    }}
-                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                  />
-                </div>
-                <div className="text-xs text-text-secondary mt-1">
-                  Пауза между созданием ставок (1-300 секунд)
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Пауза между играми (сек):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="300"
+                      value={botForm.pause_between_games}
+                      onChange={(e) => {
+                        const newForm = {...botForm, pause_between_games: parseInt(e.target.value) || 5};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                    <div className="text-xs text-text-secondary mt-1">
+                      Обычная пауза между созданием ставок
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Пауза при ничье (сек):</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="60"
+                      value={botForm.pause_on_draw}
+                      onChange={(e) => {
+                        const newForm = {...botForm, pause_on_draw: parseInt(e.target.value) || 1};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                    <div className="text-xs text-text-secondary mt-1">
+                      При ничье создается новая ставка через указанное время
+                    </div>
+                  </div>
                 </div>
               </div>
 
