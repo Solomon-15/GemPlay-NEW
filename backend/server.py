@@ -15747,7 +15747,6 @@ async def create_individual_bot(
     try:
         name = bot_config.get("name", "Bot #001")
         pause_timer = bot_config.get("pause_timer", 5)  # теперь секунды
-        recreate_interval = bot_config.get("recreate_interval", 30)  # секунды
         cycle_games = bot_config.get("cycle_games", 12)
         cycle_total_amount = bot_config.get("cycle_total_amount", 500.0)
         win_percentage = bot_config.get("win_percentage", 60.0)
