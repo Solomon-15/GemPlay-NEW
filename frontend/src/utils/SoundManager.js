@@ -77,9 +77,8 @@ class SoundManager {
     try {
       this.context = new (window.AudioContext || window.webkitAudioContext)();
       this.contextInitialized = true;
-      console.log('🔊 AudioContext successfully initialized');
     } catch (error) {
-      console.warn('AudioContext не поддерживается:', error);
+      // Silent fail for unsupported audio context
     }
   }
 
