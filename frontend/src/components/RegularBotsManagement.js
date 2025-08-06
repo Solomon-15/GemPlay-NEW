@@ -1677,8 +1677,17 @@ const RegularBotsManagement = () => {
                       </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <div className="text-cyan-400 font-roboto text-sm">
-                        {bot.pause_between_games ? `${bot.pause_between_games}с` : '0с'}
+                      <div className="flex items-center justify-center space-x-1">
+                        <span className="text-cyan-400 font-roboto text-sm font-bold">
+                          {bot.pause_between_games ? `${bot.pause_between_games}с` : '5с'}
+                        </span>
+                        <button
+                          onClick={() => handleEditPause(bot)}
+                          className="text-gray-400 hover:text-white transition-colors p-1"
+                          title="Редактировать паузу между играми"
+                        >
+                          ✏️
+                        </button>
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
