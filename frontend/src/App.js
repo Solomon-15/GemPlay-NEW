@@ -319,8 +319,6 @@ function App() {
   };
 
   const handleOpenAdminPanel = () => {
-    console.log('🔓 Opening admin panel. Current user:', user);
-    console.log('🔍 Token exists:', !!localStorage.getItem('token'));
     setIsAdminPanelOpen(true);
   };
 
