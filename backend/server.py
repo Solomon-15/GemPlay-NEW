@@ -8045,7 +8045,7 @@ async def get_available_games(current_user: User = Depends(get_current_user)):
                 "status": game.get("status", "WAITING"),
                 "creator_id": game.get("creator_id"),
                 "creator_type": game.get("creator_type", "user"),
-                "is_bot_game": game.get("is_bot_game", False),
+                "is_bot_game": is_human_bot_game or is_regular_bot_game,  # True для всех ботов
                 "bot_type": game.get("bot_type"),
                 "is_human_bot": (
                     game.get("creator_type") == "human_bot" or
