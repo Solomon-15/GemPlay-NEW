@@ -86,9 +86,7 @@ const RegularBotsManagement = () => {
     
     profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
     
-    cycle_total_amount: 0, // calculated automatically
-    can_accept_bets: false,
-    can_play_with_bots: true
+    cycle_total_amount: 0 // calculated automatically
   });
 
   // Calculate cycle total amount automatically
