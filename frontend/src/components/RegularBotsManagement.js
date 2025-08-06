@@ -892,27 +892,27 @@ const RegularBotsManagement = () => {
   // Функции для редактирования процента выигрышей и паузы
   const handleEditWinPercentage = async (bot) => {
     try {
-      const newPercentage = await prompt(`Введите новый процент выигрышей для бота ${bot.name || `Bot #${bot.id.substring(0, 3)}`}:`, {
-        defaultValue: bot.win_percentage || 55,
-        placeholder: 'Процент (0-100)',
-        validation: (value) => {
-          const num = parseFloat(value);
-          if (isNaN(num) || num < 0 || num > 100) {
-            return 'Процент должен быть числом от 0 до 100';
-          }
-          return null;
-        }
-      });
+      const currentPercentage = bot.win_percentage || 55;
+      const userInput = window.prompt(
+        `Введите новый процент выигрышей для бота ${bot.name || `Bot #${bot.id.substring(0, 3)}`}:\n\nТекущий: ${currentPercentage}%\n(Допустимые значения: 0-100)`,
+        currentPercentage
+      );
 
-      if (newPercentage !== null) {
-        const token = localStorage.getItem('token');
-        await axios.put(`${API}/admin/bots/${bot.id}/win-percentage?win_percentage=${newPercentage}`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        fetchBotsList();
-        showSuccessRU(`Процент выигрышей обновлен на ${newPercentage}%`);
+      if (userInput === null) return; // Пользователь отменил
+
+      const newPercentage = parseFloat(userInput);
+      if (isNaN(newPercentage) || newPercentage < 0 || newPercentage > 100) {
+        showErrorRU('Процент должен быть числом от 0 до 100');
+        return;
       }
+
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/admin/bots/${bot.id}/win-percentage?win_percentage=${newPercentage}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      fetchBotsList();
+      showSuccessRU(`Процент выигрышей обновлен на ${newPercentage}%`);
     } catch (error) {
       console.error('Error updating win percentage:', error);
       showErrorRU('Ошибка при обновлении процента выигрышей');
@@ -921,27 +921,27 @@ const RegularBotsManagement = () => {
 
   const handleEditPause = async (bot) => {
     try {
-      const newPause = await prompt(`Введите новую паузу между играми для бота ${bot.name || `Bot #${bot.id.substring(0, 3)}`}:`, {
-        defaultValue: bot.pause_between_games || 5,
-        placeholder: 'Секунды (1-3600)',
-        validation: (value) => {
-          const num = parseInt(value);
-          if (isNaN(num) || num < 1 || num > 3600) {
-            return 'Пауза должна быть числом от 1 до 3600 секунд';
-          }
-          return null;
-        }
-      });
+      const currentPause = bot.pause_between_games || 5;
+      const userInput = window.prompt(
+        `Введите новую паузу между играми для бота ${bot.name || `Bot #${bot.id.substring(0, 3)}`}:\n\nТекущая: ${currentPause} секунд\n(Допустимые значения: 1-3600)`,
+        currentPause
+      );
 
-      if (newPause !== null) {
-        const token = localStorage.getItem('token');
-        await axios.put(`${API}/admin/bots/${bot.id}/pause-settings?pause_between_games=${newPause}`, {}, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        fetchBotsList();
-        showSuccessRU(`Пауза обновлена на ${newPause} секунд`);
+      if (userInput === null) return; // Пользователь отменил
+
+      const newPause = parseInt(userInput);
+      if (isNaN(newPause) || newPause < 1 || newPause > 3600) {
+        showErrorRU('Пауза должна быть числом от 1 до 3600 секунд');
+        return;
       }
+
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/admin/bots/${bot.id}/pause-settings?pause_between_games=${newPause}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      fetchBotsList();
+      showSuccessRU(`Пауза обновлена на ${newPause} секунд`);
     } catch (error) {
       console.error('Error updating pause settings:', error);
       showErrorRU('Ошибка при обновлении настроек паузы');
