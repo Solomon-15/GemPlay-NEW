@@ -93,7 +93,6 @@ const AdminPanel = ({ user, onClose }) => {
   }, [betVolumeFilters]); // Re-fetch when bet volume filters change
 
   const handleTokenExpired = () => {
-    console.log('🔒 AdminPanel: Token expired, cleaning up and closing');
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
     showErrorRU('Сессия истекла. Пожалуйста, войдите снова.');
