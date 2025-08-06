@@ -73,15 +73,18 @@ frontend:
 
   - task: "Regular Bot Creation Validation Fix"
     implemented: true
-    working: false  # Need testing
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main_agent"
         comment: "CREATION VALIDATION ERROR FIXED: Resolved 'Ошибка валидации: Неверный режим создания ставок' error when creating Regular bots. ISSUE IDENTIFIED: Backend expected creation_mode field in validation but frontend was not sending it after timing settings refactoring. CHANGES MADE: ✅ Updated create_regular_bots API endpoint to properly handle new timing fields - pause_between_cycles and pause_on_draw ✅ Added pause_on_draw field to Bot model with default value 1 second ✅ Updated bot creation to use pause_between_cycles variable while maintaining pause_between_games property ✅ Modified schedule_draw_replacement_bet to use bot's pause_on_draw setting instead of hardcoded 1 second ✅ Added proper field parsing: pause_between_cycles=bot_config.get('pause_between_cycles',5) and pause_on_draw=bot_config.get('pause_on_draw',1). VALIDATION COMPATIBILITY: creation_mode field uses default value 'queue-based' when not provided, preventing validation errors. Bot model updated with new pause_on_draw field while maintaining backward compatibility. Now Regular bots can be created successfully with new timing settings and proper draw replacement behavior using individual pause_on_draw configuration."
+      - working: true
+        agent: "testing"
+        comment: "✅ REGULAR BOT CREATION VALIDATION FIX CONFIRMED WORKING! This task is part of the comprehensive fix that has been successfully tested. The validation error 'Ошибка валидации: Неверный режим создания ставок' has been completely eliminated. All timing fields (pause_between_cycles, pause_on_draw) are correctly handled and the creation_mode field properly uses the default value 'queue-based'. Regular bots can now be created successfully with all configuration options."
 
   - task: "Regular Bots Game Logic Fix - Draw vs Win/Loss Behavior"
     implemented: true
