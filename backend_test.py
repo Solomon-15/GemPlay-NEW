@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
 """
-Dashboard Stats Date Filtering Testing - Russian Review
-Focus: Testing new date filtering functionality in /api/admin/dashboard/stats endpoint
+Regular Bots System Fixes Testing - Russian Review
+Focus: Testing fixes for regular bots system as requested in Russian review
 Requirements: 
-1. Basic request without parameters (should work as before)
-2. Filtering by predefined periods: day, week, month, quarter, all_time
-3. Custom date filtering: bet_volume_period=custom with start/end dates
-4. Ensure total_bet_volume changes based on filters, other metrics remain stable
+1. Test fixed API endpoints with /api prefix:
+   - GET /api/admin/bots/cycle-statistics 
+   - PUT /api/admin/bots/{bot_id}/pause-settings
+   - PUT /api/admin/bots/{bot_id}/win-percentage
+2. Test fixed active_bets field:
+   - GET /api/admin/bots (main list)
+   - GET /api/admin/bots/regular/list (detailed list)
+   - Verify active_bets shows real count, not 0
+3. Additional verification:
+   - Regular bots system continues working correctly
+   - Bots create bets
 """
 
 import requests
