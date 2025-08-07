@@ -163,8 +163,10 @@ def test_exact_cycle_sum_matching():
     headers = {"Authorization": f"Bearer {admin_token}"}
     
     # Create Regular bot with EXACT settings from Russian review
+    import time
+    timestamp = int(time.time())
     bot_data = {
-        "name": "Critical_Fix_Test_Bot",
+        "name": f"Final_Perfect_Test_Bot_{timestamp}",
         "min_bet_amount": 1.0,
         "max_bet_amount": 50.0,
         "cycle_games": 12,
