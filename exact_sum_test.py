@@ -263,8 +263,13 @@ def test_get_active_games_and_calculate_sum(token: str, bot_id: str) -> Tuple[bo
         )
         return False, 0.0, [], {}
     
+    # Handle different response formats
+    if isinstance(response_data, list):
+        all_games = response_data
+    else:
+        all_games = response_data.get("games", [])
+    
     # Filter games for our specific bot
-    all_games = response_data.get("games", [])
     bot_games = [game for game in all_games if game.get("bot_id") == bot_id]
     
     if not bot_games:
