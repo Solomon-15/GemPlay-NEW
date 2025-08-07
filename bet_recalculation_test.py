@@ -460,9 +460,10 @@ def main():
         sys.exit(1)
     
     # Test bot configurations
+    timestamp = int(time.time())
     bot_configs = [
         {
-            "name": "Test_Recalc_Bot_1",
+            "name": f"Test_Recalc_Bot_1_{timestamp}",
             "min_bet_amount": 5.0,
             "max_bet_amount": 15.0,
             "cycle_games": 4,
@@ -471,7 +472,7 @@ def main():
             "profit_strategy": "balanced"
         },
         {
-            "name": "Test_Recalc_Bot_2",
+            "name": f"Test_Recalc_Bot_2_{timestamp}",
             "min_bet_amount": 20.0,
             "max_bet_amount": 40.0,
             "cycle_games": 6,
