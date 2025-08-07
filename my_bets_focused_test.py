@@ -10,7 +10,7 @@ import time
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://6abba581-4136-46bf-9b8f-5cb9aece096f.preview.emergentagent.com/api"
+BASE_URL = "https://5a0f72db-7197-4535-89b4-f85be852ec00.preview.emergentagent.com/api"
 
 def make_request(method: str, endpoint: str, data: Optional[Dict[str, Any]] = None, auth_token: Optional[str] = None) -> Dict[str, Any]:
     """Make an HTTP request to the API."""

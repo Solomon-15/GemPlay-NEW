@@ -2,7 +2,7 @@
 import requests
 import json
 
-BASE_URL = 'https://6abba581-4136-46bf-9b8f-5cb9aece096f.preview.emergentagent.com/api'
+BASE_URL = 'https://5a0f72db-7197-4535-89b4-f85be852ec00.preview.emergentagent.com/api'
 
 # Login first
 login_data = {'email': 'admin@gemplay.com', 'password': 'Admin123!'}
