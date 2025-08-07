@@ -36,7 +36,8 @@ def main():
     print("\n📊 REGULAR BOTS ANALYSIS:")
     response = requests.get(f"{BASE_URL}/admin/bots", headers=headers, timeout=30)
     if response.status_code == 200:
-        bots = response.json()
+        bots_data = response.json()
+        bots = bots_data if isinstance(bots_data, list) else bots_data.get("bots", [])
         for bot in bots[:3]:  # First 3 bots
             bot_id = bot["id"]
             bot_name = bot["name"]
