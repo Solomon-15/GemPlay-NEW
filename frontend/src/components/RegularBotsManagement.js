@@ -133,7 +133,7 @@ const RegularBotsManagement = () => {
   const handleCycleHistoryModal = async (bot) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, {
+      const response = await axios.get(`${API}/admin/bots/${bot.id}/completed-cycles`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
