@@ -16907,59 +16907,66 @@ async def update_individual_bot_settings(
                 detail="Bot not found"
             )
         
-        # Validate parameters
-        pause_timer = update_data.get("pause_timer")
-        cycle_games = update_data.get("cycle_games")
-        cycle_total_amount = update_data.get("cycle_total_amount")
-        win_percentage = update_data.get("win_percentage")
+        # Validate parameters  
+        name = update_data.get("name")
         min_bet_amount = update_data.get("min_bet_amount")
-        avg_bet_amount = update_data.get("avg_bet_amount")  # новое поле
-        bet_distribution = update_data.get("bet_distribution")  # новое поле
-        pause_between_games = update_data.get("pause_between_games")  # пауза между играми
+        max_bet_amount = update_data.get("max_bet_amount")
+        win_percentage = update_data.get("win_percentage")
+        cycle_games = update_data.get("cycle_games")
+        pause_between_cycles = update_data.get("pause_between_cycles")
+        pause_on_draw = update_data.get("pause_on_draw")
+        creation_mode = update_data.get("creation_mode")
+        profit_strategy = update_data.get("profit_strategy")
         
-        # Validation with new math
-        if pause_timer is not None and (pause_timer < 1 or pause_timer > 3600):
-            raise HTTPException(status_code=400, detail="Pause timer must be between 1 and 3600 seconds")
-        
-        if cycle_games is not None and cycle_games < 1:
-            raise HTTPException(status_code=400, detail="Cycle games must be at least 1")
-        
-        if min_bet_amount is not None and avg_bet_amount is not None:
-            if min_bet_amount > avg_bet_amount:
-                raise HTTPException(status_code=400, detail="Min bet must be less than or equal to avg bet")
-        
-        if cycle_total_amount is not None and cycle_games is not None and avg_bet_amount is not None:
-            avg_bet_from_cycle = cycle_total_amount / cycle_games
-            if avg_bet_from_cycle > avg_bet_amount:
-                raise HTTPException(status_code=400, detail=f"Average bet ({avg_bet_amount}) must be >= {avg_bet_from_cycle:.2f} (cycle total / cycle games)")
-        
-        if bet_distribution is not None and bet_distribution not in ["small", "medium", "large"]:
-            raise HTTPException(status_code=400, detail="Bet distribution must be 'small', 'medium', or 'large'")
-        
-        if pause_between_games is not None and (pause_between_games < 1 or pause_between_games > 3600):
-            raise HTTPException(status_code=400, detail="Pause between games must be between 1 and 3600 seconds")
+        # Validation
+        if min_bet_amount is not None and (min_bet_amount < 1 or min_bet_amount > 10000):
+            raise HTTPException(status_code=400, detail="Min bet amount must be between 1 and 10000")
+            
+        if max_bet_amount is not None and (max_bet_amount < 1 or max_bet_amount > 10000):
+            raise HTTPException(status_code=400, detail="Max bet amount must be between 1 and 10000")
+            
+        if min_bet_amount is not None and max_bet_amount is not None and min_bet_amount >= max_bet_amount:
+            raise HTTPException(status_code=400, detail="Min bet must be less than max bet")
+            
+        if win_percentage is not None and (win_percentage < 0 or win_percentage > 100):
+            raise HTTPException(status_code=400, detail="Win percentage must be between 0 and 100")
+            
+        if cycle_games is not None and (cycle_games < 1 or cycle_games > 66):
+            raise HTTPException(status_code=400, detail="Cycle games must be between 1 and 66")
+            
+        if pause_between_cycles is not None and (pause_between_cycles < 1 or pause_between_cycles > 300):
+            raise HTTPException(status_code=400, detail="Pause between cycles must be between 1 and 300 seconds")
+            
+        if pause_on_draw is not None and (pause_on_draw < 1 or pause_on_draw > 60):
+            raise HTTPException(status_code=400, detail="Pause on draw must be between 1 and 60 seconds")
+            
+        if creation_mode is not None and creation_mode not in ['always-first', 'queue-based', 'after-all']:
+            raise HTTPException(status_code=400, detail="Invalid creation mode")
+            
+        if profit_strategy is not None and profit_strategy not in ['start-positive', 'balanced', 'start-negative']:
+            raise HTTPException(status_code=400, detail="Invalid profit strategy")
         
         # Prepare update data - only update provided fields
         update_fields = {"updated_at": datetime.utcnow()}
         
-        if "name" in update_data:
-            update_fields["name"] = update_data["name"]
-        if pause_timer is not None:
-            update_fields["pause_timer"] = pause_timer
-        if cycle_games is not None:
-            update_fields["cycle_length"] = cycle_games
-        if cycle_total_amount is not None:
-            update_fields["cycle_total_amount"] = cycle_total_amount
-        if win_percentage is not None:
-            update_fields["win_percentage"] = win_percentage
+        if name is not None:
+            update_fields["name"] = name
         if min_bet_amount is not None:
             update_fields["min_bet_amount"] = min_bet_amount
-        if avg_bet_amount is not None:
-            update_fields["avg_bet_amount"] = avg_bet_amount  # новое поле
-        if bet_distribution is not None:
-            update_fields["bet_distribution"] = bet_distribution  # новое поле
-        if pause_between_games is not None:
-            update_fields["pause_between_games"] = pause_between_games  # пауза между играми
+        if max_bet_amount is not None:
+            update_fields["max_bet_amount"] = max_bet_amount
+        if win_percentage is not None:
+            update_fields["win_percentage"] = win_percentage
+        if cycle_games is not None:
+            update_fields["cycle_games"] = cycle_games
+        if pause_between_cycles is not None:
+            update_fields["pause_between_cycles"] = pause_between_cycles
+        if pause_on_draw is not None:
+            update_fields["pause_on_draw"] = pause_on_draw
+        if creation_mode is not None:
+            update_fields["creation_mode"] = creation_mode
+        if profit_strategy is not None:
+            update_fields["profit_strategy"] = profit_strategy
         
         # Update bot in database
         await db.bots.update_one(
