@@ -1670,14 +1670,14 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-left">
                       <div className="text-white font-roboto text-xs space-y-1">
                         <div>Игры: {bot.completed_cycles || 0}</div>
-                        <div>W/L/D: {(bot.games_stats?.wins || 0)}/{(bot.games_stats?.losses || 0)}/{(bot.games_stats?.draws || 0)}</div>
+                        <div>W/L/D: {(bot.current_cycle_wins || 0)}/{(bot.current_cycle_losses || 0)}/{(bot.current_cycle_draws || 0)}</div>
                         <div className="text-green-400">Прибыль: ${Math.round(bot.current_cycle_profit || 0)}</div>
                         <button
                           onClick={() => handleCycleHistoryModal(bot)}
                           className="text-blue-400 hover:text-blue-300 cursor-pointer underline"
                           title="Показать историю циклов"
                         >
-                          Чистая: ${Math.round(bot.bot_profit_amount || 0)}
+                          Чистая: ${Math.round(bot.total_net_profit || bot.bot_profit_amount || 0)}
                         </button>
                       </div>
                     </td>
