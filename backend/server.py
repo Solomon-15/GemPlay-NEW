@@ -1267,6 +1267,30 @@ class HumanBotBehavior:
         else:
             return random.randint(min_delay, max_delay)
 
+def generate_uniform_bet_amounts(min_bet: float, max_bet: float, count: int) -> List[float]:
+    """Generate uniform bet amounts across the range 1-50 for better distribution."""
+    if count <= 0:
+        return []
+    
+    # Create a uniform distribution across the range
+    amounts = []
+    if count == 1:
+        # Single bet - use middle of range
+        amounts.append((min_bet + max_bet) / 2)
+    else:
+        # Multiple bets - distribute evenly across range
+        step = (max_bet - min_bet) / (count - 1)
+        for i in range(count):
+            amount = min_bet + (step * i)
+            # Add small random variation (±10%) to avoid exact patterns
+            variation = random.uniform(0.9, 1.1)
+            amount = amount * variation
+            # Ensure within bounds
+            amount = max(min_bet, min(max_bet, amount))
+            amounts.append(math.ceil(amount))
+    
+    return amounts
+
 async def generate_unique_bot_name() -> str:
     """Generate unique bot name in format Bot#1, Bot#2, etc."""
     counter = 1
