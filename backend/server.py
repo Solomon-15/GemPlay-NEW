@@ -514,37 +514,38 @@ class Bot(BaseModel):
     
     min_bet_amount: float = 1.0  # 1-10000
     max_bet_amount: float = 100.0  # 1-10000
-    win_rate: float = 0.55  # 0-100% (по умолчанию 55%)
+    win_percentage: float = 55.0  # Соотношение выигрышных сумм к общей сумме (0-100%, по умолчанию 55%)
+    
+    # Новые поля для процентов исходов игр
+    wins_percentage: int = 35  # Процент побед в цикле (по умолчанию 35%)
+    losses_percentage: int = 35  # Процент поражений в цикле (по умолчанию 35%) 
+    draws_percentage: int = 30  # Процент ничьих (дополнительно к циклу, по умолчанию 30%)
     
     cycle_games: int = 12  # 1-66 (по умолчанию 12)
     current_cycle_games: int = 0
     current_cycle_wins: int = 0
-    current_cycle_gem_value_won: float = 0.0  # Новое поле для стоимости выигранных гемов
-    current_cycle_gem_value_total: float = 0.0  # Новое поле для общей стоимости ставок
-    current_limit: Optional[int] = None  # 1-66 (по умолчанию = cycle_games)
-    
-    # Новые поля для системы циклов и прибыли
-    completed_cycles: int = 0  # Количество завершенных циклов
     current_cycle_losses: int = 0  # Поражения в текущем цикле  
     current_cycle_draws: int = 0  # Ничьи в текущем цикле
+    current_limit: Optional[int] = None  # 1-66 (по умолчанию = cycle_games)
+    
+    # Поля для системы циклов и прибыли
+    completed_cycles: int = 0  # Количество завершенных циклов
     current_cycle_profit: float = 0.0  # Прибыль за текущий цикл
     total_net_profit: float = 0.0  # Чистая прибыль за все циклы
-    win_percentage: float = 55.0  # Процент выигрышей (по умолчанию 55%)
     
-    # Поля для отслеживания цикла
+    # Отслеживание сумм в цикле
     current_cycle_gem_value_won: float = 0.0  # Сумма выигранных гемов в текущем цикле
     current_cycle_gem_value_total: float = 0.0  # Общая сумма ставок в текущем цикле
     
     # Пауза между играми (секунды)
-    pause_between_games: int = 5  # По умолчанию 5 секунд (теперь между циклами)
-    pause_on_draw: int = 1  # Пауза при ничье (по умолчанию 1 секунда)
+    pause_between_cycles: int = 5  # Пауза между циклами (по умолчанию 5 секунд)
+    pause_on_draw: int = 5  # Пауза при ничье и между ставками (по умолчанию 5 секунд)
     
     creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
-    
     profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
     
     last_game_time: Optional[datetime] = None
-    last_bet_time: Optional[datetime] = None  # Новое поле
+    last_bet_time: Optional[datetime] = None
     
     avatar_gender: str = "male"
     simple_mode: bool = False  # Для Human ботов - простой режим
