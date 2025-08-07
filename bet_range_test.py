@@ -280,9 +280,18 @@ def analyze_bot_bets(games: List[Dict]) -> Dict[str, Any]:
     # Find games created by our test bot
     test_bot_games = []
     
+    print_info(f"Поиск игр среди {len(games)} активных игр...")
+    
     for game in games:
         # Check if game was created by our test bot
         creator_name = game.get("creator_name") or game.get("bot_name") or ""
+        creator_id = game.get("creator_id", "")
+        
+        # Debug: show first few games to understand structure
+        if len(test_bot_games) == 0 and len(games) > 0:
+            print_info(f"Пример структуры игры: {list(game.keys())}")
+            print_info(f"creator_name: '{creator_name}', creator_id: '{creator_id}'")
+        
         if creator_name == TEST_BOT_NAME:
             test_bot_games.append(game)
     
@@ -297,6 +306,7 @@ def analyze_bot_bets(games: List[Dict]) -> Dict[str, Any]:
             "bet_amounts": [],
             "out_of_range_bets": [],
             "success_rate": 0.0,
+            "expected_games": CYCLE_GAMES,
             "analysis": "Бот не создал игры"
         }
     
