@@ -50,12 +50,19 @@ def test_regular_bot_move_data_fix():
         print("❌ No regular bot games found to test")
         return
     
-    # Step 2: Find a suitable game to join
+    # Step 2: Find a suitable game to join (very small bet)
     test_game = None
     for game in regular_bot_games:
-        if game.get("status") == "WAITING" and game.get("bet_amount", 0) <= 20:
+        if game.get("status") == "WAITING" and game.get("bet_amount", 0) <= 3:
             test_game = game
             break
+    
+    if not test_game:
+        # If no small games, try to find any game and use the bot's gem combination
+        for game in regular_bot_games:
+            if game.get("status") == "WAITING":
+                test_game = game
+                break
     
     if not test_game:
         print("❌ No suitable WAITING game found")
@@ -67,11 +74,20 @@ def test_regular_bot_move_data_fix():
     print("\n2. Joining the regular bot game...")
     game_id = test_game["id"]
     bet_amount = test_game["bet_amount"]
+    bot_gems = test_game.get("bet_gems", {})
     
-    # Simple gem combination that matches the bet amount
+    # Use the same gem combination as the bot
+    if bot_gems:
+        join_gems = bot_gems.copy()
+        print(f"   Using bot's gem combination: {join_gems}")
+    else:
+        # Fallback to Ruby gems
+        join_gems = {"Ruby": max(1, int(bet_amount))}
+        print(f"   Using fallback gems: {join_gems}")
+    
     join_data = {
         "move": "rock",
-        "gems": {"Ruby": int(bet_amount)}  # Use Ruby gems to match bet amount
+        "gems": join_gems
     }
     
     response = requests.post(f"{BASE_URL}/games/{game_id}/join", headers=headers, json=join_data, timeout=10)
