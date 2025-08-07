@@ -343,11 +343,7 @@ const RegularBotsManagement = () => {
       });
       
       const botsData = response.data.bots || response.data;
-      // Sort by creation date (новые сверху)
-      const sortedBots = botsData.sort((a, b) => {
-        return new Date(b.created_at) - new Date(a.created_at);
-      });
-      setBotsList(sortedBots);
+      setBotsList(botsData); // Больше не сортируем здесь, используем getSortedBots
       
       clearSelection();
       
