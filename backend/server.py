@@ -15568,37 +15568,11 @@ async def create_regular_bots(
             "message": f"Бот '{bot_name}' создан успешно"
         }
         
-        await regular_bot_system.log_bot_action(bot.id, "BOT_CREATED", {
-            "config": bot_config,
-            "admin_id": current_user.id
-        })
-        
-        # Log admin action
-        admin_log = AdminLog(
-            admin_id=current_user.id,
-            action="CREATE_REGULAR_BOT",
-            target_type="bots",
-            target_id=bot.id,
-            details={
-                "bot_name": bot_name,
-                "config": bot_config
-            }
-        )
-        await db.admin_logs.insert_one(admin_log.dict())
-        
-        logger.info(f"✅ Created regular bot '{bot_name}' with new system")
-        
-        return {
-            "message": f"Создан обычный бот '{bot_name}'",
-            "created_bots": created_bots,
-            "bot_name": bot_name
-        }
-        
     except Exception as e:
         logger.error(f"Error creating regular bot: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create regular bot"
+            detail=f"Failed to create regular bot: {str(e)}"
         )
 
 @api_router.get("/admin/bots/cycle-statistics", response_model=List[dict])
