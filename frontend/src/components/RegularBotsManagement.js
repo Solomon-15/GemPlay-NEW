@@ -464,7 +464,26 @@ const RegularBotsManagement = () => {
     }
     
     if (formData.win_percentage < 0 || formData.win_percentage > 100) {
+      errors.push('Процент выигрыша должен быть от 0 до 100');
+    }
+    
+    // Валидация процентов исходов игр
+    if (formData.wins_percentage < 0 || formData.wins_percentage > 100) {
       errors.push('Процент побед должен быть от 0 до 100');
+    }
+    
+    if (formData.losses_percentage < 0 || formData.losses_percentage > 100) {
+      errors.push('Процент поражений должен быть от 0 до 100');
+    }
+    
+    if (formData.draws_percentage < 0 || formData.draws_percentage > 100) {
+      errors.push('Процент ничьих должен быть от 0 до 100');
+    }
+    
+    // Проверка что сумма процентов равна 100%
+    const totalPercentage = (formData.wins_percentage || 0) + (formData.losses_percentage || 0) + (formData.draws_percentage || 0);
+    if (Math.abs(totalPercentage - 100) > 0.1) { // Допускаем небольшую погрешность
+      errors.push(`Сумма процентов исходов должна быть 100% (сейчас ${totalPercentage}%)`);
     }
     
     if (formData.cycle_games < 1 || formData.cycle_games > 66) {
