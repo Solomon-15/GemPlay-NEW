@@ -175,7 +175,11 @@ def test_create_bet_range_bot(token: str) -> Optional[str]:
     )
     
     if success and response_data:
-        bot_id = response_data.get("id") or response_data.get("bot_id")
+        # Try different ways to get bot ID from response
+        bot_id = (response_data.get("id") or 
+                 response_data.get("bot_id") or 
+                 (response_data.get("created_bots", [{}])[0] if response_data.get("created_bots") else None))
+        
         if bot_id:
             record_test(
                 "Create Test_Bet_Range_Bot",
