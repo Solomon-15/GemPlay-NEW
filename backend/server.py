@@ -16861,31 +16861,27 @@ async def generate_cycle_bets_uniform_distribution(
     total_wins: int,
     total_losses: int,
     win_amount_total: float,
-    loss_amount_total: float
+    loss_amount_total: float,
+    exact_total: float = None  # НОВЫЙ параметр - точная целевая сумма
 ) -> List[Dict[str, Any]]:
     """
     Генерирует все ставки цикла заранее для равномерного покрытия диапазона min_bet - max_bet.
     ИСПРАВЛЕНО: Обеспечивает точное совпадение общей суммы ставок с расчетной "Суммой цикла".
-    
-    Args:
-        bot_id: ID бота
-        min_bet: Минимальная ставка
-        max_bet: Максимальная ставка  
-        cycle_games: Общее количество игр в цикле
-        total_wins: Количество побед в цикле
-        total_losses: Количество поражений в цикле
-        win_amount_total: Общая сумма выигрышных ставок
-        loss_amount_total: Общая сумма проигрышных ставок
-        
-    Returns:
-        List[Dict]: Список ставок с результатами и суммами
     """
     try:
-        logger.info(f"🎯 Bot {bot_id}: generating {cycle_games} bets with EXACT sum matching")
-        
-        # Целевая общая сумма (точная)
-        target_total_sum = win_amount_total + loss_amount_total
-        logger.info(f"🎯 Bot {bot_id}: target_total_sum={target_total_sum} (wins: {win_amount_total}, losses: {loss_amount_total})")
+        # Используем точную целевую сумму если передана
+        if exact_total:
+            target_total_sum = exact_total
+            # Пересчитываем win/loss суммы пропорционально
+            win_ratio = win_amount_total / (win_amount_total + loss_amount_total) if (win_amount_total + loss_amount_total) > 0 else 0.55
+            loss_ratio = 1.0 - win_ratio
+            
+            win_amount_total = target_total_sum * win_ratio
+            loss_amount_total = target_total_sum * loss_ratio
+        else:
+            target_total_sum = win_amount_total + loss_amount_total
+            
+        logger.info(f"🎯 Bot {bot_id}: EXACT target_total_sum={target_total_sum} (wins: {win_amount_total:.1f}, losses: {loss_amount_total:.1f})")
         
         all_bets = []
         
@@ -16906,12 +16902,9 @@ async def generate_cycle_bets_uniform_distribution(
             win_base_amounts = [base_amounts[i] for i in win_indices]
             
             # Нормализуем выигрышные суммы к точной целевой сумме
-            current_sum = sum(win_base_amounts)
-            if current_sum > 0:
-                # Пропорциональное масштабирование + коррекция для точности
-                win_amounts = normalize_amounts_to_exact_sum(
-                    win_base_amounts, win_amount_total, min_bet, max_bet
-                )
+            win_amounts = normalize_amounts_to_exact_sum(
+                win_base_amounts, win_amount_total, min_bet, max_bet
+            )
         
         if total_losses > 0:
             # Берем оставшиеся суммы для проигрышных ставок
@@ -16930,11 +16923,26 @@ async def generate_cycle_bets_uniform_distribution(
                 loss_base_amounts, loss_amount_total, min_bet, max_bet
             )
         
-        # ШАГ 3: Перемешиваем суммы для дополнительной случайности
+        # ШАГ 3: ФИНАЛЬНАЯ коррекция для точного попадания в exact_total
+        all_amounts = win_amounts + loss_amounts
+        current_total = sum(all_amounts)
+        
+        if exact_total and abs(current_total - exact_total) > 0:
+            logger.info(f"🔧 Bot {bot_id}: Final adjustment needed: current={current_total}, target={exact_total}")
+            # Применяем финальную коррекцию ко всем ставкам
+            final_amounts = normalize_amounts_to_exact_sum(
+                all_amounts, exact_total, min_bet, max_bet
+            )
+            
+            # Разделяем обратно на win/loss
+            win_amounts = final_amounts[:total_wins]
+            loss_amounts = final_amounts[total_wins:total_wins + total_losses]
+        
+        # ШАГ 4: Перемешиваем суммы для дополнительной случайности
         random.shuffle(win_amounts)
         random.shuffle(loss_amounts)
         
-        # ШАГ 4: Создаем финальный список ставок
+        # ШАГ 5: Создаем финальный список ставок
         win_index = 0
         loss_index = 0
         
@@ -16948,7 +16956,7 @@ async def generate_cycle_bets_uniform_distribution(
             else:
                 # Fallback - используем среднюю ставку
                 average_bet = (min_bet + max_bet) / 2
-                bet_amount = math.ceil(average_bet)
+                bet_amount = round(average_bet)
             
             all_bets.append({
                 "result": result,
@@ -16956,15 +16964,23 @@ async def generate_cycle_bets_uniform_distribution(
                 "index": i
             })
         
-        # ПРОВЕРКА ТОЧНОСТИ: Проверяем что общая сумма соответствует целевой
+        # ФИНАЛЬНАЯ ПРОВЕРКА: Проверяем что общая сумма соответствует целевой
         actual_total = sum(bet["amount"] for bet in all_bets)
         actual_win_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "win")
         actual_loss_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "loss")
         
-        logger.info(f"🎯 Bot {bot_id}: generated {len(all_bets)} bets")
-        logger.info(f"    Target total: {target_total_sum}, Actual total: {actual_total} (diff: {actual_total - target_total_sum})")
-        logger.info(f"    Win sums: target={win_amount_total}, actual={actual_win_sum}")
-        logger.info(f"    Loss sums: target={loss_amount_total}, actual={actual_loss_sum}")
+        logger.info(f"🎯 Bot {bot_id}: FINAL RESULT - {len(all_bets)} bets generated")
+        logger.info(f"    Target total: {target_total_sum}, Actual total: {actual_total}")
+        logger.info(f"    Difference: {actual_total - target_total_sum} (SHOULD BE 0)")
+        logger.info(f"    Win: target={win_amount_total:.1f}, actual={actual_win_sum}")
+        logger.info(f"    Loss: target={loss_amount_total:.1f}, actual={actual_loss_sum}")
+        
+        if exact_total and actual_total == exact_total:
+            logger.info(f"    ✅ PERFECT MATCH! Exact sum achieved!")
+        elif abs(actual_total - (exact_total or target_total_sum)) <= 1:
+            logger.info(f"    ✅ Very close match (diff ≤ 1)")
+        else:
+            logger.warning(f"    ❌ Sum mismatch exceeds tolerance")
         
         return all_bets
         
