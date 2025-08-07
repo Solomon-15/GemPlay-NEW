@@ -274,11 +274,21 @@ def wait_for_bot_bets(admin_token: str, bot_name: str = None) -> bool:
     if success and response_data:
         games = response_data if isinstance(response_data, list) else response_data.get("games", [])
         
+        print(f"{Colors.BLUE}   Found {len(games)} total games{Colors.END}")
+        
         # Look for games created by any regular bot
         bot_games = []
         for game in games:
-            if game.get("creator_type") == "bot" or game.get("is_regular_bot_game"):
+            is_regular_bot = (
+                game.get("is_regular_bot") == True or 
+                game.get("is_regular_bot_game") == True or
+                game.get("bot_type") == "REGULAR" or
+                (game.get("is_bot") == True and game.get("is_human_bot") == False)
+            )
+            
+            if is_regular_bot:
                 bot_games.append(game)
+                print(f"{Colors.BLUE}   Regular bot game: {game.get('id')} - ${game.get('bet_amount')}{Colors.END}")
         
         if bot_games:
             record_test(
@@ -291,7 +301,7 @@ def wait_for_bot_bets(admin_token: str, bot_name: str = None) -> bool:
     record_test(
         "Bot creates bets automatically",
         False,
-        f"No regular bot games found"
+        f"No regular bot games found. Total games: {len(games) if games else 0}"
     )
     return False
 
