@@ -17035,104 +17035,71 @@ async def generate_cycle_bets_uniform_distribution(
 
 def normalize_amounts_to_exact_sum(base_amounts: List[float], target_sum: float, min_bet: float, max_bet: float) -> List[int]:
     """
-    УПРОЩЕННОЕ РЕШЕНИЕ: Нормализует список базовых сумм к ТОЧНОЙ целевой сумме.
-    Использует простой и надежный алгоритм для гарантированного попадания в цель.
+    ПРОСТОЙ И НАДЕЖНЫЙ алгоритм нормализации массива к точной сумме.
+    Использует итеративное распределение разности с учетом ограничений.
     """
     if not base_amounts or target_sum <= 0:
         return []
     
-    target_sum = int(round(target_sum))  # Обеспечиваем целочисленную сумму
+    target_sum = int(round(target_sum))
     min_bet = int(min_bet)
     max_bet = int(max_bet)
     
-    # Шаг 1: Пропорциональное масштабирование и округление
+    # Шаг 1: Пропорциональное масштабирование
     current_sum = sum(base_amounts)
     if current_sum <= 0:
-        # Если сумма базовых ставок 0, распределяем равномерно
+        # Равномерное распределение если базовая сумма 0
         avg_amount = target_sum / len(base_amounts)
         return [max(min_bet, min(max_bet, round(avg_amount)))] * len(base_amounts)
     
+    # Масштабируем пропорционально
     scale_factor = target_sum / current_sum
-    scaled_amounts = [amount * scale_factor for amount in base_amounts]
-    rounded_amounts = [max(min_bet, min(max_bet, round(amount))) for amount in scaled_amounts]
+    scaled_amounts = [max(min_bet, min(max_bet, round(amount * scale_factor))) for amount in base_amounts]
     
-    # Шаг 2: Простая коррекция для точного попадания
-    current_rounded_sum = sum(rounded_amounts)
-    difference = target_sum - current_rounded_sum
+    # Шаг 2: Итеративная корректировка разности
+    current_scaled_sum = sum(scaled_amounts)
+    difference = target_sum - current_scaled_sum
     
-    logger.info(f"🔧 normalize: target={target_sum}, current={current_rounded_sum}, diff={difference}")
+    logger.info(f"🔧 normalize: target={target_sum}, scaled_sum={current_scaled_sum}, diff={difference}")
     
-    if difference == 0:
-        return rounded_amounts  # Уже точно
+    # Шаг 3: Корректируем разность по 1 единице за раз
+    attempts = 0
+    max_attempts = abs(difference) * 2  # Предотвращаем бесконечные циклы
     
-    # Шаг 3: Корректируем разность простым способом
-    # Создаем список индексов для корректировки, отсортированный по приоритету
-    indices_with_room = []
-    
-    if difference > 0:  # Нужно увеличить сумму
-        for i, amount in enumerate(rounded_amounts):
-            if amount < max_bet:
-                # Вычисляем максимальную возможную добавку
-                max_add = max_bet - amount
-                indices_with_room.append((i, max_add))
-        # Сортируем по убыванию возможной добавки
-        indices_with_room.sort(key=lambda x: x[1], reverse=True)
-    else:  # Нужно уменьшить сумму
-        for i, amount in enumerate(rounded_amounts):
-            if amount > min_bet:
-                # Вычисляем максимальную возможную убавку  
-                max_sub = amount - min_bet
-                indices_with_room.append((i, max_sub))
-        # Сортируем по убыванию возможной убавки
-        indices_with_room.sort(key=lambda x: x[1], reverse=True)
-    
-    # Шаг 4: Применяем корректировку
-    remaining_diff = abs(difference)
-    
-    for idx, max_change in indices_with_room:
-        if remaining_diff == 0:
+    while difference != 0 and attempts < max_attempts:
+        # Найдем индексы элементов, которые можно изменять
+        adjustable_indices = []
+        
+        for i, amount in enumerate(scaled_amounts):
+            if difference > 0 and amount < max_bet:  # Можно увеличить
+                adjustable_indices.append(i)
+            elif difference < 0 and amount > min_bet:  # Можно уменьшить
+                adjustable_indices.append(i)
+        
+        if not adjustable_indices:
+            logger.warning(f"normalize: No adjustable indices, diff={difference}, breaking")
             break
-            
-        # Вычисляем, сколько можем изменить на этой позиции
-        change = min(remaining_diff, max_change)
+        
+        # Случайно выбираем индекс для корректировки
+        idx = random.choice(adjustable_indices)
         
         if difference > 0:
-            rounded_amounts[idx] += change
+            scaled_amounts[idx] += 1
+            difference -= 1
         else:
-            rounded_amounts[idx] -= change
-            
-        remaining_diff -= change
+            scaled_amounts[idx] -= 1
+            difference += 1
+        
+        attempts += 1
     
-    # Финальная проверка
-    final_sum = sum(rounded_amounts)
+    final_sum = sum(scaled_amounts)
     
     if final_sum == target_sum:
         logger.info(f"✅ normalize: PERFECT MATCH! Final sum = {final_sum}")
-        return rounded_amounts
     else:
-        # Если все еще есть разность, применяем принудительную корректировку
-        final_diff = target_sum - final_sum
-        logger.warning(f"🔧 normalize: Still need to adjust by {final_diff}")
-        
-        # Принудительно корректируем первую доступную ставку
-        for i in range(len(rounded_amounts)):
-            current = rounded_amounts[i]
-            if final_diff > 0 and current < max_bet:
-                add_amount = min(final_diff, max_bet - current)
-                rounded_amounts[i] += add_amount
-                final_diff -= add_amount
-            elif final_diff < 0 and current > min_bet:
-                sub_amount = min(abs(final_diff), current - min_bet)
-                rounded_amounts[i] -= sub_amount
-                final_diff += sub_amount
-                
-            if final_diff == 0:
-                break
-        
-        final_sum = sum(rounded_amounts)
-        logger.info(f"✅ normalize: Final adjustment complete. Sum = {final_sum} (target = {target_sum})")
-        
-        return rounded_amounts
+        logger.warning(f"❌ normalize: Imperfect match: target={target_sum}, actual={final_sum}, diff={final_sum - target_sum}")
+    
+    return scaled_amounts
 
 async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
                                 win_percentage: int, min_bet: float, avg_bet: float, bet_distribution: str = "medium",
