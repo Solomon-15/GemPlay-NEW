@@ -1268,28 +1268,53 @@ class HumanBotBehavior:
             return random.randint(min_delay, max_delay)
 
 def generate_uniform_bet_amounts(min_bet: float, max_bet: float, count: int) -> List[float]:
-    """Generate uniform bet amounts across the range 1-50 for better distribution."""
+    """
+    Генерирует равномерно распределенные ставки по всему диапазону 1-50.
+    Гарантирует присутствие как малых (1-10), так и больших (40-50) ставок.
+    """
     if count <= 0:
         return []
     
-    # Create a uniform distribution across the range
     amounts = []
-    if count == 1:
-        # Single bet - use middle of range
-        amounts.append((min_bet + max_bet) / 2)
-    else:
-        # Multiple bets - distribute evenly across range
-        step = (max_bet - min_bet) / (count - 1)
-        for i in range(count):
-            amount = min_bet + (step * i)
-            # Add small random variation (±10%) to avoid exact patterns
-            variation = random.uniform(0.9, 1.1)
-            amount = amount * variation
-            # Ensure within bounds
-            amount = max(min_bet, min(max_bet, amount))
-            amounts.append(math.ceil(amount))
     
-    return amounts
+    if count == 1:
+        # Одна ставка - используем случайное значение из диапазона
+        amounts.append(random.uniform(min_bet, max_bet))
+    elif count == 2:
+        # Две ставки - одну малую, одну большую
+        amounts.append(random.uniform(min_bet, min_bet + (max_bet - min_bet) * 0.3))  # 1-16
+        amounts.append(random.uniform(min_bet + (max_bet - min_bet) * 0.7, max_bet))  # 35-50
+    else:
+        # Для 3+ ставок обеспечиваем покрытие всего диапазона
+        
+        # 1. Обязательно добавляем малые ставки (1-15)
+        small_count = max(1, count // 4)  # 25% ставок - малые
+        for _ in range(small_count):
+            amounts.append(random.uniform(min_bet, min_bet + (max_bet - min_bet) * 0.3))
+        
+        # 2. Обязательно добавляем большие ставки (35-50) 
+        large_count = max(1, count // 4)  # 25% ставок - большие
+        for _ in range(large_count):
+            amounts.append(random.uniform(min_bet + (max_bet - min_bet) * 0.7, max_bet))
+        
+        # 3. Оставшиеся ставки равномерно распределяем по всему диапазону
+        remaining_count = count - small_count - large_count
+        for i in range(remaining_count):
+            # Равномерное распределение по всему диапазону
+            amounts.append(random.uniform(min_bet, max_bet))
+    
+    # Применяем небольшие вариации и округляем
+    final_amounts = []
+    for amount in amounts:
+        # Добавляем небольшую случайную вариацию (±5%)
+        variation = random.uniform(0.95, 1.05)
+        amount = amount * variation
+        # Обеспечиваем границы и округляем вверх
+        amount = max(min_bet, min(max_bet, amount))
+        final_amounts.append(math.ceil(amount))
+    
+    logger.info(f"🎯 Generated uniform bets: {sorted(final_amounts)} (range: {min_bet}-{max_bet}, count: {count})")
+    return final_amounts
 
 async def generate_unique_bot_name() -> str:
     """Generate unique bot name in format Bot#1, Bot#2, etc."""
