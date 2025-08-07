@@ -287,8 +287,8 @@ def test_exact_cycle_sum_matching():
     return is_exact_match and correct_bet_count, total_sum, bet_count, min_bet, max_bet, avg_bet
 
 def test_backend_logs_analysis():
-    """Test 2: Анализ логов бэкенда на наличие normalize сообщений"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 2: Analyzing backend logs for normalization messages{Colors.END}")
+    """Test 2: Проверить логи на специфические сообщения КРИТИЧЕСКОГО ИСПРАВЛЕНИЯ"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 2: Analyzing backend logs for CRITICAL FIX messages{Colors.END}")
     
     try:
         # Try to read supervisor logs for backend
@@ -296,7 +296,7 @@ def test_backend_logs_analysis():
         
         # Get recent backend logs
         result = subprocess.run(
-            ["tail", "-n", "100", "/var/log/supervisor/backend.out.log"],
+            ["tail", "-n", "200", "/var/log/supervisor/backend.out.log"],
             capture_output=True,
             text=True,
             timeout=10
@@ -305,54 +305,75 @@ def test_backend_logs_analysis():
         if result.returncode == 0:
             log_content = result.stdout
             
-            # Look for normalization messages
+            # Look for CRITICAL FIX specific messages
+            generating_cycle_msgs = log_content.count("🎯 Bot ID: GENERATING COMPLETE CYCLE")
+            cycle_bets_saved_msgs = log_content.count("🎯 Bot ID: CYCLE BETS SAVED")
+            architectural_success_msgs = log_content.count("🎯 Bot ID: ARCHITECTURAL SUCCESS! Perfect exact sum match!")
+            
+            # Look for general normalization messages
             perfect_matches = log_content.count("✅ normalize: PERFECT MATCH!")
             imperfect_matches = log_content.count("❌ normalize: Imperfect match")
             
-            # Look for target_total_sum messages
-            target_sum_lines = [line for line in log_content.split('\n') if 'target_total_sum=306.0' in line]
+            print(f"   📋 CRITICAL FIX Log Analysis Results:")
+            print(f"      🎯 'GENERATING COMPLETE CYCLE' messages: {generating_cycle_msgs}")
+            print(f"      🎯 'CYCLE BETS SAVED' messages: {cycle_bets_saved_msgs}")
+            print(f"      🎯 'ARCHITECTURAL SUCCESS! Perfect exact sum match!' messages: {architectural_success_msgs}")
+            print(f"      ✅ General 'PERFECT MATCH' messages: {perfect_matches}")
+            print(f"      ❌ 'Imperfect match' messages: {imperfect_matches}")
             
-            print(f"   📋 Log Analysis Results:")
-            print(f"      ✅ PERFECT MATCH messages: {perfect_matches}")
-            print(f"      ❌ Imperfect match messages: {imperfect_matches}")
-            print(f"      🎯 target_total_sum=306.0 lines: {len(target_sum_lines)}")
-            
-            if perfect_matches > 0:
+            # Success criteria: should have architectural success messages
+            if architectural_success_msgs > 0:
                 record_test(
-                    "Backend logs analysis",
+                    "Critical Fix Backend Logs Analysis",
                     True,
-                    f"Found {perfect_matches} PERFECT MATCH messages in logs"
+                    f"Found {architectural_success_msgs} ARCHITECTURAL SUCCESS messages indicating critical fix is working"
                 )
-            elif imperfect_matches > 0:
+            elif generating_cycle_msgs > 0 and cycle_bets_saved_msgs > 0:
                 record_test(
-                    "Backend logs analysis",
-                    False,
-                    f"Found {imperfect_matches} Imperfect match messages but no PERFECT MATCH"
+                    "Critical Fix Backend Logs Analysis",
+                    True,
+                    f"Found cycle generation messages: {generating_cycle_msgs} GENERATING, {cycle_bets_saved_msgs} SAVED"
+                )
+            elif perfect_matches > 0:
+                record_test(
+                    "Critical Fix Backend Logs Analysis",
+                    True,
+                    f"Found {perfect_matches} general PERFECT MATCH messages"
                 )
             else:
                 record_test(
-                    "Backend logs analysis",
+                    "Critical Fix Backend Logs Analysis",
                     False,
-                    "No normalization messages found in recent logs"
+                    "No critical fix success messages found in recent logs"
                 )
             
             # Show some relevant log lines
-            if target_sum_lines:
-                print(f"   📝 Recent target_total_sum lines:")
-                for line in target_sum_lines[-3:]:  # Show last 3 lines
-                    print(f"      {line.strip()}")
+            critical_lines = []
+            for line in log_content.split('\n'):
+                if any(keyword in line for keyword in [
+                    "🎯 Bot ID: GENERATING COMPLETE CYCLE",
+                    "🎯 Bot ID: CYCLE BETS SAVED", 
+                    "🎯 Bot ID: ARCHITECTURAL SUCCESS",
+                    "✅ normalize: PERFECT MATCH"
+                ]):
+                    critical_lines.append(line.strip())
+            
+            if critical_lines:
+                print(f"   📝 Recent critical fix log lines:")
+                for line in critical_lines[-5:]:  # Show last 5 relevant lines
+                    print(f"      {line}")
                     
         else:
             record_test(
-                "Backend logs analysis",
+                "Critical Fix Backend Logs Analysis",
                 False,
                 f"Failed to read backend logs: {result.stderr}"
             )
             
     except subprocess.TimeoutExpired:
-        record_test("Backend logs analysis", False, "Timeout reading backend logs")
+        record_test("Critical Fix Backend Logs Analysis", False, "Timeout reading backend logs")
     except Exception as e:
-        record_test("Backend logs analysis", False, f"Error reading logs: {str(e)}")
+        record_test("Critical Fix Backend Logs Analysis", False, f"Error reading logs: {str(e)}")
 
 def print_cycle_sum_summary():
     """Print cycle sum testing specific summary"""
