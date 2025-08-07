@@ -15796,36 +15796,29 @@ async def create_bot_bet(bot: Bot) -> bool:
         current_wins = bot_doc.get("current_cycle_wins", 0)
         current_losses = bot_doc.get("current_cycle_losses", 0)
         
-        # Определяем тип следующей ставки (победа или поражение)
-        bet_result = None
-        if current_wins < total_wins and current_losses < total_losses:
-            # Можем выбрать любой
-            remaining_wins = total_wins - current_wins
-            remaining_losses = total_losses - current_losses
-            bet_result = "win" if random.random() < remaining_wins / (remaining_wins + remaining_losses) else "loss"
-        elif current_wins < total_wins:
-            bet_result = "win"
-        elif current_losses < total_losses:
-            bet_result = "loss"
-        else:
+        # НОВЫЙ АЛГОРИТМ: Генерируем все ставки цикла заранее для равномерного покрытия диапазона
+        all_cycle_bets = await generate_cycle_bets_uniform_distribution(
+            bot_id=bot.id,
+            min_bet=min_bet,
+            max_bet=max_bet,
+            cycle_games=cycle_games,
+            total_wins=total_wins,
+            total_losses=total_losses,
+            win_amount_total=win_amount_total,
+            loss_amount_total=loss_amount_total
+        )
+        
+        # Определяем какую ставку создать следующей
+        bet_index = current_wins + current_losses
+        if bet_index >= len(all_cycle_bets):
             logger.info(f"🎯 Bot {bot.id}: cycle completed ({current_wins} wins, {current_losses} losses)")
             return False
             
-        # Рассчитываем целевую сумму ставки
-        if bet_result == "win":
-            remaining_wins = total_wins - current_wins
-            target_amount = win_amount_total / total_wins if total_wins > 0 else average_bet
-            logger.info(f"🎯 Bot {bot.id}: creating WIN bet, target_amount={target_amount}")
-        else:
-            remaining_losses = total_losses - current_losses  
-            target_amount = loss_amount_total / total_losses if total_losses > 0 else average_bet
-            logger.info(f"🎯 Bot {bot.id}: creating LOSS bet, target_amount={target_amount}")
+        next_bet = all_cycle_bets[bet_index]
+        bet_result = next_bet["result"]
+        bet_amount = next_bet["amount"]
         
-        # Ограничиваем сумму ставки диапазоном min_bet - max_bet
-        bet_amount = max(min_bet, min(max_bet, target_amount))
-        bet_amount = math.ceil(bet_amount)  # Округляем в большую сторону
-        
-        logger.info(f"🎯 Bot {bot.id}: final bet_amount={bet_amount} (target={target_amount}, range={min_bet}-{max_bet})")
+        logger.info(f"🎯 Bot {bot.id}: creating {bet_result.upper()} bet #{bet_index+1}/{cycle_games}, amount={bet_amount}")
         
         # Создаем комбинацию гемов для bet_amount
         bet_gems = await generate_gem_combination(bet_amount)
