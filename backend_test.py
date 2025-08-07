@@ -202,22 +202,20 @@ def test_clear_cache_button():
         )
 
 def test_regular_bot_cycle_logic():
-    """Test 2: Создать тестовый Regular бот и проверить логику циклов"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 2: Testing Regular Bot Cycle Logic{Colors.END}")
+    """Test 2: Создать тестовый REGULAR БОТ с точными параметрами из русского обзора"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 2: Creating FINAL ARCHITECTURE TEST BOT{Colors.END}")
     
     # First authenticate as admin
     admin_token = authenticate_admin()
     if not admin_token:
-        record_test("Regular Bot Cycle Logic Test", False, "Failed to authenticate as admin")
+        record_test("Final Architecture Test Bot Creation", False, "Failed to authenticate as admin")
         return None
     
     headers = {"Authorization": f"Bearer {admin_token}"}
     
     # Create Regular bot with EXACT settings from Russian review
-    import time
-    timestamp = int(time.time())
     bot_data = {
-        "name": f"Russian_Review_Test_Bot_{timestamp}",
+        "name": "Final_Architecture_Test_Bot",
         "min_bet_amount": 1.0,
         "max_bet_amount": 50.0,
         "cycle_games": 12,
@@ -228,7 +226,8 @@ def test_regular_bot_cycle_logic():
         "creation_mode": "queue-based"
     }
     
-    print(f"   📝 Creating Regular bot with settings: min_bet=1.0, max_bet=50.0, cycle_games=12")
+    print(f"   📝 Creating Regular bot 'Final_Architecture_Test_Bot'")
+    print(f"   📊 Parameters: min_bet=1.0, max_bet=50.0, cycle_games=12, win_percentage=55")
     
     # Create the bot
     success, response_data, details = make_request(
@@ -240,7 +239,7 @@ def test_regular_bot_cycle_logic():
     
     if not success or not response_data:
         record_test(
-            "Regular Bot Creation",
+            "Final Architecture Test Bot Creation",
             False,
             f"Failed to create Regular bot: {details}"
         )
@@ -249,7 +248,7 @@ def test_regular_bot_cycle_logic():
     bot_id = response_data.get("bot_id")
     if not bot_id:
         record_test(
-            "Regular Bot Creation",
+            "Final Architecture Test Bot Creation",
             False,
             "Bot created but no bot_id returned"
         )
@@ -257,9 +256,9 @@ def test_regular_bot_cycle_logic():
     
     print(f"   ✅ Regular bot created successfully with ID: {bot_id}")
     
-    # Wait for bot to create bets
-    print(f"   ⏳ Waiting 20 seconds for bot to create cycle bets...")
-    time.sleep(20)
+    # Wait 25 seconds as specified in Russian review
+    print(f"   ⏳ Waiting 25 seconds for complete cycle creation (as per Russian review)...")
+    time.sleep(25)
     
     # Get ALL active games for this specific bot
     success, games_data, details = make_request(
@@ -284,20 +283,20 @@ def test_regular_bot_cycle_logic():
         bot_games = [game for game in games_data["games"] if game.get("bot_id") == bot_id]
     
     bet_count = len(bot_games)
-    print(f"   📊 Found {bet_count} active games for the test bot")
+    print(f"   📊 Found {bet_count} active games for Final_Architecture_Test_Bot")
     
     # Check if bot creates EXACTLY 12 active bets
     correct_bet_count = bet_count == 12
     
     if correct_bet_count:
         record_test(
-            "Regular Bot Cycle Logic - Bet Count",
+            "Final Architecture Test Bot - Bet Count",
             True,
             f"Bot created exactly 12 active bets as expected (cycle_games=12)"
         )
     else:
         record_test(
-            "Regular Bot Cycle Logic - Bet Count",
+            "Final Architecture Test Bot - Bet Count",
             False,
             f"Bot created {bet_count} bets instead of 12 (cycle_games limit violation)"
         )
