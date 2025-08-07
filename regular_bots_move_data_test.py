@@ -172,7 +172,7 @@ def create_test_user() -> Optional[str]:
     test_email = f"testuser_{timestamp}@example.com"
     
     user_data = {
-        "username": f"TestUser_{timestamp}",
+        "username": f"Test{timestamp % 10000}",  # Keep username under 15 chars
         "email": test_email,
         "password": TEST_USER["password"],
         "gender": "male"
