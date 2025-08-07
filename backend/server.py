@@ -6498,7 +6498,15 @@ async def choose_move_for_active_game(
         
         # Проверяем если создатель игры - обычный бот
         creator_move_to_set = None
-        creator_is_regular_bot = game_obj.creator_type == "bot"
+        creator_is_regular_bot = False
+        
+        if game_obj.creator_type == "bot":
+            # Проверяем если это именно обычный бот, а не Human-bot
+            creator_regular_bot = await db.bots.find_one({"id": game_obj.creator_id})
+            if creator_regular_bot and creator_regular_bot.get("bot_type") == "REGULAR":
+                creator_is_regular_bot = True
+                logger.info(f"🤖 Regular bot game detected: {game_obj.creator_id}")
+        
         if creator_is_regular_bot:
             # Для обычных ботов извлекаем ход из метаданных
             if game_obj.metadata and "initial_move" in game_obj.metadata:
@@ -6520,6 +6528,9 @@ async def choose_move_for_active_game(
         # Добавляем ход создателя если это обычный бот
         if creator_move_to_set:
             update_data["creator_move"] = creator_move_to_set
+            logger.info(f"🤖 Final update data includes creator_move: {creator_move_to_set}")
+        else:
+            logger.warning(f"🤖 No creator_move set for game {game_id}")
             
         await db.games.update_one(
             {"id": game_id},
