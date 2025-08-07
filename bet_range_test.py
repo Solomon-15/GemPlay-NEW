@@ -41,7 +41,8 @@ ADMIN_USER = {
 }
 
 # Test configuration
-TEST_BOT_NAME = "Final_Fix_Test_Bot"
+import time as time_module
+TEST_BOT_NAME = f"Final_Fix_Test_Bot_{int(time_module.time())}"
 MIN_BET_AMOUNT = 20.0
 MAX_BET_AMOUNT = 30.0
 WIN_PERCENTAGE = 55
