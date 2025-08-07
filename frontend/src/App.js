@@ -44,19 +44,15 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('🔍 LOGIN: Form submitted', { email: formData.email, isLogin });
     setLoading(true);
 
     try {
       if (isLogin) {
         // Login
-        console.log('🔍 LOGIN: Making API call to:', `${API}/auth/login`);
         const response = await axios.post(`${API}/auth/login`, {
           email: formData.email,
           password: formData.password
         });
-        
-        console.log('🔍 LOGIN: Response received:', response.data);
         
         localStorage.setItem('token', response.data.access_token);
         if (response.data.refresh_token) {
