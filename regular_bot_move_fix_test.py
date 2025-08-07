@@ -47,10 +47,10 @@ ADMIN_USER = {
     "password": "Admin123!"
 }
 
-# Test user for joining games
+# Test user for joining games - use admin as test user since it's verified
 TEST_USER = {
-    "email": "testuser@example.com",
-    "password": "TestPassword123!"
+    "email": "admin@gemplay.com",
+    "password": "Admin123!"
 }
 
 # Test results tracking
