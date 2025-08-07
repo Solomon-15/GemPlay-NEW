@@ -766,10 +766,7 @@ def main():
             print(f"{Colors.RED}❌ Could not join bot game{Colors.END}")
             return
         
-        # Step 5: Choose move (this might be handled in join)
-        choose_move_in_game(user_token, game_id)
-        
-        # Step 6: Verify game completion
+        # Step 5: Verify game completion (skip separate move choosing as it's done in join)
         verify_game_completion(admin_token, game_id)
         
         # Step 7: Test multiple scenarios
