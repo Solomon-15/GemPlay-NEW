@@ -304,11 +304,11 @@ def test_regular_bot_cycle_logic():
     return bot_id, bot_games
 
 def test_exact_cycle_sum_matching(bot_id=None, bot_games=None):
-    """Test 3: Проверить точное совпадение суммы цикла (306.0)"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 3: Testing Exact Cycle Sum Matching (306.0){Colors.END}")
+    """Test 3: КРИТИЧЕСКАЯ ПРОВЕРКА - Сумма ДОЛЖНА быть ТОЧНО 306.0"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 3: CRITICAL - Exact Cycle Sum Must Equal 306.0{Colors.END}")
     
     if not bot_id or not bot_games:
-        record_test("Exact Cycle Sum Test", False, "No bot data available from previous test")
+        record_test("CRITICAL Exact Cycle Sum Test", False, "No bot data available from previous test")
         return
     
     # Calculate EXACT sum of ALL bet_amount values
@@ -319,35 +319,52 @@ def test_exact_cycle_sum_matching(bot_id=None, bot_games=None):
     max_bet = max(bet_amounts) if bet_amounts else 0
     avg_bet = total_sum / bet_count if bet_count > 0 else 0
     
-    print(f"   📊 CYCLE SUM ANALYSIS:")
+    print(f"   📊 FINAL ARCHITECTURE TEST RESULTS:")
     print(f"      Количество ставок: {bet_count}")
     print(f"      Минимальная ставка: ${min_bet:.1f}")
     print(f"      Максимальная ставка: ${max_bet:.1f}")
     print(f"      Средняя ставка: ${avg_bet:.1f}")
-    print(f"      ФАКТИЧЕСКАЯ СУММА: ${total_sum:.1f}")
-    print(f"      ОЖИДАЕМАЯ СУММА: $306.0")
-    print(f"      Расчет: (1+50)/2 * 12 = 25.5 * 12 = 306.0")
+    print(f"      🎯 ФАКТИЧЕСКАЯ СУММА: ${total_sum:.1f}")
+    print(f"      🎯 ОЖИДАЕМАЯ СУММА: $306.0")
+    print(f"      📐 Расчет: (1+50)/2 * 12 = 25.5 * 12 = 306.0")
     
     # Check if sum is EXACTLY equal to 306.0
     expected_sum = 306.0
     is_exact_match = abs(total_sum - expected_sum) < 0.01  # Allow for floating point precision
     difference = total_sum - expected_sum
     
-    if is_exact_match:
+    # Check bet diversity - should have DIFFERENT amounts, not all the same
+    unique_amounts = len(set(bet_amounts))
+    has_diversity = unique_amounts > 1
+    
+    print(f"   🔍 BET DIVERSITY CHECK:")
+    print(f"      Уникальных сумм ставок: {unique_amounts} из {bet_count}")
+    print(f"      Individual bet amounts: {sorted(bet_amounts)}")
+    
+    if is_exact_match and has_diversity:
         record_test(
-            "Exact Cycle Sum Matching",
+            "CRITICAL Exact Cycle Sum Test",
             True,
-            f"✅ PERFECT MATCH! Total sum = {total_sum:.1f} = 306.0 (diff: {difference:+.1f})"
+            f"✅ ARCHITECTURAL SUCCESS! Perfect exact sum match: {total_sum:.1f} = 306.0, {unique_amounts} different bet amounts"
+        )
+    elif is_exact_match and not has_diversity:
+        record_test(
+            "CRITICAL Exact Cycle Sum Test",
+            False,
+            f"⚠️ Sum correct ({total_sum:.1f}) but no bet diversity - all bets same amount"
+        )
+    elif not is_exact_match and has_diversity:
+        record_test(
+            "CRITICAL Exact Cycle Sum Test",
+            False,
+            f"🚨 ARCHITECTURAL FAILURE! Sum mismatch: Got ${total_sum:.1f} instead of $306.0 (diff: {difference:+.1f})"
         )
     else:
         record_test(
-            "Exact Cycle Sum Matching",
+            "CRITICAL Exact Cycle Sum Test",
             False,
-            f"🚨 SUM MISMATCH! Got ${total_sum:.1f} instead of $306.0 (diff: {difference:+.1f})"
+            f"🚨 DOUBLE FAILURE! Wrong sum (${total_sum:.1f}) AND no bet diversity"
         )
-    
-    # Show individual bet amounts for debugging
-    print(f"   🔍 Individual bet amounts: {sorted(bet_amounts)}")
     
     return is_exact_match, total_sum
 
