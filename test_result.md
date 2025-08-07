@@ -194,6 +194,18 @@ frontend:
         agent: "main_agent"
         comment: "PERFORMANCE OPTIMIZATION COMPLETED: Successfully eliminated console log duplication issues that were causing performance problems. MAJOR IMPROVEMENTS: ✅ App.js - Removed duplicate auth check logs (🔍 Checking auth status, 📡 Making request, ✅ Auth check successful, 🚀 handleLogin, 🔓 Opening admin panel, 🔐 Attempting login, 🎉 Login successful, 💾 Token saved, 🔄 Forcing page reload) ✅ PlayerCard.js - Removed all debug logs from getTotalBetAmount function (🎮 PlayerCard Debug, bet_gems total, using bet_amount, returning 0) and commented render logs ✅ SoundManager.js - Cleaned up audio initialization logs (Loaded sounds from API, No auth token, Non-admin user, Critical sounds preloaded, 🔊 Audio context activated, 🔊 AudioContext successfully initialized, Fallback sounds created) ✅ AdminPanel.js - Removed access control and API request logs (🔍 AdminPanel: Checking user access, 🔍 AdminPanel: Token in localStorage, ❌ AdminPanel: Access denied, ✅ AdminPanel: Access granted, 🔍 AdminPanel: Fetching dashboard stats, ✅ AdminPanel: Dashboard stats responses, 🔒 AdminPanel: Token expired). CONSOLE CLEANUP IMPACT: Previously console showed extensive duplication with auth checks running twice, PlayerCard debug logs repeated for every card render, SoundManager logs appearing multiple times during initialization, AdminPanel logs cluttering output during dashboard operations. Now console output is clean and performance-optimized. All functionality preserved while eliminating verbose logging that was causing browser performance degradation."
 
+  - task: "Exact Cycle Sum Matching Fix"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py" 
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main_agent"
+        comment: "УПРОСТИЛ ЛОГИКУ NORMALIZE_AMOUNTS_TO_EXACT_SUM: Заменил сложную итеративную логику на простой и надежный алгоритм. КЛЮЧЕВЫЕ ИЗМЕНЕНИЯ: ✅ Убрал сложный цикл с max_iterations=100 ✅ Добавил приоритетную сортировку позиций для корректировки ✅ Добавил принудительную финальную корректировку ✅ Улучшил логирование для отладки ✅ Упростил обработку edge cases. ОЖИДАЕМЫЙ РЕЗУЛЬТАТ: Теперь функция должна гарантированно достигать точной суммы (например, 306) вместо неточных значений (305, 281, 325). Требуется протестировать создание нового Regular бота и проверить точность суммы ставок."
+
 backend:
   - task: "Login Endpoint Authentication Testing - Russian Review"
     implemented: true
