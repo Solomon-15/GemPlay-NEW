@@ -15575,6 +15575,44 @@ async def create_regular_bots(
             detail=f"Failed to create regular bot: {str(e)}"
         )
 
+@api_router.delete("/admin/bots/clear-regular", response_model=dict)
+async def clear_regular_bots(
+    current_user: User = Depends(get_current_admin)
+):
+    """Удалить всех обычных ботов (admin only)."""
+    try:
+        # Удалить все ставки обычных ботов
+        regular_bots = await db.bots.find({"bot_type": "REGULAR"}).to_list(None)
+        bot_ids = [bot["id"] for bot in regular_bots]
+        
+        if bot_ids:
+            # Удалить все связанные игры
+            await db.games.delete_many({"creator_id": {"$in": bot_ids}})
+            logger.info(f"Удалены игры для {len(bot_ids)} обычных ботов")
+            
+            # Удалить самих ботов  
+            result = await db.bots.delete_many({"bot_type": "REGULAR"})
+            logger.info(f"Удалено {result.deleted_count} обычных ботов")
+            
+            return {
+                "success": True,
+                "deleted_bots": result.deleted_count,
+                "message": f"Удалено {result.deleted_count} обычных ботов и их игры"
+            }
+        else:
+            return {
+                "success": True,
+                "deleted_bots": 0,
+                "message": "Обычные боты не найдены"
+            }
+            
+    except Exception as e:
+        logger.error(f"Error clearing regular bots: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to clear regular bots: {str(e)}"
+        )
+
 @api_router.get("/admin/bots/cycle-statistics", response_model=List[dict])
 async def get_bots_cycle_statistics(current_user: User = Depends(get_current_admin)):
     """
