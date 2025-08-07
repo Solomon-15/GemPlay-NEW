@@ -206,7 +206,7 @@ def test_exact_cycle_sum_matching():
     print(f"   ⏳ Waiting 25 seconds for COMPLETE cycle creation (all 12 bets)...")
     time.sleep(25)
     
-    # Get all active games for this bot
+    # Get ALL active games for this specific bot
     success, games_data, details = make_request(
         "GET",
         "/bots/active-games",
@@ -215,7 +215,7 @@ def test_exact_cycle_sum_matching():
     
     if not success or not games_data:
         record_test(
-            "Exact cycle sum matching",
+            "Critical Fix Test Bot - Active Games Retrieval",
             False,
             f"Failed to get active games: {details}"
         )
@@ -230,13 +230,15 @@ def test_exact_cycle_sum_matching():
     
     if not bot_games:
         record_test(
-            "Exact cycle sum matching",
+            "Critical Fix Test Bot - Active Games Retrieval",
             False,
             f"No active games found for bot {bot_id}. Total games found: {len(games_data) if isinstance(games_data, list) else 'unknown'}"
         )
         return
     
-    # Calculate sum of all bet amounts
+    print(f"   ✅ Found {len(bot_games)} active games for Critical_Fix_Test_Bot")
+    
+    # Calculate EXACT sum of ALL bet_amount values
     bet_amounts = [float(game.get("bet_amount", 0)) for game in bot_games]
     total_sum = sum(bet_amounts)
     bet_count = len(bet_amounts)
@@ -244,36 +246,45 @@ def test_exact_cycle_sum_matching():
     max_bet = max(bet_amounts) if bet_amounts else 0
     avg_bet = total_sum / bet_count if bet_count > 0 else 0
     
-    print(f"   📊 Bet Analysis:")
-    print(f"      Количество ставок: {bet_count}")
+    print(f"   📊 CRITICAL FIX ANALYSIS:")
+    print(f"      Количество ставок: {bet_count} (должно быть 12)")
     print(f"      Минимальная ставка: ${min_bet:.1f}")
     print(f"      Максимальная ставка: ${max_bet:.1f}")
     print(f"      Средняя ставка: ${avg_bet:.1f}")
-    print(f"      Общая сумма: ${total_sum:.1f}")
-    print(f"      Ожидаемая сумма: $306.0")
+    print(f"      ТОЧНАЯ СУММА: ${total_sum:.1f}")
+    print(f"      ОЖИДАЕМАЯ СУММА: $306.0")
     
-    # Check if sum is exactly 306.0
+    # Check if sum is STRICTLY equal to 306.0
     expected_sum = 306.0
     is_exact_match = abs(total_sum - expected_sum) < 0.01  # Allow for floating point precision
     
-    if is_exact_match:
+    # Check bet count
+    correct_bet_count = bet_count == 12
+    
+    if is_exact_match and correct_bet_count:
         record_test(
-            "Exact cycle sum matching",
+            "Critical Fix Test Bot - Exact Sum Verification",
             True,
-            f"✅ PERFECT MATCH! Sum is exactly {total_sum:.1f} (expected: {expected_sum:.1f}). Bets: {bet_count}, Range: ${min_bet:.1f}-${max_bet:.1f}, Avg: ${avg_bet:.1f}"
+            f"🎯 ARCHITECTURAL SUCCESS! Perfect exact sum match: {total_sum:.1f} = 306.0. Bets: {bet_count}/12, Range: ${min_bet:.1f}-${max_bet:.1f}"
         )
     else:
         difference = total_sum - expected_sum
+        issues = []
+        if not is_exact_match:
+            issues.append(f"Sum mismatch: {total_sum:.1f} ≠ 306.0 (diff: {difference:+.1f})")
+        if not correct_bet_count:
+            issues.append(f"Bet count wrong: {bet_count} ≠ 12")
+        
         record_test(
-            "Exact cycle sum matching",
+            "Critical Fix Test Bot - Exact Sum Verification",
             False,
-            f"❌ IMPERFECT MATCH! Sum is {total_sum:.1f} instead of {expected_sum:.1f} (difference: {difference:+.1f}). Bets: {bet_count}, Range: ${min_bet:.1f}-${max_bet:.1f}"
+            f"🚨 CRITICAL FAILURE! {'; '.join(issues)}. Expected values: 110, 288, 229, 377, 289, 227, 333, 315 indicate fix failure."
         )
     
     # Show individual bet amounts for debugging
     print(f"   🔍 Individual bet amounts: {sorted(bet_amounts)}")
     
-    return is_exact_match, total_sum, bet_count, min_bet, max_bet, avg_bet
+    return is_exact_match and correct_bet_count, total_sum, bet_count, min_bet, max_bet, avg_bet
 
 def test_backend_logs_analysis():
     """Test 2: Анализ логов бэкенда на наличие normalize сообщений"""
