@@ -468,15 +468,18 @@ def print_cycle_sum_summary():
         print(f"   ✅ Система готова к продакшену")
 
 def main():
-    """Main test execution for exact cycle sum matching"""
-    print_header("EXACT CYCLE SUM MATCHING FIX TESTING")
-    print(f"{Colors.BLUE}🎯 Testing exact cycle sum matching for Regular bots{Colors.END}")
+    """Main test execution for CRITICAL FIX - exact cycle sum matching"""
+    print_header("CRITICAL FIX - EXACT CYCLE SUM MATCHING TESTING")
+    print(f"{Colors.BLUE}🎯 Testing КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ цикла ставок для Regular ботов{Colors.END}")
     print(f"{Colors.BLUE}🌐 Backend URL: {BASE_URL}{Colors.END}")
-    print(f"{Colors.BLUE}📋 Focus: Regular bot creation, cycle sum = 306.0, normalization logs{Colors.END}")
+    print(f"{Colors.BLUE}📋 Focus: Regular bot 'Critical_Fix_Test_Bot', cycle sum = 306.0, architectural logs{Colors.END}")
     print(f"{Colors.BLUE}🎲 Expected: (1+50)/2*12 = 25.5*12 = 306.0{Colors.END}")
+    print(f"{Colors.BLUE}🚨 КРИТИЧЕСКОЕ ТРЕБОВАНИЕ: Сумма должна быть СТРОГО равна 306.0{Colors.END}")
+    print(f"{Colors.BLUE}❌ Если получается другое значение (110, 288, 229, 377, 289, 227, 333, 315), исправление провалилось{Colors.END}")
+    print(f"{Colors.BLUE}🔥 Это последняя попытка исправить архитектурную проблему создания ставок по циклам{Colors.END}")
     
     try:
-        # Run exact cycle sum matching tests
+        # Run CRITICAL FIX tests
         test_exact_cycle_sum_matching()
         test_backend_logs_analysis()
         
