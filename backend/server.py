@@ -6498,7 +6498,7 @@ async def choose_move_for_active_game(
             )
         
         # Проверяем если создатель игры - обычный бот
-        creator_move_to_set = None
+        # Для обычных ботов creator_move уже должен быть установлен при создании игры
         creator_is_regular_bot = False
         
         if game_obj.creator_type == "bot":
@@ -6507,18 +6507,17 @@ async def choose_move_for_active_game(
             if creator_regular_bot and creator_regular_bot.get("bot_type") == "REGULAR":
                 creator_is_regular_bot = True
                 logger.info(f"🤖 Regular bot game detected: {game_obj.creator_id}")
+                
+                # Проверяем что ход уже установлен
+                if not game_obj.creator_move:
+                    # Генерируем случайный ход как fallback
+                    creator_move_to_set = random.choice(["rock", "paper", "scissors"])
+                    logger.warning(f"🤖 No creator_move for regular bot, generated fallback: {creator_move_to_set}")
+                else:
+                    creator_move_to_set = None  # Ход уже установлен
+                    logger.info(f"🤖 Regular bot creator_move already set: {game_obj.creator_move}")
         
-        if creator_is_regular_bot:
-            # Для обычных ботов извлекаем ход из метаданных
-            if game_obj.metadata and "initial_move" in game_obj.metadata:
-                creator_move_to_set = game_obj.metadata["initial_move"]
-                logger.info(f"🤖 Setting creator move for regular bot: {creator_move_to_set}")
-            else:
-                # Если метаданные отсутствуют, генерируем случайный ход
-                creator_move_to_set = random.choice(["rock", "paper", "scissors"])
-                logger.warning(f"🤖 No initial_move in metadata for regular bot, generated: {creator_move_to_set}")
-        
-        # Обновляем игру с ходом оппонента и создателя (если это бот)
+        # Обновляем игру с ходом оппонента 
         update_data = {
             "opponent_move": move,
             "started_at": datetime.utcnow(),
@@ -6526,12 +6525,10 @@ async def choose_move_for_active_game(
             "updated_at": datetime.utcnow()
         }
         
-        # Добавляем ход создателя если это обычный бот
-        if creator_move_to_set:
+        # Добавляем ход создателя только если нужен fallback
+        if creator_is_regular_bot and creator_move_to_set:
             update_data["creator_move"] = creator_move_to_set
-            logger.info(f"🤖 Final update data includes creator_move: {creator_move_to_set}")
-        else:
-            logger.warning(f"🤖 No creator_move set for game {game_id}")
+            logger.info(f"🤖 Setting fallback creator_move: {creator_move_to_set}")
             
         await db.games.update_one(
             {"id": game_id},
