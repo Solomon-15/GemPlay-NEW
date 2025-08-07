@@ -15502,12 +15502,26 @@ async def create_regular_bots(
     try:
         min_bet = bot_config.get("min_bet_amount", 1.0)  # 1-10000
         max_bet = bot_config.get("max_bet_amount", 50.0)  # 1-10000
-        win_rate = bot_config.get("win_percentage", 55.0) / 100.0  # 0-100% -> 0.0-1.0
+        win_percentage = bot_config.get("win_percentage", 55.0)  # Соотношение сумм выигрыша
+        
+        # Новые поля для процентов исходов игр
+        wins_percentage = bot_config.get("wins_percentage", 35)  # % побед
+        losses_percentage = bot_config.get("losses_percentage", 35)  # % поражений
+        draws_percentage = bot_config.get("draws_percentage", 30)  # % ничьих
+        
         cycle_games = bot_config.get("cycle_games", 12)  # 1-66
         creation_mode = bot_config.get("creation_mode", "queue-based")  # Значение по умолчанию
-        pause_between_cycles = bot_config.get("pause_between_cycles", 5)  # Новое поле
-        pause_on_draw = bot_config.get("pause_on_draw", 1)  # Новое поле
+        pause_between_cycles = bot_config.get("pause_between_cycles", 5)  # Пауза между циклами
+        pause_on_draw = bot_config.get("pause_on_draw", 5)  # Пауза при ничье и между ставками
         profit_strategy = bot_config.get("profit_strategy", "balanced")
+        
+        # Валидация процентов исходов
+        total_percentage = wins_percentage + losses_percentage + draws_percentage
+        if abs(total_percentage - 100) > 0.1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Сумма процентов исходов должна быть 100% (получено {total_percentage}%)"
+            )
         
         bot_name = bot_config.get("name", "").strip()
         if not bot_name:
@@ -15527,11 +15541,14 @@ async def create_regular_bots(
             bot_type=BotType.REGULAR,
             min_bet_amount=min_bet,
             max_bet_amount=max_bet,
-            win_rate=win_rate,
+            win_percentage=win_percentage,
+            wins_percentage=wins_percentage,
+            losses_percentage=losses_percentage,
+            draws_percentage=draws_percentage,
             cycle_games=cycle_games,
             current_limit=cycle_games,
             creation_mode=creation_mode,
-            pause_between_games=pause_between_cycles,
+            pause_between_cycles=pause_between_cycles,
             pause_on_draw=pause_on_draw,
             profit_strategy=profit_strategy,
             is_active=True
@@ -15540,14 +15557,16 @@ async def create_regular_bots(
         await db.bots.insert_one(bot.dict())
         created_bots.append(bot.id)
         
-        # Create initial cycle of bets for the bot
-        logger.info(f"🎯 Creating initial cycle of {cycle_games} bets for bot {bot.name}")
-        for i in range(cycle_games):
-            success = await create_bot_bet(bot)
-            if success:
-                logger.info(f"✅ Created initial bet {i+1}/{cycle_games} for bot {bot.name}")
-            else:
-                logger.warning(f"⚠️ Failed to create initial bet {i+1}/{cycle_games} for bot {bot.name}")
+        # ВАЖНО: Удаляем создание начальных ставок здесь
+        # Ставки будут создаваться последовательно с задержкой через новую логику
+        logger.info(f"🎯 Created bot {bot.name} with new betting system")
+        
+        return {
+            "success": True,
+            "bots_created": len(created_bots),
+            "bot_id": created_bots[0] if created_bots else None,
+            "message": f"Бот '{bot_name}' создан успешно"
+        }
         
         await regular_bot_system.log_bot_action(bot.id, "BOT_CREATED", {
             "config": bot_config,
