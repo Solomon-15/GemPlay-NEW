@@ -202,27 +202,23 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         setOngoingBattles(uniqueFallbackBattles);
       }
       
-      // Ongoing Bot Battles (Bot Players) - только обычные боты со статусом ACTIVE
-      setOngoingBotBattles(userGames.filter(game => 
-        (game.status === 'ACTIVE' || game.status === 'REVEAL') && 
-        game.is_bot_game && 
-        !game.is_human_bot  // Только обычные боты, исключаем Human-ботов
-      ));
-      
-      // Также добавить активные игры обычных ботов из общего списка
-      const activeRegularBotGames = allGames.filter(game => 
-        game.status === 'ACTIVE' && 
-        game.is_bot_game && 
-        !game.is_human_bot &&  // Только обычные боты
-        (game.creator_id === user?.id || game.opponent_id === user?.id)  // Где пользователь участвует
-      );
-      
-      // Объединить Ongoing Bot Battles
-      const allOngoingBotBattles = [...ongoingBotBattles, ...activeRegularBotGames];
-      const uniqueOngoingBotBattles = allOngoingBotBattles.filter((game, index, self) => 
-        index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
-      );
-      setOngoingBotBattles(uniqueOngoingBotBattles);
+      // Ongoing Bot Battles (Bot Players) - используем новый dedicated endpoint
+      try {
+        const ongoingBotsResponse = await axios.get(`${API}/bots/ongoing-games`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setOngoingBotBattles(ongoingBotsResponse.data || []);
+      } catch (error) {
+        console.error('Error fetching ongoing bot battles:', error);
+        
+        // Fallback: filter from user games
+        setOngoingBotBattles(userGames.filter(game => 
+          (game.status === 'ACTIVE' || game.status === 'REVEAL') && 
+          game.is_bot_game && 
+          !game.is_human_bot  // Только обычные боты, исключаем Human-ботов
+        ));
+      }
       
       setLoading(false);
     } catch (error) {
