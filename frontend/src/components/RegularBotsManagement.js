@@ -533,7 +533,7 @@ const RegularBotsManagement = () => {
 
   const handleEditModal = async (bot) => {
     try {
-      const response = await axios.get(`${API}/api/admin/bots/${bot.id}`, getApiConfig());
+      const response = await axios.get(`${API}/admin/bots/${bot.id}`, getApiConfig());
       
       setBotForm({
         name: response.data.bot.name || '',
