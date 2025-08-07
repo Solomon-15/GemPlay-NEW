@@ -47,6 +47,15 @@ def join_game_with_move(token: str, game_id: str, gems: Dict[str, int]) -> bool:
     print(f"Join game response: {response.status_code} - {response.text}")
     return response.status_code == 200
 
+def choose_move(token: str, game_id: str, move: str = "scissors") -> bool:
+    """Choose move for active game"""
+    headers = {"Authorization": f"Bearer {token}"}
+    data = {"move": move}
+    
+    response = requests.post(f"{BASE_URL}/games/{game_id}/choose-move", headers=headers, json=data)
+    print(f"Choose move response: {response.status_code} - {response.text}")
+    return response.status_code == 200
+
 def get_game_state(token: str, game_id: str) -> Optional[Dict]:
     """Get current game state"""
     headers = {"Authorization": f"Bearer {token}"}
