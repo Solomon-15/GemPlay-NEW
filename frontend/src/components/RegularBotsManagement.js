@@ -67,7 +67,7 @@ const RegularBotsManagement = () => {
   const [sortField, setSortField] = useState('created_at');
   const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc'
 
-  // Сортировка данных
+  const [selectedBots, setSelectedBots] = useState(new Set());
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
