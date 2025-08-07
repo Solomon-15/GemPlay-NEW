@@ -64,7 +64,87 @@ const RegularBotsManagement = () => {
 
   const pagination = usePagination(1, 10);
 
-  const [selectedBots, setSelectedBots] = useState(new Set());
+  const [sortField, setSortField] = useState('created_at');
+  const [sortDirection, setSortDirection] = useState('desc'); // 'asc' or 'desc'
+
+  // Сортировка данных
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc'); // По умолчанию убывающий порядок
+    }
+  };
+
+  const getSortedBots = (bots) => {
+    return [...bots].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortField) {
+        case 'name':
+          aValue = a.name || '';
+          bValue = b.name || '';
+          break;
+        case 'is_active':
+          aValue = a.is_active ? 1 : 0;
+          bValue = b.is_active ? 1 : 0;
+          break;
+        case 'active_bets':
+          aValue = a.active_bets || 0;
+          bValue = b.active_bets || 0;
+          break;
+        case 'total_net_profit':
+          aValue = a.bot_profit_amount || 0;
+          bValue = b.bot_profit_amount || 0;
+          break;
+        case 'win_percentage':
+          aValue = a.win_percentage || 0;
+          bValue = b.win_percentage || 0;
+          break;
+        case 'cycle_games':
+          aValue = a.cycle_games || 0;
+          bValue = b.cycle_games || 0;
+          break;
+        case 'cycle_total_amount':
+          aValue = a.cycle_total_amount || 0;
+          bValue = b.cycle_total_amount || 0;
+          break;
+        case 'created_at':
+        default:
+          aValue = new Date(a.created_at || 0);
+          bValue = new Date(b.created_at || 0);
+          break;
+      }
+      
+      if (sortDirection === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+  };
+
+  const [cycleHistoryData, setCycleHistoryData] = useState([]);
+  const [selectedBotForCycleHistory, setSelectedBotForCycleHistory] = useState(null);
+  const [isCycleHistoryModalOpen, setIsCycleHistoryModalOpen] = useState(false);
+
+  // Функция для открытия модального окна истории циклов
+  const handleCycleHistoryModal = async (bot) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setSelectedBotForCycleHistory(bot);
+      setCycleHistoryData(response.data.cycles || []);
+      setIsCycleHistoryModalOpen(true);
+    } catch (error) {
+      console.error('Ошибка загрузки истории циклов:', error);
+      showErrorRU('Ошибка при загрузке истории циклов');
+    }
+  };
   const [selectAll, setSelectAll] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
