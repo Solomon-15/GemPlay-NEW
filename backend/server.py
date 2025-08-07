@@ -1741,8 +1741,12 @@ def start_background_scheduler():
     scheduler_thread = Thread(target=run_scheduler, daemon=True)
     scheduler_thread.start()
     
-    # Start bot automation using asyncio create_task
+    # Start bot automation using asyncio create_task - ONLY ONE automation loop
     asyncio.create_task(bot_automation_loop())
+    
+    # DISABLED: Conflicting automation loops that cause race conditions
+    # asyncio.create_task(new_bot_automation_task())  # DISABLED to prevent duplicate bet creation
+    # asyncio.create_task(bot_automation_task())      # DISABLED to prevent race conditions
     
     # Start human bot simulation background task
     asyncio.create_task(human_bot_simulation_task())
