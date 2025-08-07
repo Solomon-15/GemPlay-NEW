@@ -10033,6 +10033,76 @@ async def get_active_bots(current_user: User = Depends(get_current_user)):
             detail="Failed to fetch active bots"
         )
 
+@api_router.get("/bots/ongoing-games", response_model=List[dict])
+async def get_ongoing_bot_games(current_user: User = Depends(get_current_user)):
+    """Get active games created by regular bots for 'Ongoing Bot Battles' section."""
+    try:
+        # Find active REGULAR bots only
+        active_bots = await db.bots.find({
+            "is_active": True, 
+            "bot_type": "REGULAR"
+        }).to_list(None)
+        bot_ids = [bot["id"] for bot in active_bots]
+        
+        if not bot_ids:
+            return []
+        
+        # Find ACTIVE games created by regular bots (games being played by users)
+        bot_games = await db.games.find({
+            "creator_id": {"$in": bot_ids},
+            "status": "ACTIVE"  # Only ongoing battles (ACTIVE status)
+        }).sort("created_at", -1).to_list(None)
+        
+        result = []
+        for game in bot_games:
+            # Get bot info
+            bot = next((b for b in active_bots if b["id"] == game["creator_id"]), None)
+            if not bot:
+                continue
+                
+            # Get opponent info (should be a real user since game is ACTIVE)
+            opponent_info = {"username": "Player", "gender": "male"}
+            if game.get("opponent_id"):
+                opponent = await db.users.find_one({"id": game["opponent_id"]})
+                if opponent:
+                    opponent_info = {
+                        "username": opponent.get("username", "Player"),
+                        "gender": opponent.get("gender", "male")
+                    }
+            
+            game_data = {
+                "id": game["id"],
+                "game_id": game["id"],
+                "creator_id": game["creator_id"],
+                "creator_username": "Bot",  # Regular bots always show as "Bot"
+                "creator": {
+                    "username": "Bot",
+                    "gender": bot.get("avatar_gender", "male")
+                },
+                "opponent_id": game.get("opponent_id"),
+                "opponent": opponent_info,
+                "bet_amount": game["bet_amount"],
+                "bet_gems": game["bet_gems"],
+                "status": game["status"],
+                "created_at": game["created_at"],
+                "is_bot": True,
+                "is_bot_game": True,
+                "is_human_bot": False,  # Regular bots, not human bots
+                "is_regular_bot": True,
+                "bot_id": bot["id"],
+                "bot_type": bot["bot_type"]
+            }
+            result.append(game_data)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error fetching ongoing bot games: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch ongoing bot games"
+        )
+
 @api_router.get("/bots/active-games", response_model=List[dict])
 async def get_active_bot_games(current_user: User = Depends(get_current_user)):
     """Get all active games created by bots."""
