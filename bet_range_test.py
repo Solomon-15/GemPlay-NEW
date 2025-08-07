@@ -273,7 +273,7 @@ def get_bot_active_games(token: str) -> List[Dict]:
         print_error(f"Ошибка получения активных игр: {details}")
         return []
 
-def analyze_bot_bets(games: List[Dict]) -> Dict[str, Any]:
+def analyze_bot_bets(games: List[Dict], bot_id: str = None) -> Dict[str, Any]:
     """Analyze bets created by the test bot"""
     print_step(4, f"Анализ ставок созданных ботом '{TEST_BOT_NAME}'")
     
@@ -281,24 +281,37 @@ def analyze_bot_bets(games: List[Dict]) -> Dict[str, Any]:
     test_bot_games = []
     
     print_info(f"Поиск игр среди {len(games)} активных игр...")
+    print_info(f"Ищем по bot_id: {bot_id}")
     
     for game in games:
         # Check if game was created by our test bot
         creator_name = game.get("creator_name") or game.get("bot_name") or ""
         creator_id = game.get("creator_id", "")
+        bot_game_id = game.get("bot_id", "")
         
         # Debug: show first few games to understand structure
         if len(test_bot_games) == 0 and len(games) > 0:
             print_info(f"Пример структуры игры: {list(game.keys())}")
-            print_info(f"creator_name: '{creator_name}', creator_id: '{creator_id}'")
+            print_info(f"creator_name: '{creator_name}', creator_id: '{creator_id}', bot_id: '{bot_game_id}'")
         
-        if creator_name == TEST_BOT_NAME:
+        # Try multiple ways to match the bot
+        if (creator_name == TEST_BOT_NAME or 
+            creator_id == bot_id or 
+            bot_game_id == bot_id):
             test_bot_games.append(game)
     
     print_info(f"Найдено {len(test_bot_games)} игр созданных ботом '{TEST_BOT_NAME}'")
     
     if not test_bot_games:
         print_warning("Бот не создал ни одной игры!")
+        # Show some sample games for debugging
+        if games:
+            print_info("Примеры существующих игр:")
+            for i, game in enumerate(games[:3]):
+                creator_name = game.get("creator_name") or game.get("bot_name") or "Unknown"
+                bet_amount = game.get("bet_amount", 0)
+                print_info(f"  Игра {i+1}: creator='{creator_name}', bet=${bet_amount}")
+        
         return {
             "total_games": 0,
             "games_in_range": 0,
