@@ -15898,9 +15898,11 @@ async def create_bot_bet(bot: Bot) -> bool:
         
         logger.info(f"🎯 Bot {bot.id}: creating {bet_result.upper()} bet #{bet_index+1}/{cycle_games}, amount={bet_amount}")
         
-        # Создаем комбинацию гемов для bet_amount
+        # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Создаем комбинацию гемов для ТОЧНОЙ суммы bet_amount
         bet_gems = await generate_gem_combination(bet_amount)
-        actual_total = sum(quantity * GEM_PRICES.get(gem_type, 1.0) for gem_type, quantity in bet_gems.items())
+        actual_gem_total = sum(quantity * GEM_PRICES.get(gem_type, 1.0) for gem_type, quantity in bet_gems.items())
+        
+        logger.info(f"🎯 Bot {bot.id}: EXACT bet amount={bet_amount}, gem_total={actual_gem_total:.2f}")
         
         # Генерируем ход бота
         import secrets
@@ -15909,18 +15911,18 @@ async def create_bot_bet(bot: Bot) -> bool:
         salt = secrets.token_hex(32)
         move_hash = hashlib.sha256(f"{initial_move}{salt}".encode()).hexdigest()
         
-        # Создаем игру
+        # ИСПОЛЬЗУЕМ ТОЧНУЮ СУММУ ИЗ НОРМАЛИЗОВАННОГО МАССИВА
         game = Game(
             creator_id=bot.id,
             creator_type="bot",
             creator_move=GameMove(initial_move),
             creator_move_hash=move_hash,
             creator_salt=salt,
-            bet_amount=round(actual_total, 2),
+            bet_amount=bet_amount,  # Используем точную сумму из массива
             bet_gems=bet_gems,
             status=GameStatus.WAITING,
-            commission=round(actual_total * 0.06, 2),
-            total_bet_amount=round(actual_total, 2),
+            commission=round(bet_amount * 0.06, 2),
+            total_bet_amount=round(bet_amount, 2),
             metadata={
                 "intended_result": bet_result,  # "win" или "loss"
                 "bot_system": "new",
@@ -15930,7 +15932,7 @@ async def create_bot_bet(bot: Bot) -> bool:
         )
         
         await db.games.insert_one(game.dict())
-        logger.info(f"✅ NEW SYSTEM: Created {bet_result} bet for bot {bot.id}, amount={actual_total}")
+        logger.info(f"✅ NEW SYSTEM: Created {bet_result} bet for bot {bot.id}, amount={bet_amount}")
         
         return True
         
