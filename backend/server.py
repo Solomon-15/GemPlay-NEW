@@ -16809,6 +16809,121 @@ async def generate_extended_bot_cycle_bets(bot_id: str, cycle_length: int, cycle
     except Exception as e:
         logger.error(f"Error generating extended bot cycle bets: {e}")
         raise
+
+async def generate_cycle_bets_uniform_distribution(
+    bot_id: str,
+    min_bet: float,
+    max_bet: float,
+    cycle_games: int,
+    total_wins: int,
+    total_losses: int,
+    win_amount_total: float,
+    loss_amount_total: float
+) -> List[Dict[str, Any]]:
+    """
+    Генерирует все ставки цикла заранее для равномерного покрытия диапазона min_bet - max_bet.
+    
+    Args:
+        bot_id: ID бота
+        min_bet: Минимальная ставка
+        max_bet: Максимальная ставка
+        cycle_games: Общее количество игр в цикле
+        total_wins: Количество побед в цикле
+        total_losses: Количество поражений в цикле
+        win_amount_total: Общая сумма выигрышных ставок
+        loss_amount_total: Общая сумма проигрышных ставок
+        
+    Returns:
+        List[Dict]: Список ставок с результатами и суммами
+    """
+    try:
+        logger.info(f"🎯 Bot {bot_id}: generating {cycle_games} bets with uniform distribution")
+        
+        all_bets = []
+        
+        # Создаем список результатов (wins + losses)
+        results = ["win"] * total_wins + ["loss"] * total_losses
+        random.shuffle(results)  # Перемешиваем для случайного порядка
+        
+        # Генерируем суммы ставок для равномерного покрытия диапазона
+        bet_amounts = []
+        
+        # Для выигрышных ставок
+        win_amounts = []
+        if total_wins > 0:
+            if total_wins == 1:
+                win_amounts = [win_amount_total]
+            else:
+                # Распределяем win_amount_total между выигрышными ставками
+                base_amount = win_amount_total / total_wins
+                for i in range(total_wins):
+                    # Добавляем небольшую вариацию (±20%)
+                    variation = random.uniform(0.8, 1.2)
+                    amount = base_amount * variation
+                    amount = max(min_bet, min(max_bet, amount))
+                    win_amounts.append(math.ceil(amount))
+        
+        # Для проигрышных ставок
+        loss_amounts = []
+        if total_losses > 0:
+            if total_losses == 1:
+                loss_amounts = [loss_amount_total]
+            else:
+                # Распределяем loss_amount_total между проигрышными ставками
+                base_amount = loss_amount_total / total_losses
+                for i in range(total_losses):
+                    # Добавляем небольшую вариацию (±20%)
+                    variation = random.uniform(0.8, 1.2)
+                    amount = base_amount * variation
+                    amount = max(min_bet, min(max_bet, amount))
+                    loss_amounts.append(math.ceil(amount))
+        
+        # Перемешиваем суммы для дополнительной случайности
+        random.shuffle(win_amounts)
+        random.shuffle(loss_amounts)
+        
+        # Создаем финальный список ставок
+        win_index = 0
+        loss_index = 0
+        
+        for i, result in enumerate(results):
+            if result == "win" and win_index < len(win_amounts):
+                bet_amount = win_amounts[win_index]
+                win_index += 1
+            elif result == "loss" and loss_index < len(loss_amounts):
+                bet_amount = loss_amounts[loss_index]
+                loss_index += 1
+            else:
+                # Fallback - используем среднюю ставку
+                average_bet = (min_bet + max_bet) / 2
+                bet_amount = math.ceil(average_bet)
+            
+            all_bets.append({
+                "result": result,
+                "amount": bet_amount,
+                "index": i
+            })
+        
+        logger.info(f"🎯 Bot {bot_id}: generated {len(all_bets)} bets - {total_wins} wins, {total_losses} losses")
+        return all_bets
+        
+    except Exception as e:
+        logger.error(f"Error generating cycle bets uniform distribution for bot {bot_id}: {e}")
+        # Fallback - создаем простой список ставок
+        fallback_bets = []
+        results = ["win"] * total_wins + ["loss"] * total_losses
+        random.shuffle(results)
+        
+        for i, result in enumerate(results):
+            average_bet = (min_bet + max_bet) / 2
+            fallback_bets.append({
+                "result": result,
+                "amount": math.ceil(average_bet),
+                "index": i
+            })
+        
+        return fallback_bets
+
 async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
                                 win_percentage: int, min_bet: float, avg_bet: float, bet_distribution: str = "medium",
                                 bot_behavior: str = "balanced", profit_strategy: str = "balanced"):
