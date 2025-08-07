@@ -106,10 +106,18 @@ def main():
     
     print("✅ Successfully joined game")
     
-    # Step 4: Wait a moment for game processing
+    # Step 4: Choose move (this is where the critical bug might occur)
+    move_success = choose_move(token, game_id, "scissors")
+    if not move_success:
+        print("❌ Failed to choose move - this might be the bug!")
+        return
+    
+    print("✅ Successfully chose move")
+    
+    # Step 5: Wait a moment for game processing
     time.sleep(2)
     
-    # Step 5: Check final game state
+    # Step 6: Check final game state
     final_state = get_game_state(token, game_id)
     if not final_state:
         print("❌ Failed to get final game state")
