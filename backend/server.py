@@ -6560,13 +6560,24 @@ async def reset_bot_bets(
         )
         
         try:
+            # Рассчитываем правильную общую сумму цикла на основе параметров бота
+            min_bet_amount = bot.get("min_bet_amount", 1.0)
+            max_bet_amount = bot.get("max_bet_amount", 50.0) 
+            cycle_games = bot.get("cycle_games", 12)
+            
+            # Формула: (min + max) / 2 * количество игр
+            average_bet = (min_bet_amount + max_bet_amount) / 2
+            calculated_cycle_total = round(average_bet * cycle_games, 2)
+            
+            logger.info(f"🎯 Calculating cycle total for bot {bot_id}: min={min_bet_amount}, max={max_bet_amount}, games={cycle_games}, total={calculated_cycle_total}")
+            
             await generate_bot_cycle_bets(
                 bot_id=bot_id,
-                cycle_length=bot.get("cycle_games", 12),
-                cycle_total_amount=bot.get("cycle_total_amount", 500.0),
+                cycle_length=cycle_games,
+                cycle_total_amount=calculated_cycle_total,
                 win_percentage=bot.get("win_rate_percent", 60),
-                min_bet=bot.get("min_bet_amount", 1.0),
-                avg_bet=bot.get("max_bet_amount", 100.0),
+                min_bet=min_bet_amount,
+                avg_bet=max_bet_amount,
                 bet_distribution=bot.get("bet_distribution", "medium")
             )
         except Exception as e:
