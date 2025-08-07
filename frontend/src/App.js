@@ -106,7 +106,13 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
         onLogin(loginResponse.data.user);
       }
     } catch (error) {
-      alert(error.response?.data?.detail || 'An error occurred');
+      console.error('🔍 LOGIN: Error occurred:', error);
+      console.error('🔍 LOGIN: Error response:', error.response);
+      if (error.response) {
+        alert(`Login failed: ${error.response.data.detail || error.message}`);
+      } else {
+        alert(`Network error: ${error.message}`);
+      }
     } finally {
       setLoading(false);
     }
