@@ -16864,11 +16864,12 @@ async def generate_cycle_bets_uniform_distribution(
 ) -> List[Dict[str, Any]]:
     """
     Генерирует все ставки цикла заранее для равномерного покрытия диапазона min_bet - max_bet.
+    ИСПРАВЛЕНО: Обеспечивает точное совпадение общей суммы ставок с расчетной "Суммой цикла".
     
     Args:
         bot_id: ID бота
         min_bet: Минимальная ставка
-        max_bet: Максимальная ставка
+        max_bet: Максимальная ставка  
         cycle_games: Общее количество игр в цикле
         total_wins: Количество побед в цикле
         total_losses: Количество поражений в цикле
@@ -16879,7 +16880,11 @@ async def generate_cycle_bets_uniform_distribution(
         List[Dict]: Список ставок с результатами и суммами
     """
     try:
-        logger.info(f"🎯 Bot {bot_id}: generating {cycle_games} bets with uniform distribution")
+        logger.info(f"🎯 Bot {bot_id}: generating {cycle_games} bets with EXACT sum matching")
+        
+        # Целевая общая сумма (точная)
+        target_total_sum = win_amount_total + loss_amount_total
+        logger.info(f"🎯 Bot {bot_id}: target_total_sum={target_total_sum} (wins: {win_amount_total}, losses: {loss_amount_total})")
         
         all_bets = []
         
@@ -16887,51 +16892,48 @@ async def generate_cycle_bets_uniform_distribution(
         results = ["win"] * total_wins + ["loss"] * total_losses
         random.shuffle(results)  # Перемешиваем для случайного порядка
         
-        # Генерируем суммы ставок для РАВНОМЕРНОГО покрытия диапазона 1-50
-        all_bet_amounts = generate_uniform_bet_amounts(min_bet, max_bet, cycle_games)
+        # ШАГ 1: Генерируем базовые суммы для равномерного покрытия диапазона 1-50
+        base_amounts = generate_uniform_bet_amounts(min_bet, max_bet, cycle_games)
         
-        # Разделяем суммы на выигрышные и проигрышные группы
-        # Сортируем по возрастанию для лучшего распределения
-        sorted_amounts = sorted(all_bet_amounts)
-        
-        # Для выигрышных ставок используем более разнообразные суммы
+        # ШАГ 2: Разделяем суммы на выигрышные и проигрышные группы
         win_amounts = []
         loss_amounts = []
         
-        # Распределяем суммы между выигрышными и проигрышными ставками
-        # Чтобы соблюсти пропорции win_amount_total и loss_amount_total
         if total_wins > 0:
-            # Выбираем случайные суммы из всего диапазона
-            win_indices = random.sample(range(len(sorted_amounts)), total_wins)
-            win_base_amounts = [sorted_amounts[i] for i in win_indices]
+            # Выбираем случайные индексы для выигрышных ставок
+            win_indices = random.sample(range(len(base_amounts)), total_wins)
+            win_base_amounts = [base_amounts[i] for i in win_indices]
             
-            # Масштабируем чтобы сумма была win_amount_total
+            # Нормализуем выигрышные суммы к точной целевой сумме
             current_sum = sum(win_base_amounts)
             if current_sum > 0:
-                scale_factor = win_amount_total / current_sum
-                win_amounts = [max(min_bet, min(max_bet, math.ceil(amount * scale_factor))) for amount in win_base_amounts]
+                # Пропорциональное масштабирование + коррекция для точности
+                win_amounts = normalize_amounts_to_exact_sum(
+                    win_base_amounts, win_amount_total, min_bet, max_bet
+                )
         
         if total_losses > 0:
             # Берем оставшиеся суммы для проигрышных ставок
-            remaining_amounts = [amount for i, amount in enumerate(sorted_amounts) if i not in (win_indices if total_wins > 0 else [])]
-            if len(remaining_amounts) < total_losses:
+            remaining_indices = [i for i in range(len(base_amounts)) if i not in (win_indices if total_wins > 0 else [])]
+            if len(remaining_indices) >= total_losses:
+                loss_base_amounts = [base_amounts[i] for i in remaining_indices[:total_losses]]
+            else:
                 # Если не хватает, генерируем дополнительные
-                additional_amounts = generate_uniform_bet_amounts(min_bet, max_bet, total_losses - len(remaining_amounts))
-                remaining_amounts.extend(additional_amounts)
+                loss_base_amounts = [base_amounts[i] for i in remaining_indices]
+                additional_needed = total_losses - len(loss_base_amounts)
+                additional_amounts = generate_uniform_bet_amounts(min_bet, max_bet, additional_needed)
+                loss_base_amounts.extend(additional_amounts)
             
-            loss_base_amounts = remaining_amounts[:total_losses]
-            
-            # Масштабируем чтобы сумма была loss_amount_total
-            current_sum = sum(loss_base_amounts)
-            if current_sum > 0:
-                scale_factor = loss_amount_total / current_sum
-                loss_amounts = [max(min_bet, min(max_bet, math.ceil(amount * scale_factor))) for amount in loss_base_amounts]
+            # Нормализуем проигрышные суммы к точной целевой сумме
+            loss_amounts = normalize_amounts_to_exact_sum(
+                loss_base_amounts, loss_amount_total, min_bet, max_bet
+            )
         
-        # Перемешиваем суммы для дополнительной случайности
+        # ШАГ 3: Перемешиваем суммы для дополнительной случайности
         random.shuffle(win_amounts)
         random.shuffle(loss_amounts)
         
-        # Создаем финальный список ставок
+        # ШАГ 4: Создаем финальный список ставок
         win_index = 0
         loss_index = 0
         
@@ -16953,7 +16955,16 @@ async def generate_cycle_bets_uniform_distribution(
                 "index": i
             })
         
-        logger.info(f"🎯 Bot {bot_id}: generated {len(all_bets)} bets - {total_wins} wins, {total_losses} losses")
+        # ПРОВЕРКА ТОЧНОСТИ: Проверяем что общая сумма соответствует целевой
+        actual_total = sum(bet["amount"] for bet in all_bets)
+        actual_win_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "win")
+        actual_loss_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "loss")
+        
+        logger.info(f"🎯 Bot {bot_id}: generated {len(all_bets)} bets")
+        logger.info(f"    Target total: {target_total_sum}, Actual total: {actual_total} (diff: {actual_total - target_total_sum})")
+        logger.info(f"    Win sums: target={win_amount_total}, actual={actual_win_sum}")
+        logger.info(f"    Loss sums: target={loss_amount_total}, actual={actual_loss_sum}")
+        
         return all_bets
         
     except Exception as e:
@@ -16972,6 +16983,72 @@ async def generate_cycle_bets_uniform_distribution(
             })
         
         return fallback_bets
+
+def normalize_amounts_to_exact_sum(base_amounts: List[float], target_sum: float, min_bet: float, max_bet: float) -> List[int]:
+    """
+    Нормализует список базовых сумм к точной целевой сумме с сохранением пропорций.
+    
+    Args:
+        base_amounts: Базовые суммы ставок
+        target_sum: Целевая общая сумма
+        min_bet: Минимальная ставка
+        max_bet: Максимальная ставка
+        
+    Returns:
+        List[int]: Нормализованные суммы ставок (округленные)
+    """
+    if not base_amounts or target_sum <= 0:
+        return []
+    
+    # Шаг 1: Пропорциональное масштабирование
+    current_sum = sum(base_amounts)
+    if current_sum <= 0:
+        # Если сумма базовых ставок 0, распределяем равномерно
+        avg_amount = target_sum / len(base_amounts)
+        return [max(min_bet, min(max_bet, math.ceil(avg_amount)))] * len(base_amounts)
+    
+    scale_factor = target_sum / current_sum
+    scaled_amounts = [amount * scale_factor for amount in base_amounts]
+    
+    # Шаг 2: Округление с соблюдением ограничений
+    rounded_amounts = [max(min_bet, min(max_bet, math.ceil(amount))) for amount in scaled_amounts]
+    
+    # Шаг 3: Коррекция для точного попадания в целевую сумму
+    current_rounded_sum = sum(rounded_amounts)
+    difference = target_sum - current_rounded_sum
+    
+    if abs(difference) > 0:
+        # Если есть расхождение, корректируем случайные ставки
+        adjustable_indices = []
+        for i, amount in enumerate(rounded_amounts):
+            if difference > 0 and amount < max_bet:  # Можно увеличить
+                adjustable_indices.append(i)
+            elif difference < 0 and amount > min_bet:  # Можно уменьшить
+                adjustable_indices.append(i)
+        
+        # Применяем коррекцию случайно к доступным ставкам
+        if adjustable_indices:
+            random.shuffle(adjustable_indices)
+            remaining_diff = abs(difference)
+            diff_sign = 1 if difference > 0 else -1
+            
+            for idx in adjustable_indices:
+                if remaining_diff <= 0:
+                    break
+                    
+                current_amount = rounded_amounts[idx]
+                if diff_sign > 0:  # Увеличиваем
+                    max_increase = min(remaining_diff, max_bet - current_amount)
+                    if max_increase > 0:
+                        rounded_amounts[idx] += max_increase
+                        remaining_diff -= max_increase
+                else:  # Уменьшаем
+                    max_decrease = min(remaining_diff, current_amount - min_bet)
+                    if max_decrease > 0:
+                        rounded_amounts[idx] -= max_decrease  
+                        remaining_diff -= max_decrease
+    
+    return [int(amount) for amount in rounded_amounts]
 
 async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
                                 win_percentage: int, min_bet: float, avg_bet: float, bet_distribution: str = "medium",
