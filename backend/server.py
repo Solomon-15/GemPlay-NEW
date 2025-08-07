@@ -16869,165 +16869,88 @@ async def generate_cycle_bets_uniform_distribution(
     НОВЫЙ ПОДХОД: Сначала создаем все суммы ставок, нормализуем к exact_total, затем назначаем результаты.
     """
     try:
-        # Используем точную целевую сумму если передана
+        target_total_sum = exact_total if exact_total else (win_amount_total + loss_amount_total)
+        
+        logger.info(f"🎯 Bot {bot_id}: ARCHITECTURAL REDESIGN - target_total_sum={target_total_sum}")
+        logger.info(f"    Generating {cycle_games} bets: {total_wins} wins, {total_losses} losses")
+        
+        # ШАГ 1: Создаем базовые суммы для равномерного покрытия диапазона
+        base_amounts = generate_uniform_bet_amounts(min_bet, max_bet, cycle_games)
+        logger.info(f"    Base amounts generated: {sorted(base_amounts)}")
+        
+        # ШАГ 2: НОРМАЛИЗУЕМ ВСЕ СУММЫ К ТОЧНОЙ ЦЕЛЕВОЙ СУММЕ
         if exact_total:
-            target_total_sum = exact_total
-            # Пересчитываем win/loss суммы пропорционально
-            win_ratio = win_amount_total / (win_amount_total + loss_amount_total) if (win_amount_total + loss_amount_total) > 0 else 0.55
-            loss_ratio = 1.0 - win_ratio
-            
-            win_amount_total = target_total_sum * win_ratio
-            loss_amount_total = target_total_sum * loss_ratio
+            logger.info(f"🔧 Bot {bot_id}: Normalizing ALL amounts to exact sum: {exact_total}")
+            normalized_amounts = normalize_amounts_to_exact_sum(
+                base_amounts, exact_total, min_bet, max_bet
+            )
         else:
-            target_total_sum = win_amount_total + loss_amount_total
-            
-        logger.info(f"🎯 Bot {bot_id}: EXACT target_total_sum={target_total_sum} (wins: {win_amount_total:.1f}, losses: {loss_amount_total:.1f})")
+            normalized_amounts = [max(int(min_bet), min(int(max_bet), round(amount))) for amount in base_amounts]
         
-        all_bets = []
+        actual_normalized_sum = sum(normalized_amounts)
+        logger.info(f"    Normalized amounts: {sorted(normalized_amounts)}")
+        logger.info(f"    Actual normalized sum: {actual_normalized_sum} (target: {target_total_sum})")
         
-        # Создаем список результатов (wins + losses)
+        # ШАГ 3: Создаем список результатов игр
         results = ["win"] * total_wins + ["loss"] * total_losses
+        
+        # Дополняем до cycle_games если нужно
+        while len(results) < cycle_games:
+            # Добавляем wins или losses для достижения cycle_games
+            if total_wins > total_losses:
+                results.append("loss")
+                total_losses += 1
+            else:
+                results.append("win") 
+                total_wins += 1
+        
+        # Обрезаем если больше cycle_games
+        results = results[:cycle_games]
         random.shuffle(results)  # Перемешиваем для случайного порядка
         
-        # ШАГ 1: Генерируем базовые суммы для равномерного покрытия диапазона 1-50
-        base_amounts = generate_uniform_bet_amounts(min_bet, max_bet, cycle_games)
+        logger.info(f"    Results distribution: {results.count('win')} wins, {results.count('loss')} losses")
         
-        # ШАГ 2: Разделяем суммы на выигрышные и проигрышные группы
-        win_amounts = []
-        loss_amounts = []
-        
-        if total_wins > 0:
-            # Выбираем случайные индексы для выигрышных ставок
-            win_indices = random.sample(range(len(base_amounts)), total_wins)
-            win_base_amounts = [base_amounts[i] for i in win_indices]
-            
-            # Нормализуем выигрышные суммы к точной целевой сумме
-            win_amounts = normalize_amounts_to_exact_sum(
-                win_base_amounts, win_amount_total, min_bet, max_bet
-            )
-        
-        if total_losses > 0:
-            # Берем оставшиеся суммы для проигрышных ставок
-            remaining_indices = [i for i in range(len(base_amounts)) if i not in (win_indices if total_wins > 0 else [])]
-            if len(remaining_indices) >= total_losses:
-                loss_base_amounts = [base_amounts[i] for i in remaining_indices[:total_losses]]
-            else:
-                # Если не хватает, генерируем дополнительные
-                loss_base_amounts = [base_amounts[i] for i in remaining_indices]
-                additional_needed = total_losses - len(loss_base_amounts)
-                additional_amounts = generate_uniform_bet_amounts(min_bet, max_bet, additional_needed)
-                loss_base_amounts.extend(additional_amounts)
-            
-            # Нормализуем проигрышные суммы к точной целевой сумме
-            loss_amounts = normalize_amounts_to_exact_sum(
-                loss_base_amounts, loss_amount_total, min_bet, max_bet
-            )
-        
-        # ШАГ 3: ПРЯМАЯ финальная коррекция без двойной нормализации
-        all_amounts = win_amounts + loss_amounts
-        current_total = sum(all_amounts)
-        
-        if exact_total and current_total != exact_total:
-            difference = exact_total - current_total
-            logger.info(f"🔧 Bot {bot_id}: Direct adjustment needed: current={current_total}, target={exact_total}, diff={difference}")
-            
-            # Прямая коррекция без повторной нормализации
-            # Находим ставки, которые можно корректировать
-            adjustable_indices = []
-            
-            if difference > 0:  # Нужно увеличить
-                for i, amount in enumerate(all_amounts):
-                    if amount < max_bet:
-                        adjustable_indices.append((i, max_bet - amount))  # (индекс, максимальная добавка)
-                adjustable_indices.sort(key=lambda x: x[1], reverse=True)  # Сначала с большим запасом
-            else:  # Нужно уменьшить
-                for i, amount in enumerate(all_amounts):
-                    if amount > min_bet:
-                        adjustable_indices.append((i, amount - min_bet))  # (индекс, максимальная убавка)
-                adjustable_indices.sort(key=lambda x: x[1], reverse=True)  # Сначала с большим запасом
-            
-            # Применяем коррекцию
-            remaining_diff = abs(difference)
-            for idx, max_change in adjustable_indices:
-                if remaining_diff == 0:
-                    break
-                    
-                change = min(remaining_diff, max_change, abs(difference))
-                
-                if difference > 0:
-                    all_amounts[idx] += change
-                    difference -= change
-                else:
-                    all_amounts[idx] -= change 
-                    difference += change
-                    
-                remaining_diff -= change
-                
-                if difference == 0:
-                    break
-            
-            # Обновляем win/loss массивы
-            win_amounts = all_amounts[:total_wins]
-            loss_amounts = all_amounts[total_wins:total_wins + total_losses]
-        
-        # ШАГ 4: Перемешиваем суммы для дополнительной случайности
-        random.shuffle(win_amounts)
-        random.shuffle(loss_amounts)
-        
-        # ШАГ 5: Создаем финальный список ставок
-        win_index = 0
-        loss_index = 0
-        
-        for i, result in enumerate(results):
-            if result == "win" and win_index < len(win_amounts):
-                bet_amount = win_amounts[win_index]
-                win_index += 1
-            elif result == "loss" and loss_index < len(loss_amounts):
-                bet_amount = loss_amounts[loss_index]
-                loss_index += 1
-            else:
-                # Fallback - используем среднюю ставку
-                average_bet = (min_bet + max_bet) / 2
-                bet_amount = round(average_bet)
+        # ШАГ 4: Создаем финальный список ставок
+        all_bets = []
+        for i in range(cycle_games):
+            result = results[i] if i < len(results) else "loss"  # Fallback
+            amount = normalized_amounts[i] if i < len(normalized_amounts) else int((min_bet + max_bet) / 2)
             
             all_bets.append({
                 "result": result,
-                "amount": bet_amount,
+                "amount": amount,
                 "index": i
             })
         
-        # ФИНАЛЬНАЯ ПРОВЕРКА: Проверяем что общая сумма соответствует целевой
+        # ФИНАЛЬНАЯ ПРОВЕРКА
         actual_total = sum(bet["amount"] for bet in all_bets)
         actual_win_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "win")
         actual_loss_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "loss")
         
-        logger.info(f"🎯 Bot {bot_id}: FINAL RESULT - {len(all_bets)} bets generated")
+        logger.info(f"🎯 Bot {bot_id}: FINAL ARCHITECTURAL RESULT - {len(all_bets)} bets generated")
         logger.info(f"    Target total: {target_total_sum}, Actual total: {actual_total}")
-        logger.info(f"    Difference: {actual_total - target_total_sum} (SHOULD BE 0)")
-        logger.info(f"    Win: target={win_amount_total:.1f}, actual={actual_win_sum}")
-        logger.info(f"    Loss: target={loss_amount_total:.1f}, actual={actual_loss_sum}")
+        logger.info(f"    Difference: {actual_total - target_total_sum}")
+        logger.info(f"    Win sum: {actual_win_sum}, Loss sum: {actual_loss_sum}")
         
         if exact_total and actual_total == exact_total:
-            logger.info(f"    ✅ PERFECT MATCH! Exact sum achieved!")
-        elif abs(actual_total - (exact_total or target_total_sum)) <= 1:
-            logger.info(f"    ✅ Very close match (diff ≤ 1)")
+            logger.info(f"    ✅ ARCHITECTURAL SUCCESS! Perfect exact sum match!")
         else:
-            logger.warning(f"    ❌ Sum mismatch exceeds tolerance")
+            logger.warning(f"    ❌ ARCHITECTURAL FAILURE! Sum mismatch: expected {exact_total}, got {actual_total}")
         
         return all_bets
         
     except Exception as e:
-        logger.error(f"Error generating cycle bets uniform distribution for bot {bot_id}: {e}")
-        # Fallback - создаем простой список ставок
+        logger.error(f"Error in architectural redesign for bot {bot_id}: {e}")
+        # Простой fallback
         fallback_bets = []
         results = ["win"] * total_wins + ["loss"] * total_losses
         random.shuffle(results)
         
-        for i, result in enumerate(results):
-            average_bet = (min_bet + max_bet) / 2
+        average_bet = (min_bet + max_bet) / 2
+        for i, result in enumerate(results[:cycle_games]):
             fallback_bets.append({
                 "result": result,
-                "amount": math.ceil(average_bet),
+                "amount": round(average_bet),
                 "index": i
             })
         
