@@ -679,11 +679,18 @@ const RegularBotsManagement = () => {
     try {
       const response = await axios.get(`${API}/admin/bots/${bot.id}`, getApiConfig());
       
+      // Загружаем сохраненные проценты из localStorage согласно требованиям
+      const savedPercentages = getPercentagesFromStorage();
+      
       setBotForm({
         name: response.data.bot.name || '',
         min_bet_amount: response.data.bot.min_bet_amount || 1.0,
         max_bet_amount: response.data.bot.max_bet_amount || 50.0,
         win_percentage: response.data.bot.win_percentage || response.data.bot.win_rate * 100 || 55.0,
+        // Используем сохраненные значения из localStorage, а не значения бота
+        wins_percentage: savedPercentages.wins_percentage,
+        losses_percentage: savedPercentages.losses_percentage,
+        draws_percentage: savedPercentages.draws_percentage,
         cycle_games: response.data.bot.cycle_games || 12,
         pause_between_cycles: response.data.bot.pause_between_cycles || 5,
         pause_on_draw: response.data.bot.pause_on_draw || 1,
