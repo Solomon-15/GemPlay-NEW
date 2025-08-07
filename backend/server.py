@@ -16226,22 +16226,30 @@ async def get_regular_bots_list(
                 "cycle_games": cycle_games,
                 "cycle_progress": cycle_progress,
                 "remaining_slots": remaining_slots,
-                "cycle_total_amount": bot_doc.get('cycle_total_amount', 500.0),
-                "bot_type_name": bot_doc.get('bot_type_name', 'Type 1'),
-                "bot_type_id": bot_doc.get('bot_type_id', 'type-1'),
-                "creation_mode": bot_doc.get('creation_mode', 'queue-based'),
-                "bot_behavior": bot_doc.get('bot_behavior', 'balanced'),
-                "win_rate_percent": bot_doc.get('win_rate_percent', 60),
-                "profit_strategy": bot_doc.get('profit_strategy', 'balanced'),
-                "min_bet": bot_doc.get('min_bet_amount', 1.0),
-                "max_bet": bot_doc.get('max_bet_amount', 100.0),
+                
+                # Corrected field mappings for proper sync with modal
+                "cycle_total_amount": bot_doc.get('cycle_total_amount', 0),
                 "min_bet_amount": bot_doc.get('min_bet_amount', 1.0),
-                "max_bet_amount": bot_doc.get('max_bet_amount', 100.0),
-                "current_limit": bot_doc.get('current_limit', bot_doc.get('cycle_games', 12)),
+                "max_bet_amount": bot_doc.get('max_bet_amount', 50.0),
+                "win_percentage": bot_doc.get('win_percentage', 55.0),
+                "pause_between_cycles": bot_doc.get('pause_between_cycles', 5),
+                "pause_on_draw": bot_doc.get('pause_on_draw', 1),
+                "creation_mode": bot_doc.get('creation_mode', 'queue-based'),
+                "profit_strategy": bot_doc.get('profit_strategy', 'balanced'),
+                
+                # Legacy fields for backward compatibility
+                "min_bet": bot_doc.get('min_bet_amount', 1.0),
+                "max_bet": bot_doc.get('max_bet_amount', 50.0),
                 "pause_timer": bot_doc.get('pause_timer', 5),
                 "pause_between_games": bot_doc.get('pause_between_games', 5),
-                "win_percentage": bot_doc.get('win_percentage', bot_doc.get('win_rate', 0.55) * 100),
+                "current_limit": bot_doc.get('current_limit', bot_doc.get('cycle_games', 12)),
+                "bot_type_name": bot_doc.get('bot_type_name', 'Type 1'),
+                "bot_type_id": bot_doc.get('bot_type_id', 'type-1'),
+                "bot_behavior": bot_doc.get('bot_behavior', 'balanced'),
+                "win_rate_percent": bot_doc.get('win_rate_percent', 60),
+                
                 "created_at": bot.created_at,
+                "updated_at": bot_doc.get('updated_at'),
                 "last_game_time": bot.last_game_time
             })
         
