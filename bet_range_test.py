@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 """
-Regular Bots Bet Range Generation Testing - Russian Review
-Тестирование исправления генерации ставок обычных ботов в диапазоне min_bet_amount и max_bet_amount
+ФИНАЛЬНОЕ ТЕСТИРОВАНИЕ ИСПРАВЛЕНИЯ ГЕНЕРАЦИИ СТАВОК (продолжение)
+Final Testing of Bet Range Generation Fix - Russian Review
 
-КОНТЕКСТ: Тестирование исправления генерации ставок обычных ботов для проверки что ставки 
-создаются в правильном диапазоне min_bet_amount и max_bet_amount.
+КОНТЕКСТ: Тестирование исправления генерации ставок для Regular ботов.
+Проблема: Боты создают ставки вне диапазона min_bet_amount - max_bet_amount.
 
-ТЕСТИРОВАТЬ:
-1. Создать обычного бота с настройками:
-   - name: "Test_Bet_Range_Bot"  
-   - min_bet_amount: 10.0
+ЗАДАЧА:
+1. Создать нового тестового бота "Final_Fix_Test_Bot":
+   - min_bet_amount: 20.0  
    - max_bet_amount: 30.0
    - win_percentage: 55
    - cycle_games: 5
 
-2. Проверить что бот создался и его активные ставки находятся в диапазоне 10-30 гемов:
-   - Получить список активных игр через GET /api/bots/active-games
-   - Найти игры созданные этим ботом
-   - Проверить что bet_amount каждой игры между 10.0 и 30.0
-   - Убедиться что создано 5 активных ставок (cycle_games)
+2. Подождать 15 секунд для автоматического создания ставок
 
-3. Если нашли ставки вне диапазона - показать детали для диагностики
+3. Проверить что ВСЕ ставки бота находятся в диапазоне 20.0-30.0:
+   - Получить активные игры через GET /api/bots/active-games
+   - Найти все игры созданные "Final_Fix_Test_Bot"
+   - Проверить каждую bet_amount - должна быть между 20.0 и 30.0
+   - Должно быть ровно 5 ставок (cycle_games=5)
 
-ПРИОРИТЕТ: Критически важно - это исправление генерации ставок ботов
-ОЖИДАЕМЫЕ РЕЗУЛЬТАТЫ: Все ставки должны быть в диапазоне 10.0-30.0 гемов
+4. Показать детальную статистику и анализ проблемы
+
+КРИТИЧНОСТЬ: Это последняя попытка исправить генерацию ставок.
 """
 
 import requests
@@ -31,8 +31,6 @@ import json
 import time
 import sys
 from typing import Dict, Any, Optional, List, Tuple
-import random
-import string
 from datetime import datetime
 
 # Configuration
@@ -42,13 +40,13 @@ ADMIN_USER = {
     "password": "Admin123!"
 }
 
-# Test results tracking
-test_results = {
-    "total": 0,
-    "passed": 0,
-    "failed": 0,
-    "tests": []
-}
+# Test configuration
+TEST_BOT_NAME = "Final_Fix_Test_Bot"
+MIN_BET_AMOUNT = 20.0
+MAX_BET_AMOUNT = 30.0
+WIN_PERCENTAGE = 55
+CYCLE_GAMES = 5
+WAIT_TIME = 15  # seconds
 
 # Colors for terminal output
 class Colors:
@@ -69,30 +67,25 @@ def print_header(text: str):
     print(f"{Colors.BOLD}{Colors.CYAN}{text.center(80)}{Colors.END}")
     print(f"{Colors.BOLD}{Colors.CYAN}{'='*80}{Colors.END}\n")
 
-def print_test_result(test_name: str, success: bool, details: str = ""):
-    """Print test result with colors"""
-    status = f"{Colors.GREEN}✅ PASSED{Colors.END}" if success else f"{Colors.RED}❌ FAILED{Colors.END}"
-    print(f"{status} - {test_name}")
-    if details:
-        print(f"   {Colors.YELLOW}Details: {details}{Colors.END}")
+def print_step(step_num: int, description: str):
+    """Print test step"""
+    print(f"\n{Colors.BOLD}{Colors.BLUE}🔹 ШАГ {step_num}: {description}{Colors.END}")
 
-def record_test(test_name: str, success: bool, details: str = "", response_data: Any = None):
-    """Record test result"""
-    test_results["total"] += 1
-    if success:
-        test_results["passed"] += 1
-    else:
-        test_results["failed"] += 1
-    
-    test_results["tests"].append({
-        "name": test_name,
-        "success": success,
-        "details": details,
-        "response_data": response_data,
-        "timestamp": datetime.now().isoformat()
-    })
-    
-    print_test_result(test_name, success, details)
+def print_success(message: str):
+    """Print success message"""
+    print(f"{Colors.GREEN}✅ {message}{Colors.END}")
+
+def print_error(message: str):
+    """Print error message"""
+    print(f"{Colors.RED}❌ {message}{Colors.END}")
+
+def print_warning(message: str):
+    """Print warning message"""
+    print(f"{Colors.YELLOW}⚠️ {message}{Colors.END}")
+
+def print_info(message: str):
+    """Print info message"""
+    print(f"{Colors.CYAN}ℹ️ {message}{Colors.END}")
 
 def make_request(method: str, endpoint: str, headers: Dict = None, data: Dict = None, params: Dict = None) -> Tuple[bool, Any, str]:
     """Make HTTP request with error handling"""
@@ -136,7 +129,7 @@ def make_request(method: str, endpoint: str, headers: Dict = None, data: Dict = 
 
 def authenticate_admin() -> Optional[str]:
     """Authenticate as admin and return access token"""
-    print(f"{Colors.BLUE}🔐 Authenticating as admin user...{Colors.END}")
+    print_info("Аутентификация как администратор...")
     
     success, response_data, details = make_request(
         "POST", 
@@ -146,26 +139,81 @@ def authenticate_admin() -> Optional[str]:
     
     if success and response_data and "access_token" in response_data:
         token = response_data["access_token"]
-        print(f"{Colors.GREEN}✅ Admin authentication successful{Colors.END}")
+        print_success("Аутентификация администратора успешна")
         return token
     else:
-        print(f"{Colors.RED}❌ Admin authentication failed: {details}{Colors.END}")
+        print_error(f"Ошибка аутентификации администратора: {details}")
         return None
 
-def test_create_bet_range_bot(token: str) -> Optional[str]:
-    """Test 1: Create Regular Bot with specific bet range settings"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 1: Creating Test_Bet_Range_Bot with min_bet=10.0, max_bet=30.0{Colors.END}")
+def delete_existing_test_bot(token: str) -> bool:
+    """Delete existing test bot if it exists"""
+    print_info(f"Проверка существующего бота '{TEST_BOT_NAME}'...")
     
     headers = {"Authorization": f"Bearer {token}"}
     
-    # Exact bot data as specified in Russian review
+    # Get all bots
+    success, response_data, details = make_request(
+        "GET",
+        "/admin/bots",
+        headers=headers
+    )
+    
+    if not success:
+        print_warning(f"Не удалось получить список ботов: {details}")
+        return False
+    
+    bots = response_data if isinstance(response_data, list) else response_data.get("bots", [])
+    
+    # Find test bot
+    test_bot = None
+    for bot in bots:
+        if bot.get("name") == TEST_BOT_NAME:
+            test_bot = bot
+            break
+    
+    if test_bot:
+        print_info(f"Найден существующий бот '{TEST_BOT_NAME}', удаляем...")
+        
+        success, response_data, details = make_request(
+            "DELETE",
+            f"/admin/bots/{test_bot['id']}",
+            headers=headers
+        )
+        
+        if success:
+            print_success(f"Бот '{TEST_BOT_NAME}' успешно удален")
+            return True
+        else:
+            print_warning(f"Не удалось удалить бота: {details}")
+            return False
+    else:
+        print_info(f"Бот '{TEST_BOT_NAME}' не найден, продолжаем...")
+        return True
+
+def create_test_bot(token: str) -> Optional[str]:
+    """Create test bot with specific parameters"""
+    print_step(1, f"Создание нового тестового бота '{TEST_BOT_NAME}'")
+    
+    headers = {"Authorization": f"Bearer {token}"}
+    
     bot_data = {
-        "name": "Test_Bet_Range_Bot",
-        "min_bet_amount": 10.0,
-        "max_bet_amount": 30.0,
-        "win_percentage": 55,
-        "cycle_games": 5
+        "name": TEST_BOT_NAME,
+        "min_bet_amount": MIN_BET_AMOUNT,
+        "max_bet_amount": MAX_BET_AMOUNT,
+        "win_percentage": WIN_PERCENTAGE,
+        "cycle_games": CYCLE_GAMES,
+        "pause_between_cycles": 5,  # 5 seconds between cycles
+        "pause_on_draw": 1,  # 1 second on draw
+        "creation_mode": "queue-based",
+        "profit_strategy": "balanced"
     }
+    
+    print_info(f"Параметры бота:")
+    print_info(f"  - name: {bot_data['name']}")
+    print_info(f"  - min_bet_amount: {bot_data['min_bet_amount']}")
+    print_info(f"  - max_bet_amount: {bot_data['max_bet_amount']}")
+    print_info(f"  - win_percentage: {bot_data['win_percentage']}")
+    print_info(f"  - cycle_games: {bot_data['cycle_games']}")
     
     success, response_data, details = make_request(
         "POST",
@@ -175,167 +223,31 @@ def test_create_bet_range_bot(token: str) -> Optional[str]:
     )
     
     if success and response_data:
-        # Try different ways to get bot ID from response
-        bot_id = (response_data.get("id") or 
-                 response_data.get("bot_id") or 
-                 (response_data.get("created_bots", [{}])[0] if response_data.get("created_bots") else None))
-        
+        bot_id = response_data.get("id") or response_data.get("bot_id")
         if bot_id:
-            record_test(
-                "Create Test_Bet_Range_Bot",
-                True,
-                f"Bot created successfully with ID: {bot_id}, min_bet: {bot_data['min_bet_amount']}, max_bet: {bot_data['max_bet_amount']}, cycle_games: {bot_data['cycle_games']}"
-            )
+            print_success(f"Бот '{TEST_BOT_NAME}' успешно создан с ID: {bot_id}")
             return bot_id
         else:
-            record_test(
-                "Create Test_Bet_Range_Bot",
-                False,
-                f"Bot created but no ID returned. Response: {response_data}"
-            )
+            print_error(f"Бот создан, но ID не найден в ответе: {response_data}")
+            return None
     else:
-        record_test(
-            "Create Test_Bet_Range_Bot",
-            False,
-            f"Failed to create bot: {details}"
-        )
-    
-    return None
+        print_error(f"Ошибка создания бота: {details}")
+        return None
 
-def test_bot_active_games_range(token: str, bot_id: str = None):
-    """Test 2: Check that bot's active games are in the correct bet range (10.0-30.0)"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 2: Checking active games bet amounts are in range 10.0-30.0{Colors.END}")
+def wait_for_bet_creation():
+    """Wait for automatic bet creation"""
+    print_step(2, f"Ожидание {WAIT_TIME} секунд для автоматического создания ставок")
     
-    headers = {"Authorization": f"Bearer {token}"}
+    for i in range(WAIT_TIME):
+        remaining = WAIT_TIME - i
+        print(f"\r{Colors.YELLOW}⏳ Осталось секунд: {remaining:2d}{Colors.END}", end="", flush=True)
+        time.sleep(1)
     
-    # Wait a moment for bot to create initial bets
-    print(f"{Colors.BLUE}⏳ Waiting 5 seconds for bot to create initial cycle bets...{Colors.END}")
-    time.sleep(5)
-    
-    success, response_data, details = make_request(
-        "GET",
-        "/bots/active-games",
-        headers=headers
-    )
-    
-    if success and response_data:
-        games = response_data if isinstance(response_data, list) else response_data.get("games", [])
-        
-        if games:
-            # Find games created by our test bot - try multiple approaches
-            test_bot_games = []
-            for game in games:
-                # Check if this game was created by our test bot
-                creator_name = game.get("creator_name", "")
-                creator_id = game.get("creator_id", "")
-                bot_name = game.get("bot_name", "")
-                
-                # Multiple ways to identify our bot's games
-                if (creator_name == "Test_Bet_Range_Bot" or 
-                    bot_name == "Test_Bet_Range_Bot" or
-                    (bot_id and creator_id == bot_id)):
-                    test_bot_games.append(game)
-            
-            print(f"{Colors.BLUE}🔍 Searching for Test_Bet_Range_Bot games in {len(games)} total games{Colors.END}")
-            if bot_id:
-                print(f"{Colors.BLUE}🆔 Looking for bot ID: {bot_id}{Colors.END}")
-            
-            # Debug: Show some game creators for analysis
-            print(f"{Colors.BLUE}📋 Sample game creators (first 5):{Colors.END}")
-            for i, game in enumerate(games[:5]):
-                creator_info = {
-                    "creator_name": game.get("creator_name", "N/A"),
-                    "creator_id": game.get("creator_id", "N/A")[:8] + "..." if game.get("creator_id") else "N/A",
-                    "bot_name": game.get("bot_name", "N/A"),
-                    "bet_amount": game.get("bet_amount", "N/A")
-                }
-                print(f"   Game {i+1}: {creator_info}")
-            
-            if test_bot_games:
-                print(f"{Colors.BLUE}📊 Found {len(test_bot_games)} games created by Test_Bet_Range_Bot{Colors.END}")
-                
-                # Check bet amounts are in range
-                in_range_count = 0
-                out_of_range_games = []
-                bet_amounts = []
-                
-                for game in test_bot_games:
-                    bet_amount = game.get("bet_amount", 0)
-                    bet_amounts.append(bet_amount)
-                    
-                    if 10.0 <= bet_amount <= 30.0:
-                        in_range_count += 1
-                    else:
-                        out_of_range_games.append({
-                            "game_id": game.get("id", "unknown"),
-                            "bet_amount": bet_amount,
-                            "status": game.get("status", "unknown"),
-                            "created_at": game.get("created_at", "unknown")
-                        })
-                
-                # Check if we have expected number of games (5 cycle_games)
-                expected_games = 5
-                games_count_ok = len(test_bot_games) == expected_games
-                
-                # Check if all bets are in range
-                all_in_range = len(out_of_range_games) == 0
-                
-                if all_in_range and games_count_ok:
-                    record_test(
-                        "Bot bet amounts in correct range (10.0-30.0)",
-                        True,
-                        f"All {len(test_bot_games)} games have bet amounts in range 10.0-30.0. Amounts: {bet_amounts}"
-                    )
-                elif all_in_range and not games_count_ok:
-                    record_test(
-                        "Bot bet amounts in correct range (10.0-30.0)",
-                        True,
-                        f"All {len(test_bot_games)} games in range (expected {expected_games}). Amounts: {bet_amounts}"
-                    )
-                else:
-                    # Critical failure - bets outside range
-                    record_test(
-                        "Bot bet amounts in correct range (10.0-30.0)",
-                        False,
-                        f"Found {len(out_of_range_games)} games with bet amounts OUTSIDE range 10.0-30.0. Out of range games: {out_of_range_games}"
-                    )
-                
-                # Additional test for cycle games count
-                if games_count_ok:
-                    record_test(
-                        "Bot created correct number of cycle games (5)",
-                        True,
-                        f"Bot created exactly {len(test_bot_games)} games as expected (cycle_games=5)"
-                    )
-                else:
-                    record_test(
-                        "Bot created correct number of cycle games (5)",
-                        False,
-                        f"Bot created {len(test_bot_games)} games, expected {expected_games} (cycle_games=5)"
-                    )
-                
-            else:
-                record_test(
-                    "Bot bet amounts in correct range (10.0-30.0)",
-                    False,
-                    f"No games found created by Test_Bet_Range_Bot. Total games found: {len(games)}"
-                )
-        else:
-            record_test(
-                "Bot bet amounts in correct range (10.0-30.0)",
-                False,
-                "No active games found in /bots/active-games endpoint"
-            )
-    else:
-        record_test(
-            "Bot bet amounts in correct range (10.0-30.0)",
-            False,
-            f"Failed to get active games: {details}"
-        )
+    print(f"\n{Colors.GREEN}✅ Ожидание завершено{Colors.END}")
 
-def test_detailed_bet_analysis(token: str):
-    """Test 3: Detailed analysis of bet generation patterns"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 3: Detailed analysis of bet generation patterns{Colors.END}")
+def get_bot_active_games(token: str) -> List[Dict]:
+    """Get all active games for regular bots"""
+    print_step(3, "Получение активных игр через GET /api/bots/active-games")
     
     headers = {"Authorization": f"Bearer {token}"}
     
@@ -347,198 +259,237 @@ def test_detailed_bet_analysis(token: str):
     
     if success and response_data:
         games = response_data if isinstance(response_data, list) else response_data.get("games", [])
-        
-        # Find all Test_Bet_Range_Bot games
-        test_bot_games = [game for game in games if game.get("creator_name") == "Test_Bet_Range_Bot"]
-        
-        if test_bot_games:
-            print(f"\n{Colors.CYAN}📈 DETAILED BET ANALYSIS FOR Test_Bet_Range_Bot:{Colors.END}")
-            
-            bet_amounts = [game.get("bet_amount", 0) for game in test_bot_games]
-            min_bet = min(bet_amounts) if bet_amounts else 0
-            max_bet = max(bet_amounts) if bet_amounts else 0
-            avg_bet = sum(bet_amounts) / len(bet_amounts) if bet_amounts else 0
-            
-            print(f"   Total games: {len(test_bot_games)}")
-            print(f"   Bet amounts: {bet_amounts}")
-            print(f"   Min bet: {min_bet}")
-            print(f"   Max bet: {max_bet}")
-            print(f"   Average bet: {avg_bet:.2f}")
-            print(f"   Expected range: 10.0 - 30.0")
-            
-            # Check gem types diversity
-            gem_types_used = set()
-            for game in test_bot_games:
-                bet_gems = game.get("bet_gems", {})
-                if isinstance(bet_gems, dict):
-                    gem_types_used.update(bet_gems.keys())
-            
-            print(f"   Gem types used: {list(gem_types_used)}")
-            
-            # Analyze each game in detail
-            print(f"\n{Colors.CYAN}🔍 INDIVIDUAL GAME ANALYSIS:{Colors.END}")
-            for i, game in enumerate(test_bot_games, 1):
-                bet_amount = game.get("bet_amount", 0)
-                bet_gems = game.get("bet_gems", {})
-                status = game.get("status", "unknown")
-                game_id = game.get("id", "unknown")
-                
-                in_range = "✅" if 10.0 <= bet_amount <= 30.0 else "❌"
-                
-                print(f"   Game {i}: {in_range} ID={game_id[:8]}..., Amount={bet_amount}, Status={status}")
-                print(f"            Gems: {bet_gems}")
-            
-            # Final assessment
-            all_in_range = all(10.0 <= game.get("bet_amount", 0) <= 30.0 for game in test_bot_games)
-            
-            record_test(
-                "Detailed bet analysis",
-                all_in_range,
-                f"Range analysis: min={min_bet}, max={max_bet}, avg={avg_bet:.2f}, all_in_range={all_in_range}"
-            )
-        else:
-            record_test(
-                "Detailed bet analysis",
-                False,
-                "No Test_Bet_Range_Bot games found for detailed analysis"
-            )
+        print_success(f"Получено {len(games)} активных игр Regular ботов")
+        return games
     else:
-        record_test(
-            "Detailed bet analysis",
-            False,
-            f"Failed to get games for analysis: {details}"
-        )
+        print_error(f"Ошибка получения активных игр: {details}")
+        return []
 
-def test_wait_and_recheck_bets(token: str):
-    """Test 4: Wait longer and recheck to ensure bot automation is working"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 4: Extended wait and recheck for bot automation{Colors.END}")
+def analyze_bot_bets(games: List[Dict]) -> Dict[str, Any]:
+    """Analyze bets created by the test bot"""
+    print_step(4, f"Анализ ставок созданных ботом '{TEST_BOT_NAME}'")
     
-    print(f"{Colors.BLUE}⏳ Waiting additional 10 seconds for bot automation to stabilize...{Colors.END}")
-    time.sleep(10)
+    # Find games created by our test bot
+    test_bot_games = []
     
-    headers = {"Authorization": f"Bearer {token}"}
+    for game in games:
+        # Check if game was created by our test bot
+        creator_name = game.get("creator_name") or game.get("bot_name") or ""
+        if creator_name == TEST_BOT_NAME:
+            test_bot_games.append(game)
     
-    success, response_data, details = make_request(
-        "GET",
-        "/bots/active-games",
-        headers=headers
-    )
+    print_info(f"Найдено {len(test_bot_games)} игр созданных ботом '{TEST_BOT_NAME}'")
     
-    if success and response_data:
-        games = response_data if isinstance(response_data, list) else response_data.get("games", [])
-        test_bot_games = [game for game in games if game.get("creator_name") == "Test_Bet_Range_Bot"]
+    if not test_bot_games:
+        print_warning("Бот не создал ни одной игры!")
+        return {
+            "total_games": 0,
+            "games_in_range": 0,
+            "games_out_of_range": 0,
+            "bet_amounts": [],
+            "out_of_range_bets": [],
+            "success_rate": 0.0,
+            "analysis": "Бот не создал игры"
+        }
+    
+    # Analyze bet amounts
+    bet_amounts = []
+    games_in_range = 0
+    games_out_of_range = 0
+    out_of_range_bets = []
+    
+    print_info("Детальный анализ ставок:")
+    
+    for i, game in enumerate(test_bot_games, 1):
+        bet_amount = game.get("bet_amount", 0)
+        bet_amounts.append(bet_amount)
         
-        if test_bot_games:
-            bet_amounts = [game.get("bet_amount", 0) for game in test_bot_games]
-            out_of_range = [amount for amount in bet_amounts if not (10.0 <= amount <= 30.0)]
-            
-            if not out_of_range:
-                record_test(
-                    "Extended wait - all bets still in range",
-                    True,
-                    f"After extended wait: {len(test_bot_games)} games, all bet amounts in range 10.0-30.0: {bet_amounts}"
-                )
-            else:
-                record_test(
-                    "Extended wait - all bets still in range",
-                    False,
-                    f"After extended wait: found {len(out_of_range)} bets outside range: {out_of_range}"
-                )
+        in_range = MIN_BET_AMOUNT <= bet_amount <= MAX_BET_AMOUNT
+        
+        if in_range:
+            games_in_range += 1
+            status = f"{Colors.GREEN}✅ В ДИАПАЗОНЕ{Colors.END}"
         else:
-            record_test(
-                "Extended wait - bot games exist",
-                False,
-                "No Test_Bet_Range_Bot games found after extended wait"
-            )
-    else:
-        record_test(
-            "Extended wait - API accessible",
-            False,
-            f"Failed to access active games after extended wait: {details}"
-        )
-
-def print_final_summary():
-    """Print final test summary"""
-    print_header("BET RANGE GENERATION TESTING SUMMARY")
-    
-    total = test_results["total"]
-    passed = test_results["passed"]
-    failed = test_results["failed"]
-    success_rate = (passed / total * 100) if total > 0 else 0
-    
-    print(f"{Colors.BOLD}📊 OVERALL RESULTS:{Colors.END}")
-    print(f"   Total Tests: {total}")
-    print(f"   {Colors.GREEN}✅ Passed: {passed}{Colors.END}")
-    print(f"   {Colors.RED}❌ Failed: {failed}{Colors.END}")
-    print(f"   {Colors.CYAN}📈 Success Rate: {success_rate:.1f}%{Colors.END}")
-    
-    print(f"\n{Colors.BOLD}🎯 RUSSIAN REVIEW REQUIREMENTS STATUS:{Colors.END}")
-    
-    requirements = [
-        "Создать бота Test_Bet_Range_Bot с min_bet=10.0, max_bet=30.0",
-        "Проверить что создано 5 активных ставок (cycle_games=5)",
-        "Убедиться что все ставки в диапазоне 10.0-30.0 гемов",
-        "Диагностика ставок вне диапазона (если найдены)"
-    ]
-    
-    for i, req in enumerate(requirements, 1):
-        # Find corresponding test result
-        test_found = False
-        for test in test_results["tests"]:
-            if any(keyword in test["name"].lower() for keyword in req.lower().split()[:3]):
-                status = f"{Colors.GREEN}✅ WORKING{Colors.END}" if test["success"] else f"{Colors.RED}❌ FAILED{Colors.END}"
-                print(f"   {i}. {req}: {status}")
-                test_found = True
-                break
+            games_out_of_range += 1
+            out_of_range_bets.append(bet_amount)
+            status = f"{Colors.RED}❌ ВНЕ ДИАПАЗОНА{Colors.END}"
         
-        if not test_found:
-            print(f"   {i}. {req}: {Colors.YELLOW}⚠️ NOT TESTED{Colors.END}")
+        print(f"  Игра {i}: ${bet_amount:.1f} - {status}")
     
-    print(f"\n{Colors.BOLD}🔍 DETAILED TEST RESULTS:{Colors.END}")
-    for test in test_results["tests"]:
-        status = f"{Colors.GREEN}✅{Colors.END}" if test["success"] else f"{Colors.RED}❌{Colors.END}"
-        print(f"   {status} {test['name']}")
-        if test["details"]:
-            print(f"      {Colors.YELLOW}{test['details']}{Colors.END}")
+    success_rate = (games_in_range / len(test_bot_games)) * 100 if test_bot_games else 0
     
-    # Final conclusion
-    if success_rate >= 80:
-        print(f"\n{Colors.GREEN}{Colors.BOLD}🎉 CONCLUSION: BET RANGE GENERATION FIX IS WORKING ({success_rate:.1f}% success)!{Colors.END}")
-        print(f"{Colors.GREEN}Regular bots are correctly generating bets within the specified min_bet_amount and max_bet_amount range.{Colors.END}")
-    elif success_rate >= 60:
-        print(f"\n{Colors.YELLOW}{Colors.BOLD}⚠️ CONCLUSION: BET RANGE GENERATION PARTIALLY WORKING ({success_rate:.1f}% success){Colors.END}")
-        print(f"{Colors.YELLOW}Some issues detected but core bet range functionality appears to be working.{Colors.END}")
+    return {
+        "total_games": len(test_bot_games),
+        "games_in_range": games_in_range,
+        "games_out_of_range": games_out_of_range,
+        "bet_amounts": bet_amounts,
+        "out_of_range_bets": out_of_range_bets,
+        "success_rate": success_rate,
+        "expected_games": CYCLE_GAMES
+    }
+
+def get_gem_combinations_analysis(games: List[Dict]) -> Dict[str, Any]:
+    """Analyze gem combinations for test bot games"""
+    print_info("Анализ комбинаций гемов:")
+    
+    gem_combinations = []
+    total_gem_value = 0
+    
+    for game in games:
+        bet_gems = game.get("bet_gems", {})
+        if bet_gems:
+            gem_combinations.append(bet_gems)
+            # Calculate gem value based on GEM_PRICES
+            gem_prices = {
+                "Ruby": 1.0,
+                "Amber": 2.0,
+                "Topaz": 5.0,
+                "Emerald": 10.0,
+                "Aquamarine": 25.0,
+                "Sapphire": 50.0,
+                "Magic": 100.0
+            }
+            
+            game_gem_value = 0
+            for gem_type, quantity in bet_gems.items():
+                if gem_type in gem_prices:
+                    game_gem_value += gem_prices[gem_type] * quantity
+            
+            total_gem_value += game_gem_value
+            print_info(f"  Гемы: {bet_gems} = ${game_gem_value:.1f}")
+    
+    return {
+        "combinations": gem_combinations,
+        "total_value": total_gem_value,
+        "average_value": total_gem_value / len(gem_combinations) if gem_combinations else 0
+    }
+
+def print_detailed_statistics(analysis: Dict[str, Any], games: List[Dict]):
+    """Print detailed statistics and analysis"""
+    print_header("ДЕТАЛЬНАЯ СТАТИСТИКА РЕЗУЛЬТАТОВ")
+    
+    total = analysis["total_games"]
+    in_range = analysis["games_in_range"]
+    out_of_range = analysis["games_out_of_range"]
+    success_rate = analysis["success_rate"]
+    expected = analysis["expected_games"]
+    
+    print(f"{Colors.BOLD}📊 ОСНОВНЫЕ ПОКАЗАТЕЛИ:{Colors.END}")
+    print(f"   Ожидалось игр: {expected}")
+    print(f"   Фактически создано: {total}")
+    print(f"   {Colors.GREEN}✅ В диапазоне ({MIN_BET_AMOUNT}-{MAX_BET_AMOUNT}): {in_range}{Colors.END}")
+    print(f"   {Colors.RED}❌ Вне диапазона: {out_of_range}{Colors.END}")
+    print(f"   {Colors.CYAN}📈 Процент успеха: {success_rate:.1f}%{Colors.END}")
+    
+    if analysis["bet_amounts"]:
+        bet_amounts = analysis["bet_amounts"]
+        print(f"\n{Colors.BOLD}💰 СУММЫ СТАВОК:{Colors.END}")
+        print(f"   Все ставки: {bet_amounts}")
+        print(f"   Минимальная: ${min(bet_amounts):.1f}")
+        print(f"   Максимальная: ${max(bet_amounts):.1f}")
+        print(f"   Средняя: ${sum(bet_amounts)/len(bet_amounts):.1f}")
+    
+    if analysis["out_of_range_bets"]:
+        print(f"\n{Colors.BOLD}{Colors.RED}🚨 СТАВКИ ВНЕ ДИАПАЗОНА:{Colors.END}")
+        for bet in analysis["out_of_range_bets"]:
+            print(f"   ${bet:.1f}")
+    
+    # Gem combinations analysis
+    if total > 0:
+        test_bot_games = [g for g in games if g.get("creator_name") == TEST_BOT_NAME or g.get("bot_name") == TEST_BOT_NAME]
+        gem_analysis = get_gem_combinations_analysis(test_bot_games)
+        
+        print(f"\n{Colors.BOLD}💎 АНАЛИЗ КОМБИНАЦИЙ ГЕМОВ:{Colors.END}")
+        print(f"   Всего комбинаций: {len(gem_analysis['combinations'])}")
+        print(f"   Общая стоимость гемов: ${gem_analysis['total_value']:.1f}")
+        print(f"   Средняя стоимость: ${gem_analysis['average_value']:.1f}")
+
+def print_final_conclusion(analysis: Dict[str, Any]):
+    """Print final conclusion and recommendations"""
+    print_header("ФИНАЛЬНОЕ ЗАКЛЮЧЕНИЕ")
+    
+    total = analysis["total_games"]
+    success_rate = analysis["success_rate"]
+    expected = analysis["expected_games"]
+    
+    if total == 0:
+        print(f"{Colors.RED}{Colors.BOLD}🚨 КРИТИЧЕСКАЯ ПРОБЛЕМА: БОТ НЕ СОЗДАЛ НИ ОДНОЙ ИГРЫ!{Colors.END}")
+        print(f"{Colors.RED}Возможные причины:{Colors.END}")
+        print(f"{Colors.RED}  1. Автоматизация создания ставок не работает{Colors.END}")
+        print(f"{Colors.RED}  2. Бот не активирован после создания{Colors.END}")
+        print(f"{Colors.RED}  3. Ошибка в логике maintain_all_bots_active_bets(){Colors.END}")
+        print(f"{Colors.RED}  4. Проблемы с циклами ботов{Colors.END}")
+        
+    elif total != expected:
+        print(f"{Colors.YELLOW}{Colors.BOLD}⚠️ ПРОБЛЕМА С КОЛИЧЕСТВОМ ИГОР:{Colors.END}")
+        print(f"{Colors.YELLOW}Ожидалось: {expected} игр, Создано: {total} игр{Colors.END}")
+        print(f"{Colors.YELLOW}Логика cycle_games может работать некорректно{Colors.END}")
+        
+    if success_rate == 100.0 and total == expected:
+        print(f"{Colors.GREEN}{Colors.BOLD}🎉 ИСПРАВЛЕНИЕ ГЕНЕРАЦИИ СТАВОК УСПЕШНО!{Colors.END}")
+        print(f"{Colors.GREEN}✅ Все {total} ставок находятся в правильном диапазоне {MIN_BET_AMOUNT}-{MAX_BET_AMOUNT}{Colors.END}")
+        print(f"{Colors.GREEN}✅ Количество ставок соответствует cycle_games = {expected}{Colors.END}")
+        print(f"{Colors.GREEN}✅ Система готова к продакшену{Colors.END}")
+        
+    elif success_rate >= 80.0:
+        print(f"{Colors.YELLOW}{Colors.BOLD}⚠️ ЧАСТИЧНОЕ ИСПРАВЛЕНИЕ ({success_rate:.1f}% успеха){Colors.END}")
+        print(f"{Colors.YELLOW}Большинство ставок в правильном диапазоне, но есть проблемы{Colors.END}")
+        print(f"{Colors.YELLOW}Требуется дополнительная настройка алгоритма{Colors.END}")
+        
     else:
-        print(f"\n{Colors.RED}{Colors.BOLD}🚨 CONCLUSION: BET RANGE GENERATION FIX NEEDS ATTENTION ({success_rate:.1f}% success){Colors.END}")
-        print(f"{Colors.RED}Critical issues found with bet range generation. Bots may be creating bets outside the specified range.{Colors.END}")
+        print(f"{Colors.RED}{Colors.BOLD}🚨 ИСПРАВЛЕНИЕ НЕ РАБОТАЕТ! ({success_rate:.1f}% успеха){Colors.END}")
+        print(f"{Colors.RED}Генерация ставок все еще нарушает диапазон min_bet_amount - max_bet_amount{Colors.END}")
+        print(f"{Colors.RED}Требуется срочное вмешательство главного агента{Colors.END}")
+        
+        print(f"\n{Colors.RED}{Colors.BOLD}🔧 РЕКОМЕНДАЦИИ ДЛЯ ИСПРАВЛЕНИЯ:{Colors.END}")
+        print(f"{Colors.RED}1. Проверить функцию generate_bot_bet_amount() в server.py{Colors.END}")
+        print(f"{Colors.RED}2. Убедиться что min_bet_amount и max_bet_amount правильно используются{Colors.END}")
+        print(f"{Colors.RED}3. Проверить логику расчета стоимости гемов{Colors.END}")
+        print(f"{Colors.RED}4. Добавить дополнительную валидацию bet_amount перед созданием игры{Colors.END}")
 
 def main():
     """Main test execution"""
-    print_header("REGULAR BOTS BET RANGE GENERATION TESTING")
-    print(f"{Colors.BLUE}🎯 Testing bet range generation fix for Regular bots{Colors.END}")
-    print(f"{Colors.BLUE}📋 Focus: min_bet_amount=10.0, max_bet_amount=30.0, cycle_games=5{Colors.END}")
+    print_header("ФИНАЛЬНОЕ ТЕСТИРОВАНИЕ ИСПРАВЛЕНИЯ ГЕНЕРАЦИИ СТАВОК")
+    print(f"{Colors.BLUE}🎯 Тестирование исправления генерации ставок для Regular ботов{Colors.END}")
+    print(f"{Colors.BLUE}📋 Цель: Проверить что все ставки находятся в диапазоне {MIN_BET_AMOUNT}-{MAX_BET_AMOUNT}{Colors.END}")
     
     # Authenticate
     token = authenticate_admin()
     if not token:
-        print(f"{Colors.RED}❌ Cannot proceed without authentication{Colors.END}")
+        print_error("Невозможно продолжить без аутентификации")
         sys.exit(1)
     
     try:
-        # Run all tests in sequence
-        bot_id = test_create_bet_range_bot(token)
-        test_bot_active_games_range(token, bot_id)
-        test_detailed_bet_analysis(token)
-        test_wait_and_recheck_bets(token)
+        # Delete existing test bot if exists
+        delete_existing_test_bot(token)
+        
+        # Create test bot
+        bot_id = create_test_bot(token)
+        if not bot_id:
+            print_error("Невозможно продолжить без создания бота")
+            sys.exit(1)
+        
+        # Wait for bet creation
+        wait_for_bet_creation()
+        
+        # Get active games
+        games = get_bot_active_games(token)
+        
+        # Analyze bot bets
+        analysis = analyze_bot_bets(games)
+        
+        # Print detailed statistics
+        print_detailed_statistics(analysis, games)
+        
+        # Print final conclusion
+        print_final_conclusion(analysis)
         
     except KeyboardInterrupt:
-        print(f"\n{Colors.YELLOW}⚠️ Testing interrupted by user{Colors.END}")
+        print(f"\n{Colors.YELLOW}⚠️ Тестирование прервано пользователем{Colors.END}")
     except Exception as e:
-        print(f"\n{Colors.RED}❌ Unexpected error during testing: {str(e)}{Colors.END}")
-    
-    finally:
-        # Print final summary
-        print_final_summary()
+        print(f"\n{Colors.RED}❌ Неожиданная ошибка во время тестирования: {str(e)}{Colors.END}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
