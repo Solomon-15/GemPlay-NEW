@@ -112,15 +112,18 @@ frontend:
 
   - task: "Regular Bots Game Logic Fix - Draw vs Win/Loss Behavior"
     implemented: true
-    working: false  # Need testing
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main_agent"
         comment: "CRITICAL GAME LOGIC BUG FIXED: Successfully resolved issue where Regular bots were creating replacement bets after every game completion regardless of outcome. PROBLEM IDENTIFIED: maintain_all_bots_active_bets() was running constantly and replacing every completed game immediately, causing unwanted behavior and zero gem displays. NEW CORRECT BEHAVIOR: ✅ WIN/LOSS games - Counted toward cycle progress, NO immediate replacement bet created ✅ DRAW games - NOT counted toward cycle, new replacement bet created after 1 second via schedule_draw_replacement_bet() ✅ CYCLE COMPLETION - New full cycle created after pause_between_cycles (5 sec) when all cycle games finished ✅ INITIAL SETUP - New bots get full initial cycle of bets. KEY CHANGES: Added schedule_draw_replacement_bet() function for proper draw handling, Updated update_bot_cycle_stats() to call draw replacement only on DRAW outcome, Completely rewrote maintain_all_bots_active_bets() logic to respect cycle-based timing instead of immediate replacement, Added cycle completion detection before creating new cycle bets, Added proper pause_between_cycles timing (5 sec) between completed cycles. TIMING LOGIC FIXED: OLD: Every game completion → immediate new bet creation, NEW: Only draw → 1 sec replacement, Only cycle completion → 5 sec pause → new cycle. This resolves the reported issues of immediate bet replacement with zero gems and incorrect timing behavior."
+      - working: false
+        agent: "testing"
+        comment: "🚨 CRITICAL ISSUE DETECTED: REGULAR BOTS CYCLE_GAMES LOGIC NOT WORKING CORRECTLY! Conducted comprehensive testing of the regular bots game logic fix and found a major issue with the cycle_games limitation system. CRITICAL FAILURE IDENTIFIED: ❌ CYCLE_GAMES LIMIT VIOLATION - Multiple bots are creating more active bets than their cycle_games limit allows: 'Updated_Bot_1754524221: 31 active bets > 12 cycle_games', 'Bot#2: 27 active bets > 12 cycle_games', 'Bot#1: 186 active bets > 12 cycle_games'. This indicates that the maintain_all_bots_active_bets() function is NOT properly enforcing the cycle_games limit as intended. ✅ POSITIVE FINDINGS: Draw replacement logic is implemented (all bots have pause_on_draw settings), endpoint separation is working correctly (/games/available and /games/active-human-bots exclude regular bots), gem types diversity is working (all 7 gem types being used), isolation rules are followed (no bot vs bot games detected). ❌ ONGOING GAMES ENDPOINT ISSUE: /bots/ongoing-games returns 0 games, indicating no ACTIVE regular bot games currently exist (all are WAITING). ROOT CAUSE ANALYSIS: The cycle_games logic appears to have a race condition or the bot automation is creating bets faster than the limit checking can prevent. The maintain_all_bots_active_bets() function needs immediate attention to properly enforce the cycle_games limit. CONCLUSION: While some aspects of the game logic fix are working (draw handling, gem diversity, endpoint separation), the core cycle_games limitation system is critically broken and needs urgent fixing."
 
   - task: "Regular Bots Timing Settings Update"
     implemented: true
