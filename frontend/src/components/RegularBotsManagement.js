@@ -583,6 +583,15 @@ const RegularBotsManagement = () => {
       });
       
       showSuccessRU(response.data.message || 'Настройки бота успешно обновлены');
+      
+      // Обновляем editingBot с новыми данными для корректного отображения
+      const updatedBot = {
+        ...editingBot,
+        ...botForm,
+        updated_at: new Date().toISOString()
+      };
+      setEditingBot(updatedBot);
+      
       setIsEditModalOpen(false);
       setEditingBot(null);
       await fetchBotsList();
