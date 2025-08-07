@@ -2075,9 +2075,12 @@ const RegularBotsManagement = () => {
                       max="100"
                       value={botForm.draws_percentage}
                       onChange={(e) => {
-                        const newForm = {...botForm, draws_percentage: parseInt(e.target.value) || 30};
+                        const draws = parseInt(e.target.value) || 30;
+                        const newForm = {...botForm, draws_percentage: draws};
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
+                        // Сохраняем в localStorage
+                        savePercentagesToStorage(botForm.wins_percentage, botForm.losses_percentage, draws);
                       }}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                     />
