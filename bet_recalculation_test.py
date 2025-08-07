@@ -178,7 +178,15 @@ def create_test_bot(token: str, bot_config: Dict) -> Optional[str]:
     )
     
     if success and response_data:
-        bot_id = response_data.get("id") or response_data.get("bot_id")
+        # Try different ways to get bot ID from response
+        bot_id = None
+        if "id" in response_data:
+            bot_id = response_data["id"]
+        elif "bot_id" in response_data:
+            bot_id = response_data["bot_id"]
+        elif "created_bots" in response_data and response_data["created_bots"]:
+            bot_id = response_data["created_bots"][0]  # Get first bot ID from array
+        
         if bot_id:
             record_test(
                 f"Create test bot: {bot_config['name']}",
