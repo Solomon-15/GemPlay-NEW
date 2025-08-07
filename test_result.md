@@ -52,9 +52,9 @@ frontend:
 
   - task: "Regular Bots Bet Creation Fix - Gem Types and Zero Values"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 3
+    stuck_count: 0
     priority: "critical"
     needs_retesting: false
     status_history:
