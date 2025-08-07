@@ -396,6 +396,7 @@ def join_bot_game(user_token: str, game: Dict) -> Optional[str]:
     headers = {"Authorization": f"Bearer {user_token}"}
     game_id = game.get("id")
     bet_amount = game.get("bet_amount", 15.0)
+    bot_gems = game.get("bet_gems", {})
     
     if not game_id:
         record_test(
@@ -405,20 +406,43 @@ def join_bot_game(user_token: str, game: Dict) -> Optional[str]:
         )
         return None
     
+    print(f"{Colors.BLUE}   Game bet amount: ${bet_amount}, Bot gems: {bot_gems}{Colors.END}")
+    
     # Add gems to user first
     add_gems_to_user(user_token)
     
-    # Prepare gems for joining (match the bet amount)
-    join_gems = {
-        "Ruby": int(bet_amount * 0.6),  # 60% Ruby
-        "Emerald": int(bet_amount * 0.3),  # 30% Emerald  
-        "Sapphire": int(bet_amount * 0.1)   # 10% Sapphire
-    }
+    # Calculate exact gem combination to match bet amount
+    # Use the same gems as the bot but calculate quantities to match the bet amount
+    join_gems = {}
     
-    # Ensure we have at least 1 of each gem
-    for gem_type in join_gems:
-        if join_gems[gem_type] < 1:
-            join_gems[gem_type] = 1
+    if bot_gems:
+        # Use the same gem types as the bot
+        gem_types = list(bot_gems.keys())
+        total_value_needed = bet_amount
+        
+        # Distribute the bet amount across the gem types
+        for i, gem_type in enumerate(gem_types):
+            if i == len(gem_types) - 1:  # Last gem gets the remainder
+                remaining_value = total_value_needed - sum(join_gems.get(gt, 0) * get_gem_price(gt) for gt in join_gems)
+                join_gems[gem_type] = max(1, int(remaining_value / get_gem_price(gem_type)))
+            else:
+                # Distribute proportionally
+                proportion = 1.0 / len(gem_types)
+                gem_value = total_value_needed * proportion
+                join_gems[gem_type] = max(1, int(gem_value / get_gem_price(gem_type)))
+    else:
+        # Fallback: use Ruby gems to match the bet amount
+        join_gems = {"Ruby": int(bet_amount)}
+    
+    # Verify the total value matches
+    total_value = sum(join_gems[gem_type] * get_gem_price(gem_type) for gem_type in join_gems)
+    print(f"{Colors.BLUE}   Calculated gems: {join_gems}, Total value: ${total_value}{Colors.END}")
+    
+    # Adjust if needed to match exactly
+    if total_value != bet_amount:
+        # Simple adjustment: use Ruby gems for exact match
+        join_gems = {"Ruby": int(bet_amount)}
+        print(f"{Colors.BLUE}   Adjusted to exact match: {join_gems}{Colors.END}")
     
     join_data = {
         "move": "rock",  # Choose rock as our move
@@ -446,6 +470,19 @@ def join_bot_game(user_token: str, game: Dict) -> Optional[str]:
             f"Failed to join game {game_id}: {details}"
         )
         return None
+
+def get_gem_price(gem_type: str) -> float:
+    """Get gem price"""
+    gem_prices = {
+        "Ruby": 1.0,
+        "Amber": 2.0,
+        "Topaz": 5.0,
+        "Emerald": 10.0,
+        "Aquamarine": 25.0,
+        "Sapphire": 50.0,
+        "Magic": 100.0
+    }
+    return gem_prices.get(gem_type, 1.0)
 
 def choose_move_in_game(user_token: str, game_id: str) -> bool:
     """Choose move in the joined game"""
