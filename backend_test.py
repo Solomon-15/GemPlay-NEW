@@ -152,15 +152,64 @@ def authenticate_admin() -> Optional[str]:
         print(f"{Colors.RED}❌ Admin authentication failed: {details}{Colors.END}")
         return None
 
-def test_exact_cycle_sum_matching():
-    """Test 1: Создать Regular бот "Critical_Fix_Test_Bot" и проверить точную сумму цикла 306.0"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 1: Testing CRITICAL FIX for exact cycle sum matching{Colors.END}")
+def test_clear_cache_button():
+    """Test 1: Кратко проверить что POST /api/admin/cache/clear все еще работает"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 1: Testing Clear Cache Button (Brief Check){Colors.END}")
     
     # First authenticate as admin
     admin_token = authenticate_admin()
     if not admin_token:
-        record_test("Critical Fix Test Bot Creation", False, "Failed to authenticate as admin")
+        record_test("Clear Cache Button Test", False, "Failed to authenticate as admin")
         return
+    
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    
+    print(f"   📝 Testing POST /api/admin/cache/clear endpoint...")
+    
+    # Test clear cache endpoint
+    success, response_data, details = make_request(
+        "POST",
+        "/admin/cache/clear",
+        headers=headers
+    )
+    
+    if success and response_data:
+        # Check response structure
+        has_success = response_data.get("success", False)
+        has_message = "message" in response_data
+        has_cache_types = "cache_types_cleared" in response_data
+        
+        if has_success and has_message and has_cache_types:
+            cache_types = response_data.get("cache_types_cleared", [])
+            cleared_count = response_data.get("cleared_count", 0)
+            
+            record_test(
+                "Clear Cache Button Test",
+                True,
+                f"Cache cleared successfully: {cleared_count} types cleared ({', '.join(cache_types[:3])}...)"
+            )
+        else:
+            record_test(
+                "Clear Cache Button Test",
+                False,
+                f"Invalid response structure: {response_data}"
+            )
+    else:
+        record_test(
+            "Clear Cache Button Test",
+            False,
+            f"Cache clear failed: {details}"
+        )
+
+def test_regular_bot_cycle_logic():
+    """Test 2: Создать тестовый Regular бот и проверить логику циклов"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 2: Testing Regular Bot Cycle Logic{Colors.END}")
+    
+    # First authenticate as admin
+    admin_token = authenticate_admin()
+    if not admin_token:
+        record_test("Regular Bot Cycle Logic Test", False, "Failed to authenticate as admin")
+        return None
     
     headers = {"Authorization": f"Bearer {admin_token}"}
     
@@ -168,7 +217,7 @@ def test_exact_cycle_sum_matching():
     import time
     timestamp = int(time.time())
     bot_data = {
-        "name": f"Final_Perfect_Test_Bot_{timestamp}",
+        "name": f"Russian_Review_Test_Bot_{timestamp}",
         "min_bet_amount": 1.0,
         "max_bet_amount": 50.0,
         "cycle_games": 12,
@@ -179,7 +228,7 @@ def test_exact_cycle_sum_matching():
         "creation_mode": "queue-based"
     }
     
-    print(f"   📝 Creating Regular bot 'Final_Perfect_Test_Bot_{timestamp}' with settings: {bot_data}")
+    print(f"   📝 Creating Regular bot with settings: min_bet=1.0, max_bet=50.0, cycle_games=12")
     
     # Create the bot
     success, response_data, details = make_request(
@@ -191,26 +240,26 @@ def test_exact_cycle_sum_matching():
     
     if not success or not response_data:
         record_test(
-            "Critical Fix Test Bot Creation",
+            "Regular Bot Creation",
             False,
             f"Failed to create Regular bot: {details}"
         )
-        return
+        return None
     
     bot_id = response_data.get("bot_id")
     if not bot_id:
         record_test(
-            "Critical Fix Test Bot Creation",
+            "Regular Bot Creation",
             False,
             "Bot created but no bot_id returned"
         )
-        return
+        return None
     
-    print(f"   ✅ Regular bot 'Final_Perfect_Test_Bot_{timestamp}' created successfully with ID: {bot_id}")
+    print(f"   ✅ Regular bot created successfully with ID: {bot_id}")
     
-    # Wait 30 seconds for COMPLETE cycle creation as specified in Russian review
-    print(f"   ⏳ Waiting 30 seconds for COMPLETE cycle creation (all 12 bets)...")
-    time.sleep(30)
+    # Wait for bot to create bets
+    print(f"   ⏳ Waiting 20 seconds for bot to create cycle bets...")
+    time.sleep(20)
     
     # Get ALL active games for this specific bot
     success, games_data, details = make_request(
@@ -221,11 +270,11 @@ def test_exact_cycle_sum_matching():
     
     if not success or not games_data:
         record_test(
-            "Critical Fix Test Bot - Active Games Retrieval",
+            "Regular Bot Active Games Retrieval",
             False,
             f"Failed to get active games: {details}"
         )
-        return
+        return None
     
     # Filter games for our specific bot
     bot_games = []
@@ -234,15 +283,34 @@ def test_exact_cycle_sum_matching():
     elif isinstance(games_data, dict) and "games" in games_data:
         bot_games = [game for game in games_data["games"] if game.get("bot_id") == bot_id]
     
-    if not bot_games:
-        record_test(
-            "Critical Fix Test Bot - Active Games Retrieval",
-            False,
-            f"No active games found for bot {bot_id}. Total games found: {len(games_data) if isinstance(games_data, list) else 'unknown'}"
-        )
-        return
+    bet_count = len(bot_games)
+    print(f"   📊 Found {bet_count} active games for the test bot")
     
-    print(f"   ✅ Found {len(bot_games)} active games for Final_Perfect_Test_Bot_{timestamp}")
+    # Check if bot creates EXACTLY 12 active bets
+    correct_bet_count = bet_count == 12
+    
+    if correct_bet_count:
+        record_test(
+            "Regular Bot Cycle Logic - Bet Count",
+            True,
+            f"Bot created exactly 12 active bets as expected (cycle_games=12)"
+        )
+    else:
+        record_test(
+            "Regular Bot Cycle Logic - Bet Count",
+            False,
+            f"Bot created {bet_count} bets instead of 12 (cycle_games limit violation)"
+        )
+    
+    return bot_id, bot_games
+
+def test_exact_cycle_sum_matching(bot_id=None, bot_games=None):
+    """Test 3: Проверить точное совпадение суммы цикла (306.0)"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 3: Testing Exact Cycle Sum Matching (306.0){Colors.END}")
+    
+    if not bot_id or not bot_games:
+        record_test("Exact Cycle Sum Test", False, "No bot data available from previous test")
+        return
     
     # Calculate EXACT sum of ALL bet_amount values
     bet_amounts = [float(game.get("bet_amount", 0)) for game in bot_games]
@@ -252,49 +320,41 @@ def test_exact_cycle_sum_matching():
     max_bet = max(bet_amounts) if bet_amounts else 0
     avg_bet = total_sum / bet_count if bet_count > 0 else 0
     
-    print(f"   📊 CRITICAL FIX ANALYSIS:")
-    print(f"      Количество ставок: {bet_count} (должно быть 12)")
+    print(f"   📊 CYCLE SUM ANALYSIS:")
+    print(f"      Количество ставок: {bet_count}")
     print(f"      Минимальная ставка: ${min_bet:.1f}")
     print(f"      Максимальная ставка: ${max_bet:.1f}")
     print(f"      Средняя ставка: ${avg_bet:.1f}")
-    print(f"      ТОЧНАЯ СУММА: ${total_sum:.1f}")
+    print(f"      ФАКТИЧЕСКАЯ СУММА: ${total_sum:.1f}")
     print(f"      ОЖИДАЕМАЯ СУММА: $306.0")
+    print(f"      Расчет: (1+50)/2 * 12 = 25.5 * 12 = 306.0")
     
-    # Check if sum is STRICTLY equal to 306.0
+    # Check if sum is EXACTLY equal to 306.0
     expected_sum = 306.0
     is_exact_match = abs(total_sum - expected_sum) < 0.01  # Allow for floating point precision
+    difference = total_sum - expected_sum
     
-    # Check bet count
-    correct_bet_count = bet_count == 12
-    
-    if is_exact_match and correct_bet_count:
+    if is_exact_match:
         record_test(
-            "Critical Fix Test Bot - Exact Sum Verification",
+            "Exact Cycle Sum Matching",
             True,
-            f"🎯 ARCHITECTURAL SUCCESS! Perfect exact sum match: {total_sum:.1f} = 306.0. Bets: {bet_count}/12, Range: ${min_bet:.1f}-${max_bet:.1f}"
+            f"✅ PERFECT MATCH! Total sum = {total_sum:.1f} = 306.0 (diff: {difference:+.1f})"
         )
     else:
-        difference = total_sum - expected_sum
-        issues = []
-        if not is_exact_match:
-            issues.append(f"Sum mismatch: {total_sum:.1f} ≠ 306.0 (diff: {difference:+.1f})")
-        if not correct_bet_count:
-            issues.append(f"Bet count wrong: {bet_count} ≠ 12")
-        
         record_test(
-            "Critical Fix Test Bot - Exact Sum Verification",
+            "Exact Cycle Sum Matching",
             False,
-            f"🚨 CRITICAL FAILURE! {'; '.join(issues)}. Expected values: 110, 288, 229, 377, 289, 227, 333, 315 indicate fix failure."
+            f"🚨 SUM MISMATCH! Got ${total_sum:.1f} instead of $306.0 (diff: {difference:+.1f})"
         )
     
     # Show individual bet amounts for debugging
     print(f"   🔍 Individual bet amounts: {sorted(bet_amounts)}")
     
-    return is_exact_match and correct_bet_count, total_sum, bet_count, min_bet, max_bet, avg_bet
+    return is_exact_match, total_sum
 
 def test_backend_logs_analysis():
-    """Test 2: Проверить логи на специфические сообщения КРИТИЧЕСКОГО ИСПРАВЛЕНИЯ"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 2: Analyzing backend logs for CRITICAL FIX messages{Colors.END}")
+    """Test 4: Проверить логи backend на специфические сообщения"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 4: Analyzing Backend Logs for Success Messages{Colors.END}")
     
     try:
         # Try to read supervisor logs for backend
@@ -302,7 +362,7 @@ def test_backend_logs_analysis():
         
         # Get recent backend logs
         result = subprocess.run(
-            ["tail", "-n", "200", "/var/log/supervisor/backend.out.log"],
+            ["tail", "-n", "300", "/var/log/supervisor/backend.out.log"],
             capture_output=True,
             text=True,
             timeout=10
@@ -311,79 +371,79 @@ def test_backend_logs_analysis():
         if result.returncode == 0:
             log_content = result.stdout
             
-            # Look for CRITICAL FIX specific messages
-            generating_cycle_msgs = log_content.count("🎯 Bot ID: GENERATING COMPLETE CYCLE")
-            cycle_bets_saved_msgs = log_content.count("🎯 Bot ID: CYCLE BETS SAVED")
-            architectural_success_msgs = log_content.count("🎯 Bot ID: ARCHITECTURAL SUCCESS! Perfect exact sum match!")
+            # Look for specific success messages
+            architectural_success_msgs = log_content.count("✅ ARCHITECTURAL SUCCESS! Perfect exact sum match!")
+            perfect_match_msgs = log_content.count("PERFECT MATCH! Final sum = 306")
+            general_perfect_matches = log_content.count("✅ PERFECT MATCH!")
+            http_500_errors = log_content.count("HTTP 500")
             
-            # Look for general normalization messages
-            perfect_matches = log_content.count("✅ normalize: PERFECT MATCH!")
-            imperfect_matches = log_content.count("❌ normalize: Imperfect match")
+            print(f"   📋 Backend Log Analysis Results:")
+            print(f"      ✅ 'ARCHITECTURAL SUCCESS! Perfect exact sum match!' messages: {architectural_success_msgs}")
+            print(f"      ✅ 'PERFECT MATCH! Final sum = 306' messages: {perfect_match_msgs}")
+            print(f"      ✅ General 'PERFECT MATCH!' messages: {general_perfect_matches}")
+            print(f"      ❌ HTTP 500 errors: {http_500_errors}")
             
-            print(f"   📋 CRITICAL FIX Log Analysis Results:")
-            print(f"      🎯 'GENERATING COMPLETE CYCLE' messages: {generating_cycle_msgs}")
-            print(f"      🎯 'CYCLE BETS SAVED' messages: {cycle_bets_saved_msgs}")
-            print(f"      🎯 'ARCHITECTURAL SUCCESS! Perfect exact sum match!' messages: {architectural_success_msgs}")
-            print(f"      ✅ General 'PERFECT MATCH' messages: {perfect_matches}")
-            print(f"      ❌ 'Imperfect match' messages: {imperfect_matches}")
+            # Success criteria: should have success messages and no HTTP 500 errors
+            has_success_messages = (architectural_success_msgs > 0 or 
+                                  perfect_match_msgs > 0 or 
+                                  general_perfect_matches > 0)
+            no_http_errors = http_500_errors == 0
             
-            # Success criteria: should have architectural success messages
-            if architectural_success_msgs > 0:
+            if has_success_messages and no_http_errors:
                 record_test(
-                    "Critical Fix Backend Logs Analysis",
+                    "Backend Logs Analysis",
                     True,
-                    f"Found {architectural_success_msgs} ARCHITECTURAL SUCCESS messages indicating critical fix is working"
+                    f"Found success messages ({architectural_success_msgs + perfect_match_msgs + general_perfect_matches} total) and no HTTP 500 errors"
                 )
-            elif generating_cycle_msgs > 0 and cycle_bets_saved_msgs > 0:
+            elif has_success_messages and not no_http_errors:
                 record_test(
-                    "Critical Fix Backend Logs Analysis",
-                    True,
-                    f"Found cycle generation messages: {generating_cycle_msgs} GENERATING, {cycle_bets_saved_msgs} SAVED"
+                    "Backend Logs Analysis",
+                    False,
+                    f"Found success messages but also {http_500_errors} HTTP 500 errors"
                 )
-            elif perfect_matches > 0:
+            elif not has_success_messages and no_http_errors:
                 record_test(
-                    "Critical Fix Backend Logs Analysis",
-                    True,
-                    f"Found {perfect_matches} general PERFECT MATCH messages"
+                    "Backend Logs Analysis",
+                    False,
+                    "No success messages found in recent logs (but no HTTP 500 errors)"
                 )
             else:
                 record_test(
-                    "Critical Fix Backend Logs Analysis",
+                    "Backend Logs Analysis",
                     False,
-                    "No critical fix success messages found in recent logs"
+                    f"No success messages found and {http_500_errors} HTTP 500 errors detected"
                 )
             
             # Show some relevant log lines
-            critical_lines = []
+            success_lines = []
             for line in log_content.split('\n'):
                 if any(keyword in line for keyword in [
-                    "🎯 Bot ID: GENERATING COMPLETE CYCLE",
-                    "🎯 Bot ID: CYCLE BETS SAVED", 
-                    "🎯 Bot ID: ARCHITECTURAL SUCCESS",
-                    "✅ normalize: PERFECT MATCH"
+                    "✅ ARCHITECTURAL SUCCESS",
+                    "PERFECT MATCH! Final sum = 306",
+                    "✅ PERFECT MATCH"
                 ]):
-                    critical_lines.append(line.strip())
+                    success_lines.append(line.strip())
             
-            if critical_lines:
-                print(f"   📝 Recent critical fix log lines:")
-                for line in critical_lines[-5:]:  # Show last 5 relevant lines
+            if success_lines:
+                print(f"   📝 Recent success log lines:")
+                for line in success_lines[-3:]:  # Show last 3 relevant lines
                     print(f"      {line}")
                     
         else:
             record_test(
-                "Critical Fix Backend Logs Analysis",
+                "Backend Logs Analysis",
                 False,
                 f"Failed to read backend logs: {result.stderr}"
             )
             
     except subprocess.TimeoutExpired:
-        record_test("Critical Fix Backend Logs Analysis", False, "Timeout reading backend logs")
+        record_test("Backend Logs Analysis", False, "Timeout reading backend logs")
     except Exception as e:
-        record_test("Critical Fix Backend Logs Analysis", False, f"Error reading logs: {str(e)}")
+        record_test("Backend Logs Analysis", False, f"Error reading logs: {str(e)}")
 
-def print_cycle_sum_summary():
-    """Print CRITICAL FIX cycle sum testing specific summary"""
-    print_header("CRITICAL FIX - EXACT CYCLE SUM MATCHING TESTING SUMMARY")
+def print_russian_review_summary():
+    """Print Russian Review testing specific summary"""
+    print_header("RUSSIAN REVIEW - THREE CRITICAL ISSUES TESTING SUMMARY")
     
     total = test_results["total"]
     passed = test_results["passed"]
@@ -396,37 +456,29 @@ def print_cycle_sum_summary():
     print(f"   {Colors.RED}❌ Failed: {failed}{Colors.END}")
     print(f"   {Colors.CYAN}📈 Success Rate: {success_rate:.1f}%{Colors.END}")
     
-    print(f"\n{Colors.BOLD}🎯 CRITICAL FIX REQUIREMENTS STATUS:{Colors.END}")
+    print(f"\n{Colors.BOLD}🎯 RUSSIAN REVIEW REQUIREMENTS STATUS:{Colors.END}")
     
-    requirements = [
-        "POST /api/admin/bots/create-regular - создать бота 'Critical_Fix_Test_Bot'",
-        "Подождать 25 секунд для полного создания всех 12 ставок цикла",
-        "GET /api/bots/active-games - получить ВСЕ активные игры этого бота",
-        "Вычислить ТОЧНУЮ сумму всех bet_amount",
-        "Проверить что сумма СТРОГО равна 306.0",
-        "Показать количество ставок (должно быть 12)",
-        "Проверить логи на '🎯 Bot ID: GENERATING COMPLETE CYCLE'",
-        "Проверить логи на '🎯 Bot ID: CYCLE BETS SAVED'",
-        "Проверить логи на '🎯 Bot ID: ARCHITECTURAL SUCCESS! Perfect exact sum match!'"
+    # Check each critical issue
+    cache_test = next((test for test in test_results["tests"] if "clear cache" in test["name"].lower()), None)
+    cycle_test = next((test for test in test_results["tests"] if "cycle logic" in test["name"].lower()), None)
+    sum_test = next((test for test in test_results["tests"] if "exact cycle sum" in test["name"].lower()), None)
+    logs_test = next((test for test in test_results["tests"] if "backend logs" in test["name"].lower()), None)
+    
+    issues = [
+        ("1. КНОПКА ОЧИСТКИ КЭША", cache_test),
+        ("2. ЛОГИКА REGULAR БОТОВ - ЦИКЛЫ", cycle_test),
+        ("3. ТОЧНОЕ СОВПАДЕНИЕ СУММЫ ЦИКЛА", sum_test),
+        ("4. ЛОГИ BACKEND", logs_test)
     ]
     
-    for i, req in enumerate(requirements, 1):
-        # Find corresponding test result
-        test_found = False
-        for test in test_results["tests"]:
-            if ("critical fix test bot" in test["name"].lower() or "exact sum verification" in test["name"].lower()) and i <= 6:
-                status = f"{Colors.GREEN}✅ WORKING{Colors.END}" if test["success"] else f"{Colors.RED}❌ FAILED{Colors.END}"
-                print(f"   {i}. {req}: {status}")
-                test_found = True
-                break
-            elif "critical fix backend logs" in test["name"].lower() and i >= 7:
-                status = f"{Colors.GREEN}✅ WORKING{Colors.END}" if test["success"] else f"{Colors.RED}❌ FAILED{Colors.END}"
-                print(f"   {i}. {req}: {status}")
-                test_found = True
-                break
-        
-        if not test_found:
-            print(f"   {i}. {req}: {Colors.YELLOW}⚠️ NOT TESTED{Colors.END}")
+    for issue_name, test in issues:
+        if test:
+            status = f"{Colors.GREEN}✅ WORKING{Colors.END}" if test["success"] else f"{Colors.RED}❌ FAILED{Colors.END}"
+            print(f"   {issue_name}: {status}")
+            if test["details"]:
+                print(f"      {Colors.YELLOW}{test['details']}{Colors.END}")
+        else:
+            print(f"   {issue_name}: {Colors.YELLOW}⚠️ NOT TESTED{Colors.END}")
     
     print(f"\n{Colors.BOLD}🔍 DETAILED TEST RESULTS:{Colors.END}")
     for test in test_results["tests"]:
@@ -435,58 +487,59 @@ def print_cycle_sum_summary():
         if test["details"]:
             print(f"      {Colors.YELLOW}{test['details']}{Colors.END}")
     
-    # Specific conclusion for CRITICAL FIX
+    # Overall conclusion
     if success_rate == 100:
-        print(f"\n{Colors.GREEN}{Colors.BOLD}🎉 CONCLUSION: CRITICAL FIX IS 100% WORKING!{Colors.END}")
-        print(f"{Colors.GREEN}Regular боты создают ставки с точной суммой 306.0. КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ цикла ставок работает корректно.{Colors.END}")
-        print(f"{Colors.GREEN}Это последняя попытка исправить архитектурную проблему - УСПЕШНА!{Colors.END}")
+        print(f"\n{Colors.GREEN}{Colors.BOLD}🎉 CONCLUSION: ALL THREE CRITICAL ISSUES ARE WORKING!{Colors.END}")
+        print(f"{Colors.GREEN}✅ Кнопка очистки кэша работает{Colors.END}")
+        print(f"{Colors.GREEN}✅ Regular боты создают ровно 12 ставок{Colors.END}")
+        print(f"{Colors.GREEN}✅ Сумма цикла точно равна 306.0{Colors.END}")
+        print(f"{Colors.GREEN}✅ Логи показывают успешные сообщения{Colors.END}")
+    elif success_rate >= 75:
+        print(f"\n{Colors.YELLOW}{Colors.BOLD}⚠️ CONCLUSION: MOST ISSUES FIXED ({success_rate:.1f}% functional){Colors.END}")
+        print(f"{Colors.YELLOW}Большинство критических проблем решены, но есть минорные проблемы.{Colors.END}")
     elif success_rate >= 50:
-        print(f"\n{Colors.YELLOW}{Colors.BOLD}⚠️ CONCLUSION: CRITICAL FIX HAS ISSUES ({success_rate:.1f}% functional){Colors.END}")
-        print(f"{Colors.YELLOW}Некоторые компоненты работают, но есть проблемы с точностью суммы цикла.{Colors.END}")
-        print(f"{Colors.YELLOW}КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ требует дополнительной работы.{Colors.END}")
+        print(f"\n{Colors.YELLOW}{Colors.BOLD}⚠️ CONCLUSION: PARTIAL SUCCESS ({success_rate:.1f}% functional){Colors.END}")
+        print(f"{Colors.YELLOW}Некоторые критические проблемы решены, но требуется дополнительная работа.{Colors.END}")
     else:
-        print(f"\n{Colors.RED}{Colors.BOLD}🚨 CONCLUSION: CRITICAL FIX FAILED ({success_rate:.1f}% functional){Colors.END}")
-        print(f"{Colors.RED}КРИТИЧЕСКИЕ ПРОБЛЕМЫ! Regular боты НЕ создают точную сумму 306.0.{Colors.END}")
-        print(f"{Colors.RED}Если получается другое значение (110, 288, 229, 377, 289, 227, 333, 315), исправление провалилось.{Colors.END}")
-        print(f"{Colors.RED}Это последняя попытка исправить архитектурную проблему создания ставок по циклам - ПРОВАЛЕНА!{Colors.END}")
+        print(f"\n{Colors.RED}{Colors.BOLD}🚨 CONCLUSION: CRITICAL ISSUES REMAIN ({success_rate:.1f}% functional){Colors.END}")
+        print(f"{Colors.RED}Большинство критических проблем НЕ решены. Требуется срочное исправление.{Colors.END}")
     
     # Specific recommendations
     print(f"\n{Colors.BOLD}💡 RECOMMENDATIONS FOR MAIN AGENT:{Colors.END}")
     
-    # Check specific failure patterns
-    cycle_test = next((test for test in test_results["tests"] if "exact sum verification" in test["name"].lower()), None)
-    logs_test = next((test for test in test_results["tests"] if "critical fix backend logs" in test["name"].lower()), None)
-    
+    if cache_test and not cache_test["success"]:
+        print(f"   🔴 Clear cache button needs fixing")
     if cycle_test and not cycle_test["success"]:
-        print(f"   🔴 CRITICAL: Exact cycle sum matching is NOT working")
-        print(f"   🔧 URGENT: Fix normalize_amounts_to_exact_sum() function")
-        print(f"   🔧 URGENT: Check cycle-wide sum calculation logic")
-        print(f"   🔧 URGENT: Verify bet creation architecture (individual vs batch)")
-        print(f"   🔧 URGENT: This is the LAST ATTEMPT - architectural redesign needed")
-    elif logs_test and not logs_test["success"]:
-        print(f"   🔴 Backend logs don't show ARCHITECTURAL SUCCESS messages")
-        print(f"   🔧 Check critical fix logging implementation")
-        print(f"   🔧 Verify cycle generation and saving logic")
+        print(f"   🔴 Regular bot cycle logic needs fixing - bots not creating exactly 12 bets")
+    if sum_test and not sum_test["success"]:
+        print(f"   🔴 CRITICAL: Exact cycle sum matching is NOT working - sum ≠ 306.0")
+    if logs_test and not logs_test["success"]:
+        print(f"   🔴 Backend logs don't show success messages")
+    
+    if success_rate == 100:
+        print(f"   🟢 All critical issues are resolved - system ready for production")
+        print(f"   ✅ Main agent can summarize and finish")
     else:
-        print(f"   🟢 CRITICAL FIX appears to be working correctly")
-        print(f"   ✅ Regular боты создают точную сумму 306.0")
-        print(f"   ✅ Архитектурная проблема решена")
-        print(f"   ✅ Система готова к продакшену")
+        print(f"   🔧 Fix remaining issues before considering system complete")
 
 def main():
-    """Main test execution for CRITICAL FIX - exact cycle sum matching"""
-    print_header("CRITICAL FIX - EXACT CYCLE SUM MATCHING TESTING")
-    print(f"{Colors.BLUE}🎯 Testing КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ цикла ставок для Regular ботов{Colors.END}")
+    """Main test execution for Russian Review - Three Critical Issues"""
+    print_header("RUSSIAN REVIEW - THREE CRITICAL ISSUES TESTING")
+    print(f"{Colors.BLUE}🎯 Testing three critical issues that were supposedly fixed{Colors.END}")
     print(f"{Colors.BLUE}🌐 Backend URL: {BASE_URL}{Colors.END}")
-    print(f"{Colors.BLUE}📋 Focus: Regular bot 'Critical_Fix_Test_Bot', cycle sum = 306.0, architectural logs{Colors.END}")
-    print(f"{Colors.BLUE}🎲 Expected: (1+50)/2*12 = 25.5*12 = 306.0{Colors.END}")
-    print(f"{Colors.BLUE}🚨 КРИТИЧЕСКОЕ ТРЕБОВАНИЕ: Сумма должна быть СТРОГО равна 306.0{Colors.END}")
-    print(f"{Colors.BLUE}❌ Если получается другое значение (110, 288, 229, 377, 289, 227, 333, 315), исправление провалилось{Colors.END}")
-    print(f"{Colors.BLUE}🔥 Это последняя попытка исправить архитектурную проблему создания ставок по циклам{Colors.END}")
+    print(f"{Colors.BLUE}📋 Issues: 1) Clear Cache Button, 2) Regular Bot Cycles, 3) Exact Sum Matching, 4) Backend Logs{Colors.END}")
+    print(f"{Colors.BLUE}🔑 Using admin@gemplay.com / Admin123! for authorization{Colors.END}")
     
     try:
-        # Run CRITICAL FIX tests
-        test_exact_cycle_sum_matching()
+        # Test 1: Clear Cache Button (brief check)
+        test_clear_cache_button()
+        
+        # Test 2: Regular Bot Cycle Logic + Test 3: Exact Sum Matching
+        bot_id, bot_games = test_regular_bot_cycle_logic()
+        if bot_id and bot_games:
+            test_exact_cycle_sum_matching(bot_id, bot_games)
+        
+        # Test 4: Backend Logs Analysis
         test_backend_logs_analysis()
         
     except KeyboardInterrupt:
@@ -496,7 +549,7 @@ def main():
     
     finally:
         # Print final summary
-        print_cycle_sum_summary()
+        print_russian_review_summary()
 
 if __name__ == "__main__":
     main()
