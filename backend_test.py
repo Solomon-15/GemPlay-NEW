@@ -204,7 +204,7 @@ def test_exact_cycle_sum_matching():
         )
         return
     
-    print(f"   ✅ Regular bot 'Critical_Fix_Test_Bot' created successfully with ID: {bot_id}")
+    print(f"   ✅ Regular bot 'Final_Perfect_Test_Bot_{timestamp}' created successfully with ID: {bot_id}")
     
     # Wait 25 seconds for COMPLETE cycle creation as specified in Russian review
     print(f"   ⏳ Waiting 25 seconds for COMPLETE cycle creation (all 12 bets)...")
