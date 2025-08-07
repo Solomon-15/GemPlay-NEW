@@ -123,7 +123,7 @@ def main():
         print("❌ Failed to get final game state")
         return
     
-    # Step 6: Analyze the results
+    # Step 7: Analyze the results
     creator_move = final_state.get("creator_move")
     opponent_move = final_state.get("opponent_move")
     status = final_state.get("status")
