@@ -136,7 +136,7 @@ def main():
     print(f"   Opponent Move: {opponent_move}")
     print(f"   Winner ID: {winner_id}")
     
-    # Step 7: Check for the critical issue
+    # Step 8: Check for the critical issue
     print("\n🎯 CRITICAL CHECKS:")
     
     # Check 1: Creator move should NOT be null
