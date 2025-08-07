@@ -322,9 +322,14 @@ def find_bot_game(admin_token: str, bot_name: str = None) -> Optional[Dict]:
         
         # Look for WAITING games created by any regular bot
         for game in games:
-            if (game.get("status") == "WAITING" and 
-                (game.get("creator_type") == "bot" or game.get("is_regular_bot_game"))):
-                
+            is_regular_bot = (
+                game.get("is_regular_bot") == True or 
+                game.get("is_regular_bot_game") == True or
+                game.get("bot_type") == "REGULAR" or
+                (game.get("is_bot") == True and game.get("is_human_bot") == False)
+            )
+            
+            if game.get("status") == "WAITING" and is_regular_bot:
                 record_test(
                     "Find bot game for joining",
                     True,
