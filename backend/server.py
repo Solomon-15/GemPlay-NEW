@@ -15714,48 +15714,39 @@ async def create_bot_bet(bot: Bot) -> bool:
         bet_amount = round(random.uniform(min_bet, max_bet), 2)
         logger.info(f"🎯 Bot {bot.id}: generating bet in range {min_bet}-{max_bet}, selected: {bet_amount}")
         
-        # ПРОСТОЙ И ТОЧНЫЙ алгоритм генерации гемов в заданном диапазоне
+        # УПРОЩЕННЫЙ АЛГОРИТМ: сначала генерируем точную сумму, потом гемы
+        bet_amount = round(random.uniform(min_bet, max_bet), 2)
+        logger.info(f"🎯 Bot {bot.id}: target bet amount = {bet_amount} (range: {min_bet}-{max_bet})")
+        
+        # Создаем комбинацию гемов для точной суммы
         gem_types = list(GEM_PRICES.keys())  # ["Ruby", "Amber", "Topaz", "Emerald", "Aquamarine", "Sapphire", "Magic"]
+        bet_gems = {}
+        remaining_amount = bet_amount
         
-        # Используем алгоритм похожий на generate_gem_combination_and_amount но упрощенный
-        attempts = 0
-        max_attempts = 50
-        bet_gems = None
-        actual_total = None
+        # Сортируем гемы по убыванию стоимости для эффективного распределения
+        sorted_gems = sorted(gem_types, key=lambda x: GEM_PRICES[x], reverse=True)
         
-        while attempts < max_attempts:
-            # Генерируем случайную комбинацию гемов
-            temp_gems = {}
-            selected_gems = random.sample(gem_types, random.randint(1, 4))
-            
-            for gem_type in selected_gems:
-                # Случайное количество в зависимости от типа гема
-                if gem_type in ['Ruby', 'Amber']:
-                    max_quantity = 5
-                else:
-                    max_quantity = 3
-                quantity = random.randint(1, max_quantity)
-                temp_gems[gem_type] = quantity
-            
-            # Вычисляем общую стоимость
-            temp_total = sum(quantity * GEM_PRICES.get(gem_type, 1.0) for gem_type, quantity in temp_gems.items())
-            
-            # Проверяем диапазон
-            if min_bet <= temp_total <= max_bet:
-                bet_gems = temp_gems
-                actual_total = temp_total
+        for gem_type in sorted_gems:
+            if remaining_amount <= 0:
                 break
-            
-            attempts += 1
+                
+            gem_price = GEM_PRICES[gem_type]
+            if remaining_amount >= gem_price:
+                # Количество этого типа гема
+                max_quantity = min(int(remaining_amount / gem_price), 3)  # Максимум 3 штуки каждого
+                if max_quantity > 0:
+                    quantity = random.randint(1, max_quantity) if max_quantity > 1 else 1
+                    bet_gems[gem_type] = quantity
+                    remaining_amount -= quantity * gem_price
         
-        # Если не удалось подобрать комбинацию, используем fallback
-        if bet_gems is None:
-            logger.warning(f"Could not generate gems in range {min_bet}-{max_bet} for bot {bot.id}, using fallback")
-            
-            # Простой fallback: используем только Ruby (цена 1 гем)
-            ruby_quantity = int(bet_amount)
-            bet_gems = {"Ruby": ruby_quantity}
-            actual_total = ruby_quantity * 1.0
+        # Если остался остаток, добавляем Ruby (самый дешевый гем)
+        if remaining_amount > 0:
+            ruby_quantity = int(remaining_amount)
+            if ruby_quantity > 0:
+                bet_gems["Ruby"] = bet_gems.get("Ruby", 0) + ruby_quantity
+        
+        # Вычисляем точную итоговую сумму
+        actual_total = sum(quantity * GEM_PRICES.get(gem_type, 1.0) for gem_type, quantity in bet_gems.items())
         
         logger.info(f"🎯 Bot {bot.id} generated bet: target={bet_amount}, actual={actual_total}, gems={bet_gems}")
         
