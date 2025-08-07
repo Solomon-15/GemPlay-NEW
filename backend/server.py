@@ -15854,7 +15854,8 @@ async def create_bot_bet(bot: Bot) -> bool:
             total_wins=total_wins,
             total_losses=total_losses,
             win_amount_total=win_amount_total,
-            loss_amount_total=loss_amount_total
+            loss_amount_total=loss_amount_total,
+            exact_total=total_cycle_amount  # Передаем точную целевую сумму
         )
         
         # Определяем какую ставку создать следующей
