@@ -1869,35 +1869,14 @@ async def maintain_all_bots_active_bets():
                         reason = "cycle completed" if cycle_completed else "new bot initialization"
                         logger.info(f"🎯 Bot {bot_doc['name']}: starting new cycle ({reason})")
                         
-                        bot_obj = Bot(
-                            id=bot_doc["id"],
-                            name=bot_doc["name"],
-                            bot_type=BotType(bot_doc.get("bot_type", "REGULAR")),
-                            min_bet_amount=bot_doc.get("min_bet_amount", 1.0),
-                            max_bet_amount=bot_doc.get("max_bet_amount", 50.0),
-                            win_percentage=bot_doc.get("win_percentage", 55.0),
-                            cycle_games=cycle_games,
-                            pause_between_cycles=bot_doc.get("pause_between_cycles", 5),
-                            is_active=bot_doc.get("is_active", True),
-                            created_at=bot_doc.get("created_at", datetime.utcnow()),
-                            profit_strategy=bot_doc.get("profit_strategy", "balanced")
-                        )
+                        # Создаем полный цикл ставок за один вызов
+                        success = await create_full_bot_cycle(bot_doc)
                         
-                        # Пауза между циклами если цикл завершен
-                        if cycle_completed:
-                            pause_between_cycles = bot_doc.get("pause_between_cycles", 5)
-                            await asyncio.sleep(pause_between_cycles)
+                        if success:
+                            logger.info(f"✅ Bot {bot_doc['name']} created full cycle of {cycle_games} bets")
+                        else:
+                            logger.warning(f"❌ Failed to create full cycle for bot {bot_doc['name']}")
                         
-                        # Создаем полный новый цикл ставок
-                        for i in range(cycle_games):
-                            success = await create_bot_bet(bot_obj)
-                            if success:
-                                logger.info(f"✅ Bot {bot_obj.name} created cycle bet {i+1}/{cycle_games}")
-                                await asyncio.sleep(0.1)  # Небольшая пауза между созданием
-                            else:
-                                logger.warning(f"❌ Failed to create cycle bet {i+1}/{cycle_games} for bot {bot_obj.name}")
-                                break
-                                
                         # Сброс статистики цикла для нового цикла
                         if cycle_completed:
                             await db.bots.update_one(
@@ -1922,6 +1901,84 @@ async def maintain_all_bots_active_bets():
                 
     except Exception as e:
         logger.error(f"Error in maintain_all_bots_active_bets: {e}")
+
+async def create_full_bot_cycle(bot_doc: dict) -> bool:
+    """
+    Создает полный цикл ставок для бота за один вызов с точной суммой.
+    """
+    try:
+        bot_id = bot_doc["id"]
+        cycle_games = bot_doc.get("cycle_games", 12)
+        min_bet = bot_doc.get("min_bet_amount", 1.0)
+        max_bet = bot_doc.get("max_bet_amount", 50.0)
+        win_percentage = bot_doc.get("win_percentage", 55.0)
+        
+        # Вычисляем точную сумму цикла
+        average_bet = (min_bet + max_bet) / 2
+        exact_total_amount = average_bet * cycle_games
+        
+        logger.info(f"🎯 Bot {bot_id}: Creating complete cycle - {cycle_games} bets with exact total {exact_total_amount}")
+        
+        # Генерируем все ставки цикла с точной суммой
+        all_cycle_bets = await generate_cycle_bets_uniform_distribution(
+            bot_id=bot_id,
+            min_bet=min_bet,
+            max_bet=max_bet,
+            cycle_games=cycle_games,
+            total_wins=round(cycle_games * 35 / 100),  # 35% побед
+            total_losses=round(cycle_games * 35 / 100),  # 35% поражений
+            win_amount_total=exact_total_amount * win_percentage / 100,
+            loss_amount_total=exact_total_amount * (100 - win_percentage) / 100,
+            exact_total=exact_total_amount
+        )
+        
+        # Создаем все игры в базе данных
+        created_count = 0
+        for bet_info in all_cycle_bets:
+            bet_amount = bet_info["amount"]
+            bet_result = bet_info["result"]
+            
+            # Создаем комбинацию гемов для этой ставки
+            bet_gems = await generate_gem_combination(bet_amount)
+            
+            # Генерируем ход бота
+            import secrets
+            import hashlib
+            initial_move = random.choice(["rock", "paper", "scissors"])
+            salt = secrets.token_hex(32)
+            move_hash = hashlib.sha256(f"{initial_move}{salt}".encode()).hexdigest()
+            
+            game = Game(
+                creator_id=bot_id,
+                creator_type="bot",
+                creator_move=GameMove(initial_move),
+                creator_move_hash=move_hash,
+                creator_salt=salt,
+                bet_amount=bet_amount,
+                bet_gems=bet_gems,
+                status=GameStatus.WAITING,
+                metadata={
+                    "intended_result": bet_result,
+                    "bot_system": "cycle",
+                    "cycle_position": bet_info["index"] + 1,
+                    "total_cycle_games": cycle_games
+                }
+            )
+            
+            await db.games.insert_one(game.dict())
+            created_count += 1
+            
+            # Небольшая пауза между созданием
+            await asyncio.sleep(0.1)
+        
+        logger.info(f"✅ Bot {bot_id}: Created complete cycle - {created_count}/{cycle_games} bets")
+        logger.info(f"🎯 Bot {bot_id}: Total bet amounts = {sum(bet['amount'] for bet in all_cycle_bets)}")
+        
+        return created_count == cycle_games
+        
+    except Exception as e:
+        logger.error(f"Error creating full bot cycle for bot {bot_id}: {e}")
+        return False
 
 async def calculate_bot_game_outcome(bot_id: str, game_value: float) -> str:
     """
