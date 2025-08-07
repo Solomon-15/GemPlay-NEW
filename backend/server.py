@@ -15735,142 +15735,166 @@ async def start_regular_bots(
         )
 
 async def create_bot_bet(bot: Bot) -> bool:
-    """Create a bet for a bot with creation mode support."""
+    """
+    Создание ставки для бота с новой системой распределения:
+    1. Использует процентное распределение исходов (wins_percentage/losses_percentage/draws_percentage)  
+    2. Распределяет суммы согласно win_percentage (соотношение выигрыша к общей сумме)
+    3. Генерирует ставки последовательно с задержкой pause_on_draw
+    """
     try:
-        logger.info(f"🎯 Attempting to create bet for bot {bot.id} ({bot.name})")
-        import random
+        logger.info(f"🎯 NEW SYSTEM: Creating bet for bot {bot.id} ({bot.name})")
         
-        # Removed global limit checks - check only individual bot limits
+        # Получаем актуальные данные бота из базы
         bot_doc = await db.bots.find_one({"id": bot.id})
-        creation_mode = bot_doc.get("creation_mode", "queue-based") if bot_doc else "queue-based"
-        bot_type = bot_doc.get("bot_type", "REGULAR") if bot_doc else "REGULAR"
-        
+        if not bot_doc:
+            logger.error(f"Bot document not found for bot {bot.id}")
+            return False
+            
+        # Проверяем лимит активных ставок
         bot_active_bets = await db.games.count_documents({
             "creator_id": bot.id,
             "status": "WAITING"
         })
         
-        # ИСПРАВЛЕНО: Используем только cycle_games для строгого контроля лимита
         cycle_games = bot_doc.get("cycle_games", 12)
         if bot_active_bets >= cycle_games:
-            logger.info(f"🚫 Cycle games limit reached for bot {bot.id}: {bot_active_bets}/{cycle_games}")
+            logger.info(f"🚫 Cycle limit reached for bot {bot.id}: {bot_active_bets}/{cycle_games}")
             return False
         
-        if bot_doc:
-            bot._bot_data = bot_doc
-        
-        if creation_mode == "always-first":
-            logger.info(f"Creating bet for always-first bot {bot.id}")
-        
-        elif creation_mode == "queue-based":
-            logger.info(f"Creating bet for queue-based bot {bot.id}")
-        
-        elif creation_mode == "after-all":
-            logger.info(f"Creating bet for after-all bot {bot.id}")
-        
-        # КРИТИЧНОЕ ИСПРАВЛЕНИЕ: Всегда используем актуальные значения из базы данных
-        if not bot_doc:
-            logger.error(f"Bot document not found for bot {bot.id}")
-            return False
-            
+        # Получаем параметры бота
         min_bet = bot_doc.get("min_bet_amount", 1.0)
-        max_bet = bot_doc.get("max_bet_amount", 100.0)
+        max_bet = bot_doc.get("max_bet_amount", 50.0)
+        win_percentage = bot_doc.get("win_percentage", 55.0)  # Соотношение сумм
+        wins_pct = bot_doc.get("wins_percentage", 35)  # % побед
+        losses_pct = bot_doc.get("losses_percentage", 35)  # % поражений  
+        draws_pct = bot_doc.get("draws_percentage", 30)  # % ничьих
         
-        # Дополнительная валидация диапазона
-        if min_bet >= max_bet:
-            logger.error(f"Invalid bet range for bot {bot.id}: min_bet={min_bet}, max_bet={max_bet}")
+        # Вычисляем общую сумму цикла (среднее между min и max * количество игр)
+        average_bet = (min_bet + max_bet) / 2
+        total_cycle_amount = average_bet * cycle_games
+        logger.info(f"🎯 Bot {bot.id}: total_cycle_amount={total_cycle_amount}, cycle_games={cycle_games}")
+        
+        # Рассчитываем количество игр каждого типа
+        total_wins = round(cycle_games * wins_pct / 100)
+        total_losses = round(cycle_games * losses_pct / 100)
+        
+        # Корректируем чтобы сумма была ровно cycle_games
+        if total_wins + total_losses > cycle_games:
+            total_losses = cycle_games - total_wins
+        elif total_wins + total_losses < cycle_games:
+            total_wins = cycle_games - total_losses
+            
+        logger.info(f"🎯 Bot {bot.id}: planned wins={total_wins}, losses={total_losses} (total={total_wins + total_losses})")
+        
+        # Рассчитываем суммы для выигрышных и проигрышных ставок
+        win_amount_total = total_cycle_amount * win_percentage / 100  # 55% от общей суммы
+        loss_amount_total = total_cycle_amount - win_amount_total  # Остаток (45%)
+        
+        logger.info(f"🎯 Bot {bot.id}: win_amount_total={win_amount_total}, loss_amount_total={loss_amount_total}")
+        
+        # Определяем текущее состояние цикла
+        current_wins = bot_doc.get("current_cycle_wins", 0)
+        current_losses = bot_doc.get("current_cycle_losses", 0)
+        
+        # Определяем тип следующей ставки (победа или поражение)
+        bet_result = None
+        if current_wins < total_wins and current_losses < total_losses:
+            # Можем выбрать любой
+            remaining_wins = total_wins - current_wins
+            remaining_losses = total_losses - current_losses
+            bet_result = "win" if random.random() < remaining_wins / (remaining_wins + remaining_losses) else "loss"
+        elif current_wins < total_wins:
+            bet_result = "win"
+        elif current_losses < total_losses:
+            bet_result = "loss"
+        else:
+            logger.info(f"🎯 Bot {bot.id}: cycle completed ({current_wins} wins, {current_losses} losses)")
             return False
             
-        bet_amount = round(random.uniform(min_bet, max_bet), 2)
-        logger.info(f"🎯 Bot {bot.id}: generating bet in range {min_bet}-{max_bet}, selected: {bet_amount}")
+        # Рассчитываем целевую сумму ставки
+        if bet_result == "win":
+            remaining_wins = total_wins - current_wins
+            target_amount = win_amount_total / total_wins if total_wins > 0 else average_bet
+            logger.info(f"🎯 Bot {bot.id}: creating WIN bet, target_amount={target_amount}")
+        else:
+            remaining_losses = total_losses - current_losses  
+            target_amount = loss_amount_total / total_losses if total_losses > 0 else average_bet
+            logger.info(f"🎯 Bot {bot.id}: creating LOSS bet, target_amount={target_amount}")
         
-        # УПРОЩЕННЫЙ АЛГОРИТМ: сначала генерируем точную сумму, потом гемы
-        bet_amount = round(random.uniform(min_bet, max_bet), 2)
-        logger.info(f"🎯 Bot {bot.id}: target bet amount = {bet_amount} (range: {min_bet}-{max_bet})")
+        # Ограничиваем сумму ставки диапазоном min_bet - max_bet
+        bet_amount = max(min_bet, min(max_bet, target_amount))
+        bet_amount = math.ceil(bet_amount)  # Округляем в большую сторону
         
-        # Создаем комбинацию гемов для точной суммы
-        gem_types = list(GEM_PRICES.keys())  # ["Ruby", "Amber", "Topaz", "Emerald", "Aquamarine", "Sapphire", "Magic"]
-        bet_gems = {}
-        remaining_amount = bet_amount
+        logger.info(f"🎯 Bot {bot.id}: final bet_amount={bet_amount} (target={target_amount}, range={min_bet}-{max_bet})")
         
-        # Сортируем гемы по убыванию стоимости для эффективного распределения
-        sorted_gems = sorted(gem_types, key=lambda x: GEM_PRICES[x], reverse=True)
-        
-        for gem_type in sorted_gems:
-            if remaining_amount <= 0:
-                break
-                
-            gem_price = GEM_PRICES[gem_type]
-            if remaining_amount >= gem_price:
-                # Количество этого типа гема
-                max_quantity = min(int(remaining_amount / gem_price), 3)  # Максимум 3 штуки каждого
-                if max_quantity > 0:
-                    quantity = random.randint(1, max_quantity) if max_quantity > 1 else 1
-                    bet_gems[gem_type] = quantity
-                    remaining_amount -= quantity * gem_price
-        
-        # Если остался остаток, добавляем Ruby (самый дешевый гем)
-        if remaining_amount > 0:
-            ruby_quantity = int(remaining_amount)
-            if ruby_quantity > 0:
-                bet_gems["Ruby"] = bet_gems.get("Ruby", 0) + ruby_quantity
-        
-        # Вычисляем точную итоговую сумму
+        # Создаем комбинацию гемов для bet_amount
+        bet_gems = await generate_gem_combination(bet_amount)
         actual_total = sum(quantity * GEM_PRICES.get(gem_type, 1.0) for gem_type, quantity in bet_gems.items())
         
-        logger.info(f"🎯 Bot {bot.id} generated bet: target={bet_amount}, actual={actual_total}, gems={bet_gems}")
-        
-        # Генерируем начальный ход бота и хэш для commit-reveal схемы
+        # Генерируем ход бота
         import secrets
         import hashlib
         initial_move = random.choice(["rock", "paper", "scissors"])
         salt = secrets.token_hex(32)
         move_hash = hashlib.sha256(f"{initial_move}{salt}".encode()).hexdigest()
         
+        # Создаем игру
         game = Game(
             creator_id=bot.id,
             creator_type="bot",
-            creator_move=GameMove(initial_move),  # КРИТИЧНО: Сразу устанавливаем ход бота
+            creator_move=GameMove(initial_move),
             creator_move_hash=move_hash,
             creator_salt=salt,
-            bet_amount=round(actual_total, 2),  # Используем фактическую сумму
+            bet_amount=round(actual_total, 2),
             bet_gems=bet_gems,
             status=GameStatus.WAITING,
             commission=round(actual_total * 0.06, 2),
-            bot_type="REGULAR" if bot_type == "REGULAR" else "HUMAN",
+            total_bet_amount=round(actual_total, 2),
             metadata={
-                "initial_move": initial_move,
-                "gem_based_bet": True,
-                "auto_created": True,
-                "bot_strategy": bot_doc.get("profit_strategy", "balanced")
+                "intended_result": bet_result,  # "win" или "loss"
+                "bot_system": "new",
+                "cycle_position": current_wins + current_losses + 1,
+                "total_cycle_games": cycle_games
             }
         )
         
-        
-        # Save to database
         await db.games.insert_one(game.dict())
+        logger.info(f"✅ NEW SYSTEM: Created {bet_result} bet for bot {bot.id}, amount={actual_total}")
         
-        # Update bot stats
-        await db.bots.update_one(
-            {"id": bot.id},
-            {
-                "$set": {
-                    "current_bet_id": game.id,
-                    "updated_at": datetime.utcnow(),
-                    "last_game_time": datetime.utcnow()
-                },
-                "$inc": {
-                    "total_bet_amount": actual_total
-                }
-            }
-        )
-        
-        logger.info(f"Bot {bot.name} created gem-based bet {game.id} with total ${actual_total} (gems: {bet_gems})")
         return True
         
     except Exception as e:
-        logger.error(f"Error creating bot bet: {e}")
+        logger.error(f"Error creating bet for bot {bot.id} (NEW SYSTEM): {e}")
         return False
+
+async def generate_gem_combination(target_amount: float) -> Dict[str, int]:
+    """Генерирует комбинацию гемов для заданной суммы."""
+    gem_types = list(GEM_PRICES.keys())
+    bet_gems = {}
+    remaining_amount = target_amount
+    
+    # Сортируем гемы по убыванию стоимости
+    sorted_gems = sorted(gem_types, key=lambda x: GEM_PRICES[x], reverse=True)
+    
+    for gem_type in sorted_gems:
+        if remaining_amount <= 0:
+            break
+            
+        gem_price = GEM_PRICES[gem_type]
+        if remaining_amount >= gem_price:
+            max_quantity = min(int(remaining_amount / gem_price), 3)  # Максимум 3 штуки
+            if max_quantity > 0:
+                quantity = random.randint(1, max_quantity) if max_quantity > 1 else 1
+                bet_gems[gem_type] = quantity
+                remaining_amount -= quantity * gem_price
+    
+    # Если остался остаток, добавляем Ruby (самый дешевый)
+    if remaining_amount > 0:
+        ruby_quantity = int(remaining_amount)
+        if ruby_quantity > 0:
+            bet_gems["Ruby"] = bet_gems.get("Ruby", 0) + ruby_quantity
+    
+    return bet_gems
 
 async def get_next_bot_in_queue() -> dict:
     """Get the next bot in queue based on creation mode and priority."""
