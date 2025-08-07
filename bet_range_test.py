@@ -507,7 +507,7 @@ def main():
         games = get_bot_active_games(token)
         
         # Analyze bot bets
-        analysis = analyze_bot_bets(games)
+        analysis = analyze_bot_bets(games, bot_id)
         
         # Print detailed statistics
         print_detailed_statistics(analysis, games)
