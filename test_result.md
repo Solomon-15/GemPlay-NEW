@@ -52,9 +52,9 @@ frontend:
 
   - task: "Regular Bots Bet Creation Fix - Gem Types and Zero Values"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
     needs_retesting: false
     status_history:
@@ -64,6 +64,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "🎉 REGULAR BOTS BET CREATION GEM TYPES FIX SUCCESSFULLY VERIFIED! Conducted comprehensive testing of the gem types and zero values fix for regular bots bet creation. CRITICAL SUCCESS RATE: 100% (gem diversity test passed). ✅ GEM TYPES DIVERSITY CONFIRMED - Successfully verified that regular bots now use all 7 available gem types: ['Amber', 'Aquamarine', 'Emerald', 'Magic', 'Ruby', 'Sapphire', 'Topaz']. Found diverse bet combinations with multiple gem types per bet (6 out of 10 sample games used multiple gem types). ✅ ZERO VALUE BETS ELIMINATED - Confirmed that no bets have zero values. All tested games show proper bet amounts calculated from actual gem prices. ✅ PROPER PRICE CALCULATION - Verified that bet amounts are correctly calculated using GEM_PRICES with proper case matching (Title case). ✅ RANDOM GEM SELECTION WORKING - Confirmed that bots select 1-4 random gem types per bet for variety as intended. The fix has completely resolved the original issues: limited gem types (now uses all 7), case mismatch (fixed), missing DIAMOND type (replaced with correct gem types), and zero value bets (eliminated). Regular bots now create diverse, properly valued bets with various gem combinations."
+      - working: false
+        agent: "testing"
+        comment: "🚨 CRITICAL BET RANGE GENERATION ISSUE DISCOVERED! Conducted comprehensive testing of the Russian review request to test bet range generation fix for regular bots. CRITICAL FAILURE IDENTIFIED: The bet range generation fix is NOT working correctly. SPECIFIC TEST RESULTS: ❌ Created Test_Bet_Range_Bot with settings: min_bet_amount=10.0, max_bet_amount=30.0, win_percentage=55, cycle_games=5. ❌ ACTUAL BET AMOUNTS: [100.0, 50.0, 28.0, 60.0, 50.0] - Only 1 out of 5 bets (20%) are in the correct range (10.0-30.0). ❌ BETS OUTSIDE RANGE: [100.0, 50.0, 60.0, 50.0] - 4 out of 5 bets are significantly outside the specified range. ❌ SYSTEM-WIDE ANALYSIS: All 5 regular bots (100%) have bet range violations. Bot#4 (1.0-2.0 range): 9/12 bets outside range, Bot#3 (1.0-3.0 range): 1/12 bets outside range, Bot#2 (1.0-50.0 range): 1/12 bets outside range, Bot#1 (1.0-50.0 range): 1/12 bets outside range. CONCLUSION: The bet range generation logic is fundamentally broken. Regular bots are creating bets with amounts that completely ignore the min_bet_amount and max_bet_amount settings. This is a critical system failure that requires immediate attention from the main agent."
 
   - task: "Regular Bot Creation Frontend Fix - Button Not Working"
     implemented: true
