@@ -81,8 +81,13 @@ def main():
     print(f"   Required gems: {bet_gems}")
     
     # Step 3: Try to join the game
-    # Use the exact gems required by the bot
-    success = join_game_with_move(token, game_id, bet_gems)
+    # Try with minimal gems first, then with exact gems
+    simple_gems = {"Ruby": 1}  # Start with minimal gems
+    success = join_game_with_move(token, game_id, simple_gems)
+    
+    if not success:
+        # Try with exact gems required by the bot
+        success = join_game_with_move(token, game_id, bet_gems)
     
     if not success:
         print("❌ Failed to join game")
