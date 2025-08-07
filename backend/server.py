@@ -16862,38 +16862,45 @@ async def generate_cycle_bets_uniform_distribution(
         results = ["win"] * total_wins + ["loss"] * total_losses
         random.shuffle(results)  # Перемешиваем для случайного порядка
         
-        # Генерируем суммы ставок для равномерного покрытия диапазона
-        bet_amounts = []
+        # Генерируем суммы ставок для РАВНОМЕРНОГО покрытия диапазона 1-50
+        all_bet_amounts = generate_uniform_bet_amounts(min_bet, max_bet, cycle_games)
         
-        # Для выигрышных ставок
+        # Разделяем суммы на выигрышные и проигрышные группы
+        # Сортируем по возрастанию для лучшего распределения
+        sorted_amounts = sorted(all_bet_amounts)
+        
+        # Для выигрышных ставок используем более разнообразные суммы
         win_amounts = []
-        if total_wins > 0:
-            if total_wins == 1:
-                win_amounts = [win_amount_total]
-            else:
-                # Распределяем win_amount_total между выигрышными ставками
-                base_amount = win_amount_total / total_wins
-                for i in range(total_wins):
-                    # Добавляем небольшую вариацию (±20%)
-                    variation = random.uniform(0.8, 1.2)
-                    amount = base_amount * variation
-                    amount = max(min_bet, min(max_bet, amount))
-                    win_amounts.append(math.ceil(amount))
-        
-        # Для проигрышных ставок
         loss_amounts = []
+        
+        # Распределяем суммы между выигрышными и проигрышными ставками
+        # Чтобы соблюсти пропорции win_amount_total и loss_amount_total
+        if total_wins > 0:
+            # Выбираем случайные суммы из всего диапазона
+            win_indices = random.sample(range(len(sorted_amounts)), total_wins)
+            win_base_amounts = [sorted_amounts[i] for i in win_indices]
+            
+            # Масштабируем чтобы сумма была win_amount_total
+            current_sum = sum(win_base_amounts)
+            if current_sum > 0:
+                scale_factor = win_amount_total / current_sum
+                win_amounts = [max(min_bet, min(max_bet, math.ceil(amount * scale_factor))) for amount in win_base_amounts]
+        
         if total_losses > 0:
-            if total_losses == 1:
-                loss_amounts = [loss_amount_total]
-            else:
-                # Распределяем loss_amount_total между проигрышными ставками
-                base_amount = loss_amount_total / total_losses
-                for i in range(total_losses):
-                    # Добавляем небольшую вариацию (±20%)
-                    variation = random.uniform(0.8, 1.2)
-                    amount = base_amount * variation
-                    amount = max(min_bet, min(max_bet, amount))
-                    loss_amounts.append(math.ceil(amount))
+            # Берем оставшиеся суммы для проигрышных ставок
+            remaining_amounts = [amount for i, amount in enumerate(sorted_amounts) if i not in (win_indices if total_wins > 0 else [])]
+            if len(remaining_amounts) < total_losses:
+                # Если не хватает, генерируем дополнительные
+                additional_amounts = generate_uniform_bet_amounts(min_bet, max_bet, total_losses - len(remaining_amounts))
+                remaining_amounts.extend(additional_amounts)
+            
+            loss_base_amounts = remaining_amounts[:total_losses]
+            
+            # Масштабируем чтобы сумма была loss_amount_total
+            current_sum = sum(loss_base_amounts)
+            if current_sum > 0:
+                scale_factor = loss_amount_total / current_sum
+                loss_amounts = [max(min_bet, min(max_bet, math.ceil(amount * scale_factor))) for amount in loss_base_amounts]
         
         # Перемешиваем суммы для дополнительной случайности
         random.shuffle(win_amounts)
