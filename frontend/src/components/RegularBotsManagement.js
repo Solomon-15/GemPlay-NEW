@@ -898,7 +898,7 @@ const RegularBotsManagement = () => {
       }
 
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/api/admin/bots/${bot.id}/pause-settings`, {
+      await axios.put(`${API}/admin/bots/${bot.id}/pause-settings`, {
         pause_between_games: newPause
       }, {
         headers: { Authorization: `Bearer ${token}` }
