@@ -541,7 +541,7 @@ const RegularBotsManagement = () => {
         max_bet_amount: response.data.bot.max_bet_amount || 50.0,
         win_percentage: response.data.bot.win_percentage || response.data.bot.win_rate * 100 || 55.0,
         cycle_games: response.data.bot.cycle_games || 12,
-        pause_between_cycles: response.data.bot.pause_between_cycles || response.data.bot.pause_between_games || 5,
+        pause_between_cycles: response.data.bot.pause_between_cycles || 5,
         pause_on_draw: response.data.bot.pause_on_draw || 1,
         creation_mode: response.data.bot.creation_mode || 'queue-based',
         profit_strategy: response.data.bot.profit_strategy || 'balanced',
