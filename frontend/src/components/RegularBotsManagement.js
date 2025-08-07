@@ -2346,6 +2346,42 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
+              {/* Список всех параметров бота */}
+              <div className="border border-gray-600 rounded-lg p-4 bg-gray-800">
+                <h4 className="font-rajdhani font-bold text-white mb-3">📋 Все установленные параметры</h4>
+                <div className="text-sm text-gray-300 space-y-1">
+                  <div className="grid grid-cols-2 gap-x-4">
+                    <div><strong>ID бота:</strong> {editingBot.id || 'Не указан'}</div>
+                    <div><strong>Имя:</strong> {botForm.name || 'Без названия'}</div>
+                    <div><strong>Статус:</strong> {editingBot.is_active ? 'Активен' : 'Неактивен'}</div>
+                    <div><strong>Процент побед:</strong> {botForm.win_percentage || 55}%</div>
+                    <div><strong>Игр в цикле:</strong> {botForm.cycle_games || 12}</div>
+                    <div><strong>Мин. ставка:</strong> {botForm.min_bet_amount || 1} гемов</div>
+                    <div><strong>Макс. ставка:</strong> {botForm.max_bet_amount || 50} гемов</div>
+                    <div><strong>Сумма цикла:</strong> ${botForm.cycle_total_amount || 0}</div>
+                    <div><strong>Пауза между циклами:</strong> {botForm.pause_between_cycles || 5} сек</div>
+                    <div><strong>Пауза при ничье:</strong> {botForm.pause_on_draw || 1} сек</div>
+                    <div><strong>Режим создания:</strong> {
+                      botForm.creation_mode === 'queue-based' ? 'По очереди' :
+                      botForm.creation_mode === 'always-first' ? 'Всегда первый' :
+                      botForm.creation_mode === 'after-all' ? 'После всех' : botForm.creation_mode
+                    }</div>
+                    <div><strong>Стратегия прибыли:</strong> {
+                      botForm.profit_strategy === 'balanced' ? 'Сбалансированная' :
+                      botForm.profit_strategy === 'start-positive' ? 'Ранняя прибыль' :
+                      botForm.profit_strategy === 'start-negative' ? 'Поздние потери' : botForm.profit_strategy
+                    }</div>
+                    <div><strong>Завершенные циклы:</strong> {editingBot.completed_cycles || 0}</div>
+                    <div><strong>Текущий цикл (W/L/D):</strong> {editingBot.current_cycle_wins || 0}/{editingBot.current_cycle_losses || 0}/{editingBot.current_cycle_draws || 0}</div>
+                    <div><strong>Прибыль цикла:</strong> ${(editingBot.current_cycle_profit || 0).toFixed(2)}</div>
+                    <div><strong>Общая прибыль:</strong> ${(editingBot.total_net_profit || 0).toFixed(2)}</div>
+                    <div><strong>Активные ставки:</strong> {editingBot.active_bets || 0}</div>
+                    <div><strong>Дата создания:</strong> {editingBot.created_at ? new Date(editingBot.created_at).toLocaleString('ru-RU') : 'Не указана'}</div>
+                    <div><strong>Последнее обновление:</strong> {editingBot.updated_at ? new Date(editingBot.updated_at).toLocaleString('ru-RU') : 'Не указано'}</div>
+                  </div>
+                </div>
+              </div>
+
               {/* Кнопки */}
               <div className="flex space-x-3 pt-4">
                 <button
