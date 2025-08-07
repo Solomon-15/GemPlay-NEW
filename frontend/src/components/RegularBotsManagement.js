@@ -1945,44 +1945,78 @@ const RegularBotsManagement = () => {
               {/* Процент побед и стратегия прибыли */}
               <div className="border border-border-primary rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-white mb-3">Настройки выигрыша</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-text-secondary text-sm mb-1">Процент выигрыша (соотношение сумм):</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={botForm.win_percentage}
+                    onChange={(e) => {
+                      const newForm = {...botForm, win_percentage: parseFloat(e.target.value) || 55.0};
+                      setBotForm(newForm);
+                      validateExtendedFormInRealTime(newForm);
+                    }}
+                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                  />
+                  <div className="text-xs text-text-secondary mt-1">
+                    Соотношение выигрышных сумм к общей сумме цикла (0-100%, по умолчанию 55%)
+                  </div>
+                </div>
+              </div>
+
+              {/* Новая секция: Процент исходов игр */}
+              <div className="border border-green-500 bg-green-900 bg-opacity-20 rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-green-400 mb-3">Процент исходов игр</h4>
+                <div className="grid grid-cols-3 gap-4 mb-3">
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Процент побед:</label>
+                    <label className="block text-text-secondary text-sm mb-1">Победы (%):</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
-                      value={botForm.win_percentage}
+                      value={botForm.wins_percentage}
                       onChange={(e) => {
-                        const newForm = {...botForm, win_percentage: parseFloat(e.target.value) || 55.0};
+                        const newForm = {...botForm, wins_percentage: parseInt(e.target.value) || 35};
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
                       }}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                     />
-                    <div className="text-xs text-text-secondary mt-1">
-                      Целевой процент побед (0-100%, по умолчанию 55%)
-                    </div>
                   </div>
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Стратегия прибыли:</label>
-                    <select
-                      value={botForm.profit_strategy}
+                    <label className="block text-text-secondary text-sm mb-1">Поражения (%):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={botForm.losses_percentage}
                       onChange={(e) => {
-                        const newForm = {...botForm, profit_strategy: e.target.value};
+                        const newForm = {...botForm, losses_percentage: parseInt(e.target.value) || 35};
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
                       }}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    >
-                      <option value="start-positive">В начале в плюсе</option>
-                      <option value="balanced">Баланс</option>
-                      <option value="start-negative">В минусе</option>
-                    </select>
-                    <div className="text-xs text-text-secondary mt-1">
-                      Поведение бота в рамках цикла
-                    </div>
+                    />
                   </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Ничьи (%):</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={botForm.draws_percentage}
+                      onChange={(e) => {
+                        const newForm = {...botForm, draws_percentage: parseInt(e.target.value) || 30};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                </div>
+                <div className="text-xs text-text-secondary">
+                  Сумма должна быть 100%. Из {botForm.cycle_games} игр: {Math.round(botForm.cycle_games * botForm.wins_percentage / 100)} побед, {Math.round(botForm.cycle_games * botForm.losses_percentage / 100)} поражений. Ничьи ({Math.round(botForm.cycle_games * botForm.draws_percentage / 100)} дополнительно) не засчитываются в цикл.
                 </div>
               </div>
 
