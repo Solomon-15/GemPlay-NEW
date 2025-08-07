@@ -376,8 +376,8 @@ def test_backend_logs_analysis():
         record_test("Critical Fix Backend Logs Analysis", False, f"Error reading logs: {str(e)}")
 
 def print_cycle_sum_summary():
-    """Print cycle sum testing specific summary"""
-    print_header("EXACT CYCLE SUM MATCHING FIX TESTING SUMMARY")
+    """Print CRITICAL FIX cycle sum testing specific summary"""
+    print_header("CRITICAL FIX - EXACT CYCLE SUM MATCHING TESTING SUMMARY")
     
     total = test_results["total"]
     passed = test_results["passed"]
@@ -390,27 +390,30 @@ def print_cycle_sum_summary():
     print(f"   {Colors.RED}❌ Failed: {failed}{Colors.END}")
     print(f"   {Colors.CYAN}📈 Success Rate: {success_rate:.1f}%{Colors.END}")
     
-    print(f"\n{Colors.BOLD}🎯 EXACT CYCLE SUM REQUIREMENTS STATUS:{Colors.END}")
+    print(f"\n{Colors.BOLD}🎯 CRITICAL FIX REQUIREMENTS STATUS:{Colors.END}")
     
     requirements = [
-        "Regular бот создание с настройками min=1.0, max=50.0, cycle=12",
-        "Автоматическое создание 12 ставок в течение 20 секунд",
-        "Точная сумма цикла равна 306.0 (не 305, 281, 325, 227, 333, 315, 377, 289)",
-        "Backend логи показывают '✅ normalize: PERFECT MATCH!'",
-        "Количество ставок соответствует cycle_games (12)",
-        "Ставки находятся в диапазоне min_bet_amount - max_bet_amount"
+        "POST /api/admin/bots/create-regular - создать бота 'Critical_Fix_Test_Bot'",
+        "Подождать 25 секунд для полного создания всех 12 ставок цикла",
+        "GET /api/bots/active-games - получить ВСЕ активные игры этого бота",
+        "Вычислить ТОЧНУЮ сумму всех bet_amount",
+        "Проверить что сумма СТРОГО равна 306.0",
+        "Показать количество ставок (должно быть 12)",
+        "Проверить логи на '🎯 Bot ID: GENERATING COMPLETE CYCLE'",
+        "Проверить логи на '🎯 Bot ID: CYCLE BETS SAVED'",
+        "Проверить логи на '🎯 Bot ID: ARCHITECTURAL SUCCESS! Perfect exact sum match!'"
     ]
     
     for i, req in enumerate(requirements, 1):
         # Find corresponding test result
         test_found = False
         for test in test_results["tests"]:
-            if "exact cycle sum" in test["name"].lower() and i <= 3:
+            if ("critical fix test bot" in test["name"].lower() or "exact sum verification" in test["name"].lower()) and i <= 6:
                 status = f"{Colors.GREEN}✅ WORKING{Colors.END}" if test["success"] else f"{Colors.RED}❌ FAILED{Colors.END}"
                 print(f"   {i}. {req}: {status}")
                 test_found = True
                 break
-            elif "backend logs" in test["name"].lower() and i == 4:
+            elif "critical fix backend logs" in test["name"].lower() and i >= 7:
                 status = f"{Colors.GREEN}✅ WORKING{Colors.END}" if test["success"] else f"{Colors.RED}❌ FAILED{Colors.END}"
                 print(f"   {i}. {req}: {status}")
                 test_found = True
@@ -426,35 +429,42 @@ def print_cycle_sum_summary():
         if test["details"]:
             print(f"      {Colors.YELLOW}{test['details']}{Colors.END}")
     
-    # Specific conclusion for cycle sum fix
+    # Specific conclusion for CRITICAL FIX
     if success_rate == 100:
-        print(f"\n{Colors.GREEN}{Colors.BOLD}🎉 CONCLUSION: EXACT CYCLE SUM MATCHING FIX IS 100% WORKING!{Colors.END}")
-        print(f"{Colors.GREEN}Regular боты создают ставки с точной суммой 306.0. Исправление работает корректно.{Colors.END}")
+        print(f"\n{Colors.GREEN}{Colors.BOLD}🎉 CONCLUSION: CRITICAL FIX IS 100% WORKING!{Colors.END}")
+        print(f"{Colors.GREEN}Regular боты создают ставки с точной суммой 306.0. КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ цикла ставок работает корректно.{Colors.END}")
+        print(f"{Colors.GREEN}Это последняя попытка исправить архитектурную проблему - УСПЕШНА!{Colors.END}")
     elif success_rate >= 50:
-        print(f"\n{Colors.YELLOW}{Colors.BOLD}⚠️ CONCLUSION: EXACT CYCLE SUM MATCHING FIX HAS ISSUES ({success_rate:.1f}% functional){Colors.END}")
+        print(f"\n{Colors.YELLOW}{Colors.BOLD}⚠️ CONCLUSION: CRITICAL FIX HAS ISSUES ({success_rate:.1f}% functional){Colors.END}")
         print(f"{Colors.YELLOW}Некоторые компоненты работают, но есть проблемы с точностью суммы цикла.{Colors.END}")
+        print(f"{Colors.YELLOW}КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ требует дополнительной работы.{Colors.END}")
     else:
-        print(f"\n{Colors.RED}{Colors.BOLD}🚨 CONCLUSION: EXACT CYCLE SUM MATCHING FIX IS NOT WORKING ({success_rate:.1f}% functional){Colors.END}")
-        print(f"{Colors.RED}Критические проблемы с исправлением. Regular боты НЕ создают точную сумму 306.0.{Colors.END}")
+        print(f"\n{Colors.RED}{Colors.BOLD}🚨 CONCLUSION: CRITICAL FIX FAILED ({success_rate:.1f}% functional){Colors.END}")
+        print(f"{Colors.RED}КРИТИЧЕСКИЕ ПРОБЛЕМЫ! Regular боты НЕ создают точную сумму 306.0.{Colors.END}")
+        print(f"{Colors.RED}Если получается другое значение (110, 288, 229, 377, 289, 227, 333, 315), исправление провалилось.{Colors.END}")
+        print(f"{Colors.RED}Это последняя попытка исправить архитектурную проблему создания ставок по циклам - ПРОВАЛЕНА!{Colors.END}")
     
     # Specific recommendations
     print(f"\n{Colors.BOLD}💡 RECOMMENDATIONS FOR MAIN AGENT:{Colors.END}")
     
     # Check specific failure patterns
-    cycle_test = next((test for test in test_results["tests"] if "exact cycle sum" in test["name"].lower()), None)
-    logs_test = next((test for test in test_results["tests"] if "backend logs" in test["name"].lower()), None)
+    cycle_test = next((test for test in test_results["tests"] if "exact sum verification" in test["name"].lower()), None)
+    logs_test = next((test for test in test_results["tests"] if "critical fix backend logs" in test["name"].lower()), None)
     
     if cycle_test and not cycle_test["success"]:
         print(f"   🔴 CRITICAL: Exact cycle sum matching is NOT working")
-        print(f"   🔧 Need to fix normalize_amounts_to_exact_sum() function")
-        print(f"   🔧 Check cycle-wide sum calculation logic")
-        print(f"   🔧 Verify bet creation architecture (individual vs batch)")
+        print(f"   🔧 URGENT: Fix normalize_amounts_to_exact_sum() function")
+        print(f"   🔧 URGENT: Check cycle-wide sum calculation logic")
+        print(f"   🔧 URGENT: Verify bet creation architecture (individual vs batch)")
+        print(f"   🔧 URGENT: This is the LAST ATTEMPT - architectural redesign needed")
     elif logs_test and not logs_test["success"]:
-        print(f"   🔴 Backend logs don't show PERFECT MATCH messages")
-        print(f"   🔧 Check normalization logging implementation")
+        print(f"   🔴 Backend logs don't show ARCHITECTURAL SUCCESS messages")
+        print(f"   🔧 Check critical fix logging implementation")
+        print(f"   🔧 Verify cycle generation and saving logic")
     else:
-        print(f"   🟢 Exact cycle sum matching appears to be working correctly")
+        print(f"   🟢 CRITICAL FIX appears to be working correctly")
         print(f"   ✅ Regular боты создают точную сумму 306.0")
+        print(f"   ✅ Архитектурная проблема решена")
         print(f"   ✅ Система готова к продакшену")
 
 def main():
