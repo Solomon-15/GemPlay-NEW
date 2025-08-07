@@ -15799,6 +15799,7 @@ async def create_bot_bet(bot: Bot) -> bool:
         game = Game(
             creator_id=bot.id,
             creator_type="bot",
+            creator_move=GameMove(initial_move),  # КРИТИЧНО: Сразу устанавливаем ход бота
             creator_move_hash=move_hash,
             creator_salt=salt,
             bet_amount=round(actual_total, 2),  # Используем фактическую сумму
