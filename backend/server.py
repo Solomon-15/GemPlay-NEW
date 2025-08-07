@@ -15761,14 +15761,29 @@ async def create_bot_bet(bot: Bot) -> bool:
         
         logger.info(f"🎯 Bot {bot.id} generated bet: target={bet_amount}, actual={actual_total}, gems={bet_gems}")
         
+        # Генерируем начальный ход бота и хэш для commit-reveal схемы
+        import secrets
+        import hashlib
+        initial_move = random.choice(["rock", "paper", "scissors"])
+        salt = secrets.token_hex(32)
+        move_hash = hashlib.sha256(f"{initial_move}{salt}".encode()).hexdigest()
+        
         game = Game(
             creator_id=bot.id,
             creator_type="bot",
+            creator_move_hash=move_hash,
+            creator_salt=salt,
             bet_amount=round(actual_total, 2),  # Используем фактическую сумму
             bet_gems=bet_gems,
             status=GameStatus.WAITING,
             commission=round(actual_total * 0.06, 2),
-            bot_type="REGULAR" if bot_type == "REGULAR" else "HUMAN"
+            bot_type="REGULAR" if bot_type == "REGULAR" else "HUMAN",
+            metadata={
+                "initial_move": initial_move,
+                "gem_based_bet": True,
+                "auto_created": True,
+                "bot_strategy": bot_doc.get("profit_strategy", "balanced")
+            }
         )
         
         
