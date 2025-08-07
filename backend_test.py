@@ -149,24 +149,24 @@ def authenticate_admin() -> Optional[str]:
         return None
 
 def test_exact_cycle_sum_matching():
-    """Test 1: Создать Regular бот и проверить точную сумму цикла 306.0"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 1: Testing exact cycle sum matching fix{Colors.END}")
+    """Test 1: Создать Regular бот "Critical_Fix_Test_Bot" и проверить точную сумму цикла 306.0"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 1: Testing CRITICAL FIX for exact cycle sum matching{Colors.END}")
     
     # First authenticate as admin
     admin_token = authenticate_admin()
     if not admin_token:
-        record_test("Exact cycle sum matching", False, "Failed to authenticate as admin")
+        record_test("Critical Fix Test Bot Creation", False, "Failed to authenticate as admin")
         return
     
     headers = {"Authorization": f"Bearer {admin_token}"}
     
-    # Create Regular bot with specific settings
+    # Create Regular bot with EXACT settings from Russian review
     bot_data = {
-        "name": "Final_Sum_Test_Bot",
+        "name": "Critical_Fix_Test_Bot",
         "min_bet_amount": 1.0,
         "max_bet_amount": 50.0,
         "cycle_games": 12,
-        "win_percentage": 55.0,
+        "win_percentage": 55,
         "pause_between_cycles": 5,
         "pause_on_draw": 1,
         "profit_strategy": "balanced",
