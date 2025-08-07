@@ -240,7 +240,7 @@ def test_exact_cycle_sum_matching():
         )
         return
     
-    print(f"   ✅ Found {len(bot_games)} active games for Critical_Fix_Test_Bot")
+    print(f"   ✅ Found {len(bot_games)} active games for Final_Perfect_Test_Bot_{timestamp}")
     
     # Calculate EXACT sum of ALL bet_amount values
     bet_amounts = [float(game.get("bet_amount", 0)) for game in bot_games]
