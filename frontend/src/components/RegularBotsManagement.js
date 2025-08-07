@@ -1620,7 +1620,7 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center space-x-1">
                         <span className="text-cyan-400 font-roboto text-sm font-bold">
-                          {bot.pause_between_cycles || bot.pause_between_games ? `${bot.pause_between_cycles || bot.pause_between_games}с` : '5с'}
+                          {bot.pause_between_cycles ? `${bot.pause_between_cycles}с` : '5с'}
                         </span>
                         <button
                           onClick={() => handleEditPause(bot)}
