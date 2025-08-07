@@ -16923,20 +16923,52 @@ async def generate_cycle_bets_uniform_distribution(
                 loss_base_amounts, loss_amount_total, min_bet, max_bet
             )
         
-        # ШАГ 3: ФИНАЛЬНАЯ коррекция для точного попадания в exact_total
+        # ШАГ 3: ПРЯМАЯ финальная коррекция без двойной нормализации
         all_amounts = win_amounts + loss_amounts
         current_total = sum(all_amounts)
         
-        if exact_total and abs(current_total - exact_total) > 0:
-            logger.info(f"🔧 Bot {bot_id}: Final adjustment needed: current={current_total}, target={exact_total}")
-            # Применяем финальную коррекцию ко всем ставкам
-            final_amounts = normalize_amounts_to_exact_sum(
-                all_amounts, exact_total, min_bet, max_bet
-            )
+        if exact_total and current_total != exact_total:
+            difference = exact_total - current_total
+            logger.info(f"🔧 Bot {bot_id}: Direct adjustment needed: current={current_total}, target={exact_total}, diff={difference}")
             
-            # Разделяем обратно на win/loss
-            win_amounts = final_amounts[:total_wins]
-            loss_amounts = final_amounts[total_wins:total_wins + total_losses]
+            # Прямая коррекция без повторной нормализации
+            # Находим ставки, которые можно корректировать
+            adjustable_indices = []
+            
+            if difference > 0:  # Нужно увеличить
+                for i, amount in enumerate(all_amounts):
+                    if amount < max_bet:
+                        adjustable_indices.append((i, max_bet - amount))  # (индекс, максимальная добавка)
+                adjustable_indices.sort(key=lambda x: x[1], reverse=True)  # Сначала с большим запасом
+            else:  # Нужно уменьшить
+                for i, amount in enumerate(all_amounts):
+                    if amount > min_bet:
+                        adjustable_indices.append((i, amount - min_bet))  # (индекс, максимальная убавка)
+                adjustable_indices.sort(key=lambda x: x[1], reverse=True)  # Сначала с большим запасом
+            
+            # Применяем коррекцию
+            remaining_diff = abs(difference)
+            for idx, max_change in adjustable_indices:
+                if remaining_diff == 0:
+                    break
+                    
+                change = min(remaining_diff, max_change, abs(difference))
+                
+                if difference > 0:
+                    all_amounts[idx] += change
+                    difference -= change
+                else:
+                    all_amounts[idx] -= change 
+                    difference += change
+                    
+                remaining_diff -= change
+                
+                if difference == 0:
+                    break
+            
+            # Обновляем win/loss массивы
+            win_amounts = all_amounts[:total_wins]
+            loss_amounts = all_amounts[total_wins:total_wins + total_losses]
         
         # ШАГ 4: Перемешиваем суммы для дополнительной случайности
         random.shuffle(win_amounts)
