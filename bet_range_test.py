@@ -224,6 +224,13 @@ def create_test_bot(token: str) -> Optional[str]:
     
     if success and response_data:
         bot_id = response_data.get("id") or response_data.get("bot_id")
+        
+        # Handle different response formats
+        if not bot_id and "created_bots" in response_data:
+            created_bots = response_data.get("created_bots", [])
+            if created_bots:
+                bot_id = created_bots[0]
+        
         if bot_id:
             print_success(f"Бот '{TEST_BOT_NAME}' успешно создан с ID: {bot_id}")
             return bot_id
