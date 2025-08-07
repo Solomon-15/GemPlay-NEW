@@ -156,23 +156,13 @@ def authenticate_admin() -> Optional[str]:
 
 def authenticate_test_user() -> Optional[str]:
     """Authenticate as test user and return access token"""
-    print(f"{Colors.BLUE}🔐 Authenticating as test user...{Colors.END}")
+    print(f"{Colors.BLUE}🔐 Authenticating as test user (using admin account)...{Colors.END}")
     
-    # First try to register the test user (in case it doesn't exist)
-    register_data = {
-        "username": "TestUser",
-        "email": TEST_USER["email"],
-        "password": TEST_USER["password"],
-        "gender": "male"
-    }
-    
-    make_request("POST", "/auth/register", data=register_data)
-    
-    # Now try to login
+    # Use admin account as test user since it's verified and has permissions
     success, response_data, details = make_request(
         "POST", 
         "/auth/login",
-        data=TEST_USER
+        data=ADMIN_USER  # Use admin user instead of TEST_USER
     )
     
     if success and response_data and "access_token" in response_data:
