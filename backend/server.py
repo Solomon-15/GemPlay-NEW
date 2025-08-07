@@ -7876,18 +7876,11 @@ regular_bot_system = RegularBotSystem()
 # ==============================================================================
 
 async def new_bot_automation_task():
-    """Новая фоновая задача для автоматизации обычных ботов."""
-    logger.info("🤖 Starting new bot automation system...")
-    
-    while True:
-        try:
-            await regular_bot_system.process_bots_automation()
-            
-            await asyncio.sleep(5)
-            
-        except Exception as e:
-            logger.error(f"❌ Error in new bot automation: {e}")
-            await asyncio.sleep(10)
+    """DISABLED: Conflicting automation task that caused race conditions."""
+    # DISABLED: This function is disabled to prevent race conditions with maintain_all_bots_active_bets()
+    # The main bot automation is handled by bot_automation_loop() which calls maintain_all_bots_active_bets()
+    logger.warning("⚠️ new_bot_automation_task() is disabled to prevent race conditions")
+    return
 
 
 async def maintain_bot_active_bets(game: Game):
