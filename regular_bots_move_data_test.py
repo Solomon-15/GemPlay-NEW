@@ -296,23 +296,27 @@ def create_matching_gems(bet_gems: Dict[str, int], user_gems: Dict[str, int]) ->
     """Create matching gem combination for joining the game"""
     matching_gems = {}
     
+    # First try to match exactly
     for gem_type, required_quantity in bet_gems.items():
         available_quantity = user_gems.get(gem_type, 0)
         
         if available_quantity >= required_quantity:
             matching_gems[gem_type] = required_quantity
-        else:
-            # If we don't have enough of this gem type, try to substitute with others
-            # For testing purposes, we'll use what we have
-            if available_quantity > 0:
-                matching_gems[gem_type] = min(available_quantity, required_quantity)
+        elif available_quantity > 0:
+            matching_gems[gem_type] = available_quantity
     
-    # If we don't have enough gems, add some basic ones
-    if not matching_gems:
+    # If we don't have enough gems, create a simple combination
+    if not matching_gems or sum(matching_gems.values()) == 0:
+        # Use any available gems
         for gem_type, quantity in user_gems.items():
             if quantity > 0:
-                matching_gems[gem_type] = min(quantity, 5)  # Use up to 5 gems
-                break
+                matching_gems[gem_type] = min(quantity, 10)  # Use up to 10 gems
+                if len(matching_gems) >= 2:  # Use at most 2 gem types
+                    break
+    
+    # If still no gems, create a minimal combination
+    if not matching_gems:
+        matching_gems = {"Ruby": 1}  # Fallback
     
     return matching_gems
 
