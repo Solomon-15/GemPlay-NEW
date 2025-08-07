@@ -6496,17 +6496,34 @@ async def choose_move_for_active_game(
                 detail="Invalid move. Must be rock, paper, or scissors"
             )
         
-        # Update game with opponent's move and complete the game
+        # Проверяем если создатель игры - обычный бот
+        creator_move_to_set = None
+        creator_is_regular_bot = game_obj.creator_type == "bot"
+        if creator_is_regular_bot:
+            # Для обычных ботов извлекаем ход из метаданных
+            if game_obj.metadata and "initial_move" in game_obj.metadata:
+                creator_move_to_set = game_obj.metadata["initial_move"]
+                logger.info(f"🤖 Setting creator move for regular bot: {creator_move_to_set}")
+            else:
+                # Если метаданные отсутствуют, генерируем случайный ход
+                creator_move_to_set = random.choice(["rock", "paper", "scissors"])
+                logger.warning(f"🤖 No initial_move in metadata for regular bot, generated: {creator_move_to_set}")
+        
+        # Обновляем игру с ходом оппонента и создателя (если это бот)
+        update_data = {
+            "opponent_move": move,
+            "started_at": datetime.utcnow(),
+            "status": GameStatus.COMPLETED,  # Mark as completed since we have both moves
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Добавляем ход создателя если это обычный бот
+        if creator_move_to_set:
+            update_data["creator_move"] = creator_move_to_set
+            
         await db.games.update_one(
             {"id": game_id},
-            {
-                "$set": {
-                    "opponent_move": move,
-                    "started_at": datetime.utcnow(),
-                    "status": GameStatus.COMPLETED,  # Mark as completed since we have both moves
-                    "updated_at": datetime.utcnow()
-                }
-            }
+            {"$set": update_data}
         )
         
         # Determine winner and complete the game
