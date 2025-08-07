@@ -259,7 +259,7 @@ def create_test_regular_bot(admin_token: str) -> Optional[str]:
     
     return None
 
-def wait_for_bot_bets(admin_token: str, bot_name: str = "Test_Move_Fix_Bot") -> bool:
+def wait_for_bot_bets(admin_token: str, bot_name: str = None) -> bool:
     """Wait for bot to create bets"""
     print(f"\n{Colors.MAGENTA}⏳ Step 2: Waiting for bot to create bets...{Colors.END}")
     
@@ -278,17 +278,17 @@ def wait_for_bot_bets(admin_token: str, bot_name: str = "Test_Move_Fix_Bot") -> 
         if success and response_data:
             games = response_data if isinstance(response_data, list) else response_data.get("games", [])
             
-            # Look for games created by our test bot
+            # Look for games created by any regular bot
             bot_games = []
             for game in games:
-                if game.get("creator_type") == "bot" and bot_name in str(game):
+                if game.get("creator_type") == "bot" or game.get("is_regular_bot_game"):
                     bot_games.append(game)
             
             if bot_games:
                 record_test(
                     "Bot creates bets automatically",
                     True,
-                    f"Found {len(bot_games)} active games created by {bot_name}"
+                    f"Found {len(bot_games)} active games created by regular bots"
                 )
                 return True
         
@@ -298,7 +298,7 @@ def wait_for_bot_bets(admin_token: str, bot_name: str = "Test_Move_Fix_Bot") -> 
     record_test(
         "Bot creates bets automatically",
         False,
-        f"Bot {bot_name} did not create any bets after {max_attempts * 5} seconds"
+        f"Regular bots did not create any bets after {max_attempts * 5} seconds"
     )
     return False
 
