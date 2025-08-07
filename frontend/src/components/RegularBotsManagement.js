@@ -3068,6 +3068,124 @@ const RegularBotsManagement = () => {
         </div>
       )}
 
+      {/* Модальное окно истории циклов */}
+      {isCycleHistoryModalOpen && selectedBotForCycleHistory && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 w-full max-w-6xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-rajdhani text-2xl font-bold text-white">
+                📊 История циклов — {selectedBotForCycleHistory.name}
+              </h3>
+              <button
+                onClick={() => setIsCycleHistoryModalOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {cycleHistoryData.length === 0 ? (
+                <div className="text-center text-text-secondary py-8">
+                  <div className="text-6xl mb-4">📅</div>
+                  <p className="text-lg">История циклов пока пуста</p>
+                  <p className="text-sm mt-2">Завершенные циклы будут отображаться здесь</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-surface-sidebar">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">№</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата завершения</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Время цикла</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Игры</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">W/L/D</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ставки</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Выигрыш</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Прибыль</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Действия</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-primary">
+                      {cycleHistoryData.map((cycle, index) => (
+                        <tr key={cycle.id || index} className="hover:bg-surface-sidebar hover:bg-opacity-30">
+                          <td className="px-4 py-3 text-white font-roboto text-sm">
+                            {index + 1}
+                          </td>
+                          <td className="px-4 py-3 text-white font-roboto text-sm">
+                            {new Date(cycle.completed_at || cycle.created_at).toLocaleDateString('ru-RU')}
+                          </td>
+                          <td className="px-4 py-3 text-white font-roboto text-sm">
+                            {cycle.duration || '—'}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-accent-primary font-roboto text-sm font-bold">
+                              {cycle.total_games || cycle.games_played || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-green-400 text-xs font-roboto font-bold">
+                              {cycle.wins || 0}
+                            </span>
+                            /
+                            <span className="text-red-400 text-xs font-roboto font-bold">
+                              {cycle.losses || 0}
+                            </span>
+                            /
+                            <span className="text-yellow-400 text-xs font-roboto font-bold">
+                              {cycle.draws || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-white font-roboto text-sm">
+                              ${Math.round(cycle.total_bet || cycle.total_wagered || 0)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-green-400 font-roboto text-sm font-bold">
+                              ${Math.round(cycle.total_winnings || 0)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`font-roboto text-sm font-bold ${
+                              (cycle.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                            }`}>
+                              ${Math.round(cycle.profit || 0)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <button
+                              onClick={() => {/* TODO: показать детали цикла */}}
+                              className="text-blue-400 hover:text-blue-300 text-sm underline"
+                              title="Показать детали цикла"
+                            >
+                              Детали
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Кнопки */}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={() => setIsCycleHistoryModalOpen(false)}
+                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-rajdhani font-bold"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Модальное окно подтверждения */}
       <ConfirmationModal {...confirmationModal} />
       
