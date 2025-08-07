@@ -15845,23 +15845,51 @@ async def create_bot_bet(bot: Bot) -> bool:
         current_wins = bot_doc.get("current_cycle_wins", 0)
         current_losses = bot_doc.get("current_cycle_losses", 0)
         
-        # НОВЫЙ АЛГОРИТМ: Генерируем все ставки цикла заранее для равномерного покрытия диапазона
-        all_cycle_bets = await generate_cycle_bets_uniform_distribution(
-            bot_id=bot.id,
-            min_bet=min_bet,
-            max_bet=max_bet,
-            cycle_games=cycle_games,
-            total_wins=total_wins,
-            total_losses=total_losses,
-            win_amount_total=win_amount_total,
-            loss_amount_total=loss_amount_total,
-            exact_total=total_cycle_amount  # Передаем точную целевую сумму
-        )
+        # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Генерируем массив ставок ОДИН РАЗ для всего цикла
+        # Проверяем, есть ли уже готовый массив ставок для этого бота
+        cycle_bets_key = f"cycle_bets_{bot.id}"
+        
+        # Проверяем, начался ли новый цикл (если нет активных ставок и статистика = 0)
+        is_new_cycle = (current_wins + current_losses == 0) and (bot_active_bets == 0)
+        
+        # Получаем или генерируем массив ставок всего цикла
+        if is_new_cycle or cycle_bets_key not in bot_doc:
+            logger.info(f"🎯 Bot {bot.id}: GENERATING COMPLETE CYCLE - new_cycle={is_new_cycle}")
+            
+            # Генерируем ВСЕ ставки цикла сразу с точной суммой 
+            all_cycle_bets = await generate_cycle_bets_uniform_distribution(
+                bot_id=bot.id,
+                min_bet=min_bet,
+                max_bet=max_bet,
+                cycle_games=cycle_games,
+                total_wins=total_wins,
+                total_losses=total_losses,
+                win_amount_total=win_amount_total,
+                loss_amount_total=loss_amount_total,
+                exact_total=total_cycle_amount  # Передаем точную целевую сумму
+            )
+            
+            # Сохраняем массив ставок в документ бота
+            await db.bots.update_one(
+                {"id": bot.id},
+                {"$set": {cycle_bets_key: all_cycle_bets}}
+            )
+            
+            logger.info(f"🎯 Bot {bot.id}: CYCLE BETS SAVED - {len(all_cycle_bets)} bets with total sum {sum(bet['amount'] for bet in all_cycle_bets)}")
+        else:
+            # Используем уже сохраненный массив ставок
+            all_cycle_bets = bot_doc.get(cycle_bets_key, [])
+            logger.info(f"🎯 Bot {bot.id}: USING EXISTING CYCLE - {len(all_cycle_bets)} bets from saved cycle")
         
         # Определяем какую ставку создать следующей
         bet_index = current_wins + current_losses
         if bet_index >= len(all_cycle_bets):
             logger.info(f"🎯 Bot {bot.id}: cycle completed ({current_wins} wins, {current_losses} losses)")
+            # Очищаем сохраненный массив ставок для следующего цикла
+            await db.bots.update_one(
+                {"id": bot.id},
+                {"$unset": {cycle_bets_key: 1}}
+            )
             return False
             
         next_bet = all_cycle_bets[bet_index]
