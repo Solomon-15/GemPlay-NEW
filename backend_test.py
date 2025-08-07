@@ -177,7 +177,7 @@ def test_exact_cycle_sum_matching():
         "creation_mode": "queue-based"
     }
     
-    print(f"   📝 Creating Regular bot 'Critical_Fix_Test_Bot' with settings: {bot_data}")
+    print(f"   📝 Creating Regular bot 'Final_Perfect_Test_Bot_{timestamp}' with settings: {bot_data}")
     
     # Create the bot
     success, response_data, details = make_request(
