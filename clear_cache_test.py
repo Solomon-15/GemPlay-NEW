@@ -204,7 +204,7 @@ def test_clear_cache_endpoint():
     
     if success and isinstance(response_data, dict):
         # Check for expected cache clearing response structure
-        expected_fields = ["success", "message", "cleared_cache_types"]
+        expected_fields = ["success", "message", "cache_types_cleared"]
         missing_fields = [field for field in expected_fields if field not in response_data]
         
         if missing_fields:
@@ -212,9 +212,10 @@ def test_clear_cache_endpoint():
         
         if response_data.get("success") is True:
             print(f"   ✅ Cache clearing reported as successful")
-            if "cleared_cache_types" in response_data:
-                cache_types = response_data["cleared_cache_types"]
+            if "cache_types_cleared" in response_data:
+                cache_types = response_data["cache_types_cleared"]
                 print(f"   📋 Cleared cache types: {cache_types}")
+                print(f"   📊 Total cache types cleared: {response_data.get('cleared_count', 0)}")
         else:
             issues_found.append("Response indicates cache clearing failed")
     
