@@ -453,6 +453,7 @@ class Game(BaseModel):
     bot_id: Optional[str] = None
     bot_type: Optional[str] = None  # "REGULAR", "HUMAN"
     is_regular_bot_game: bool = False  # Флаг для игр против обычных ботов (без комиссии)
+    metadata: Optional[Dict[str, Any]] = None  # Дополнительные метаданные игры
 
 class Transaction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
