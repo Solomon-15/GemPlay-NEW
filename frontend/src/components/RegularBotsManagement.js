@@ -151,26 +151,60 @@ const RegularBotsManagement = () => {
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   // Form states for creating bot with new extended system
-  const [botForm, setBotForm] = useState({
-    name: '',
-    
-    min_bet_amount: 1.0, // 1-10000
-    max_bet_amount: 50.0, // 1-10000
-    win_percentage: 55.0, // 0-100% (соотношение выигрыша к общей сумме, по умолчанию 55%)
-    
-    // Новые поля для процентов исходов игр
-    wins_percentage: 35, // % побед в цикле (по умолчанию 35%)
-    losses_percentage: 35, // % поражений в цикле (по умолчанию 35%)
-    draws_percentage: 30, // % ничьих (дополнительно к циклу, по умолчанию 30%)
-    
-    cycle_games: 12, // 1-66 (по умолчанию 12)
-    pause_between_cycles: 5, // 1-300 секунд (пауза между циклами, по умолчанию 5)
-    pause_on_draw: 5, // 1-60 секунд (пауза при ничье и между ставками, по умолчанию 5)
-    
-    creation_mode: 'queue-based', // 'always-first', 'queue-based', 'after-all' (по умолчанию queue-based)
-    profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
-    
-    cycle_total_amount: 0 // calculated automatically
+  // Функции для работы с localStorage
+  const savePercentagesToStorage = (wins, losses, draws) => {
+    localStorage.setItem('botPercentages', JSON.stringify({
+      wins_percentage: wins,
+      losses_percentage: losses,
+      draws_percentage: draws,
+      saved_at: Date.now()
+    }));
+  };
+
+  const getPercentagesFromStorage = () => {
+    try {
+      const saved = localStorage.getItem('botPercentages');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          wins_percentage: parsed.wins_percentage || 35,
+          losses_percentage: parsed.losses_percentage || 35,
+          draws_percentage: parsed.draws_percentage || 30
+        };
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки сохраненных процентов:', error);
+    }
+    return {
+      wins_percentage: 35,
+      losses_percentage: 35, 
+      draws_percentage: 30
+    };
+  };
+
+  const [botForm, setBotForm] = useState(() => {
+    const savedPercentages = getPercentagesFromStorage();
+    return {
+      name: '',
+      
+      min_bet_amount: 1.0, // 1-10000
+      max_bet_amount: 50.0, // 1-10000
+      win_percentage: 55.0, // 0-100% (соотношение выигрыша к общей сумме, по умолчанию 55%)
+      
+      // Новые поля для процентов исходов игр (из localStorage)
+      wins_percentage: savedPercentages.wins_percentage,
+      losses_percentage: savedPercentages.losses_percentage,
+      draws_percentage: savedPercentages.draws_percentage,
+      
+      cycle_games: 12, // 1-66 (по умолчанию 12)
+      pause_between_cycles: 5, // 1-300 секунд (пауза между циклами, по умолчанию 5)
+      pause_on_draw: 5, // 1-60 секунд (пауза при ничье и между ставками, по умолчанию 5)
+      
+      creation_mode: 'queue-based', // 'always-first', 'queue-based', 'after-all' (по умолчанию queue-based)
+      profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
+      
+      cycle_total_amount: 0 // calculated automatically
+    };
   });
 
   // Calculate cycle total amount automatically
