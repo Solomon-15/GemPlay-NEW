@@ -1520,32 +1520,88 @@ const RegularBotsManagement = () => {
                 <th className="px-4 py-3 text-center text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   №
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Имя
+                <th 
+                  className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center">
+                    Имя
+                    {sortField === 'name' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Статус
+                <th 
+                  className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
+                  onClick={() => handleSort('is_active')}
+                >
+                  <div className="flex items-center">
+                    Статус
+                    {sortField === 'is_active' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Ставки
+                <th 
+                  className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
+                  onClick={() => handleSort('active_bets')}
+                >
+                  <div className="flex items-center">
+                    Ставки
+                    {sortField === 'active_bets' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Статистика
+                <th 
+                  className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
+                  onClick={() => handleSort('total_net_profit')}
+                >
+                  <div className="flex items-center">
+                    Статистика
+                    {sortField === 'total_net_profit' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  %
+                <th 
+                  className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
+                  onClick={() => handleSort('win_percentage')}
+                >
+                  <div className="flex items-center">
+                    %
+                    {sortField === 'win_percentage' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Лимиты
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Цикл
+                <th 
+                  className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
+                  onClick={() => handleSort('cycle_games')}
+                >
+                  <div className="flex items-center">
+                    Цикл
+                    {sortField === 'cycle_games' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Активность бота
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Сумма цикла
+                <th 
+                  className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
+                  onClick={() => handleSort('cycle_total_amount')}
+                >
+                  <div className="flex items-center">
+                    Сумма цикла
+                    {sortField === 'cycle_total_amount' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Стратегия
@@ -1553,8 +1609,16 @@ const RegularBotsManagement = () => {
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Пауза
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
-                  Регистрация
+                <th 
+                  className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
+                  onClick={() => handleSort('created_at')}
+                >
+                  <div className="flex items-center">
+                    Регистрация
+                    {sortField === 'created_at' && (
+                      <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
                   Действия
