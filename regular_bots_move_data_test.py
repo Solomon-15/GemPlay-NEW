@@ -188,23 +188,49 @@ def create_test_user() -> Optional[str]:
     if success:
         print(f"{Colors.GREEN}✅ Test user created: {test_email}{Colors.END}")
         
-        # Login with the new user
-        login_data = {
-            "email": test_email,
-            "password": TEST_USER["password"]
-        }
-        
-        success, response_data, details = make_request(
-            "POST",
-            "/auth/login",
-            data=login_data
-        )
-        
-        if success and response_data and "access_token" in response_data:
-            token = response_data["access_token"]
-            user_id = response_data.get("user", {}).get("id")
-            print(f"{Colors.GREEN}✅ Test user authenticated successfully{Colors.END}")
-            return token, user_id
+        # Get admin token to verify the user
+        admin_token = authenticate_admin()
+        if admin_token:
+            admin_headers = {"Authorization": f"Bearer {admin_token}"}
+            
+            # Get the user ID
+            users_response = make_request("GET", "/admin/users", headers=admin_headers)
+            if users_response[0]:
+                users = users_response[1]
+                if isinstance(users, list):
+                    for user in users:
+                        if user.get("email") == test_email:
+                            user_id = user.get("id")
+                            
+                            # Verify the user's email
+                            verify_data = {"status": "ACTIVE", "email_verified": True}
+                            verify_response = make_request(
+                                "PUT", 
+                                f"/admin/users/{user_id}",
+                                headers=admin_headers,
+                                data=verify_data
+                            )
+                            
+                            if verify_response[0]:
+                                print(f"{Colors.GREEN}✅ Test user email verified{Colors.END}")
+                                
+                                # Now login with the verified user
+                                login_data = {
+                                    "email": test_email,
+                                    "password": TEST_USER["password"]
+                                }
+                                
+                                success, response_data, details = make_request(
+                                    "POST",
+                                    "/auth/login",
+                                    data=login_data
+                                )
+                                
+                                if success and response_data and "access_token" in response_data:
+                                    token = response_data["access_token"]
+                                    print(f"{Colors.GREEN}✅ Test user authenticated successfully{Colors.END}")
+                                    return token, user_id
+                            break
     
     print(f"{Colors.RED}❌ Failed to create/authenticate test user: {details}{Colors.END}")
     return None, None
