@@ -369,8 +369,8 @@ def test_exact_cycle_sum_matching(bot_id=None, bot_games=None):
     return is_exact_match, total_sum
 
 def test_backend_logs_analysis():
-    """Test 4: Проверить логи backend на специфические сообщения"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 4: Analyzing Backend Logs for Success Messages{Colors.END}")
+    """Test 4: Искать специфические сообщения из русского обзора"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 4: Searching for Specific Russian Review Log Messages{Colors.END}")
     
     try:
         # Try to read supervisor logs for backend
@@ -378,7 +378,7 @@ def test_backend_logs_analysis():
         
         # Get recent backend logs
         result = subprocess.run(
-            ["tail", "-n", "300", "/var/log/supervisor/backend.out.log"],
+            ["tail", "-n", "500", "/var/log/supervisor/backend.out.log"],
             capture_output=True,
             text=True,
             timeout=10
@@ -387,75 +387,87 @@ def test_backend_logs_analysis():
         if result.returncode == 0:
             log_content = result.stdout
             
-            # Look for specific success messages
-            architectural_success_msgs = log_content.count("✅ ARCHITECTURAL SUCCESS! Perfect exact sum match!")
-            perfect_match_msgs = log_content.count("PERFECT MATCH! Final sum = 306")
+            # Look for SPECIFIC messages from Russian review
+            creating_complete_cycle_msgs = log_content.count("Creating complete cycle - 12 bets with exact total 306")
+            architectural_success_msgs = log_content.count("ARCHITECTURAL SUCCESS! Perfect exact sum match!")
+            created_complete_cycle_msgs = log_content.count("Created complete cycle - 12/12 bets")
+            total_bet_amounts_306_msgs = log_content.count("Total bet amounts = 306")
             general_perfect_matches = log_content.count("✅ PERFECT MATCH!")
             http_500_errors = log_content.count("HTTP 500")
             
-            print(f"   📋 Backend Log Analysis Results:")
-            print(f"      ✅ 'ARCHITECTURAL SUCCESS! Perfect exact sum match!' messages: {architectural_success_msgs}")
-            print(f"      ✅ 'PERFECT MATCH! Final sum = 306' messages: {perfect_match_msgs}")
+            print(f"   📋 Russian Review Specific Log Messages:")
+            print(f"      🎯 'Creating complete cycle - 12 bets with exact total 306': {creating_complete_cycle_msgs}")
+            print(f"      🎯 'ARCHITECTURAL SUCCESS! Perfect exact sum match!': {architectural_success_msgs}")
+            print(f"      🎯 'Created complete cycle - 12/12 bets': {created_complete_cycle_msgs}")
+            print(f"      🎯 'Total bet amounts = 306': {total_bet_amounts_306_msgs}")
             print(f"      ✅ General 'PERFECT MATCH!' messages: {general_perfect_matches}")
             print(f"      ❌ HTTP 500 errors: {http_500_errors}")
             
-            # Success criteria: should have success messages and no HTTP 500 errors
-            has_success_messages = (architectural_success_msgs > 0 or 
-                                  perfect_match_msgs > 0 or 
-                                  general_perfect_matches > 0)
+            # Success criteria: should have specific Russian review messages and no HTTP 500 errors
+            has_specific_messages = (creating_complete_cycle_msgs > 0 or 
+                                   architectural_success_msgs > 0 or 
+                                   created_complete_cycle_msgs > 0 or
+                                   total_bet_amounts_306_msgs > 0)
+            has_any_success_messages = has_specific_messages or general_perfect_matches > 0
             no_http_errors = http_500_errors == 0
             
-            if has_success_messages and no_http_errors:
+            total_specific_msgs = (creating_complete_cycle_msgs + architectural_success_msgs + 
+                                 created_complete_cycle_msgs + total_bet_amounts_306_msgs)
+            
+            if has_specific_messages and no_http_errors:
                 record_test(
-                    "Backend Logs Analysis",
+                    "Russian Review Backend Logs Analysis",
                     True,
-                    f"Found success messages ({architectural_success_msgs + perfect_match_msgs + general_perfect_matches} total) and no HTTP 500 errors"
+                    f"Found {total_specific_msgs} specific Russian review messages and no HTTP 500 errors"
                 )
-            elif has_success_messages and not no_http_errors:
+            elif has_any_success_messages and no_http_errors:
                 record_test(
-                    "Backend Logs Analysis",
+                    "Russian Review Backend Logs Analysis",
                     False,
-                    f"Found success messages but also {http_500_errors} HTTP 500 errors"
+                    f"Found general success messages ({general_perfect_matches}) but no specific Russian review messages"
                 )
-            elif not has_success_messages and no_http_errors:
+            elif has_specific_messages and not no_http_errors:
                 record_test(
-                    "Backend Logs Analysis",
+                    "Russian Review Backend Logs Analysis",
                     False,
-                    "No success messages found in recent logs (but no HTTP 500 errors)"
+                    f"Found specific messages but also {http_500_errors} HTTP 500 errors"
                 )
             else:
                 record_test(
-                    "Backend Logs Analysis",
+                    "Russian Review Backend Logs Analysis",
                     False,
-                    f"No success messages found and {http_500_errors} HTTP 500 errors detected"
+                    f"No specific Russian review messages found and {http_500_errors} HTTP 500 errors detected"
                 )
             
             # Show some relevant log lines
             success_lines = []
             for line in log_content.split('\n'):
                 if any(keyword in line for keyword in [
-                    "✅ ARCHITECTURAL SUCCESS",
-                    "PERFECT MATCH! Final sum = 306",
-                    "✅ PERFECT MATCH"
+                    "Creating complete cycle - 12 bets with exact total 306",
+                    "ARCHITECTURAL SUCCESS! Perfect exact sum match!",
+                    "Created complete cycle - 12/12 bets",
+                    "Total bet amounts = 306"
                 ]):
                     success_lines.append(line.strip())
             
             if success_lines:
-                print(f"   📝 Recent success log lines:")
-                for line in success_lines[-3:]:  # Show last 3 relevant lines
+                print(f"   📝 Recent Russian review specific log lines:")
+                for line in success_lines[-5:]:  # Show last 5 relevant lines
                     print(f"      {line}")
+            else:
+                print(f"   ⚠️ No specific Russian review log messages found in recent logs")
                     
         else:
             record_test(
-                "Backend Logs Analysis",
+                "Russian Review Backend Logs Analysis",
                 False,
                 f"Failed to read backend logs: {result.stderr}"
             )
             
     except subprocess.TimeoutExpired:
-        record_test("Backend Logs Analysis", False, "Timeout reading backend logs")
+        record_test("Russian Review Backend Logs Analysis", False, "Timeout reading backend logs")
     except Exception as e:
-        record_test("Backend Logs Analysis", False, f"Error reading logs: {str(e)}")
+        record_test("Russian Review Backend Logs Analysis", False, f"Error reading logs: {str(e)}")
 
 def print_russian_review_summary():
     """Print Russian Review testing specific summary"""
