@@ -15714,44 +15714,50 @@ async def create_bot_bet(bot: Bot) -> bool:
         bet_amount = round(random.uniform(min_bet, max_bet), 2)
         logger.info(f"🎯 Bot {bot.id}: generating bet in range {min_bet}-{max_bet}, selected: {bet_amount}")
         
-        # Используем все доступные типы гемов из GEM_PRICES с правильным регистром
+        # ПРОСТОЙ И ТОЧНЫЙ алгоритм генерации гемов в заданном диапазоне
         gem_types = list(GEM_PRICES.keys())  # ["Ruby", "Amber", "Topaz", "Emerald", "Aquamarine", "Sapphire", "Magic"]
-        bet_gems = {}
-        total_value = 0.0
         
-        # Генерируем случайную комбинацию гемов для ставки
-        selected_gems = random.sample(gem_types, random.randint(1, min(4, len(gem_types))))  # 1-4 случайных типа гемов
+        # Используем алгоритм похожий на generate_gem_combination_and_amount но упрощенный
+        attempts = 0
+        max_attempts = 50
+        bet_gems = None
+        actual_total = None
         
-        remaining_amount = bet_amount
-        for i, gem_type in enumerate(selected_gems):
-            if i == len(selected_gems) - 1:  # Последний гем получает остаток
-                gem_value = remaining_amount
-            else:
-                max_for_this_gem = remaining_amount * 0.7  # Максимум 70% от остатка
-                min_for_this_gem = remaining_amount * 0.1  # Минимум 10% от остатка
-                gem_value = round(random.uniform(min_for_this_gem, max_for_this_gem), 2)
+        while attempts < max_attempts:
+            # Генерируем случайную комбинацию гемов
+            temp_gems = {}
+            selected_gems = random.sample(gem_types, random.randint(1, 4))
             
-            if gem_value > 0:
-                gem_price = GEM_PRICES.get(gem_type, 1.0)
-                quantity = max(1, int(gem_value / gem_price))
-                
-                # Коррекция количества, чтобы не превысить оставшуюся сумму
-                actual_value = quantity * gem_price
-                if actual_value > remaining_amount:
-                    quantity = max(1, int(remaining_amount / gem_price))
-                    actual_value = quantity * gem_price
-                
-                bet_gems[gem_type] = quantity
-                total_value += actual_value
-                remaining_amount -= actual_value
-                
-                if remaining_amount <= 0.01:  # Практически ничего не осталось
-                    break
+            for gem_type in selected_gems:
+                # Случайное количество в зависимости от типа гема
+                if gem_type in ['Ruby', 'Amber']:
+                    max_quantity = 5
+                else:
+                    max_quantity = 3
+                quantity = random.randint(1, max_quantity)
+                temp_gems[gem_type] = quantity
+            
+            # Вычисляем общую стоимость
+            temp_total = sum(quantity * GEM_PRICES.get(gem_type, 1.0) for gem_type, quantity in temp_gems.items())
+            
+            # Проверяем диапазон
+            if min_bet <= temp_total <= max_bet:
+                bet_gems = temp_gems
+                actual_total = temp_total
+                break
+            
+            attempts += 1
         
-        # Убеждаемся что total_value соответствует реальной сумме ставки
-        actual_total = sum(quantity * GEM_PRICES.get(gem_type, 1.0) for gem_type, quantity in bet_gems.items())
+        # Если не удалось подобрать комбинацию, используем fallback
+        if bet_gems is None:
+            logger.warning(f"Could not generate gems in range {min_bet}-{max_bet} for bot {bot.id}, using fallback")
+            
+            # Простой fallback: используем только Ruby (цена 1 гем)
+            ruby_quantity = int(bet_amount)
+            bet_gems = {"Ruby": ruby_quantity}
+            actual_total = ruby_quantity * 1.0
         
-        logger.info(f"🎯 Bot {bot.id} created bet: amount={actual_total}, gems={bet_gems}")
+        logger.info(f"🎯 Bot {bot.id} generated bet: target={bet_amount}, actual={actual_total}, gems={bet_gems}")
         
         game = Game(
             creator_id=bot.id,
@@ -15777,12 +15783,12 @@ async def create_bot_bet(bot: Bot) -> bool:
                     "last_game_time": datetime.utcnow()
                 },
                 "$inc": {
-                    "total_bet_amount": total_value
+                    "total_bet_amount": actual_total
                 }
             }
         )
         
-        logger.info(f"Bot {bot.name} created gem-based bet {game.id} with total ${total_value} (gems: {bet_gems})")
+        logger.info(f"Bot {bot.name} created gem-based bet {game.id} with total ${actual_total} (gems: {bet_gems})")
         return True
         
     except Exception as e:
