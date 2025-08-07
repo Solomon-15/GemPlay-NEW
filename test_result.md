@@ -3285,7 +3285,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Bot Fields Removal Testing - Russian Review"
+    - "Login Endpoint Authentication Testing - Russian Review"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
