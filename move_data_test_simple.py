@@ -72,7 +72,9 @@ def main():
         print("❌ No active regular bot games found")
         return
     
-    game = games[0]  # Use first available game
+    # Sort games by bet amount to find the simplest one
+    games.sort(key=lambda x: x.get("bet_amount", 999))
+    game = games[0]  # Use simplest available game
     game_id = game["id"]
     bet_gems = game["bet_gems"]
     
