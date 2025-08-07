@@ -1,27 +1,20 @@
 #!/usr/bin/env python3
 """
-Regular Bots Management Editing Functionality Testing - Russian Review
-Тестирование исправлений функционала редактирования обычных ботов в админ-панели
+LOGIN ENDPOINT AUTHENTICATION TESTING - Russian Review
+Тестирование работы login endpoint для пользователя admin@gemplay.com
 
-КОНТЕКСТ: Тестирование исправленного компонента RegularBotsManagement.js для корректной работы 
-инлайн-редактирования и модального окна редактирования бота.
+ПРОБЛЕМА: Frontend не может авторизоваться - остается на странице логина даже после нажатия кнопки LOGIN.
+Backend URL настроен как внешний: https://07bd7b72-19cf-45a5-a132-f377943ad1db.preview.emergentagent.com
 
 ТЕСТИРОВАТЬ:
-1. API эндпоинты для инлайн-редактирования:
-   - PUT /api/admin/bots/{bot_id}/win-percentage с JSON body {win_percentage: число}
-   - PUT /api/admin/bots/{bot_id}/pause-settings с JSON body {pause_between_games: число}
-   - Проверить что изменения сохраняются в базе данных
+1. Проверить доступность login endpoint
+2. Проверить авторизацию админа admin@gemplay.com с паролем Admin123!
+3. Проверить /auth/me endpoint  
+4. Убедиться что токен возвращается правильно
+5. Выполнить полную проверку auth процесса чтобы понять почему не работает логин в интерфейсе
 
-2. API для модального окна редактирования:
-   - GET /api/admin/bots/{bot_id} должен возвращать все поля включая pause_between_cycles, pause_on_draw, creation_mode
-   - PUT /api/admin/bots/{bot_id} должен принимать JSON с полями: name, min_bet_amount, max_bet_amount, win_percentage, cycle_games, pause_between_cycles, pause_on_draw, creation_mode, profit_strategy
-
-3. Проверить что данные корректно возвращаются:
-   - GET /api/admin/bots/regular/list должен показывать обновленные значения после редактирования
-   - Убедиться что поля % и Пауза отображают актуальные значения
-
-ПРИОРИТЕТ: Критически важно для пользователя - он не может редактировать ботов
-ОЖИДАЕМЫЕ РЕЗУЛЬТАТЫ: Все API должны работать корректно, изменения должны сохраняться и отображаться
+ПРИОРИТЕТ: Критически важно - пользователь не может войти в систему
+ОЖИДАЕМЫЕ РЕЗУЛЬТАТЫ: Login должен работать корректно, токен должен возвращаться, /auth/me должен работать
 """
 
 import requests
