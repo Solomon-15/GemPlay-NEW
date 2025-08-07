@@ -173,7 +173,7 @@ def test_exact_cycle_sum_matching():
         "creation_mode": "queue-based"
     }
     
-    print(f"   📝 Creating Regular bot with settings: {bot_data}")
+    print(f"   📝 Creating Regular bot 'Critical_Fix_Test_Bot' with settings: {bot_data}")
     
     # Create the bot
     success, response_data, details = make_request(
@@ -185,7 +185,7 @@ def test_exact_cycle_sum_matching():
     
     if not success or not response_data:
         record_test(
-            "Exact cycle sum matching",
+            "Critical Fix Test Bot Creation",
             False,
             f"Failed to create Regular bot: {details}"
         )
@@ -194,17 +194,17 @@ def test_exact_cycle_sum_matching():
     bot_id = response_data.get("bot_id")
     if not bot_id:
         record_test(
-            "Exact cycle sum matching",
+            "Critical Fix Test Bot Creation",
             False,
             "Bot created but no bot_id returned"
         )
         return
     
-    print(f"   ✅ Regular bot created successfully with ID: {bot_id}")
+    print(f"   ✅ Regular bot 'Critical_Fix_Test_Bot' created successfully with ID: {bot_id}")
     
-    # Wait 20 seconds for bet creation
-    print(f"   ⏳ Waiting 20 seconds for automatic bet creation...")
-    time.sleep(20)
+    # Wait 25 seconds for COMPLETE cycle creation as specified in Russian review
+    print(f"   ⏳ Waiting 25 seconds for COMPLETE cycle creation (all 12 bets)...")
+    time.sleep(25)
     
     # Get all active games for this bot
     success, games_data, details = make_request(
