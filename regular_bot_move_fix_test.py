@@ -182,11 +182,34 @@ def create_test_user() -> Optional[str]:
     return None
 
 def create_test_regular_bot(admin_token: str) -> Optional[str]:
-    """Create test regular bot with specific parameters"""
+    """Create test regular bot with specific parameters or use existing one"""
     print(f"\n{Colors.MAGENTA}🤖 Step 1: Creating test regular bot 'Test_Move_Fix_Bot'{Colors.END}")
     
     headers = {"Authorization": f"Bearer {admin_token}"}
     
+    # First, check if we already have existing bots
+    success, response_data, details = make_request(
+        "GET",
+        "/admin/bots",
+        headers=headers
+    )
+    
+    if success and response_data:
+        bots = response_data if isinstance(response_data, list) else response_data.get("bots", [])
+        if bots:
+            # Use the first available bot
+            existing_bot = bots[0]
+            bot_id = existing_bot.get("id")
+            bot_name = existing_bot.get("name", "Unknown")
+            
+            record_test(
+                "Use existing regular bot",
+                True,
+                f"Using existing bot: {bot_name} (ID: {bot_id}) for testing"
+            )
+            return bot_id
+    
+    # If no existing bots, try to create a new one
     bot_data = {
         "name": "Test_Move_Fix_Bot",
         "min_bet_amount": 10.0,
