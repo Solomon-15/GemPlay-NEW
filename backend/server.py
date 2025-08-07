@@ -16318,13 +16318,20 @@ async def get_bot_details(
                 "is_active": bot_doc.get("is_active", True),
                 "bot_type": bot_doc.get("bot_type", "REGULAR"),
                 
-                # User-defined parameters - return exactly as saved, not defaults!
+                # User-defined parameters - return exactly as saved with correct field names
+                "min_bet_amount": bot_doc.get("min_bet_amount", 1.0),
+                "max_bet_amount": bot_doc.get("max_bet_amount", 50.0),
+                "win_percentage": bot_doc.get("win_percentage", 55.0),
+                "cycle_games": bot_doc.get("cycle_games", 12),
+                "pause_between_cycles": bot_doc.get("pause_between_cycles", 5),
+                "pause_on_draw": bot_doc.get("pause_on_draw", 1),
+                "creation_mode": bot_doc.get("creation_mode", "queue-based"),
+                "profit_strategy": bot_doc.get("profit_strategy", "balanced"),
+                "cycle_total_amount": bot_doc.get("cycle_total_amount", 0),
+                
+                # Legacy fields for backward compatibility
                 "pause_timer": bot_doc.get("pause_timer"),
-                "cycle_games": bot_doc.get("cycle_length"),
-                "cycle_total_amount": bot_doc.get("cycle_total_amount"),
-                "win_percentage": bot_doc.get("win_percentage"),
-                "min_bet_amount": bot_doc.get("min_bet_amount"),
-                "max_bet_amount": bot_doc.get("max_bet_amount"),
+                "cycle_length": bot_doc.get("cycle_length"),
                 
                 # Statistics
                 "active_bets": active_bets,
@@ -16337,7 +16344,8 @@ async def get_bot_details(
                 "win_rate": round(win_rate, 1),
                 "created_at": bot_doc.get("created_at"),
                 "last_game_time": bot_doc.get("last_game_time"),
-                "last_bet_time": bot_doc.get("last_bet_time")
+                "last_bet_time": bot_doc.get("last_bet_time"),
+                "updated_at": bot_doc.get("updated_at")
             }
         }
         
