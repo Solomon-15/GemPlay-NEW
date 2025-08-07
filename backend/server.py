@@ -15698,10 +15698,21 @@ async def create_bot_bet(bot: Bot) -> bool:
         elif creation_mode == "after-all":
             logger.info(f"Creating bet for after-all bot {bot.id}")
         
-        # Используем значения из базы данных вместо модели Bot
-        min_bet = bot_doc.get("min_bet_amount", 1.0) if bot_doc else bot.min_bet_amount
-        max_bet = bot_doc.get("max_bet_amount", 100.0) if bot_doc else bot.max_bet_amount
+        # КРИТИЧНОЕ ИСПРАВЛЕНИЕ: Всегда используем актуальные значения из базы данных
+        if not bot_doc:
+            logger.error(f"Bot document not found for bot {bot.id}")
+            return False
+            
+        min_bet = bot_doc.get("min_bet_amount", 1.0)
+        max_bet = bot_doc.get("max_bet_amount", 100.0)
+        
+        # Дополнительная валидация диапазона
+        if min_bet >= max_bet:
+            logger.error(f"Invalid bet range for bot {bot.id}: min_bet={min_bet}, max_bet={max_bet}")
+            return False
+            
         bet_amount = round(random.uniform(min_bet, max_bet), 2)
+        logger.info(f"🎯 Bot {bot.id}: generating bet in range {min_bet}-{max_bet}, selected: {bet_amount}")
         
         # Используем все доступные типы гемов из GEM_PRICES с правильным регистром
         gem_types = list(GEM_PRICES.keys())  # ["Ruby", "Amber", "Topaz", "Emerald", "Aquamarine", "Sapphire", "Magic"]
