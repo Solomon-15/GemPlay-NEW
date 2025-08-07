@@ -1633,7 +1633,7 @@ const RegularBotsManagement = () => {
                   </td>
                 </tr>
               ) : (
-                botsList.map((bot, index) => (
+                getSortedBots(botsList).map((bot, index) => (
                   <tr key={bot.id} className="hover:bg-surface-sidebar hover:bg-opacity-50">
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <input
