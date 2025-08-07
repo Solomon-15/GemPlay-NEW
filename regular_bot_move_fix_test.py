@@ -260,45 +260,38 @@ def create_test_regular_bot(admin_token: str) -> Optional[str]:
     return None
 
 def wait_for_bot_bets(admin_token: str, bot_name: str = None) -> bool:
-    """Wait for bot to create bets"""
-    print(f"\n{Colors.MAGENTA}⏳ Step 2: Waiting for bot to create bets...{Colors.END}")
+    """Check if there are existing bot bets"""
+    print(f"\n{Colors.MAGENTA}⏳ Step 2: Checking for existing bot bets...{Colors.END}")
     
     headers = {"Authorization": f"Bearer {admin_token}"}
-    max_attempts = 6  # 30 seconds total
     
-    for attempt in range(max_attempts):
-        print(f"{Colors.BLUE}   Attempt {attempt + 1}/{max_attempts}: Checking for bot bets...{Colors.END}")
+    success, response_data, details = make_request(
+        "GET",
+        "/bots/active-games",
+        headers=headers
+    )
+    
+    if success and response_data:
+        games = response_data if isinstance(response_data, list) else response_data.get("games", [])
         
-        success, response_data, details = make_request(
-            "GET",
-            "/bots/active-games",
-            headers=headers
-        )
+        # Look for games created by any regular bot
+        bot_games = []
+        for game in games:
+            if game.get("creator_type") == "bot" or game.get("is_regular_bot_game"):
+                bot_games.append(game)
         
-        if success and response_data:
-            games = response_data if isinstance(response_data, list) else response_data.get("games", [])
-            
-            # Look for games created by any regular bot
-            bot_games = []
-            for game in games:
-                if game.get("creator_type") == "bot" or game.get("is_regular_bot_game"):
-                    bot_games.append(game)
-            
-            if bot_games:
-                record_test(
-                    "Bot creates bets automatically",
-                    True,
-                    f"Found {len(bot_games)} active games created by regular bots"
-                )
-                return True
-        
-        if attempt < max_attempts - 1:
-            time.sleep(5)  # Wait 5 seconds between attempts
+        if bot_games:
+            record_test(
+                "Bot creates bets automatically",
+                True,
+                f"Found {len(bot_games)} active games created by regular bots"
+            )
+            return True
     
     record_test(
         "Bot creates bets automatically",
         False,
-        f"Regular bots did not create any bets after {max_attempts * 5} seconds"
+        f"No regular bot games found"
     )
     return False
 
