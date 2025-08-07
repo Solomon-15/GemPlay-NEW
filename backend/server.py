@@ -16974,36 +16974,6 @@ async def update_individual_bot_settings(
             {"$set": update_fields}
         )
         
-        # Check if cycle parameters were changed - if so, recalculate bets
-        cycle_params_changed = any(field in update_fields for field in [
-            "cycle_length", "cycle_total_amount", "win_percentage", 
-            "min_bet_amount", "avg_bet_amount", "bet_distribution"  # обновленные поля
-        ])
-        
-        generated_bets = 0
-        if cycle_params_changed and bot.get("is_active", False):
-            try:
-                # Get updated bot data
-                updated_bot = await db.bots.find_one({"id": bot_id})
-                new_bets = await generate_bot_cycle_bets(
-                    bot_id=bot_id,
-                    cycle_length=updated_bot.get("cycle_length", 12),
-                    cycle_total_amount=updated_bot.get("cycle_total_amount", 500.0),
-                    win_percentage=updated_bot.get("win_percentage", 60),
-                    min_bet=updated_bot.get("min_bet_amount", 5.0),
-                    avg_bet=updated_bot.get("avg_bet_amount", 50.0),
-                    bet_distribution=updated_bot.get("bet_distribution", "medium")
-                )
-                generated_bets = len(new_bets)
-                
-
-                
-            except Exception as e:
-                logger.warning(f"Failed to auto-recalculate bets for bot {bot_id}: {e}")
-        
-        elif "cycle_length" in update_fields and bot.get("is_active", False):
-            pass
-        
         # Log admin action
         admin_log = AdminLog(
             admin_id=current_user.id,
@@ -17012,21 +16982,17 @@ async def update_individual_bot_settings(
             target_id=bot_id,
             details={
                 "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
-                "updated_fields": update_fields,
-                "auto_recalculated_bets": generated_bets if cycle_params_changed else None
+                "updated_fields": update_fields
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
         response_data = {
-            "message": f"Настройки бота обновлены",
+            "message": f"Настройки бота успешно обновлены",
             "bot_id": bot_id,
-            "updated_fields": list(update_fields.keys())
+            "updated_fields": list(update_fields.keys()),
+            "success": True
         }
-        
-        if cycle_params_changed:
-            response_data["recalculated_bets"] = generated_bets
-            response_data["message"] += f" и пересчитано {generated_bets} ставок"
         
         return response_data
         
