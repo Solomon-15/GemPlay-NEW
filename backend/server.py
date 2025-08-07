@@ -17094,7 +17094,7 @@ async def update_bot_pause_settings(
     Обновляет настройки паузы между играми для бота.
     """
     try:
-        pause_between_games = request.pause_between_games
+        pause_between_cycles = request.pause_between_cycles
         
         # Проверяем существует ли бот
         bot = await db.bots.find_one({"id": bot_id})
@@ -17109,7 +17109,7 @@ async def update_bot_pause_settings(
             {"id": bot_id},
             {
                 "$set": {
-                    "pause_between_games": pause_between_games,
+                    "pause_between_cycles": pause_between_cycles,
                     "updated_at": datetime.utcnow()
                 }
             }
@@ -17122,19 +17122,19 @@ async def update_bot_pause_settings(
             target_type="bot",
             target_id=bot_id,
             details={
-                "old_pause": bot.get("pause_between_games", 5),
-                "new_pause": pause_between_games,
+                "old_pause": bot.get("pause_between_cycles", bot.get("pause_between_games", 5)),
+                "new_pause": pause_between_cycles,
                 "bot_name": bot.get("name", f"Bot #{bot_id[:8]}")
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        logger.info(f"Admin {current_user.username} updated pause settings for bot {bot.get('name', bot_id)}: {pause_between_games}s")
+        logger.info(f"Admin {current_user.username} updated pause settings for bot {bot.get('name', bot_id)}: {pause_between_cycles}s")
         
         return {
-            "message": f"Настройки паузы обновлены на {pause_between_games} секунд",
+            "message": f"Настройки паузы обновлены на {pause_between_cycles} секунд",
             "bot_id": bot_id,
-            "pause_between_games": pause_between_games,
+            "pause_between_cycles": pause_between_cycles,
             "success": True
         }
         
