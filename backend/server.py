@@ -16150,17 +16150,10 @@ async def get_regular_bots_list(
         for bot_doc in bots:
             bot = Bot(**bot_doc)
             
-            # Count active bets for this bot (both as creator and opponent)
+            # Count active bets for this bot (ONLY as creator - regular bots don't join other bets)
             active_bets = await db.games.count_documents({
-                "$and": [
-                    {
-                        "$or": [
-                            {"creator_id": bot.id},
-                            {"opponent_id": bot.id}
-                        ]
-                    },
-                    {"status": {"$in": ["WAITING", "ACTIVE"]}}
-                ]
+                "creator_id": bot.id,
+                "status": {"$in": ["WAITING", "ACTIVE"]}
             })
             
             # Get game statistics
