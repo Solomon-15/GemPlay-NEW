@@ -222,13 +222,34 @@ def test_bot_active_games_range(token: str, bot_id: str = None):
         games = response_data if isinstance(response_data, list) else response_data.get("games", [])
         
         if games:
-            # Find games created by our test bot
+            # Find games created by our test bot - try multiple approaches
             test_bot_games = []
             for game in games:
                 # Check if this game was created by our test bot
                 creator_name = game.get("creator_name", "")
-                if creator_name == "Test_Bet_Range_Bot" or (bot_id and game.get("creator_id") == bot_id):
+                creator_id = game.get("creator_id", "")
+                bot_name = game.get("bot_name", "")
+                
+                # Multiple ways to identify our bot's games
+                if (creator_name == "Test_Bet_Range_Bot" or 
+                    bot_name == "Test_Bet_Range_Bot" or
+                    (bot_id and creator_id == bot_id)):
                     test_bot_games.append(game)
+            
+            print(f"{Colors.BLUE}🔍 Searching for Test_Bet_Range_Bot games in {len(games)} total games{Colors.END}")
+            if bot_id:
+                print(f"{Colors.BLUE}🆔 Looking for bot ID: {bot_id}{Colors.END}")
+            
+            # Debug: Show some game creators for analysis
+            print(f"{Colors.BLUE}📋 Sample game creators (first 5):{Colors.END}")
+            for i, game in enumerate(games[:5]):
+                creator_info = {
+                    "creator_name": game.get("creator_name", "N/A"),
+                    "creator_id": game.get("creator_id", "N/A")[:8] + "..." if game.get("creator_id") else "N/A",
+                    "bot_name": game.get("bot_name", "N/A"),
+                    "bet_amount": game.get("bet_amount", "N/A")
+                }
+                print(f"   Game {i+1}: {creator_info}")
             
             if test_bot_games:
                 print(f"{Colors.BLUE}📊 Found {len(test_bot_games)} games created by Test_Bet_Range_Bot{Colors.END}")
