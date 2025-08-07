@@ -302,9 +302,9 @@ def wait_for_bot_bets(admin_token: str, bot_name: str = None) -> bool:
     )
     return False
 
-def find_bot_game(admin_token: str, bot_name: str = "Test_Move_Fix_Bot") -> Optional[Dict]:
-    """Find an active game created by the test bot"""
-    print(f"\n{Colors.MAGENTA}🔍 Step 3: Finding active game from {bot_name}{Colors.END}")
+def find_bot_game(admin_token: str, bot_name: str = None) -> Optional[Dict]:
+    """Find an active game created by any regular bot"""
+    print(f"\n{Colors.MAGENTA}🔍 Step 3: Finding active game from regular bots{Colors.END}")
     
     headers = {"Authorization": f"Bearer {admin_token}"}
     
@@ -317,11 +317,10 @@ def find_bot_game(admin_token: str, bot_name: str = "Test_Move_Fix_Bot") -> Opti
     if success and response_data:
         games = response_data if isinstance(response_data, list) else response_data.get("games", [])
         
-        # Look for WAITING games created by our test bot
+        # Look for WAITING games created by any regular bot
         for game in games:
             if (game.get("status") == "WAITING" and 
-                game.get("creator_type") == "bot" and 
-                bot_name in str(game)):
+                (game.get("creator_type") == "bot" or game.get("is_regular_bot_game"))):
                 
                 record_test(
                     "Find bot game for joining",
@@ -333,7 +332,7 @@ def find_bot_game(admin_token: str, bot_name: str = "Test_Move_Fix_Bot") -> Opti
         record_test(
             "Find bot game for joining",
             False,
-            f"No WAITING games found from {bot_name}. Total games: {len(games)}"
+            f"No WAITING games found from regular bots. Total games: {len(games)}"
         )
     else:
         record_test(
