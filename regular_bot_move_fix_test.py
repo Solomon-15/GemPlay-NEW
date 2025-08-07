@@ -167,7 +167,7 @@ def create_test_user() -> Optional[str]:
     """Create or authenticate test user for joining games"""
     print(f"{Colors.BLUE}👤 Setting up test user for game joining...{Colors.END}")
     
-    # Try to login first
+    # Use admin user as test user since it's already verified
     success, response_data, details = make_request(
         "POST",
         "/auth/login",
@@ -175,36 +175,8 @@ def create_test_user() -> Optional[str]:
     )
     
     if success and response_data and "access_token" in response_data:
-        print(f"{Colors.GREEN}✅ Test user login successful{Colors.END}")
+        print(f"{Colors.GREEN}✅ Test user login successful (using admin account){Colors.END}")
         return response_data["access_token"]
-    
-    # If login fails, try to register
-    print(f"{Colors.YELLOW}⚠️ Test user login failed, attempting registration...{Colors.END}")
-    
-    registration_data = {
-        "username": "TestMoveUser",
-        "email": TEST_USER["email"],
-        "password": TEST_USER["password"],
-        "gender": "male"
-    }
-    
-    success, response_data, details = make_request(
-        "POST",
-        "/auth/register",
-        data=registration_data
-    )
-    
-    if success:
-        print(f"{Colors.GREEN}✅ Test user registered successfully{Colors.END}")
-        # Try login again
-        success, response_data, details = make_request(
-            "POST",
-            "/auth/login",
-            data=TEST_USER
-        )
-        
-        if success and response_data and "access_token" in response_data:
-            return response_data["access_token"]
     
     print(f"{Colors.RED}❌ Failed to setup test user: {details}{Colors.END}")
     return None
