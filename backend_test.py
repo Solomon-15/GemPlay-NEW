@@ -4,7 +4,7 @@ LOGIN ENDPOINT AUTHENTICATION TESTING - Russian Review
 Тестирование работы login endpoint для пользователя admin@gemplay.com
 
 ПРОБЛЕМА: Frontend не может авторизоваться - остается на странице логина даже после нажатия кнопки LOGIN.
-Backend URL настроен как внешний: https://07bd7b72-19cf-45a5-a132-f377943ad1db.preview.emergentagent.com
+Backend URL настроен как внешний: https://53b51271-d84e-45ed-b769-9b3ed6d4038f.preview.emergentagent.com
 
 ТЕСТИРОВАТЬ:
 1. Проверить доступность login endpoint
@@ -27,7 +27,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://07bd7b72-19cf-45a5-a132-f377943ad1db.preview.emergentagent.com/api"
+BASE_URL = "https://53b51271-d84e-45ed-b769-9b3ed6d4038f.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
@@ -335,7 +335,7 @@ def test_cors_headers():
     try:
         # Test OPTIONS request with Origin header (simulating frontend request)
         headers = {
-            "Origin": "https://07bd7b72-19cf-45a5-a132-f377943ad1db.preview.emergentagent.com",
+            "Origin": "https://53b51271-d84e-45ed-b769-9b3ed6d4038f.preview.emergentagent.com",
             "Access-Control-Request-Method": "POST",
             "Access-Control-Request-Headers": "Content-Type,Authorization"
         }
