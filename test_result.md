@@ -114,7 +114,7 @@ frontend:
     implemented: true
     working: false
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 2
     priority: "critical"
     needs_retesting: false
     status_history:
@@ -124,6 +124,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "🚨 CRITICAL ISSUE DETECTED: REGULAR BOTS CYCLE_GAMES LOGIC NOT WORKING CORRECTLY! Conducted comprehensive testing of the regular bots game logic fix and found a major issue with the cycle_games limitation system. CRITICAL FAILURE IDENTIFIED: ❌ CYCLE_GAMES LIMIT VIOLATION - Multiple bots are creating more active bets than their cycle_games limit allows: 'Updated_Bot_1754524221: 31 active bets > 12 cycle_games', 'Bot#2: 27 active bets > 12 cycle_games', 'Bot#1: 186 active bets > 12 cycle_games'. This indicates that the maintain_all_bots_active_bets() function is NOT properly enforcing the cycle_games limit as intended. ✅ POSITIVE FINDINGS: Draw replacement logic is implemented (all bots have pause_on_draw settings), endpoint separation is working correctly (/games/available and /games/active-human-bots exclude regular bots), gem types diversity is working (all 7 gem types being used), isolation rules are followed (no bot vs bot games detected). ❌ ONGOING GAMES ENDPOINT ISSUE: /bots/ongoing-games returns 0 games, indicating no ACTIVE regular bot games currently exist (all are WAITING). ROOT CAUSE ANALYSIS: The cycle_games logic appears to have a race condition or the bot automation is creating bets faster than the limit checking can prevent. The maintain_all_bots_active_bets() function needs immediate attention to properly enforce the cycle_games limit. CONCLUSION: While some aspects of the game logic fix are working (draw handling, gem diversity, endpoint separation), the core cycle_games limitation system is critically broken and needs urgent fixing."
+      - working: false
+        agent: "testing"
+        comment: "🚨 RACE CONDITION FIX VERIFICATION FAILED! Conducted comprehensive testing of the race condition fix as specifically requested in the Russian review. CRITICAL SUCCESS RATE: 71.4% (5/7 tests passed). ❌ MAJOR ISSUES CONFIRMED: 1) CYCLE_GAMES COMPLIANCE VIOLATION - 3 out of 5 bots are violating cycle_games limits: Bot#1 has 186 active bets vs 12 limit (1550% over limit!), Bot#2 has 27 active bets vs 12 limit (225% over limit), Updated_Bot_1754524221 has 31 active bets vs 12 limit (258% over limit). This confirms the race condition is NOT fixed despite claims of disabling conflicting automation loops. 2) AUTOMATION SOURCE ANALYSIS - While game count fluctuation appears stable (0 games difference over 3 measurements), the massive cycle_games violations indicate the underlying race condition persists. ✅ POSITIVE FINDINGS: Isolation rules working correctly (regular bots properly separated from human-bots), draw replacement logic implemented (all 5 bots have pause_on_draw settings), endpoint functionality partially working (/bots/active-games returns 268 games, all WAITING status). ❌ CRITICAL CONCLUSION: The race condition fix is INCOMPLETE. The system is creating far more bets than the cycle_games limits allow, indicating multiple automation sources are still active or the maintain_all_bots_active_bets() function has a critical bug. The system is NOT ready for production use and requires immediate attention to fix the cycle_games enforcement logic."
 
   - task: "Regular Bots Timing Settings Update"
     implemented: true
