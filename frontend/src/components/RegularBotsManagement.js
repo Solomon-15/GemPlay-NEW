@@ -156,11 +156,16 @@ const RegularBotsManagement = () => {
     
     min_bet_amount: 1.0, // 1-10000
     max_bet_amount: 50.0, // 1-10000
-    win_percentage: 55.0, // 0-100% (по умолчанию 55%)
+    win_percentage: 55.0, // 0-100% (соотношение выигрыша к общей сумме, по умолчанию 55%)
+    
+    // Новые поля для процентов исходов игр
+    wins_percentage: 35, // % побед в цикле (по умолчанию 35%)
+    losses_percentage: 35, // % поражений в цикле (по умолчанию 35%)
+    draws_percentage: 30, // % ничьих (дополнительно к циклу, по умолчанию 30%)
     
     cycle_games: 12, // 1-66 (по умолчанию 12)
     pause_between_cycles: 5, // 1-300 секунд (пауза между циклами, по умолчанию 5)
-    pause_on_draw: 1, // 1-60 секунд (пауза при ничье, по умолчанию 1)
+    pause_on_draw: 5, // 1-60 секунд (пауза при ничье и между ставками, по умолчанию 5)
     
     creation_mode: 'queue-based', // 'always-first', 'queue-based', 'after-all' (по умолчанию queue-based)
     profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
