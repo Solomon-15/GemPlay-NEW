@@ -1872,15 +1872,14 @@ async def maintain_all_bots_active_bets():
                         bot_obj = Bot(
                             id=bot_doc["id"],
                             name=bot_doc["name"],
-                            bot_type=bot_doc.get("bot_type", "REGULAR"),
+                            bot_type=BotType(bot_doc.get("bot_type", "REGULAR")),
                             min_bet_amount=bot_doc.get("min_bet_amount", 1.0),
                             max_bet_amount=bot_doc.get("max_bet_amount", 50.0),
-                            win_rate=bot_doc.get("win_percentage", 55.0) / 100.0,
+                            win_percentage=bot_doc.get("win_percentage", 55.0),
                             cycle_games=cycle_games,
-                            pause_between_games=bot_doc.get("pause_between_cycles", 5),
+                            pause_between_cycles=bot_doc.get("pause_between_cycles", 5),
                             is_active=bot_doc.get("is_active", True),
                             created_at=bot_doc.get("created_at", datetime.utcnow()),
-                            bot_behavior=bot_doc.get("bot_behavior", "balanced"),
                             profit_strategy=bot_doc.get("profit_strategy", "balanced")
                         )
                         
