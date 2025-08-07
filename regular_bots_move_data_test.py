@@ -206,18 +206,21 @@ def add_gems_to_user(admin_token: str, user_token: str) -> bool:
     success, user_data, _ = make_request("GET", "/user/profile", headers=headers)
     
     if not success or not user_data:
+        print(f"{Colors.RED}❌ Failed to get user profile{Colors.END}")
         return False
     
     user_id = user_data.get("id")
     if not user_id:
+        print(f"{Colors.RED}❌ No user ID found{Colors.END}")
         return False
     
     # Add gems using admin endpoint
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
     
     # Add various gems
-    gem_types = ["Ruby", "Emerald", "Sapphire", "Topaz", "Amber"]
+    gem_types = ["Ruby", "Emerald", "Sapphire", "Topaz", "Amber", "Aquamarine", "Magic"]
     
+    gems_added = 0
     for gem_type in gem_types:
         gem_data = {
             "user_id": user_id,
@@ -225,15 +228,35 @@ def add_gems_to_user(admin_token: str, user_token: str) -> bool:
             "quantity": 50  # Add 50 of each gem type
         }
         
-        make_request(
+        success, _, _ = make_request(
             "POST",
             "/admin/users/add-gems",
             headers=admin_headers,
             data=gem_data
         )
+        
+        if success:
+            gems_added += 1
     
-    print(f"{Colors.GREEN}✅ Added gems to test user{Colors.END}")
-    return True
+    if gems_added > 0:
+        print(f"{Colors.GREEN}✅ Added {gems_added} gem types to test user{Colors.END}")
+        return True
+    else:
+        # Try alternative method - add balance and buy gems
+        balance_data = {"amount": 1000.0}
+        success, _, _ = make_request(
+            "POST",
+            "/admin/users/add-balance",
+            headers=admin_headers,
+            data={"user_id": user_id, "amount": 1000.0}
+        )
+        
+        if success:
+            print(f"{Colors.GREEN}✅ Added balance to test user, they can buy gems{Colors.END}")
+            return True
+        
+        print(f"{Colors.RED}❌ Failed to add gems or balance to test user{Colors.END}")
+        return False
 
 def find_active_regular_bot_game(token: str) -> Optional[Dict]:
     """Find an active regular bot game to join"""
