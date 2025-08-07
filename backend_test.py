@@ -148,387 +148,204 @@ def authenticate_admin() -> Optional[str]:
         print(f"{Colors.RED}❌ Admin authentication failed: {details}{Colors.END}")
         return None
 
-def generate_unique_bot_name() -> str:
-    """Generate unique bot name for testing"""
-    timestamp = int(time.time())
-    random_suffix = ''.join(random.choices(string.digits, k=4))
-    return f"TestRegularBot_{timestamp}_{random_suffix}"
-
-def test_login_endpoint_availability():
-    """Test 1: Проверить доступность login endpoint"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 1: Testing login endpoint availability{Colors.END}")
+def test_exact_cycle_sum_matching():
+    """Test 1: Создать Regular бот и проверить точную сумму цикла 306.0"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 1: Testing exact cycle sum matching fix{Colors.END}")
     
-    # Test endpoint availability with OPTIONS request first
-    url = f"{BASE_URL}/auth/login"
+    # First authenticate as admin
+    admin_token = authenticate_admin()
+    if not admin_token:
+        record_test("Exact cycle sum matching", False, "Failed to authenticate as admin")
+        return
     
-    try:
-        # Test with OPTIONS to check CORS
-        options_response = requests.options(url, timeout=10)
-        print(f"   OPTIONS /auth/login: {options_response.status_code}")
-        
-        # Test with GET to see if endpoint exists (should return 405 Method Not Allowed)
-        get_response = requests.get(url, timeout=10)
-        print(f"   GET /auth/login: {get_response.status_code}")
-        
-        # Endpoint should exist (not 404)
-        if options_response.status_code != 404 and get_response.status_code != 404:
-            record_test(
-                "Login endpoint availability",
-                True,
-                f"Endpoint exists - OPTIONS: {options_response.status_code}, GET: {get_response.status_code}"
-            )
-        else:
-            record_test(
-                "Login endpoint availability", 
-                False,
-                f"Endpoint not found - OPTIONS: {options_response.status_code}, GET: {get_response.status_code}"
-            )
-            
-    except requests.exceptions.Timeout:
-        record_test("Login endpoint availability", False, "Request timeout (10s)")
-    except requests.exceptions.ConnectionError:
-        record_test("Login endpoint availability", False, "Connection error - endpoint unreachable")
-    except Exception as e:
-        record_test("Login endpoint availability", False, f"Request error: {str(e)}")
-
-def test_admin_login_authentication():
-    """Test 2: Проверить авторизацию админа admin@gemplay.com"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 2: Testing admin authentication{Colors.END}")
+    headers = {"Authorization": f"Bearer {admin_token}"}
     
-    login_data = {
-        "email": "admin@gemplay.com",
-        "password": "Admin123!"
+    # Create Regular bot with specific settings
+    bot_data = {
+        "name": "Final_Sum_Test_Bot",
+        "min_bet_amount": 1.0,
+        "max_bet_amount": 50.0,
+        "cycle_games": 12,
+        "win_percentage": 55.0,
+        "pause_between_cycles": 5,
+        "pause_on_draw": 1,
+        "profit_strategy": "balanced",
+        "creation_mode": "queue-based"
     }
     
+    print(f"   📝 Creating Regular bot with settings: {bot_data}")
+    
+    # Create the bot
     success, response_data, details = make_request(
-        "POST", 
-        "/auth/login",
-        data=login_data
+        "POST",
+        "/admin/bots/create-regular",
+        headers=headers,
+        data=bot_data
     )
     
-    if success and response_data:
-        # Check for required fields in response
-        has_access_token = "access_token" in response_data
-        has_token_type = "token_type" in response_data
-        has_user = "user" in response_data
+    if not success or not response_data:
+        record_test(
+            "Exact cycle sum matching",
+            False,
+            f"Failed to create Regular bot: {details}"
+        )
+        return
+    
+    bot_id = response_data.get("bot_id")
+    if not bot_id:
+        record_test(
+            "Exact cycle sum matching",
+            False,
+            "Bot created but no bot_id returned"
+        )
+        return
+    
+    print(f"   ✅ Regular bot created successfully with ID: {bot_id}")
+    
+    # Wait 20 seconds for bet creation
+    print(f"   ⏳ Waiting 20 seconds for automatic bet creation...")
+    time.sleep(20)
+    
+    # Get all active games for this bot
+    success, games_data, details = make_request(
+        "GET",
+        "/bots/active-games",
+        headers=headers
+    )
+    
+    if not success or not games_data:
+        record_test(
+            "Exact cycle sum matching",
+            False,
+            f"Failed to get active games: {details}"
+        )
+        return
+    
+    # Filter games for our specific bot
+    bot_games = []
+    if isinstance(games_data, list):
+        bot_games = [game for game in games_data if game.get("bot_id") == bot_id]
+    elif isinstance(games_data, dict) and "games" in games_data:
+        bot_games = [game for game in games_data["games"] if game.get("bot_id") == bot_id]
+    
+    if not bot_games:
+        record_test(
+            "Exact cycle sum matching",
+            False,
+            f"No active games found for bot {bot_id}. Total games found: {len(games_data) if isinstance(games_data, list) else 'unknown'}"
+        )
+        return
+    
+    # Calculate sum of all bet amounts
+    bet_amounts = [float(game.get("bet_amount", 0)) for game in bot_games]
+    total_sum = sum(bet_amounts)
+    bet_count = len(bet_amounts)
+    min_bet = min(bet_amounts) if bet_amounts else 0
+    max_bet = max(bet_amounts) if bet_amounts else 0
+    avg_bet = total_sum / bet_count if bet_count > 0 else 0
+    
+    print(f"   📊 Bet Analysis:")
+    print(f"      Количество ставок: {bet_count}")
+    print(f"      Минимальная ставка: ${min_bet:.1f}")
+    print(f"      Максимальная ставка: ${max_bet:.1f}")
+    print(f"      Средняя ставка: ${avg_bet:.1f}")
+    print(f"      Общая сумма: ${total_sum:.1f}")
+    print(f"      Ожидаемая сумма: $306.0")
+    
+    # Check if sum is exactly 306.0
+    expected_sum = 306.0
+    is_exact_match = abs(total_sum - expected_sum) < 0.01  # Allow for floating point precision
+    
+    if is_exact_match:
+        record_test(
+            "Exact cycle sum matching",
+            True,
+            f"✅ PERFECT MATCH! Sum is exactly {total_sum:.1f} (expected: {expected_sum:.1f}). Bets: {bet_count}, Range: ${min_bet:.1f}-${max_bet:.1f}, Avg: ${avg_bet:.1f}"
+        )
+    else:
+        difference = total_sum - expected_sum
+        record_test(
+            "Exact cycle sum matching",
+            False,
+            f"❌ IMPERFECT MATCH! Sum is {total_sum:.1f} instead of {expected_sum:.1f} (difference: {difference:+.1f}). Bets: {bet_count}, Range: ${min_bet:.1f}-${max_bet:.1f}"
+        )
+    
+    # Show individual bet amounts for debugging
+    print(f"   🔍 Individual bet amounts: {sorted(bet_amounts)}")
+    
+    return is_exact_match, total_sum, bet_count, min_bet, max_bet, avg_bet
+
+def test_backend_logs_analysis():
+    """Test 2: Анализ логов бэкенда на наличие normalize сообщений"""
+    print(f"\n{Colors.MAGENTA}🧪 Test 2: Analyzing backend logs for normalization messages{Colors.END}")
+    
+    try:
+        # Try to read supervisor logs for backend
+        import subprocess
         
-        if has_access_token and has_token_type:
-            # Check user role
-            user_data = response_data.get("user", {})
-            user_role = user_data.get("role", "")
-            user_email = user_data.get("email", "")
+        # Get recent backend logs
+        result = subprocess.run(
+            ["tail", "-n", "100", "/var/log/supervisor/backend.out.log"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        
+        if result.returncode == 0:
+            log_content = result.stdout
             
-            if user_role in ["ADMIN", "SUPER_ADMIN"] and user_email == "admin@gemplay.com":
+            # Look for normalization messages
+            perfect_matches = log_content.count("✅ normalize: PERFECT MATCH!")
+            imperfect_matches = log_content.count("❌ normalize: Imperfect match")
+            
+            # Look for target_total_sum messages
+            target_sum_lines = [line for line in log_content.split('\n') if 'target_total_sum=306.0' in line]
+            
+            print(f"   📋 Log Analysis Results:")
+            print(f"      ✅ PERFECT MATCH messages: {perfect_matches}")
+            print(f"      ❌ Imperfect match messages: {imperfect_matches}")
+            print(f"      🎯 target_total_sum=306.0 lines: {len(target_sum_lines)}")
+            
+            if perfect_matches > 0:
                 record_test(
-                    "Admin authentication",
+                    "Backend logs analysis",
                     True,
-                    f"Successfully authenticated admin with role: {user_role}, token_type: {response_data.get('token_type')}"
+                    f"Found {perfect_matches} PERFECT MATCH messages in logs"
                 )
-                return response_data.get("access_token")
+            elif imperfect_matches > 0:
+                record_test(
+                    "Backend logs analysis",
+                    False,
+                    f"Found {imperfect_matches} Imperfect match messages but no PERFECT MATCH"
+                )
             else:
                 record_test(
-                    "Admin authentication",
+                    "Backend logs analysis",
                     False,
-                    f"Authentication successful but wrong role/email: role={user_role}, email={user_email}"
+                    "No normalization messages found in recent logs"
                 )
+            
+            # Show some relevant log lines
+            if target_sum_lines:
+                print(f"   📝 Recent target_total_sum lines:")
+                for line in target_sum_lines[-3:]:  # Show last 3 lines
+                    print(f"      {line.strip()}")
+                    
         else:
             record_test(
-                "Admin authentication",
+                "Backend logs analysis",
                 False,
-                f"Missing required fields in response. Has token: {has_access_token}, Has type: {has_token_type}"
-            )
-    else:
-        record_test(
-            "Admin authentication",
-            False,
-            f"Login failed: {details}"
-        )
-    
-    return None
-
-def test_auth_me_endpoint(token: str):
-    """Test 3: Проверить /auth/me endpoint"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 3: Testing /auth/me endpoint{Colors.END}")
-    
-    if not token:
-        record_test("Auth me endpoint", False, "No token available for testing")
-        return
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    success, response_data, details = make_request(
-        "GET",
-        "/auth/me",
-        headers=headers
-    )
-    
-    if success and response_data:
-        # Check user data structure
-        required_fields = ["id", "email", "role", "username"]
-        found_fields = [field for field in required_fields if field in response_data]
-        
-        user_email = response_data.get("email", "")
-        user_role = response_data.get("role", "")
-        
-        if len(found_fields) >= 3 and user_email == "admin@gemplay.com":
-            record_test(
-                "Auth me endpoint",
-                True,
-                f"Successfully retrieved user data: email={user_email}, role={user_role}, fields={found_fields}"
-            )
-        else:
-            record_test(
-                "Auth me endpoint",
-                False,
-                f"Invalid user data: email={user_email}, found_fields={found_fields}"
-            )
-    else:
-        record_test(
-            "Auth me endpoint",
-            False,
-            f"Failed to get user data: {details}"
-        )
-
-def test_token_format_and_validity(token: str):
-    """Test 4: Проверить формат и валидность токена"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 4: Testing token format and validity{Colors.END}")
-    
-    if not token:
-        record_test("Token format and validity", False, "No token available for testing")
-        return
-    
-    # Check token format (JWT should have 3 parts separated by dots)
-    token_parts = token.split('.')
-    
-    if len(token_parts) == 3:
-        # Token has correct JWT format
-        token_length = len(token)
-        
-        # Test token with a simple authenticated endpoint
-        headers = {"Authorization": f"Bearer {token}"}
-        success, response_data, details = make_request(
-            "GET",
-            "/auth/me",
-            headers=headers
-        )
-        
-        if success:
-            record_test(
-                "Token format and validity",
-                True,
-                f"Token is valid JWT format (3 parts, {token_length} chars) and works with API"
-            )
-        else:
-            record_test(
-                "Token format and validity",
-                False,
-                f"Token has correct format but fails API validation: {details}"
-            )
-    else:
-        record_test(
-            "Token format and validity",
-            False,
-            f"Token has invalid format: {len(token_parts)} parts instead of 3 (JWT standard)"
-        )
-
-def test_cors_headers():
-    """Test 5: Проверить CORS headers для frontend"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 5: Testing CORS headers{Colors.END}")
-    
-    url = f"{BASE_URL}/auth/login"
-    
-    try:
-        # Test OPTIONS request with Origin header (simulating frontend request)
-        headers = {
-            "Origin": "https://53b51271-d84e-45ed-b769-9b3ed6d4038f.preview.emergentagent.com",
-            "Access-Control-Request-Method": "POST",
-            "Access-Control-Request-Headers": "Content-Type,Authorization"
-        }
-        
-        response = requests.options(url, headers=headers, timeout=10)
-        
-        # Check CORS headers in response
-        cors_headers = {
-            "Access-Control-Allow-Origin": response.headers.get("Access-Control-Allow-Origin"),
-            "Access-Control-Allow-Methods": response.headers.get("Access-Control-Allow-Methods"),
-            "Access-Control-Allow-Headers": response.headers.get("Access-Control-Allow-Headers"),
-            "Access-Control-Allow-Credentials": response.headers.get("Access-Control-Allow-Credentials")
-        }
-        
-        has_cors_origin = cors_headers["Access-Control-Allow-Origin"] is not None
-        has_cors_methods = cors_headers["Access-Control-Allow-Methods"] is not None
-        
-        if has_cors_origin and has_cors_methods:
-            record_test(
-                "CORS headers",
-                True,
-                f"CORS properly configured: Origin={cors_headers['Access-Control-Allow-Origin']}, Methods={cors_headers['Access-Control-Allow-Methods']}"
-            )
-        else:
-            record_test(
-                "CORS headers",
-                False,
-                f"CORS headers missing or incomplete: {cors_headers}"
+                f"Failed to read backend logs: {result.stderr}"
             )
             
+    except subprocess.TimeoutExpired:
+        record_test("Backend logs analysis", False, "Timeout reading backend logs")
     except Exception as e:
-        record_test("CORS headers", False, f"Error testing CORS: {str(e)}")
+        record_test("Backend logs analysis", False, f"Error reading logs: {str(e)}")
 
-def test_login_with_wrong_credentials():
-    """Test 6: Проверить обработку неверных учетных данных"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 6: Testing login with wrong credentials{Colors.END}")
-    
-    # Test with wrong password
-    wrong_data = {
-        "email": "admin@gemplay.com",
-        "password": "WrongPassword123!"
-    }
-    
-    success, response_data, details = make_request(
-        "POST",
-        "/auth/login", 
-        data=wrong_data
-    )
-    
-    # Should fail with proper error message
-    if not success:
-        # Check if it's a proper authentication error (401 or 400)
-        if "401" in details or "400" in details or "Invalid" in str(response_data):
-            record_test(
-                "Login with wrong credentials",
-                True,
-                f"Correctly rejected wrong credentials: {details}"
-            )
-        else:
-            record_test(
-                "Login with wrong credentials",
-                False,
-                f"Wrong credentials rejected but with unexpected error: {details}"
-            )
-    else:
-        record_test(
-            "Login with wrong credentials",
-            False,
-            "Should have rejected wrong credentials but login succeeded"
-        )
-
-def test_admin_panel_access(token: str):
-    """Test 7: Проверить доступ к админ-панели с полученным токеном"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 7: Testing admin panel access{Colors.END}")
-    
-    if not token:
-        record_test("Admin panel access", False, "No token available for testing")
-        return
-    
-    headers = {"Authorization": f"Bearer {token}"}
-    
-    # Test access to admin endpoints
-    admin_endpoints = [
-        "/admin/dashboard",
-        "/admin/users",
-        "/admin/bots"
-    ]
-    
-    successful_endpoints = []
-    failed_endpoints = []
-    
-    for endpoint in admin_endpoints:
-        success, response_data, details = make_request(
-            "GET",
-            endpoint,
-            headers=headers
-        )
-        
-        if success:
-            successful_endpoints.append(endpoint)
-        else:
-            failed_endpoints.append(f"{endpoint}: {details}")
-    
-    if len(successful_endpoints) >= 2:
-        record_test(
-            "Admin panel access",
-            True,
-            f"Successfully accessed {len(successful_endpoints)} admin endpoints: {successful_endpoints}"
-        )
-    else:
-        record_test(
-            "Admin panel access",
-            False,
-            f"Failed to access admin endpoints. Success: {successful_endpoints}, Failed: {failed_endpoints}"
-        )
-
-def test_complete_auth_flow():
-    """Test 8: Полный тест auth flow как в frontend"""
-    print(f"\n{Colors.MAGENTA}🧪 Test 8: Testing complete auth flow (frontend simulation){Colors.END}")
-    
-    # Step 1: Login
-    login_data = {
-        "email": "admin@gemplay.com", 
-        "password": "Admin123!"
-    }
-    
-    success, login_response, details = make_request(
-        "POST",
-        "/auth/login",
-        data=login_data
-    )
-    
-    if not success or not login_response:
-        record_test(
-            "Complete auth flow",
-            False,
-            f"Step 1 (Login) failed: {details}"
-        )
-        return
-    
-    token = login_response.get("access_token")
-    if not token:
-        record_test(
-            "Complete auth flow",
-            False,
-            "Step 1 (Login) succeeded but no access_token in response"
-        )
-        return
-    
-    # Step 2: Verify token with /auth/me
-    headers = {"Authorization": f"Bearer {token}"}
-    success, me_response, details = make_request(
-        "GET",
-        "/auth/me",
-        headers=headers
-    )
-    
-    if not success or not me_response:
-        record_test(
-            "Complete auth flow",
-            False,
-            f"Step 2 (/auth/me) failed: {details}"
-        )
-        return
-    
-    # Step 3: Access admin panel
-    success, admin_response, details = make_request(
-        "GET",
-        "/admin/dashboard",
-        headers=headers
-    )
-    
-    if success:
-        record_test(
-            "Complete auth flow",
-            True,
-            "Complete auth flow successful: Login → Token → /auth/me → Admin access"
-        )
-    else:
-        record_test(
-            "Complete auth flow",
-            False,
-            f"Step 3 (Admin access) failed: {details}"
-        )
-
-def print_auth_summary():
-    """Print authentication-specific summary"""
-    print_header("LOGIN ENDPOINT AUTHENTICATION TESTING SUMMARY")
+def print_cycle_sum_summary():
+    """Print cycle sum testing specific summary"""
+    print_header("EXACT CYCLE SUM MATCHING FIX TESTING SUMMARY")
     
     total = test_results["total"]
     passed = test_results["passed"]
@@ -541,24 +358,27 @@ def print_auth_summary():
     print(f"   {Colors.RED}❌ Failed: {failed}{Colors.END}")
     print(f"   {Colors.CYAN}📈 Success Rate: {success_rate:.1f}%{Colors.END}")
     
-    print(f"\n{Colors.BOLD}🎯 AUTHENTICATION REQUIREMENTS STATUS:{Colors.END}")
+    print(f"\n{Colors.BOLD}🎯 EXACT CYCLE SUM REQUIREMENTS STATUS:{Colors.END}")
     
     requirements = [
-        "Login endpoint доступность",
-        "Авторизация admin@gemplay.com / Admin123!",
-        "/auth/me endpoint функциональность",
-        "Токен формат и валидность",
-        "CORS headers для frontend",
-        "Обработка неверных учетных данных",
-        "Доступ к админ-панели",
-        "Полный auth flow"
+        "Regular бот создание с настройками min=1.0, max=50.0, cycle=12",
+        "Автоматическое создание 12 ставок в течение 20 секунд",
+        "Точная сумма цикла равна 306.0 (не 305, 281, 325, 227, 333, 315, 377, 289)",
+        "Backend логи показывают '✅ normalize: PERFECT MATCH!'",
+        "Количество ставок соответствует cycle_games (12)",
+        "Ставки находятся в диапазоне min_bet_amount - max_bet_amount"
     ]
     
     for i, req in enumerate(requirements, 1):
         # Find corresponding test result
         test_found = False
         for test in test_results["tests"]:
-            if str(i) in test["name"] or any(keyword in test["name"].lower() for keyword in req.lower().split()[:2]):
+            if "exact cycle sum" in test["name"].lower() and i <= 3:
+                status = f"{Colors.GREEN}✅ WORKING{Colors.END}" if test["success"] else f"{Colors.RED}❌ FAILED{Colors.END}"
+                print(f"   {i}. {req}: {status}")
+                test_found = True
+                break
+            elif "backend logs" in test["name"].lower() and i == 4:
                 status = f"{Colors.GREEN}✅ WORKING{Colors.END}" if test["success"] else f"{Colors.RED}❌ FAILED{Colors.END}"
                 print(f"   {i}. {req}: {status}")
                 test_found = True
@@ -574,57 +394,49 @@ def print_auth_summary():
         if test["details"]:
             print(f"      {Colors.YELLOW}{test['details']}{Colors.END}")
     
-    # Specific conclusion for auth issues
-    if success_rate >= 80:
-        print(f"\n{Colors.GREEN}{Colors.BOLD}🎉 CONCLUSION: LOGIN SYSTEM IS {success_rate:.1f}% FUNCTIONAL!{Colors.END}")
-        print(f"{Colors.GREEN}Authentication is working correctly. Frontend login issues may be due to client-side problems.{Colors.END}")
-    elif success_rate >= 60:
-        print(f"\n{Colors.YELLOW}{Colors.BOLD}⚠️ CONCLUSION: LOGIN SYSTEM HAS ISSUES ({success_rate:.1f}% functional){Colors.END}")
-        print(f"{Colors.YELLOW}Some authentication components are working but there are issues that need attention.{Colors.END}")
+    # Specific conclusion for cycle sum fix
+    if success_rate == 100:
+        print(f"\n{Colors.GREEN}{Colors.BOLD}🎉 CONCLUSION: EXACT CYCLE SUM MATCHING FIX IS 100% WORKING!{Colors.END}")
+        print(f"{Colors.GREEN}Regular боты создают ставки с точной суммой 306.0. Исправление работает корректно.{Colors.END}")
+    elif success_rate >= 50:
+        print(f"\n{Colors.YELLOW}{Colors.BOLD}⚠️ CONCLUSION: EXACT CYCLE SUM MATCHING FIX HAS ISSUES ({success_rate:.1f}% functional){Colors.END}")
+        print(f"{Colors.YELLOW}Некоторые компоненты работают, но есть проблемы с точностью суммы цикла.{Colors.END}")
     else:
-        print(f"\n{Colors.RED}{Colors.BOLD}🚨 CONCLUSION: LOGIN SYSTEM NEEDS IMMEDIATE ATTENTION ({success_rate:.1f}% functional){Colors.END}")
-        print(f"{Colors.RED}Critical authentication issues found that prevent proper login functionality.{Colors.END}")
+        print(f"\n{Colors.RED}{Colors.BOLD}🚨 CONCLUSION: EXACT CYCLE SUM MATCHING FIX IS NOT WORKING ({success_rate:.1f}% functional){Colors.END}")
+        print(f"{Colors.RED}Критические проблемы с исправлением. Regular боты НЕ создают точную сумму 306.0.{Colors.END}")
     
     # Specific recommendations
-    print(f"\n{Colors.BOLD}💡 RECOMMENDATIONS FOR FRONTEND LOGIN ISSUES:{Colors.END}")
+    print(f"\n{Colors.BOLD}💡 RECOMMENDATIONS FOR MAIN AGENT:{Colors.END}")
     
     # Check specific failure patterns
-    login_test = next((test for test in test_results["tests"] if "authentication" in test["name"].lower()), None)
-    me_test = next((test for test in test_results["tests"] if "auth me" in test["name"].lower()), None)
-    cors_test = next((test for test in test_results["tests"] if "cors" in test["name"].lower()), None)
+    cycle_test = next((test for test in test_results["tests"] if "exact cycle sum" in test["name"].lower()), None)
+    logs_test = next((test for test in test_results["tests"] if "backend logs" in test["name"].lower()), None)
     
-    if login_test and not login_test["success"]:
-        print(f"   🔴 Login endpoint is failing - check backend server status")
-    elif me_test and not me_test["success"]:
-        print(f"   🔴 Token validation is failing - check JWT configuration")
-    elif cors_test and not cors_test["success"]:
-        print(f"   🔴 CORS issues detected - check CORS middleware configuration")
+    if cycle_test and not cycle_test["success"]:
+        print(f"   🔴 CRITICAL: Exact cycle sum matching is NOT working")
+        print(f"   🔧 Need to fix normalize_amounts_to_exact_sum() function")
+        print(f"   🔧 Check cycle-wide sum calculation logic")
+        print(f"   🔧 Verify bet creation architecture (individual vs batch)")
+    elif logs_test and not logs_test["success"]:
+        print(f"   🔴 Backend logs don't show PERFECT MATCH messages")
+        print(f"   🔧 Check normalization logging implementation")
     else:
-        print(f"   🟢 Backend authentication appears to be working")
-        print(f"   🔍 Check frontend console for JavaScript errors")
-        print(f"   🔍 Check network tab for failed requests")
-        print(f"   🔍 Verify frontend is using correct backend URL")
+        print(f"   🟢 Exact cycle sum matching appears to be working correctly")
+        print(f"   ✅ Regular боты создают точную сумму 306.0")
+        print(f"   ✅ Система готова к продакшену")
 
 def main():
-    """Main test execution for authentication"""
-    print_header("LOGIN ENDPOINT AUTHENTICATION TESTING")
-    print(f"{Colors.BLUE}🎯 Testing login functionality for admin@gemplay.com{Colors.END}")
+    """Main test execution for exact cycle sum matching"""
+    print_header("EXACT CYCLE SUM MATCHING FIX TESTING")
+    print(f"{Colors.BLUE}🎯 Testing exact cycle sum matching for Regular bots{Colors.END}")
     print(f"{Colors.BLUE}🌐 Backend URL: {BASE_URL}{Colors.END}")
-    print(f"{Colors.BLUE}📋 Focus: Login endpoint, token validation, admin access{Colors.END}")
-    
-    # Store token for subsequent tests
-    admin_token = None
+    print(f"{Colors.BLUE}📋 Focus: Regular bot creation, cycle sum = 306.0, normalization logs{Colors.END}")
+    print(f"{Colors.BLUE}🎲 Expected: (1+50)/2*12 = 25.5*12 = 306.0{Colors.END}")
     
     try:
-        # Run all authentication tests
-        test_login_endpoint_availability()
-        admin_token = test_admin_login_authentication()
-        test_auth_me_endpoint(admin_token)
-        test_token_format_and_validity(admin_token)
-        test_cors_headers()
-        test_login_with_wrong_credentials()
-        test_admin_panel_access(admin_token)
-        test_complete_auth_flow()
+        # Run exact cycle sum matching tests
+        test_exact_cycle_sum_matching()
+        test_backend_logs_analysis()
         
     except KeyboardInterrupt:
         print(f"\n{Colors.YELLOW}⚠️ Testing interrupted by user{Colors.END}")
@@ -633,7 +445,7 @@ def main():
     
     finally:
         # Print final summary
-        print_auth_summary()
+        print_cycle_sum_summary()
 
 if __name__ == "__main__":
     main()
