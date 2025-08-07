@@ -12209,32 +12209,11 @@ async def update_bot_cycle_tracking(bot_id: str, bot_won: bool):
         logger.error(f"Error updating bot cycle tracking: {e}")
 
 async def bot_automation_task():
-    """Background task for bot automation - creates and joins games."""
-    while True:
-        try:
-            # Get active bots
-            active_bots = await db.bots.find({"is_active": True}).to_list(None)  # Removed limit to get all active bots
-            
-            for bot in active_bots:
-                bot_obj = Bot(**bot)
-                
-                # Check if bot should take action
-                if await should_bot_take_action(bot_obj):
-                    # Randomly decide between creating a game or joining one
-                    if random.choice([True, False]):
-                        # Check global limits before creating a game
-                        success = await bot_create_game_automatically(bot_obj)
-                        if not success:
-                            logger.info(f"Bot {bot_obj.id} skipped due to global limits")
-                    else:
-                        await bot_join_game_automatically(bot_obj)
-            
-            # Wait before next cycle
-            await asyncio.sleep(30)  # Check every 30 seconds
-            
-        except Exception as e:
-            logger.error(f"Error in bot automation task: {e}")
-            await asyncio.sleep(60)  # Wait longer if error occurred
+    """Background task for bot automation - DISABLED to prevent race conditions."""
+    # DISABLED: This function is disabled to prevent race conditions with maintain_all_bots_active_bets()
+    # The main bot automation is handled by bot_automation_loop() which calls maintain_all_bots_active_bets()
+    logger.warning("⚠️ bot_automation_task() is disabled to prevent race conditions")
+    return
 
 async def should_bot_take_action(bot: Bot) -> bool:
     """Determine if bot should take action based on timing and settings."""
