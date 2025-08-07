@@ -16986,69 +16986,81 @@ async def generate_cycle_bets_uniform_distribution(
 
 def normalize_amounts_to_exact_sum(base_amounts: List[float], target_sum: float, min_bet: float, max_bet: float) -> List[int]:
     """
-    Нормализует список базовых сумм к точной целевой сумме с сохранением пропорций.
-    
-    Args:
-        base_amounts: Базовые суммы ставок
-        target_sum: Целевая общая сумма
-        min_bet: Минимальная ставка
-        max_bet: Максимальная ставка
-        
-    Returns:
-        List[int]: Нормализованные суммы ставок (округленные)
+    ИСПРАВЛЕНО: Нормализует список базовых сумм к ТОЧНОЙ целевой сумме с сохранением пропорций.
+    Гарантирует попадание в точную сумму через итеративную коррекцию.
     """
     if not base_amounts or target_sum <= 0:
         return []
+    
+    target_sum = int(target_sum)  # Обеспечиваем целочисленную сумму
     
     # Шаг 1: Пропорциональное масштабирование
     current_sum = sum(base_amounts)
     if current_sum <= 0:
         # Если сумма базовых ставок 0, распределяем равномерно
         avg_amount = target_sum / len(base_amounts)
-        return [max(min_bet, min(max_bet, math.ceil(avg_amount)))] * len(base_amounts)
+        return [max(int(min_bet), min(int(max_bet), round(avg_amount)))] * len(base_amounts)
     
     scale_factor = target_sum / current_sum
     scaled_amounts = [amount * scale_factor for amount in base_amounts]
     
-    # Шаг 2: Округление с соблюдением ограничений
-    rounded_amounts = [max(min_bet, min(max_bet, math.ceil(amount))) for amount in scaled_amounts]
+    # Шаг 2: Начальное округление с соблюдением ограничений
+    rounded_amounts = [max(int(min_bet), min(int(max_bet), round(amount))) for amount in scaled_amounts]
     
-    # Шаг 3: Коррекция для точного попадания в целевую сумму
-    current_rounded_sum = sum(rounded_amounts)
-    difference = target_sum - current_rounded_sum
+    # Шаг 3: ИТЕРАТИВНАЯ коррекция для ТОЧНОГО попадания в целевую сумму
+    max_iterations = 100  # Предотвращаем бесконечный цикл
+    iteration = 0
     
-    if abs(difference) > 0:
-        # Если есть расхождение, корректируем случайные ставки
+    while iteration < max_iterations:
+        current_rounded_sum = sum(rounded_amounts)
+        difference = target_sum - current_rounded_sum
+        
+        if difference == 0:
+            break  # Точное попадание!
+            
+        # Находим ставки, которые можно корректировать
         adjustable_indices = []
         for i, amount in enumerate(rounded_amounts):
-            if difference > 0 and amount < max_bet:  # Можно увеличить
+            if difference > 0 and amount < int(max_bet):  # Можно увеличить
                 adjustable_indices.append(i)
-            elif difference < 0 and amount > min_bet:  # Можно уменьшить
+            elif difference < 0 and amount > int(min_bet):  # Можно уменьшить
                 adjustable_indices.append(i)
         
-        # Применяем коррекцию случайно к доступным ставкам
-        if adjustable_indices:
-            random.shuffle(adjustable_indices)
-            remaining_diff = abs(difference)
-            diff_sign = 1 if difference > 0 else -1
+        if not adjustable_indices:
+            logger.warning(f"Cannot adjust further: diff={difference}, no adjustable amounts")
+            break
             
-            for idx in adjustable_indices:
-                if remaining_diff <= 0:
-                    break
-                    
-                current_amount = rounded_amounts[idx]
-                if diff_sign > 0:  # Увеличиваем
-                    max_increase = min(remaining_diff, max_bet - current_amount)
-                    if max_increase > 0:
-                        rounded_amounts[idx] += max_increase
-                        remaining_diff -= max_increase
-                else:  # Уменьшаем
-                    max_decrease = min(remaining_diff, current_amount - min_bet)
-                    if max_decrease > 0:
-                        rounded_amounts[idx] -= max_decrease  
-                        remaining_diff -= max_decrease
+        # Применяем коррекцию по 1$ за раз для точности
+        random.shuffle(adjustable_indices)
+        adjustments_made = 0
+        
+        for idx in adjustable_indices:
+            if difference == 0:
+                break
+                
+            current_amount = rounded_amounts[idx]
+            if difference > 0:  # Увеличиваем на 1
+                if current_amount < int(max_bet):
+                    rounded_amounts[idx] += 1
+                    difference -= 1
+                    adjustments_made += 1
+            else:  # Уменьшаем на 1
+                if current_amount > int(min_bet):
+                    rounded_amounts[idx] -= 1
+                    difference += 1
+                    adjustments_made += 1
+        
+        if adjustments_made == 0:
+            logger.warning(f"No adjustments possible: diff={difference}")
+            break
+            
+        iteration += 1
     
-    return [int(amount) for amount in rounded_amounts]
+    final_sum = sum(rounded_amounts)
+    if final_sum != target_sum:
+        logger.warning(f"Failed to achieve exact sum: target={target_sum}, actual={final_sum}, diff={final_sum - target_sum}")
+    
+    return rounded_amounts
 
 async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_amount: float, 
                                 win_percentage: int, min_bet: float, avg_bet: float, bet_distribution: str = "medium",
