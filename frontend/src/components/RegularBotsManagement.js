@@ -602,9 +602,12 @@ const RegularBotsManagement = () => {
         min_bet_amount: 1.0,
         max_bet_amount: 50.0,
         win_percentage: 55.0,
+        wins_percentage: 35,
+        losses_percentage: 35,
+        draws_percentage: 30,
         cycle_games: 12,
         pause_between_cycles: 5,
-        pause_on_draw: 1,
+        pause_on_draw: 5,
         creation_mode: 'queue-based',
         profit_strategy: 'balanced',
         cycle_total_amount: 0
