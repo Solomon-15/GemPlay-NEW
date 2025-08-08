@@ -4170,3 +4170,17 @@ agent_communication:
       - working: true
         agent: "testing"
         comment: "🎉 DATABASE PURGE ENDPOINT TESTING COMPLETED SUCCESSFULLY: Conducted comprehensive testing of POST /api/admin/maintenance/purge-db endpoint as specifically requested. CRITICAL SUCCESS RATE: 100% (4/4 tests passed). ALL REQUIREMENTS VERIFIED: ✅ 1. ADMIN AUTHENTICATION SUCCESSFUL - Successfully authenticated as admin@gemplay.com / Admin123! with ADMIN role, received valid access token for API calls. ✅ 2. PURGE ENDPOINT FULLY FUNCTIONAL - POST /api/admin/maintenance/purge-db returns HTTP 200 OK with valid JSON response, endpoint accessible with admin token, operation completes in 0.041s. ✅ 3. RESPONSE STRUCTURE VALIDATED - Response contains all required fields: success=true, message='Database purged successfully', summary object with detailed counts. All expected summary fields present: games_deleted, bots_deleted, human_bots_deleted, users_deleted, transactions_deleted, refresh_tokens_deleted, notifications_deleted, admin_logs_deleted, security_alerts_deleted, security_monitoring_deleted, user_gems_deleted, sounds_deleted, gem_definitions_remain. ✅ 4. ADMIN ACCESS PRESERVED - Verified admin access still works after purge by testing GET /api/admin/bots endpoint, admin authentication and authorization remain functional post-purge. ✅ 5. GEM DEFINITIONS PRESERVED - Confirmed 7 gem_definitions remain in database as required, core game assets protected from purge operation. ✅ 6. CLEANUP PERFORMED - Database cleanup executed successfully with 1 refresh_token deleted, system properly cleaned up expired/invalid tokens. TECHNICAL VERIFICATION: ✅ JSON response format correct with proper structure ✅ All deletion counts properly reported in summary ✅ Admin/super_admin users preserved (not deleted) ✅ Essential game data (gem_definitions) protected ✅ API endpoint security working (requires admin token) ✅ Post-purge system stability confirmed CONCLUSION: 🎉 DATABASE PURGE ENDPOINT IS 100% OPERATIONAL! The endpoint successfully purges non-essential data while preserving critical system components (admin users, gem definitions). Response provides detailed summary of all deletion counts as requested. Admin access remains functional after purge, confirming proper preservation of administrative capabilities. The system is ready for production use with full database maintenance functionality."
+
+
+backend:
+  - task: "ROI Backend Validation - Presets/Counts API support"
+    implemented: true
+    working: pending
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main_agent"
+        comment: "Planned backend test: create regular bot with new fields (wins_count/losses_count/draws_count + percentages), verify ROI_active present in admin list, ensure bet_amount integers in active games."
