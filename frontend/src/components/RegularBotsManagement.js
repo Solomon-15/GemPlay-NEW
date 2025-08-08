@@ -2480,6 +2480,20 @@ const RegularBotsManagement = () => {
               {/* Настройки таймингов */}
               <div className="border border-border-primary rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-white mb-3">Настройки таймингов</h4>
+                {/* Предупреждения и подсказки */}
+                {(() => {
+                  const preview = calculateCycleAmounts();
+                  const activePoolShare = preview.total > 0 ? Math.round(((preview.active_pool / preview.total) * 100)) : 0;
+                  const warnings = [];
+                  if (activePoolShare < 65) warnings.push(`⚠️ Активный пул слишком мал (${activePoolShare}%). Рекомендуется ≥ 65%.`);
+                  if (preview.roi_active < 2 || preview.roi_active > 20) warnings.push(`⚠️ ROI_active (${preview.roi_active}%) вне рекомендуемых пределов [2%, 20%].`);
+                  return warnings.length > 0 ? (
+                    <div className="mt-3 border border-yellow-500 bg-yellow-900 bg-opacity-20 rounded-lg p-3 text-yellow-200 text-sm space-y-1">
+                      {warnings.map((w, idx) => (<div key={idx}>{w}</div>))}
+                    </div>
+                  ) : null;
+                })()}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-text-secondary text-sm mb-1">Пауза между циклами (сек):</label>
