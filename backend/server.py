@@ -1959,6 +1959,13 @@ async def maintain_all_bots_active_bets():
                         
                         # Сброс статистики цикла для нового цикла
                         if cycle_completed:
+                            # ИСПРАВЛЕНИЕ: Удаляем все завершенные игры предыдущего цикла пакетно
+                            deleted_result = await db.games.delete_many({
+                                "creator_id": bot_id,
+                                "status": "COMPLETED"
+                            })
+                            logger.info(f"🗑️ Bot {bot_doc['name']}: deleted {deleted_result.deleted_count} completed games after cycle completion")
+                            
                             await db.bots.update_one(
                                 {"id": bot_id},
                                 {
