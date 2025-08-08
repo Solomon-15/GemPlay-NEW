@@ -1963,14 +1963,19 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
         
         logger.info(f"🎯 Bot {bot_id}: Creating complete cycle - {cycle_games} bets with exact total {exact_total_amount}")
         
-        # Генерируем все ставки цикла с точной суммой
+        # Получаем проценты исходов от бота
+        wins_percentage = bot_doc.get("wins_percentage", 35)
+        losses_percentage = bot_doc.get("losses_percentage", 35) 
+        draws_percentage = bot_doc.get("draws_percentage", 30)
+        
+        # НОВАЯ ЛОГИКА: Генерируем естественное распределение ставок
         all_cycle_bets = await generate_cycle_bets_uniform_distribution(
             bot_id=bot_id,
             min_bet=min_bet,
             max_bet=max_bet,
             cycle_games=cycle_games,
-            total_wins=round(cycle_games * 35 / 100),  # 35% побед
-            total_losses=round(cycle_games * 35 / 100),  # 35% поражений
+            total_wins=round(cycle_games * wins_percentage / 100),  # Используем wins_percentage от бота
+            total_losses=round(cycle_games * losses_percentage / 100),  # Используем losses_percentage от бота
             win_amount_total=exact_total_amount * win_percentage / 100,
             loss_amount_total=exact_total_amount * (100 - win_percentage) / 100,
             exact_total=exact_total_amount
