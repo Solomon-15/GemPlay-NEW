@@ -2991,7 +2991,7 @@ const RegularBotsManagement = () => {
                             </td>
                             <td className="px-4 py-3">
                               <div className="text-sm font-roboto font-bold text-accent-primary">
-                                {game.bet_amount || game.amount || game.total_bet_amount || '—'}
+                                ${game.bet_amount || game.amount || 0}
                               </div>
                             </td>
                             <td className="px-4 py-3">
