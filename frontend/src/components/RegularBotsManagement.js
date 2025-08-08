@@ -3017,9 +3017,6 @@ const RegularBotsManagement = () => {
                         );
                       })}
                     </tbody>
-                  </table>
-                </div>
-              </div>
                     </tbody>
                   </table>
                 </div>
