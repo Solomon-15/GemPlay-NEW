@@ -728,8 +728,8 @@ const RegularBotsManagement = () => {
       errors.push(`Сумма процентов исходов должна быть 100% (сейчас ${totalPercentage}%)`);
     }
     
-    if (formData.cycle_games < 1 || formData.cycle_games > 66) {
-      errors.push('Количество игр в цикле должно быть от 1 до 66');
+    if (formData.cycle_games < 4 || formData.cycle_games > 100) {
+      errors.push('Количество игр в цикле должно быть от 4 до 100');
     }
     
     if (formData.pause_between_cycles < 1 || formData.pause_between_cycles > 300) {
