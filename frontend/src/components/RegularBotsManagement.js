@@ -262,37 +262,52 @@ const RegularBotsManagement = () => {
     };
   });
 
-  // Calculate cycle total amount automatically - НОВАЯ ФОРМУЛА
-  const calculateCycleTotalAmount = () => {
+  // НОВАЯ ФОРМУЛА 2.0: Расчет суммы цикла и ROI для превью
+  const calculateCycleAmounts = () => {
     if (!botForm.min_bet_amount || !botForm.max_bet_amount || !botForm.cycle_games) {
-      return 0;
+      return { total: 0, active_pool: 0, roi_active: 0 };
     }
     
-    // НОВАЯ ЛОГИКА: Имитация естественного распределения для предпросмотра
-    // Используем более точную формулу с учетом равномерного распределения
     const min_bet = parseFloat(botForm.min_bet_amount);
     const max_bet = parseFloat(botForm.max_bet_amount);
     const games = parseInt(botForm.cycle_games);
     
-    // Имитируем равномерное распределение по диапазону
+    // 1. Имитируем равномерное распределение ставок для общей суммы
     let estimatedTotal = 0;
-    
-    // 25% ставок - малые (1-30% диапазона)
     const smallBetsCount = Math.max(1, Math.round(games * 0.25));
-    const smallAvg = min_bet + (max_bet - min_bet) * 0.15;
-    estimatedTotal += smallBetsCount * smallAvg;
-    
-    // 50% ставок - средние (30-70% диапазона)
     const mediumBetsCount = Math.round(games * 0.5);
-    const mediumAvg = min_bet + (max_bet - min_bet) * 0.5;
-    estimatedTotal += mediumBetsCount * mediumAvg;
-    
-    // 25% ставок - большие (70-100% диапазона)
     const largeBetsCount = games - smallBetsCount - mediumBetsCount;
-    const largeAvg = min_bet + (max_bet - min_bet) * 0.85;
-    estimatedTotal += largeBetsCount * largeAvg;
     
-    return Math.round(estimatedTotal);
+    const smallAvg = min_bet + (max_bet - min_bet) * 0.15;
+    const mediumAvg = min_bet + (max_bet - min_bet) * 0.5;
+    const largeAvg = min_bet + (max_bet - min_bet) * 0.85;
+    
+    estimatedTotal = (smallBetsCount * smallAvg) + (mediumBetsCount * mediumAvg) + (largeBetsCount * largeAvg);
+    
+    // 2. Рассчитываем суммы по процентам исходов
+    const winsSum = Math.round(estimatedTotal * botForm.wins_percentage / 100);
+    const lossesSum = Math.round(estimatedTotal * botForm.losses_percentage / 100);  
+    const drawsSum = Math.round(estimatedTotal * botForm.draws_percentage / 100);
+    
+    // 3. Активный пул (база для ROI)
+    const activePool = winsSum + lossesSum;
+    const profit = winsSum - lossesSum;
+    const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
+    
+    return {
+      total: Math.round(estimatedTotal),
+      active_pool: activePool,
+      roi_active: Math.round(roiActive * 100) / 100, // Округляем до 2 знаков
+      wins_sum: winsSum,
+      losses_sum: lossesSum,
+      draws_sum: drawsSum,
+      profit: profit
+    };
+  };
+  
+  // Обратная совместимость
+  const calculateCycleTotalAmount = () => {
+    return calculateCycleAmounts().total;
   };
 
   // Update cycle total amount when relevant fields change
