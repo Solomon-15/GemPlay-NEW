@@ -2981,7 +2981,7 @@ const RegularBotsManagement = () => {
                             </td>
                             <td className="px-4 py-3">
                               <div className="text-sm font-roboto font-bold text-accent-primary">
-                                {game.bet_amount} гемы
+                                {game.bet_amount}
                               </div>
                             </td>
                             <td className="px-4 py-3">
