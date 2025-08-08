@@ -1269,52 +1269,96 @@ class HumanBotBehavior:
 
 def generate_uniform_bet_amounts(min_bet: float, max_bet: float, count: int) -> List[float]:
     """
-    Генерирует равномерно распределенные ставки по всему диапазону 1-50.
-    Гарантирует присутствие как малых (1-10), так и больших (40-50) ставок.
+    НОВАЯ ФОРМУЛА: Генерирует ИСТИННО равномерно распределенные ставки по всему диапазону.
+    Обеспечивает покрытие малых (1-15), средних (16-35) и больших (36-50) ставок.
+    Возвращает естественную сумму без принудительной нормализации.
     """
     if count <= 0:
         return []
     
     amounts = []
+    range_size = max_bet - min_bet
     
     if count == 1:
-        # Одна ставка - используем случайное значение из диапазона
+        # Одна ставка - случайное значение из диапазона
         amounts.append(random.uniform(min_bet, max_bet))
     elif count == 2:
-        # Две ставки - одну малую, одну большую
-        amounts.append(random.uniform(min_bet, min_bet + (max_bet - min_bet) * 0.3))  # 1-16
-        amounts.append(random.uniform(min_bet + (max_bet - min_bet) * 0.7, max_bet))  # 35-50
+        # Две ставки - одну из нижней трети, одну из верхней трети
+        amounts.append(random.uniform(min_bet, min_bet + range_size * 0.33))
+        amounts.append(random.uniform(min_bet + range_size * 0.67, max_bet))
     else:
-        # Для 3+ ставок обеспечиваем покрытие всего диапазона
+        # Для 3+ ставок используем стратифицированную выборку
         
-        # 1. Обязательно добавляем малые ставки (1-15)
-        small_count = max(1, count // 4)  # 25% ставок - малые
-        for _ in range(small_count):
-            amounts.append(random.uniform(min_bet, min_bet + (max_bet - min_bet) * 0.3))
+        # Разделяем диапазон на сегменты для равномерного покрытия
+        segments = min(count, 5)  # Максимум 5 сегментов для лучшего покрытия
+        segment_size = range_size / segments
         
-        # 2. Обязательно добавляем большие ставки (35-50) 
-        large_count = max(1, count // 4)  # 25% ставок - большие
-        for _ in range(large_count):
-            amounts.append(random.uniform(min_bet + (max_bet - min_bet) * 0.7, max_bet))
+        # Гарантируем по крайней мере одну ставку из каждого сегмента
+        for i in range(segments):
+            segment_start = min_bet + i * segment_size
+            segment_end = min_bet + (i + 1) * segment_size
+            amounts.append(random.uniform(segment_start, segment_end))
         
-        # 3. Оставшиеся ставки равномерно распределяем по всему диапазону
-        remaining_count = count - small_count - large_count
-        for i in range(remaining_count):
-            # Равномерное распределение по всему диапазону
-            amounts.append(random.uniform(min_bet, max_bet))
+        # Оставшиеся ставки распределяем случайно с акцентом на покрытие
+        remaining_count = count - segments
+        for _ in range(remaining_count):
+            # 30% малые ставки (1-30% диапазона)
+            # 40% средние ставки (30-70% диапазона) 
+            # 30% большие ставки (70-100% диапазона)
+            rand_val = random.random()
+            if rand_val < 0.3:
+                amounts.append(random.uniform(min_bet, min_bet + range_size * 0.3))
+            elif rand_val < 0.7:
+                amounts.append(random.uniform(min_bet + range_size * 0.3, min_bet + range_size * 0.7))
+            else:
+                amounts.append(random.uniform(min_bet + range_size * 0.7, max_bet))
     
-    # Применяем небольшие вариации и округляем
+    # Округляем до целых чисел без принудительной нормализации
     final_amounts = []
     for amount in amounts:
-        # Добавляем небольшую случайную вариацию (±5%)
-        variation = random.uniform(0.95, 1.05)
+        # Небольшая случайная вариация (±2%) для естественности
+        variation = random.uniform(0.98, 1.02)
         amount = amount * variation
-        # Обеспечиваем границы и округляем вверх
+        # Обеспечиваем границы и округляем
         amount = max(min_bet, min(max_bet, amount))
-        final_amounts.append(math.ceil(amount))
+        final_amounts.append(round(amount))
     
-    logger.info(f"🎯 Generated uniform bets: {sorted(final_amounts)} (range: {min_bet}-{max_bet}, count: {count})")
+    # Убедимся что есть представители всех частей диапазона
+    final_amounts = ensure_range_coverage(final_amounts, min_bet, max_bet, count)
+    
+    total_sum = sum(final_amounts)
+    logger.info(f"🎯 Generated TRUE uniform bets: {sorted(final_amounts)}")
+    logger.info(f"    Range: {min_bet}-{max_bet}, Count: {count}, Natural sum: {total_sum}")
+    
     return final_amounts
+
+def ensure_range_coverage(amounts: List[float], min_bet: float, max_bet: float, count: int) -> List[float]:
+    """
+    Обеспечивает, что в списке ставок есть представители всех частей диапазона.
+    """
+    if count < 3:
+        return amounts
+        
+    range_size = max_bet - min_bet
+    low_threshold = min_bet + range_size * 0.33
+    high_threshold = min_bet + range_size * 0.67
+    
+    # Проверяем покрытие
+    has_low = any(amount <= low_threshold for amount in amounts)
+    has_high = any(amount >= high_threshold for amount in amounts)
+    
+    # Если не хватает покрытия, заменяем некоторые ставки
+    if not has_low:
+        # Заменяем самую маленькую ставку на действительно малую
+        min_idx = amounts.index(min(amounts))
+        amounts[min_idx] = random.uniform(min_bet, low_threshold)
+        
+    if not has_high:
+        # Заменяем самую большую ставку на действительно большую
+        max_idx = amounts.index(max(amounts))
+        amounts[max_idx] = random.uniform(high_threshold, max_bet)
+    
+    return amounts
 
 async def generate_unique_bot_name() -> str:
     """Generate unique bot name in format Bot#1, Bot#2, etc."""
