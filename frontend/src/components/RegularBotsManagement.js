@@ -1932,15 +1932,11 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center space-x-1">
                         <span className="text-orange-400 font-roboto text-sm font-bold">
-                          {Math.round(bot.win_percentage || 55)}%
+                          {(bot.bot_profit_percent !== undefined ? bot.bot_profit_percent : 0).toFixed(2)}%
                         </span>
-                        <button
-                          onClick={() => handleEditWinPercentage(bot)}
-                          className="text-gray-400 hover:text-white transition-colors p-1"
-                          title="Редактировать процент выигрышей"
-                        >
-                          ✏️
-                        </button>
+                        <span className="text-gray-500 font-roboto text-xs">
+                          ROI
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
