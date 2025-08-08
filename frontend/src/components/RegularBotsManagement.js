@@ -2923,22 +2923,32 @@ const RegularBotsManagement = () => {
                           }
                         };
 
-                        // Функция для форматирования гемов иконками (только иконки и количество)
+                        // Функция для форматирования гемов с настоящими иконками из /app/frontend/public/gems
                         const formatGemsWithIcons = (gems) => {
                           if (!gems || typeof gems !== 'object') return '—';
                           
-                          const gemIcons = {
-                            'Ruby': '🟥',
-                            'Emerald': '🟩', 
-                            'Sapphire': '🟦',
-                            'Diamond': '💎',
-                            'Amethyst': '🟪',
-                            'Topaz': '🟨'
+                          const gemIconMap = {
+                            'Ruby': '/gems/gem-red.svg',
+                            'Amber': '/gems/gem-orange.svg', 
+                            'Topaz': '/gems/gem-yellow.svg',
+                            'Emerald': '/gems/gem-green.svg',
+                            'Aquamarine': '/gems/gem-cyan.svg',
+                            'Sapphire': '/gems/gem-blue.svg',
+                            'Magic': '/gems/gem-purple.svg'
                           };
                           
                           return Object.entries(gems)
-                            .map(([gemType, qty]) => `${gemIcons[gemType] || '💎'}×${qty}`)
-                            .join(' ');
+                            .filter(([gemType, qty]) => qty > 0)
+                            .map(([gemType, qty]) => (
+                              <span key={gemType} className="inline-flex items-center mr-2">
+                                <img 
+                                  src={gemIconMap[gemType] || '/gems/gem-red.svg'} 
+                                  alt={gemType} 
+                                  className="w-4 h-4 inline-block mr-1"
+                                />
+                                ×{qty}
+                              </span>
+                            ));
                         };
 
                         // Функция для получения цвета роли пользователя (модератор желтый)
