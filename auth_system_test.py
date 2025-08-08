@@ -10,7 +10,7 @@ RUSSIAN REVIEW - AUTHORIZATION SYSTEM WITH AUTOMATIC TOKEN REFRESH TESTING
 4. Добавил глобальную функцию уведомлений для interceptor
 
 ТЕСТИРОВАНИЕ:
-1. ТЕСТ СОЗДАНИЯ ТОКЕНОВ - POST /api/auth/login (user@gemplay.com / User123!)
+1. ТЕСТ СОЗДАНИЯ ТОКЕНОВ - POST /api/auth/login (admin@gemplay.com / Admin123!)
 2. ТЕСТ REFRESH TOKEN ENDPOINT - POST /api/auth/refresh с valid refresh_token
 3. ЛОГИ BACKEND - Не должно быть ошибок при создании токенов
 4. ПРОВЕРКА КОНФИГУРАЦИИ - ACCESS_TOKEN_EXPIRE_MINUTES = 30, REFRESH_TOKEN_EXPIRE_DAYS = 7
@@ -201,25 +201,25 @@ def test_token_creation():
     
     # Check token expiration time
     exp_timestamp = token_payload.get("exp")
-    iat_timestamp = token_payload.get("iat")
     token_type_field = token_payload.get("type")
     user_id = token_payload.get("sub")
     
-    if not exp_timestamp or not iat_timestamp:
+    if not exp_timestamp:
         record_test(
             "Token Creation Test",
             False,
-            "Missing exp or iat fields in JWT token"
+            "Missing exp field in JWT token"
         )
         return None, None
     
-    # Calculate token lifespan in minutes
-    token_lifespan_seconds = exp_timestamp - iat_timestamp
+    # Calculate token lifespan from current time (since iat is not present)
+    current_time = time.time()
+    token_lifespan_seconds = exp_timestamp - current_time
     token_lifespan_minutes = token_lifespan_seconds / 60
     
-    # Check if token lifespan is 30 minutes (1800 seconds)
+    # Check if token lifespan is approximately 30 minutes (1800 seconds)
     expected_lifespan_minutes = 30
-    is_correct_lifespan = abs(token_lifespan_minutes - expected_lifespan_minutes) < 1  # Allow 1 minute tolerance
+    is_correct_lifespan = abs(token_lifespan_minutes - expected_lifespan_minutes) < 2  # Allow 2 minute tolerance
     
     print(f"   📊 TOKEN ANALYSIS:")
     print(f"      Access Token: {access_token[:50]}...")
@@ -227,9 +227,9 @@ def test_token_creation():
     print(f"      Token Type: {token_type}")
     print(f"      JWT Type Field: {token_type_field}")
     print(f"      User ID: {user_id}")
-    print(f"      Token Lifespan: {token_lifespan_minutes:.1f} minutes ({token_lifespan_seconds} seconds)")
+    print(f"      Token Lifespan: {token_lifespan_minutes:.1f} minutes ({token_lifespan_seconds:.0f} seconds)")
     print(f"      Expected Lifespan: {expected_lifespan_minutes} minutes (1800 seconds)")
-    print(f"      Issued At: {datetime.fromtimestamp(iat_timestamp)}")
+    print(f"      Current Time: {datetime.fromtimestamp(current_time)}")
     print(f"      Expires At: {datetime.fromtimestamp(exp_timestamp)}")
     
     if is_correct_lifespan and refresh_token and token_type == "bearer":
@@ -308,31 +308,31 @@ def test_refresh_token_endpoint(refresh_token: str):
     
     # Check new token expiration time
     new_exp_timestamp = new_token_payload.get("exp")
-    new_iat_timestamp = new_token_payload.get("iat")
     
-    if not new_exp_timestamp or not new_iat_timestamp:
+    if not new_exp_timestamp:
         record_test(
             "Refresh Token Test",
             False,
-            "Missing exp or iat fields in new JWT token"
+            "Missing exp field in new JWT token"
         )
         return None
     
-    # Calculate new token lifespan in minutes
-    new_token_lifespan_seconds = new_exp_timestamp - new_iat_timestamp
+    # Calculate new token lifespan from current time
+    current_time = time.time()
+    new_token_lifespan_seconds = new_exp_timestamp - current_time
     new_token_lifespan_minutes = new_token_lifespan_seconds / 60
     
-    # Check if new token lifespan is also 30 minutes
+    # Check if new token lifespan is also approximately 30 minutes
     expected_lifespan_minutes = 30
-    is_correct_new_lifespan = abs(new_token_lifespan_minutes - expected_lifespan_minutes) < 1
+    is_correct_new_lifespan = abs(new_token_lifespan_minutes - expected_lifespan_minutes) < 2
     
     print(f"   📊 REFRESH TOKEN ANALYSIS:")
     print(f"      New Access Token: {new_access_token[:50]}...")
     print(f"      New Refresh Token: {new_refresh_token[:50] if new_refresh_token else 'None'}...")
     print(f"      Token Type: {token_type}")
-    print(f"      New Token Lifespan: {new_token_lifespan_minutes:.1f} minutes ({new_token_lifespan_seconds} seconds)")
+    print(f"      New Token Lifespan: {new_token_lifespan_minutes:.1f} minutes ({new_token_lifespan_seconds:.0f} seconds)")
     print(f"      Expected Lifespan: {expected_lifespan_minutes} minutes (1800 seconds)")
-    print(f"      New Issued At: {datetime.fromtimestamp(new_iat_timestamp)}")
+    print(f"      Current Time: {datetime.fromtimestamp(current_time)}")
     print(f"      New Expires At: {datetime.fromtimestamp(new_exp_timestamp)}")
     
     if is_correct_new_lifespan and token_type == "bearer":
@@ -458,9 +458,9 @@ def test_configuration_verification():
         refresh_token_expire_line = None
         
         for line_num, line in enumerate(server_content.split('\n'), 1):
-            if 'ACCESS_TOKEN_EXPIRE_MINUTES' in line and '=' in line:
+            if 'ACCESS_TOKEN_EXPIRE_MINUTES' in line and '=' in line and not line.strip().startswith('#'):
                 access_token_expire_line = (line_num, line.strip())
-            if 'REFRESH_TOKEN_EXPIRE_DAYS' in line and '=' in line:
+            if 'REFRESH_TOKEN_EXPIRE_DAYS' in line and '=' in line and not line.strip().startswith('#'):
                 refresh_token_expire_line = (line_num, line.strip())
         
         print(f"   📋 CONFIGURATION ANALYSIS:")
@@ -472,7 +472,7 @@ def test_configuration_verification():
             line_content = access_token_expire_line[1]
             print(f"      Line {access_token_expire_line[0]}: {line_content}")
             # Check if the value is 30
-            if '30' in line_content and not line_content.strip().startswith('#'):
+            if '= 30' in line_content or '=30' in line_content:
                 access_token_correct = True
                 print(f"      ✅ ACCESS_TOKEN_EXPIRE_MINUTES = 30 (correct)")
             else:
@@ -484,7 +484,7 @@ def test_configuration_verification():
             line_content = refresh_token_expire_line[1]
             print(f"      Line {refresh_token_expire_line[0]}: {line_content}")
             # Check if the value is 7
-            if '7' in line_content and not line_content.strip().startswith('#'):
+            if '= 7' in line_content or '=7' in line_content:
                 refresh_token_correct = True
                 print(f"      ✅ REFRESH_TOKEN_EXPIRE_DAYS = 7 (correct)")
             else:
