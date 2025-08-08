@@ -90,9 +90,7 @@ const AdminPanel = ({ user, onClose }) => {
       console.log('🔍 AdminPanel: Fetching dashboard stats. Token exists:', !!token);
       
       if (!token) {
-        console.log('❌ AdminPanel: No token found, redirecting to login');
-        handleTokenExpired();
-        return;
+        console.log('❌ AdminPanel: No token found, will be handled by interceptor');
       }
       
       // Prepare params for bet volume filtering
