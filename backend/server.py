@@ -17698,7 +17698,7 @@ async def generate_bot_cycle_bets(bot_id: str, cycle_length: int, cycle_total_am
                 creator_move=bot_move,
                 creator_move_hash=hashlib.sha256(f"{bot_move.value}{salt}".encode()).hexdigest(),
                 creator_salt=salt,
-                bet_amount=float(bet_amount),  # Convert to float for compatibility
+                bet_amount=int(bet_amount),  # Force integer bet amount
                 bet_gems=gem_combination,
                 is_bot_game=True,
                 bot_id=bot_id,
