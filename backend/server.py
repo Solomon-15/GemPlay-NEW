@@ -16550,7 +16550,7 @@ async def get_regular_bots_simple(
     limit: int = 100,
     current_user: User = Depends(get_current_admin)
 ):
-    """Get regular bots list (simplified version)."""
+    """Get regular bots list (simplified version) with ROI_active field."""
     try:
         # Validate pagination parameters
         if page < 1:
@@ -16572,24 +16572,37 @@ async def get_regular_bots_simple(
         }).sort("created_at", -1).skip(offset).limit(limit)
         bots = await bots_cursor.to_list(length=limit)
         
-        # Convert ObjectId to string and calculate active_bets for each bot
+        # Calculate ROI_active per bot and active_bets
         for bot in bots:
             if "_id" in bot:
                 bot["_id"] = str(bot["_id"])
             
             # Calculate actual active bets for this bot
             active_bets_count = await db.games.count_documents({
-                "$and": [
-                    {
-                        "$or": [
-                            {"creator_id": bot["id"]},
-                            {"opponent_id": bot["id"]}
-                        ]
-                    },
-                    {"status": {"$in": ["WAITING", "ACTIVE"]}}
-                ]
+                "creator_id": bot["id"],
+                "status": {"$in": ["WAITING", "ACTIVE"]}
             })
             bot["active_bets"] = active_bets_count
+            
+            # Calculate ROI_active from completed games
+            try:
+                wins_sum_agg = await db.games.aggregate([
+                    {"$match": {"creator_id": bot["id"], "status": "COMPLETED", "winner_id": bot["id"]}},
+                    {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+                ]).to_list(1)
+                wins_sum = float((wins_sum_agg[0]['total'] if wins_sum_agg else 0) * 2)
+                
+                losses_sum_agg = await db.games.aggregate([
+                    {"$match": {"creator_id": bot["id"], "status": "COMPLETED", "winner_id": {"$ne": bot["id"], "$ne": None}}},
+                    {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+                ]).to_list(1)
+                losses_sum = float(losses_sum_agg[0]['total'] if losses_sum_agg else 0)
+                
+                active_pool = wins_sum + losses_sum
+                profit = wins_sum - losses_sum
+                bot["roi_active"] = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
+            except Exception as _:
+                bot["roi_active"] = 0.0
         
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
