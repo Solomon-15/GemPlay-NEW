@@ -10321,7 +10321,7 @@ async def bot_create_game(
             creator_move=bot_move,
             creator_move_hash=hashlib.sha256(f"{bot_move.value}{secrets.token_hex(32)}".encode()).hexdigest(),
             creator_salt=secrets.token_hex(32),
-            bet_amount=bet_amount,
+            bet_amount=int(bet_amount),
             bet_gems=bet_gems,
             is_bot_game=True,
             bot_id=bot_id
