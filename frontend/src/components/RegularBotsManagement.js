@@ -143,7 +143,7 @@ const RegularBotsManagement = () => {
       });
       
       setSelectedBotForCycleHistory(bot);
-      setCycleHistoryData(response.data.cycles || []);
+      setCycleHistoryData(response.data.games || []);
       setIsCycleHistoryModalOpen(true);
     } catch (error) {
       console.error('Ошибка загрузки истории циклов:', error);
