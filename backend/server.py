@@ -17188,17 +17188,49 @@ async def generate_cycle_bets_natural_distribution(
         # Перемешиваем для случайного порядка
         random.shuffle(results)
         
+        # ОБРАБОТКА НИЧЬИХ: Пересоздание ставок согласно логике 55/45
+        natural_total = sum(base_amounts)
+        
+        # Рассчитываем суммы для выигрышей и проигрышей после пересоздания ничьих
+        final_wins_count = total_wins + (total_draws // 2) + (total_draws % 2)  # Округляем ничьи в сторону побед
+        final_losses_count = total_losses + (total_draws // 2)
+        
+        win_target_amount = natural_total * (win_percentage / 100)
+        loss_target_amount = natural_total - win_target_amount
+        
+        logger.info(f"    After draws processing: {final_wins_count} final wins, {final_losses_count} final losses")
+        logger.info(f"    Target amounts: wins={win_target_amount}, losses={loss_target_amount}")
+        
+        # Распределяем суммы между выигрышными и проигрышными ставками
+        win_amounts = distribute_amounts_naturally(win_target_amount, final_wins_count, min_bet, max_bet)
+        loss_amounts = distribute_amounts_naturally(loss_target_amount, final_losses_count, min_bet, max_bet)
+        
         # Создаем финальный список ставок
         all_bets = []
+        win_idx = 0
+        loss_idx = 0
+        
         for i in range(cycle_games):
-            result = results[i] if i < len(results) else "draw"
-            amount = int(base_amounts[i]) if i < len(base_amounts) else int((min_bet + max_bet) / 2)
+            original_result = results[i] if i < len(results) else "draw"
             
-            all_bets.append({
-                "result": result,
-                "amount": amount,
-                "index": i
-            })
+            if original_result == "win":
+                amount = win_amounts[win_idx] if win_idx < len(win_amounts) else int((min_bet + max_bet) / 2)
+                all_bets.append({"result": "win", "amount": amount, "index": i})
+                win_idx += 1
+            elif original_result == "loss":
+                amount = loss_amounts[loss_idx] if loss_idx < len(loss_amounts) else int((min_bet + max_bet) / 2)
+                all_bets.append({"result": "loss", "amount": amount, "index": i})
+                loss_idx += 1
+            else:  # draw
+                # Ничьи пересоздаются как win/loss в соотношении согласно логике
+                if (i % 2 == 0 and win_idx < len(win_amounts)) or loss_idx >= len(loss_amounts):
+                    amount = win_amounts[win_idx] if win_idx < len(win_amounts) else int((min_bet + max_bet) / 2)
+                    all_bets.append({"result": "win", "amount": amount, "index": i})
+                    win_idx += 1
+                else:
+                    amount = loss_amounts[loss_idx] if loss_idx < len(loss_amounts) else int((min_bet + max_bet) / 2)
+                    all_bets.append({"result": "loss", "amount": amount, "index": i})
+                    loss_idx += 1
         
         # Логирование результатов
         actual_wins = sum(1 for bet in all_bets if bet["result"] == "win")
