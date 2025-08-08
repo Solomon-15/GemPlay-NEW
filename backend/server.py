@@ -2269,6 +2269,31 @@ async def check_and_complete_bot_cycle(bot_id: str):
         logger.error(f"Error checking bot cycle completion for {bot_id}: {e}")
         return False
 
+async def calculate_real_cycle_total_amount(bot_doc: dict) -> float:
+    """
+    Вычисляет реальную сумму цикла на основе текущих данных бота.
+    """
+    try:
+        # Получаем базовые параметры
+        cycle_games = bot_doc.get('cycle_games', 12)
+        min_bet = bot_doc.get('min_bet_amount', 1.0)
+        max_bet = bot_doc.get('max_bet_amount', 100.0)
+        
+        # Вычисляем среднюю ставку
+        avg_bet = (min_bet + max_bet) / 2
+        
+        # Реальная сумма цикла = количество игр * средняя ставка
+        real_cycle_total = cycle_games * avg_bet
+        
+        logger.info(f"🔢 Calculated real cycle total for bot {bot_doc.get('id', 'unknown')}: "
+                   f"{real_cycle_total} (games: {cycle_games}, avg_bet: {avg_bet})")
+        
+        return real_cycle_total
+        
+    except Exception as e:
+        logger.error(f"Error calculating real cycle total amount: {e}")
+        return bot_doc.get('cycle_total_amount', 0)
+
 async def get_bot_cycle_statistics():
     """
     Получает статистику циклов всех обычных ботов для отображения в админ-панели.
