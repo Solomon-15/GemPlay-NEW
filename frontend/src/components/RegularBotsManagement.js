@@ -913,7 +913,7 @@ const RegularBotsManagement = () => {
 
   const handleCycleModal = async (bot) => {
     try {
-      const response = await axios.get(`${API}/admin/bots/${bot.id}/completed-cycles`, getApiConfig());
+      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, getApiConfig());
       
       setCycleBot(bot);
       setCycleData(response.data);
