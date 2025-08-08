@@ -234,23 +234,31 @@ const RegularBotsManagement = () => {
     return {
       name: '',
       
-      min_bet_amount: 1.0, // 1-10000
-      max_bet_amount: 50.0, // 1-10000
-      win_percentage: 55.0, // 0-100% (соотношение выигрыша к общей сумме, по умолчанию 55%)
+      // НОВАЯ ФОРМУЛА 2.0: Обновленные диапазоны и параметры
+      min_bet_amount: 1.0,   // 1-100
+      max_bet_amount: 100.0, // 1-100
       
-      // Новые поля для процентов исходов игр (из localStorage)
-      wins_percentage: savedPercentages.wins_percentage,
-      losses_percentage: savedPercentages.losses_percentage,
-      draws_percentage: savedPercentages.draws_percentage,
+      // УБИРАЕМ: win_percentage (старая логика)
+      // ДОБАВЛЯЕМ: Баланс игр
+      wins_count: 6,    // Количество побед в цикле
+      losses_count: 6,  // Количество поражений в цикле  
+      draws_count: 4,   // Количество ничьих в цикле
       
-      cycle_games: 12, // 1-66 (по умолчанию 12)
-      pause_between_cycles: 5, // 1-300 секунд (пауза между циклами, по умолчанию 5)
-      pause_on_draw: 5, // 1-60 секунд (пауза при ничье и между ставками, по умолчанию 5)
+      // Процент исходов игр (новые значения по умолчанию)
+      wins_percentage: savedPercentages.wins_percentage || 44.0,
+      losses_percentage: savedPercentages.losses_percentage || 36.0,
+      draws_percentage: savedPercentages.draws_percentage || 20.0,
       
-      creation_mode: 'queue-based', // 'always-first', 'queue-based', 'after-all' (по умолчанию queue-based)
-      profit_strategy: 'balanced', // 'start-positive', 'balanced', 'start-negative'
+      cycle_games: 16, // НОВОЕ: 16 игр по умолчанию (было 12)
+      pause_between_cycles: 5, // 1-300 секунд
+      pause_on_draw: 5, // 1-60 секунд
       
-      cycle_total_amount: 0 // calculated automatically
+      creation_mode: 'queue-based',
+      profit_strategy: 'balanced',
+      
+      cycle_total_amount: 0, // calculated automatically
+      active_pool_amount: 0, // НОВОЕ: активный пул для отображения
+      roi_active: 0.0        // НОВОЕ: ROI_active для превью
     };
   });
 
