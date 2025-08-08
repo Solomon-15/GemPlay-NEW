@@ -129,6 +129,11 @@ const RegularBotsManagement = () => {
   const [selectedBotForCycleHistory, setSelectedBotForCycleHistory] = useState(null);
   const [isCycleHistoryModalOpen, setIsCycleHistoryModalOpen] = useState(false);
 
+  // States for cycle details modal
+  const [selectedCycleForDetails, setSelectedCycleForDetails] = useState(null);
+  const [isCycleDetailsModalOpen, setIsCycleDetailsModalOpen] = useState(false);
+  const [cycleDetailsData, setCycleDetailsData] = useState(null);
+
   // Функция для открытия модального окна истории циклов
   const handleCycleHistoryModal = async (bot) => {
     try {
