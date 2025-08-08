@@ -17817,7 +17817,7 @@ async def get_bot_cycle_history(
                 "opponent_move": game_doc.get("opponent_move", ""),
                 "winner": "Win" if game_doc.get("winner_id") == bot_id else ("Draw" if game_doc.get("winner_id") is None else "Loss"),
                 "winnings": round(float(game_doc.get("total_bet_amount", 0)) * 2, 2) if game_doc.get("winner_id") == bot_id else 0,
-                "created_at": game_doc.get("created_at", datetime.utcnow()).isoformat(),
+                "created_at": game_doc.get("created_at", datetime.utcnow()).isoformat() if hasattr(game_doc.get("created_at", datetime.utcnow()), 'isoformat') else str(game_doc.get("created_at", datetime.utcnow())),
                 "status": game_doc.get("status", "")
             })
         
