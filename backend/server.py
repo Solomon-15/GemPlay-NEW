@@ -1363,39 +1363,6 @@ def ensure_range_coverage(amounts: List[float], min_bet: float, max_bet: float, 
     
     return amounts
 
-def distribute_amounts_naturally(target_amount: float, count: int, min_bet: float, max_bet: float) -> List[int]:
-    """
-    Распределяет целевую сумму между указанным количеством ставок естественным образом.
-    Возвращает список целых чисел (сумм ставок).
-    """
-    if count <= 0:
-        return []
-    
-    if count == 1:
-        return [max(min_bet, min(max_bet, int(target_amount)))]
-    
-    # Генерируем случайные веса для распределения
-    weights = [random.uniform(0.5, 2.0) for _ in range(count)]
-    total_weight = sum(weights)
-    
-    # Распределяем сумму пропорционально весам
-    amounts = []
-    remaining_amount = target_amount
-    
-    for i in range(count - 1):
-        proportion = weights[i] / total_weight
-        amount = target_amount * proportion
-        # Ограничиваем диапазоном min_bet - max_bet
-        amount = max(min_bet, min(max_bet, amount))
-        amounts.append(int(amount))
-        remaining_amount -= int(amount)
-    
-    # Последняя ставка получает остаток
-    last_amount = max(min_bet, min(max_bet, remaining_amount))
-    amounts.append(int(last_amount))
-    
-    return amounts
-
 def distribute_sum_to_bets(target_sum: float, bet_count: int, min_bet: float, max_bet: float) -> List[float]:
     """
     НОВАЯ ФОРМУЛА 2.0: Распределяет целевую сумму на N ставок в диапазоне [min_bet, max_bet].
