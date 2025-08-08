@@ -29,8 +29,8 @@ import subprocess
 # Configuration
 BASE_URL = "https://f772daa6-fb15-4f46-808e-f02104f088ba.preview.emergentagent.com/api"
 TEST_USER = {
-    "email": "user@gemplay.com",
-    "password": "User123!"
+    "email": "admin@gemplay.com",
+    "password": "Admin123!"
 }
 
 # Test results tracking
