@@ -17977,7 +17977,8 @@ async def get_bot_cycle_history(
                 total_losses += game_bet
         
         completed_cycle_games = wins_count + losses_count + draws_count
-        net_profit = total_winnings - total_losses
+        # ИСПРАВЛЕНИЕ: net_profit = выигрыши - общие ставки (не только проигрышные)
+        net_profit = total_winnings - total_bet_amount
         win_percentage = (wins_count / max(completed_cycle_games, 1)) * 100 if completed_cycle_games > 0 else 0
         
         # Prepare detailed game data
