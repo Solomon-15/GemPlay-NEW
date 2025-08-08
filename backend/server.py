@@ -15862,42 +15862,67 @@ async def create_regular_bots(
             detail=f"Failed to create regular bot: {str(e)}"
         )
 
-@api_router.delete("/admin/bots/clear-regular", response_model=dict)
-async def clear_regular_bots(
-    current_user: User = Depends(get_current_admin)
-):
-    """Удалить всех обычных ботов (admin only)."""
+@api_router.post("/admin/maintenance/purge-db", response_model=dict)
+async def purge_database(current_user: User = Depends(get_current_admin)):
+    """
+    Полная очистка базы данных (кроме админов/суперадминов и gem_definitions).
+    Удаляем: все игры, все боты (REGULAR/HUMAN), всех пользователей, кроме ADMIN/SUPER_ADMIN,
+    все транзакции, refresh_tokens, уведомления, логи безопасности/админа, user_gems, sounds.
+    ВНИМАНИЕ: Операция необратима. Использовать только по подтверждению.
+    """
     try:
-        # Удалить все ставки обычных ботов
-        regular_bots = await db.bots.find({"bot_type": "REGULAR"}).to_list(None)
-        bot_ids = [bot["id"] for bot in regular_bots]
+        summary = {}
+        # 1) Деактивируем ботов, чтобы остановить автогенерацию на момент очистки
+        await db.bots.update_many({}, {"$set": {"is_active": False}})
+        await db.human_bots.update_many({}, {"$set": {"is_active": False}})
         
-        if bot_ids:
-            # Удалить все связанные игры
-            await db.games.delete_many({"creator_id": {"$in": bot_ids}})
-            logger.info(f"Удалены игры для {len(bot_ids)} обычных ботов")
-            
-            # Удалить самих ботов  
-            result = await db.bots.delete_many({"bot_type": "REGULAR"})
-            logger.info(f"Удалено {result.deleted_count} обычных ботов")
-            
-            return {
-                "success": True,
-                "deleted_bots": result.deleted_count,
-                "message": f"Удалено {result.deleted_count} обычных ботов и их игры"
-            }
-        else:
-            return {
-                "success": True,
-                "deleted_bots": 0,
-                "message": "Обычные боты не найдены"
-            }
-            
+        # 2) Игры
+        res = await db.games.delete_many({})
+        summary["games_deleted"] = res.deleted_count
+        
+        # 3) Боты (REGULAR/HUMAN)
+        res = await db.bots.delete_many({})
+        summary["bots_deleted"] = res.deleted_count
+        res = await db.human_bots.delete_many({})
+        summary["human_bots_deleted"] = res.deleted_count
+        
+        # 4) Пользователи: оставить только ADMIN/SUPER_ADMIN
+        res = await db.users.delete_many({"role": {"$nin": ["ADMIN", "SUPER_ADMIN"]}})
+        summary["users_deleted"] = res.deleted_count
+        
+        # 5) Служебные коллекции
+        for coll_name in [
+            "transactions", "refresh_tokens", "notifications",
+            "admin_logs", "security_alerts", "security_monitoring", "user_gems"
+        ]:
+            try:
+                res = await getattr(db, coll_name).delete_many({})
+                summary[f"{coll_name}_deleted"] = res.deleted_count
+            except Exception as _:
+                summary[f"{coll_name}_deleted"] = 0
+        
+        # 6) sounds — удалить
+        try:
+            res = await db.sounds.delete_many({})
+            summary["sounds_deleted"] = res.deleted_count
+        except Exception:
+            summary["sounds_deleted"] = 0
+        
+        # 7) gem_definitions — сохраняем, ничего не делаем
+        remaining_gems = await db.gem_definitions.count_documents({})
+        summary["gem_definitions_remain"] = remaining_gems
+        
+        # 8) Возврат суммарного отчета
+        return {
+            "success": True,
+            "message": "Database purged successfully",
+            "summary": summary
+        }
     except Exception as e:
-        logger.error(f"Error clearing regular bots: {e}")
+        logger.error(f"Error purging database: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to clear regular bots: {str(e)}"
+            detail=f"Failed to purge database: {str(e)}"
         )
 
 @api_router.get("/admin/bots/cycle-statistics", response_model=List[dict])
