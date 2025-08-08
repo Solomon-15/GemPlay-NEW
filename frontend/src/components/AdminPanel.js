@@ -77,27 +77,12 @@ const AdminPanel = ({ user, onClose }) => {
   useEffect(() => {
     fetchDashboardStats();
     
-    const interceptor = axios.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          handleTokenExpired();
-        }
-        return Promise.reject(error);
-      }
-    );
-    
-    return () => {
-      axios.interceptors.response.eject(interceptor);
-    };
+    // Global axios interceptor will handle 401s automatically
+    // No need for local interceptor
+    fetchDashboardStats();
   }, [betVolumeFilters]); // Re-fetch when bet volume filters change
 
-  const handleTokenExpired = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refresh_token');
-    showErrorRU('Сессия истекла. Пожалуйста, войдите снова.');
-    onClose();
-  };
+  // Removed handleTokenExpired - now handled by global interceptor
 
   const fetchDashboardStats = async () => {
     try {
