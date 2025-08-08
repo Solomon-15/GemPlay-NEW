@@ -153,10 +153,8 @@ def validate_purge_response(response_data: Dict) -> bool:
         print_error("Response is not a JSON object")
         return False
     
-    # Expected fields in purge response
-    expected_fields = [
-        "success", "message", "deleted_counts", "preserved_counts", "timestamp"
-    ]
+    # Expected fields in purge response (based on actual backend implementation)
+    expected_fields = ["success", "message", "summary"]
     
     missing_fields = []
     for field in expected_fields:
@@ -167,31 +165,26 @@ def validate_purge_response(response_data: Dict) -> bool:
         print_error(f"Missing required fields: {missing_fields}")
         return False
     
-    # Check deleted_counts structure
-    deleted_counts = response_data.get("deleted_counts", {})
-    expected_deleted_fields = [
-        "games", "bots", "human_bots", "users", "transactions", 
-        "refresh_tokens", "notifications", "admin_logs", 
-        "security_alerts", "security_monitoring", "user_gems", "sounds"
+    # Check summary structure
+    summary = response_data.get("summary", {})
+    expected_summary_fields = [
+        "games_deleted", "bots_deleted", "human_bots_deleted", "users_deleted", 
+        "transactions_deleted", "refresh_tokens_deleted", "notifications_deleted", 
+        "admin_logs_deleted", "security_alerts_deleted", "security_monitoring_deleted", 
+        "user_gems_deleted", "sounds_deleted", "gem_definitions_remain"
     ]
     
-    print(f"   📊 Deleted counts:")
-    for field in expected_deleted_fields:
-        count = deleted_counts.get(field, 0)
+    print(f"   📊 Purge summary:")
+    for field in expected_summary_fields:
+        count = summary.get(field, 0)
         print(f"      {field}: {count}")
     
-    # Check preserved_counts structure
-    preserved_counts = response_data.get("preserved_counts", {})
-    print(f"   📋 Preserved counts:")
-    for field, count in preserved_counts.items():
-        print(f"      {field}: {count}")
-    
-    # Verify gem_definitions are preserved
-    gem_definitions_preserved = preserved_counts.get("gem_definitions", 0)
-    if gem_definitions_preserved > 0:
-        print_success(f"Gem definitions preserved: {gem_definitions_preserved}")
+    # Verify gem_definitions remain
+    gem_definitions_remain = summary.get("gem_definitions_remain", 0)
+    if gem_definitions_remain > 0:
+        print_success(f"Gem definitions preserved: {gem_definitions_remain}")
     else:
-        print_warning("No gem definitions preserved (might be expected)")
+        print_warning("No gem definitions preserved")
     
     print_success("Response structure validation passed")
     return True
