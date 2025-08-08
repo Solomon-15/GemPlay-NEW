@@ -151,6 +151,48 @@ const RegularBotsManagement = () => {
     }
   };
 
+  // Функция для открытия модального окна деталей цикла
+  const handleCycleDetailsModal = async (cycle, bot) => {
+    try {
+      const token = localStorage.getItem('token');
+      // Use mock data for now since backend doesn't have real cycle details yet
+      const mockCycleDetails = {
+        id: cycle.id,
+        bot_name: bot.name,
+        cycle_number: cycle.cycle_number,
+        completed_at: cycle.completed_at,
+        duration: cycle.duration,
+        total_games: cycle.total_games || cycle.games_played || 12,
+        wins: cycle.wins || 7,
+        losses: cycle.losses || 4, 
+        draws: cycle.draws || 1,
+        total_bet: cycle.total_bet || cycle.total_wagered || 150.0,
+        total_winnings: cycle.total_winnings || 280.0,
+        profit: cycle.profit || 130.0,
+        win_percentage: cycle.wins ? ((cycle.wins / (cycle.wins + cycle.losses + cycle.draws)) * 100).toFixed(1) : '58.3',
+        // Mock individual bets data - in real implementation this would come from API
+        bets: Array.from({ length: cycle.total_games || 12 }, (_, index) => ({
+          id: `bet_${cycle.id}_${index + 1}`,
+          game_number: index + 1,
+          bet_amount: Math.floor(Math.random() * 40) + 10, // Random bet between 10-50
+          result: index < (cycle.wins || 7) ? 'win' : 
+                 index < (cycle.wins || 7) + (cycle.losses || 4) ? 'loss' : 'draw',
+          payout: index < (cycle.wins || 7) ? (Math.floor(Math.random() * 40) + 10) * 1.94 : 0,
+          created_at: new Date(Date.now() - (12 - index) * 3600000).toISOString(), // Hours ago
+          move: ['rock', 'paper', 'scissors'][Math.floor(Math.random() * 3)],
+          opponent_move: ['rock', 'paper', 'scissors'][Math.floor(Math.random() * 3)]
+        }))
+      };
+
+      setSelectedCycleForDetails(cycle);
+      setCycleDetailsData(mockCycleDetails);
+      setIsCycleDetailsModalOpen(true);
+    } catch (error) {
+      console.error('Ошибка загрузки деталей цикла:', error);
+      showErrorRU('Ошибка при загрузке деталей цикла');
+    }
+  };
+
   const [selectAll, setSelectAll] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
