@@ -25,7 +25,7 @@ import hashlib
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://f772daa6-fb15-4f46-808e-f02104f088ba.preview.emergentagent.com/api"
+BASE_URL = "https://b3ba33fd-e1bd-41d2-9c67-f61e5e7d4bdf.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
