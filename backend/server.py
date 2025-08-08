@@ -16180,7 +16180,7 @@ async def create_bot_bet(bot: Bot) -> bool:
             creator_move=GameMove(initial_move),
             creator_move_hash=move_hash,
             creator_salt=salt,
-            bet_amount=bet_amount,  # Используем точную сумму из массива
+            bet_amount=int(bet_amount),  # Используем точную сумму из массива (гарантируем целое)
             bet_gems=bet_gems,
             status=GameStatus.WAITING,
             commission=round(bet_amount * 0.06, 2),
