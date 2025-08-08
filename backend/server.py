@@ -16644,20 +16644,40 @@ async def get_regular_bots_list(
             
             win_rate = (wins / total_games * 100) if total_games > 0 else 0
             
-            total_bet_amount = await db.games.aggregate([
-                {"$match": {"creator_id": bot.id, "status": "COMPLETED"}},
+            # НОВАЯ ФОРМУЛА 2.0: Рассчитываем ROI_active = (profit / active_pool) * 100%
+            
+            # Суммы побед (wins sum)
+            wins_sum_agg = await db.games.aggregate([
+                {"$match": {"creator_id": bot.id, "status": "COMPLETED", "winner_id": bot.id}},
                 {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
             ]).to_list(1)
+            wins_sum = (wins_sum_agg[0]['total'] if wins_sum_agg else 0) * 2  # выигрыш = ставка × 2
             
-            total_winnings = await db.games.aggregate([
-                {"$match": {"creator_id": bot.id, "status": "COMPLETED", "winner_id": bot.id}},
-                {"$group": {"_id": None, "total": {"$sum": {"$multiply": ["$bet_amount", 2]}}}}
+            # Суммы поражений (losses sum)  
+            losses_sum_agg = await db.games.aggregate([
+                {"$match": {"creator_id": bot.id, "status": "COMPLETED", "winner_id": {"$ne": bot.id, "$ne": None}}},
+                {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
             ]).to_list(1)
+            losses_sum = losses_sum_agg[0]['total'] if losses_sum_agg else 0
             
-            total_bet_sum = total_bet_amount[0]['total'] if total_bet_amount else 0
-            total_win_sum = total_winnings[0]['total'] if total_winnings else 0
-            bot_profit_amount = total_win_sum - total_bet_sum
-            bot_profit_percent = (bot_profit_amount / total_bet_sum * 100) if total_bet_sum > 0 else 0
+            # Суммы ничьих (draws sum) - не участвуют в ROI  
+            draws_sum_agg = await db.games.aggregate([
+                {"$match": {"creator_id": bot.id, "status": "COMPLETED", "winner_id": None}},
+                {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+            ]).to_list(1)
+            draws_sum = draws_sum_agg[0]['total'] if draws_sum_agg else 0
+            
+            # Рассчитываем ROI по новой формуле
+            active_pool = wins_sum + losses_sum  # Активный пул (база для ROI)
+            profit = wins_sum - losses_sum       # Чистая прибыль
+            
+            # ROI_active = (profit / active_pool) * 100%
+            roi_active_percent = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
+            
+            # Для обратной совместимости сохраняем старые расчеты
+            total_bet_sum = wins_sum + losses_sum + draws_sum  # Общая сумма ставок
+            bot_profit_amount = profit
+            bot_profit_percent = roi_active_percent  # Теперь используем ROI_active!
             
             cycle_games = bot_doc.get('cycle_games', 12)
             if cycle_games <= 0:
