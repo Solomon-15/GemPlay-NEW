@@ -15751,6 +15751,9 @@ async def create_regular_bots(
         
         created_bots = []
         
+        # НОВАЯ ЛОГИКА: Вычисляем реальную сумму цикла
+        real_cycle_total = (min_bet + max_bet) / 2 * cycle_games
+        
         bot = Bot(
             name=bot_name,
             bot_type=BotType.REGULAR,
@@ -15766,6 +15769,7 @@ async def create_regular_bots(
             pause_between_cycles=pause_between_cycles,
             pause_on_draw=pause_on_draw,
             profit_strategy=profit_strategy,
+            cycle_total_amount=real_cycle_total,  # Сохраняем реальную сумму
             is_active=True
         )
         
