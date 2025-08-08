@@ -2908,46 +2908,118 @@ const RegularBotsManagement = () => {
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Гемы</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ходы</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Соперник</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Статус</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Результат</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border-primary">
-                      {cycleData.games.map((game, index) => (
-                        <tr key={game.game_id} className="hover:bg-surface-card hover:bg-opacity-50">
-                          <td className="px-4 py-3 text-white">{game.game_number || (index + 1)}</td>
-                          <td className="px-4 py-3 text-accent-primary text-sm font-mono">{game.game_id || 'N/A'}</td>
-                          <td className="px-4 py-3 text-text-secondary text-sm">
-                            {new Date(game.completed_at || game.created_at).toLocaleDateString('ru-RU')}
-                          </td>
-                          <td className="px-4 py-3 text-text-secondary text-sm">
-                            {new Date(game.completed_at || game.created_at).toLocaleTimeString('ru-RU')}
-                          </td>
-                          <td className="px-4 py-3 text-accent-primary font-bold">${game.bet_amount}</td>
-                          <td className="px-4 py-3 text-text-secondary text-xs">
-                            {Object.entries(game.bet_gems || {}).map(([gem, qty]) => `${gem}: ${qty}`).join(', ') || 'N/A'}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <div className="text-xs space-y-1">
-                              <div>Бот: {game.bot_move || '—'}</div>
-                              <div>Соперник: {game.opponent_move || '—'}</div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-white">{game.opponent || 'N/A'}</td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 text-xs rounded-full font-rajdhani font-bold ${
-                              game.status === 'COMPLETED' ? 'bg-green-600 text-white' :
-                              game.status === 'ACTIVE' ? 'bg-blue-600 text-white' :
-                              game.status === 'WAITING' ? 'bg-yellow-600 text-white' :
-                              'bg-gray-600 text-white'
-                            }`}>
-                              {game.status || 'Unknown'}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`px-2 py-1 text-xs rounded-full font-rajdhani font-bold ${
-                              game.result === 'Победа' ? 'bg-green-600 text-white' :
-                              game.result === 'Поражение' ? 'bg-red-600 text-white' :
+                      {cycleData.games.map((game, index) => {
+                        // Функция для получения иконки хода
+                        const getMoveIcon = (move) => {
+                          switch (move?.toUpperCase()) {
+                            case 'ROCK': return '🪨';
+                            case 'PAPER': return '📄';
+                            case 'SCISSORS': return '✂️';
+                            default: return '—';
+                          }
+                        };
+
+                        // Функция для форматирования гемов иконками
+                        const formatGemsWithIcons = (gems) => {
+                          if (!gems || typeof gems !== 'object') return '—';
+                          
+                          const gemIcons = {
+                            'Ruby': '🔴',
+                            'Emerald': '🟢', 
+                            'Sapphire': '🔵',
+                            'Diamond': '💎',
+                            'Amethyst': '🟣',
+                            'Topaz': '🟡'
+                          };
+                          
+                          return Object.entries(gems)
+                            .map(([gemType, qty]) => `${gemIcons[gemType] || '💎'}×${qty}`)
+                            .join(' ');
+                        };
+
+                        // Функция для получения цвета роли пользователя
+                        const getRoleColor = (role) => {
+                          const roleColors = {
+                            'USER': 'bg-blue-600',
+                            'MODERATOR': 'bg-green-600', 
+                            'ADMIN': 'bg-purple-600',
+                            'SUPER_ADMIN': 'bg-red-600'
+                          };
+                          return roleColors[role] || 'bg-gray-600';
+                        };
+
+                        // Сокращенный ID (первые 4 + последние 4)
+                        const shortId = game.game_id && game.game_id.length > 8 
+                          ? `${game.game_id.substring(0, 4)}…${game.game_id.substring(game.game_id.length - 4)}`
+                          : game.game_id || 'N/A';
+
+                        return (
+                          <tr key={game.game_id} className="transition-colors hover:border-l-4 hover:bg-gray-900 hover:bg-opacity-20 hover:border-green-400">
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-roboto text-white font-bold">
+                                {index + 1}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-roboto text-white font-mono">
+                                {shortId}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-roboto text-white">
+                                {new Date(game.completed_at || game.created_at).toLocaleDateString('ru-RU')}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-roboto text-white">
+                                {new Date(game.completed_at || game.created_at).toLocaleTimeString('ru-RU')}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-roboto font-bold text-accent-primary">
+                                {game.bet_amount} гемы
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-roboto text-white">
+                                {formatGemsWithIcons(game.bet_gems)}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-roboto text-white">
+                                <div className="space-y-1">
+                                  <div>Player: {getMoveIcon(game.creator_move)}</div>
+                                  <div>Opponent: {getMoveIcon(game.opponent_move)}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-roboto font-bold text-white ${getRoleColor(game.opponent_role || 'USER')}`}>
+                                {game.opponent || 'N/A'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-roboto">
+                                <span className={`font-bold ${
+                                  game.winner === cycleData.bot_name ? 'text-green-400' : 
+                                  game.winner && game.winner !== 'Ничья' ? 'text-red-400' : 'text-gray-400'
+                                }`}>
+                                  {game.winner === cycleData.bot_name ? 'Победа' : 
+                                   game.winner && game.winner !== 'Ничья' ? 'Поражение' : 'Ничья'}
+                                </span>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
                               game.result === 'Ничья' ? 'bg-yellow-600 text-white' :
                               'bg-gray-600 text-white'
                             }`}>
