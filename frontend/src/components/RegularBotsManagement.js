@@ -2370,8 +2370,9 @@ const RegularBotsManagement = () => {
                     max="66"
                     value={botForm.cycle_games}
                     onChange={(e) => {
-                      const newValue = parseInt(e.target.value) || 12;
-                      const newForm = {...botForm, cycle_games: newValue};
+                      const newValue = Math.min(100, Math.max(4, parseInt(e.target.value) || 12));
+                      updateBalanceGames(newValue, true);
+                      const newForm = { ...botForm, cycle_games: newValue };
                       setBotForm(newForm);
                       validateExtendedFormInRealTime(newForm);
                     }}
