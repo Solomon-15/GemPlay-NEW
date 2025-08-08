@@ -3382,7 +3382,7 @@ const RegularBotsManagement = () => {
                           </td>
                           <td className="px-4 py-3 text-center">
                             <button
-                              onClick={() => {/* TODO: показать детали цикла */}}
+                              onClick={() => handleCycleDetailsModal(cycle, selectedBotForCycleHistory)}
                               className="text-blue-400 hover:text-blue-300 text-sm underline"
                               title="Показать детали цикла"
                             >
