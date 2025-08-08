@@ -2298,21 +2298,47 @@ const RegularBotsManagement = () => {
               {/* Новая секция: Процент исходов игр */}
               <div className="border border-green-500 bg-green-900 bg-opacity-20 rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-green-400 mb-3">Процент исходов игр</h4>
-                <div className="grid grid-cols-3 gap-4 mb-3">
+                <div className="grid grid-cols-4 gap-4 mb-3">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Пресет ROI:</label>
+                    <select
+                      value={selectedPreset}
+                      onChange={(e) => {
+                        const preset = defaultPresets.find(p => p.name === e.target.value);
+                        applyPreset(preset);
+                        // После смены пресета пересчитаем counts из процентов
+                        const { W, L, D } = recalcCountsFromPercents(
+                          botForm.cycle_games,
+                          preset && !preset.custom ? preset.wins : botForm.wins_percentage,
+                          preset && !preset.custom ? preset.losses : botForm.losses_percentage,
+                          preset && !preset.custom ? preset.draws : botForm.draws_percentage
+                        );
+                        setBotForm(prev => ({ ...prev, wins_count: W, losses_count: L, draws_count: D }));
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    >
+                      {defaultPresets.map(preset => (
+                        <option key={preset.name} value={preset.name}>{preset.name}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label className="block text-text-secondary text-sm mb-1">Победы (%):</label>
                     <input
                       type="number"
                       min="0"
                       max="100"
+                      step="0.1"
                       value={botForm.wins_percentage}
                       onChange={(e) => {
-                        const wins = parseInt(e.target.value) || 44;
-                        const newForm = {...botForm, wins_percentage: wins};
+                        const wins = parseFloat(e.target.value) || 0;
+                        const newForm = { ...botForm, wins_percentage: wins };
+                        setSelectedPreset("Custom");
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
-                        // Сохраняем в localStorage
                         savePercentagesToStorage(wins, botForm.losses_percentage, botForm.draws_percentage);
+                        const { W, L, D } = recalcCountsFromPercents(botForm.cycle_games, wins, botForm.losses_percentage, botForm.draws_percentage);
+                        setBotForm(prev => ({ ...prev, wins_count: W, losses_count: L, draws_count: D }));
                       }}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                     />
@@ -2323,14 +2349,17 @@ const RegularBotsManagement = () => {
                       type="number"
                       min="0"
                       max="100"
+                      step="0.1"
                       value={botForm.losses_percentage}
                       onChange={(e) => {
-                        const losses = parseInt(e.target.value) || 36;
-                        const newForm = {...botForm, losses_percentage: losses};
+                        const losses = parseFloat(e.target.value) || 0;
+                        const newForm = { ...botForm, losses_percentage: losses };
+                        setSelectedPreset("Custom");
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
-                        // Сохраняем в localStorage
                         savePercentagesToStorage(botForm.wins_percentage, losses, botForm.draws_percentage);
+                        const { W, L, D } = recalcCountsFromPercents(botForm.cycle_games, botForm.wins_percentage, losses, botForm.draws_percentage);
+                        setBotForm(prev => ({ ...prev, wins_count: W, losses_count: L, draws_count: D }));
                       }}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                     />
@@ -2341,14 +2370,17 @@ const RegularBotsManagement = () => {
                       type="number"
                       min="0"
                       max="100"
+                      step="0.1"
                       value={botForm.draws_percentage}
                       onChange={(e) => {
-                        const draws = parseInt(e.target.value) || 20;
-                        const newForm = {...botForm, draws_percentage: draws};
+                        const draws = parseFloat(e.target.value) || 0;
+                        const newForm = { ...botForm, draws_percentage: draws };
+                        setSelectedPreset("Custom");
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
-                        // Сохраняем в localStorage
                         savePercentagesToStorage(botForm.wins_percentage, botForm.losses_percentage, draws);
+                        const { W, L, D } = recalcCountsFromPercents(botForm.cycle_games, botForm.wins_percentage, botForm.losses_percentage, draws);
+                        setBotForm(prev => ({ ...prev, wins_count: W, losses_count: L, draws_count: D }));
                       }}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                     />
