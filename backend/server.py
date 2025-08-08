@@ -18552,8 +18552,11 @@ async def get_bot_active_bets(
             "status": "COMPLETED"
         }).to_list(1000)
         
+        # ИСПРАВЛЕНИЕ: Показывать все игры текущего цикла (активные + завершенные)
+        all_current_cycle_games = updated_active_games + completed_games
+        
         bets_data = []
-        for game in updated_active_games:
+        for game in all_current_cycle_games:
             bets_data.append({
                 "id": game["id"],
                 "created_at": game["created_at"],
@@ -18562,7 +18565,10 @@ async def get_bot_active_bets(
                 "opponent_name": game.get("opponent_name", "—"),
                 "move": game.get("move", "—"),
                 "selected_gem": game.get("selected_gem", "—"),
-                "result": game.get("result", "—")
+                "result": game.get("result", "—"),
+                "bot_move": game.get("bot_move", "—"),
+                "opponent_move": game.get("opponent_move", "—"),
+                "bet_gems": game.get("bet_gems", {})
             })
         
         total_bets = len(bets_data)
