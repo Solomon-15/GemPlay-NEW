@@ -460,8 +460,12 @@ def test_configuration_verification():
         for line_num, line in enumerate(server_content.split('\n'), 1):
             if 'ACCESS_TOKEN_EXPIRE_MINUTES' in line and '=' in line and not line.strip().startswith('#'):
                 access_token_expire_line = (line_num, line.strip())
+                break
+        
+        for line_num, line in enumerate(server_content.split('\n'), 1):
             if 'REFRESH_TOKEN_EXPIRE_DAYS' in line and '=' in line and not line.strip().startswith('#'):
                 refresh_token_expire_line = (line_num, line.strip())
+                break
         
         print(f"   📋 CONFIGURATION ANALYSIS:")
         
