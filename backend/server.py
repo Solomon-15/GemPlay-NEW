@@ -18585,7 +18585,7 @@ async def get_bot_active_bets(
                 
                 new_game = Game(
                     creator_id=bot_id,
-                    bet_amount=bet_amount,
+                    bet_amount=int(bet_amount),
                     status=GameStatus.WAITING,
                     is_bot_game=True,
                     is_regular_bot_game=True
