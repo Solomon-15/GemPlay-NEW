@@ -17839,7 +17839,7 @@ async def get_bot_cycle_history(
                 "net_profit": round(net_profit, 2),
                 "win_percentage": round(win_percentage, 1)
             },
-            "games": cycle_games
+            "games": game_details  # Use processed game details instead of raw MongoDB docs
         }
         
     except HTTPException:
