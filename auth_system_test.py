@@ -608,7 +608,7 @@ def main():
     print(f"{Colors.BLUE}🎯 Testing ИСПРАВЛЕННУЮ систему авторизации с автоматическим обновлением токенов{Colors.END}")
     print(f"{Colors.BLUE}🌐 Backend URL: {BASE_URL}{Colors.END}")
     print(f"{Colors.BLUE}📋 CRITICAL FIXES: 30-min tokens, refresh endpoint, no duplicate handlers{Colors.END}")
-    print(f"{Colors.BLUE}🔑 Using user@gemplay.com / User123! for testing{Colors.END}")
+    print(f"{Colors.BLUE}🔑 Using admin@gemplay.com / Admin123! for testing{Colors.END}")
     
     try:
         # Test 1: Token Creation with 30-minute lifespan
