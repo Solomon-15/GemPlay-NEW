@@ -2543,7 +2543,7 @@ const RegularBotsManagement = () => {
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <div className="text-text-secondary">Общая сумма цикла:</div>
-                        <div className="text-white font-bold">${preview.total}</div>
+                        <div className="text-white font-bold">{preview.total}</div>
                       </div>
                       <div>
                         <div className="text-text-secondary">Активный пул:</div>
