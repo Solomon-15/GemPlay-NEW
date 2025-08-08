@@ -2102,7 +2102,7 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
                 creator_move=GameMove(initial_move),
                 creator_move_hash=move_hash,
                 creator_salt=salt,
-                bet_amount=bet_amount,
+                bet_amount=int(bet_amount),
                 bet_gems=bet_gems,
                 status=GameStatus.WAITING,
                 metadata={
