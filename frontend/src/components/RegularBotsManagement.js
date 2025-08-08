@@ -2992,8 +2992,8 @@ const RegularBotsManagement = () => {
                             <td className="px-4 py-3">
                               <div className="text-sm font-roboto text-white">
                                 <div className="space-y-1">
-                                  <div>Player: {getMoveIcon(game.creator_move)}</div>
-                                  <div>Opponent: {getMoveIcon(game.opponent_move)}</div>
+                                  <div><span className="text-green-400 font-bold">Бот:</span> {getMoveIcon(game.creator_move)}</div>
+                                  <div><span className="text-orange-400 font-bold">Соперник:</span> {getMoveIcon(game.opponent_move)}</div>
                                 </div>
                               </div>
                             </td>
