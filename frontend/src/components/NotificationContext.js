@@ -283,6 +283,14 @@ export const NotificationProvider = ({ children }) => {
     showInfoRU: addInfoNotification
   };
 
+  // Make showErrorRU globally available for auth interceptor
+  React.useEffect(() => {
+    window.showErrorRU = addErrorNotification;
+    return () => {
+      delete window.showErrorRU;
+    };
+  }, []);
+
   return (
     <NotificationContext.Provider value={value}>
       {children}
