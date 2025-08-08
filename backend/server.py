@@ -1396,6 +1396,90 @@ def distribute_amounts_naturally(target_amount: float, count: int, min_bet: floa
     
     return amounts
 
+def distribute_sum_to_bets(target_sum: float, bet_count: int, min_bet: float, max_bet: float) -> List[float]:
+    """
+    НОВАЯ ФОРМУЛА 2.0: Распределяет целевую сумму на N ставок в диапазоне [min_bet, max_bet].
+    Обеспечивает равномерное покрытие диапазона с точной суммой.
+    
+    Args:
+        target_sum: Целевая сумма для распределения
+        bet_count: Количество ставок
+        min_bet: Минимальная ставка  
+        max_bet: Максимальная ставка
+        
+    Returns:
+        List[float]: Список ставок суммой target_sum
+    """
+    if bet_count <= 0:
+        return []
+    
+    # Проверяем достижимость целевой суммы
+    min_possible = bet_count * min_bet
+    max_possible = bet_count * max_bet
+    
+    if target_sum < min_possible:
+        logger.warning(f"Target sum {target_sum} too small for {bet_count} bets [{min_bet}-{max_bet}], using minimum")
+        target_sum = min_possible
+    elif target_sum > max_possible:
+        logger.warning(f"Target sum {target_sum} too large for {bet_count} bets [{min_bet}-{max_bet}], using maximum")  
+        target_sum = max_possible
+    
+    # 1. Генерируем случайные веса для равномерного распределения
+    weights = []
+    range_size = max_bet - min_bet
+    
+    # Обеспечиваем покрытие всего диапазона
+    for i in range(bet_count):
+        if bet_count <= 3:
+            # Для малого количества ставок - равномерно по диапазону
+            weight = random.uniform(0.5, 1.5)
+        else:
+            # Для большего количества - стратифицированная выборка
+            segment = i / bet_count  # 0 to 1
+            base_weight = 0.3 + segment * 0.7  # от 0.3 до 1.0
+            weight = base_weight + random.uniform(-0.2, 0.2)
+        weights.append(max(0.1, weight))
+    
+    total_weight = sum(weights)
+    
+    # 2. Рассчитываем пропорциональные суммы
+    amounts = []
+    for weight in weights:
+        proportional_amount = (weight / total_weight) * target_sum
+        # Приводим в рамки диапазона
+        amount = max(min_bet, min(max_bet, proportional_amount))
+        amounts.append(round(amount, 2))
+    
+    # 3. "Докрутчик" - точная подгонка к целевой сумме
+    current_sum = sum(amounts)
+    diff = target_sum - current_sum
+    
+    # Корректируем по 0.01 за раз, пока не достигнем точной суммы
+    attempts = 0
+    max_attempts = 1000
+    
+    while abs(diff) >= 0.01 and attempts < max_attempts:
+        # Выбираем случайную ставку для корректировки
+        idx = random.randint(0, len(amounts) - 1)
+        
+        if diff > 0 and amounts[idx] < max_bet:
+            # Увеличиваем ставку
+            adjustment = min(0.01, diff, max_bet - amounts[idx])
+            amounts[idx] = round(amounts[idx] + adjustment, 2)
+        elif diff < 0 and amounts[idx] > min_bet:
+            # Уменьшаем ставку
+            adjustment = min(0.01, abs(diff), amounts[idx] - min_bet)
+            amounts[idx] = round(amounts[idx] - adjustment, 2)
+        
+        current_sum = sum(amounts)
+        diff = target_sum - current_sum
+        attempts += 1
+    
+    logger.info(f"    Distributed {target_sum} across {bet_count} bets: {amounts}")
+    logger.info(f"    Final sum: {sum(amounts)}, diff: {diff:.3f}")
+    
+    return amounts
+
 async def generate_unique_bot_name() -> str:
     """Generate unique bot name in format Bot#1, Bot#2, etc."""
     counter = 1
