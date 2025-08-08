@@ -351,6 +351,44 @@ const RegularBotsManagement = () => {
     const total = botForm.wins_count + botForm.losses_count + botForm.draws_count;
     return total === botForm.cycle_games;
   };
+  
+  // НОВАЯ ЛОГИКА: Пресеты процентов исходов
+  const [customPresets, setCustomPresets] = useState([]);
+  const [showPresetModal, setShowPresetModal] = useState(false);
+  const [newPresetName, setNewPresetName] = useState('');
+  
+  const defaultPresets = [
+    { name: "По умолчанию", wins: 44.0, losses: 36.0, draws: 20.0 },
+    { name: "Агрессивный", wins: 50.0, losses: 30.0, draws: 20.0 },
+    { name: "Консервативный", wins: 40.0, losses: 40.0, draws: 20.0 },
+    { name: "Рисковый", wins: 55.0, losses: 25.0, draws: 20.0 },
+    { name: "Сбалансированный", wins: 45.0, losses: 35.0, draws: 20.0 }
+  ];
+  
+  const applyPreset = (preset) => {
+    setBotForm(prev => ({
+      ...prev,
+      wins_percentage: preset.wins,
+      losses_percentage: preset.losses,
+      draws_percentage: preset.draws
+    }));
+  };
+  
+  const saveCustomPreset = () => {
+    if (!newPresetName.trim()) return;
+    
+    const newPreset = {
+      name: newPresetName.trim(),
+      wins: botForm.wins_percentage,
+      losses: botForm.losses_percentage, 
+      draws: botForm.draws_percentage,
+      custom: true
+    };
+    
+    setCustomPresets(prev => [...prev, newPreset]);
+    setNewPresetName('');
+    setShowPresetModal(false);
+  };
 
   // Update cycle total amount when relevant fields change
   useEffect(() => {
