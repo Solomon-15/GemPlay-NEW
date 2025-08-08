@@ -515,14 +515,14 @@ class Bot(BaseModel):
     
     min_bet_amount: float = 1.0  # 1-10000
     max_bet_amount: float = 100.0  # 1-10000
-    win_percentage: float = 55.0  # Соотношение выигрышных сумм к общей сумме (0-100%, по умолчанию 55%)
-    
-    # Новые поля для процентов исходов игр
-    wins_percentage: int = 35  # Процент побед в цикле (по умолчанию 35%)
-    losses_percentage: int = 35  # Процент поражений в цикле (по умолчанию 35%) 
-    draws_percentage: int = 30  # Процент ничьих (дополнительно к циклу, по умолчанию 30%)
-    
-    cycle_games: int = 12  # 1-66 (по умолчанию 12)
+    # НОВАЯ ЛОГИКА: Убираем win_percentage, добавляем баланс игр
+    wins_count: int = 6           # Баланс игр - количество побед
+    losses_count: int = 6         # Баланс игр - количество поражений  
+    draws_count: int = 4          # Баланс игр - количество ничьих
+    wins_percentage: float = 44.0  # Процент исходов - победы
+    losses_percentage: float = 36.0 # Процент исходов - поражения
+    draws_percentage: float = 20.0  # Процент исходов - ничьи
+    cycle_games: int = 16
     current_cycle_games: int = 0
     current_cycle_wins: int = 0
     current_cycle_losses: int = 0  # Поражения в текущем цикле  
