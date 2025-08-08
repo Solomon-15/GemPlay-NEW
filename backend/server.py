@@ -17994,17 +17994,39 @@ async def get_bot_cycle_history(
                     if opponent_bot:
                         opponent_info = f"🤖 {opponent_bot.get('name', 'Bot')}"
             
+            # ИСПРАВЛЕНИЯ: Правильные поля и русская локализация
+            winner_id = game_doc.get("winner_id")
+            if winner_id == bot_id:
+                winner_text = "Победа" 
+                result_for_frontend = "Победа"
+            elif winner_id is None or winner_id == "DRAW":
+                winner_text = "Ничья"
+                result_for_frontend = "Ничья" 
+            else:
+                winner_text = "Поражение"
+                result_for_frontend = "Поражение"
+
+            # Получаем роль соперника
+            opponent_role = "USER"  # по умолчанию
+            if opponent_id:
+                opponent_user = await db.users.find_one({"id": opponent_id})
+                if opponent_user:
+                    opponent_role = opponent_user.get("role", "USER")
+            
             game_details.append({
                 "id": str(game_doc.get("_id", "")),
                 "game_id": game_doc.get("id", ""),
                 "opponent": opponent_info,
-                "bet_amount": round(float(game_doc.get("total_bet_amount", 0)), 2),
+                "opponent_role": opponent_role,
+                "bet_amount": round(float(game_doc.get("bet_amount", game_doc.get("total_bet_amount", 0))), 2),
+                "bet_gems": game_doc.get("bet_gems", {}),
                 "creator_move": game_doc.get("creator_move", ""),
                 "opponent_move": game_doc.get("opponent_move", ""),
-                "winner": "Win" if game_doc.get("winner_id") == bot_id else ("Draw" if game_doc.get("winner_id") is None else "Loss"),
-                "winnings": round(float(game_doc.get("total_bet_amount", 0)) * 2, 2) if game_doc.get("winner_id") == bot_id else 0,
+                "winner": result_for_frontend,
+                "winnings": round(float(game_doc.get("bet_amount", game_doc.get("total_bet_amount", 0))) * 2, 2) if winner_id == bot_id else 0,
                 "created_at": game_doc.get("created_at", datetime.utcnow()).isoformat() if hasattr(game_doc.get("created_at", datetime.utcnow()), 'isoformat') else str(game_doc.get("created_at", datetime.utcnow())),
-                "status": game_doc.get("status", "")
+                "completed_at": game_doc.get("completed_at", game_doc.get("created_at", datetime.utcnow())).isoformat() if hasattr(game_doc.get("completed_at", game_doc.get("created_at", datetime.utcnow())), 'isoformat') else str(game_doc.get("completed_at", game_doc.get("created_at", datetime.utcnow()))),
+                "status": game_doc.get("status", "COMPLETED")
             })
         
         return {
