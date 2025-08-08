@@ -17290,9 +17290,9 @@ async def generate_cycle_bets_natural_distribution(
         logger.info(f"    Target sums: W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
         
         # 3. Распределяем целевые суммы по балансу игр
-        wins_bets = distribute_amounts_naturally(target_wins_sum, wins_count, min_bet, max_bet)
-        losses_bets = distribute_amounts_naturally(target_losses_sum, losses_count, min_bet, max_bet)
-        draws_bets = distribute_amounts_naturally(target_draws_sum, draws_count, min_bet, max_bet)
+        wins_bets = distribute_sum_to_bets(target_wins_sum, wins_count, min_bet, max_bet)
+        losses_bets = distribute_sum_to_bets(target_losses_sum, losses_count, min_bet, max_bet)
+        draws_bets = distribute_sum_to_bets(target_draws_sum, draws_count, min_bet, max_bet)
         
         # 4. Формируем финальный массив ставок
         all_bets = []
