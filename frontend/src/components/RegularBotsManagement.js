@@ -3020,14 +3020,6 @@ const RegularBotsManagement = () => {
                   </table>
                 </div>
               </div>
-                              game.result === 'Ничья' ? 'bg-yellow-600 text-white' :
-                              'bg-gray-600 text-white'
-                            }`}>
-                              {game.result || '—'}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
                     </tbody>
                   </table>
                 </div>
