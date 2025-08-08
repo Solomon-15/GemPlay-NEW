@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-ROI VALIDATION TESTING - Specific Review Request
-Re-run backend validation:
+ROI VALIDATION TESTING - Integer Bet Fixes and ROI Planned Fallback
+Re-run backend validation after integer bet fixes and ROI planned fallback:
+
 1) Authenticate as admin.
-2) Create a regular bot (ROI_Test_Bot_2) with ROI 9% preset: 16 games, min=1, max=50, wins/losses/draws per Largest Remainder.
-3) GET /api/admin/bots and verify that response includes roi_active field (2 decimals) for the new bot.
-4) After 10-20 seconds, fetch active bot games and verify bet_amount values are integers (no decimals). Report counts of any decimals if found.
-5) Return a concise summary with pass/fail for ROI field and integer bet amounts.
+2) Create a regular bot (ROI_Test_Bot_3) with ROI 9% preset (16 games, min=1, max=50; wins/losses/draws per Largest Remainder).
+3) GET /api/admin/bots and verify that roi_active is present and > 0 (planned fallback used before games complete).
+4) After 10-20s, fetch active games for this bot and verify that 100% of bet_amount values are integers (no decimals). Report pass/fail.
+
+Using admin@gemplay.com / Admin123! for authorization
 """
 
 import requests
