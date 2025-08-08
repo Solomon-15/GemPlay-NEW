@@ -2190,26 +2190,65 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Процент побед и стратегия прибыли */}
-              <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Настройки выигрыша</h4>
-                <div>
-                  <label className="block text-text-secondary text-sm mb-1">Процент выигрыша (соотношение сумм):</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={botForm.win_percentage}
-                    onChange={(e) => {
-                      const newForm = {...botForm, win_percentage: parseFloat(e.target.value) || 55.0};
-                      setBotForm(newForm);
-                      validateExtendedFormInRealTime(newForm);
-                    }}
-                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                  />
-                  <div className="text-xs text-text-secondary mt-1">
-                    Соотношение выигрышных сумм к общей сумме цикла (0-100%, по умолчанию 55%)
+              {/* НОВАЯ ЛОГИКА: Баланс игр */}
+              <div className="border border-blue-500 bg-blue-900 bg-opacity-20 rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-blue-400 mb-3">⚖️ Баланс игр</h4>
+                <div className="grid grid-cols-3 gap-4 mb-3">
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Победы:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={botForm.wins_count}
+                      onChange={(e) => {
+                        const wins = parseInt(e.target.value) || 6;
+                        const newForm = {...botForm, wins_count: wins};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
                   </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Поражения:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={botForm.losses_count}
+                      onChange={(e) => {
+                        const losses = parseInt(e.target.value) || 6;
+                        const newForm = {...botForm, losses_count: losses};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Ничьи:</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="20"
+                      value={botForm.draws_count}
+                      onChange={(e) => {
+                        const draws = parseInt(e.target.value) || 4;
+                        const newForm = {...botForm, draws_count: draws};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                  </div>
+                </div>
+                <div className="text-xs text-text-secondary">
+                  Количество каждого типа игр в цикле. Сумма: {botForm.wins_count + botForm.losses_count + botForm.draws_count} 
+                  {(botForm.wins_count + botForm.losses_count + botForm.draws_count) === botForm.cycle_games ? 
+                    <span className="text-green-400 ml-1">✓ Совпадает с "Игр в цикле"</span> : 
+                    <span className="text-red-400 ml-1">⚠ Не совпадает с "Игр в цикле" ({botForm.cycle_games})</span>
+                  }
                 </div>
               </div>
 
