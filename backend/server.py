@@ -16671,8 +16671,11 @@ async def get_regular_bots_list(
             active_pool = wins_sum + losses_sum  # Активный пул (база для ROI)
             profit = wins_sum - losses_sum       # Чистая прибыль
             
-            # ROI_active = (profit / active_pool) * 100%
-            roi_active_percent = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
+            # ROI_active = (profit / active_pool) * 100% - ИСПРАВЛЯЕМ деление на ноль
+            try:
+                roi_active_percent = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
+            except (ZeroDivisionError, TypeError):
+                roi_active_percent = 0.0
             
             # Для обратной совместимости сохраняем старые расчеты
             total_bet_sum = wins_sum + losses_sum + draws_sum  # Общая сумма ставок
