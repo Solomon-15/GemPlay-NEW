@@ -12660,7 +12660,7 @@ async def bot_create_game_automatically(bot: Bot):
             creator_move=bot_move,
             creator_move_hash=hashlib.sha256(f"{bot_move.value}{salt}".encode()).hexdigest(),
             creator_salt=salt,
-            bet_amount=float(bet_amount),  # Convert to float for compatibility
+            bet_amount=int(bet_amount),  # Force integer bet amount
             bet_gems=bet_gems,
             is_bot_game=True,
             bot_id=bot.id,
