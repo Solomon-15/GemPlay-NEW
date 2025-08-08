@@ -3015,11 +3015,10 @@ const RegularBotsManagement = () => {
                             <td className="px-4 py-3">
                               <div className="text-sm font-roboto">
                                 <span className={`font-bold ${
-                                  game.winner === cycleData.bot_name ? 'text-green-400' : 
-                                  game.winner && game.winner !== 'Ничья' ? 'text-red-400' : 'text-gray-400'
+                                  game.winner === 'Победа' ? 'text-green-400' : 
+                                  game.winner === 'Поражение' ? 'text-red-400' : 'text-gray-400'
                                 }`}>
-                                  {game.winner === cycleData.bot_name ? 'Победа' : 
-                                   game.winner && game.winner !== 'Ничья' ? 'Поражение' : 'Ничья'}
+                                  {game.winner || 'Ничья'}
                                 </span>
                               </div>
                             </td>
