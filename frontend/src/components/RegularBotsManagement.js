@@ -2923,17 +2923,17 @@ const RegularBotsManagement = () => {
                           }
                         };
 
-                        // Функция для форматирования гемов иконками
+                        // Функция для форматирования гемов иконками (только иконки и количество)
                         const formatGemsWithIcons = (gems) => {
                           if (!gems || typeof gems !== 'object') return '—';
                           
                           const gemIcons = {
-                            'Ruby': '🔴',
-                            'Emerald': '🟢', 
-                            'Sapphire': '🔵',
+                            'Ruby': '🟥',
+                            'Emerald': '🟩', 
+                            'Sapphire': '🟦',
                             'Diamond': '💎',
-                            'Amethyst': '🟣',
-                            'Topaz': '🟡'
+                            'Amethyst': '🟪',
+                            'Topaz': '🟨'
                           };
                           
                           return Object.entries(gems)
@@ -2941,11 +2941,11 @@ const RegularBotsManagement = () => {
                             .join(' ');
                         };
 
-                        // Функция для получения цвета роли пользователя
+                        // Функция для получения цвета роли пользователя (модератор желтый)
                         const getRoleColor = (role) => {
                           const roleColors = {
                             'USER': 'bg-blue-600',
-                            'MODERATOR': 'bg-green-600', 
+                            'MODERATOR': 'bg-yellow-600', 
                             'ADMIN': 'bg-purple-600',
                             'SUPER_ADMIN': 'bg-red-600'
                           };
