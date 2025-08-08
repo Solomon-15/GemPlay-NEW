@@ -2557,7 +2557,7 @@ async def create_human_bot_bet(human_bot: HumanBot):
             creator_move=bot_move,
             creator_move_hash=move_hash,
             creator_salt=salt,
-            bet_amount=bet_amount,
+            bet_amount=int(bet_amount),
             bet_gems=bet_gems,
             is_bot_game=True,
             bot_id=human_bot.id,
