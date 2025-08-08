@@ -17173,138 +17173,93 @@ async def generate_cycle_bets_natural_distribution(
     min_bet: float,
     max_bet: float,
     cycle_games: int,
-    wins_percentage: int,
-    losses_percentage: int,
-    draws_percentage: int,
-    win_percentage: float  # Процент выигрышной суммы (55%)
-) -> List[Dict[str, Any]]:
+    wins_count: int,
+    losses_count: int,
+    draws_count: int,
+    wins_percentage: float,
+    losses_percentage: float,
+    draws_percentage: float
+):
     """
-    Генерирует естественное распределение ставок для бота с новой логикой.
-    
-    Args:
-        bot_id: ID бота
-        min_bet: Минимальная ставка
-        max_bet: Максимальная ставка
-        cycle_games: Количество игр в цикле
-        wins_percentage: Процент побед в цикле
-        losses_percentage: Процент поражений в цикле
-        draws_percentage: Процент ничьих в цикле
-        win_percentage: Процент выигрышной суммы от общей суммы
-    
-    Returns:
-        List[Dict[str, Any]]: Список ставок с результатами
+    НОВАЯ ФОРМУЛА 2.0: Генерирует ставки согласно новой логике ROI.
+    - Баланс игр: wins_count/losses_count/draws_count
+    - Процент исходов: wins_percentage/losses_percentage/draws_percentage  
+    - ROI_active = (profit / active_pool) * 100%
+    - Ничьи НЕ пересоздаются
     """
     try:
-        logger.info(f"🎯 Bot {bot_id}: Generating natural distribution")
-        logger.info(f"    Games: {cycle_games}, Wins: {wins_percentage}%, Losses: {losses_percentage}%, Draws: {draws_percentage}%")
-        logger.info(f"    Win percentage: {win_percentage}%")
+        logger.info(f"🎯 NEW FORMULA: Generating cycle bets for bot {bot_id}")
+        logger.info(f"    Games: {cycle_games}, Range: {min_bet}-{max_bet}")
+        logger.info(f"    Balance: {wins_count}W/{losses_count}L/{draws_count}D")
+        logger.info(f"    Percentages: {wins_percentage}%/{losses_percentage}%/{draws_percentage}%")
         
-        # Рассчитываем количество игр каждого типа
-        total_wins = round(cycle_games * wins_percentage / 100)
-        total_losses = round(cycle_games * losses_percentage / 100)
-        total_draws = round(cycle_games * draws_percentage / 100)
-        
-        # Корректируем если сумма не равна cycle_games
-        total_calculated = total_wins + total_losses + total_draws
-        if total_calculated != cycle_games:
-            diff = cycle_games - total_calculated
-            if diff > 0:
-                # Добавляем недостающие игры к ничьим
-                total_draws += diff
-            else:
-                # Убираем лишние игры из ничьих
-                total_draws = max(0, total_draws + diff)
-        
-        logger.info(f"    Final distribution: {total_wins} wins, {total_losses} losses, {total_draws} draws")
-        
-        # Генерируем естественные суммы ставок
+        # 1. Генерируем базовые ставки с равномерным покрытием диапазона
         base_amounts = generate_uniform_bet_amounts(min_bet, max_bet, cycle_games)
+        total_sum = sum(base_amounts)
+        logger.info(f"    Generated base amounts, total: {total_sum}")
         
-        # Создаем список результатов
-        results = (["win"] * total_wins + 
-                  ["loss"] * total_losses + 
-                  ["draw"] * total_draws)
+        # 2. Рассчитываем целевые суммы по процентам исходов
+        target_wins_sum = round(total_sum * wins_percentage / 100, 2)
+        target_losses_sum = round(total_sum * losses_percentage / 100, 2)
+        target_draws_sum = round(total_sum * draws_percentage / 100, 2)
         
-        # Обрезаем или дополняем до нужного количества
-        while len(results) < cycle_games:
-            results.append("draw")
-        results = results[:cycle_games]
+        logger.info(f"    Target sums: W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
         
-        # Перемешиваем для случайного порядка
-        random.shuffle(results)
+        # 3. Распределяем целевые суммы по балансу игр
+        wins_bets = distribute_amounts_naturally(target_wins_sum, wins_count, min_bet, max_bet)
+        losses_bets = distribute_amounts_naturally(target_losses_sum, losses_count, min_bet, max_bet)
+        draws_bets = distribute_amounts_naturally(target_draws_sum, draws_count, min_bet, max_bet)
         
-        # ОБРАБОТКА НИЧЬИХ: Пересоздание ставок согласно логике 55/45
-        natural_total = sum(base_amounts)
-        
-        # Рассчитываем суммы для выигрышей и проигрышей после пересоздания ничьих
-        final_wins_count = total_wins + (total_draws // 2) + (total_draws % 2)  # Округляем ничьи в сторону побед
-        final_losses_count = total_losses + (total_draws // 2)
-        
-        win_target_amount = natural_total * (win_percentage / 100)
-        loss_target_amount = natural_total - win_target_amount
-        
-        logger.info(f"    After draws processing: {final_wins_count} final wins, {final_losses_count} final losses")
-        logger.info(f"    Target amounts: wins={win_target_amount}, losses={loss_target_amount}")
-        
-        # Распределяем суммы между выигрышными и проигрышными ставками
-        win_amounts = distribute_amounts_naturally(win_target_amount, final_wins_count, min_bet, max_bet)
-        loss_amounts = distribute_amounts_naturally(loss_target_amount, final_losses_count, min_bet, max_bet)
-        
-        # Создаем финальный список ставок
+        # 4. Формируем финальный массив ставок
         all_bets = []
-        win_idx = 0
-        loss_idx = 0
         
-        for i in range(cycle_games):
-            original_result = results[i] if i < len(results) else "draw"
-            
-            if original_result == "win":
-                amount = win_amounts[win_idx] if win_idx < len(win_amounts) else int((min_bet + max_bet) / 2)
-                all_bets.append({"result": "win", "amount": amount, "index": i})
-                win_idx += 1
-            elif original_result == "loss":
-                amount = loss_amounts[loss_idx] if loss_idx < len(loss_amounts) else int((min_bet + max_bet) / 2)
-                all_bets.append({"result": "loss", "amount": amount, "index": i})
-                loss_idx += 1
-            else:  # draw
-                # Ничьи пересоздаются как win/loss в соотношении согласно логике
-                if (i % 2 == 0 and win_idx < len(win_amounts)) or loss_idx >= len(loss_amounts):
-                    amount = win_amounts[win_idx] if win_idx < len(win_amounts) else int((min_bet + max_bet) / 2)
-                    all_bets.append({"result": "win", "amount": amount, "index": i})
-                    win_idx += 1
-                else:
-                    amount = loss_amounts[loss_idx] if loss_idx < len(loss_amounts) else int((min_bet + max_bet) / 2)
-                    all_bets.append({"result": "loss", "amount": amount, "index": i})
-                    loss_idx += 1
-        
-        # Логирование результатов
-        actual_wins = sum(1 for bet in all_bets if bet["result"] == "win")
-        actual_losses = sum(1 for bet in all_bets if bet["result"] == "loss")
-        actual_draws = sum(1 for bet in all_bets if bet["result"] == "draw")
-        total_amount = sum(bet["amount"] for bet in all_bets)
-        
-        logger.info(f"🎯 Bot {bot_id}: Natural distribution generated - {len(all_bets)} bets")
-        logger.info(f"    Results: {actual_wins} wins, {actual_losses} losses, {actual_draws} draws")
-        logger.info(f"    Total amount: {total_amount}")
-        
-        return all_bets
-        
-    except Exception as e:
-        logger.error(f"Error in natural distribution for bot {bot_id}: {e}")
-        # Простой fallback
-        fallback_bets = []
-        results = ["win"] * (cycle_games // 3) + ["loss"] * (cycle_games // 3) + ["draw"] * (cycle_games - 2 * (cycle_games // 3))
-        random.shuffle(results)
-        
-        average_bet = (min_bet + max_bet) / 2
-        for i, result in enumerate(results[:cycle_games]):
-            fallback_bets.append({
-                "result": result,
-                "amount": round(average_bet),
+        # Добавляем победы
+        for i in range(wins_count):
+            all_bets.append({
+                "result": "win",
+                "amount": wins_bets[i] if i < len(wins_bets) else min_bet,
                 "index": i
             })
+            
+        # Добавляем поражения  
+        for i in range(losses_count):
+            all_bets.append({
+                "result": "loss", 
+                "amount": losses_bets[i] if i < len(losses_bets) else min_bet,
+                "index": wins_count + i
+            })
+            
+        # Добавляем ничьи (НЕ пересоздаются!)
+        for i in range(draws_count):
+            all_bets.append({
+                "result": "draw",
+                "amount": draws_bets[i] if i < len(draws_bets) else min_bet, 
+                "index": wins_count + losses_count + i
+            })
         
-        return fallback_bets
+        # Перемешиваем для случайного порядка
+        random.shuffle(all_bets)
+        
+        # 5. Рассчитываем финальную статистику и ROI
+        actual_wins_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "win")
+        actual_losses_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "loss") 
+        actual_draws_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "draw")
+        
+        active_pool = actual_wins_sum + actual_losses_sum
+        profit = actual_wins_sum - actual_losses_sum
+        roi_active = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
+        
+        logger.info(f"✅ NEW FORMULA results:")
+        logger.info(f"    Generated {len(all_bets)} bets: {wins_count}W/{losses_count}L/{draws_count}D")
+        logger.info(f"    Actual sums: W={actual_wins_sum}, L={actual_losses_sum}, D={actual_draws_sum}")
+        logger.info(f"    Active pool: {active_pool}, Profit: {profit}")
+        logger.info(f"    ROI_active: {roi_active}%")
+        
+        return all_bets
+
+    except Exception as e:
+        logger.error(f"❌ Error generating NEW FORMULA cycle bets: {e}")
+        return []
 
 def normalize_amounts_to_exact_sum(base_amounts: List[float], target_sum: float, min_bet: float, max_bet: float) -> List[int]:
     """
