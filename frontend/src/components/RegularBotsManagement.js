@@ -2444,14 +2444,39 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Автоматически рассчитанная сумма за цикл */}
-              <div className="border border-blue-500 bg-blue-900 bg-opacity-20 rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-blue-400 mb-2">Автоматический расчёт</h4>
-                <div className="text-lg font-bold text-white">
-                  Сумма за цикл: ${botForm.cycle_total_amount}
-                </div>
-                <div className="text-sm text-blue-300 mt-1">
-                  Рассчитывается по формуле: (Мин. ставка + Макс. ставка) / 2 × Игр в цикле
+              {/* НОВАЯ ЛОГИКА: Превью ROI расчетов */}
+              <div className="border border-purple-500 bg-purple-900 bg-opacity-20 rounded-lg p-4">
+                <h4 className="font-rajdhani font-bold text-purple-400 mb-3">📊 Превью ROI расчетов</h4>
+                {(() => {
+                  const preview = calculateCycleAmounts();
+                  return (
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <div className="text-text-secondary">Общая сумма цикла:</div>
+                        <div className="text-white font-bold">${preview.total}</div>
+                      </div>
+                      <div>
+                        <div className="text-text-secondary">Активный пул:</div>
+                        <div className="text-purple-300 font-bold">${preview.active_pool}</div>
+                      </div>
+                      <div>
+                        <div className="text-text-secondary">Прибыль:</div>
+                        <div className={`font-bold ${preview.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          ${preview.profit}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-text-secondary">ROI_active:</div>
+                        <div className={`font-bold text-lg ${preview.roi_active >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {preview.roi_active}%
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div className="text-xs text-purple-200 mt-3 border-t border-purple-700 pt-2">
+                  <div><strong>Формула ROI:</strong> (Прибыль ÷ Активный пул) × 100%</div>
+                  <div><strong>Активный пул:</strong> Сумма побед + Сумма поражений (ничьи не участвуют в ROI)</div>
                 </div>
               </div>
 
