@@ -1969,16 +1969,15 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
         draws_percentage = bot_doc.get("draws_percentage", 30)
         
         # НОВАЯ ЛОГИКА: Генерируем естественное распределение ставок
-        all_cycle_bets = await generate_cycle_bets_uniform_distribution(
+        all_cycle_bets = await generate_cycle_bets_natural_distribution(
             bot_id=bot_id,
             min_bet=min_bet,
             max_bet=max_bet,
             cycle_games=cycle_games,
-            total_wins=round(cycle_games * wins_percentage / 100),  # Используем wins_percentage от бота
-            total_losses=round(cycle_games * losses_percentage / 100),  # Используем losses_percentage от бота
-            win_amount_total=exact_total_amount * win_percentage / 100,
-            loss_amount_total=exact_total_amount * (100 - win_percentage) / 100,
-            exact_total=exact_total_amount
+            wins_percentage=wins_percentage,
+            losses_percentage=losses_percentage,  
+            draws_percentage=draws_percentage,
+            win_percentage=win_percentage  # Процент выигрышной суммы (55%)
         )
         
         # Создаем все игры в базе данных
