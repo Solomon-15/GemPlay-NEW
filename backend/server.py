@@ -7920,7 +7920,7 @@ class RegularBotSystem:
                 creator_type="bot",
                 creator_move_hash=move_hash,
                 creator_salt=salt,
-                bet_amount=bet_params["total_value"],
+                bet_amount=int(bet_params["total_value"]),
                 bet_gems=bet_params["bet_gems"],
                 status=GameStatus.WAITING,
                 is_bot_game=True,
