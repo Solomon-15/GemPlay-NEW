@@ -545,6 +545,9 @@ class Bot(BaseModel):
     creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
     profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
     
+    # Реальная сумма цикла (вычисляется автоматически)
+    cycle_total_amount: float = 0.0  # Реальная сумма всех ставок в цикле
+    
     last_game_time: Optional[datetime] = None
     last_bet_time: Optional[datetime] = None
     
