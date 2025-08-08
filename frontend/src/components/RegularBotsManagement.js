@@ -309,6 +309,48 @@ const RegularBotsManagement = () => {
   const calculateCycleTotalAmount = () => {
     return calculateCycleAmounts().total;
   };
+  
+  // НОВАЯ ФУНКЦИЯ: Автосвязь баланса игр
+  const updateBalanceGames = (newCycleGames, autoUpdate = true) => {
+    if (!autoUpdate) return;
+    
+    const currentTotal = botForm.wins_count + botForm.losses_count + botForm.draws_count;
+    if (currentTotal === 0) return;
+    
+    const ratio = newCycleGames / currentTotal;
+    
+    const newWins = Math.round(botForm.wins_count * ratio);
+    const newLosses = Math.round(botForm.losses_count * ratio);
+    const newDraws = newCycleGames - newWins - newLosses;
+    
+    // Убеждаемся что все значения положительные
+    const finalWins = Math.max(1, newWins);
+    const finalLosses = Math.max(1, newLosses);  
+    const finalDraws = Math.max(0, newDraws);
+    
+    // Корректируем если сумма не совпадает
+    const totalCheck = finalWins + finalLosses + finalDraws;
+    const diff = newCycleGames - totalCheck;
+    
+    setBotForm(prev => ({
+      ...prev,
+      wins_count: finalWins,
+      losses_count: finalLosses,
+      draws_count: Math.max(0, finalDraws + diff)
+    }));
+  };
+  
+  // Валидация процентов исходов (должны быть = 100%)
+  const validatePercentages = () => {
+    const total = botForm.wins_percentage + botForm.losses_percentage + botForm.draws_percentage;
+    return Math.abs(total - 100) < 0.1; // Допускаем погрешность 0.1%
+  };
+  
+  // Валидация баланса игр (должны совпадать с cycle_games)
+  const validateBalanceGames = () => {
+    const total = botForm.wins_count + botForm.losses_count + botForm.draws_count;
+    return total === botForm.cycle_games;
+  };
 
   // Update cycle total amount when relevant fields change
   useEffect(() => {
