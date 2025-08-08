@@ -16620,8 +16620,8 @@ async def get_regular_bots_list(
                 "cycle_progress": cycle_progress,
                 "remaining_slots": remaining_slots,
                 
-                # Corrected field mappings for proper sync with modal
-                "cycle_total_amount": bot_doc.get('cycle_total_amount', 0),
+                # Corrected field mappings for proper sync with modal - РЕАЛЬНАЯ СУММА ЦИКЛА
+                "cycle_total_amount": await calculate_real_cycle_total_amount(bot_doc),
                 "min_bet_amount": bot_doc.get('min_bet_amount', 1.0),
                 "max_bet_amount": bot_doc.get('max_bet_amount', 50.0),
                 "win_percentage": bot_doc.get('win_percentage', 55.0),
