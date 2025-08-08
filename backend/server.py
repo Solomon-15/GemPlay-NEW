@@ -5966,7 +5966,7 @@ async def create_game(
             creator_move=game_data.move,
             creator_move_hash=move_hash,
             creator_salt=salt,
-            bet_amount=total_bet_amount,
+            bet_amount=int(total_bet_amount),
             bet_gems=game_data.bet_gems,
             status=GameStatus.WAITING
         )
