@@ -1984,7 +1984,16 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-accent-primary font-roboto text-sm">
-                        {Math.round(((bot.min_bet_amount || bot.min_bet || 1) + (bot.max_bet_amount || bot.max_bet || 100)) / 2 * (bot.cycle_games || 12))}
+                        {bot.cycle_total_info ? (
+                          <div title={`Общая сумма: ${bot.cycle_total_info.total_sum}, Ничьи: ${bot.cycle_total_info.draws_sum}`}>
+                            <span className="font-bold">{bot.cycle_total_info.active_pool}</span>
+                            <div className="text-xs text-gray-400">
+                              (из {bot.cycle_total_info.total_sum}, ничьи: {bot.cycle_total_info.draws_sum})
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="font-bold">{bot.cycle_total_amount || 0}</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
