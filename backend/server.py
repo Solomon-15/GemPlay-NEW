@@ -15779,14 +15779,16 @@ async def create_regular_bots(
 ):
     """Create regular bots (admin only) - ОБНОВЛЕНО для новой системы."""
     try:
-        min_bet = bot_config.get("min_bet_amount", 1.0)  # 1-10000
-        max_bet = bot_config.get("max_bet_amount", 50.0)  # 1-10000
-        win_percentage = bot_config.get("win_percentage", 55.0)  # Соотношение сумм выигрыша
+        min_bet = bot_config.get("min_bet_amount", 1.0)  # 1-100
+        max_bet = bot_config.get("max_bet_amount", 100.0)  # 1-100
         
-        # Новые поля для процентов исходов игр
-        wins_percentage = bot_config.get("wins_percentage", 35)  # % побед
-        losses_percentage = bot_config.get("losses_percentage", 35)  # % поражений
-        draws_percentage = bot_config.get("draws_percentage", 30)  # % ничьих
+        # НОВАЯ ФОРМУЛА 2.0: Убираем win_percentage, добавляем баланс игр
+        wins_count = bot_config.get("wins_count", 6)          # Баланс игр - победы
+        losses_count = bot_config.get("losses_count", 6)      # Баланс игр - поражения
+        draws_count = bot_config.get("draws_count", 4)        # Баланс игр - ничьи
+        wins_percentage = bot_config.get("wins_percentage", 44.0)   # % побед  
+        losses_percentage = bot_config.get("losses_percentage", 36.0) # % поражений
+        draws_percentage = bot_config.get("draws_percentage", 20.0)   # % ничьих
         
         cycle_games = bot_config.get("cycle_games", 12)  # 1-66
         creation_mode = bot_config.get("creation_mode", "queue-based")  # Значение по умолчанию
@@ -15823,7 +15825,9 @@ async def create_regular_bots(
             bot_type=BotType.REGULAR,
             min_bet_amount=min_bet,
             max_bet_amount=max_bet,
-            win_percentage=win_percentage,
+            wins_count=wins_count,
+            losses_count=losses_count,
+            draws_count=draws_count,
             wins_percentage=wins_percentage,
             losses_percentage=losses_percentage,
             draws_percentage=draws_percentage,
