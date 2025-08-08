@@ -184,7 +184,7 @@ def create_roi_test_bot():
     
     # Create Regular bot with ROI 9% preset: 16 games, min=1, max=50
     bot_data = {
-        "name": "ROI_Test_Bot_2",
+        "name": "ROI_Test_Bot_3",
         "min_bet_amount": 1.0,
         "max_bet_amount": 50.0,
         "cycle_games": 16,
