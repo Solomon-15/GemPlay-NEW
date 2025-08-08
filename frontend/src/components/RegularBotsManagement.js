@@ -2552,7 +2552,7 @@ const RegularBotsManagement = () => {
                       <div>
                         <div className="text-text-secondary">Прибыль:</div>
                         <div className={`font-bold ${preview.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          ${preview.profit}
+                          {preview.profit}
                         </div>
                       </div>
                       <div>
