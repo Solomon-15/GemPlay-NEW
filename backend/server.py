@@ -17960,7 +17960,8 @@ async def get_bot_cycle_history(
         total_losses = 0
         
         for game_doc in cycle_games:
-            game_bet = float(game_doc.get("total_bet_amount", 0))
+            # ИСПРАВЛЕНИЕ: Правильно получаем сумму ставки
+            game_bet = float(game_doc.get("bet_amount", game_doc.get("total_bet_amount", 0)))
             total_bet_amount += game_bet
             
             game_status = game_doc.get("winner_id")
@@ -17970,6 +17971,7 @@ async def get_bot_cycle_history(
                 total_winnings += game_bet * 2  # Simplified calculation
             elif game_status is None or game_status == "DRAW":
                 draws_count += 1
+                # При ничье ставка возвращается (нет потерь)
             else:
                 losses_count += 1
                 total_losses += game_bet
