@@ -3410,6 +3410,193 @@ const RegularBotsManagement = () => {
         </div>
       )}
 
+      {/* Модальное окно деталей цикла */}
+      {isCycleDetailsModalOpen && cycleDetailsData && selectedCycleForDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-green-500 border-opacity-50 rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-green-400">
+                📈 История цикла: {cycleDetailsData.bot_name} — Цикл #{cycleDetailsData.cycle_number}
+              </h3>
+              <button
+                onClick={() => setIsCycleDetailsModalOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Краткая статистика цикла */}
+            <div className="bg-surface-sidebar border border-border-primary rounded-lg p-4 mb-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Дата завершения</div>
+                  <div className="text-white font-roboto text-sm">
+                    {new Date(cycleDetailsData.completed_at).toLocaleDateString('ru-RU')}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Длительность</div>
+                  <div className="text-white font-roboto text-sm">{cycleDetailsData.duration}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Игры</div>
+                  <div className="text-accent-primary font-roboto text-sm font-bold">
+                    {cycleDetailsData.total_games}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Винрейт</div>
+                  <div className="text-orange-400 font-roboto text-sm font-bold">
+                    {cycleDetailsData.win_percentage}%
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">W/L/D</div>
+                  <div className="text-white font-roboto text-sm">
+                    <span className="text-green-400">{cycleDetailsData.wins}</span>/
+                    <span className="text-red-400">{cycleDetailsData.losses}</span>/
+                    <span className="text-yellow-400">{cycleDetailsData.draws}</span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Сумма ставок</div>
+                  <div className="text-white font-roboto text-sm">${Math.round(cycleDetailsData.total_bet)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Выигрыши</div>
+                  <div className="text-green-400 font-roboto text-sm font-bold">
+                    ${Math.round(cycleDetailsData.total_winnings)}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Чистая прибыль</div>
+                  <div className={`font-roboto text-sm font-bold ${
+                    cycleDetailsData.profit >= 0 ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    ${Math.round(cycleDetailsData.profit)}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Детали всех ставок цикла */}
+            <div className="mb-4">
+              <h4 className="text-white font-rajdhani text-lg font-bold mb-3">
+                Все ставки цикла ({cycleDetailsData.bets?.length || 0})
+              </h4>
+              
+              {cycleDetailsData.bets && cycleDetailsData.bets.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-surface-sidebar">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          #
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          Дата
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          Ставка
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          Ход
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          Против
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          Результат
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          Выплата
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          P&L
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border-primary">
+                      {cycleDetailsData.bets.map((bet, index) => (
+                        <tr key={bet.id} className="hover:bg-surface-sidebar hover:bg-opacity-30">
+                          <td className="px-3 py-2 text-white font-roboto text-sm">
+                            {bet.game_number}
+                          </td>
+                          <td className="px-3 py-2 text-text-secondary font-roboto text-xs">
+                            {new Date(bet.created_at).toLocaleString('ru-RU', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </td>
+                          <td className="px-3 py-2 text-white font-roboto text-sm">
+                            ${bet.bet_amount}
+                          </td>
+                          <td className="px-3 py-2 text-white font-roboto text-sm">
+                            {bet.move === 'rock' ? '🪨' : bet.move === 'paper' ? '📄' : '✂️'}
+                          </td>
+                          <td className="px-3 py-2 text-white font-roboto text-sm">
+                            {bet.opponent_move === 'rock' ? '🪨' : bet.opponent_move === 'paper' ? '📄' : '✂️'}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-roboto font-bold ${
+                              bet.result === 'win' 
+                                ? 'bg-green-500 bg-opacity-20 text-green-400' 
+                                : bet.result === 'loss'
+                                ? 'bg-red-500 bg-opacity-20 text-red-400'
+                                : 'bg-yellow-500 bg-opacity-20 text-yellow-400'
+                            }`}>
+                              {bet.result === 'win' ? 'Выигрыш' : bet.result === 'loss' ? 'Проигрыш' : 'Ничья'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-white font-roboto text-sm">
+                            {bet.result === 'win' ? `$${Math.round(bet.payout)}` : '—'}
+                          </td>
+                          <td className="px-3 py-2">
+                            <span className={`font-roboto text-sm font-bold ${
+                              bet.result === 'win' 
+                                ? 'text-green-400' 
+                                : bet.result === 'loss'
+                                ? 'text-red-400'
+                                : 'text-text-secondary'
+                            }`}>
+                              {bet.result === 'win' 
+                                ? `+$${Math.round(bet.payout - bet.bet_amount)}` 
+                                : bet.result === 'loss'
+                                ? `-$${bet.bet_amount}`
+                                : '$0'
+                              }
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center text-text-secondary py-4">
+                  <p>Нет данных о ставках для этого цикла</p>
+                </div>
+              )}
+            </div>
+
+            {/* Кнопка закрытия */}
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsCycleDetailsModalOpen(false)}
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-rajdhani font-bold"
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Модальное окно подтверждения */}
       <ConfirmationModal {...confirmationModal} />
       
