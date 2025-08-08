@@ -271,8 +271,7 @@ def test_refresh_token_endpoint(refresh_token: str):
     # Test refresh endpoint
     success, response_data, details = make_request(
         "POST",
-        "/auth/refresh",
-        params={"refresh_token": refresh_token}
+        f"/auth/refresh?refresh_token={refresh_token}"
     )
     
     if not success or not response_data:
