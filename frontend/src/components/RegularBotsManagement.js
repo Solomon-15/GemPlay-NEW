@@ -2264,7 +2264,7 @@ const RegularBotsManagement = () => {
                       max="100"
                       value={botForm.wins_percentage}
                       onChange={(e) => {
-                        const wins = parseInt(e.target.value) || 35;
+                        const wins = parseInt(e.target.value) || 44;
                         const newForm = {...botForm, wins_percentage: wins};
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
