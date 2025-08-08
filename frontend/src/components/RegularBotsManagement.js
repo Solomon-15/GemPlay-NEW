@@ -254,16 +254,37 @@ const RegularBotsManagement = () => {
     };
   });
 
-  // Calculate cycle total amount automatically
+  // Calculate cycle total amount automatically - НОВАЯ ФОРМУЛА
   const calculateCycleTotalAmount = () => {
     if (!botForm.min_bet_amount || !botForm.max_bet_amount || !botForm.cycle_games) {
       return 0;
     }
     
-    const averageValue = (botForm.min_bet_amount + botForm.max_bet_amount) / 2;
-    const totalAmount = Math.round(averageValue * botForm.cycle_games);
+    // НОВАЯ ЛОГИКА: Имитация естественного распределения для предпросмотра
+    // Используем более точную формулу с учетом равномерного распределения
+    const min_bet = parseFloat(botForm.min_bet_amount);
+    const max_bet = parseFloat(botForm.max_bet_amount);
+    const games = parseInt(botForm.cycle_games);
     
-    return totalAmount;
+    // Имитируем равномерное распределение по диапазону
+    let estimatedTotal = 0;
+    
+    // 25% ставок - малые (1-30% диапазона)
+    const smallBetsCount = Math.max(1, Math.round(games * 0.25));
+    const smallAvg = min_bet + (max_bet - min_bet) * 0.15;
+    estimatedTotal += smallBetsCount * smallAvg;
+    
+    // 50% ставок - средние (30-70% диапазона)
+    const mediumBetsCount = Math.round(games * 0.5);
+    const mediumAvg = min_bet + (max_bet - min_bet) * 0.5;
+    estimatedTotal += mediumBetsCount * mediumAvg;
+    
+    // 25% ставок - большие (70-100% диапазона)
+    const largeBetsCount = games - smallBetsCount - mediumBetsCount;
+    const largeAvg = min_bet + (max_bet - min_bet) * 0.85;
+    estimatedTotal += largeBetsCount * largeAvg;
+    
+    return Math.round(estimatedTotal);
   };
 
   // Update cycle total amount when relevant fields change
