@@ -151,8 +151,7 @@ const AdminPanel = ({ user, onClose }) => {
       console.error('❌ AdminPanel: Error loading statistics:', error);
       
       if (error.response?.status === 401) {
-        console.log('🔒 AdminPanel: Token expired (401), handling logout');
-        handleTokenExpired();
+        console.log('🔒 AdminPanel: Token expired (401), will be handled by interceptor');
         return;
       }
       
