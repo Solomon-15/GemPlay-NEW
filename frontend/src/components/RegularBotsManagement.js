@@ -2547,7 +2547,7 @@ const RegularBotsManagement = () => {
                       </div>
                       <div>
                         <div className="text-text-secondary">Активный пул:</div>
-                        <div className="text-purple-300 font-bold">${preview.active_pool}</div>
+                        <div className="text-purple-300 font-bold">{preview.active_pool}</div>
                       </div>
                       <div>
                         <div className="text-text-secondary">Прибыль:</div>
