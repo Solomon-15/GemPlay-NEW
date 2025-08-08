@@ -358,19 +358,37 @@ const RegularBotsManagement = () => {
   const [newPresetName, setNewPresetName] = useState('');
   
   const defaultPresets = [
-    { name: "По умолчанию", wins: 44.0, losses: 36.0, draws: 20.0 },
-    { name: "Агрессивный", wins: 50.0, losses: 30.0, draws: 20.0 },
-    { name: "Консервативный", wins: 40.0, losses: 40.0, draws: 20.0 },
-    { name: "Рисковый", wins: 55.0, losses: 25.0, draws: 20.0 },
-    { name: "Сбалансированный", wins: 45.0, losses: 35.0, draws: 20.0 }
+    { name: "Custom", wins: null, losses: null, draws: null, custom: true },
+    { name: "ROI 2%", wins: 39.3, losses: 37.7, draws: 23.0 },
+    { name: "ROI 3%", wins: 40.7, losses: 38.3, draws: 21.0 },
+    { name: "ROI 4%", wins: 41.6, losses: 38.4, draws: 20.0 },
+    { name: "ROI 5%", wins: 41.5, losses: 37.5, draws: 21.0 },
+    { name: "ROI 6%", wins: 41.9, losses: 37.1, draws: 21.0 },
+    { name: "ROI 7%", wins: 38.0, losses: 33.0, draws: 29.0 },
+    { name: "ROI 8%", wins: 38.9, losses: 33.1, draws: 28.0 },
+    { name: "ROI 9%", wins: 42.0, losses: 35.0, draws: 23.0 },
+    { name: "ROI 10%", wins: 38.5, losses: 31.5, draws: 30.0 },
+    { name: "ROI 11%", wins: 41.6, losses: 33.4, draws: 25.0 },
+    { name: "ROI 12%", wins: 39.8, losses: 31.2, draws: 29.0 },
+    { name: "ROI 13%", wins: 44.6, losses: 34.4, draws: 21.0 },
+    { name: "ROI 14%", wins: 41.6, losses: 31.4, draws: 27.0 },
+    { name: "ROI 15%", wins: 46.0, losses: 34.0, draws: 20.0 },
+    { name: "ROI 20%", wins: 47.4, losses: 31.6, draws: 21.0 }
   ];
-  
+
+  const [selectedPreset, setSelectedPreset] = useState("Custom");
+
   const applyPreset = (preset) => {
+    if (!preset || preset.custom) {
+      setSelectedPreset("Custom");
+      return;
+    }
+    setSelectedPreset(preset.name);
     setBotForm(prev => ({
       ...prev,
-      wins_percentage: preset.wins,
-      losses_percentage: preset.losses,
-      draws_percentage: preset.draws
+      wins_percentage: Number(preset.wins.toFixed(1)),
+      losses_percentage: Number(preset.losses.toFixed(1)),
+      draws_percentage: Number(preset.draws.toFixed(1))
     }));
   };
   
