@@ -408,6 +408,37 @@ const RegularBotsManagement = () => {
     setShowPresetModal(false);
   };
 
+  // Пересчет counts по процентам (Largest Remainder)
+  const recalcCountsFromPercents = (games, winsP, lossesP, drawsP) => {
+    const N = Math.max(1, parseInt(games) || 1);
+    const w = (winsP / 100) * N;
+    const l = (lossesP / 100) * N;
+    const d = (drawsP / 100) * N;
+    let W = Math.floor(w), L = Math.floor(l), D = Math.floor(d);
+    let R = N - (W + L + D);
+    const remainders = [
+      { key: 'W', rem: w - W },
+      { key: 'L', rem: l - L },
+      { key: 'D', rem: d - D }
+    ].sort((a, b) => b.rem - a.rem);
+    let i = 0;
+    while (R > 0) {
+      const k = remainders[i % remainders.length].key;
+      if (k === 'W') W += 1; else if (k === 'L') L += 1; else D += 1;
+      R -= 1; i += 1;
+    }
+    // гарантируем неотрицательность и точную сумму
+    W = Math.max(0, W); L = Math.max(0, L); D = Math.max(0, D);
+    const total = W + L + D;
+    if (total !== N) {
+      const diff = N - total;
+      if (diff !== 0) {
+        if (W >= L && W >= D) W += diff; else if (L >= W && L >= D) L += diff; else D += diff;
+      }
+    }
+    return { W, L, D };
+  };
+
   // Update cycle total amount when relevant fields change
   useEffect(() => {
     const newAmount = calculateCycleTotalAmount();
