@@ -2386,7 +2386,7 @@ const RegularBotsManagement = () => {
                       max="100"
                       value={botForm.draws_percentage}
                       onChange={(e) => {
-                        const draws = parseInt(e.target.value) || 30;
+                        const draws = parseInt(e.target.value) || 20;
                         const newForm = {...botForm, draws_percentage: draws};
                         setBotForm(newForm);
                         // Сохраняем в localStorage
