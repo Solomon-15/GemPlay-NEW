@@ -197,7 +197,7 @@ def create_roi_test_bot():
         "creation_mode": "queue-based"
     }
     
-    print(f"   📝 Creating Regular bot 'ROI_Test_Bot_2' with ROI 9% preset")
+    print(f"   📝 Creating Regular bot 'ROI_Test_Bot_3' with ROI 9% preset")
     print(f"   📊 Parameters: 16 games, min=1, max=50, wins={distribution['wins']}, losses={distribution['losses']}, draws={distribution['draws']}")
     print(f"   🎯 Expected ROI: 9% using Largest Remainder distribution")
     
