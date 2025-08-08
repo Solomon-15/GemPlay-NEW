@@ -150,7 +150,7 @@ def test_token_creation():
     """Test 1: POST /api/auth/login - проверить создание токенов с правильным временем жизни"""
     print(f"\n{Colors.MAGENTA}🧪 Test 1: Token Creation with 30-minute Lifespan{Colors.END}")
     
-    print(f"   📝 Testing POST /api/auth/login with user@gemplay.com / User123!")
+    print(f"   📝 Testing POST /api/auth/login with admin@gemplay.com / Admin123!")
     
     # Test login endpoint
     success, response_data, details = make_request(
