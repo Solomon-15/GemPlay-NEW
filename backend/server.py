@@ -16100,7 +16100,7 @@ async def create_bot_bet(bot: Bot) -> bool:
         # Получаем параметры бота
         min_bet = bot_doc.get("min_bet_amount", 1.0)
         max_bet = bot_doc.get("max_bet_amount", 50.0)
-        win_percentage = bot_doc.get("win_percentage", 55.0)  # Соотношение сумм
+        # УДАЛЕНО: win_percentage (наследие)
         wins_pct = bot_doc.get("wins_percentage", 35)  # % побед
         losses_pct = bot_doc.get("losses_percentage", 35)  # % поражений  
         draws_pct = bot_doc.get("draws_percentage", 30)  # % ничьих
@@ -16122,9 +16122,9 @@ async def create_bot_bet(bot: Bot) -> bool:
             
         logger.info(f"🎯 Bot {bot.id}: planned wins={total_wins}, losses={total_losses} (total={total_wins + total_losses})")
         
-        # Рассчитываем суммы для выигрышных и проигрышных ставок
-        win_amount_total = total_cycle_amount * win_percentage / 100  # 55% от общей суммы
-        loss_amount_total = total_cycle_amount - win_amount_total  # Остаток (45%)
+        # Равномерное распределение сумм между выигрышными и проигрышными ставками
+        win_amount_total = total_cycle_amount * total_wins / cycle_games if cycle_games > 0 else 0
+        loss_amount_total = total_cycle_amount - win_amount_total
         
         logger.info(f"🎯 Bot {bot.id}: win_amount_total={win_amount_total}, loss_amount_total={loss_amount_total}")
         
