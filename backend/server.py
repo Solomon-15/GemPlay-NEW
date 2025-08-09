@@ -17850,8 +17850,7 @@ async def update_individual_bot_settings(
             raise HTTPException(status_code=400, detail="Max bet amount must be between 1 and 10000")
         if min_bet_amount is not None and max_bet_amount is not None and min_bet_amount >= max_bet_amount:
             raise HTTPException(status_code=400, detail="Min bet must be less than max bet")
-        if win_percentage is not None and (win_percentage < 0 or win_percentage > 100):
-            raise HTTPException(status_code=400, detail="Win percentage must be between 0 and 100")
+
         if cycle_games is not None and (cycle_games < 1 or cycle_games > 66):
             raise HTTPException(status_code=400, detail="Cycle games must be between 1 and 66")
         if pause_between_cycles is not None and (pause_between_cycles < 1 or pause_between_cycles > 300):
