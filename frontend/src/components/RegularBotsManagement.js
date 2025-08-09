@@ -98,9 +98,9 @@ const RegularBotsManagement = () => {
           aValue = a.bot_profit_amount || 0;
           bValue = b.bot_profit_amount || 0;
           break;
-        case 'win_percentage':
-          aValue = a.win_percentage || 0;
-          bValue = b.win_percentage || 0;
+        case 'roi':
+          aValue = (a.bot_profit_percent !== undefined ? a.bot_profit_percent : 0);
+          bValue = (b.bot_profit_percent !== undefined ? b.bot_profit_percent : 0);
           break;
         case 'cycle_games':
           aValue = a.cycle_games || 0;
