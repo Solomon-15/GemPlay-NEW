@@ -4027,7 +4027,7 @@ const RegularBotsManagement = () => {
                 <div className="text-center">
                   <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Винрейт</div>
                   <div className="text-orange-400 font-roboto text-sm font-bold">
-                    {cycleDetailsData.win_percentage}%
+                    {cycleDetailsData.win_rate}%
                   </div>
                 </div>
                 <div className="text-center">
