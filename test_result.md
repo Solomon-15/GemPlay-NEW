@@ -230,7 +230,7 @@ frontend:
 backend:
   - task: "ROI UI Changes Validation - Backend Testing"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "critical"
