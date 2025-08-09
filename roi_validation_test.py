@@ -424,7 +424,7 @@ def print_concise_summary():
     print(f"   {Colors.CYAN}📈 Success Rate: {success_rate:.1f}%{Colors.END}")
     
     # Find specific test results
-    roi_field_test = next((test for test in test_results["tests"] if "roi_active field" in test["name"].lower()), None)
+    roi_field_test = next((test for test in test_results["tests"] if "roi active field" in test["name"].lower()), None)
     integer_amounts_test = next((test for test in test_results["tests"] if "integer bet amounts" in test["name"].lower()), None)
     
     print(f"\n{Colors.BOLD}🎯 SPECIFIC VALIDATION RESULTS:{Colors.END}")
