@@ -17895,8 +17895,7 @@ async def update_individual_bot_settings(
             update_fields["min_bet_amount"] = min_bet_amount
         if max_bet_amount is not None:
             update_fields["max_bet_amount"] = max_bet_amount
-        if win_percentage is not None:
-            update_fields["win_percentage"] = win_percentage
+
         if cycle_games is not None:
             update_fields["cycle_games"] = cycle_games
         if pause_between_cycles is not None:
