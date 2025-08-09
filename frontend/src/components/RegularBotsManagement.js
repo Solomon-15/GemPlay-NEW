@@ -890,24 +890,44 @@ const RegularBotsManagement = () => {
     try {
       const response = await axios.get(`${API}/admin/bots/${bot.id}`, getApiConfig());
       
-      // Загружаем сохраненные проценты из localStorage согласно требованиям
-      const savedPercentages = getPercentagesFromStorage();
+      const b = response.data.bot || {};
       
       setBotForm({
-        name: response.data.bot.name || '',
-        min_bet_amount: response.data.bot.min_bet_amount || 1.0,
-        max_bet_amount: response.data.bot.max_bet_amount || 50.0,
-        win_percentage: response.data.bot.win_percentage || response.data.bot.win_rate * 100 || 55.0,
-        // Используем сохраненные значения из localStorage, а не значения бота
-        wins_percentage: savedPercentages.wins_percentage,
-        losses_percentage: savedPercentages.losses_percentage,
-        draws_percentage: savedPercentages.draws_percentage,
-        cycle_games: response.data.bot.cycle_games || 12,
-        pause_between_cycles: response.data.bot.pause_between_cycles || 5,
-        pause_on_draw: response.data.bot.pause_on_draw || 1,
-        creation_mode: response.data.bot.creation_mode || 'queue-based',
-        profit_strategy: response.data.bot.profit_strategy || 'balanced',
-        cycle_total_amount: response.data.bot.cycle_total_amount || 0
+        name: b.name || '',
+        min_bet_amount: b.min_bet_amount ?? 1.0,
+        max_bet_amount: b.max_bet_amount ?? 50.0,
+        win_percentage: b.win_percentage ?? (b.win_rate ? b.win_rate * 100 : 55.0),
+        // Новая система: подтягиваем баланс и проценты из бота
+        wins_count: b.wins_count ?? 6,
+        losses_count: b.losses_count ?? 6,
+        draws_count: b.draws_count ?? 4,
+        wins_percentage: b.wins_percentage ?? 44.0,
+        losses_percentage: b.losses_percentage ?? 36.0,
+        draws_percentage: b.draws_percentage ?? 20.0,
+        cycle_games: b.cycle_games ?? 12,
+        pause_between_cycles: b.pause_between_cycles ?? 5,
+        pause_on_draw: b.pause_on_draw ?? 1,
+        creation_mode: b.creation_mode ?? 'queue-based',
+        profit_strategy: b.profit_strategy ?? 'balanced',
+        cycle_total_amount: b.cycle_total_amount ?? 0
+      });
+      setSelectedPreset('Custom');
+      validateExtendedFormInRealTime({
+        name: b.name || '',
+        min_bet_amount: b.min_bet_amount ?? 1.0,
+        max_bet_amount: b.max_bet_amount ?? 50.0,
+        win_percentage: b.win_percentage ?? (b.win_rate ? b.win_rate * 100 : 55.0),
+        wins_count: b.wins_count ?? 6,
+        losses_count: b.losses_count ?? 6,
+        draws_count: b.draws_count ?? 4,
+        wins_percentage: b.wins_percentage ?? 44.0,
+        losses_percentage: b.losses_percentage ?? 36.0,
+        draws_percentage: b.draws_percentage ?? 20.0,
+        cycle_games: b.cycle_games ?? 12,
+        pause_between_cycles: b.pause_between_cycles ?? 5,
+        pause_on_draw: b.pause_on_draw ?? 1,
+        creation_mode: b.creation_mode ?? 'queue-based',
+        profit_strategy: b.profit_strategy ?? 'balanced'
       });
       
       setEditingBot(response.data.bot);
