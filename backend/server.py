@@ -17853,7 +17853,7 @@ async def update_individual_bot_settings(
     update_data: dict,
     current_user: User = Depends(get_current_admin)
 ):
-    """Update bot settings with user-defined parameters."""
+    """Update bot settings with user-defined parameters (PUT/PATCH-compatible)."""
     try:
         bot = await db.bots.find_one({"id": bot_id})
         if not bot:
@@ -17862,7 +17862,7 @@ async def update_individual_bot_settings(
                 detail="Bot not found"
             )
         
-        # Validate parameters  
+        # Extract parameters (all optional)
         name = update_data.get("name")
         min_bet_amount = update_data.get("min_bet_amount")
         max_bet_amount = update_data.get("max_bet_amount")
@@ -17873,37 +17873,61 @@ async def update_individual_bot_settings(
         creation_mode = update_data.get("creation_mode")
         profit_strategy = update_data.get("profit_strategy")
         
-        # Validation
+        # New fields in extended system
+        wins_count = update_data.get("wins_count")
+        losses_count = update_data.get("losses_count")
+        draws_count = update_data.get("draws_count")
+        wins_percentage = update_data.get("wins_percentage")
+        losses_percentage = update_data.get("losses_percentage")
+        draws_percentage = update_data.get("draws_percentage")
+        
+        # Basic validation
         if min_bet_amount is not None and (min_bet_amount < 1 or min_bet_amount > 10000):
             raise HTTPException(status_code=400, detail="Min bet amount must be between 1 and 10000")
-            
         if max_bet_amount is not None and (max_bet_amount < 1 or max_bet_amount > 10000):
             raise HTTPException(status_code=400, detail="Max bet amount must be between 1 and 10000")
-            
         if min_bet_amount is not None and max_bet_amount is not None and min_bet_amount >= max_bet_amount:
             raise HTTPException(status_code=400, detail="Min bet must be less than max bet")
-            
         if win_percentage is not None and (win_percentage < 0 or win_percentage > 100):
             raise HTTPException(status_code=400, detail="Win percentage must be between 0 and 100")
-            
         if cycle_games is not None and (cycle_games < 1 or cycle_games > 66):
             raise HTTPException(status_code=400, detail="Cycle games must be between 1 and 66")
-            
         if pause_between_cycles is not None and (pause_between_cycles < 1 or pause_between_cycles > 300):
             raise HTTPException(status_code=400, detail="Pause between cycles must be between 1 and 300 seconds")
-            
         if pause_on_draw is not None and (pause_on_draw < 1 or pause_on_draw > 60):
             raise HTTPException(status_code=400, detail="Pause on draw must be between 1 and 60 seconds")
-            
         if creation_mode is not None and creation_mode not in ['always-first', 'queue-based', 'after-all']:
             raise HTTPException(status_code=400, detail="Invalid creation mode")
-            
         if profit_strategy is not None and profit_strategy not in ['start-positive', 'balanced', 'start-negative']:
             raise HTTPException(status_code=400, detail="Invalid profit strategy")
         
+        # Percentages validation (if any provided)
+        if any(v is not None for v in [wins_percentage, losses_percentage, draws_percentage]):
+            wp = wins_percentage if wins_percentage is not None else bot.get("wins_percentage", 35.0)
+            lp = losses_percentage if losses_percentage is not None else bot.get("losses_percentage", 35.0)
+            dp = draws_percentage if draws_percentage is not None else bot.get("draws_percentage", 30.0)
+            total_p = (wp or 0) + (lp or 0) + (dp or 0)
+            if abs(total_p - 100) > 0.1:
+                raise HTTPException(status_code=400, detail=f"Сумма процентов исходов должна быть 100% (сейчас {total_p}%)")
+            # Additional bounds check
+            for label, val in [("wins_percentage", wp), ("losses_percentage", lp), ("draws_percentage", dp)]:
+                if val < 0 or val > 100:
+                    raise HTTPException(status_code=400, detail=f"{label} must be between 0 and 100")
+        
+        # Counts validation (if any provided)
+        if any(v is not None for v in [wins_count, losses_count, draws_count]):
+            # Determine target cycle games (updated or existing)
+            target_cycle_games = cycle_games if cycle_games is not None else bot.get("cycle_games", 12)
+            W = wins_count if wins_count is not None else bot.get("wins_count", 6)
+            L = losses_count if losses_count is not None else bot.get("losses_count", 6)
+            D = draws_count if draws_count is not None else bot.get("draws_count", 4)
+            if W < 0 or L < 0 or D < 0:
+                raise HTTPException(status_code=400, detail="Counts W/L/D не могут быть отрицательными")
+            if (W + L + D) != target_cycle_games:
+                raise HTTPException(status_code=400, detail=f"Сумма W/L/D ({W + L + D}) должна равняться 'Игр в цикле' ({target_cycle_games})")
+        
         # Prepare update data - only update provided fields
         update_fields = {"updated_at": datetime.utcnow()}
-        
         if name is not None:
             update_fields["name"] = name
         if min_bet_amount is not None:
@@ -17922,6 +17946,19 @@ async def update_individual_bot_settings(
             update_fields["creation_mode"] = creation_mode
         if profit_strategy is not None:
             update_fields["profit_strategy"] = profit_strategy
+        # New fields
+        if wins_count is not None:
+            update_fields["wins_count"] = wins_count
+        if losses_count is not None:
+            update_fields["losses_count"] = losses_count
+        if draws_count is not None:
+            update_fields["draws_count"] = draws_count
+        if wins_percentage is not None:
+            update_fields["wins_percentage"] = wins_percentage
+        if losses_percentage is not None:
+            update_fields["losses_percentage"] = losses_percentage
+        if draws_percentage is not None:
+            update_fields["draws_percentage"] = draws_percentage
         
         # Update bot in database
         await db.bots.update_one(
@@ -17959,6 +17996,15 @@ async def update_individual_bot_settings(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update bot settings"
         )
+
+@api_router.patch("/admin/bots/{bot_id}", response_model=dict)
+async def patch_individual_bot_settings(
+    bot_id: str,
+    update_data: dict,
+    current_user: User = Depends(get_current_admin)
+):
+    """PATCH alias for update_individual_bot_settings to support partial updates."""
+    return await update_individual_bot_settings(bot_id, update_data, current_user)
 
 @api_router.post("/admin/bots/{bot_id}/toggle", response_model=dict)
 async def toggle_bot_status_admin(
