@@ -3163,7 +3163,7 @@ const RegularBotsManagement = () => {
                   </div>
                 </div>
                 <div className="text-xs text-text-secondary">
-                  Сумма должна быть 100%. Из {botForm.cycle_games} игр: {Math.round(botForm.cycle_games * botForm.wins_percentage / 100)} побед, {Math.round(botForm.cycle_games * botForm.losses_percentage / 100)} поражений. Ничьи ({Math.round(botForm.cycle_games * botForm.draws_percentage / 100)} дополнительно) не засчитываются в цикл.
+                  Сумма должна быть 100%. Из {botForm.cycle_games} игр: {Math.round(botForm.cycle_games * botForm.wins_percentage / 100)} побед, {Math.round(botForm.cycle_games * botForm.losses_percentage / 100)} поражений и {Math.round(botForm.cycle_games * botForm.draws_percentage / 100)} ничьих.
                 </div>
               </div>
 
