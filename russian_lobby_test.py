@@ -440,14 +440,25 @@ def test_bots_ongoing_games_endpoint():
         else:
             non_regular_bot_games += 1
         
-        # Check for real bot names (not empty, not "Unknown Player")
-        if bot_name and bot_name != "Unknown Player" and bot_name.strip():
+        # Check for real bot names (look in creator_username and creator.username)
+        creator_username = game.get("creator_username", "")
+        creator_obj = game.get("creator", {})
+        creator_name_from_obj = creator_obj.get("username", "") if creator_obj else ""
+        
+        actual_bot_name = creator_username or creator_name_from_obj or bot_name
+        
+        if actual_bot_name and actual_bot_name != "Unknown Player" and actual_bot_name.strip():
             real_bot_names += 1
         else:
             missing_bot_names += 1
         
-        # Check for real opponent names (not "Unknown Player")
-        if opponent_name and opponent_name != "Unknown Player" and opponent_name.strip():
+        # Check for real opponent names (look in opponent.username)
+        opponent_obj = game.get("opponent", {})
+        opponent_name_from_obj = opponent_obj.get("username", "") if opponent_obj else ""
+        
+        actual_opponent_name = opponent_name_from_obj or opponent_name
+        
+        if actual_opponent_name and actual_opponent_name != "Unknown Player" and actual_opponent_name.strip():
             real_opponent_names += 1
         else:
             unknown_opponent_names += 1
