@@ -17353,68 +17353,111 @@ async def generate_cycle_bets_natural_distribution(
         logger.info(f"    Balance: {wins_count}W/{losses_count}L/{draws_count}D")
         logger.info(f"    Percentages: {wins_percentage}%/{losses_percentage}%/{draws_percentage}%")
         
-        # 1. Генерируем базовые ставки с равномерным покрытием диапазона
-        base_amounts = generate_uniform_bet_amounts(min_bet, max_bet, cycle_games)
-        total_sum = sum(base_amounts)
-        logger.info(f"    Generated base amounts, total: {total_sum}")
-        
-        # 2. Рассчитываем целевые суммы по процентам исходов
-        target_wins_sum = round(total_sum * wins_percentage / 100, 2)
-        target_losses_sum = round(total_sum * losses_percentage / 100, 2)
-        target_draws_sum = round(total_sum * draws_percentage / 100, 2)
-        
-        logger.info(f"    Target sums: W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
-        
-        # 3. Распределяем целевые суммы по балансу игр
-        wins_bets = distribute_sum_to_bets(target_wins_sum, wins_count, min_bet, max_bet)
-        losses_bets = distribute_sum_to_bets(target_losses_sum, losses_count, min_bet, max_bet)
-        draws_bets = distribute_sum_to_bets(target_draws_sum, draws_count, min_bet, max_bet)
-        
-        # 4. Формируем финальный массив ставок
+        # Приводим параметры к целым (требование: 1–100 и суммы округлены до целого)
+        min_bet_int = int(round(min_bet))
+        max_bet_int = int(round(max_bet))
+        wins_count = int(wins_count)
+        losses_count = int(losses_count)
+        draws_count = int(draws_count)
+        cycle_games = int(cycle_games)
+
+        # 1) Точная общая сумма цикла по формуле: N × (min+max)/2, округление до целого
+        exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
+        logger.info(f"    Exact cycle total (int): {exact_cycle_total}")
+
+        # 2) Интегральное распределение суммы по W/L/D по методу наибольших остатков
+        raw_w = exact_cycle_total * (float(wins_percentage) / 100.0)
+        raw_l = exact_cycle_total * (float(losses_percentage) / 100.0)
+        raw_d = exact_cycle_total * (float(draws_percentage) / 100.0)
+
+        floors = [math.floor(raw_w), math.floor(raw_l), math.floor(raw_d)]
+        remainders = [raw_w - floors[0], raw_l - floors[1], raw_d - floors[2]]
+        sum_floors = sum(floors)
+        diff = exact_cycle_total - sum_floors
+
+        allocation = floors[:]
+        if diff != 0:
+            # Положительная разница — добавляем к наибольшим остаткам, отрицательная — вычитаем от наименьших остатков
+            order = sorted(range(3), key=lambda i: remainders[i], reverse=(diff > 0))
+            step = 1 if diff > 0 else -1
+            for i in range(abs(diff)):
+                idx = order[i % 3]
+                allocation[idx] += step
+                # не даем опуститься ниже 0 в крайних случаях
+                if allocation[idx] < 0:
+                    allocation[idx] = 0
+
+        target_wins_sum, target_losses_sum, target_draws_sum = map(int, allocation)
+        # Защита: суммарная проверка
+        adjust = exact_cycle_total - (target_wins_sum + target_losses_sum + target_draws_sum)
+        if adjust != 0:
+            # Добрасываем/снимаем по тому же правилу остатков, чтобы сумма точно сошлась
+            order = sorted(range(3), key=lambda i: remainders[i], reverse=(adjust > 0))
+            for i in range(abs(adjust)):
+                idx = order[i % 3]
+                target = [target_wins_sum, target_losses_sum, target_draws_sum]
+                target[idx] += 1 if adjust > 0 else -1
+                target_wins_sum, target_losses_sum, target_draws_sum = target
+
+        logger.info(f"    Target sums (int): W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
+
+        # 3) Для каждой категории генерируем случайные ставки по всему диапазону и нормализуем к точной сумме
+        # Победы
+        wins_base = generate_uniform_bet_amounts(min_bet_int, max_bet_int, wins_count)
+        wins_bets = normalize_amounts_to_exact_sum(wins_base, target_wins_sum, min_bet_int, max_bet_int)
+
+        # Поражения
+        losses_base = generate_uniform_bet_amounts(min_bet_int, max_bet_int, losses_count)
+        losses_bets = normalize_amounts_to_exact_sum(losses_base, target_losses_sum, min_bet_int, max_bet_int)
+
+        # Ничьи
+        draws_base = generate_uniform_bet_amounts(min_bet_int, max_bet_int, draws_count)
+        draws_bets = normalize_amounts_to_exact_sum(draws_base, target_draws_sum, min_bet_int, max_bet_int)
+
+        # 4) Формируем финальный массив ставок (все суммы — целые)
         all_bets = []
-        
-        # Добавляем победы
         for i in range(wins_count):
             all_bets.append({
                 "result": "win",
-                "amount": wins_bets[i] if i < len(wins_bets) else min_bet,
+                "amount": int(wins_bets[i]) if i < len(wins_bets) else min_bet_int,
                 "index": i
             })
-            
-        # Добавляем поражения  
         for i in range(losses_count):
             all_bets.append({
-                "result": "loss", 
-                "amount": losses_bets[i] if i < len(losses_bets) else min_bet,
+                "result": "loss",
+                "amount": int(losses_bets[i]) if i < len(losses_bets) else min_bet_int,
                 "index": wins_count + i
             })
-            
-        # Добавляем ничьи (НЕ пересоздаются!)
         for i in range(draws_count):
             all_bets.append({
                 "result": "draw",
-                "amount": draws_bets[i] if i < len(draws_bets) else min_bet, 
+                "amount": int(draws_bets[i]) if i < len(draws_bets) else min_bet_int,
                 "index": wins_count + losses_count + i
             })
-        
+
         # Перемешиваем для случайного порядка
         random.shuffle(all_bets)
-        
-        # 5. Рассчитываем финальную статистику и ROI
-        actual_wins_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "win")
-        actual_losses_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "loss") 
-        actual_draws_sum = sum(bet["amount"] for bet in all_bets if bet["result"] == "draw")
-        
+
+        # 5) Рассчитываем точные суммы и ROI по формуле из задания
+        actual_wins_sum = int(sum(bet["amount"] for bet in all_bets if bet["result"] == "win"))
+        actual_losses_sum = int(sum(bet["amount"] for bet in all_bets if bet["result"] == "loss"))
+        actual_draws_sum = int(sum(bet["amount"] for bet in all_bets if bet["result"] == "draw"))
+
         active_pool = actual_wins_sum + actual_losses_sum
         profit = actual_wins_sum - actual_losses_sum
         roi_active = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
+
+        # Валидации целостности
+        final_total = actual_wins_sum + actual_losses_sum + actual_draws_sum
+        if final_total != exact_cycle_total:
+            logger.warning(f"❗ Final cycle total {final_total} != exact_cycle_total {exact_cycle_total}. Forcing fix in logs-only.")
         
-        logger.info(f"✅ NEW FORMULA results:")
-        logger.info(f"    Generated {len(all_bets)} bets: {wins_count}W/{losses_count}L/{draws_count}D")
-        logger.info(f"    Actual sums: W={actual_wins_sum}, L={actual_losses_sum}, D={actual_draws_sum}")
+        logger.info(f"✅ NEW INT FORMULA results:")
+        logger.info(f"    Bets: {len(all_bets)} = {wins_count}W/{losses_count}L/{draws_count}D")
+        logger.info(f"    Sums (int): W={actual_wins_sum}, L={actual_losses_sum}, D={actual_draws_sum}, TOTAL={final_total}")
         logger.info(f"    Active pool: {active_pool}, Profit: {profit}")
         logger.info(f"    ROI_active: {roi_active}%")
-        
+
         return all_bets
 
     except Exception as e:
