@@ -360,7 +360,7 @@ def verify_integer_bet_amounts(bot_id: str, admin_token: str):
         )
         return False
     
-    print(f"   📊 Found {len(roi_bot_games)} active games for ROI_Test_Bot_2")
+    print(f"   📊 Found {len(roi_bot_games)} active games for ROI_Test_Bot_5")
     
     # Check bet_amount values for integer format
     decimal_count = 0
