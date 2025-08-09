@@ -18599,8 +18599,7 @@ async def get_bot_active_bets(
         
         played_games = await db.games.count_documents({
             "creator_id": bot_id,
-            "status": "COMPLETED",
-            "winner_id": {"$ne": None}
+            "status": "COMPLETED"
         })
         
         current_cycle_played = played_games % cycle_games
