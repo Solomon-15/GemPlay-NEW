@@ -280,7 +280,7 @@ def verify_roi_active_field(bot_id: str, admin_token: str):
     # Check if roi_active field exists and has proper format (2 decimals)
     roi_active = roi_test_bot.get("roi_active")
     
-    print(f"   📊 Found ROI_Test_Bot_5 in admin bots response")
+    print(f"   📊 Found {roi_test_bot.get('name', 'ROI_Test_Bot_5')} in admin bots response")
     print(f"   🔍 Checking roi_active field...")
     
     if roi_active is None:
