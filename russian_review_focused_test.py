@@ -81,11 +81,12 @@ def test_russian_review_requirements():
     response = requests.get(f"{BASE_URL}/admin/bots/regular/list", headers=headers)
     results["total"] += 1
     if response.status_code == 200:
-        bots = response.json()
+        bots_data = response.json()
+        bots = bots_data if isinstance(bots_data, list) else bots_data.get("bots", [])
         print(f"   {Colors.GREEN}✅ Retrieved {len(bots)} regular bots{Colors.END}")
         
         # Check for roi_active and cycle_total_info
-        if bots:
+        if bots and len(bots) > 0:
             first_bot = bots[0]
             has_roi = any(key in first_bot for key in ["roi_active", "win_percentage"])
             has_cycle_info = any(key in first_bot for key in ["cycle_total_amount", "cycle_games"])
