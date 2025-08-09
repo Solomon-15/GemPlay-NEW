@@ -1974,20 +1974,31 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       {(() => {
-                        const roi = (bot.bot_profit_percent !== undefined ? bot.bot_profit_percent : 0);
-                        const hasStats = (() => {
-                          const gs = bot.games_stats || bot.stats || {};
-                          const total = (gs.total !== undefined ? gs.total : (gs.wins || 0) + (gs.losses || 0) + (gs.draws || 0));
-                          return total > 0;
-                        })();
-                        const isPlanned = !hasStats; // нет завершенных игр => плановый ROI
-                        const isNegative = roi < 0;
-                        const baseColor = isNegative ? 'text-red-400' : 'text-orange-400';
-                        const plannedDim = isPlanned ? 'opacity-60' : '';
+                        // Фактический ROI (как есть с бэка)
+                        const roiActual = (bot.bot_profit_percent !== undefined ? bot.bot_profit_percent : 0);
+                        const isActualNegative = roiActual < 0;
+                        const actualColor = isActualNegative ? 'text-red-400' : 'text-orange-400';
+                        
+                        // Плановый ROI (если нет завершенных игр или приходит отдельное поле)
+                        const gs = bot.games_stats || bot.stats || {};
+                        const totalGames = (gs.total !== undefined ? gs.total : (gs.wins || 0) + (gs.losses || 0) + (gs.draws || 0));
+                        const hasCompleted = totalGames > 0;
+                        // Источник планового ROI: предпочитаем bot.cycle_total_info.roi_active, затем bot.roi_active, затем превью не используем
+                        const plannedRaw = (bot.cycle_total_info && bot.cycle_total_info.roi_active !== undefined)
+                          ? bot.cycle_total_info.roi_active
+                          : (bot.roi_active !== undefined ? bot.roi_active : null);
+                        const plannedIsAvailable = plannedRaw !== null && plannedRaw !== undefined;
+                        const roiPlanned = plannedIsAvailable ? Number(plannedRaw) : null;
+                        const plannedColor = roiPlanned !== null && roiPlanned < 0 ? 'text-red-400' : 'text-orange-400';
+                        const plannedOpacity = 'opacity-60';
+                        
                         return (
-                          <div className={`flex items-center justify-center ${plannedDim}`}>
-                            <span className={`${baseColor} font-roboto text-sm font-bold`}>
-                              {Number(roi).toFixed(2)}%
+                          <div className="flex flex-col items-center justify-center leading-tight">
+                            <span className={`${actualColor} font-roboto text-sm font-bold`} title="Фактический ROI">
+                              {Number(roiActual).toFixed(2)}%
+                            </span>
+                            <span className={`text-xs ${plannedColor} ${plannedOpacity}`} title="Плановый ROI">
+                              {plannedIsAvailable ? `${Number(roiPlanned).toFixed(2)}%` : '—'}
                             </span>
                           </div>
                         );
