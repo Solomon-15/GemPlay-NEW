@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+"""
+REFRESH TOKEN FLOW TESTING - Russian Review Request
+Протестировать обновление токена (refresh flow) и отсутствие самопроизвольного разлогина
+
+BACKEND TESTS:
+1) POST /api/auth/refresh (JSON): {"refresh_token":"<valid>"}
+   - Ожидаю: 200 OK, JSON содержит access_token, refresh_token (новый), user
+2) POST /api/auth/refresh с отсутствующим полем
+   - Ожидаю: 400 Bad Request (Missing refresh_token)
+3) POST /api/auth/refresh с невалидным refresh_token
+   - Ожидаю: 401 Unauthorized (Invalid or expired refresh token)
+4) Проверить, что старый refresh_token деактивирован после успешного обновления (повторный refresh со старым -> 401)
+"""
+
 import requests
 import json
 import time
@@ -7,13 +21,15 @@ from typing import Dict, Any, Optional, List, Tuple
 import random
 import string
 import hashlib
+import concurrent.futures
+from datetime import datetime
 
 # Configuration
 BASE_URL = "https://f5408cb5-a948-4578-b0dd-1a7c404eb24f.preview.emergentagent.com/api"
 TEST_USER = {
-    "username": "refresh_test_user",
-    "email": "refresh_test@test.com",
-    "password": "Test123!",
+    "username": "RefreshTestUser",
+    "email": "refreshtest@example.com",
+    "password": "TestPassword123!",
     "gender": "male"
 }
 
