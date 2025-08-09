@@ -16827,8 +16827,7 @@ async def get_regular_bots_list(
 
                 "pause_between_cycles": bot_doc.get('pause_between_cycles', 5),
                 "pause_on_draw": bot_doc.get('pause_on_draw', 1),
-                "creation_mode": bot_doc.get('creation_mode', 'queue-based'),
-                "profit_strategy": bot_doc.get('profit_strategy', 'balanced'),
+
                 
                 # Legacy fields for backward compatibility
                 "min_bet": bot_doc.get('min_bet_amount', 1.0),
