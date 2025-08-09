@@ -1856,7 +1856,7 @@ const RegularBotsManagement = () => {
                   onClick={() => handleSort('win_percentage')}
                 >
                   <div className="flex items-center">
-                    %
+                    ROI
                     {sortField === 'win_percentage' && (
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
