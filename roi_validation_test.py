@@ -229,7 +229,7 @@ def create_roi_test_bot():
     record_test(
         "ROI Test Bot Creation",
         True,
-        f"ROI_Test_Bot_3 created with ID: {bot_id}, ROI 9% preset applied"
+        f"ROI_Test_Bot_5 created with ID: {bot_id}, ROI 9% preset applied"
     )
     
     return bot_id, admin_token
