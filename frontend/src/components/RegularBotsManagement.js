@@ -2109,7 +2109,7 @@ const RegularBotsManagement = () => {
                         )}
                         <div>
                           <button
-                            onClick={() => handleCycleBetsDetails(bot)}
+                            onClick={}
                             className="text-blue-400 hover:text-blue-300 underline text-xs mt-1"
                             title="Показать детали цикла (W/L/D и ROI)"
                           >
