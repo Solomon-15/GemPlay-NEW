@@ -1288,7 +1288,8 @@ const RegularBotsManagement = () => {
       }
 
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/admin/bots/${bot.id}/win-percentage`, {
+      // УДАЛЕНО: вызов устаревшего эндпоинта win-percentage
+      /* await axios.put(`${API}/admin/bots/${bot.id}/win-percentage`, {
         win_percentage: newPercentage
       }, {
         headers: { Authorization: `Bearer ${token}` }
