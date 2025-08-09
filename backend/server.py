@@ -10390,7 +10390,7 @@ async def get_active_bot_games(current_user: User = Depends(get_current_user)):
                 continue
                 
             # Determine display name for bot
-            bot_display_name = bot.get("name", "Bot")
+            bot_display_name = "Bot"  # Hide real bot name for regular bots
             
             game_data = {
                 "id": game["id"],
