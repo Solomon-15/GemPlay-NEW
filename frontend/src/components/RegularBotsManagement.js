@@ -925,8 +925,8 @@ const RegularBotsManagement = () => {
         cycle_games: b.cycle_games ?? 12,
         pause_between_cycles: b.pause_between_cycles ?? 5,
         pause_on_draw: b.pause_on_draw ?? 1,
-        creation_mode: b.creation_mode ?? 'queue-based',
-        profit_strategy: b.profit_strategy ?? 'balanced'
+        // УДАЛЕНО: creation_mode (наследие)
+        // УДАЛЕНО: profit_strategy (наследие)
       });
       
       setEditingBot(response.data.bot);
