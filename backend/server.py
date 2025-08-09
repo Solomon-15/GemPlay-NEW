@@ -16816,13 +16816,13 @@ async def get_regular_bots_list(
                 "cycle_progress": cycle_progress,
                 "remaining_slots": remaining_slots,
                 
-                # НОВАЯ ФОРМУЛА 2.0: СУММА ЦИКЛА = активный пул с дополнительной информацией
-                "cycle_total_amount": active_pool,  # Активный пул (wins + losses)
+                # НОВАЯ ФОРМУЛА 2.0: СУММА ЦИКЛА = точная сумма всех ставок (включая ничьи)
+                "cycle_total_amount": total_bet_sum,
                 "cycle_total_info": {
-                    "active_pool": active_pool,      # 646
-                    "total_sum": total_bet_sum,      # 808  
-                    "draws_sum": draws_sum,          # 162
-                    "display": f"{active_pool} (из {total_bet_sum}, ничьи: {draws_sum})"
+                    "active_pool": active_pool,
+                    "total_sum": total_bet_sum,
+                    "draws_sum": draws_sum,
+                    "display": f"АКТИВНЫЙ ПУЛ: {active_pool} (из ИТОГО: {total_bet_sum}, ничьи: {draws_sum})"
                 },
                 "min_bet_amount": bot_doc.get('min_bet_amount', 1.0),
                 "max_bet_amount": bot_doc.get('max_bet_amount', 50.0),
