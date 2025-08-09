@@ -17857,10 +17857,7 @@ async def update_individual_bot_settings(
             raise HTTPException(status_code=400, detail="Pause between cycles must be between 1 and 300 seconds")
         if pause_on_draw is not None and (pause_on_draw < 1 or pause_on_draw > 60):
             raise HTTPException(status_code=400, detail="Pause on draw must be between 1 and 60 seconds")
-        if creation_mode is not None and creation_mode not in ['always-first', 'queue-based', 'after-all']:
-            raise HTTPException(status_code=400, detail="Invalid creation mode")
-        if profit_strategy is not None and profit_strategy not in ['start-positive', 'balanced', 'start-negative']:
-            raise HTTPException(status_code=400, detail="Invalid profit strategy")
+
         
         # Percentages validation (if any provided)
         if any(v is not None for v in [wins_percentage, losses_percentage, draws_percentage]):
