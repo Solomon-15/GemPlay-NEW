@@ -289,12 +289,15 @@ def test_requirement_2_bot_details():
     
     print(f"   🔍 Analyzing bot details response structure...")
     
+    # Extract bot data from response (it's nested under "bot" key)
+    bot_data = response_data.get("bot", response_data)
+    
     # Check for LEGACY fields that should NOT be present
     legacy_fields = ["win_percentage", "creation_mode", "profit_strategy"]
     legacy_found = []
     
     for field in legacy_fields:
-        if field in response_data:
+        if field in bot_data:
             legacy_found.append(field)
     
     # Check for REQUIRED fields that SHOULD be present
@@ -306,7 +309,7 @@ def test_requirement_2_bot_details():
     
     missing_required = []
     for field in required_fields:
-        if field not in response_data:
+        if field not in bot_data:
             missing_required.append(field)
     
     print(f"   📊 Analysis Results:")
@@ -314,10 +317,10 @@ def test_requirement_2_bot_details():
     print(f"      Missing required fields: {missing_required if missing_required else 'None (✅ Good)'}")
     
     # Check specific field values
-    wins_count = response_data.get("wins_count")
-    losses_count = response_data.get("losses_count")
-    draws_count = response_data.get("draws_count")
-    wins_percentage = response_data.get("wins_percentage")
+    wins_count = bot_data.get("wins_count")
+    losses_count = bot_data.get("losses_count")
+    draws_count = bot_data.get("draws_count")
+    wins_percentage = bot_data.get("wins_percentage")
     
     print(f"      W/L/D counts: {wins_count}/{losses_count}/{draws_count}")
     print(f"      Win percentage: {wins_percentage}%")
