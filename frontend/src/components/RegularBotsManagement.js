@@ -2519,83 +2519,86 @@ const RegularBotsManagement = () => {
                 </div>
               </div>
 
-              {/* Игр в цикле и индивидуальный лимит */}
-              <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Циклы</h4>
-                <div>
-                  <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="66"
-                    value={botForm.cycle_games}
-                    onChange={(e) => {
-                      const newValue = Math.min(100, Math.max(4, parseInt(e.target.value) || 12));
-                      updateBalanceGames(newValue, true);
-                      const newForm = { ...botForm, cycle_games: newValue };
-                      setBotForm(newForm);
-                      validateExtendedFormInRealTime(newForm);
-                    }}
-                    className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                  />
-                </div>
-                <div className="text-xs text-text-secondary mt-1">
-                  Количество игр в одном цикле (1-66)
-                </div>
-              </div>
-
-              {/* Настройки таймингов */}
-              <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Настройки таймингов</h4>
-                {/* Предупреждения и подсказки */}
-                {(() => {
-                  const preview = calculateCycleAmounts();
-                  const activePoolShare = preview.total > 0 ? Math.round(((preview.active_pool / preview.total) * 100)) : 0;
-                  const warnings = [];
-                  if (activePoolShare < 65) warnings.push(`⚠️ Активный пул слишком мал (${activePoolShare}%). Рекомендуется ≥ 65%.`);
-                  if (preview.roi_active < 2 || preview.roi_active > 20) warnings.push(`⚠️ ROI_active (${preview.roi_active}%) вне рекомендуемых пределов [2%, 20%].`);
-                  return warnings.length > 0 ? (
-                    <div className="mt-3 border border-yellow-500 bg-yellow-900 bg-opacity-20 rounded-lg p-3 text-yellow-200 text-sm space-y-1">
-                      {warnings.map((w, idx) => (<div key={idx}>{w}</div>))}
-                    </div>
-                  ) : null;
-                })()}
-
-                <div className="grid grid-cols-2 gap-4">
+              {/* Горизонтальный ряд: Циклы + Настройки таймингов */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Игр в цикле и индивидуальный лимит */}
+                <div className="border border-border-primary rounded-lg p-4">
+                  <h4 className="font-rajdhani font-bold text-white mb-3">Циклы</h4>
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Пауза между циклами (сек):</label>
+                    <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
                     <input
                       type="number"
                       min="1"
-                      max="300"
-                      value={botForm.pause_between_cycles}
+                      max="66"
+                      value={botForm.cycle_games}
                       onChange={(e) => {
-                        const newForm = {...botForm, pause_between_cycles: parseInt(e.target.value) || 5};
+                        const newValue = Math.min(100, Math.max(4, parseInt(e.target.value) || 12));
+                        updateBalanceGames(newValue, true);
+                        const newForm = { ...botForm, cycle_games: newValue };
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
                       }}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                     />
-                    <div className="text-xs text-text-secondary mt-1">
-                      Интервал после завершения цикла до начала нового
-                    </div>
                   </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Пауза при ничье (сек):</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="60"
-                      value={botForm.pause_on_draw}
-                      onChange={(e) => {
-                        const newForm = {...botForm, pause_on_draw: parseInt(e.target.value) || 1};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                    <div className="text-xs text-text-secondary mt-1">
-                      При ничье создается новая ставка через указанное время
+                  <div className="text-xs text-text-secondary mt-1">
+                    Количество игр в одном цикле (1-66)
+                  </div>
+                </div>
+
+                {/* Настройки таймингов */}
+                <div className="border border-border-primary rounded-lg p-4">
+                  <h4 className="font-rajdhani font-bold text-white mb-3">Настройки таймингов</h4>
+                  {/* Предупреждения и подсказки */}
+                  {(() => {
+                    const preview = calculateCycleAmounts();
+                    const activePoolShare = preview.total > 0 ? Math.round(((preview.active_pool / preview.total) * 100)) : 0;
+                    const warnings = [];
+                    if (activePoolShare < 65) warnings.push(`⚠️ Активный пул слишком мал (${activePoolShare}%). Рекомендуется ≥ 65%.`);
+                    if (preview.roi_active < 2 || preview.roi_active > 20) warnings.push(`⚠️ ROI_active (${preview.roi_active}%) вне рекомендуемых пределов [2%, 20%].`);
+                    return warnings.length > 0 ? (
+                      <div className="mt-3 border border-yellow-500 bg-yellow-900 bg-opacity-20 rounded-lg p-3 text-yellow-200 text-sm space-y-1">
+                        {warnings.map((w, idx) => (<div key={idx}>{w}</div>))}
+                      </div>
+                    ) : null;
+                  })()}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-text-secondary text-sm mb-1">Пауза между циклами (сек):</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="300"
+                        value={botForm.pause_between_cycles}
+                        onChange={(e) => {
+                          const newForm = {...botForm, pause_between_cycles: parseInt(e.target.value) || 5};
+                          setBotForm(newForm);
+                          validateExtendedFormInRealTime(newForm);
+                        }}
+                        className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                      />
+                      <div className="text-xs text-text-secondary mt-1">
+                        Интервал после завершения цикла до начала нового
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-text-secondary text-sm mb-1">Пауза при ничье (сек):</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={botForm.pause_on_draw}
+                        onChange={(e) => {
+                          const newForm = {...botForm, pause_on_draw: parseInt(e.target.value) || 1};
+                          setBotForm(newForm);
+                          validateExtendedFormInRealTime(newForm);
+                        }}
+                        className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                      />
+                      <div className="text-xs text-text-secondary mt-1">
+                        При ничье создается новая ставка через указанное время
+                      </div>
                     </div>
                   </div>
                 </div>
