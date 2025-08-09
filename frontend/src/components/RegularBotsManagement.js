@@ -2013,7 +2013,7 @@ const RegularBotsManagement = () => {
                           className="text-blue-400 hover:text-blue-300 cursor-pointer underline"
                           title="Показать историю циклов"
                         >
-                          Чистая: ${Math.round(bot.total_net_profit || bot.bot_profit_amount || 0)}
+                          Чистая22: ${Math.round(bot.total_net_profit || bot.bot_profit_amount || 0)}
                         </button>
                       </div>
                     </td>
