@@ -1,4 +1,16 @@
 frontend:
+  - task: "Unify Create/Edit Regular Bot Modals (Variant 2) + PATCH Edit"
+    implemented: true
+    working: pending
+    file: "/app/frontend/src/components/RegularBotsManagement.js, /app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main_agent"
+        comment: "UI унификация завершена: модалка Редактирования получила тот же набор полей и макет, что и Создание (единый блок 'Циклы и Настройки таймингов', диапазон ставок, баланс W/L/D, проценты исходов, стратегия и режим). Вариант 2: лайв‑превью ROI убрано из модалки редактирования. Бэкенд: добавлен PATCH /api/admin/bots/{id} как алиас к PUT и расширен /admin/bots/{id} для приема wins_count/losses_count/draws_count и wins_percentage/losses_percentage/draws_percentage; добавлена строгая валидация суммы процентов (100%±0.1) и суммы W/L/D == cycle_games. Фронтенд теперь сохраняет изменения через PATCH. Требуется тестирование бэкенда (PATCH/PUT) и, по желанию, фронтенда."
+
   - task: "Ongoing Battles Display Fix"
     implemented: true
     working: true
