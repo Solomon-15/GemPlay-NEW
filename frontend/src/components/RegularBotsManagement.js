@@ -1973,14 +1973,26 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <div className="flex items-center justify-center space-x-1">
-                        <span className="text-orange-400 font-roboto text-sm font-bold">
-                          {(bot.bot_profit_percent !== undefined ? bot.bot_profit_percent : 0).toFixed(2)}%
-                        </span>
-                        <span className="text-gray-500 font-roboto text-xs">
-                          ROI
-                        </span>
-                      </div>
+                      {(() => {
+                        const roi = (bot.bot_profit_percent !== undefined ? bot.bot_profit_percent : 0);
+                        const hasStats = (() => {
+                          const gs = bot.games_stats || bot.stats || {};
+                          const total = (gs.total !== undefined ? gs.total : (gs.wins || 0) + (gs.losses || 0) + (gs.draws || 0));
+                          return total > 0;
+                        })();
+                        const isPlanned = !hasStats; // нет завершенных игр => плановый ROI
+                        const isNegative = roi < 0;
+                        const baseColor = isNegative ? 'text-red-400' : 'text-orange-400';
+                        const plannedDim = isPlanned ? 'opacity-60' : '';
+                        return (
+                          <div className={`flex items-center justify-center ${plannedDim}`}>
+                            <span className={`${baseColor} font-roboto text-sm font-bold`}>
+                              {Number(roi).toFixed(2)}%
+                            </span>
+                          </div>
+                        );
+                      })()}
+
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-accent-primary font-roboto text-xs">
