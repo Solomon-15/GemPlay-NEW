@@ -83,13 +83,10 @@ const AdminPanel = ({ user, onClose }) => {
   // Removed handleTokenExpired - now handled by global interceptor
 
   const fetchDashboardStats = async () => {
+    if (fetchInFlight.current) return; // защита от гонок/дубликатов
+    fetchInFlight.current = true;
     try {
       const token = localStorage.getItem('token');
-      console.log('🔍 AdminPanel: Fetching dashboard stats. Token exists:', !!token);
-      
-      if (!token) {
-        console.log('❌ AdminPanel: No token found, will be handled by interceptor');
-      }
       
       // Prepare params for bet volume filtering
       let dashboardParams = {};
@@ -117,23 +114,15 @@ const AdminPanel = ({ user, onClose }) => {
         })
       ]);
 
-      console.log('✅ AdminPanel: Dashboard stats responses:', {
-        users: usersResponse.status,
-        bots: botsResponse.status,
-        games: gamesResponse.status,
-        dashboard: dashboardResponse.status
-      });
-
       setStats({
         users: usersResponse.status === 'fulfilled' ? usersResponse.value.data : { total: '—', active: '—', banned: '—' },
-        bots: botsResponse.status === 'fulfilled' ? botsResponse.value.data.length : '—',
+        bots: botsResponse.status === 'fulfilled' ? usersResponse.value.data?.length ?? '—' : '—',
         games: gamesResponse.status === 'fulfilled' ? gamesResponse.value.data : { total: '—', active: '—', completed: '—' }
       });
       
       if (dashboardResponse.status === 'fulfilled') {
         setDashboardStats(dashboardResponse.value.data);
       } else {
-        console.error('❌ Failed to fetch dashboard stats:', dashboardResponse.reason);
         setDashboardStats({
           active_human_bots: '—',
           active_regular_bots: '—', 
@@ -146,14 +135,9 @@ const AdminPanel = ({ user, onClose }) => {
       
       setLoading(false);
     } catch (error) {
-      console.error('❌ AdminPanel: Error loading statistics:', error);
-      
-      if (error.response?.status === 401) {
-        console.log('🔒 AdminPanel: Token expired (401), will be handled by interceptor');
-        return;
-      }
-      
       setLoading(false);
+    } finally {
+      fetchInFlight.current = false;
     }
   };
 
