@@ -16777,6 +16777,9 @@ async def get_regular_bots_list(
                     "draws_sum": draws_sum,
                     "display": f"АКТИВНЫЙ ПУЛ: {active_pool} (из ИТОГО: {total_bet_sum}, ничьи: {draws_sum})"
                 },
+                # Удобные плоские поля для клиентов
+                "active_pool": active_pool,
+                "cycle_total_display": f"АКТИВНЫЙ ПУЛ: {active_pool} (из ИТОГО: {total_bet_sum}, ничьи: {draws_sum})",
                 "min_bet_amount": bot_doc.get('min_bet_amount', 1.0),
                 "max_bet_amount": bot_doc.get('max_bet_amount', 50.0),
 
