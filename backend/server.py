@@ -16584,13 +16584,13 @@ async def get_regular_bots_simple(
             })
             bot["active_bets"] = active_bets_count
             
-            # Calculate ROI_active from completed games
+            # Calculate ROI_active from completed games (platform view: +B on win, -B on loss)
             try:
                 wins_sum_agg = await db.games.aggregate([
                     {"$match": {"creator_id": bot["id"], "status": "COMPLETED", "winner_id": bot["id"]}},
                     {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
                 ]).to_list(1)
-                wins_sum = float((wins_sum_agg[0]['total'] if wins_sum_agg else 0) * 2)
+                wins_sum = float(wins_sum_agg[0]['total'] if wins_sum_agg else 0)
                 
                 losses_sum_agg = await db.games.aggregate([
                     {"$match": {"creator_id": bot["id"], "status": "COMPLETED", "winner_id": {"$ne": bot["id"], "$ne": None}}},
@@ -16603,6 +16603,24 @@ async def get_regular_bots_simple(
                 bot["roi_active"] = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
             except Exception as _:
                 bot["roi_active"] = 0.0
+            
+            # Planned ROI fallback when no completed games yet
+            if not bot.get("roi_active"):
+                try:
+                    wins_pct = float(bot.get("wins_percentage", 44.0) or 44.0)
+                    losses_pct = float(bot.get("losses_percentage", 36.0) or 36.0)
+                    cycle_games = int(bot.get("cycle_games", 12) or 12)
+                    min_bet = float(bot.get("min_bet_amount", 1.0) or 1.0)
+                    max_bet = float(bot.get("max_bet_amount", 50.0) or 50.0)
+                    avg_bet = (min_bet + max_bet) / 2.0
+                    total_est = round(avg_bet * cycle_games)
+                    wins_sum_planned = math.floor(total_est * wins_pct / 100.0)
+                    losses_sum_planned = math.ceil(total_est * losses_pct / 100.0)
+                    active_pool_planned = wins_sum_planned + losses_sum_planned
+                    profit_planned = wins_sum_planned - losses_sum_planned
+                    bot["roi_active"] = round((profit_planned / active_pool_planned * 100), 2) if active_pool_planned > 0 else 0.0
+                except Exception:
+                    pass
         
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
