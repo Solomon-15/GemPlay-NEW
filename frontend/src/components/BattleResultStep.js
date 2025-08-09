@@ -254,16 +254,22 @@ const BattleResultStep = ({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            if (controlsLocked) return;
             handleClose();
           }}
-          className={`w-full py-4 text-white font-rajdhani font-bold text-lg rounded-xl hover:scale-105 transition-all duration-300 ${
+          disabled={controlsLocked}
+          className={`w-full py-4 text-white font-rajdhani font-bold text-lg rounded-xl transition-all duration-300 ${
+            controlsLocked ? 'opacity-60 cursor-not-allowed' : 'hover:scale-105'
+          } ${
             result === 'win' ? 'bg-gradient-to-r from-green-600 to-green-700' :
             result === 'lose' ? 'bg-gradient-to-r from-red-600 to-red-700' :
             'bg-gradient-to-r from-yellow-600 to-yellow-700'
           }`}
         >
-          {result === 'win' ? '🎉 Claim Victory!' : 
-           result === 'lose' ? '💔 Accept Defeat' : '🤝 Continue Playing'} (OK)
+          {controlsLocked ? `Please wait ${lockCountdown}s...` : (
+            result === 'win' ? '🎉 Claim Victory!' : 
+            result === 'lose' ? '💔 Accept Defeat' : '🤝 Continue Playing'
+          )} (OK)
         </button>
         
         <div className="text-center text-text-secondary text-sm">
