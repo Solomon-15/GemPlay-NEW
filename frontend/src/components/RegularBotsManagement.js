@@ -1296,7 +1296,7 @@ const RegularBotsManagement = () => {
       });
       
       fetchBotsList();
-      showSuccessRU(`Процент выигрышей обновлен на ${newPercentage}%`);
+      showSuccessRU(`Процент выигрышей обновлен (устар.) на ${newPercentage}%`); */
     } catch (error) {
       console.error('Error updating win percentage:', error);
       showErrorRU('Ошибка при обновлении процента выигрышей');
