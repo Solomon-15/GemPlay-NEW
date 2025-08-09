@@ -2025,14 +2025,11 @@ const RegularBotsManagement = () => {
                         
                         // Плановый ROI: всегда показываем нижней строкой
                         // Нижняя строка: индивидуальный плановый ROI по конфигурации бота
-                        // Берём проценты из бота: приоритет wins_percentage/losses_percentage, иначе используем win_percentage и выводим losses = 100 - win - draws
+                        // Плановый ROI берём только из wins_percentage/losses_percentage/draws_percentage
                         const roiPlanned = (() => {
-                          const hasWinsPct = bot.wins_percentage !== undefined && bot.wins_percentage !== null;
-                          const hasLossesPct = bot.losses_percentage !== undefined && bot.losses_percentage !== null;
-                          const hasDrawsPct = bot.draws_percentage !== undefined && bot.draws_percentage !== null;
-                          const winPct = hasWinsPct ? Number(bot.wins_percentage) : (bot.win_percentage !== undefined ? Number(bot.win_percentage) : 55.0);
-                          const drawPct = hasDrawsPct ? Number(bot.draws_percentage) : 20.0;
-                          const lossPct = hasLossesPct ? Number(bot.losses_percentage) : Math.max(0, 100.0 - winPct - drawPct);
+                          const winPct = Number(bot.wins_percentage ?? 0);
+                          const lossPct = Number(bot.losses_percentage ?? 0);
+                          const drawPct = Number(bot.draws_percentage ?? 0);
                           const denom = winPct + lossPct;
                           if (denom <= 0) return 0.0;
                           const roi = ((winPct - lossPct) / denom) * 100.0;
