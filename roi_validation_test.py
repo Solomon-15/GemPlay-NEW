@@ -356,7 +356,7 @@ def verify_integer_bet_amounts(bot_id: str, admin_token: str):
         record_test(
             "Integer Bet Amounts Verification",
             False,
-            f"No active games found for ROI_Test_Bot_2 (bot_id: {bot_id})"
+            f"No active games found for ROI_Test_Bot_5 (bot_id: {bot_id})"
         )
         return False
     
