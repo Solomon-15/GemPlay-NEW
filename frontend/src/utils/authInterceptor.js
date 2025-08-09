@@ -57,8 +57,8 @@ axios.interceptors.response.use(
       }
 
       try {
-        const response = await axios.post(`${API}/auth/refresh`, refreshToken, {
-          headers: { 'Content-Type': 'text/plain' }
+        const response = await axios.post(`${API}/auth/refresh`, { refresh_token: refreshToken }, {
+          headers: { 'Content-Type': 'application/json' }
         });
         
         const { access_token, refresh_token: newRefreshToken } = response.data;
