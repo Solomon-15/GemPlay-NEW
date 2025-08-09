@@ -16714,7 +16714,7 @@ async def get_regular_bots_list(
                     {"$match": {"creator_id": bot.id, "status": "COMPLETED", "winner_id": bot.id}},
                     {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
                 ]).to_list(1)
-                wins_sum = float((wins_sum_agg[0]['total'] if wins_sum_agg else 0) * 2)  # выигрыш = ставка × 2
+                wins_sum = float(wins_sum_agg[0]['total'] if wins_sum_agg else 0)  # сумма ставок побед (INT-версия, без умножения)
                 
                 # Суммы поражений (losses sum)  
                 losses_sum_agg = await db.games.aggregate([
