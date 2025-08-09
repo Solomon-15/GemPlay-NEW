@@ -183,8 +183,13 @@ def create_roi_test_bot():
     distribution = calculate_largest_remainder_distribution(16, 9.0)
     
     # Create Regular bot with ROI 9% preset: 16 games, min=1, max=50
+    # Use timestamp to ensure unique name
+    import time
+    timestamp = int(time.time())
+    bot_name = f"ROI_Test_Bot_5_{timestamp}"
+    
     bot_data = {
-        "name": "ROI_Test_Bot_5",
+        "name": bot_name,
         "min_bet_amount": 1.0,
         "max_bet_amount": 50.0,
         "cycle_games": 16,
@@ -195,7 +200,7 @@ def create_roi_test_bot():
         "creation_mode": "queue-based"
     }
     
-    print(f"   📝 Creating Regular bot 'ROI_Test_Bot_5' with ROI 9% preset")
+    print(f"   📝 Creating Regular bot '{bot_name}' with ROI 9% preset")
     print(f"   📊 Parameters: 16 games, min=1, max=50, ROI 9% preset")
     print(f"   🎯 Expected ROI: 9% using Largest Remainder distribution")
     
