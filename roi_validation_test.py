@@ -184,21 +184,19 @@ def create_roi_test_bot():
     
     # Create Regular bot with ROI 9% preset: 16 games, min=1, max=50
     bot_data = {
-        "name": "ROI_Test_Bot_3",
+        "name": "ROI_Test_Bot_5",
         "min_bet_amount": 1.0,
         "max_bet_amount": 50.0,
         "cycle_games": 16,
-        "wins_count": distribution["wins"],      # 10 wins
-        "losses_count": distribution["losses"],  # 6 losses  
-        "draws_count": distribution["draws"],    # 0 draws
+        "win_percentage": 55,  # Will be adjusted for ROI calculation
         "pause_between_cycles": 5,
         "pause_on_draw": 1,
         "profit_strategy": "balanced",
         "creation_mode": "queue-based"
     }
     
-    print(f"   📝 Creating Regular bot 'ROI_Test_Bot_3' with ROI 9% preset")
-    print(f"   📊 Parameters: 16 games, min=1, max=50, wins={distribution['wins']}, losses={distribution['losses']}, draws={distribution['draws']}")
+    print(f"   📝 Creating Regular bot 'ROI_Test_Bot_5' with ROI 9% preset")
+    print(f"   📊 Parameters: 16 games, min=1, max=50, ROI 9% preset")
     print(f"   🎯 Expected ROI: 9% using Largest Remainder distribution")
     
     # Create the bot
