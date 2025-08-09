@@ -5217,23 +5217,9 @@ async def get_bot_profit_integration(current_admin: User = Depends(get_current_a
             "games_per_bot": total_games / active_bots if active_bots > 0 else 0
         }
         
-        # Format creation mode data
+        # Legacy formatting removed
         creation_mode_data = {}
-        for item in bot_revenue_by_mode:
-            mode = item["_id"] or "queue-based"
-            creation_mode_data[mode] = {
-                "revenue": item["total"],
-                "transactions": item["count"]
-            }
-        
-        # Format behavior data
         behavior_data = {}
-        for item in bot_revenue_by_behavior:
-            behavior = item["_id"] or "balanced"
-            behavior_data[behavior] = {
-                "revenue": item["total"],
-                "transactions": item["count"]
-            }
         
         return {
             "bot_revenue": {
