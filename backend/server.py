@@ -5277,8 +5277,8 @@ async def get_bot_win_rate_analysis(bot_id: str, current_user: User = Depends(ge
         actual_win_rate = (total_wins / total_games * 100) if total_games > 0 else 0
         
         target_win_rate = bot.get("win_rate_percent", 60)
+        # Legacy removed: profit_strategy
         bot_behavior = bot.get("bot_behavior", "balanced")
-        profit_strategy = bot.get("profit_strategy", "balanced")
         
         cycle_games = bot.get("cycle_games", 12)
         current_cycle_games = bot.get("current_cycle_games", 0)
@@ -5307,20 +5307,11 @@ async def get_bot_win_rate_analysis(bot_id: str, current_user: User = Depends(ge
             }
         }.get(bot_behavior, {})
         
+        # Legacy removed: strategy_stats (profit_strategy deprecated)
         strategy_stats = {
-            "start_profit": {
-                "description": "Старт с прибыли - выигрыши в начале цикла",
-                "pattern": "Фронт-лоадинг выигрышей"
-            },
-            "balanced": {
-                "description": "Сбалансированная стратегия - равномерные выигрыши",
-                "pattern": "Случайное распределение выигрышей"
-            },
-            "end_loss": {
-                "description": "Принятие поражений в конце цикла",
-                "pattern": "Бэк-лоадинг проигрышей"
-            }
-        }.get(profit_strategy, {})
+            "description": "Legacy profit strategy removed",
+            "pattern": "No longer applicable"
+        }
         
         return {
             "bot_id": bot_id,
