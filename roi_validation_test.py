@@ -268,7 +268,7 @@ def verify_roi_active_field(bot_id: str, admin_token: str):
         record_test(
             "ROI Active Field Verification",
             False,
-            f"ROI_Test_Bot_2 not found in admin bots response"
+            f"ROI_Test_Bot_5 not found in admin bots response"
         )
         return False
     
