@@ -988,7 +988,7 @@ const RegularBotsManagement = () => {
   const recalculateBotBets = async (botId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/admin/bots/${botId}/reset-bets`, {}, {
+      const response = await axios.post(`${API}/admin/bots/${botId}/recalculate-bets`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
