@@ -1,4 +1,15 @@
 backend:
+  - task: "Russian Review Lobby Requirements Testing"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "🎉 RUSSIAN REVIEW LOBBY TESTING COMPLETED WITH 100% SUCCESS! Conducted comprehensive testing of all 4 specific Russian review lobby requirements. PERFECT SUCCESS RATE: 100% (4/4 tests passed). DETAILED RESULTS: ✅ REQUIREMENT 1 PASSED: GET /api/games/available excludes REGULAR bot games (0 found), shows only Human-bots and live players, no 'Unknown Player' names (0 found), tested 187 Human-bot games. ✅ REQUIREMENT 2 PASSED: GET /api/bots/active-games returns only WAITING REGULAR bot games (53 found), all with real bot names (creator_username) and avatar_gender from creator.gender field. ✅ REQUIREMENT 3 PASSED: GET /api/bots/ongoing-games returns only ACTIVE REGULAR bot games (1 found), all with real bot names and real opponent names (no 'Unknown Player' found). ✅ REQUIREMENT 4 PASSED: GET /api/games/active-human-bots excludes REGULAR bots (0 found), no 'Unknown Player' names for creators/opponents (0 found), tested 21 Human-bot games. CONCLUSION: ALL Russian review lobby requirements are FULLY FUNCTIONAL and working as expected."
   - task: "Regular Bots API Comprehensive Testing - Russian Review"
     implemented: true
     working: true
