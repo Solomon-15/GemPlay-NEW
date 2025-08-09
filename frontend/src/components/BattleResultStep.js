@@ -11,6 +11,25 @@ const BattleResultStep = ({
   onClose
 }) => {
   const [timeUntilAutoClose, setTimeUntilAutoClose] = React.useState(30);
+  const [controlsLocked, setControlsLocked] = React.useState(true);
+  const [lockCountdown, setLockCountdown] = React.useState(2);
+
+  // 2-секундная блокировка кнопок после показа результата
+  React.useEffect(() => {
+    setControlsLocked(true);
+    setLockCountdown(2);
+    const lockTimer = setInterval(() => {
+      setLockCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(lockTimer);
+          setControlsLocked(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(lockTimer);
+  }, []);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
