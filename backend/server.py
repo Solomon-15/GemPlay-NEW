@@ -10325,9 +10325,9 @@ async def get_ongoing_bot_games(current_user: User = Depends(get_current_user)):
                 "id": game["id"],
                 "game_id": game["id"],
                 "creator_id": game["creator_id"],
-                "creator_username": "Bot",  # Regular bots always show as "Bot"
+                "creator_username": bot.get("name", "Bot"),  # Show real bot name
                 "creator": {
-                    "username": "Bot",
+                    "username": bot.get("name", "Bot"),
                     "gender": bot.get("avatar_gender", "male")
                 },
                 "opponent_id": game.get("opponent_id"),
