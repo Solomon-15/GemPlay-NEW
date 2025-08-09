@@ -1979,21 +1979,19 @@ const RegularBotsManagement = () => {
                         const actualColor = roiActual < 0 ? 'text-red-400' : 'text-orange-400';
                         
                         // Плановый ROI: всегда показываем нижней строкой
-                        // Нижняя строка: плановый ROI, серый фиксированный
+                        // Нижняя строка: индивидуальный плановый ROI по конфигурации бота
+                        // Берём проценты из бота: приоритет wins_percentage/losses_percentage, иначе используем win_percentage и выводим losses = 100 - win - draws
                         const roiPlanned = (() => {
-                          if (bot.roi_active !== undefined && bot.roi_active !== null) return Number(bot.roi_active);
-                          const winsPct = (bot.wins_percentage !== undefined ? Number(bot.wins_percentage) : 44.0);
-                          const lossesPct = (bot.losses_percentage !== undefined ? Number(bot.losses_percentage) : 36.0);
-                          const cycleGames = (bot.cycle_games !== undefined ? Number(bot.cycle_games) : 12);
-                          const minBet = (bot.min_bet_amount !== undefined ? Number(bot.min_bet_amount) : 1.0);
-                          const maxBet = (bot.max_bet_amount !== undefined ? Number(bot.max_bet_amount) : 50.0);
-                          const avgBet = (minBet + maxBet) / 2.0;
-                          const totalEst = Math.round(avgBet * cycleGames);
-                          const winsSum = Math.floor(totalEst * winsPct / 100.0);
-                          const lossesSum = Math.ceil(totalEst * lossesPct / 100.0);
-                          const activePool = winsSum + lossesSum;
-                          const profit = winsSum - lossesSum;
-                          return activePool > 0 ? (profit / activePool) * 100.0 : 0.0;
+                          const hasWinsPct = bot.wins_percentage !== undefined && bot.wins_percentage !== null;
+                          const hasLossesPct = bot.losses_percentage !== undefined && bot.losses_percentage !== null;
+                          const hasDrawsPct = bot.draws_percentage !== undefined && bot.draws_percentage !== null;
+                          const winPct = hasWinsPct ? Number(bot.wins_percentage) : (bot.win_percentage !== undefined ? Number(bot.win_percentage) : 55.0);
+                          const drawPct = hasDrawsPct ? Number(bot.draws_percentage) : 20.0;
+                          const lossPct = hasLossesPct ? Number(bot.losses_percentage) : Math.max(0, 100.0 - winPct - drawPct);
+                          const denom = winPct + lossPct;
+                          if (denom <= 0) return 0.0;
+                          const roi = ((winPct - lossPct) / denom) * 100.0;
+                          return roi;
                         })();
                         
                         return (
