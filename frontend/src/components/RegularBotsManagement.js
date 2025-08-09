@@ -2548,7 +2548,7 @@ const RegularBotsManagement = () => {
 
                   {/* Пауза между циклами */}
                   <div>
-                    <label className="block text-text-secondary text-sm mb-1">Пауза между циклами (сек):</label>
+                    <label className="block text-text-secondary text-sm mb-1">Пауза между циклами:</label>
                     <input
                       type="number"
                       min="1"
