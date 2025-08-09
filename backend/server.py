@@ -15850,7 +15850,6 @@ async def create_regular_bots(
         draws_percentage = bot_config.get("draws_percentage", 20.0)   # % ничьих
         
         cycle_games = bot_config.get("cycle_games", 12)  # 1-66
-        creation_mode = bot_config.get("creation_mode", "queue-based")  # Значение по умолчанию
         pause_between_cycles = bot_config.get("pause_between_cycles", 5)  # Пауза между циклами
         pause_on_draw = bot_config.get("pause_on_draw", 5)  # Пауза при ничье и между ставками
         profit_strategy = bot_config.get("profit_strategy", "balanced")
@@ -15892,7 +15891,7 @@ async def create_regular_bots(
             draws_percentage=draws_percentage,
             cycle_games=cycle_games,
             current_limit=cycle_games,
-            creation_mode=creation_mode,
+            creation_mode=bot_config.get("creation_mode", "queue-based"),
             pause_between_cycles=pause_between_cycles,
             pause_on_draw=pause_on_draw,
             profit_strategy=profit_strategy,
