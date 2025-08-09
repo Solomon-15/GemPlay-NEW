@@ -2249,8 +2249,9 @@ async def check_and_complete_bot_cycle(bot_id: str):
         current_losses = bot_doc.get("current_cycle_losses", 0)
         cycle_games = bot_doc.get("cycle_games", 12)
         
-        # Проверяем завершение цикла (ничьи не считаются)
-        games_played = current_wins + current_losses
+        # Проверяем завершение цикла (ничьи считаются в общем количестве игр)
+        current_draws = bot_doc.get("current_cycle_draws", 0)
+        games_played = current_wins + current_losses + current_draws
         
         if games_played >= cycle_games:
             # Цикл завершен!
