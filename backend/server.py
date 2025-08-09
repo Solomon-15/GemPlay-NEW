@@ -5344,7 +5344,7 @@ async def get_bot_win_rate_analysis(bot_id: str, current_user: User = Depends(ge
                 "stats": behavior_stats
             },
             "strategy": {
-                "type": profit_strategy,
+                "type": "legacy_removed",
                 "stats": strategy_stats
             },
             "performance": {
