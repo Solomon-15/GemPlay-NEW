@@ -17899,10 +17899,7 @@ async def update_individual_bot_settings(
             update_fields["pause_between_cycles"] = pause_between_cycles
         if pause_on_draw is not None:
             update_fields["pause_on_draw"] = pause_on_draw
-        if creation_mode is not None:
-            update_fields["creation_mode"] = creation_mode
-        if profit_strategy is not None:
-            update_fields["profit_strategy"] = profit_strategy
+
         # New fields
         if wins_count is not None:
             update_fields["wins_count"] = wins_count
