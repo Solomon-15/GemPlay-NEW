@@ -74,6 +74,8 @@ const AdminPanel = ({ user, onClose }) => {
     );
   }
 
+  const fetchInFlight = useRef(false);
+
   useEffect(() => {
     fetchDashboardStats();
     
