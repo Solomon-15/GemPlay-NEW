@@ -10314,6 +10314,7 @@ async def get_ongoing_bot_games(current_user: User = Depends(get_current_user)):
             # Get opponent info (should be a real user since game is ACTIVE)
             opponent_info = {"username": "Player", "gender": "male"}
             if game.get("opponent_id"):
+                # Opponent is always a real user in these games
                 opponent = await db.users.find_one({"id": game["opponent_id"]})
                 if opponent:
                     opponent_info = {
