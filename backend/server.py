@@ -1981,7 +1981,8 @@ async def maintain_all_bots_active_bets():
                 current_wins = bot_doc.get("current_cycle_wins", 0)
                 current_losses = bot_doc.get("current_cycle_losses", 0) 
                 current_draws = bot_doc.get("current_cycle_draws", 0)
-                games_played = current_wins + current_losses  # Ничьи не засчитываются в цикл
+                # НОВАЯ ЛОГИКА: Ничьи входят в цикл
+                games_played = current_wins + current_losses + current_draws
                 
                 # ПРАВИЛА:
                 # 1. Если нет активных ставок И цикл завершен → создать новый цикл
