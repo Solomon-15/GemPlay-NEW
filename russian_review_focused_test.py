@@ -413,7 +413,7 @@ def test_requirement_3_recalculate_bets():
     # Check response structure
     success_field = response_data.get("success", False)
     message = response_data.get("message", "")
-    bets_created = response_data.get("bets_created", 0)
+    bets_created = response_data.get("bets_created", response_data.get("generated_bets", 0))
     
     print(f"   🔍 Response Analysis:")
     print(f"      Success: {success_field}")
