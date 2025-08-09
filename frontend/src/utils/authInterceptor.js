@@ -4,6 +4,18 @@ import { API } from './api';
 let isRefreshing = false;
 let failedQueue = [];
 
+const isAuthEndpoint = (url = '') => {
+  try {
+    return (
+      url.includes('/auth/login') ||
+      url.includes('/auth/register') ||
+      url.includes('/auth/refresh')
+    );
+  } catch {
+    return false;
+  }
+};
+
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -16,11 +28,11 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Request interceptor to add token
+// Request interceptor to add token (skip auth endpoints)
 axios.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && !isAuthEndpoint(config?.url)) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -28,11 +40,20 @@ axios.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle 401s and auto-refresh tokens
+// Response interceptor to handle 401s and auto-refresh tokens (skip auth endpoints)
 axios.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config || {};
+
+    // Если это /auth/* — не пытаемся рефрешить, просто очищаем токены и отдаем ошибку
+    if (error.response?.status === 401 && isAuthEndpoint(originalRequest.url)) {
+      try {
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+      } catch {}
+      return Promise.reject(error);
+    }
     
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
@@ -40,6 +61,7 @@ axios.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(token => {
+          originalRequest.headers = originalRequest.headers || {};
           originalRequest.headers.Authorization = `Bearer ${token}`;
           return axios(originalRequest);
         }).catch(err => Promise.reject(err));
@@ -76,6 +98,7 @@ axios.interceptors.response.use(
         processQueue(null, access_token);
         
         // Retry original request
+        originalRequest.headers = originalRequest.headers || {};
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
         return axios(originalRequest);
         
