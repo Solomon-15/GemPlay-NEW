@@ -325,12 +325,19 @@ def test_requirement_2_bot_details():
     print(f"      W/L/D counts: {wins_count}/{losses_count}/{draws_count}")
     print(f"      Win percentage: {wins_percentage}%")
     
+    # Also check for ROI and other expected fields
+    roi_active = bot_data.get("roi_active")
+    win_rate = bot_data.get("win_rate")
+    
+    print(f"      ROI Active: {roi_active}")
+    print(f"      Win Rate: {win_rate}%")
+    
     # Record test result
     if not legacy_found and not missing_required:
         record_test(
             "REQUIREMENT 2 - Bot Details Structure",
             True,
-            f"Perfect structure: No legacy fields, all required W/L/D fields present"
+            f"Perfect structure: No legacy fields, all required W/L/D fields present, Win Rate: {win_rate}%"
         )
     elif legacy_found and not missing_required:
         record_test(
