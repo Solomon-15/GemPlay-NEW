@@ -278,7 +278,9 @@ function App() {
         // If token is expired and we have a refresh token, try to refresh
         if (error.response?.status === 401 && refreshToken) {
           try {
-            const refreshResponse = await axios.post(`${API}/auth/refresh?refresh_token=${refreshToken}`);
+            const refreshResponse = await axios.post(`${API}/auth/refresh`, { refresh_token: refreshToken }, {
+              headers: { 'Content-Type': 'application/json' }
+            });
             
             localStorage.setItem('token', refreshResponse.data.access_token);
             if (refreshResponse.data.refresh_token) {
