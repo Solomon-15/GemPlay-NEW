@@ -4,7 +4,7 @@ ROI VALIDATION TESTING - Integer Bet Fixes and ROI Planned Fallback
 Re-run backend validation after integer bet fixes and ROI planned fallback:
 
 1) Authenticate as admin.
-2) Create a regular bot (ROI_Test_Bot_3) with ROI 9% preset (16 games, min=1, max=50; wins/losses/draws per Largest Remainder).
+2) Create a regular bot (ROI_Test_Bot_5) with ROI 9% preset (16 games, min=1, max=50; wins/losses/draws per Largest Remainder).
 3) GET /api/admin/bots and verify that roi_active is present and > 0 (planned fallback used before games complete).
 4) After 10-20s, fetch active games for this bot and verify that 100% of bet_amount values are integers (no decimals). Report pass/fail.
 
