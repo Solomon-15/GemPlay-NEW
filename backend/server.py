@@ -246,8 +246,7 @@ class BotSettings(BaseModel):
 class UpdateBotPauseRequest(BaseModel):
     pause_between_cycles: int = Field(..., ge=1, le=3600, description="Пауза между циклами в секундах (1-3600)")
 
-class UpdateBotWinPercentageRequest(BaseModel):
-    win_percentage: float = Field(..., ge=0, le=100, description="Процент выигрышей (0-100)")
+# Removed legacy: UpdateBotWinPercentageRequest (win_percentage deprecated)
 
 
 
