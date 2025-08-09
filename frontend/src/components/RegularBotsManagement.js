@@ -705,9 +705,7 @@ const RegularBotsManagement = () => {
       errors.push('Минимальная ставка должна быть меньше максимальной');
     }
     
-    if (formData.win_percentage < 0 || formData.win_percentage > 100) {
-      errors.push('Процент выигрыша должен быть от 0 до 100');
-    }
+
     
     // Валидация процентов исходов игр
     if (formData.wins_percentage < 0 || formData.wins_percentage > 100) {
