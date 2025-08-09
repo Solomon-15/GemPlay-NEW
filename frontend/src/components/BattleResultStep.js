@@ -17,7 +17,7 @@ const BattleResultStep = ({
   // 2-секундная блокировка кнопок после показа результата
   React.useEffect(() => {
     setControlsLocked(true);
-    setLockCountdown(2);
+    setLockCountdown(3);
     const lockTimer = setInterval(() => {
       setLockCountdown(prev => {
         if (prev <= 1) {
