@@ -2121,7 +2121,7 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <span className={`px-3 py-1 text-xs rounded-full font-roboto font-medium ${
                         (() => {
-                          const strategy = cycleDetailsData.sums?.total_sum || 0;
+                          const strategy = bot.profit_strategy || 'balanced';
                           switch(strategy) {
                             case 'start-positive': 
                             case 'start_profit': 
