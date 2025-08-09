@@ -1980,21 +1980,14 @@ const RegularBotsManagement = () => {
                         
                         // Плановый ROI: всегда показываем нижней строкой
                         const ci = bot.cycle_total_info || {};
+                        // Строго по требованию: плановый ROI только по формуле из cycle_total_info
                         const plannedFromSums = (() => {
                           const ws = ci.wins_sum, ls = ci.losses_sum;
                           const denom = (Number(ws) || 0) + (Number(ls) || 0);
                           if (denom > 0) return ((Number(ws) - Number(ls)) / denom) * 100;
                           return null;
                         })();
-                        const plannedCandidates = [
-                          bot.planned_roi,
-                          bot.roi_planned,
-                          ci.roi_active,
-                          plannedFromSums,
-                          bot.roi_active
-                        ];
-                        const plannedRaw = plannedCandidates.find(v => v !== null && v !== undefined);
-                        const roiPlanned = plannedRaw !== undefined ? Number(plannedRaw) : 0;
+                        const roiPlanned = plannedFromSums !== null ? Number(plannedFromSums) : 0;
                         const plannedColor = roiPlanned < 0 ? 'text-red-400' : 'text-orange-400';
                         const plannedOpacity = 'opacity-60';
                         
