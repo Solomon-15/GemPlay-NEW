@@ -221,7 +221,8 @@ def test_russian_review_requirements():
     response = requests.get(f"{BASE_URL}/admin/bots/regular/list", headers=headers)
     results["total"] += 1
     if response.status_code == 200:
-        bots = response.json()
+        bots_data = response.json()
+        bots = bots_data if isinstance(bots_data, list) else bots_data.get("bots", [])
         roi_verified = 0
         roi_total = 0
         
