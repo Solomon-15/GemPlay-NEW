@@ -1979,16 +1979,9 @@ const RegularBotsManagement = () => {
                         const actualColor = roiActual < 0 ? 'text-red-400' : 'text-orange-400';
                         
                         // Плановый ROI: всегда показываем нижней строкой
-                        const ci = bot.cycle_total_info || {};
-                        // Строго по требованию: плановый ROI только по формуле из cycle_total_info
-                        // Используем доступные поля: active_pool = wins_sum + losses_sum, profit = wins_sum - losses_sum
-                        const plannedFromSums = (() => {
-                          const activePool = Number(ci.active_pool) || 0;
-                          const profit = Number(bot.bot_profit_amount) || 0;
-                          if (activePool > 0) return (profit / activePool) * 100;
-                          return null;
-                        })();
-                        const roiPlanned = plannedFromSums !== null ? Number(plannedFromSums) : 0;
+                        // Нижняя строка должна показывать изначальный ROI_active, который приходит с бэка
+                        const plannedRaw = bot.roi_active;
+                        const roiPlanned = (plannedRaw !== undefined && plannedRaw !== null) ? Number(plannedRaw) : 0;
                         const plannedColor = roiPlanned < 0 ? 'text-red-400' : 'text-orange-400';
                         const plannedOpacity = 'opacity-60';
                         
