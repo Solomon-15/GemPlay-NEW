@@ -475,7 +475,7 @@ def main():
     print_header("ROI VALIDATION TESTING")
     print(f"{Colors.BLUE}🎯 Testing ROI 9% preset with Largest Remainder distribution{Colors.END}")
     print(f"{Colors.BLUE}🌐 Backend URL: {BASE_URL}{Colors.END}")
-    print(f"{Colors.BLUE}📋 Requirements: ROI_Test_Bot_2, 16 games, min=1, max=50, roi_active field, integer bet amounts{Colors.END}")
+    print(f"{Colors.BLUE}📋 Requirements: ROI_Test_Bot_5, 16 games, min=1, max=50, roi_active field, integer bet amounts{Colors.END}")
     print(f"{Colors.BLUE}🔑 Using admin@gemplay.com / Admin123! for authorization{Colors.END}")
     
     try:
