@@ -16989,31 +16989,31 @@ async def recalculate_bot_bets(
             "status": "WAITING"
         })
         
-        # Generate new bet structure
-        new_bets = await generate_bot_cycle_bets(
-            bot_id=bot_id,
-            cycle_length=cycle_length,
-            cycle_total_amount=cycle_total_amount,
-            win_percentage=win_percentage,
-            min_bet=min_bet_amount,
-            avg_bet=bot.get("avg_bet_amount", 50.0),
-            bet_distribution=bot.get("bet_distribution", "medium")
-        )
+        # Create a full cycle using the NEW formula 2.0 with exact sums and planned outcomes
+        success = await create_full_bot_cycle(bot)
         
         # Count active bets after generation
-        active_bets_count = len(new_bets)
+        active_bets_count = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "WAITING"
+        })
         
         return {
-            "message": f"Пересчитаны ставки для бота {bot.get('name', bot_id[:8])}",
+            "message": f"Пересоздан цикл ставок для бота {bot.get('name', bot_id[:8])}",
             "bot_id": bot_id,
-            "generated_bets": active_bets_count,
+            "generated_bets": int(active_bets_count),
             "cycle_parameters": {
-                "cycle_length": cycle_length,
-                "cycle_total_amount": cycle_total_amount,
-                "win_percentage": win_percentage,
-                "min_bet": min_bet_amount,
-                "max_bet": max_bet_amount
-            }
+                "cycle_games": bot.get("cycle_games", 12),
+                "min_bet_amount": bot.get("min_bet_amount", 1.0),
+                "max_bet_amount": bot.get("max_bet_amount", 50.0),
+                "wins_count": bot.get("wins_count", 6),
+                "losses_count": bot.get("losses_count", 6),
+                "draws_count": bot.get("draws_count", 4),
+                "wins_percentage": bot.get("wins_percentage", 44.0),
+                "losses_percentage": bot.get("losses_percentage", 36.0),
+                "draws_percentage": bot.get("draws_percentage", 20.0)
+            },
+            "success": bool(success)
         }
         
     except HTTPException:
