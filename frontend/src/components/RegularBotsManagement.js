@@ -2213,6 +2213,73 @@ const RegularBotsManagement = () => {
       </div>
 
       {/* Модальное окно создания бота */}
+      {/* Модалка деталей цикла (W/L/D, суммы, ROI) */}
+      {isCycleDetailsModalOpen && cycleDetailsData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-rajdhani text-xl font-bold text-white">
+                Детали цикла: {cycleDetailsData.bot_name}
+              </h3>
+              <button onClick={() => setIsCycleDetailsModalOpen(false)} className="text-gray-400 hover:text-white">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs">Длина цикла</div>
+                <div className="text-white text-lg font-bold">{cycleDetailsData.cycle_length}</div>
+              </div>
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs">Теоретическая сумма</div>
+                <div className="text-white text-lg font-bold">{cycleDetailsData.exact_cycle_total}</div>
+              </div>
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs">ROI</div>
+                <div className="text-white text-lg font-bold">{Number(cycleDetailsData.sums?.roi_active || 0).toFixed(2)}%</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4 mb-6">
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs">Победы (сумма)</div>
+                <div className="text-green-400 text-lg font-bold">{cycleDetailsData.sums?.wins_sum || 0}</div>
+              </div>
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs">Поражения (сумма)</div>
+                <div className="text-red-400 text-lg font-bold">{cycleDetailsData.sums?.losses_sum || 0}</div>
+              </div>
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs">Ничьи (сумма)</div>
+                <div className="text-yellow-400 text-lg font-bold">{cycleDetailsData.sums?.draws_sum || 0}</div>
+              </div>
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs">Общая сумма</div>
+                <div className="text-white text-lg font-bold">{cycleDetailsData.sums?.total_sum || 0}</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs mb-2">Ставки Побед</div>
+                <div className="text-white text-sm break-words">{(cycleDetailsData.breakdown?.wins || []).join(', ') || '—'}</div>
+              </div>
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs mb-2">Ставки Поражений</div>
+                <div className="text-white text-sm break-words">{(cycleDetailsData.breakdown?.losses || []).join(', ') || '—'}</div>
+              </div>
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs mb-2">Ставки Ничьих</div>
+                <div className="text-white text-sm break-words">{(cycleDetailsData.breakdown?.draws || []).join(', ') || '—'}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
