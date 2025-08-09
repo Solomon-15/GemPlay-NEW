@@ -65,7 +65,11 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
         // Initialize sound manager with user role
         soundManager.initializeSounds(response.data.user.role);
         
-        window.location.reload();
+        // Переинициализация приложения без перезагрузки страницы
+        // Достаточно установить пользователя и снять состояние загрузки
+        // window.location.reload();
+        setLoading(false);
+        setAuthView('login');
       } else {
         // Register
         // Валидация имени пользователя перед отправкой
