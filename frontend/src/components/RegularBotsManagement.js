@@ -830,8 +830,8 @@ const RegularBotsManagement = () => {
         cycle_games: botForm.cycle_games,
         pause_between_cycles: botForm.pause_between_cycles,
         pause_on_draw: botForm.pause_on_draw,
-        creation_mode: botForm.creation_mode,
-        profit_strategy: botForm.profit_strategy
+        // УДАЛЕНО: creation_mode (наследие)
+        // УДАЛЕНО: profit_strategy (наследие)
       };
       
       const response = await axios.post(`${API}/admin/bots/create-regular`, botData, {
