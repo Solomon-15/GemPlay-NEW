@@ -3222,7 +3222,7 @@ const RegularBotsManagement = () => {
                       }}
                       className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
                     />
-                    <div className="text-xs text-text-secondary mt-1">При ничье создается новая ставка через указанное время</div>
+                    {/* Удалено: При ничье замена не создаётся в новой логике */}
                   </div>
                 </div>
                 {/* Вариант 2: Без лайв‑превью ROI в режиме редактирования */}
