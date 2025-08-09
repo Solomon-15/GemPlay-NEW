@@ -6,7 +6,7 @@ Simple test for Human-bot names management API endpoints
 import requests
 import json
 
-BASE_URL = "https://a0c62159-4f54-474f-b3db-88a2c8a14d22.preview.emergentagent.com/api"
+BASE_URL = "https://ac189324-9922-4d54-b6a3-50cded9a8e9f.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

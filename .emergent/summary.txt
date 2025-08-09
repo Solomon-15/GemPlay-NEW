@@ -1,110 +1,81 @@
 <analysis>
-The AI engineer has performed several iterative feature enhancements and critical bug fixes on the application's frontend, with some backend adjustments. The primary focus was on refining the ROI column in the Regular Bots Management table, which progressed from basic formatting and coloring to a complex two-line display (actual and planned ROI) with specific sorting and fallback logic. This required multiple refinements to the planned ROI calculation.
-
-Beyond features, two significant bugs were resolved: a console error and duplicate API calls in the Admin Panel (due to unthrottled  calls), and a persistent user logout issue. The logout problem stemmed from an API contract mismatch in the token refresh flow and race conditions, both of which were systematically addressed. The most recent task involved fixing an error when the Join Battle modal was rapidly closed, by introducing a timed UI lock. There was a brief interlude where an unrelated ROI display bug was fixed, indicating a slight deviation from the active bug. Overall, the engineer demonstrated strong problem-solving and iterative refinement capabilities.
+The previous AI engineer successfully executed a complex, multi-faceted task to refine and clean up the Regular Bots feature. The work progressed iteratively, focusing on precise game logic for betting cycles, ROI calculations, and careful removal of legacy fields. Key efforts included a significant rewrite of backend logic in  to ensure integer-based bet generation, proportional sum distribution, and accurate draw handling without replacement bets. On the frontend,  was updated to reflect new data, unify bot creation/editing modals, and remove deprecated UI elements. The engineer diligently addressed user confirmations, performing multiple backend tests and preparing a database migration script. The process involved systematic search-and-replace operations, endpoint consolidation, and meticulous adjustment of game outcome determination to strictly adhere to new draw logic. The trajectory highlights a disciplined approach to code cleanup and feature refinement.
 </analysis>
 
 <product_requirements>
-The user requires enhancements and fixes for an existing full-stack application.
-**A. ROI Column Enhancements (Regular Bots Management Table):**
-*   Rename the % column header to ROI.
-*   Remove ROI text from cell values, displaying only the number and percentage (e.g., 9.82%).
-*   Implement color-coding for actual ROI values: orange for values ≥ 0 and red for values < 0.
-*   Introduce a two-line display within the ROI column:
-    *   Top line: Actual ROI (sourced from ), colored based on its sign (orange/red).
-    *   Bottom line: Planned ROI, displayed in a fixed gray color (), without sign-based coloring.
-*   The planned ROI's source should prioritize  from the backend; if unavailable, a frontend calculation based on bot configuration (wins/losses/draws percentages, min/max bets, cycle games) should be used as a fallback.
-*   The ROI column must be sortable based on the actual ROI ().
-*   Add tooltips (Фактический ROI, Плановый ROI) on hover.
-
-**B. Admin Panel Dashboard Bug Fix:**
-*   Resolve  errors and duplicate Fetching dashboard stats logs in . This includes addressing concurrent API calls and potential issues with  not being an array.
-
-**C. Spontaneous Logout Bug Fix:**
-*   Address the issue causing users to be spontaneously logged out after 2-7 minutes. This involves ensuring consistent token refresh mechanisms between frontend and backend, handling  responses gracefully, and preventing race conditions during token refresh.
-
-**D. Join Battle Modal Closure Error Fix:**
-*   Resolve an error that occurs when the Join Battle modal is abruptly closed during a game turn. Specifically, after a move is completed and the result is displayed, a 2-second countdown should be added before the close button (X) and Continue Playing (OK) button become active, preventing premature  calls.
+The goal is to develop and enhance a full-stack application for Regular Bots within a game. Key requirements include:
+1.  **Algorithmic Betting Cycle**: Implement an algorithm for precise integer-based bet generation (1-100) and proportional sum distribution across wins, losses, and draws using the largest remainder method, ensuring the total sum matches the theoretical total.
+2.  **Dynamic ROI Calculation**: Automate ROI computation as .
+3.  **API & UI Integration**: Expose ROI and cycle details via backend APIs, displayed in the frontend admin panel, including a Cycle Details modal. Forms should provide real-time calculation previews.
+4.  **UI/UX Refinement**: Streamline the Create Regular Bot modal's layout by merging Cycles and Timing Settings sections for improved responsiveness.
+5.  **UI Unification & Cleanup**: Unify Create and Edit bot modals. Crucially, remove all legacy fields (, , ) and associated logic/mentions from the entire codebase (model, API, UI, documentation, tests).
+6.  **Accurate Draw Logic**: Implement draws to count towards the total  games in a cycle, without replacement bets, strictly aligning with specified W/L/D counts.
+7.  **Anti-Race Conditions**: Prevent active bets from exceeding  limits.
 </product_requirements>
 
 <key_technical_concepts>
-- **React.js:** Frontend framework for building UI components.
-- **FastAPI:** Backend framework for API development.
-- **MongoDB:** NoSQL database used for data storage.
-- **Axios:** HTTP client for making API requests from the frontend.
-- **Tailwind CSS:** Utility-first CSS framework for styling.
-- ** &  Hooks:** React hooks for managing side effects and mutable references.
-- **Authentication Interceptors:** Axios interceptors for handling token refresh and authentication headers.
-- **JSON Web Tokens (JWT):** Used for authentication and authorization.
+-   **FastAPI**: Backend API development.
+-   **React**: Frontend UI development.
+-   **MongoDB**: Database for bot configurations and game data.
+-   **Tailwind CSS**: Responsive UI styling.
+-   **Game Logic Algorithms**: Custom algorithms for betting cycles, proportional distribution, and ROI calculation.
+-   **Database Migration**: One-time script for field removal.
 </key_technical_concepts>
 
 <code_architecture>
-The application has a standard full-stack structure:
+The application uses a FastAPI backend and a React frontend, deployed in Kubernetes.
 
 
-- ****:
-    - **Summary:** This file manages the display and interaction of the regular bots table in the admin panel. It's crucial for presenting bot statistics and allowing sorting.
-    - **Changes:**
-        - Modified the column header for ROI from %.
-        - Implemented a two-line display for ROI values, separating actual and planned ROI.
-        - Applied specific Tailwind CSS classes (, , , ) for color-coding and gray tinting.
-        - Updated sorting logic to sort by  for the ROI column.
-        - Adjusted the logic for calculating planned ROI on the frontend: initially attempted to source from  sums, then pivoted to , and finally implemented a fallback calculation based on individual bot's / when  is absent.
 
-- ****:
-    - **Summary:** This component handles the display and fetching of dashboard statistics for the admin panel.
-    - **Changes:**
-        - Eliminated duplicate  calls within .
-        - Introduced a  () to prevent concurrent API requests, acting as a debouncer/guard for dashboard data fetching.
-        - Removed verbose  statements used for debugging.
-        - Added a safe guard for  to correctly handle non-array responses when setting bot counts.
+-   ****:
+    -   **Summary of importance**: Defines FastAPI application, API routes, Pydantic models, and core business logic for bot management, game cycle generation, and calculations, interacting with MongoDB.
+    -   **Summary of changes**:
+        *    updated for precise integer sums and proportional distribution.
+        *   ROI calculation integrated.
+        *   API endpoints (, , , ) updated for new metrics and bot settings.
+        *   **Legacy Removal**: , ,  removed from  model, DTOs, validations, and all API responses (e.g., , , ). Corresponding old endpoints (e.g., , ) were removed. Backend aggregations/statistics reliant on these fields (e.g., , , ) were also purged.
+        *   **Draw Logic Refinement**:  function and its calls were removed. Logic now ensures  is used for game results, and draws count towards  total games in a cycle.
+        *   Endpoint consolidation:  is now the sole endpoint for rebuilding active bets.
+        *   Added  and  flat fields to  response.
+        *    were ensured to be returned correctly in bot details.
 
-- ****:
-    - **Summary:** This file contains an Axios interceptor responsible for attaching authentication headers to requests and handling token refresh when access tokens expire.
-    - **Changes:**
-        - Standardized the  request to consistently send a JSON payload  with .
-        - Implemented a queuing mechanism ( flag) to ensure only one token refresh request is active at a time, preventing race conditions and multiple logouts.
+-   ****:
+    -   **Summary of importance**: Provides the admin interface for managing regular bots (listing, creating, editing).
+    -   **Summary of changes**:
+        *   Updated to display , , and .
+        *   Cycle Details modal added.
+        *   Create Bot UI refined: Cycles and Timing Settings blocks merged.
+        *   Edit Bot UI unified with Create Bot UI (excluding live ROI preview). Sends  requests.
+        *   **Legacy Removal**:  column and inline editing for  removed. Стратегия и режим block (, ) removed from create/edit modals.
+        *   API calls updated from  to .
+        *   All UI text, hints, state variables, and calculations referring to  were updated to use  or removed entirely.
+        *   Hints regarding draw logic were corrected to reflect that draws now count towards the cycle.
 
-- ****:
-    - **Summary:** The main application component, responsible for overall layout and initial authentication status checks.
-    - **Changes:**
-        - Updated the  function to adhere to the new standardized JSON payload contract for the  endpoint, aligning with the  changes.
-
-- ****:
-    - **Summary:** The core FastAPI application, defining all API routes and backend business logic, including authentication.
-    - **Changes:**
-        - Modified the  endpoint to correctly parse the JSON payload from the frontend for .
-        - Ensured that after a successful token refresh, the used  is explicitly deactivated (marked inactive in the database) to prevent reuse.
-
-- ****:
-    - **Summary:** This modal handles the flow of joining a battle, choosing a move, and displaying the result.
-    - **Changes:**
-        - Implemented a state () and a 2-second timer.
-        - The close button (X) in the modal header is now conditionally  for 2 seconds when the battle result step (step 3) is active.
-        - Coordinates with  to ensure both the X and OK buttons are disabled for the specified duration, preventing rapid closure and associated errors.
-
-- ****:
-    - **Summary:** A sub-component within  responsible for displaying the battle outcome.
-    - **Changes:**
-        - Introduced  state and  with a 2-second timer.
-        - The Continue Playing (OK) button is disabled and displays a countdown (Please wait Ns...) during this 2-second period.
-        - After the countdown, the button activates with its original text.
+-   ****:
+    -   **Summary of importance**: A one-time script to perform a database migration.
+    -   **Summary of changes**: Created to  (remove) , , and  fields from existing documents in the  MongoDB collection. Includes backup and index check. A dry-run was performed, showing 0 documents containing these fields, indicating the DB is already clean or new bots don't use them.
 </code_architecture>
 
 <pending_tasks>
-- **Backend Enhancement for Planned ROI:** The AI engineer recommended adding  field to the  endpoint in the backend () for full consistency of planned ROI data.
-- **Optional UI Labels:** The user was asked if they want compact факт/план (fact/plan) labels for the two-line ROI display.
-- **Other ROI Views:** The user was asked if the two-line ROI display logic should be applied to other detailed lists/modals.
-- **Additional Monitoring:** The AI engineer asked if the user wants additional monitoring (metrics for refreshes, 401s, logout events).
-- **Load Testing:** The AI engineer asked if the user wants a load test scenario (20 concurrent requests) for the refresh cycle.
+-   Frontend: Run automatic frontend (E2E) tests.
+-   Backend: Minor cleanup for  to explicitly return 0 if values are missing in the bot list API.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was working on resolving a bug in the Join Battle modal ( and ). The bug manifested as an error when the modal was abruptly closed during a game turn, resulting in  and backend errors like  or .
+The immediate work involved a comprehensive cleanup and refinement of the Regular Bots functionality. This was a multi-stage process with frequent user confirmations.
 
-The current state of the fix is that a 2-second delay has been implemented after the battle result is displayed. During this delay, both the modal's close X button and the Continue Playing (OK) button are disabled. The OK button also shows a countdown (e.g., Please wait 2s...). After 2 seconds, both controls become active, allowing the user to safely close the modal or proceed. This change aims to prevent premature closing, allowing the game state to synchronize and avoid subsequent erroneous API calls (like  on an already completed game). The AI engineer confirmed the fix and asked for testing. The user then simply said Продолжай (Continue), which implies the fix is accepted for now, and the engineer is ready to proceed.
+The AI engineer has successfully:
+1.  **Backend Legacy Removal**: All mentions of , , and  have been removed from the bot model, DTOs, API responses (, ), and creation/update logic. Corresponding backend aggregations and statistics have also been purged.
+2.  **Frontend UI Cleanup**: The  column and inline editors for  were removed, and the Стратегия и режим block (, ) was removed from both Create Regular Bot and Edit Bot modals. All UI text/hints related to  have been removed or updated to . Hints for draw logic were updated to confirm draws now count.
+3.  **Database Migration**: The script  was created and a dry-run executed, which found 0 documents with legacy fields, confirming the database is clean.
+4.  **Draw Logic Correction**: The old  logic has been entirely removed. Draws now explicitly count towards  total games in a cycle, and the  field is consistently used for game outcomes.
+5.  **Cycle Sum Accuracy & API Enhancement**: The  in the bot list now accurately reflects the sum of all bets (including draws), while  reflects wins + losses. New flat fields  and  were added to the bot list API for convenience.
+6.  **Endpoint Consolidation**: All  functionality has been consolidated to  on both frontend and backend, with old  endpoints removed from the backend.
+7.  **Backend Testing**: Multiple rounds of backend autotests were executed successfully, confirming the removal of legacy fields, correctness of new calculations, and proper functionality of  and draw logic. A minor observation from the test agent regarding  returning  in the bot list API was noted, but not yet addressed as it's considered a minor edge case.
+
+The engineer is currently waiting for user confirmation on the next steps, as the previously confirmed plan has been executed.
 </current_work>
 
 <optional_next_step>
-Run E2E tests for the Join Battle modal fix to confirm the 2-second delay on the close X button.
+Run automatic frontend (E2E) tests for key scenarios of Regular Bots.
 </optional_next_step>
