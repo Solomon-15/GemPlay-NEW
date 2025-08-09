@@ -16824,7 +16824,7 @@ async def get_regular_bots_list(
                 },
                 "min_bet_amount": bot_doc.get('min_bet_amount', 1.0),
                 "max_bet_amount": bot_doc.get('max_bet_amount', 50.0),
-                "win_percentage": bot_doc.get('win_percentage', 55.0),
+
                 "pause_between_cycles": bot_doc.get('pause_between_cycles', 5),
                 "pause_on_draw": bot_doc.get('pause_on_draw', 1),
                 "creation_mode": bot_doc.get('creation_mode', 'queue-based'),
