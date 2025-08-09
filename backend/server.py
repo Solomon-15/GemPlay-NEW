@@ -4036,8 +4036,9 @@ async def refresh_access_token(payload: dict):
             data={"sub": user_obj.id}, expires_delta=access_token_expires
         )
         
-        # Create new refresh token
+        # Create new refresh token and deactivate the old one
         new_refresh_token = await create_refresh_token(user_obj.id)
+        await db.refresh_tokens.update_one({"id": token_doc.get("id")}, {"$set": {"is_active": False}})
         
         return Token(
             access_token=access_token,
