@@ -35,6 +35,22 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const [resultControlsLocked, setResultControlsLocked] = useState(false);
   const resultLockTimerRef = useRef(null);
 
+  useEffect(() => {
+    if (currentStep === 3) {
+      // Стартуем 2-секундную блокировку крестика
+      setResultControlsLocked(true);
+      if (resultLockTimerRef.current) {
+        clearTimeout(resultLockTimerRef.current);
+      }
+      resultLockTimerRef.current = setTimeout(() => {
+        setResultControlsLocked(false);
+      }, 2000);
+      return () => {
+        if (resultLockTimerRef.current) clearTimeout(resultLockTimerRef.current);
+      };
+    }
+  }, [currentStep]);
+
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
   const { showSuccess, showError } = useNotifications() || {};
   const { refreshAllData, refreshWithDelay } = useDataRefresh(onUpdateUser, false); // Disabled verbose logging
