@@ -964,7 +964,7 @@ const RegularBotsManagement = () => {
         profit_strategy: botForm.profit_strategy
       };
 
-      const response = await axios.put(`${API}/admin/bots/${editingBot.id}`, botData, {
+      const response = await axios.patch(`${API}/admin/bots/${editingBot.id}`, botData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
