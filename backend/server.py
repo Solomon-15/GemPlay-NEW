@@ -2026,7 +2026,7 @@ async def maintain_all_bots_active_bets():
                             )
                 else:
                     # Есть активные ставки → НЕ создавать новые
-                    # Новые ставки создаются ТОЛЬКО при ничье через schedule_draw_replacement_bet()
+                    # НОВАЯ ЛОГИКА: При ничьей замены не создаются автоматически
                     logger.debug(f"Bot {bot_doc['name']}: {current_active_bets} active bets, cycle progress: {games_played}/{cycle_games}")
                     
             except Exception as e:
