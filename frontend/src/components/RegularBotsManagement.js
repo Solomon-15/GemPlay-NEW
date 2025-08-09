@@ -821,7 +821,6 @@ const RegularBotsManagement = () => {
         name: botForm.name,
         min_bet_amount: botForm.min_bet_amount,
         max_bet_amount: botForm.max_bet_amount,
-        // НОВАЯ ЛОГИКА: Убираем win_percentage, добавляем баланс игр
         wins_count: botForm.wins_count,
         losses_count: botForm.losses_count,
         draws_count: botForm.draws_count,
