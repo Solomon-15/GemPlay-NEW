@@ -1521,7 +1521,7 @@ const RegularBotsManagement = () => {
             </div>
             <div className="ml-3">
               <p className="text-text-secondary text-sm font-rajdhani">% побед</p>
-              <p className="text-white text-lg font-rajdhani font-bold">{stats.win_percentage}%</p>
+              <p className="text-white text-lg font-rajdhani font-bold">{stats.win_rate}%</p>
             </div>
           </div>
         </div>
