@@ -2521,7 +2521,7 @@ const RegularBotsManagement = () => {
 
               {/* Игр в цикле и индивидуальный лимит */}
               <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Циклы и лимиты</h4>
+                <h4 className="font-rajdhani font-bold text-white mb-3">Циклы</h4>
                 <div>
                   <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
                   <input
@@ -2541,67 +2541,6 @@ const RegularBotsManagement = () => {
                 </div>
                 <div className="text-xs text-text-secondary mt-1">
                   Количество игр в одном цикле (1-66)
-                </div>
-              </div>
-
-              {/* Процент исходов игр - НОВАЯ СЕКЦИЯ */}
-              <div className="border border-green-500 bg-green-900 bg-opacity-20 rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-green-400 mb-3">Процент исходов игр</h4>
-                <div className="grid grid-cols-3 gap-4 mb-3">
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Победы (%):</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={botForm.wins_percentage}
-                      onChange={(e) => {
-                        const wins = parseInt(e.target.value) || 44;
-                        const newForm = {...botForm, wins_percentage: wins};
-                        setBotForm(newForm);
-                        // Сохраняем в localStorage
-                        savePercentagesToStorage(wins, botForm.losses_percentage, botForm.draws_percentage);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Поражения (%):</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={botForm.losses_percentage}
-                      onChange={(e) => {
-                        const losses = parseInt(e.target.value) || 36;
-                        const newForm = {...botForm, losses_percentage: losses};
-                        setBotForm(newForm);
-                        // Сохраняем в localStorage
-                        savePercentagesToStorage(botForm.wins_percentage, losses, botForm.draws_percentage);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Ничьи (%):</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={botForm.draws_percentage}
-                      onChange={(e) => {
-                        const draws = parseInt(e.target.value) || 20;
-                        const newForm = {...botForm, draws_percentage: draws};
-                        setBotForm(newForm);
-                        // Сохраняем в localStorage
-                        savePercentagesToStorage(botForm.wins_percentage, botForm.losses_percentage, draws);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
-                </div>
-                <div className="text-xs text-text-secondary">
-                  Сумма должна быть 100%. Из {botForm.cycle_games} игр: {Math.round(botForm.cycle_games * botForm.wins_percentage / 100)} побед, {Math.round(botForm.cycle_games * botForm.losses_percentage / 100)} поражений. Ничьи ({Math.round(botForm.cycle_games * botForm.draws_percentage / 100)} дополнительно) не засчитываются в цикл.
                 </div>
               </div>
 
