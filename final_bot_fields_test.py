@@ -9,7 +9,7 @@ import aiohttp
 import json
 from datetime import datetime
 
-BACKEND_URL = "https://0c58569d-a538-4734-ba0a-4f12eea2760d.preview.emergentagent.com/api"
+BACKEND_URL = "https://9dac94ee-f135-41d4-9528-71a64685f265.preview.emergentagent.com/api"
 SUPER_ADMIN_EMAIL = "admin@gemplay.com"
 SUPER_ADMIN_PASSWORD = "Admin123!"
 

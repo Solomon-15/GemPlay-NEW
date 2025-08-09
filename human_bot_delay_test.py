@@ -24,7 +24,7 @@ import random
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://0c58569d-a538-4734-ba0a-4f12eea2760d.preview.emergentagent.com/api"
+BACKEND_URL = "https://9dac94ee-f135-41d4-9528-71a64685f265.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gemplay.com"
 ADMIN_PASSWORD = "Admin123!"
 
