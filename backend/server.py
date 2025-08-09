@@ -16595,7 +16595,7 @@ async def get_bot_details(
     bot_id: str,
     current_user: User = Depends(get_current_admin)
 ):
-    """Get detailed bot information with all saved parameters."""
+    """Get detailed bot information with all saved parameters (legacy-free)."""
     try:
         bot_doc = await db.bots.find_one({"id": bot_id})
         if not bot_doc:
@@ -16610,7 +16610,7 @@ async def get_bot_details(
             "status": {"$in": ["WAITING", "ACTIVE"]}
         })
         
-        # Get game statistics
+        # Completed games stats (including draws)
         total_games = await db.games.count_documents({
             "creator_id": bot_id,
             "status": "COMPLETED"
@@ -16625,53 +16625,65 @@ async def get_bot_details(
         losses = await db.games.count_documents({
             "creator_id": bot_id,
             "status": "COMPLETED",
-            "winner_id": {"$ne": bot_id}
+            "winner_id": {"$ne": bot_id, "$ne": None}
+        })
+        
+        draws = await db.games.count_documents({
+            "creator_id": bot_id,
+            "status": "COMPLETED",
+            "winner_id": None
         })
         
         win_rate = (wins / total_games * 100) if total_games > 0 else 0
         
-        # Return all saved parameters exactly as they were stored
-        return {
-            "bot": {
-                "id": bot_doc["id"],
-                "name": bot_doc.get("name", ""),
-                "status": "Активен" if bot_doc.get("is_active", True) else "Отключён",
-                "is_active": bot_doc.get("is_active", True),
-                "bot_type": bot_doc.get("bot_type", "REGULAR"),
-                
-                # User-defined parameters - return exactly as saved with correct field names
-                "min_bet_amount": bot_doc.get("min_bet_amount", 1.0),
-                "max_bet_amount": bot_doc.get("max_bet_amount", 50.0),
-                "win_percentage": bot_doc.get("win_percentage", 55.0),
-                "cycle_games": bot_doc.get("cycle_games", 12),
-                "pause_between_cycles": bot_doc.get("pause_between_cycles", 5),
-                "pause_on_draw": bot_doc.get("pause_on_draw", 1),
-                "creation_mode": bot_doc.get("creation_mode", "queue-based"),
-                "profit_strategy": bot_doc.get("profit_strategy", "balanced"),
-                "cycle_total_amount": bot_doc.get("cycle_total_amount", 0),
-                
-                # Legacy fields for backward compatibility
-                "pause_timer": bot_doc.get("pause_timer"),
-                "cycle_length": bot_doc.get("cycle_length"),
-                
-                # Statistics
-                "active_bets": active_bets,
-                "games_stats": {
-                    "wins": wins,
-                    "losses": losses,
-                    "draws": 0,
-                    "total": total_games
-                },
-                "win_rate": round(win_rate, 1),
-                "created_at": bot_doc.get("created_at"),
-                "last_game_time": bot_doc.get("last_game_time"),
-                "last_bet_time": bot_doc.get("last_bet_time"),
-                "updated_at": bot_doc.get("updated_at")
-            }
+        # Compose response without legacy fields
+        bot_resp = {
+            "id": bot_doc["id"],
+            "name": bot_doc.get("name", ""),
+            "status": "Активен" if bot_doc.get("is_active", True) else "Отключён",
+            "is_active": bot_doc.get("is_active", True),
+            "bot_type": bot_doc.get("bot_type", "REGULAR"),
+            
+            # Core user-defined parameters
+            "min_bet_amount": bot_doc.get("min_bet_amount", 1.0),
+            "max_bet_amount": bot_doc.get("max_bet_amount", 50.0),
+            "cycle_games": bot_doc.get("cycle_games", 12),
+            "pause_between_cycles": bot_doc.get("pause_between_cycles", 5),
+            "pause_on_draw": bot_doc.get("pause_on_draw", 1),
+            "cycle_total_amount": bot_doc.get("cycle_total_amount", 0),
+            
+            # New W/L/D configuration
+            "wins_count": bot_doc.get("wins_count", 6),
+            "losses_count": bot_doc.get("losses_count", 6),
+            "draws_count": bot_doc.get("draws_count", 4),
+            "wins_percentage": bot_doc.get("wins_percentage", 44.0),
+            "losses_percentage": bot_doc.get("losses_percentage", 36.0),
+            "draws_percentage": bot_doc.get("draws_percentage", 20.0),
+            
+            # Current cycle stats
+            "current_cycle_wins": bot_doc.get("current_cycle_wins", 0),
+            "current_cycle_losses": bot_doc.get("current_cycle_losses", 0),
+            "current_cycle_draws": bot_doc.get("current_cycle_draws", 0),
+            "current_cycle_games": (
+                bot_doc.get("current_cycle_wins", 0)
+                + bot_doc.get("current_cycle_losses", 0)
+                + bot_doc.get("current_cycle_draws", 0)
+            ),
+            
+            # Historical stats
+            "active_bets": active_bets,
+            "total_games": total_games,
+            "wins": wins,
+            "losses": losses,
+            "draws": draws,
+            "win_rate": round(win_rate, 1),
+            
+            "created_at": bot_doc.get("created_at"),
+            "updated_at": bot_doc.get("updated_at")
         }
         
-    except HTTPException:
-        raise
+        return {"bot": bot_resp}
+        
     except Exception as e:
         logger.error(f"Error fetching bot details: {e}")
         raise HTTPException(
