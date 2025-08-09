@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 import subprocess
 
 # Configuration
-BASE_URL = "https://bef757b2-b856-4612-bfd8-1e1d820561f6.preview.emergentagent.com/api"
+BASE_URL = "https://f5408cb5-a948-4578-b0dd-1a7c404eb24f.preview.emergentagent.com/api"
 TEST_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
