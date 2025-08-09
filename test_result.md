@@ -28,9 +28,9 @@ frontend:
     implemented: true
     working: false
     file: "/app/backend/server.py, /app/frontend/src/components/RegularBotsManagement.js, /app/scripts/migrations/remove_legacy_fields.py"
-    stuck_count: 1
+    stuck_count: 2
     priority: "critical"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main_agent"
@@ -38,6 +38,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "Backend testing reveals LEGACY CLEANUP IS INCOMPLETE. Critical backend issues found: 1) Bot details endpoint (/admin/bots/{id}) still returns legacy fields win_percentage, creation_mode, profit_strategy 2) Missing required fields in list endpoint: active_pool, display 3) Missing W/L/D count fields in details endpoint 4) Old /reset-bets endpoint still exists and functional 5) No metadata.intended_result in game bets. Frontend cleanup may be complete but backend API responses still contain legacy data. REQUIRES IMMEDIATE BACKEND FIXES."
+      - working: false
+        agent: "testing"
+        comment: "🚨 FRONTEND E2E TESTING BLOCKED: Cannot complete Russian review E2E testing due to frontend login form malfunction. BACKEND VERIFIED: ✅ API login works (admin@gemplay.com returns ADMIN role), ✅ All Russian review backend requirements met, ✅ RegularBotsManagement component code analysis shows correct structure with unified forms and no legacy fields. FRONTEND ISSUE: ❌ Login form submission fails despite correct credentials, preventing access to admin panel UI. IMPACT: Cannot verify the 5 Russian review scenarios (table columns, create/edit modals, recalculate bets, cycle details) through UI testing. RECOMMENDATION: Fix frontend login form JavaScript/submission logic to enable complete E2E verification."
 
 metadata:
   created_by: "main_agent"
