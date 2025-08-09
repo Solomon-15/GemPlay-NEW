@@ -845,15 +845,12 @@ const RegularBotsManagement = () => {
           name: '',
           min_bet_amount: 1.0,
           max_bet_amount: 50.0,
-          // УДАЛЕНО: win_percentage (наследие),
           wins_percentage: savedPercentages.wins_percentage,
           losses_percentage: savedPercentages.losses_percentage,
           draws_percentage: savedPercentages.draws_percentage,
           cycle_games: 12,
           pause_between_cycles: 5,
           pause_on_draw: 5,
-          creation_mode: 'queue-based',
-          profit_strategy: 'balanced',
           cycle_total_amount: 0
         };
       });
@@ -2105,7 +2102,7 @@ const RegularBotsManagement = () => {
                             </div>
                           </div>
                         ) : (
-                          <span className="font-bold">{}</span>
+                          <span className="font-bold">{cycleDetailsData.sums?.total_sum || 0}</span>
                         )}
                         <div>
                           <button
