@@ -5180,29 +5180,9 @@ async def get_bot_profit_integration(current_admin: User = Depends(get_current_a
         ]).to_list(1)
         bot_revenue_total = bot_revenue_total[0]["total"] if bot_revenue_total else 0
         
-        # Get bot revenue by creation mode
-        bot_revenue_by_mode = await db.profit_entries.aggregate([
-            {"$match": {"entry_type": "BOT_REVENUE"}},
-            {"$lookup": {"from": "bots", "localField": "source_id", "foreignField": "id", "as": "bot"}},
-            {"$unwind": {"path": "$bot", "preserveNullAndEmptyArrays": True}},
-            {"$group": {
-                "_id": "$bot.creation_mode",
-                "total": {"$sum": "$amount"},
-                "count": {"$sum": 1}
-            }}
-        ]).to_list(10)
-        
-        # Get bot revenue by behavior
-        bot_revenue_by_behavior = await db.profit_entries.aggregate([
-            {"$match": {"entry_type": "BOT_REVENUE"}},
-            {"$lookup": {"from": "bots", "localField": "source_id", "foreignField": "id", "as": "bot"}},
-            {"$unwind": {"path": "$bot", "preserveNullAndEmptyArrays": True}},
-            {"$group": {
-                "_id": "$bot.bot_behavior",
-                "total": {"$sum": "$amount"},
-                "count": {"$sum": 1}
-            }}
-        ]).to_list(10)
+        # Legacy aggregations removed: creation_mode and behavior
+        bot_revenue_by_mode = []
+        bot_revenue_by_behavior = []
         
         # Get active bots count
         active_bots = await db.bots.count_documents({"bot_type": "REGULAR", "is_active": True})
