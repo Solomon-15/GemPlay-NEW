@@ -1853,11 +1853,11 @@ const RegularBotsManagement = () => {
                 </th>
                 <th 
                   className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
-                  onClick={() => handleSort('win_percentage')}
+                  onClick={() => handleSort('roi')}
                 >
                   <div className="flex items-center">
                     ROI
-                    {sortField === 'win_percentage' && (
+                    {sortField === 'roi' && (
                       <span className="ml-1">{sortDirection === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </div>
