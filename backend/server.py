@@ -8529,7 +8529,7 @@ async def get_active_human_bot_games(current_user: User = Depends(get_current_us
         games = await db.games.find({
             "status": "ACTIVE",
             "creator_id": {"$nin": regular_bot_ids},  # Exclude games created by regular bots
-            "opponent_id": {"$nin": regular_bot_ids + [None]}  # Exclude games with regular bot opponents
+            "opponent_id": {"$nin": regular_bot_ids}  # Exclude games with regular bot opponents
         }).sort("created_at", -1).to_list(100)
         
         result = []
