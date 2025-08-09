@@ -42,8 +42,7 @@ metadata:
 test_plan:
   current_focus:
     - "Legacy cleanup + Draw logic alignment (Implementation)"
-  stuck_tasks:
-    - "Regular Bots API Comprehensive Testing - Russian Review"
+  stuck_tasks: []
   test_all: false
   test_priority: "critical_first"
 
