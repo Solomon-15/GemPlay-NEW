@@ -18118,68 +18118,7 @@ async def update_bot_pause_settings(
             detail="Не удалось обновить настройки паузы"
         )
 
-@api_router.put("/admin/bots/{bot_id}/win-percentage", response_model=dict)
-async def update_bot_win_percentage(
-    bot_id: str,
-    request: UpdateBotWinPercentageRequest,
-    current_user: User = Depends(get_current_admin)
-):
-    """
-    Обновляет процент выигрышей для бота (0-100%).
-    """
-    try:
-        win_percentage = request.win_percentage
-        
-        # Проверяем существует ли бот
-        bot = await db.bots.find_one({"id": bot_id})
-        if not bot:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Бот не найден"
-            )
-        
-        # Обновляем процент выигрышей
-        await db.bots.update_one(
-            {"id": bot_id},
-            {
-                "$set": {
-                    "win_percentage": win_percentage,
-                    "updated_at": datetime.utcnow()
-                }
-            }
-        )
-        
-        # Логируем действие админа
-        admin_log = AdminLog(
-            admin_id=current_user.id,
-            action="UPDATE_BOT_WIN_PERCENTAGE",
-            target_type="bot",
-            target_id=bot_id,
-            details={
-                "old_win_percentage": bot.get("win_percentage", 55.0),
-                "new_win_percentage": win_percentage,
-                "bot_name": bot.get("name", f"Bot #{bot_id[:8]}")
-            }
-        )
-        await db.admin_logs.insert_one(admin_log.dict())
-        
-        logger.info(f"Admin {current_user.username} updated win percentage for bot {bot.get('name', bot_id)}: {win_percentage}%")
-        
-        return {
-            "message": f"Процент выигрышей обновлен на {win_percentage}%",
-            "bot_id": bot_id,
-            "win_percentage": win_percentage,
-            "success": True
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error updating bot win percentage for {bot_id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Не удалось обновить процент выигрышей"
-        )
+# Removed legacy: update_bot_win_percentage endpoint (win_percentage deprecated)
 
 # УДАЛЕН ДУБЛИРОВАННЫЙ ENDPOINT - используется более полная версия ниже
 
