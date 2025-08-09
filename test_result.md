@@ -1,4 +1,16 @@
 frontend:
+  - task: "Legacy cleanup + Draw logic alignment (Plan)"
+    implemented: false
+    working: pending
+    file: "/app/backend/server.py, /app/frontend/src/components/RegularBotsManagement.js, /app/scripts/migrations/remove_legacy_fields.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main_agent"
+        comment: "План: единым PR удалить win_percentage, creation_mode, profit_strategy из модели/API/UI/доков; удалить дубли /reset-bets (оставить /recalculate-bets); выполнить разовую миграцию БД (unset полей); скорректировать текущую новую логику ничьих без возврата replacement; гарантировать точность суммы цикла и корректность ROI. Следующий шаг: запустить авто‑тесты бэкенда для базовой фиксации состояния перед изменениями." 
+
   - task: "Unify Create/Edit Regular Bot Modals (Variant 2) + PATCH Edit"
     implemented: true
     working: pending
