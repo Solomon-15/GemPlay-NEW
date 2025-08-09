@@ -542,9 +542,6 @@ class Bot(BaseModel):
     pause_between_cycles: int = 5  # Пауза между циклами (по умолчанию 5 секунд)
     pause_on_draw: int = 5  # Пауза при ничье и между ставками (по умолчанию 5 секунд)
     
-    creation_mode: str = "queue-based"  # "always-first", "queue-based", "after-all"
-    profit_strategy: str = "balanced"  # "start-positive", "balanced", "start-negative"
-    
     # Реальная сумма цикла (вычисляется автоматически)
     cycle_total_amount: float = 0.0  # Реальная сумма всех ставок в цикле
     
