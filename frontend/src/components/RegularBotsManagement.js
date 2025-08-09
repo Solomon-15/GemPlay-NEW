@@ -169,7 +169,7 @@ const RegularBotsManagement = () => {
         total_bet: cycle.total_bet || cycle.total_wagered || 150.0,
         total_winnings: cycle.total_winnings || 280.0,
         profit: cycle.profit || 130.0,
-        win_percentage: cycle.wins ? ((cycle.wins / (cycle.wins + cycle.losses + cycle.draws)) * 100).toFixed(1) : '58.3',
+        win_rate: cycle.wins ? ((cycle.wins / (cycle.wins + cycle.losses + cycle.draws)) * 100).toFixed(1) : '58.3',
         // Mock individual bets data - in real implementation this would come from API
         bets: Array.from({ length: cycle.total_games || 12 }, (_, index) => ({
           id: `bet_${cycle.id}_${index + 1}`,
