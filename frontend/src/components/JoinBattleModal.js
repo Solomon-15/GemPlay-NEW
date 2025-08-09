@@ -31,6 +31,10 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const [battleResult, setBattleResult] = useState(null);
   const [hasJoinedGame, setHasJoinedGame] = useState(false); // Отслеживаем, присоединился ли игрок
 
+  // Блокировка управления на шаге результата (2 секунды)
+  const [resultControlsLocked, setResultControlsLocked] = useState(false);
+  const resultLockTimerRef = useRef(null);
+
   const { gemsData = [], refreshInventory = () => {} } = useGems() || {};
   const { showSuccess, showError } = useNotifications() || {};
   const { refreshAllData, refreshWithDelay } = useDataRefresh(onUpdateUser, false); // Disabled verbose logging
