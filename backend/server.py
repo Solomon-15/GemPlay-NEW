@@ -5234,8 +5234,7 @@ async def get_bot_profit_integration(current_admin: User = Depends(get_current_a
                 "avg_win_rate": bot_win_stats.get("avg_win_rate", 0),
                 "total_games": total_games
             },
-            "creation_modes": creation_mode_data,
-            "behaviors": behavior_data,
+            # Legacy sections removed: creation_modes, behaviors
             "efficiency": bot_efficiency,
             "recent_transactions": [
                 {
