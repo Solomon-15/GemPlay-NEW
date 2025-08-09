@@ -116,7 +116,7 @@ const AdminPanel = ({ user, onClose }) => {
 
       setStats({
         users: usersResponse.status === 'fulfilled' ? usersResponse.value.data : { total: '—', active: '—', banned: '—' },
-        bots: botsResponse.status === 'fulfilled' ? usersResponse.value.data?.length ?? '—' : '—',
+        bots: botsResponse.status === 'fulfilled' ? (Array.isArray(botsResponse.value.data) ? botsResponse.value.data.length : (botsResponse.value.data?.total ?? '—')) : '—',
         games: gamesResponse.status === 'fulfilled' ? gamesResponse.value.data : { total: '—', active: '—', completed: '—' }
       });
       
