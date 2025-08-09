@@ -1273,7 +1273,7 @@ const RegularBotsManagement = () => {
   // УДАЛЕНО: Инлайн-редактирование процента выигрышей (наследие)
   const handleEditWinPercentage = async (bot) => {
     try {
-      const currentPercentage = bot.win_percentage || 55;
+      const currentPercentage = 55; // legacy removed
       const userInput = window.prompt(
         `Введите новый процент выигрышей для бота ${bot.name || `Bot #${bot.id.substring(0, 3)}`}:\n\nТекущий: ${currentPercentage}%\n(Допустимые значения: 0-100)`,
         currentPercentage
