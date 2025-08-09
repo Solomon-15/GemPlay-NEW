@@ -17,12 +17,35 @@ backend:
 frontend:
   - task: "Legacy cleanup + Draw logic alignment (Implementation)"
     implemented: true
-    working: pending
+    working: false
     file: "/app/backend/server.py, /app/frontend/src/components/RegularBotsManagement.js, /app/scripts/migrations/remove_legacy_fields.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
     needs_retesting: true
     status_history:
       - working: false
         agent: "main_agent"
         comment: "Удалены legacy поля win_percentage, creation_mode, profit_strategy из ключевых API (создание/обновление/списки), фронтенд очищен от отправки этих полей и обновлены вызовы на /recalculate-bets. Исправлена логика ничьих: ничьи входят в N игр цикла и замены не создаются. Внесены правки в расчёт суммы цикла и ROI Active, добавлен скрипт миграции для очистки старых полей. Требуется повторное тестирование бэкенда."
+      - working: false
+        agent: "testing"
+        comment: "Backend testing reveals LEGACY CLEANUP IS INCOMPLETE. Critical backend issues found: 1) Bot details endpoint (/admin/bots/{id}) still returns legacy fields win_percentage, creation_mode, profit_strategy 2) Missing required fields in list endpoint: active_pool, display 3) Missing W/L/D count fields in details endpoint 4) Old /reset-bets endpoint still exists and functional 5) No metadata.intended_result in game bets. Frontend cleanup may be complete but backend API responses still contain legacy data. REQUIRES IMMEDIATE BACKEND FIXES."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Legacy cleanup + Draw logic alignment (Implementation)"
+  stuck_tasks:
+    - "Regular Bots API Comprehensive Testing - Russian Review"
+  test_all: false
+  test_priority: "critical_first"
+
+agent_communication:
+  - agent: "main_agent"
+    message: "Удалены legacy поля win_percentage, creation_mode, profit_strategy из ключевых API (создание/обновление/списки), фронтенд очищен от отправки этих полей и обновлены вызовы на /recalculate-bets. Исправлена логика ничьих: ничьи входят в N игр цикла и замены не создаются. Внесены правки в расчёт суммы цикла и ROI Active, добавлен скрипт миграции для очистки старых полей. Требуется повторное тестирование бэкенда."
+  - agent: "testing"
+    message: "🚨 CRITICAL BACKEND TESTING RESULTS: Legacy cleanup is INCOMPLETE. Comprehensive testing of 6 Russian review requirements shows 33.3% success rate (2/6 passed). MAJOR ISSUES: 1) Bot details API still returns legacy fields (win_percentage, creation_mode, profit_strategy) 2) Missing required fields in list/details APIs (active_pool, display, W/L/D counts/percentages) 3) Old /reset-bets endpoint still exists (should be removed) 4) No metadata.intended_result in game bets 5) Cycle recalculation not creating proper metadata. WORKING: Bot creation without legacy fields, Anti-race conditions. REQUIRES IMMEDIATE BACKEND API FIXES before system is functional."
