@@ -2105,11 +2105,11 @@ const RegularBotsManagement = () => {
                             </div>
                           </div>
                         ) : (
-                          <span className="font-bold">{bot.cycle_total_amount || 0}</span>
+                          <span className="font-bold">{}</span>
                         )}
                         <div>
                           <button
-                            onClick={}
+                            onClick={() => handleCycleBetsDetails(bot)}
                             className="text-blue-400 hover:text-blue-300 underline text-xs mt-1"
                             title="Показать детали цикла (W/L/D и ROI)"
                           >
