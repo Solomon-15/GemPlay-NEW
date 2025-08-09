@@ -78,10 +78,6 @@ const AdminPanel = ({ user, onClose }) => {
 
   useEffect(() => {
     fetchDashboardStats();
-    
-    // Global axios interceptor will handle 401s automatically
-    // No need for local interceptor
-    fetchDashboardStats();
   }, [betVolumeFilters]); // Re-fetch when bet volume filters change
 
   // Removed handleTokenExpired - now handled by global interceptor
