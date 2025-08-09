@@ -1979,18 +1979,29 @@ const RegularBotsManagement = () => {
                         const actualColor = roiActual < 0 ? 'text-red-400' : 'text-orange-400';
                         
                         // Плановый ROI: всегда показываем нижней строкой
-                        // Нижняя строка должна показывать изначальный ROI_active, который приходит с бэка
-                        const plannedRaw = bot.roi_active;
-                        const roiPlanned = (plannedRaw !== undefined && plannedRaw !== null) ? Number(plannedRaw) : 0;
-                        const plannedColor = roiPlanned < 0 ? 'text-red-400' : 'text-orange-400';
-                        const plannedOpacity = 'opacity-60';
+                        // Нижняя строка: плановый ROI, серый фиксированный
+                        const roiPlanned = (() => {
+                          if (bot.roi_active !== undefined && bot.roi_active !== null) return Number(bot.roi_active);
+                          const winsPct = (bot.wins_percentage !== undefined ? Number(bot.wins_percentage) : 44.0);
+                          const lossesPct = (bot.losses_percentage !== undefined ? Number(bot.losses_percentage) : 36.0);
+                          const cycleGames = (bot.cycle_games !== undefined ? Number(bot.cycle_games) : 12);
+                          const minBet = (bot.min_bet_amount !== undefined ? Number(bot.min_bet_amount) : 1.0);
+                          const maxBet = (bot.max_bet_amount !== undefined ? Number(bot.max_bet_amount) : 50.0);
+                          const avgBet = (minBet + maxBet) / 2.0;
+                          const totalEst = Math.round(avgBet * cycleGames);
+                          const winsSum = Math.floor(totalEst * winsPct / 100.0);
+                          const lossesSum = Math.ceil(totalEst * lossesPct / 100.0);
+                          const activePool = winsSum + lossesSum;
+                          const profit = winsSum - lossesSum;
+                          return activePool > 0 ? (profit / activePool) * 100.0 : 0.0;
+                        })();
                         
                         return (
                           <div className="flex flex-col items-center justify-center leading-tight">
                             <span className={`${actualColor} font-roboto text-sm font-bold`} title="Фактический ROI">
                               {Number(roiActual).toFixed(2)}%
                             </span>
-                            <span className={`text-xs ${plannedColor} ${plannedOpacity}`} title="Плановый ROI">
+                            <span className={`text-xs text-gray-400`} title="Плановый ROI">
                               {Number(roiPlanned).toFixed(2)}%
                             </span>
                           </div>
