@@ -317,7 +317,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
               {/* Bot Name - Always show "Bot" */}
               <div className="flex items-center space-x-2 mb-1">
                 <h3 className="text-white font-rajdhani font-bold text-lg">
-                  {game.creator?.username || game.creator_username || 'Bot'}
+                  {'Bot'}
                 </h3>
                 <span className="bg-blue-600 text-white text-xs font-rajdhani font-bold px-2 py-1 rounded">
                   {game.bot_type === 'HUMAN' ? 'Human-like' : 'AI'}
