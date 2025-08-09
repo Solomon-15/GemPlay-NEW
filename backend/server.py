@@ -15860,10 +15860,8 @@ async def create_regular_bots(
             draws_percentage=draws_percentage,
             cycle_games=cycle_games,
             current_limit=cycle_games,
-            creation_mode=bot_config.get("creation_mode", "queue-based"),
             pause_between_cycles=pause_between_cycles,
             pause_on_draw=pause_on_draw,
-            profit_strategy=profit_strategy,
             cycle_total_amount=real_cycle_total,  # Сохраняем реальную сумму
             is_active=True
         )
