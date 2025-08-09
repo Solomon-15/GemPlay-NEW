@@ -16784,8 +16784,7 @@ async def get_regular_bots_list(
             
             played_games = await db.games.count_documents({
                 "creator_id": bot.id,
-                "status": "COMPLETED",
-                "winner_id": {"$ne": None}  # Исключаем ничьи (когда winner_id = None)
+                "status": "COMPLETED"
             })
             
             current_cycle_played = played_games % cycle_games
