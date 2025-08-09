@@ -15,7 +15,7 @@ const RegularBotsManagement = () => {
     active_bots: 0,
     bets_24h: 0,
     wins_24h: 0,
-    win_percentage: 0,
+    win_rate: 0,
     total_bet_value: 0,
     errors: 0,
     most_active: []
