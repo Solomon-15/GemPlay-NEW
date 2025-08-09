@@ -17828,7 +17828,7 @@ async def update_individual_bot_settings(
         name = update_data.get("name")
         min_bet_amount = update_data.get("min_bet_amount")
         max_bet_amount = update_data.get("max_bet_amount")
-        win_percentage = update_data.get("win_percentage")
+
         cycle_games = update_data.get("cycle_games")
         pause_between_cycles = update_data.get("pause_between_cycles")
         pause_on_draw = update_data.get("pause_on_draw")
