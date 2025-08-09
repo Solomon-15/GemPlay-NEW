@@ -5556,7 +5556,7 @@ async def get_bot_cycle_bets(
     bot_id: str,
     current_user: User = Depends(get_current_admin)
 ):
-    """Получить ставки текущего цикла бота."""
+    """Получить детальный разбор текущего цикла бота с ROI и разбивкой W/L/D."""
     try:
         bot = await db.bots.find_one({"id": bot_id})
         if not bot:
@@ -5565,42 +5565,100 @@ async def get_bot_cycle_bets(
                 detail="Бот не найден"
             )
         
-        cycle_games = await db.games.find({
-            "creator_id": bot_id,
-            "is_bot_game": True
-        }).sort("created_at", -1).limit(bot.get("cycle_games", 12)).to_list(None)
+        cycle_len = int(bot.get("cycle_games", 12) or 12)
+        min_bet = int(round(float(bot.get("min_bet_amount", 1))))
+        max_bet = int(round(float(bot.get("max_bet_amount", 100))))
         
+        # Забираем игры бота (активные + завершенные) для текущего цикла
+        active_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+        }).sort("created_at", -1).to_list(1000)
+        completed_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": "COMPLETED"
+        }).sort("created_at", -1).to_list(1000)
+        
+        # Текущий цикл: последние cycle_len игр (активные в начале + самые свежие завершенные)
+        combined = active_games + completed_games
+        combined_sorted = sorted(combined, key=lambda g: g.get("created_at"), reverse=True)
+        current_cycle_games = combined_sorted[:cycle_len]
+        current_cycle_games = list(reversed(current_cycle_games))  # старые первыми
+        
+        # Формируем списки и посчитаем суммы по W/L/D
+        wins_list, losses_list, draws_list = [], [], []
         formatted_bets = []
-        for i, game in enumerate(cycle_games):
-            bet_info = {
+        for i, game in enumerate(current_cycle_games):
+            status_str = str(game.get("status", "waiting")).lower()
+            # Определяем result
+            if status_str == "completed":
+                if game.get("winner_id") == bot_id:
+                    result = "win"
+                elif game.get("winner_id"):
+                    result = "loss"
+                else:
+                    result = "draw"
+            else:
+                # Для активных игр пока нет результата — считаем их нейтральными (не попадут в W/L/D)
+                result = None
+            
+            bet_amount = int(game.get("bet_amount", 0))
+            if result == "win":
+                wins_list.append(bet_amount)
+            elif result == "loss":
+                losses_list.append(bet_amount)
+            elif result == "draw":
+                draws_list.append(bet_amount)
+            
+            formatted_bets.append({
                 "position": i + 1,
-                "amount": game.get("bet_amount", 0),
+                "amount": bet_amount,
                 "gems": game.get("bet_gems", {}),
-                "status": game.get("status", "waiting"),
-                "result": None,
+                "status": status_str,
+                "result": result,
                 "created_at": game.get("created_at"),
                 "opponent": game.get("opponent_name", "Ожидание")
-            }
-            
-            if game.get("status") == "completed":
-                if game.get("winner_id") == bot_id:
-                    bet_info["result"] = "win"
-                elif game.get("winner_id"):
-                    bet_info["result"] = "loss"
-                else:
-                    bet_info["result"] = "draw"
-            
-            formatted_bets.append(bet_info)
+            })
         
-        return {
+        wins_sum = int(sum(wins_list))
+        losses_sum = int(sum(losses_list))
+        draws_sum = int(sum(draws_list))
+        total_sum = wins_sum + losses_sum + draws_sum
+        active_pool = wins_sum + losses_sum
+        profit = wins_sum - losses_sum
+        roi_active = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
+        
+        # Если по текущему циклу часть игр активна и sum < теоретической, добавим теоретические опоры
+        exact_cycle_total = int(round(((min_bet + max_bet) / 2.0) * cycle_len))
+        
+        response = {
             "success": True,
             "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
-            "current_cycle": len([b for b in formatted_bets if b["status"] == "completed"]),
-            "cycle_total": bot.get("cycle_games", 12),
-            "cycle_total_amount": bot.get("cycle_total_amount", 0),
-            "win_rate_percent": bot.get("win_rate_percent", 60),
+            "cycle_length": cycle_len,
+            "exact_cycle_total": exact_cycle_total,
+            "sums": {
+                "wins_sum": wins_sum,
+                "losses_sum": losses_sum,
+                "draws_sum": draws_sum,
+                "total_sum": total_sum,
+                "active_pool": active_pool,
+                "profit": profit,
+                "roi_active": roi_active
+            },
+            "counts": {
+                "wins_count": len(wins_list),
+                "losses_count": len(losses_list),
+                "draws_count": len(draws_list),
+                "total_count": len(current_cycle_games)
+            },
+            "breakdown": {
+                "wins": wins_list,
+                "losses": losses_list,
+                "draws": draws_list
+            },
             "bets": formatted_bets
         }
+        return response
         
     except HTTPException:
         raise
