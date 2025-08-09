@@ -265,7 +265,7 @@ def verify_roi_active_field(bot_id: str, admin_token: str):
     roi_test_bot = None
     
     for bot in bots:
-        if bot.get("id") == bot_id or bot.get("name") == "ROI_Test_Bot_5":
+        if bot.get("id") == bot_id or bot.get("name").startswith("ROI_Test_Bot_5"):
             roi_test_bot = bot
             break
     
