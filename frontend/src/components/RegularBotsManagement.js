@@ -845,7 +845,7 @@ const RegularBotsManagement = () => {
           name: '',
           min_bet_amount: 1.0,
           max_bet_amount: 50.0,
-          // УДАЛЕНО: win_percentage (наследие),
+          // Удалено наследие win_percentage
           wins_percentage: savedPercentages.wins_percentage,
           losses_percentage: savedPercentages.losses_percentage,
           draws_percentage: savedPercentages.draws_percentage,
