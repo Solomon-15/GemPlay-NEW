@@ -311,14 +311,23 @@ def test_bots_active_games_endpoint():
         else:
             non_regular_bot_games += 1
         
-        # Check for real bot names (not empty, not "Unknown Player")
-        if bot_name and bot_name != "Unknown Player" and bot_name.strip():
+        # Check for real bot names (look in creator_username and creator.username)
+        creator_username = game.get("creator_username", "")
+        creator_obj = game.get("creator", {})
+        creator_name_from_obj = creator_obj.get("username", "") if creator_obj else ""
+        
+        actual_bot_name = creator_username or creator_name_from_obj or bot_name
+        
+        if actual_bot_name and actual_bot_name != "Unknown Player" and actual_bot_name.strip():
             real_bot_names += 1
         else:
             missing_bot_names += 1
         
-        # Check for avatar_gender
-        if avatar_gender and avatar_gender.strip():
+        # Check for avatar_gender (look in creator.gender)
+        creator_gender = creator_obj.get("gender", "") if creator_obj else ""
+        actual_gender = creator_gender or avatar_gender
+        
+        if actual_gender and actual_gender.strip():
             has_avatar_gender += 1
         else:
             missing_avatar_gender += 1
