@@ -1976,20 +1976,26 @@ const RegularBotsManagement = () => {
                       {(() => {
                         // Фактический ROI (как есть с бэка)
                         const roiActual = (bot.bot_profit_percent !== undefined ? bot.bot_profit_percent : 0);
-                        const isActualNegative = roiActual < 0;
-                        const actualColor = isActualNegative ? 'text-red-400' : 'text-orange-400';
+                        const actualColor = roiActual < 0 ? 'text-red-400' : 'text-orange-400';
                         
-                        // Плановый ROI (если нет завершенных игр или приходит отдельное поле)
-                        const gs = bot.games_stats || bot.stats || {};
-                        const totalGames = (gs.total !== undefined ? gs.total : (gs.wins || 0) + (gs.losses || 0) + (gs.draws || 0));
-                        const hasCompleted = totalGames > 0;
-                        // Источник планового ROI: предпочитаем bot.cycle_total_info.roi_active, затем bot.roi_active, затем превью не используем
-                        const plannedRaw = (bot.cycle_total_info && bot.cycle_total_info.roi_active !== undefined)
-                          ? bot.cycle_total_info.roi_active
-                          : (bot.roi_active !== undefined ? bot.roi_active : null);
-                        const plannedIsAvailable = plannedRaw !== null && plannedRaw !== undefined;
-                        const roiPlanned = plannedIsAvailable ? Number(plannedRaw) : null;
-                        const plannedColor = roiPlanned !== null && roiPlanned < 0 ? 'text-red-400' : 'text-orange-400';
+                        // Плановый ROI: всегда показываем нижней строкой
+                        const ci = bot.cycle_total_info || {};
+                        const plannedFromSums = (() => {
+                          const ws = ci.wins_sum, ls = ci.losses_sum;
+                          const denom = (Number(ws) || 0) + (Number(ls) || 0);
+                          if (denom > 0) return ((Number(ws) - Number(ls)) / denom) * 100;
+                          return null;
+                        })();
+                        const plannedCandidates = [
+                          bot.planned_roi,
+                          bot.roi_planned,
+                          ci.roi_active,
+                          plannedFromSums,
+                          bot.roi_active
+                        ];
+                        const plannedRaw = plannedCandidates.find(v => v !== null && v !== undefined);
+                        const roiPlanned = plannedRaw !== undefined ? Number(plannedRaw) : 0;
+                        const plannedColor = roiPlanned < 0 ? 'text-red-400' : 'text-orange-400';
                         const plannedOpacity = 'opacity-60';
                         
                         return (
@@ -1998,7 +2004,7 @@ const RegularBotsManagement = () => {
                               {Number(roiActual).toFixed(2)}%
                             </span>
                             <span className={`text-xs ${plannedColor} ${plannedOpacity}`} title="Плановый ROI">
-                              {plannedIsAvailable ? `${Number(roiPlanned).toFixed(2)}%` : '—'}
+                              {Number(roiPlanned).toFixed(2)}%
                             </span>
                           </div>
                         );
