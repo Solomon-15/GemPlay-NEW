@@ -4038,7 +4038,8 @@ async def refresh_access_token(payload: dict):
         
         # Create new refresh token and deactivate the old one
         new_refresh_token = await create_refresh_token(user_obj.id)
-        await db.refresh_tokens.update_one({"id": token_doc.get("id")}, {"$set": {"is_active": False}})
+        # Deactivate used refresh token by token value (since id may not be selected)
+        await db.refresh_tokens.update_one({"token": token_doc.get("token")}, {"$set": {"is_active": False}})
         
         return Token(
             access_token=access_token,
