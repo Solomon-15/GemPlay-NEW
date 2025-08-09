@@ -1,99 +1,110 @@
 <analysis>
-The previous AI engineer successfully brought the application from MVP to a more refined state through several iterative development cycles. Initially, core issues related to Regular Bots were resolved, including ensuring bot bets adhere to min/max ranges, dynamically calculating totals for the Recalculate Bets button, and fixing Missing move data errors by adding a  field to the  model and directly setting .
+The AI engineer has performed several iterative feature enhancements and critical bug fixes on the application's frontend, with some backend adjustments. The primary focus was on refining the ROI column in the Regular Bots Management table, which progressed from basic formatting and coloring to a complex two-line display (actual and planned ROI) with specific sorting and fallback logic. This required multiple refinements to the planned ROI calculation.
 
-Subsequently, the engineer implemented significant new features based on detailed user requirements. This involved enhancing the admin panel for Regular Bots to include advanced statistics (Games, W/L/D, Profit, Net Profit), dynamic sorting, and a detailed Cycle History modal. A major focus was on implementing a sophisticated bot betting algorithm, incorporating Win/Loss/Draw Percentages (e.g., 35/35/30) and a Win Ratio (55/45) to distribute total cycle sums and ensure random, non-average bet amounts across the full range (1-50), including mandatory small and large bets. Draw handling was also refined. The latest ongoing task, and the one immediately preceding this summary, involves precisely synchronizing the auto-calculated Cycle Sum displayed in the frontend with the exact total sum of generated bets in the backend, addressing current discrepancies due to rounding and normalization issues in the  and  functions.
+Beyond features, two significant bugs were resolved: a console error and duplicate API calls in the Admin Panel (due to unthrottled  calls), and a persistent user logout issue. The logout problem stemmed from an API contract mismatch in the token refresh flow and race conditions, both of which were systematically addressed. The most recent task involved fixing an error when the Join Battle modal was rapidly closed, by introducing a timed UI lock. There was a brief interlude where an unrelated ROI display bug was fixed, indicating a slight deviation from the active bug. Overall, the engineer demonstrated strong problem-solving and iterative refinement capabilities.
 </analysis>
 
 <product_requirements>
-The application manages Human Bots and Regular Bots, with a focus on enhancing Regular Bots within Bot Players sections. Initial requirements included ensuring bot bets adhere to specified min/max ranges, dynamically calculating total bet amounts for the Recalculate Bets button, and resolving Missing move data errors by ensuring  is set and  model includes .
+The user requires enhancements and fixes for an existing full-stack application.
+**A. ROI Column Enhancements (Regular Bots Management Table):**
+*   Rename the % column header to ROI.
+*   Remove ROI text from cell values, displaying only the number and percentage (e.g., 9.82%).
+*   Implement color-coding for actual ROI values: orange for values ≥ 0 and red for values < 0.
+*   Introduce a two-line display within the ROI column:
+    *   Top line: Actual ROI (sourced from ), colored based on its sign (orange/red).
+    *   Bottom line: Planned ROI, displayed in a fixed gray color (), without sign-based coloring.
+*   The planned ROI's source should prioritize  from the backend; if unavailable, a frontend calculation based on bot configuration (wins/losses/draws percentages, min/max bets, cycle games) should be used as a fallback.
+*   The ROI column must be sortable based on the actual ROI ().
+*   Add tooltips (Фактический ROI, Плановый ROI) on hover.
 
-Subsequent requirements aimed to enrich the Regular Bots admin panel. This involved:
-1.  **Bot Order**: New bots should appear at the top, and the list should be sortable by column headers (Name, Status, Bets, Statistics, %, Limits, Cycle, Cycle Sum, Registration).
-2.  **Statistics Column**: Display  (total completed cycles),  (current cycle, e.g., 4/4/4),  (current unfinished cycle, e.g., ,579), and  (sum of all completed cycles, e.g., ,579).  should be clickable to open a modal with detailed cycle history. All monetary values should be rounded to whole numbers (e.g., ,579).
-3.  **Advanced Bet Generation Logic**:
-    *   **Automatic Sum Distribution**: The Cycle Sum (e.g., 306 calculated from (min_bet+max_bet)/2 * cycle_games) must exactly match the total sum of all generated bets in the cycle. This sum should also be reflected in the Active Bets modal.
-    *   **New Win/Loss/Draw Percentages**: Add three fields (e.g., 35/35/30 by default for Wins/Losses/Draws) to create and edit bot modals. These percentages should sum to 100% and determine the distribution of game outcomes over 12 cycle games, with draws being additional to the 12 games.
-    *   **Win/Loss Ratio (%)**: Default 55/45 ratio for win/loss sum distribution (e.g., 55% of 306 = 168 win sum, 45% = 138 loss sum). These sums are then randomly distributed across winning/losing bets within the 1-50 range.
-    *   **Bet Distribution**: Bets in the 1-50 range must be uniformly random, covering the entire interval (e.g., 1, 3, 8, ..., 45, 50), not just average values. This means ensuring both small (1-10) and large (40-50) bets are present in each cycle. Bet display in the lobby should be random.
-    *   **Draw Handling**: On a draw, the bet is not counted in the cycle and is immediately recreated with the same sum but different gem types, respecting the Pause on Draw timing.
-    *   All new logic applies only to Regular Bots.
-4.  **Frontend State Persistence**: Win/Loss/Draw Percentages values should be remembered and auto-filled from  across sessions in both Create Bot and Edit Bot modals.
+**B. Admin Panel Dashboard Bug Fix:**
+*   Resolve  errors and duplicate Fetching dashboard stats logs in . This includes addressing concurrent API calls and potential issues with  not being an array.
+
+**C. Spontaneous Logout Bug Fix:**
+*   Address the issue causing users to be spontaneously logged out after 2-7 minutes. This involves ensuring consistent token refresh mechanisms between frontend and backend, handling  responses gracefully, and preventing race conditions during token refresh.
+
+**D. Join Battle Modal Closure Error Fix:**
+*   Resolve an error that occurs when the Join Battle modal is abruptly closed during a game turn. Specifically, after a move is completed and the result is displayed, a 2-second countdown should be added before the close button (X) and Continue Playing (OK) button become active, preventing premature  calls.
 </product_requirements>
 
 <key_technical_concepts>
--   **Full-stack Architecture**: React frontend, FastAPI backend, MongoDB for data persistence.
--   **Bot Systems**: Distinct Human-Bot and Regular-Bot logic.
--   **Pydantic**: Data validation and serialization for API models (e.g., , ).
--   **Environment Variables**: Strict usage for  and .
--   **Asynchronous Programming**: Python / for non-blocking operations.
--   **LocalStorage**: Frontend mechanism for persisting user-input values across sessions.
--   **Numerical Precision & Distribution Algorithms**: Critical for managing bet sums and distributions accurately.
+- **React.js:** Frontend framework for building UI components.
+- **FastAPI:** Backend framework for API development.
+- **MongoDB:** NoSQL database used for data storage.
+- **Axios:** HTTP client for making API requests from the frontend.
+- **Tailwind CSS:** Utility-first CSS framework for styling.
+- ** &  Hooks:** React hooks for managing side effects and mutable references.
+- **Authentication Interceptors:** Axios interceptors for handling token refresh and authentication headers.
+- **JSON Web Tokens (JWT):** Used for authentication and authorization.
 </key_technical_concepts>
 
 <code_architecture>
-The application employs a standard full-stack monorepo structure:
+The application has a standard full-stack structure:
 
 
-**Detailed Directory Structure:**
+- ****:
+    - **Summary:** This file manages the display and interaction of the regular bots table in the admin panel. It's crucial for presenting bot statistics and allowing sorting.
+    - **Changes:**
+        - Modified the column header for ROI from %.
+        - Implemented a two-line display for ROI values, separating actual and planned ROI.
+        - Applied specific Tailwind CSS classes (, , , ) for color-coding and gray tinting.
+        - Updated sorting logic to sort by  for the ROI column.
+        - Adjusted the logic for calculating planned ROI on the frontend: initially attempted to source from  sums, then pivoted to , and finally implemented a fallback calculation based on individual bot's / when  is absent.
 
-*   **/app/backend/server.py**:
-    *   **Summary**: The core FastAPI backend responsible for game logic, bot management, and API endpoints. It has undergone extensive modifications for all implemented features.
-    *   **Changes**:
-        *    Pydantic model: Added  and ensured  is set directly during  object creation to resolve Missing move data errors.
-        *   : Modified to dynamically calculate .
-        *    Pydantic model: Updated to include , ,  fields. Cleaned up duplicate fields.
-        *   : Major refactoring to implement complex bet generation logic, including random amount generation within min/max, distribution based on win/loss/draw percentages, 55/45 win/loss sum ratio, and uniform distribution across the entire bet range (1-50) ensuring small and large bets.
-        *   : Introduced and extensively modified to create bets that adhere to uniform distribution, cover the full range, and, most recently, attempt to match a precise .
-        *   : A helper function added/modified to adjust generated bet amounts to sum up to an exact target total. This function is currently being debugged for precision issues.
-        *   : A new endpoint was created to serve the history of completed cycles (currently with mock data, but structure for persistence is in place).
-        *   : An endpoint was added to clear all regular bots for testing purposes.
-        *   : Modified to accept and process new percentage fields and to call the updated bet generation logic.
-        *   : Modified to handle the updated  model.
+- ****:
+    - **Summary:** This component handles the display and fetching of dashboard statistics for the admin panel.
+    - **Changes:**
+        - Eliminated duplicate  calls within .
+        - Introduced a  () to prevent concurrent API requests, acting as a debouncer/guard for dashboard data fetching.
+        - Removed verbose  statements used for debugging.
+        - Added a safe guard for  to correctly handle non-array responses when setting bot counts.
 
-*   **/app/frontend/src/components/RegularBotsManagement.js**:
-    *   **Summary**: The administrative interface for managing regular bots. Heavily modified for UI updates and data handling.
-    *   **Changes**:
-        *   Implemented dynamic sorting for the bots list based on column headers (Name, Status, Statistics, etc.) using  and .
-        *   Updated Statistics column display to show Games, W/L/D, Profit (current cycle), and Net Profit (total completed cycles), with proper rounding and format.
-        *   Added  component, which opens on clicking Net Profit to display detailed completed cycle information.
-        *   Modified  state and  to include , ,  fields.
-        *   Added validation for the sum of percentages (must be 100%).
-        *   Integrated  to save and load , ,  for autofill in modals.
-        *   Added the Процент исходов игр section to both Create Regular Bot and Edit Bot modals.
-        *   Updated  and  functions to handle new percentage fields.
-        *   Updated  to load percentages from  instead of bot data for user experience.
+- ****:
+    - **Summary:** This file contains an Axios interceptor responsible for attaching authentication headers to requests and handling token refresh when access tokens expire.
+    - **Changes:**
+        - Standardized the  request to consistently send a JSON payload  with .
+        - Implemented a queuing mechanism ( flag) to ensure only one token refresh request is active at a time, preventing race conditions and multiple logouts.
 
-*   **/app/frontend/src/App.js**:
-    *   **Summary**: Main application component, handling routing and login.
-    *   **Changes**: Debugged and fixed login issues, primarily related to button  and test selectors. Removed console logs after debugging.
+- ****:
+    - **Summary:** The main application component, responsible for overall layout and initial authentication status checks.
+    - **Changes:**
+        - Updated the  function to adhere to the new standardized JSON payload contract for the  endpoint, aligning with the  changes.
 
-*   **/app/test_result.md**:
-    *   **Summary**: Chronological record of testing protocols, results, and communications.
-    *   **Changes**: Continuously updated to reflect testing progress, user feedback, and debugging information throughout the development cycles.
+- ****:
+    - **Summary:** The core FastAPI application, defining all API routes and backend business logic, including authentication.
+    - **Changes:**
+        - Modified the  endpoint to correctly parse the JSON payload from the frontend for .
+        - Ensured that after a successful token refresh, the used  is explicitly deactivated (marked inactive in the database) to prevent reuse.
 
+- ****:
+    - **Summary:** This modal handles the flow of joining a battle, choosing a move, and displaying the result.
+    - **Changes:**
+        - Implemented a state () and a 2-second timer.
+        - The close button (X) in the modal header is now conditionally  for 2 seconds when the battle result step (step 3) is active.
+        - Coordinates with  to ensure both the X and OK buttons are disabled for the specified duration, preventing rapid closure and associated errors.
+
+- ****:
+    - **Summary:** A sub-component within  responsible for displaying the battle outcome.
+    - **Changes:**
+        - Introduced  state and  with a 2-second timer.
+        - The Continue Playing (OK) button is disabled and displays a countdown (Please wait Ns...) during this 2-second period.
+        - After the countdown, the button activates with its original text.
 </code_architecture>
 
 <pending_tasks>
--   **Exact Cycle Sum Matching**: The  and  functions in the backend () still need refinement to ensure the total sum of generated bets precisely matches the  calculated in the frontend (e.g., 306). Current attempts result in discrepancies (e.g., 305, 281, 325 instead of 306).
+- **Backend Enhancement for Planned ROI:** The AI engineer recommended adding  field to the  endpoint in the backend () for full consistency of planned ROI data.
+- **Optional UI Labels:** The user was asked if they want compact факт/план (fact/plan) labels for the two-line ROI display.
+- **Other ROI Views:** The user was asked if the two-line ROI display logic should be applied to other detailed lists/modals.
+- **Additional Monitoring:** The AI engineer asked if the user wants additional monitoring (metrics for refreshes, 401s, logout events).
+- **Load Testing:** The AI engineer asked if the user wants a load test scenario (20 concurrent requests) for the refresh cycle.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was actively working on the problem of ensuring the Cycle Sum displayed in the frontend (calculated as ) precisely matches the actual sum of bets generated by the backend algorithm.
+Immediately before this summary request, the AI engineer was working on resolving a bug in the Join Battle modal ( and ). The bug manifested as an error when the modal was abruptly closed during a game turn, resulting in  and backend errors like  or .
 
-The core of this work is focused on the  function in . This function is responsible for creating a list of bet amounts that adhere to:
-1.  A uniform distribution across the min/max bet range (e.g., 1-50).
-2.  Inclusion of both small (e.g., 1-10) and large (e.g., 40-50) bets.
-3.  Maintaining the overall win/loss ratio (e.g., 55/45) for the total sum.
-4.  Crucially, ensuring the sum of all generated bets exactly equals the .
-
-The  helper function was introduced/modified within  to achieve this exact sum. However, recent tests have shown persistent discrepancies:
--   An initial test resulted in a sum of  instead of the expected .
--   Further adjustments led to a sum of  instead of .
--   The most recent attempt yielded  instead of .
-
-The last log message from the backend indicated: 🔧 Final adjustment needed: current=305, target=306.0, suggesting the normalization logic is failing to make the final, precise adjustment needed. The AI engineer's thought process concluded that the  function might not be able to find a suitable bet to adjust by small amounts (e.g., ) to hit the exact target, and contemplated adding a more aggressive correction.
+The current state of the fix is that a 2-second delay has been implemented after the battle result is displayed. During this delay, both the modal's close X button and the Continue Playing (OK) button are disabled. The OK button also shows a countdown (e.g., Please wait 2s...). After 2 seconds, both controls become active, allowing the user to safely close the modal or proceed. This change aims to prevent premature closing, allowing the game state to synchronize and avoid subsequent erroneous API calls (like  on an already completed game). The AI engineer confirmed the fix and asked for testing. The user then simply said Продолжай (Continue), which implies the fix is accepted for now, and the engineer is ready to proceed.
 </current_work>
 
 <optional_next_step>
-I will refine the  function in  to ensure the generated bet amounts precisely sum up to the .
+Run E2E tests for the Join Battle modal fix to confirm the 2-second delay on the close X button.
 </optional_next_step>

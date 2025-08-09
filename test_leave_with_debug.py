@@ -9,7 +9,7 @@ import random
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://f5408cb5-a948-4578-b0dd-1a7c404eb24f.preview.emergentagent.com/api"
+BASE_URL = "https://1a17f7c4-97e2-459a-9945-552c2196fe9a.preview.emergentagent.com/api"
 
 def generate_unique_id():
     """Generate unique ID for test users"""
