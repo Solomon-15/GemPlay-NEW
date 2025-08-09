@@ -26,12 +26,10 @@ import concurrent.futures
 # Configuration
 BASE_URL = "https://f5408cb5-a948-4578-b0dd-1a7c404eb24f.preview.emergentagent.com/api"
 
-# Test user credentials
-TEST_USER = {
-    "username": "RefreshTestUser",
-    "email": "refreshtest@example.com", 
-    "password": "TestPassword123!",
-    "gender": "male"
+# Admin user credentials for testing
+ADMIN_USER = {
+    "email": "admin@gemplay.com",
+    "password": "Admin123!"
 }
 
 # Test results tracking
@@ -126,25 +124,14 @@ def make_request(method: str, endpoint: str, headers: Dict = None, data: Dict = 
     except Exception as e:
         return False, None, f"Request error: {str(e)}"
 
-def create_test_user() -> Optional[Tuple[str, str]]:
-    """Create test user and return access_token and refresh_token"""
-    print(f"{Colors.BLUE}👤 Creating test user for refresh token testing...{Colors.END}")
+def authenticate_admin() -> Optional[Tuple[str, str]]:
+    """Authenticate admin user and return access_token and refresh_token"""
+    print(f"{Colors.BLUE}👤 Authenticating admin user for refresh token testing...{Colors.END}")
     
-    # First try to register the user
-    success, response_data, details = make_request(
-        "POST", 
-        "/auth/register",
-        data=TEST_USER
-    )
-    
-    if not success:
-        # User might already exist, try to login
-        print(f"   ℹ️ Registration failed, trying to login existing user...")
-        
-    # Try to login
+    # Try to login with admin user
     login_data = {
-        "email": TEST_USER["email"],
-        "password": TEST_USER["password"]
+        "email": ADMIN_USER["email"],
+        "password": ADMIN_USER["password"]
     }
     
     success, response_data, details = make_request(
@@ -157,13 +144,13 @@ def create_test_user() -> Optional[Tuple[str, str]]:
         access_token = response_data["access_token"]
         refresh_token = response_data.get("refresh_token")
         
-        print(f"{Colors.GREEN}✅ Test user authenticated successfully{Colors.END}")
+        print(f"{Colors.GREEN}✅ Admin user authenticated successfully{Colors.END}")
         print(f"   Access token: {access_token[:20]}...")
         print(f"   Refresh token: {refresh_token[:20] if refresh_token else 'None'}...")
         
         return access_token, refresh_token
     else:
-        print(f"{Colors.RED}❌ Failed to authenticate test user: {details}{Colors.END}")
+        print(f"{Colors.RED}❌ Failed to authenticate admin user: {details}{Colors.END}")
         return None, None
 
 def test_refresh_token_valid():
@@ -171,7 +158,7 @@ def test_refresh_token_valid():
     print(f"\n{Colors.MAGENTA}🧪 Test 1: Valid Refresh Token{Colors.END}")
     
     # Get valid tokens first
-    access_token, refresh_token = create_test_user()
+    access_token, refresh_token = authenticate_admin()
     if not refresh_token:
         record_test("Valid Refresh Token Test", False, "Failed to get valid refresh token")
         return None, None, None
@@ -345,7 +332,7 @@ def test_concurrent_401_handling():
     print(f"\n{Colors.MAGENTA}🧪 Test 5: Concurrent 401 Handling Simulation{Colors.END}")
     
     # Get valid tokens first
-    access_token, refresh_token = create_test_user()
+    access_token, refresh_token = authenticate_admin()
     if not access_token or not refresh_token:
         record_test("Concurrent 401 Handling Test", False, "Failed to get valid tokens")
         return
@@ -483,7 +470,7 @@ def main():
     print_header("REFRESH TOKEN FLOW TESTING - RUSSIAN REVIEW")
     print(f"{Colors.BLUE}🎯 Testing refresh token flow and preventing self-logout{Colors.END}")
     print(f"{Colors.BLUE}🌐 Backend URL: {BASE_URL}{Colors.END}")
-    print(f"{Colors.BLUE}👤 Test User: {TEST_USER['email']}{Colors.END}")
+    print(f"{Colors.BLUE}👤 Test User: {ADMIN_USER['email']}{Colors.END}")
     print(f"{Colors.BLUE}🔑 Testing all refresh token scenarios from Russian review{Colors.END}")
     
     try:
