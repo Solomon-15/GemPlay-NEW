@@ -7100,55 +7100,48 @@ async def determine_game_winner(game_id: str) -> dict:
                 )
             winner_id, result_status = determine_rps_winner(game_obj.creator_move, game_obj.opponent_move, game_obj.creator_id, game_obj.opponent_id)
         elif is_regular_bot_game:
-            # Специальная логика для обычных ботов - используем алгоритм 55% выигрышей
+            # Специальная логика для обычных ботов - ИСПОЛЬЗУЕМ ПЛАНИРУЕМЫЙ ИСХОД, если он задан
             if not game_obj.creator_move or not game_obj.opponent_move:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Missing move data for regular bot game"
                 )
             
-            # Определяем какой бот и применяем алгоритм
+            # Определяем какой бот участвует
             bot_id = None
+            bot_is_creator = False
             if creator_regular_bot:
                 bot_id = game_obj.creator_id
+                bot_is_creator = True
             elif opponent_regular_bot:
                 bot_id = game_obj.opponent_id
-                
+                bot_is_creator = False
+            
             if bot_id:
-                # Используем наш алгоритм для определения исхода
-                desired_outcome = await calculate_bot_game_outcome(bot_id, game_obj.bet_amount)
+                # 1) Сначала пробуем запланированный исход (intended_result) из метаданных
+                intended = None
+                try:
+                    intended = (game.get("metadata", {}) or {}).get("intended_result")
+                except Exception:
+                    intended = None
                 
-                if desired_outcome == "WIN":
-                    # Бот должен выиграть
-                    if creator_regular_bot:
-                        winner_id, result_status = game_obj.creator_id, "creator_wins"
-                    else:
-                        winner_id, result_status = game_obj.opponent_id, "opponent_wins"
-                elif desired_outcome == "LOSS":
-                    # Бот должен проиграть
-                    if creator_regular_bot:
-                        winner_id, result_status = game_obj.opponent_id, "opponent_wins"
-                    else:
-                        winner_id, result_status = game_obj.creator_id, "creator_wins"
+                outcome_upper = None
+                if intended in ["win", "loss", "draw"]:
+                    outcome_upper = intended.upper()
+                else:
+                    # 2) Fallback: старая функция расчёта исхода (WIN/LOSS)
+                    outcome_upper = await calculate_bot_game_outcome(bot_id, game_obj.bet_amount)
+                
+                if outcome_upper == "WIN":
+                    winner_id, result_status = (game_obj.creator_id, "creator_wins") if bot_is_creator else (game_obj.opponent_id, "opponent_wins")
+                elif outcome_upper == "LOSS":
+                    winner_id, result_status = (game_obj.opponent_id, "opponent_wins") if bot_is_creator else (game_obj.creator_id, "creator_wins")
                 else:  # DRAW
                     winner_id, result_status = None, "draw"
-                    
-                # Обновляем статистику цикла бота
-                bot_outcome = desired_outcome
-                if creator_regular_bot and desired_outcome == "WIN":
-                    bot_outcome = "WIN"
-                elif creator_regular_bot and desired_outcome == "LOSS":
-                    bot_outcome = "LOSS"
-                elif opponent_regular_bot and desired_outcome == "WIN":
-                    bot_outcome = "WIN"
-                elif opponent_regular_bot and desired_outcome == "LOSS":
-                    bot_outcome = "LOSS"
-                else:
-                    bot_outcome = "DRAW"
-                    
-                await update_bot_cycle_stats(bot_id, bot_outcome, game_obj.bet_amount)
                 
-                logger.info(f"🎯 Regular bot {bot_id} game result: {bot_outcome} (bet: ${game_obj.bet_amount})")
+                # Обновляем статистику цикла бота ровно с тем исходом, который применили
+                await update_bot_cycle_stats(bot_id, outcome_upper, game_obj.bet_amount)
+                logger.info(f"🎯 Regular bot {bot_id} game result: {outcome_upper} (bet: ${game_obj.bet_amount})")
             else:
                 # Fallback к обычной логике если не найден бот
                 winner_id, result_status = determine_rps_winner(game_obj.creator_move, game_obj.opponent_move, game_obj.creator_id, game_obj.opponent_id)
