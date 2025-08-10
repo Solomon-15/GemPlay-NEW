@@ -13297,11 +13297,20 @@ async def get_all_bets_stats(current_user: User = Depends(get_current_admin)):
         completed_bets = await db.games.count_documents({"status": "COMPLETED"})
         cancelled_bets = await db.games.count_documents({"status": "CANCELLED"})
         
-        # Get stuck bets: ACTIVE games with expired active_deadline (timer ran out)
+        # Get stuck bets: ACTIVE games без хода одной из сторон > 5 минут
         now_ts = datetime.utcnow()
+        threshold = now_ts - timedelta(minutes=5)
         stuck_bets = await db.games.count_documents({
             "status": "ACTIVE",
-            "active_deadline": {"$exists": True, "$ne": None, "$lt": now_ts}
+            "$and": [
+                {"$or": [{"opponent_move": None}, {"creator_move": None}]},
+                {"$or": [
+                    {"updated_at": {"$lt": threshold}},
+                    {"joined_at": {"$lt": threshold}},
+                    {"started_at": {"$lt": threshold}},
+                    {"created_at": {"$lt": threshold}}
+                ]}
+            ]
         })
         
         # Calculate total bet value
