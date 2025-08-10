@@ -6675,6 +6675,7 @@ async def join_game(
             payload = NotificationPayload(
                 game_id=game_id,
                 opponent_name=opponent_name,
+                opponent_id=current_user.id,
                 amount=game_obj.bet_amount,
                 action_url=f"/games/{game_id}"
             )
