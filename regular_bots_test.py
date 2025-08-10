@@ -22,7 +22,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://7b2a63c7-bf40-43a1-8f55-0ccf6c9e6341.preview.emergentagent.com/api"
+BASE_URL = "https://da053847-7ac3-4ecc-981f-d918a9fbd110.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
@@ -927,7 +927,7 @@ import sys
 from typing import Dict, Any, Optional, List, Tuple
 
 # Configuration
-BASE_URL = "https://7b2a63c7-bf40-43a1-8f55-0ccf6c9e6341.preview.emergentagent.com/api"
+BASE_URL = "https://da053847-7ac3-4ecc-981f-d918a9fbd110.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
