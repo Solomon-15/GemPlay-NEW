@@ -476,7 +476,7 @@ def main():
     results = tester.run_comprehensive_tests()
     
     # Return exit code based on results
-    if results["success_rate"] >= 80 and not results["implementation_issues"]:
+    if results and results["success_rate"] >= 80 and not results["implementation_issues"]:
         exit(0)
     else:
         exit(1)
