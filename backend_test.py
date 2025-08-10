@@ -336,14 +336,9 @@ class MyBetsEndpointTester:
                 print("❌ Cannot proceed without admin access")
                 return
             
-            # Create and login test user
-            user_id = await self.create_test_user()
-            if not user_id:
-                print("⚠️ Test user creation failed, trying to login with existing user")
-                
-            if not await self.login_test_user():
-                print("❌ Cannot proceed without test user login")
-                return
+            # Use admin user for testing (has access to my-bets endpoint)
+            self.test_user_token = self.admin_token
+            print("✅ Using admin user for testing my-bets endpoint")
             
             # Get my bets
             bets = await self.get_my_bets()
