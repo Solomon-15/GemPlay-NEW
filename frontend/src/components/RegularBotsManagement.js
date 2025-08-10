@@ -2116,34 +2116,23 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <span className={`px-3 py-1 text-xs rounded-full font-roboto font-medium ${
-                        (() => {
-                          const strategy = bot.profit_strategy || 'balanced';
-                          switch(strategy) {
-                            case 'start-positive': 
-                            case 'start_profit': 
-                              return 'bg-blue-600 text-white';
-                            case 'start-negative': 
-                            case 'end_loss': 
-                              return 'bg-red-600 text-white';
-                            case 'balanced': 
-                            default: 
-                              return 'bg-green-600 text-white';
-                          }
-                        })()
-                      }`}>
-                        {(() => {
-                          const strategy = bot.profit_strategy || 'balanced';
-                          switch(strategy) {
-                            case 'start-positive': return 'Ранняя прибыль';
-                            case 'start_profit': return 'Ранняя прибыль';
-                            case 'start-negative': return 'Поздние потери';
-                            case 'end_loss': return 'Поздние потери';
-                            case 'balanced': return 'Сбалансированная';
-                            default: return 'Сбалансированная';
-                          }
-                        })()}
-                      </span>
+                      {(() => {
+                        // Прибыль текущего активного цикла
+                        // Источник A: backend поле current_profit (если есть)
+                        // Источник B: рассчитать из cycle_total_info: wins_sum - losses_sum (если бэк не дал) — но из API цикла берём при клике
+                        const profit = typeof bot.current_profit === 'number'
+                          ? bot.current_profit
+                          : (typeof bot.cycle_total_info?.active_pool === 'number' && typeof bot.cycle_total_info?.total_sum === 'number')
+                            ? (bot.cycle_total_info.active_pool - (bot.cycle_total_info.total_sum - bot.cycle_total_info.active_pool - (bot.cycle_total_info.draws_sum || 0)))
+                            : 0;
+                        const color = profit >= 0 ? 'text-green-400' : 'text-red-400';
+                        const sign = profit > 0 ? '+' : profit < 0 ? '−' : '+';
+                        return (
+                          <span className={`font-roboto text-sm font-bold ${color}`} title="Прибыль текущего активного цикла">
+                            {sign}${Math.abs(Math.round(profit))}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center space-x-1">
