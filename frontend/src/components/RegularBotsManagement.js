@@ -3214,36 +3214,7 @@ const RegularBotsManagement = () => {
                 {/* Вариант 2: Без лайв‑превью ROI в режиме редактирования */}
               </div>
 
-              {/* Стратегия и режим */}
-              <div className="border border-border-primary rounded-lg p-4">
-                <h4 className="font-rajdhani font-bold text-white mb-3">Стратегия и режим</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Стратегия прибыли:</label>
-                    <select
-                      value={botForm.profit_strategy}
-                      onChange={(e) => setBotForm({...botForm, profit_strategy: e.target.value})}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                    >
-                      <option value="balanced">Сбалансированная</option>
-                      <option value="start-positive">Ранняя прибыль</option>
-                      <option value="start-negative">Поздние потери</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Режим создания:</label>
-                    <select
-                      value={botForm.creation_mode}
-                      onChange={(e) => setBotForm({...botForm, creation_mode: e.target.value})}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
-                    >
-                      <option value="queue-based">По очереди</option>
-                      <option value="always-first">Всегда первый</option>
-                      <option value="after-all">После всех</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+              {/* Удалено: Стратегия и режим (legacy) */}
 
               {/* Ошибки валидации */}
               {!extendedValidation.isValid && (
