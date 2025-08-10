@@ -49,7 +49,7 @@ const InterfaceSettings = () => {
       showSuccessRU('Interface settings saved successfully');
     } catch (error) {
       console.error('Error saving interface settings:', error);
-      showErrorRU('Ошибка при сохранении настроек интерфейса');
+      showErrorRU('Failed to save interface settings');
     } finally {
       setSaving(false);
     }
