@@ -818,7 +818,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           </svg>
         }
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ willChange: 'transform' }}>
           {getPaginatedItems(availableBots, currentPage.availableBots, 12).map((game) => (
             <PlayerCard 
               key={game.game_id || game.id} 
