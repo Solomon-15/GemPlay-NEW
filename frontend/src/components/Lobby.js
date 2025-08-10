@@ -894,7 +894,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-primary p-4 sm:p-6">
+    <div className="min-h-screen min-h-app bg-gradient-primary p-4 sm:p-6">
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="font-russo text-3xl sm:text-4xl md:text-6xl text-accent-primary mb-4">
