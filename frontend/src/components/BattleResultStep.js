@@ -198,6 +198,7 @@ const BattleResultStep = ({
                 src={moves.find(m => m.id === opponentMove)?.icon} 
                 alt={opponentMove} 
                 className="w-16 h-16 mx-auto mb-2" 
+                style={{ willChange: 'transform' }}
               />
               <div className="text-accent-primary font-rajdhani capitalize font-bold">
                 {moves.find(m => m.id === opponentMove)?.name}
