@@ -22551,29 +22551,59 @@ async def delete_notification(
 
 @api_router.get("/admin/games/scan-inconsistencies", response_model=dict)
 async def scan_inconsistent_games(
+    # Новые параметры фильтрации/пагинации
+    start_ts: Optional[str] = Query(None, description="ISO-8601 start datetime, e.g. 2025-06-01T00:00:00Z"),
+    end_ts: Optional[str] = Query(None, description="ISO-8601 end datetime, e.g. 2025-06-02T00:00:00Z"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=500),
+    # Обратная совместимость со старыми параметрами
     start: Optional[datetime] = Query(None),
     end: Optional[datetime] = Query(None),
-    limit: int = Query(200, ge=1, le=5000),
+    limit: int = Query(0, ge=0, le=50000),  # устаревший, игнорируется при наличии page/page_size
     current_admin: User = Depends(get_current_admin)
 ):
     """Скан матчей на потенциальные несоответствия результата и реальных ходов (RPS).
-    Доступно только ADMIN/SUPER_ADMIN. По умолчанию берётся последние 24 часа, если не указаны start/end.
-    Возвращает счётчики и первые N найденных случаев (limit)."""
+    Доступно только ADMIN/SUPER_ADMIN. По умолчанию берётся последние 24 часа, если не указаны даты.
+    Возвращает пагинированный список найденных случаев и агрегированные поля."""
     try:
+        def parse_iso(dt_str: Optional[str]) -> Optional[datetime]:
+            if not dt_str:
+                return None
+            try:
+                # Поддержка Z-суффикса и смещений
+                if dt_str.endswith('Z'):
+                    dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
+                else:
+                    dt = datetime.fromisoformat(dt_str)
+                # Приводим к UTC naive для сравнения в БД
+                if dt.tzinfo is not None:
+                    dt = dt.astimezone(pytz.UTC).replace(tzinfo=None)
+                return dt
+            except Exception:
+                return None
+
         now = datetime.utcnow()
-        if end is None:
-            end = now
-        if start is None:
-            start = now - timedelta(days=1)
+        end_dt = parse_iso(end_ts) or end or now
+        start_dt = parse_iso(start_ts) or start or (end_dt - timedelta(days=1))
 
-        # Ищем только завершённые игры в периоде
-        cursor = db.games.find({
+        # Базовый фильтр по периоду
+        base_filter = {
             "status": "COMPLETED",
-            "completed_at": {"$gte": start, "$lte": end}
-        }).sort("completed_at", -1).limit(limit)
+            "completed_at": {"$gte": start_dt, "$lte": end_dt}
+        }
 
-        inconsistent = []
+        # Сканиуем матчи в указанном периоде. Для обратной совместимости, если задан limit>0 и page/page_size не заданы, ограничим кол-во сканируемых записей
+        scan_limit = 0
+        if limit and limit > 0 and page == 1 and page_size:
+            scan_limit = limit
+
+        cursor = db.games.find(base_filter).sort("completed_at", -1)
+        if scan_limit:
+            cursor = cursor.limit(scan_limit)
+
+        inconsistent: list[dict] = []
         checked = 0
+
         async for g in cursor:
             checked += 1
             try:
@@ -22585,13 +22615,13 @@ async def scan_inconsistent_games(
                 c_str = c.value if hasattr(c, 'value') else c
                 o_str = o.value if hasattr(o, 'value') else o
                 # RPS вычисление
-                def rps(a, b):
-                    if a == b:
-                        return "draw"
-                    if (a == "rock" and b == "scissors") or (a == "scissors" and b == "paper") or (a == "paper" and b == "rock"):
-                        return "creator_wins"
-                    return "opponent_wins"
-                rps_result = rps(c_str, o_str)
+                if c_str == o_str:
+                    rps_result = "draw"
+                elif (c_str == "rock" and o_str == "scissors") or (c_str == "scissors" and o_str == "paper") or (c_str == "paper" and o_str == "rock"):
+                    rps_result = "creator_wins"
+                else:
+                    rps_result = "opponent_wins"
+
                 winner_id = g.get("winner_id")
                 expected = None
                 if rps_result == "creator_wins":
@@ -22600,6 +22630,7 @@ async def scan_inconsistent_games(
                     expected = g.get("opponent_id")
                 else:
                     expected = None
+
                 if expected != winner_id:
                     inconsistent.append({
                         "game_id": g.get("id"),
@@ -22613,11 +22644,22 @@ async def scan_inconsistent_games(
                     })
             except Exception:
                 continue
+
+        total_found = len(inconsistent)
+        total_pages = math.ceil(total_found / page_size) if page_size else 1
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        items_page = inconsistent[start_idx:end_idx]
+
         return {
             "success": True,
-            "checked": checked,
-            "found": len(inconsistent),
-            "items": inconsistent
+            "checked": checked,  # кол-во просмотренных документов (а не найденных)
+            "found": total_found,  # общее кол-во найденных несоответствий за период
+            "page": page,
+            "page_size": page_size,
+            "pages": total_pages,
+            "items": items_page,
+            "period": {"start": start_dt, "end": end_dt}
         }
     except Exception as e:
         logger.error(f"Error scanning inconsistent games: {e}")
