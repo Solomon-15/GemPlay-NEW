@@ -178,6 +178,8 @@ class MyBetsEndpointTester:
         except Exception as e:
             print(f"❌ Create test game error: {e}")
             return False
+            
+    async def get_my_bets(self) -> Optional[List[Dict[str, Any]]]:
         """Get my bets using test user token"""
         try:
             headers = {"Authorization": f"Bearer {self.test_user_token}"}
