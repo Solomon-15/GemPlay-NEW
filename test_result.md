@@ -36,6 +36,17 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ RUSSIAN REVIEW REPEAT TEST 2 SUCCESSFUL! Tested /admin/bots/regular/list endpoint after legacy cleanup and flat fields addition. PERFECT COMPLIANCE ACHIEVED: ❌ NO legacy fields found (win_percentage, creation_mode, profit_strategy completely removed), ✅ ALL required fields present (cycle_total_amount, active_pool, cycle_total_display), ✅ Field validations passed (active_pool calculation correct), ✅ cycle_total_info.display field present. Analyzed 3 regular bots, all showing proper structure. SUCCESS RATE: 100% (1/1 tests passed). Legacy cleanup is COMPLETE for Regular Bots List API."
+  - task: "Current Profit Field Implementation and Testing"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "🎉 CURRENT PROFIT FIELD TESTING COMPLETED WITH PERFECT SUCCESS! Conducted comprehensive testing of all current_profit field requirements with 100% success rate (4/4 tests passed). DETAILED RESULTS: ✅ REQUIREMENT 1 PERFECT: GET /api/admin/bots/regular/list returns current_profit field for all 4 bots with valid numeric values [-36, -6, 0, 99] computed as sum_wins - sum_losses of current cycle. ✅ REQUIREMENT 2 PERFECT: All existing Regular Bot endpoints working correctly - /api/admin/bots/{id}, /api/admin/bots/{id}/cycle-bets, /api/admin/bots/{id}/recalculate-bets all responding properly with required fields (active_pool, cycle_total_display, current_cycle_wins/losses/draws). ✅ REQUIREMENT 3 PERFECT: Admin Profit endpoints (/api/admin/profit/stats, /api/admin/profit/bot-integration, /api/admin/profit/bot-revenue-details) all working without legacy creation_modes/behaviors fields. Bot-integration returns proper structure with bot_stats, efficiency, recent_transactions and no legacy fields to avoid Object.entries null error. ✅ REQUIREMENT 4 PERFECT: All lobby endpoints unaffected - /api/games/available (184 games), /api/games/active-human-bots (18 games), /api/bots/active-games (54 games), /api/bots/ongoing-games (1 game) all working correctly. CONCLUSION: ALL current_profit field requirements are FULLY FUNCTIONAL and ready for production use."
 
 frontend:
   - task: "Legacy cleanup + Draw logic alignment (Implementation)"
