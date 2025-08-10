@@ -46,7 +46,7 @@ const InterfaceSettings = () => {
       await axios.put(`${API}/admin/interface-settings`, settings, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      showSuccessRU('Настройки интерфейса успешно сохранены');
+      showSuccessRU('Interface settings saved successfully');
     } catch (error) {
       console.error('Error saving interface settings:', error);
       showErrorRU('Ошибка при сохранении настроек интерфейса');
