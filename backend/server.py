@@ -6297,8 +6297,8 @@ async def handle_game_timeout(game_id: str):
                 await create_notification(
                     user_id=game_obj.creator_id,
                     notification_type=NotificationTypeEnum.SYSTEM_MESSAGE,
-                    title="Bet Recreated",
-                    message=f"Your ${game_obj.bet_amount} bet has been recreated with a new move due to opponent timeout.",
+                    custom_title="Bet Recreated",
+                    custom_message=f"Your ${game_obj.bet_amount} bet has been recreated with a new move due to opponent timeout.",
                     payload=creator_payload,
                     priority=NotificationPriorityEnum.INFO
                 )
