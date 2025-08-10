@@ -69,35 +69,25 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const fetchLobbyData = async () => {
     try {
       const token = localStorage.getItem('token');
-      
-      // Fetch user stats
-      const balanceResponse = await axios.get(`${API}/economy/balance`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Fetch games data
-      const gamesResponse = await axios.get(`${API}/games/available`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const myBetsResponse = await axios.get(`${API}/games/my-bets`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Fetch active bot games
-      const botGamesResponse = await axios.get(`${API}/bots/active-games`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Выполняем основные запросы параллельно для снижения латентности и лагов UI
+      const [balanceResponse, gamesResponse, myBetsResponse, botGamesResponse] = await Promise.all([
+        axios.get(`${API}/economy/balance`, { headers }),
+        axios.get(`${API}/games/available`, { headers }),
+        axios.get(`${API}/games/my-bets`, { headers }),
+        axios.get(`${API}/bots/active-games`, { headers })
+      ]);
+
       setStats({
         available: balanceResponse.data.virtual_balance || 0,
         gems: balanceResponse.data.total_gem_value || 0,
         total: balanceResponse.data.total_value || 0
       });
-      
+
       // Filter games - separate human bots from regular bots
       const allGames = gamesResponse.data || [];
-      
+          
       // Available bets (Live Players) должны включать только:
       // 1. Игры живых игроков (is_bot_game is false или undefined) со статусом WAITING
       // 2. Human-bot игры (is_human_bot is true) со статусом WAITING
