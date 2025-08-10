@@ -544,9 +544,18 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Prevent body scroll while modal open (and avoid layout jumps)
   useEffect(() => {
     const { body } = document;
-    const prev = body.style.overflow;
+    const prevOverflow = body.style.overflow;
+    const prevPaddingRight = body.style.paddingRight;
+    // компенсируем исчезновение скроллбара (desktop), чтобы не было горизонтального «дрожания»
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
     body.style.overflow = 'hidden';
-    return () => { body.style.overflow = prev; };
+    return () => { 
+      body.style.overflow = prevOverflow; 
+      body.style.paddingRight = prevPaddingRight; 
+    };
   }, []);
 
   return (
