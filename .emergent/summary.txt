@@ -1,81 +1,89 @@
 <analysis>
-The previous AI engineer successfully executed a complex, multi-faceted task to refine and clean up the Regular Bots feature. The work progressed iteratively, focusing on precise game logic for betting cycles, ROI calculations, and careful removal of legacy fields. Key efforts included a significant rewrite of backend logic in  to ensure integer-based bet generation, proportional sum distribution, and accurate draw handling without replacement bets. On the frontend,  was updated to reflect new data, unify bot creation/editing modals, and remove deprecated UI elements. The engineer diligently addressed user confirmations, performing multiple backend tests and preparing a database migration script. The process involved systematic search-and-replace operations, endpoint consolidation, and meticulous adjustment of game outcome determination to strictly adhere to new draw logic. The trajectory highlights a disciplined approach to code cleanup and feature refinement.
+The AI engineer iteratively refined the Regular Bots feature, addressing core game logic, UI, and backend stability. Initially, work focused on comprehensive cleanup: removing legacy fields (, , ) from backend models, APIs, and frontend UI. This included refining betting cycle algorithms for integer-based sums, integrating ROI calculations, and correcting draw logic. A database migration script was created and verified. After successfully passing backend tests, the focus shifted to frontend E2E testing, which revealed a critical login form issue. The engineer meticulously debugged and fixed the login mechanism, ensuring correct Axios interception, token handling, and preventing unnecessary page reloads, leading to 100% successful E2E tests for Regular Bots. The latest phase involved significant updates to the Lobby section to ensure strict separation of Regular Bot games from Human/PvP games, and dynamic display of real names, which was then revised to display a uniform Bot name and prevent bot games from appearing in the general Ongoing Battles section, indicating continuous refinement based on detailed user feedback.
 </analysis>
 
 <product_requirements>
-The goal is to develop and enhance a full-stack application for Regular Bots within a game. Key requirements include:
-1.  **Algorithmic Betting Cycle**: Implement an algorithm for precise integer-based bet generation (1-100) and proportional sum distribution across wins, losses, and draws using the largest remainder method, ensuring the total sum matches the theoretical total.
-2.  **Dynamic ROI Calculation**: Automate ROI computation as .
-3.  **API & UI Integration**: Expose ROI and cycle details via backend APIs, displayed in the frontend admin panel, including a Cycle Details modal. Forms should provide real-time calculation previews.
-4.  **UI/UX Refinement**: Streamline the Create Regular Bot modal's layout by merging Cycles and Timing Settings sections for improved responsiveness.
-5.  **UI Unification & Cleanup**: Unify Create and Edit bot modals. Crucially, remove all legacy fields (, , ) and associated logic/mentions from the entire codebase (model, API, UI, documentation, tests).
-6.  **Accurate Draw Logic**: Implement draws to count towards the total  games in a cycle, without replacement bets, strictly aligning with specified W/L/D counts.
-7.  **Anti-Race Conditions**: Prevent active bets from exceeding  limits.
+The application aims to provide a robust system for Regular Bots within a game. This includes an algorithm for precise integer-based betting (1-100) with proportional sum distribution (wins, losses, draws) using the largest remainder method, and dynamic ROI calculation . The frontend admin panel requires integration to display ROI and cycle details, along with real-time calculation previews. The UI/UX needs streamlining by merging Cycles and Timing Settings in the Create Regular Bot modal, unifying Create and Edit modals, and removing all legacy fields (, , ) and associated logic/UI. Draw logic must count towards the total  games without replacement bets, and the system needs to prevent active bets from exceeding . Recent additions include fixing the frontend login functionality, and refining the Lobby to ensure Regular Bot games are exclusively shown in Bot Players (Available Bots, Ongoing Bot Battles) and never in Live Players (Ongoing Battles, Available Bets). Furthermore, bot names in Bot Players should uniformly display as Bot, hiding their real names, and bot games should not duplicate in Ongoing Battles under Unknown Player.
 </product_requirements>
 
 <key_technical_concepts>
--   **FastAPI**: Backend API development.
--   **React**: Frontend UI development.
--   **MongoDB**: Database for bot configurations and game data.
--   **Tailwind CSS**: Responsive UI styling.
--   **Game Logic Algorithms**: Custom algorithms for betting cycles, proportional distribution, and ROI calculation.
--   **Database Migration**: One-time script for field removal.
+-   **FastAPI**: Backend API development for bot management and game logic.
+-   **React**: Frontend UI development for admin panels and game lobby.
+-   **MongoDB**: Database for storing bot configurations and game data.
+-   **Axios Interceptors**: Used for managing API requests, authentication, and token handling.
+-   **Game Logic Algorithms**: Custom algorithms for betting cycle generation, proportional distribution, and ROI calculation.
+-   **Database Migration**: One-time scripts for data cleanup and schema adjustments.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a FastAPI backend and a React frontend, deployed in Kubernetes.
+The application features a FastAPI backend and a React frontend, deployed within a Kubernetes environment.
 
 
 
 -   ****:
-    -   **Summary of importance**: Defines FastAPI application, API routes, Pydantic models, and core business logic for bot management, game cycle generation, and calculations, interacting with MongoDB.
+    -   **Summary of importance**: Core FastAPI application, defines API routes, Pydantic models, and business logic for bot management, game cycles, and calculations, interacting with MongoDB.
     -   **Summary of changes**:
-        *    updated for precise integer sums and proportional distribution.
-        *   ROI calculation integrated.
-        *   API endpoints (, , , ) updated for new metrics and bot settings.
-        *   **Legacy Removal**: , ,  removed from  model, DTOs, validations, and all API responses (e.g., , , ). Corresponding old endpoints (e.g., , ) were removed. Backend aggregations/statistics reliant on these fields (e.g., , , ) were also purged.
-        *   **Draw Logic Refinement**:  function and its calls were removed. Logic now ensures  is used for game results, and draws count towards  total games in a cycle.
-        *   Endpoint consolidation:  is now the sole endpoint for rebuilding active bets.
-        *   Added  and  flat fields to  response.
-        *    were ensured to be returned correctly in bot details.
+        *   Legacy fields (, , ) completely removed from  model, DTOs, validations, and all API responses (e.g., , ). Old endpoints associated with these fields removed.
+        *    updated for integer sums and proportional distribution, ROI integrated.
+        *   Draw logic refined:  removed; draws count towards  total games.
+        *   Endpoint consolidation:  made sole endpoint for rebuilding active bets.
+        *    and  added to  response.
+        *   **Recent changes**: Ensured  explicitly return 0 if values are missing in  response.
+        *   Modified ,  to exclude regular bot games.
+        *   Modified ,  to specifically handle regular bot games.
+        *   Updated logic in ,  to return  and .
+        *   Adjusted  and  (likely  and similar) to ensure real usernames for human players/human bots are returned, and  is avoided.
+        *   Latest updates: Ensured bot games are filtered out from the  endpoint to prevent duplication in Ongoing Battles. Implemented logic to return a generic Bot name instead of real bot names in relevant lobby endpoints.
 
 -   ****:
-    -   **Summary of importance**: Provides the admin interface for managing regular bots (listing, creating, editing).
+    -   **Summary of importance**: Admin interface for listing, creating, and editing regular bots.
     -   **Summary of changes**:
-        *   Updated to display , , and .
-        *   Cycle Details modal added.
-        *   Create Bot UI refined: Cycles and Timing Settings blocks merged.
-        *   Edit Bot UI unified with Create Bot UI (excluding live ROI preview). Sends  requests.
-        *   **Legacy Removal**:  column and inline editing for  removed. Стратегия и режим block (, ) removed from create/edit modals.
-        *   API calls updated from  to .
-        *   All UI text, hints, state variables, and calculations referring to  were updated to use  or removed entirely.
-        *   Hints regarding draw logic were corrected to reflect that draws now count towards the cycle.
+        *   Displays , , ; Cycle Details modal added.
+        *   Create Bot UI refined (Cycles/Timing Settings merged). Edit Bot unified with Create Bot UI.
+        *   Legacy elements ( column,  inline editing, Стратегия и режим block) removed.
+        *   API calls updated from  to . UI text updated for . Draw hints corrected.
 
 -   ****:
-    -   **Summary of importance**: A one-time script to perform a database migration.
-    -   **Summary of changes**: Created to  (remove) , , and  fields from existing documents in the  MongoDB collection. Includes backup and index check. A dry-run was performed, showing 0 documents containing these fields, indicating the DB is already clean or new bots don't use them.
+    -   **Summary of importance**: One-time script for database migration.
+    -   **Summary of changes**: Created to  , , and  from  collection. Dry-run showed 0 documents requiring changes.
+
+-   ****:
+    -   **Summary of importance**: Main React application component, handling routing and core application flow, including authentication.
+    -   **Summary of changes**: Modified login handler to prevent full page reload on successful login and ensure proper token storage.
+
+-   ****:
+    -   **Summary of importance**: Configures Axios to intercept requests, add authentication headers, and handle token refresh/expiration.
+    -   **Summary of changes**: Updated to correctly attach  headers only for  routes and not for , preventing login loop issues. Ensured token saving and refresh logic is sound.
+
+-   ****:
+    -   **Summary of importance**: Centralized API utility for making backend requests.
+    -   **Summary of changes**: Referenced and utilized by other components, implicitly benefiting from  changes.
+
+-   ****:
+    -   **Summary of importance**: Displays the game lobby with different categories for active games and available bets.
+    -   **Summary of changes**: Frontend logic confirmed to correctly separate / (human/PvP) from / (regular bots). Updates for displaying real bot/player names from API.
+    -   Latest changes: Adapted to display generic Bot name for regular bots and handle the logic for preventing regular bot games from showing in .
+
+-   ****:
+    -   **Summary of importance**: Component for displaying individual player/bot cards in the lobby.
+    -   **Summary of changes**: Updated to dynamically display  or  for human players/human bots and specific bot names, instead of fixed Bot.
+    -   Latest changes: Modified to display the uniform Bot name for regular bots as per the most recent user request.
 </code_architecture>
 
 <pending_tasks>
--   Frontend: Run automatic frontend (E2E) tests.
--   Backend: Minor cleanup for  to explicitly return 0 if values are missing in the bot list API.
+-   Frontend: The user initially confirmed an E2E test run for the lobby, but then paused/cancelled it with Пока не надо (Not yet). The explicit task to re-run E2E for Live Players vs Bot Players in the lobby is therefore implicitly pending if not already covered by backend tests.
+-   No other explicit pending tasks were identified that were not immediately addressed.
 </pending_tasks>
 
 <current_work>
-The immediate work involved a comprehensive cleanup and refinement of the Regular Bots functionality. This was a multi-stage process with frequent user confirmations.
+Immediately before this summary request, the AI engineer was working on further refinements to the Lobby display based on the user's latest explicit requests (Chat Message 93). This involved two key points:
 
-The AI engineer has successfully:
-1.  **Backend Legacy Removal**: All mentions of , , and  have been removed from the bot model, DTOs, API responses (, ), and creation/update logic. Corresponding backend aggregations and statistics have also been purged.
-2.  **Frontend UI Cleanup**: The  column and inline editors for  were removed, and the Стратегия и режим block (, ) was removed from both Create Regular Bot and Edit Bot modals. All UI text/hints related to  have been removed or updated to . Hints for draw logic were updated to confirm draws now count.
-3.  **Database Migration**: The script  was created and a dry-run executed, which found 0 documents with legacy fields, confirming the database is clean.
-4.  **Draw Logic Correction**: The old  logic has been entirely removed. Draws now explicitly count towards  total games in a cycle, and the  field is consistently used for game outcomes.
-5.  **Cycle Sum Accuracy & API Enhancement**: The  in the bot list now accurately reflects the sum of all bets (including draws), while  reflects wins + losses. New flat fields  and  were added to the bot list API for convenience.
-6.  **Endpoint Consolidation**: All  functionality has been consolidated to  on both frontend and backend, with old  endpoints removed from the backend.
-7.  **Backend Testing**: Multiple rounds of backend autotests were executed successfully, confirming the removal of legacy fields, correctness of new calculations, and proper functionality of  and draw logic. A minor observation from the test agent regarding  returning  in the bot list API was noted, but not yet addressed as it's considered a minor edge case.
+1.  **Standardizing Bot Names**: In the Available Bots and Ongoing Bot Battles sections, all regular bots should display a uniform name Bot, instead of their actual internal names. This hides real bot names from players.
+2.  **Preventing Duplication in Ongoing Battles**: A bug was identified where a regular bot's bet would appear in Ongoing Bot Battles and then *duplicate* in Ongoing Battles (the section intended for PvP and Human Bots) under the name Unknown Player. The task was to correct this logic so that regular bot bets *never* appear in Ongoing Battles.
 
-The engineer is currently waiting for user confirmation on the next steps, as the previously confirmed plan has been executed.
+The engineer made several edits to  (Chat Messages 95, 97, 99, 101, 103, 105) to implement these changes, focusing on the endpoints related to fetching game lists for the lobby, ensuring proper filtering and name assignment. Backend autotests were subsequently run (Chat Message 107) to validate these most recent changes, and the summary indicates successful testing related to Russian Review Lobby Requirements Testing. The frontend components (, ) would also have been adjusted to reflect these naming and filtering changes in the UI.
 </current_work>
 
 <optional_next_step>
-Run automatic frontend (E2E) tests for key scenarios of Regular Bots.
+The next step is to confirm the visual behavior of the latest lobby changes (uniform Bot name, no duplication in Ongoing Battles) and, if needed, re-run frontend E2E tests for the lobby sections.
 </optional_next_step>

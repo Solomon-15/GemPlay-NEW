@@ -18,7 +18,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://ac189324-9922-4d54-b6a3-50cded9a8e9f.preview.emergentagent.com/api"
+BACKEND_URL = "https://8c9fa134-69e2-43fa-b7ef-b4ab7b224374.preview.emergentagent.com/api"
 SUPER_ADMIN_EMAIL = "admin@gemplay.com"
 SUPER_ADMIN_PASSWORD = "Admin123!"
 
