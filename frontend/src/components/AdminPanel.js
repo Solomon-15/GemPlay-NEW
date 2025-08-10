@@ -703,30 +703,9 @@ const AdminPanel = ({ user, onClose }) => {
             {/* Кнопка сканирования несоответствий (ADMIN/QA only) */}
             {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'MODERATOR') && (
               <button
-                onClick={async () => {
-                  try {
-                    const token = localStorage.getItem('token');
-                    const end = new Date().toISOString();
-                    const start = new Date(Date.now() - 24*3600*1000).toISOString();
-                    const res = await axios.get(`${API}/admin/games/scan-inconsistencies`, {
-                      headers: { Authorization: `Bearer ${token}` },
-                      params: { start, end, limit: 300 }
-                    });
-                    const data = res.data || {};
-                    const found = data.found || 0;
-                    if (found > 0) {
-                      showErrorRU(`Найдены потенциальные несоответствия: ${found}. Проверьте список в консоли.`);
-                      console.warn('Inconsistencies:', data.items);
-                    } else {
-                      showSuccessRU('Несоответствия не найдены за выбранный период');
-                    }
-                  } catch (e) {
-                    console.error('Scan inconsistencies error', e);
-                    showErrorRU('Ошибка сканирования несоответствий');
-                  }
-                }}
+                onClick={() => setScanModalOpen(true)}
                 className="px-4 py-2 bg-red-600 hover:bg-red-700 border border-red-500 rounded-lg text-white font-roboto text-sm transition-colors duration-200 flex items-center space-x-2"
-                title="Найти потенциально неконсистентные матчи (за 24ч)"
+                title="Найти потенциально неконсистентные матчи"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
