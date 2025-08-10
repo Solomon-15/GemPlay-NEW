@@ -6307,7 +6307,7 @@ async def handle_game_timeout(game_id: str):
                 opponent_name = await get_user_name_for_notification(game_obj.opponent_id)
                 opponent_payload = NotificationPayload(
                     game_id=game_id,
-                    opponent_name=creator.get("username", "Unknown"),
+                    opponent_name=creator.get("username", "Unknown Player"),
                     amount=game_obj.bet_amount
                 )
                 await create_notification(
@@ -13095,8 +13095,8 @@ async def cleanup_stuck_bets(
             opponent_gems = game.get("opponent_gems", {})
             
             # Unfreeze logic: extend deadlines and return to ACTIVE state
-            # Compute new active_deadline: now + 5 minutes
-            new_deadline = datetime.utcnow() + timedelta(minutes=5)
+            # Compute new active_deadline: now + 10 minutes
+            new_deadline = datetime.utcnow() + timedelta(minutes=10)
             await db.games.update_one(
                 {"id": game_id},
                 {
