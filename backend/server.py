@@ -6313,8 +6313,8 @@ async def handle_game_timeout(game_id: str):
                 await create_notification(
                     user_id=game_obj.opponent_id,
                     notification_type=NotificationTypeEnum.SYSTEM_MESSAGE,
-                    title="Game Timeout",
-                    message=f"You didn't choose a move in time for the ${game_obj.bet_amount} bet. Your gems and commission have been returned.",
+                    custom_title="Game Timeout",
+                    custom_message=f"You didn't choose a move in time for the ${game_obj.bet_amount} bet. Your gems and commission have been returned.",
                     payload=opponent_payload,
                     priority=NotificationPriorityEnum.WARNING
                 )
