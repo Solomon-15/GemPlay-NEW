@@ -1157,7 +1157,29 @@ const RegularBotsManagement = () => {
       const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, getApiConfig());
       
       setCycleBot(bot);
-      setCycleData(response.data);
+      const apiData = response.data;
+      // Пересчитываем корректные показатели цикла на клиенте согласно требованиям
+      const derived = getDerivedCycleStats(apiData, bot);
+      const patched = {
+        ...apiData,
+        cycle_info: {
+          ...(apiData?.cycle_info || {}),
+          progress: `${derived.completed}/${derived.cycleLength}`,
+          completed_games: derived.completed,
+          current_wins: derived.winsCount,
+          current_losses: derived.lossesCount,
+          draws: derived.drawsCount,
+          cycle_length: derived.cycleLength
+        },
+        cycle_stats: {
+          total_bet_amount: Number(derived.totalBet),
+          total_winnings: Number(derived.wonAmount),
+          total_losses: Number(derived.lostAmount),
+          net_profit: Number(derived.netProfit),
+          win_rate: Number(derived.winRate)
+        }
+      };
+      setCycleData(patched);
       setIsCycleModalOpen(true);
     } catch (error) {
       console.error('Ошибка загрузки истории цикла:', error);
