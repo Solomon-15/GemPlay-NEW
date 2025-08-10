@@ -11,6 +11,7 @@ const BattleResultStep = ({
   onClose
 }) => {
   const [timeUntilAutoClose, setTimeUntilAutoClose] = React.useState(30);
+  // showInconsistent вычисляется ниже. Для не-админов никогда не подсвечиваем неконсистентность
   const [controlsLocked, setControlsLocked] = React.useState(true);
   const [lockCountdown, setLockCountdown] = React.useState(2);
 
