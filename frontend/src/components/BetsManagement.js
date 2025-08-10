@@ -141,7 +141,7 @@ const BetsManagement = ({ user: currentUser }) => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API}/admin/bets/cleanup-stuck`,
+        `${API}/admin/bets/unfreeze-stuck`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -150,8 +150,8 @@ const BetsManagement = ({ user: currentUser }) => {
       await fetchStats();
       await fetchBets();
     } catch (error) {
-      console.error('Error cleaning up stuck bets:', error);
-      const errorMessage = error.response?.data?.detail || 'Ошибка при очистке зависших ставок';
+      console.error('Error unfreezing stuck bets:', error);
+      const errorMessage = error.response?.data?.detail || 'Ошибка при разморозке зависших ставок';
       showErrorRU(errorMessage);
     }
   };
