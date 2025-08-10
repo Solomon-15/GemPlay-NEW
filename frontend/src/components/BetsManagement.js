@@ -394,15 +394,14 @@ const BetsManagement = ({ user: currentUser }) => {
             🔄 Обновить
           </button>
           
-          {/* Cleanup stuck bets button */}
-          {stats.stuck_bets > 0 && (
-            <button
-              onClick={cleanupStuckBets}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-rajdhani font-bold transition-colors"
-            >
-              🧹 Очистить зависшие ({stats.stuck_bets})
-            </button>
-          )}
+          {/* Unfreeze stuck bets button (always visible as per requirement) */}
+          <button
+            onClick={cleanupStuckBets}
+            className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-rajdhani font-bold transition-colors"
+            title="Разморозить зависшие ставки"
+          >
+            🧊 Разморозить зависшие {stats.stuck_bets > 0 ? `(${stats.stuck_bets})` : ''}
+          </button>
           
           {/* Reset all bets button (SUPER_ADMIN only) */}
           <button
