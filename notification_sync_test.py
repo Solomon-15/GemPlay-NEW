@@ -345,54 +345,6 @@ class NotificationSystemTester:
             logger.error(f"❌ Error adding gems to user: {e}")
             return False
             
-    def run_all_tests(self):
-        """Run all notification system tests"""
-        logger.info("🚀 Starting Notification System Testing")
-        
-        try:
-            # Setup
-            if not self.login_admin():
-                logger.error("❌ Failed to login as admin")
-                return False
-                
-            if not self.create_test_users():
-                logger.error("❌ Failed to create test users")
-                return False
-                
-            # Add gems to test users
-            self.add_gems_to_user("NotifyTest1", "Ruby", 50)
-            self.add_gems_to_user("NotifyTest2", "Ruby", 50)
-            
-            # Run tests
-            test_results = []
-            
-            test_results.append(self.test_english_notification_templates())
-            test_results.append(self.test_opponent_name_display())
-            test_results.append(self.test_notification_payload_fields())
-            test_results.append(self.test_admin_gem_notifications())
-            test_results.append(self.test_game_regression())
-            
-            # Summary
-            passed_tests = sum(test_results)
-            total_tests = len(test_results)
-            
-            logger.info(f"\n📊 TEST SUMMARY:")
-            logger.info(f"   Total Tests: {total_tests}")
-            logger.info(f"   Passed: {passed_tests}")
-            logger.info(f"   Failed: {total_tests - passed_tests}")
-            logger.info(f"   Success Rate: {(passed_tests/total_tests)*100:.1f}%")
-            
-            if passed_tests == total_tests:
-                logger.info("🎉 ALL NOTIFICATION SYSTEM TESTS PASSED!")
-                return True
-            else:
-                logger.error("❌ SOME NOTIFICATION SYSTEM TESTS FAILED!")
-                return False
-                
-        except Exception as e:
-            logger.error(f"❌ Error running tests: {e}")
-            return False
-
 def main():
     """Main test execution"""
     tester = NotificationSystemTester()
