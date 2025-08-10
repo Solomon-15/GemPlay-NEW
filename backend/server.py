@@ -6812,6 +6812,24 @@ async def choose_move_for_active_game(
                 new_hash = hash_move_with_salt(bot_move_to_set, new_salt)
 
                 creator_move_to_set = bot_move_to_set
+
+                # Жёсткая валидация: проверяем, что выбранный ход даёт нужный исход по RPS
+                try:
+                    desired_map = {"win": "creator_wins", "loss": "opponent_wins", "draw": "draw"}
+                    desired_status = desired_map.get(intended, "draw")
+                    # Приводим строки к GameMove
+                    c_move_tmp = GameMove(creator_move_to_set)
+                    o_move_tmp = GameMove(move)
+                    _, rps_status = determine_rps_winner(c_move_tmp, o_move_tmp, game_obj.creator_id, current_user.id)
+                    if rps_status != desired_status:
+                        # Перегенерируем ход под нужный исход с новым salt/hash
+                        bot_move_to_set = pick_bot_move(move, intended)
+                        creator_move_to_set = bot_move_to_set
+                        new_salt = secrets.token_hex(32)
+                        new_hash = hash_move_with_salt(creator_move_to_set, new_salt)
+                        logger.warning(f"⚠️ RPS mismatch for intended '{intended}', regenerated bot move to '{creator_move_to_set}'")
+                except Exception as v_err:
+                    logger.error(f"Validation error while enforcing intended outcome: {v_err}")
         
         # Обновляем игру с ходом оппонента 
         update_data = {
