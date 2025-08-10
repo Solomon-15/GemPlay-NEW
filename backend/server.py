@@ -13665,132 +13665,42 @@ async def unfreeze_all_stuck_bets(current_user: User = Depends(get_current_admin
         
         cleanup_results = {
             "total_processed": 0,
-            "cancelled_games": [],
-            "total_gems_returned": {},
+            "unfrozen_games": [],
+            "total_gems_returned": 0,
             "total_commission_returned": 0
         }
         
         for game in stuck_games:
             game_id = game.get("id")
-            game_status = game.get("status")
-            creator_id = game.get("creator_id")
-            opponent_id = game.get("opponent_id")
-            bet_amount = game.get("bet_amount", 0)
-            bet_gems = game.get("bet_gems", {})
-            opponent_gems = game.get("opponent_gems", {})
+            old_deadline = game.get("active_deadline")
+            # Extend deadline by 1 minute (can be adjusted if needed)
+            new_deadline = datetime.utcnow() + timedelta(minutes=1)
             
-            # Cancel the game
-            await db.games.update_one(
-                {"id": game_id},
-                {
-                    "$set": {
-                        "status": "CANCELLED",
-                        "cancelled_at": datetime.utcnow(),
-                        "cancelled_by": "admin_cleanup",
-                        "cancel_reason": f"Auto-cancelled by admin cleanup - stuck for >24h in status {game_status}"
-                    }
+            # Unfreeze: keep status ACTIVE, extend deadline, clear locks
+            update_ops = {
+                "$set": {
+                    "status": "ACTIVE",
+                    "active_deadline": new_deadline,
+                    "updated_at": datetime.utcnow(),
+                    "unfrozen_at": datetime.utcnow(),
+                    "unfrozen_by": current_user.id
+                },
+                "$unset": {
+                    "processing_lock": "",
+                    "locked_by": "",
+                    "lock_acquired_at": "",
+                    "cancel_reason": "",
+                    "cancelled_by": "",
+                    "cancelled_at": ""
                 }
-            )
+            }
+            await db.games.update_one({"id": game_id}, update_ops)
             
-            commission_returned = 0
-            
-            # Return resources based on game status
-            if game_status == "WAITING":
-                # Only creator has bet, return their resources
-                for gem_type, quantity in bet_gems.items():
-                    await db.user_gems.update_one(
-                        {"user_id": creator_id, "gem_type": gem_type},
-                        {
-                            "$inc": {"frozen_quantity": -quantity},
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
-                    cleanup_results["total_gems_returned"][gem_type] = cleanup_results["total_gems_returned"].get(gem_type, 0) + quantity
-                
-                # Return commission to creator (only if it's a user)
-                commission_amount = bet_amount * 0.03
-                creator_user = await db.users.find_one({"id": creator_id})
-                if creator_user:
-                    await db.users.update_one(
-                        {"id": creator_id},
-                        {
-                            "$inc": {
-                                "virtual_balance": commission_amount,
-                                "frozen_balance": -commission_amount
-                            },
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
-                    commission_returned += commission_amount
-                    
-            elif game_status in ["ACTIVE", "REVEAL"]:
-                # Both players have bet, return resources to both
-                
-                # Return creator's resources
-                for gem_type, quantity in bet_gems.items():
-                    await db.user_gems.update_one(
-                        {"user_id": creator_id, "gem_type": gem_type},
-                        {
-                            "$inc": {"frozen_quantity": -quantity},
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
-                    cleanup_results["total_gems_returned"][gem_type] = cleanup_results["total_gems_returned"].get(gem_type, 0) + quantity
-                
-                # Return opponent's resources (use opponent_gems if available, otherwise bet_gems)
-                opponent_bet_gems = opponent_gems if opponent_gems else bet_gems
-                for gem_type, quantity in opponent_bet_gems.items():
-                    await db.user_gems.update_one(
-                        {"user_id": opponent_id, "gem_type": gem_type},
-                        {
-                            "$inc": {"frozen_quantity": -quantity},
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
-                    cleanup_results["total_gems_returned"][gem_type] = cleanup_results["total_gems_returned"].get(gem_type, 0) + quantity
-                
-                # Return commission to both players (only if they're users)
-                commission_amount = bet_amount * 0.03
-                
-                # Return to creator
-                creator_user = await db.users.find_one({"id": creator_id})
-                if creator_user:
-                    await db.users.update_one(
-                        {"id": creator_id},
-                        {
-                            "$inc": {
-                                "virtual_balance": commission_amount,
-                                "frozen_balance": -commission_amount
-                            },
-                            "$set": {"updated_at": datetime.utcnow()}
-                        }
-                    )
-                    commission_returned += commission_amount
-                
-                # Return to opponent (if they're a user, not a bot)
-                if opponent_id:
-                    opponent_user = await db.users.find_one({"id": opponent_id})
-                    if opponent_user:
-                        await db.users.update_one(
-                            {"id": opponent_id},
-                            {
-                                "$inc": {
-                                    "virtual_balance": commission_amount,
-                                    "frozen_balance": -commission_amount
-                                },
-                                "$set": {"updated_at": datetime.utcnow()}
-                            }
-                        )
-                        commission_returned += commission_amount
-            
-            cleanup_results["cancelled_games"].append({
+            cleanup_results["unfrozen_games"].append({
                 "game_id": game_id,
-                "status": game_status,
-                "bet_amount": bet_amount,
-                "created_at": game.get("created_at"),
-                "age_hours": (datetime.utcnow() - game.get("created_at")).total_seconds() / 3600
+                "old_deadline": old_deadline,
+                "new_deadline": new_deadline
             })
-            cleanup_results["total_commission_returned"] += commission_returned
             cleanup_results["total_processed"] += 1
         
         # Log admin action
