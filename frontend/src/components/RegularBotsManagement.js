@@ -1112,18 +1112,34 @@ const RegularBotsManagement = () => {
   const getDerivedCycleStats = (cycle, bot) => {
     try {
       const games = Array.isArray(cycle?.games) ? cycle.games : [];
-      const winsCount = games.filter(g => (g?.winner || '').toLowerCase() === 'победа').length;
-      const lossesCount = games.filter(g => (g?.winner || '').toLowerCase() === 'поражение').length;
-      const drawsCount = games.filter(g => (g?.winner || '').toLowerCase() === 'ничья').length;
+      const normalize = (val) => (val ?? '').toString().trim().toLowerCase();
+      const isWin = (w) => {
+        const s = normalize(w);
+        return s.includes('win') || s.includes('побед');
+      };
+      const isLoss = (w) => {
+        const s = normalize(w);
+        return s.includes('loss') || s.includes('lose') || s.includes('пораж');
+      };
+      const isDraw = (w) => {
+        const s = normalize(w);
+        return s.includes('draw') || s.includes('нич');
+      };
+
+      const winsCount = games.filter(g => isWin(g?.winner)).length;
+      const lossesCount = games.filter(g => isLoss(g?.winner)).length;
+      const drawsCount = games.filter(g => isDraw(g?.winner)).length;
       const completed = winsCount + lossesCount + drawsCount;
       const cycleLength = Number(cycle?.cycle_info?.cycle_length || bot?.cycle_games || 16);
+
       const totalBet = games.reduce((sum, g) => sum + Number(g?.bet_amount || 0), 0);
-      const wonAmount = games.reduce((sum, g) => sum + (((g?.winner || '').toLowerCase() === 'победа') ? Number(g?.bet_amount || 0) : 0), 0);
-      const lostAmount = games.reduce((sum, g) => sum + (((g?.winner || '').toLowerCase() === 'поражение') ? Number(g?.bet_amount || 0) : 0), 0);
+      const wonAmount = games.reduce((sum, g) => sum + (isWin(g?.winner) ? Number(g?.bet_amount || 0) : 0), 0);
+      const lostAmount = games.reduce((sum, g) => sum + (isLoss(g?.winner) ? Number(g?.bet_amount || 0) : 0), 0);
       const netProfit = wonAmount - lostAmount;
       const denom = Math.max(1, winsCount + lossesCount); // ничьи не входят в знаменатель
       const winRate = (winsCount / denom) * 100;
       const formatMoney = (v) => (Math.round(Number(v || 0) * 100) / 100).toFixed(2);
+
       return {
         winsCount,
         lossesCount,
