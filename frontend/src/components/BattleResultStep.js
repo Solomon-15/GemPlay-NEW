@@ -122,6 +122,11 @@ const BattleResultStep = ({
         <div className="text-text-secondary text-sm">
           Auto-closing in {timeUntilAutoClose} seconds
         </div>
+        {isInconsistent && (
+          <div className="mt-2 text-red-400 text-xs">
+            We detected a mismatch between computed RPS outcome and server result.
+          </div>
+        )}
       </div>
 
       {/* Players Battle Section с аватарами */}
