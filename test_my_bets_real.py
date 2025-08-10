@@ -31,6 +31,15 @@ async def test_my_bets_with_real_user():
         
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
         
+        # First verify the test user's email
+        verify_data = {"user_id": "f3ac71c0-eb83-4636-9e58-2aec27ebe9c2", "verified": True}
+        async with session.patch(f"{BACKEND_URL}/admin/users/f3ac71c0-eb83-4636-9e58-2aec27ebe9c2/verify-email", 
+                                json=verify_data, headers=admin_headers) as verify_response:
+            if verify_response.status == 200:
+                print("✅ User email verified")
+            else:
+                print(f"⚠️ Email verification failed: {verify_response.status}")
+        
         # Try to login as test user (might already exist)
         test_login_data = {
             "email": "testmybets2025@example.com",
