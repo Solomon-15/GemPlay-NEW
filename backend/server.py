@@ -13396,6 +13396,16 @@ async def get_all_bets(
             # Calculate bet age in hours
             bet_age_hours = (datetime.utcnow() - game.get("created_at")).total_seconds() / 3600
             
+            # Determine stuck status by expired active_deadline on ACTIVE games
+            is_stuck = False
+            try:
+                if game.get("status") == "ACTIVE":
+                    deadline = game.get("active_deadline")
+                    if deadline and isinstance(deadline, datetime):
+                        is_stuck = deadline < datetime.utcnow()
+            except Exception:
+                is_stuck = False
+            
             bets_data.append({
                 "id": game.get("id"),
                 "bet_amount": game.get("bet_amount"),
@@ -13410,7 +13420,7 @@ async def get_all_bets(
                 "winner_id": game.get("winner_id"),
                 "commission_amount": game.get("commission_amount", game.get("bet_amount", 0) * 0.03),
                 "age_hours": round(bet_age_hours, 1),
-                "is_stuck": bet_age_hours > 24 and game.get("status") in ["WAITING", "ACTIVE", "REVEAL"],
+                "is_stuck": is_stuck,
                 "can_cancel": game.get("status") == "WAITING",
                 "creator_move": game.get("creator_move"),
                 "opponent_move": game.get("opponent_move"),
