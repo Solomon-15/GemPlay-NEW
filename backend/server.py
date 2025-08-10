@@ -13306,9 +13306,10 @@ async def get_all_bets_stats(current_user: User = Depends(get_current_admin)):
                 {"$or": [{"opponent_move": None}, {"creator_move": None}]},
                 {"$or": [
                     {"updated_at": {"$lt": threshold}},
-                    {"joined_at": {"$lt": threshold}},
-                    {"started_at": {"$lt": threshold}},
-                    {"created_at": {"$lt": threshold}}
+                    {"$and": [
+                        {"updated_at": {"$exists": False}},
+                        {"created_at": {"$lt": threshold}}
+                    ]}
                 ]}
             ]
         })
