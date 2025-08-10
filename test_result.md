@@ -1,4 +1,15 @@
 backend:
+  - task: "GET /api/games/my-bets Endpoint Testing"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "🔍 MY-BETS ENDPOINT TESTING COMPLETED WITH MIXED RESULTS! Conducted comprehensive testing of GET /api/games/my-bets endpoint for Russian review requirements. SUCCESS RATE: 66.7% (2/3 tests passed). DETAILED RESULTS: ✅ REQUIREMENT 1 PERFECT: creator_username never equals 'Unknown Player' - Regular bots correctly show as 'Bot' (3 games), players show real usernames (10 games), no 'Unknown Player' violations found in 13 tested bets. ✅ REQUIREMENT 3 PERFECT: No regressions detected - All required fields present (game_id, is_creator, bet_amount, bet_gems, status, created_at, creator_username), correct data types, proper response structure. ❌ REQUIREMENT 2 FAILED: creator/opponent objects missing required fields - Found 3 creator objects missing 'id' field and 1 opponent object missing 'id' field. CRITICAL ISSUE: Some creator/opponent objects in my-bets response are not properly structured with all required fields (id, username, gender). CONCLUSION: Main requirement (no 'Unknown Player') is working correctly, but object structure needs fixing for complete compliance."
   - task: "Russian Review Lobby Requirements Testing"
     implemented: true
     working: true
