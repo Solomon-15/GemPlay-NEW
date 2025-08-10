@@ -14,7 +14,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 # Configuration
-BASE_URL = "https://8c9fa134-69e2-43fa-b7ef-b4ab7b224374.preview.emergentagent.com"
+BASE_URL = "https://7b2a63c7-bf40-43a1-8f55-0ccf6c9e6341.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test credentials
@@ -368,7 +368,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://8c9fa134-69e2-43fa-b7ef-b4ab7b224374.preview.emergentagent.com/api"
+BASE_URL = "https://7b2a63c7-bf40-43a1-8f55-0ccf6c9e6341.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
