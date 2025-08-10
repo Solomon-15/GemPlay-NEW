@@ -2143,7 +2143,7 @@ const RegularBotsManagement = () => {
                           >
                             {(() => {
                               const completed = (bot.current_cycle_wins || 0) + (bot.current_cycle_losses || 0) + (bot.current_cycle_draws || 0);
-                              const total = bot.cycle_games || 16;
+                              const total = (bot.cycle_games && bot.cycle_games > 0) ? bot.cycle_games : 16;
                               return `${completed}/${total}`;
                             })()}
                           </button>
