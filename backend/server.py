@@ -13665,9 +13665,7 @@ async def unfreeze_all_stuck_bets(current_user: User = Depends(get_current_admin
         
         cleanup_results = {
             "total_processed": 0,
-            "unfrozen_games": [],
-            "total_gems_returned": 0,
-            "total_commission_returned": 0
+            "unfrozen_games": []
         }
         
         for game in stuck_games:
