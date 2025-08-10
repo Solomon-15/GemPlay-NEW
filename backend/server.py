@@ -13632,10 +13632,11 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
         # Define cutoff time (24 hours ago)
         cutoff_time = datetime.utcnow() - timedelta(hours=24)
         
-        # Find stuck bets - games that are in problematic states for more than 24 hours
+        # Find stuck bets - ACTIVE games with expired active_deadline
+        now_ts = datetime.utcnow()
         stuck_games = await db.games.find({
-            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]},
-            "created_at": {"$lt": cutoff_time}
+            "status": "ACTIVE",
+            "active_deadline": {"$exists": True, "$ne": None, "$lt": now_ts}
         }).to_list(1000)  # Limit to 1000 to prevent memory issues
         
         cleanup_results = {
