@@ -374,7 +374,17 @@ class UnfreezeStuckBetsTester:
         # Setup
         if not self.setup_authentication():
             print("❌ Authentication failed. Cannot proceed with tests.")
-            return
+            return {
+                "total_tests": 0,
+                "passed": 0,
+                "failed": 0,
+                "success_rate": 0,
+                "unfreeze_working": False,
+                "stats_working": False,
+                "no_regression": False,
+                "implementation_issues": True,
+                "test_results": []
+            }
         
         print("\n🔍 Analyzing Current Implementation")
         print("-" * 50)
