@@ -70,6 +70,8 @@ const BattleResultStep = ({
   }, [selectedMove, opponentMove]);
 
   const isInconsistent = computedRps !== (result || 'draw');
+  const currentRole = playerData?.player?.role;
+  const showInconsistent = isInconsistent && (currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN');
 
   const getResultConfig = () => {
     switch (result) {
