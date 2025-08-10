@@ -95,7 +95,7 @@ const Shop = ({ user, onUpdateUser }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
+      <div className="min-h-screen min-h-app bg-gradient-primary flex items-center justify-center">
         <div className="text-white text-xl font-roboto">Loading Shop...</div>
       </div>
     );
