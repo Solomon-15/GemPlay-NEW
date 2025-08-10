@@ -505,6 +505,14 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     </div>
   );
 
+  // Prevent body scroll while modal open (and avoid layout jumps)
+  useEffect(() => {
+    const { body } = document;
+    const prev = body.style.overflow;
+    body.style.overflow = 'hidden';
+    return () => { body.style.overflow = prev; };
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden">
