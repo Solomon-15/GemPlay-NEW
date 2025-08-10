@@ -19590,6 +19590,7 @@ class NotificationPriorityEnum(str, Enum):
 class NotificationPayload(BaseModel):
     game_id: Optional[str] = None
     opponent_name: Optional[str] = None
+    opponent_id: Optional[str] = None
     amount: Optional[float] = None
     result: Optional[str] = None  # won/lost/draw
     amount_won: Optional[float] = None
@@ -19597,6 +19598,7 @@ class NotificationPayload(BaseModel):
     commission: Optional[float] = None  # Commission amount
     total_gems: Optional[float] = None  # Total gems before commission
     sender_name: Optional[str] = None
+    sender_id: Optional[str] = None
     category: Optional[str] = None
     system_message: Optional[str] = None
     admin_message: Optional[str] = None
