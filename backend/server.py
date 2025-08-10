@@ -19823,19 +19823,33 @@ async def create_notification(
         return None
 
 async def get_user_name_for_notification(user_id: str) -> str:
-    """Get user name for notification display"""
+    """Get display name for notifications.
+    - Regular bot: return "Bot"
+    - Human-bot: return its name
+    - Real user: return username
+    - Fallbacks: "Player"
+    """
     try:
-        # Try human bot first
-        bot = await db.human_bots.find_one({"id": user_id})
-        if bot:
-            return bot.get("name", "Bot")
+        # Regular bot check
+        reg_bot = await db.bots.find_one({"id": user_id})
+        if reg_bot:
+            if reg_bot.get("bot_type") == "REGULAR":
+                return "Bot"
+            # Human bot documents may also live here in some datasets
+            if reg_bot.get("bot_type") == "HUMAN" and reg_bot.get("name"):
+                return reg_bot.get("name")
         
-        # Try regular user
+        # Human-bot collection check
+        human_bot = await db.human_bots.find_one({"id": user_id})
+        if human_bot:
+            return human_bot.get("name", "Bot")
+        
+        # Regular user
         user = await db.users.find_one({"id": user_id})
         if user:
             return user.get("username", "Player")
         
-        return "Unknown Player"
+        return "Player"
     except Exception:
         return "Player"
 
