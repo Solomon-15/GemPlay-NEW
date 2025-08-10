@@ -148,12 +148,24 @@ class UnfreezeStuckBetsTester:
                 unfreeze_data = unfreeze_response.json()
                 
                 # Validate response structure
-                required_fields = ["success", "message", "total_processed", "cancelled_games", "total_gems_returned", "total_commission_returned"]
+                required_fields = ["success", "message", "total_processed"]
                 missing_fields = [field for field in required_fields if field not in unfreeze_data]
                 
                 if missing_fields:
                     self.log_test("Unfreeze Response Structure", False, f"Missing fields: {missing_fields}")
                     return
+                else:
+                    self.log_test("Unfreeze Response Structure", True, "All required fields present")
+                
+                # Check that OLD cancellation fields are NOT present (key requirement)
+                old_fields = ["cancelled_games", "total_gems_returned", "total_commission_returned"]
+                present_old_fields = [field for field in old_fields if field in unfreeze_data]
+                if not present_old_fields:
+                    self.log_test("Unfreeze - No Resource Return", True, 
+                                "Response correctly does NOT return resources/commission (unfreezing, not cancelling)")
+                else:
+                    self.log_test("Unfreeze - No Resource Return", False, 
+                                f"Response incorrectly includes resource return fields: {present_old_fields}")
                 
                 total_processed = unfreeze_data.get("total_processed", 0)
                 message = unfreeze_data.get("message", "")
