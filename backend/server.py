@@ -22548,6 +22548,82 @@ async def delete_notification(
 
 # ==============================================================================
 # ADMIN NOTIFICATION API ENDPOINTS
+
+@api_router.get("/admin/games/scan-inconsistencies", response_model=dict)
+async def scan_inconsistent_games(
+    start: Optional[datetime] = Query(None),
+    end: Optional[datetime] = Query(None),
+    limit: int = Query(200, ge=1, le=5000),
+    current_admin: User = Depends(get_current_admin)
+):
+    """Скан матчей на потенциальные несоответствия результата и реальных ходов (RPS).
+    Доступно только ADMIN/SUPER_ADMIN. По умолчанию берётся последние 24 часа, если не указаны start/end.
+    Возвращает счётчики и первые N найденных случаев (limit)."""
+    try:
+        now = datetime.utcnow()
+        if end is None:
+            end = now
+        if start is None:
+            start = now - timedelta(days=1)
+
+        # Ищем только завершённые игры в периоде
+        cursor = db.games.find({
+            "status": "COMPLETED",
+            "completed_at": {"$gte": start, "$lte": end}
+        }).sort("completed_at", -1).limit(limit)
+
+        inconsistent = []
+        checked = 0
+        async for g in cursor:
+            checked += 1
+            try:
+                c = g.get("creator_move")
+                o = g.get("opponent_move")
+                if not c or not o:
+                    continue
+                # Приводим к строкам
+                c_str = c.value if hasattr(c, 'value') else c
+                o_str = o.value if hasattr(o, 'value') else o
+                # RPS вычисление
+                def rps(a, b):
+                    if a == b:
+                        return "draw"
+                    if (a == "rock" and b == "scissors") or (a == "scissors" and b == "paper") or (a == "paper" and b == "rock"):
+                        return "creator_wins"
+                    return "opponent_wins"
+                rps_result = rps(c_str, o_str)
+                winner_id = g.get("winner_id")
+                expected = None
+                if rps_result == "creator_wins":
+                    expected = g.get("creator_id")
+                elif rps_result == "opponent_wins":
+                    expected = g.get("opponent_id")
+                else:
+                    expected = None
+                if expected != winner_id:
+                    inconsistent.append({
+                        "game_id": g.get("id"),
+                        "creator_id": g.get("creator_id"),
+                        "opponent_id": g.get("opponent_id"),
+                        "creator_move": c_str,
+                        "opponent_move": o_str,
+                        "winner_id": winner_id,
+                        "expected_winner_id": expected,
+                        "completed_at": g.get("completed_at")
+                    })
+            except Exception:
+                continue
+        return {
+            "success": True,
+            "checked": checked,
+            "found": len(inconsistent),
+            "items": inconsistent
+        }
+    except Exception as e:
+        logger.error(f"Error scanning inconsistent games: {e}")
+        raise HTTPException(status_code=500, detail="Failed to scan games")
+
+
 # ==============================================================================
 
 @api_router.post("/admin/notifications/broadcast")
