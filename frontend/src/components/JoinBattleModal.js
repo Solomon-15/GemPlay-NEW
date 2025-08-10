@@ -541,6 +541,14 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     setCurrentStep(prev => Math.max(1, prev - 1));
   };
 
+  // Prevent body scroll while modal open (and avoid layout jumps)
+  useEffect(() => {
+    const { body } = document;
+    const prev = body.style.overflow;
+    body.style.overflow = 'hidden';
+    return () => { body.style.overflow = prev; };
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
       {/* Анимированный обратный отсчет 3-2-1 */}
