@@ -38,9 +38,9 @@ async def test_my_bets_with_real_user():
         }
         
         async with session.post(f"{BACKEND_URL}/auth/register", json=user_data) as response:
-            if response.status == 201:
+            if response.status == 200:
                 user_result = await response.json()
-                user_id = user_result["user"]["id"]
+                user_id = user_result["user_id"]
                 print(f"✅ Test user created: {user_id}")
                 
                 # Verify email
