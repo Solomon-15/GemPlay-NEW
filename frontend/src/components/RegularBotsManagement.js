@@ -3344,7 +3344,7 @@ const RegularBotsManagement = () => {
           <div className="bg-surface-card border border-green-500 border-opacity-50 rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-rajdhani text-xl font-bold text-green-400">
-                📈 История цикла: {cycleData.bot_name} <span className="ml-2 text-xs text-gray-400">v2</span>
+                📈 История цикла: {cycleData.bot_name} <span className="ml-2 text-xs text-gray-400">v2.1</span>
               </h3>
               <button
                 onClick={() => setIsCycleModalOpen(false)}
