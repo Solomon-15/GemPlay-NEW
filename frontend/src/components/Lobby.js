@@ -747,7 +747,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
                   onUpdateUser();
                 }
               }}
-              currentTime={new Date()}
             />
           ))}
           {getFilteredAvailableBets().length === 0 && availableBets.length > 0 && (
