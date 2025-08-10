@@ -112,7 +112,7 @@ const BattleResultStep = ({
     <div className="space-y-6">
       {/* Result Header с увеличенным размером */}
       <div className="text-center py-4">
-        <h3 className={`text-5xl font-russo mb-6 ${resultConfig.color} animate-pulse`}>
+        <h3 className={`text-5xl font-russo mb-6 ${resultConfig.color} animate-pulse`} style={{ willChange: 'transform' }}>
           {showInconsistent ? 'INCONSISTENT DATA' : resultConfig.title}
         </h3>
         {showInconsistent && (
