@@ -152,9 +152,9 @@ class RussianReviewTester:
                 if has_required and not has_legacy:
                     endpoint_results.append("✅ /admin/bots/{id} - correct structure")
                 else:
-                    endpoint_results.append(f"❌ /admin/bots/{id} - structure issues (required: {has_required}, legacy: {has_legacy})")
+                    endpoint_results.append(f"❌ /admin/bots/{test_bot_id} - structure issues (required: {has_required}, legacy: {has_legacy})")
             else:
-                endpoint_results.append(f"❌ /admin/bots/{id} - status {bot_response.status_code}")
+                endpoint_results.append(f"❌ /admin/bots/{test_bot_id} - status {bot_response.status_code}")
             
             # Test cycle-bets endpoint
             cycle_bets_response = self.session.get(f"{API_BASE}/admin/bots/{test_bot_id}/cycle-bets")
