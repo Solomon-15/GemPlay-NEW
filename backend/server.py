@@ -22093,7 +22093,7 @@ async def unfreeze_stuck_commission(current_admin: User = Depends(get_current_ad
                     affected_users.add(opponent_id)
                     game_info["players_processed"].append({
                         "user_id": opponent_id,
-                        "username": opponent.get("username", "Unknown"),
+                        "username": opponent.get("username", "Unknown Player"),
                         "amount_unfrozen": commission_per_player
                     })
                     logger.info(f"Unfroze ${commission_per_player} commission for opponent {opponent_id} from game {game_id}")
