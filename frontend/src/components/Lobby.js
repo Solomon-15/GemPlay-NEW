@@ -786,7 +786,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
               key={game.game_id || game.id} 
               game={game} 
               isOngoing={true}
-              currentTime={new Date()}
             />
           ))}
           {ongoingBattles.length === 0 && (
