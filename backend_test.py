@@ -339,8 +339,7 @@ class MyBetsEndpointTester:
             # Create and login test user
             user_id = await self.create_test_user()
             if not user_id:
-                print("❌ Cannot proceed without test user")
-                return
+                print("⚠️ Test user creation failed, trying to login with existing user")
                 
             if not await self.login_test_user():
                 print("❌ Cannot proceed without test user login")
