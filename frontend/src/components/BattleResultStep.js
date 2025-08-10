@@ -110,8 +110,13 @@ const BattleResultStep = ({
       {/* Result Header с увеличенным размером */}
       <div className="text-center py-4">
         <h3 className={`text-5xl font-russo mb-6 ${resultConfig.color} animate-pulse`}>
-          {resultConfig.title}
+          {isInconsistent ? 'INCONSISTENT DATA' : resultConfig.title}
         </h3>
+        {isInconsistent && (
+          <div className="text-red-400 text-xs font-mono mt-2">
+            Inconsistent data detected (RPS vs result). Please contact support.
+          </div>
+        )}
         
         {/* Auto-close timer */}
         <div className="text-text-secondary text-sm">
