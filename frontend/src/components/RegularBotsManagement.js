@@ -355,6 +355,7 @@ const RegularBotsManagement = () => {
     { name: "ROI 8%", wins: 38.9, losses: 33.1, draws: 28.0 },
     { name: "ROI 9%", wins: 42.0, losses: 35.0, draws: 23.0 },
     { name: "ROI 10%", wins: 38.5, losses: 31.5, draws: 30.0 },
+    { name: "ROI 10%+", wins: 44, losses: 36, draws: 20.0 },
     { name: "ROI 11%", wins: 41.6, losses: 33.4, draws: 25.0 },
     { name: "ROI 12%", wins: 39.8, losses: 31.2, draws: 29.0 },
     { name: "ROI 13%", wins: 44.6, losses: 34.4, draws: 21.0 },
