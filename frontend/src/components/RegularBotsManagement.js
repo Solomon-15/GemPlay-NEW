@@ -1108,6 +1108,50 @@ const RegularBotsManagement = () => {
     }
   };
 
+  // Вычисление корректной статистики текущего цикла по данным модалки "История цикла"
+  const getDerivedCycleStats = (cycle, bot) => {
+    try {
+      const games = Array.isArray(cycle?.games) ? cycle.games : [];
+      const winsCount = games.filter(g => (g?.winner || '').toLowerCase() === 'победа').length;
+      const lossesCount = games.filter(g => (g?.winner || '').toLowerCase() === 'поражение').length;
+      const drawsCount = games.filter(g => (g?.winner || '').toLowerCase() === 'ничья').length;
+      const completed = winsCount + lossesCount + drawsCount;
+      const cycleLength = Number(cycle?.cycle_info?.cycle_length || bot?.cycle_games || 16);
+      const totalBet = games.reduce((sum, g) => sum + Number(g?.bet_amount || 0), 0);
+      const wonAmount = games.reduce((sum, g) => sum + (((g?.winner || '').toLowerCase() === 'победа') ? Number(g?.bet_amount || 0) : 0), 0);
+      const lostAmount = games.reduce((sum, g) => sum + (((g?.winner || '').toLowerCase() === 'поражение') ? Number(g?.bet_amount || 0) : 0), 0);
+      const netProfit = wonAmount - lostAmount;
+      const denom = Math.max(1, winsCount + lossesCount); // ничьи не входят в знаменатель
+      const winRate = (winsCount / denom) * 100;
+      const formatMoney = (v) => (Math.round(Number(v || 0) * 100) / 100).toFixed(2);
+      return {
+        winsCount,
+        lossesCount,
+        drawsCount,
+        completed,
+        cycleLength,
+        totalBet: formatMoney(totalBet),
+        wonAmount: formatMoney(wonAmount),
+        lostAmount: formatMoney(lostAmount),
+        netProfit: formatMoney(netProfit),
+        winRate: (Math.round(winRate * 10) / 10).toFixed(1)
+      };
+    } catch (e) {
+      return {
+        winsCount: 0,
+        lossesCount: 0,
+        drawsCount: 0,
+        completed: 0,
+        cycleLength: Number(cycle?.cycle_info?.cycle_length || bot?.cycle_games || 16),
+        totalBet: '0.00',
+        wonAmount: '0.00',
+        lostAmount: '0.00',
+        netProfit: '0.00',
+        winRate: '0.0'
+      };
+    }
+  };
+
   const handleCycleModal = async (bot) => {
     try {
       const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, getApiConfig());
