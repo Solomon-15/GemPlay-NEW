@@ -253,8 +253,7 @@ const RegularBotsManagement = () => {
       pause_between_cycles: 5, // 1-300 секунд
       pause_on_draw: 5, // 1-60 секунд
       
-      creation_mode: 'queue-based',
-      profit_strategy: 'balanced',
+
       
       cycle_total_amount: 0, // calculated automatically
       active_pool_amount: 0, // НОВОЕ: активный пул для отображения
