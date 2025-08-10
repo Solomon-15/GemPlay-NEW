@@ -57,6 +57,20 @@ const BattleResultStep = ({
     gameData = null
   } = battleResult || {};
 
+  // Небольшая защита фронта: верифицируем исход по RPS и сигнализируем при расхождении
+  const computedRps = React.useMemo(() => {
+    const toRes = (a, b) => {
+      if (!a || !b) return 'draw';
+      if (a === b) return 'draw';
+      if ((a === 'rock' && b === 'scissors') || (a === 'scissors' && b === 'paper') || (a === 'paper' && b === 'rock')) return 'win';
+      return 'lose';
+    };
+    // Сторона игрока — selectedMove; оппонент — opponentMove
+    return toRes(selectedMove, opponentMove);
+  }, [selectedMove, opponentMove]);
+
+  const isInconsistent = computedRps !== (result || 'draw');
+
   const getResultConfig = () => {
     switch (result) {
       case 'win':
