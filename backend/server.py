@@ -15153,13 +15153,14 @@ async def delete_user_gems(
         await db.admin_logs.insert_one(admin_log.dict())
         
         # Send notification to user
-        notification = Notification(
+        await create_notification(
             user_id=user_id,
-            type="ADMIN_ACTION",
-            title="Гемы удалены",
-            message=f"Администратор удалил {quantity} {gem_type} гемов из вашего инвентаря. Причина: {reason}"
+            notification_type=NotificationTypeEnum.ADMIN_NOTIFICATION,
+            payload=NotificationPayload(admin_message=f"Администратор удалил {quantity} {gem_type} гемов из вашего инвентаря. Причина: {reason}"),
+            priority=NotificationPriorityEnum.WARNING,
+            custom_title="Admin Action",
+            custom_message=f"Gems removed: {quantity} {gem_type}. Reason: {reason}"
         )
-        await db.notifications.insert_one(notification.dict())
         
         return {
             "message": f"Successfully deleted {quantity} {gem_type} gems",
