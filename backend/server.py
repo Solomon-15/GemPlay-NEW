@@ -8637,16 +8637,43 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
         
         result = []
         for game in games:
-            # Get creator info
-            creator = await db.users.find_one({"id": game["creator_id"]})
-            
-            # Get opponent info
+            # Get creator info (user, human-bot, or regular bot)
+            creator_user = await db.users.find_one({"id": game["creator_id"]})
+            creator_human_bot = await db.human_bots.find_one({"id": game["creator_id"]}) if not creator_user else None
+            creator_regular_bot = await db.bots.find_one({"id": game["creator_id"]}) if not creator_user and not creator_human_bot else None
+
+            # Get opponent info (user, human-bot, or regular bot)
             opponent_id = game["opponent_id"] if game["creator_id"] == current_user.id else game["creator_id"]
-            opponent = None
-            if opponent_id:
-                opponent = await db.users.find_one({"id": opponent_id})
+            opponent_user = await db.users.find_one({"id": opponent_id}) if opponent_id else None
+            opponent_human_bot = await db.human_bots.find_one({"id": opponent_id}) if opponent_id and not opponent_user else None
+            opponent_regular_bot = await db.bots.find_one({"id": opponent_id}) if opponent_id and not opponent_user and not opponent_human_bot else None
             
             is_creator = game["creator_id"] == current_user.id
+            
+            # Normalize creator display
+            if creator_user:
+                creator_display = {"id": creator_user["id"], "username": creator_user.get("username", "Player"), "gender": creator_user.get("gender", "male")}
+                creator_username = creator_display["username"]
+            elif creator_human_bot:
+                creator_display = {"id": creator_human_bot["id"], "username": creator_human_bot.get("name", "Bot"), "gender": creator_human_bot.get("gender", "male")}
+                creator_username = creator_display["username"]
+            elif creator_regular_bot:
+                # Regular bot — всегда "Bot"
+                creator_display = {"id": creator_regular_bot["id"], "username": "Bot", "gender": creator_regular_bot.get("avatar_gender", "male")}
+                creator_username = "Bot"
+            else:
+                creator_display = None
+                creator_username = "Bot" if game.get("is_regular_bot_game") else "Player"
+            
+            # Normalize opponent display
+            if opponent_user:
+                opponent_display = {"id": opponent_user["id"], "username": opponent_user.get("username", "Player"), "gender": opponent_user.get("gender", "male")}
+            elif opponent_human_bot:
+                opponent_display = {"id": opponent_human_bot["id"], "username": opponent_human_bot.get("name", "Bot"), "gender": opponent_human_bot.get("gender", "male")}
+            elif opponent_regular_bot:
+                opponent_display = {"id": opponent_regular_bot["id"], "username": "Bot", "gender": opponent_regular_bot.get("avatar_gender", "male")}
+            else:
+                opponent_display = None
             
             game_data = {
                 "game_id": game["id"],
@@ -8655,17 +8682,9 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
                 "bet_gems": game["bet_gems"],
                 "status": game["status"],
                 "created_at": game["created_at"],
-                "creator_username": creator["username"] if creator else "Unknown Player",
-                "creator": {
-                    "id": creator["id"],
-                    "username": creator["username"],
-                    "gender": creator["gender"]
-                } if creator else None,
-                "opponent": {
-                    "id": opponent["id"],
-                    "username": opponent["username"],
-                    "gender": opponent["gender"]
-                } if opponent else None
+                "creator_username": creator_username,
+                "creator": creator_display,
+                "opponent": opponent_display
             }
             
             # Add result info if completed
