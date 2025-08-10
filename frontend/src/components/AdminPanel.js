@@ -1293,6 +1293,154 @@ const AdminPanel = ({ user, onClose }) => {
               title="Назад"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+      {/* Scan Inconsistencies Modal */}
+      {scanModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-60" onClick={() => setScanModalOpen(false)} />
+          <div className="relative bg-surface-card border border-border-primary rounded-xl w-full max-w-5xl mx-4 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-rajdhani text-xl text-white font-bold">Сканирование несоответствий</h3>
+              <button onClick={() => setScanModalOpen(false)} className="text-text-secondary hover:text-white">✕</button>
+            </div>
+
+            {/* Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <label className="block text-text-secondary text-sm mb-2">Период</label>
+                <select
+                  value={scanPreset}
+                  onChange={(e) => setScanPreset(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                >
+                  <option value="24h">Последние 24 часа</option>
+                  <option value="7d">Последние 7 дней</option>
+                  <option value="30d">Последние 30 дней</option>
+                  <option value="custom">Свой период</option>
+                </select>
+              </div>
+
+              {scanPreset === 'custom' && (
+                <>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-2">Начало</label>
+                    <input
+                      type="datetime-local"
+                      value={scanStart}
+                      onChange={(e) => setScanStart(e.target.value)}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-2">Конец</label>
+                    <input
+                      type="datetime-local"
+                      value={scanEnd}
+                      onChange={(e) => setScanEnd(e.target.value)}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div>
+                <label className="block text-text-secondary text-sm mb-2">Page size</label>
+                <select
+                  value={scanPageSize}
+                  onChange={(e) => setScanPageSize(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white"
+                >
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 mb-4">
+              <button
+                onClick={() => runScanFetch(1, scanPageSize)}
+                disabled={scanLoading || (scanPreset === 'custom' && (!scanStart || !scanEnd))}
+                className={`px-4 py-2 rounded-lg font-rajdhani font-bold ${scanLoading ? 'bg-gray-600 text-gray-400' : 'bg-accent-primary text-white hover:opacity-90'}`}
+              >
+                {scanLoading ? 'Сканирую...' : 'Сканировать'}
+              </button>
+              {scanError && <span className="text-red-400 text-sm">{scanError}</span>}
+              {scanResult?.found > 0 && (
+                <span className="text-yellow-400 text-sm">Найдено: {scanResult.found} (просмотрено документов: {scanResult.checked})</span>
+              )}
+            </div>
+
+            {/* Results Table */}
+            <div className="overflow-x-auto border border-border-primary rounded-lg">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-border-primary text-text-secondary">
+                    <th className="py-2 px-3">Completed At</th>
+                    <th className="py-2 px-3">Game ID</th>
+                    <th className="py-2 px-3">Creator</th>
+                    <th className="py-2 px-3">Opponent</th>
+                    <th className="py-2 px-3">Creator Move</th>
+                    <th className="py-2 px-3">Opponent Move</th>
+                    <th className="py-2 px-3">Winner</th>
+                    <th className="py-2 px-3">Expected</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(scanResult.items || []).length === 0 ? (
+                    <tr>
+                      <td className="py-4 px-3 text-text-secondary" colSpan="8">Нет данных</td>
+                    </tr>
+                  ) : (
+                    scanResult.items.map((it) => (
+                      <tr key={it.game_id} className="border-t border-border-primary">
+                        <td className="py-2 px-3 text-white">{it.completed_at ? new Date(it.completed_at).toLocaleString() : '—'}</td>
+                        <td className="py-2 px-3 text-white font-mono text-xs">{it.game_id}</td>
+                        <td className="py-2 px-3 text-white font-mono text-xs">{it.creator_id}</td>
+                        <td className="py-2 px-3 text-white font-mono text-xs">{it.opponent_id}</td>
+                        <td className="py-2 px-3 text-white">{it.creator_move}</td>
+                        <td className="py-2 px-3 text-white">{it.opponent_move}</td>
+                        <td className="py-2 px-3 text-white font-mono text-xs">{it.winner_id || 'DRAW'}</td>
+                        <td className="py-2 px-3 text-white font-mono text-xs">{it.expected_winner_id || 'DRAW'}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {scanResult.pages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-text-secondary text-sm">
+                  Страница {scanResult.page} из {scanResult.pages}
+                </div>
+                <div className="space-x-2">
+                  <button
+                    onClick={() => runScanFetch(Math.max(1, scanResult.page - 1))}
+                    disabled={scanLoading || scanResult.page <= 1}
+                    className={`px-3 py-2 rounded bg-surface-sidebar border border-border-primary text-white ${scanResult.page <= 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-surface-card'}`}
+                  >
+                    Назад
+                  </button>
+                  <button
+                    onClick={() => runScanFetch(Math.min(scanResult.pages, scanResult.page + 1))}
+                    disabled={scanLoading || scanResult.page >= scanResult.pages}
+                    className={`px-3 py-2 rounded bg-surface-sidebar border border-border-primary text-white ${scanResult.page >= scanResult.pages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-surface-card'}`}
+                  >
+                    Вперёд
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 text-text-secondary text-xs">
+              Период: {scanResult?.period?.start ? new Date(scanResult.period.start).toLocaleString() : '—'} — {scanResult?.period?.end ? new Date(scanResult.period.end).toLocaleString() : '—'}
+            </div>
+          </div>
+        </div>
+      )}
+
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
