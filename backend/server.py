@@ -13094,15 +13094,26 @@ async def cleanup_stuck_bets(
             bet_gems = game.get("bet_gems", {})
             opponent_gems = game.get("opponent_gems", {})
             
-            # Cancel the game
+            # Unfreeze logic: extend deadlines and return to ACTIVE state
+            # Compute new active_deadline: now + 1 minute
+            new_deadline = datetime.utcnow() + timedelta(minutes=1)
             await db.games.update_one(
                 {"id": game_id},
                 {
                     "$set": {
-                        "status": "CANCELLED",
-                        "cancelled_at": datetime.utcnow(),
-                        "cancelled_by": "admin_cleanup",
-                        "cancel_reason": f"Auto-cancelled by admin cleanup - stuck for >24h in status {game_status}"
+                        "status": "ACTIVE",
+                        "active_deadline": new_deadline,
+                        "updated_at": datetime.utcnow(),
+                        "unfrozen_at": datetime.utcnow(),
+                        "unfrozen_by": current_user.id
+                    },
+                    "$unset": {
+                        "processing_lock": "",
+                        "locked_by": "",
+                        "lock_acquired_at": "",
+                        "cancel_reason": "",
+                        "cancelled_by": "",
+                        "cancelled_at": ""
                     }
                 }
             )
