@@ -50,6 +50,17 @@ backend:
       - working: true
         agent: "testing"
         comment: "🎉 CURRENT PROFIT FIELD TESTING COMPLETED WITH PERFECT SUCCESS! Conducted comprehensive testing of all current_profit field requirements with 100% success rate (4/4 tests passed). DETAILED RESULTS: ✅ REQUIREMENT 1 PERFECT: GET /api/admin/bots/regular/list returns current_profit field for all 4 bots with valid numeric values [-36, -6, 0, 99] computed as sum_wins - sum_losses of current cycle. ✅ REQUIREMENT 2 PERFECT: All existing Regular Bot endpoints working correctly - /api/admin/bots/{id}, /api/admin/bots/{id}/cycle-bets, /api/admin/bots/{id}/recalculate-bets all responding properly with required fields (active_pool, cycle_total_display, current_cycle_wins/losses/draws). ✅ REQUIREMENT 3 PERFECT: Admin Profit endpoints (/api/admin/profit/stats, /api/admin/profit/bot-integration, /api/admin/profit/bot-revenue-details) all working without legacy creation_modes/behaviors fields. Bot-integration returns proper structure with bot_stats, efficiency, recent_transactions and no legacy fields to avoid Object.entries null error. ✅ REQUIREMENT 4 PERFECT: All lobby endpoints unaffected - /api/games/available (184 games), /api/games/active-human-bots (18 games), /api/bots/active-games (54 games), /api/bots/ongoing-games (1 game) all working correctly. CONCLUSION: ALL current_profit field requirements are FULLY FUNCTIONAL and ready for production use."
+  - task: "Unfreeze Stuck Bets Implementation and Testing"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "🚨 CRITICAL IMPLEMENTATION ISSUE FOUND: POST /api/admin/bets/unfreeze-stuck endpoint is CANCELLING stuck games instead of UNFREEZING them as requested. DETAILED FINDINGS: ✅ AUTHENTICATION: Endpoint correctly requires admin authentication (401 without token, 200 with admin token). ✅ RESPONSE STRUCTURE: All required fields present (success, message, total_processed, cancelled_games, total_gems_returned, total_commission_returned). ✅ STATS CALCULATION: GET /api/admin/bets/stats correctly calculates stuck_bets as ACTIVE games with expired active_deadline (found 0 stuck bets). ✅ REGRESSION: All existing admin bet endpoints working correctly (/admin/bets/list, /admin/bets/stats, /admin/bets/reset-all, /admin/bets/delete-all, /admin/bets/reset-fractional). ❌ CORE FUNCTIONALITY: The endpoint is cancelling stuck games (setting status=CANCELLED) instead of unfreezing them (removing lock fields, extending active_deadline by 1 minute, setting unfrozen_at/unfrozen_by). REQUIREMENT: Should find ACTIVE games with expired active_deadline, remove processing_lock/locked_by/lock_acquired_at fields, extend active_deadline by 1 minute, and set unfrozen_at/unfrozen_by fields. CURRENT BEHAVIOR: Cancels games and returns resources to players. SUCCESS RATE: 87.5% (14/16 tests passed). REQUIRES IMMEDIATE FIX to implement actual unfreezing logic instead of cancellation logic."
 
 frontend:
   - task: "Legacy cleanup + Draw logic alignment (Implementation)"
