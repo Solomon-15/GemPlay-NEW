@@ -104,11 +104,26 @@ const GiftConfirmationModal = ({
     }
   };
 
+  // Lock body scroll when modal is open (prevents background jumps)
+  useEffect(() => {
+    if (!isOpen) return;
+    const { body } = document;
+    const prevOverflow = body.style.overflow;
+    const prevPaddingRight = body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
+    body.style.overflow = 'hidden';
+    return () => {
+      body.style.overflow = prevOverflow || 'unset';
+      body.style.paddingRight = prevPaddingRight || '';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-md w-full">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onWheel={(e)=>e.stopPropagation()} onTouchMove={(e)=>e.stopPropagation()}>
+      <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-md w-full" role="dialog" aria-modal="true">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-russo text-xl text-accent-primary">🎁 Gift Confirmation</h3>
