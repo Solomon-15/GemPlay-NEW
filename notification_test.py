@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 # Get backend URL from environment
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://7442eeef-ca61-40db-a631-c7dfd755caa2.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://df28b502-4a8b-41a3-806f-4aea5b27dbbf.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 class NotificationSystemTester:
