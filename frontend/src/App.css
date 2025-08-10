@@ -36,3 +36,12 @@
         transform: rotate(360deg);
     }
 }
+
+:root {
+  /* Will be updated at runtime to avoid mobile 100vh jumps */
+  --vh: 1vh;
+}
+
+.min-h-app {
+  min-height: calc(var(--vh) * 100);
+}
