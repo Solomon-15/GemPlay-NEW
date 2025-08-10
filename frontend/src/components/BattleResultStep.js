@@ -114,7 +114,7 @@ const BattleResultStep = ({
         <h3 className={`text-5xl font-russo mb-6 ${resultConfig.color} animate-pulse`}>
           {showInconsistent ? 'INCONSISTENT DATA' : resultConfig.title}
         </h3>
-        {isInconsistent && (
+        {showInconsistent && (
           <div className="text-red-400 text-xs font-mono mt-2">
             Inconsistent data detected (RPS vs result). Please contact support.
           </div>
