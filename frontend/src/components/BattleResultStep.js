@@ -46,11 +46,11 @@ const BattleResultStep = ({
     return () => clearInterval(timer);
   }, [onClose]);
 
-  const moves = [
+  const moves = React.useMemo(() => ([
     { id: 'rock', name: 'Rock', icon: '/Rock.svg' },
     { id: 'paper', name: 'Paper', icon: '/Paper.svg' },
     { id: 'scissors', name: 'Scissors', icon: '/Scissors.svg' }
-  ];
+  ]), []);
 
   const {
     result = 'draw', // win, lose, draw
