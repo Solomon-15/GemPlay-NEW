@@ -13095,8 +13095,8 @@ async def cleanup_stuck_bets(
             opponent_gems = game.get("opponent_gems", {})
             
             # Unfreeze logic: extend deadlines and return to ACTIVE state
-            # Compute new active_deadline: now + 1 minute
-            new_deadline = datetime.utcnow() + timedelta(minutes=1)
+            # Compute new active_deadline: now + 5 minutes
+            new_deadline = datetime.utcnow() + timedelta(minutes=5)
             await db.games.update_one(
                 {"id": game_id},
                 {
