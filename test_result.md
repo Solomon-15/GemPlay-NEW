@@ -1,12 +1,15 @@
 backend:
   - task: "GET /api/games/my-bets Endpoint Testing"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
+      - working: true
+        agent: "testing"
+        comment: "🎉 MY-BETS ENDPOINT RE-TESTING COMPLETED WITH PERFECT SUCCESS! Conducted comprehensive re-testing of GET /api/games/my-bets endpoint for Russian review requirements after backend changes. PERFECT SUCCESS RATE: 100% (3/3 tests passed). DETAILED RESULTS: ✅ REQUIREMENT 1 PERFECT: creator_username never equals 'Unknown Player' - All 2 tested bets show valid usernames (admin users), no 'Unknown Player' violations found. ✅ REQUIREMENT 2 PERFECT: creator/opponent objects now always contain required fields - All creator objects have proper structure with id, username, gender fields. Opponent objects properly structured with id field (null for WAITING games is acceptable). No missing 'id' field issues found. ✅ REQUIREMENT 3 PERFECT: No regressions detected - All required fields present (game_id, is_creator, bet_amount, bet_gems, status, created_at, creator_username), correct data types, proper response structure maintained. CONCLUSION: ALL Russian review requirements for GET /api/games/my-bets endpoint are now FULLY FUNCTIONAL and working as expected. The backend changes have successfully resolved the missing 'id' field issue."
       - working: false
         agent: "testing"
         comment: "🔍 MY-BETS ENDPOINT TESTING COMPLETED WITH MIXED RESULTS! Conducted comprehensive testing of GET /api/games/my-bets endpoint for Russian review requirements. SUCCESS RATE: 66.7% (2/3 tests passed). DETAILED RESULTS: ✅ REQUIREMENT 1 PERFECT: creator_username never equals 'Unknown Player' - Regular bots correctly show as 'Bot' (3 games), players show real usernames (10 games), no 'Unknown Player' violations found in 13 tested bets. ✅ REQUIREMENT 3 PERFECT: No regressions detected - All required fields present (game_id, is_creator, bet_amount, bet_gems, status, created_at, creator_username), correct data types, proper response structure. ❌ REQUIREMENT 2 FAILED: creator/opponent objects missing required fields - Found 3 creator objects missing 'id' field and 1 opponent object missing 'id' field. CRITICAL ISSUE: Some creator/opponent objects in my-bets response are not properly structured with all required fields (id, username, gender). CONCLUSION: Main requirement (no 'Unknown Player') is working correctly, but object structure needs fixing for complete compliance."
