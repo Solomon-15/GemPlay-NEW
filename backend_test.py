@@ -144,7 +144,9 @@ class RussianReviewTester:
             # Test individual bot endpoint
             bot_response = self.session.get(f"{API_BASE}/admin/bots/{test_bot_id}")
             if bot_response.status_code == 200:
-                bot_data = bot_response.json()
+                response_data = bot_response.json()
+                bot_data = response_data.get("bot", response_data)  # Handle wrapped response
+                
                 # Check for required fields and no legacy fields
                 has_required = all(field in bot_data for field in ["wins_count", "losses_count", "draws_count"])
                 has_legacy = any(field in bot_data for field in ["win_percentage", "creation_mode", "profit_strategy"])
