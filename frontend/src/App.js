@@ -117,7 +117,7 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-primary flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gradient-primary flex items-center justify-center p-8 min-h-app">
       <div className="bg-surface-card border border-border-primary rounded-xl p-8 max-w-md w-full">
         <div className="flex flex-col items-center mb-2">
           <img 
