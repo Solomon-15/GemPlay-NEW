@@ -102,7 +102,7 @@ const Shop = ({ user, onUpdateUser }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-primary p-8">
+    <div className="min-h-screen min-h-app bg-gradient-primary p-8">
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="font-russo text-4xl md:text-6xl text-accent-primary mb-4">
