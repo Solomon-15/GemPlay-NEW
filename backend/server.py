@@ -13244,11 +13244,11 @@ async def get_all_bets_stats(current_user: User = Depends(get_current_admin)):
         completed_bets = await db.games.count_documents({"status": "COMPLETED"})
         cancelled_bets = await db.games.count_documents({"status": "CANCELLED"})
         
-        # Get stuck bets (older than 24 hours and still in problematic states)
-        cutoff_time = datetime.utcnow() - timedelta(hours=24)
+        # Get stuck bets: ACTIVE games with expired active_deadline (timer ran out)
+        now_ts = datetime.utcnow()
         stuck_bets = await db.games.count_documents({
-            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]},
-            "created_at": {"$lt": cutoff_time}
+            "status": "ACTIVE",
+            "active_deadline": {"$exists": True, "$ne": None, "$lt": now_ts}
         })
         
         # Calculate total bet value
