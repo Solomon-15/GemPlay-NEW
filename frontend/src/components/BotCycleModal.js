@@ -24,7 +24,7 @@ const BotCycleModal = ({ bot, onClose }) => {
       setLoading(false);
     } catch (error) {
       console.error('Error fetching cycle data:', error);
-      showErrorRU('Ошибка загрузки данных цикла');
+      showErrorRU('Failed to load cycle data');
       setLoading(false);
     }
   };
