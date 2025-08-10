@@ -3363,7 +3363,7 @@ const RegularBotsManagement = () => {
                 <div className="bg-surface-sidebar rounded-lg p-4">
                   <h4 className="font-rajdhani font-bold text-white mb-2">Прогресс цикла:</h4>
                   <div className="text-2xl font-rajdhani font-bold text-green-400">
-                    {cycleData.cycle_info.progress}
+                    {(() => { const c = (cycleData?.cycle_info?.completed_games ?? 0); const t = (cycleData?.cycle_info?.cycle_length ?? 16); return `${c}/${t}`; })()}
                   </div>
                   <div className="text-text-secondary text-sm">
                     Завершено игр
