@@ -82,8 +82,19 @@ class MyBetsEndpointTester:
                         else:
                             print(f"⚠️ User created but verification failed: {verify_response.status}")
                             return user_id
+                elif response.status == 200:
+                    # User might already exist, try to get user info
+                    data = await response.json()
+                    if "user" in data and "id" in data["user"]:
+                        user_id = data["user"]["id"]
+                        print("✅ Test user already exists, using existing user")
+                        return user_id
+                    else:
+                        print(f"❌ Unexpected response format: {data}")
+                        return None
                 else:
-                    print(f"❌ Test user creation failed: {response.status}")
+                    text = await response.text()
+                    print(f"❌ Test user creation failed: {response.status} - {text}")
                     return None
         except Exception as e:
             print(f"❌ Test user creation error: {e}")
