@@ -739,14 +739,7 @@ const RegularBotsManagement = () => {
     }
     
     const validModes = ['always-first', 'queue-based', 'after-all'];
-    if (!validModes.includes(formData.creation_mode)) {
-      errors.push('Неверный режим создания ставок');
-    }
-    
-    const validStrategies = ['start-positive', 'balanced', 'start-negative'];
-    if (!validStrategies.includes(formData.profit_strategy)) {
-      errors.push('Неверная стратегия прибыли');
-    }
+
     
     return {
       isValid: errors.length === 0,
