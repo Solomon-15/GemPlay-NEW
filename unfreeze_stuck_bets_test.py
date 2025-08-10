@@ -205,6 +205,33 @@ class UnfreezeStuckBetsTester:
                         self.log_test("Stuck Bets Count Update", True, 
                                     f"No stuck bets to process (initial: {initial_stuck_bets}, after: {stuck_bets_after})")
                 
+                # Check unfrozen games details if available
+                if "unfrozen_games" in unfreeze_data and total_processed > 0:
+                    unfrozen_games = unfreeze_data.get("unfrozen_games", [])
+                    if unfrozen_games:
+                        self.log_test("Unfrozen Games Details", True, 
+                                    f"Received details for {len(unfrozen_games)} unfrozen games")
+                        
+                        # Check deadline extension logic for first game
+                        first_game = unfrozen_games[0]
+                        if "old_deadline" in first_game and "new_deadline" in first_game:
+                            try:
+                                old_deadline = datetime.fromisoformat(first_game["old_deadline"].replace('Z', '+00:00'))
+                                new_deadline = datetime.fromisoformat(first_game["new_deadline"].replace('Z', '+00:00'))
+                                extension_seconds = (new_deadline - old_deadline).total_seconds()
+                                
+                                if 50 <= extension_seconds <= 70:  # Around 1 minute
+                                    self.log_test("Deadline Extension", True, 
+                                                f"Deadline correctly extended by ~1 minute ({extension_seconds:.0f}s)")
+                                else:
+                                    self.log_test("Deadline Extension", False, 
+                                                f"Deadline extension incorrect: {extension_seconds:.0f}s (expected ~60s)")
+                            except Exception as e:
+                                self.log_test("Deadline Extension", False, f"Error parsing deadlines: {str(e)}")
+                    else:
+                        self.log_test("Unfrozen Games Details", False, 
+                                    f"Processed {total_processed} games but no unfrozen_games details")
+                
                 self.log_test("Unfreeze Stuck Functionality", True, 
                             f"Successfully processed {total_processed} stuck bets")
                 
