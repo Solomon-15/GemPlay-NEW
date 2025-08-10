@@ -3359,22 +3359,22 @@ const RegularBotsManagement = () => {
                   <div className="space-y-2 text-sm">
                     <div>
                       <span className="text-text-secondary">Поставлено:</span>
-                      <span className="text-white ml-2">${cycleData.cycle_stats.total_bet_amount}</span>
+                      <span className="text-white ml-2">${Number(cycleData.cycle_stats.total_bet_amount).toFixed(2)}</span>
                     </div>
                     <div>
                       <span className="text-text-secondary">Выиграно:</span>
-                      <span className="text-green-400 ml-2">${cycleData.cycle_stats.total_winnings}</span>
+                      <span className="text-green-400 ml-2">${Number(cycleData.cycle_stats.total_winnings).toFixed(2)}</span>
                     </div>
                     <div>
                       <span className="text-text-secondary">Проиграно:</span>
-                      <span className="text-red-400 ml-2">${cycleData.cycle_stats.total_losses}</span>
+                      <span className="text-red-400 ml-2">${Number(cycleData.cycle_stats.total_losses).toFixed(2)}</span>
                     </div>
                     <div className="border-t border-border-primary pt-2">
                       <span className="text-text-secondary">Прибыль:</span>
                       <span className={`ml-2 font-bold ${
-                        cycleData.cycle_stats.net_profit >= 0 ? 'text-green-400' : 'text-red-400'
+                        Number(cycleData.cycle_stats.net_profit) >= 0 ? 'text-green-400' : 'text-red-400'
                       }`}>
-                        ${cycleData.cycle_stats.net_profit}
+                        ${Number(cycleData.cycle_stats.net_profit).toFixed(2)}
                       </span>
                     </div>
                   </div>
