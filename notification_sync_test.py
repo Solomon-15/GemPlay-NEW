@@ -258,7 +258,13 @@ class NotificationSystemTester:
                 response = self.session.get(f"{API_BASE}{endpoint}", headers=headers)
                 if response.status_code == 200:
                     data = response.json()
-                    games_count = len(data.get("games", []))
+                    # Handle different response formats
+                    if isinstance(data, list):
+                        games_count = len(data)
+                    elif isinstance(data, dict):
+                        games_count = len(data.get("games", []))
+                    else:
+                        games_count = 0
                     logger.info(f"✅ {description} endpoint working: {games_count} games found")
                 else:
                     logger.error(f"❌ {description} endpoint failed: {response.status_code}")
