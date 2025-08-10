@@ -121,7 +121,63 @@ class MyBetsEndpointTester:
             print(f"❌ Test user login error: {e}")
             return False
             
-    async def get_my_bets(self) -> Optional[List[Dict[str, Any]]]:
+    async def create_test_game(self) -> bool:
+        """Create a test game to have data for testing"""
+        try:
+            headers = {"Authorization": f"Bearer {self.test_user_token}"}
+            
+            # First, get user gems to see what's available
+            async with self.session.get(f"{BACKEND_URL}/user/gems", headers=headers) as response:
+                if response.status == 200:
+                    gems_data = await response.json()
+                    print(f"✅ User gems retrieved: {len(gems_data)} gem types")
+                    
+                    # Find a gem with quantity > 0
+                    available_gem = None
+                    for gem in gems_data:
+                        if gem.get("quantity", 0) > 0:
+                            available_gem = gem
+                            break
+                    
+                    if not available_gem:
+                        print("⚠️ No gems available, adding some gems first")
+                        # Add some gems for testing
+                        add_gems_data = {
+                            "gem_type": "Ruby",
+                            "quantity": 10
+                        }
+                        async with self.session.post(f"{BACKEND_URL}/admin/users/gems/add", 
+                                                   json=add_gems_data, headers=headers) as add_response:
+                            if add_response.status == 200:
+                                print("✅ Added Ruby gems for testing")
+                                available_gem = {"type": "Ruby", "quantity": 10}
+                            else:
+                                print(f"❌ Failed to add gems: {add_response.status}")
+                                return False
+                    
+                    # Create a game
+                    game_data = {
+                        "move": "rock",
+                        "bet_gems": {available_gem["type"]: 1}
+                    }
+                    
+                    async with self.session.post(f"{BACKEND_URL}/games/create", 
+                                               json=game_data, headers=headers) as create_response:
+                        if create_response.status == 201:
+                            game_result = await create_response.json()
+                            print(f"✅ Test game created: {game_result.get('game_id', 'unknown')}")
+                            return True
+                        else:
+                            text = await create_response.text()
+                            print(f"❌ Failed to create game: {create_response.status} - {text}")
+                            return False
+                else:
+                    print(f"❌ Failed to get user gems: {response.status}")
+                    return False
+                    
+        except Exception as e:
+            print(f"❌ Create test game error: {e}")
+            return False
         """Get my bets using test user token"""
         try:
             headers = {"Authorization": f"Bearer {self.test_user_token}"}
