@@ -122,7 +122,7 @@ const handleLogout = () => {
   
   // Show notification
   if (window.showErrorRU) {
-    window.showErrorRU('Сессия истекла. Пожалуйста, войдите снова.');
+    window.showErrorRU('Session expired. Please sign in again.');
   }
   
   // Redirect to login - trigger app logout
