@@ -9063,8 +9063,8 @@ async def leave_game(game_id: str, current_user: User = Depends(get_current_user
                 await create_notification(
                     user_id=game_obj.creator_id,
                     notification_type=NotificationTypeEnum.SYSTEM_MESSAGE,
-                    title="Opponent Left Game",
-                    message=f"Your opponent left the ${game_obj.bet_amount} bet. Your bet has been recreated with a new move and is available again.",
+                    custom_title="Opponent Left Game",
+                    custom_message=f"Your opponent left the ${game_obj.bet_amount} bet. Your bet has been recreated with a new move and is available again.",
                     payload=creator_payload,
                     priority=NotificationPriorityEnum.INFO
                 )
