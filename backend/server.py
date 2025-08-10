@@ -13792,7 +13792,7 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
         
         return {
             "success": True,
-            "message": f"Cleaned up {cleanup_results['total_processed']} stuck bets",
+            "message": f"Разморожено {cleanup_results['total_processed']} зависших ставок",
             **cleanup_results
         }
         
