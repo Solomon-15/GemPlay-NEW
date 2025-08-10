@@ -501,7 +501,7 @@ const UserManagement = ({ user: currentUser }) => {
       showSuccessRU('User has been banned');
     } catch (error) {
       console.error('Ошибка бана:', error);
-      showErrorRU('Ошибка при бане пользователя');
+      showErrorRU('Error banning user');
     }
   };
 
