@@ -131,7 +131,7 @@ const BattleResultStep = ({
           {/* Player (You) */}
           <div className="text-center">
             <div className={`w-20 h-20 mx-auto mb-3 rounded-full border-4 ${
-              result === 'win' ? 'border-green-400' : result === 'lose' ? 'border-red-400' : 'border-yellow-400'
+              (isInconsistent ? 'border-red-500' : (result === 'win' ? 'border-green-400' : result === 'lose' ? 'border-red-400' : 'border-yellow-400'))
             } bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center`}>
               <span className="text-white font-russo text-xl">
                 {playerData?.player?.username?.charAt(0)?.toUpperCase() || 'Y'}
