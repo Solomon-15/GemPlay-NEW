@@ -831,7 +831,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
                   onUpdateUser();
                 }
               }}
-              currentTime={new Date()}
               isBot={true}
             />
           ))}
