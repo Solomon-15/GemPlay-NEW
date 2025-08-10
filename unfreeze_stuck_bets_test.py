@@ -53,11 +53,11 @@ class UnfreezeStuckBetsTester:
         try:
             # Login as admin
             login_data = {
-                "username": ADMIN_EMAIL,
+                "email": ADMIN_EMAIL,
                 "password": ADMIN_PASSWORD
             }
             
-            response = self.session.post(f"{API_BASE}/auth/login", data=login_data)
+            response = self.session.post(f"{API_BASE}/auth/login", json=login_data)
             
             if response.status_code == 200:
                 token_data = response.json()
