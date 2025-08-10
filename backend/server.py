@@ -6306,9 +6306,10 @@ async def handle_game_timeout(game_id: str):
                 
                 # Notify opponent about the timeout
                 opponent_name = await get_user_name_for_notification(game_obj.opponent_id)
+                creator_name = await get_user_name_for_notification(game_obj.creator_id)
                 opponent_payload = NotificationPayload(
                     game_id=game_id,
-                    opponent_name=creator.get("username", "Unknown Player"),
+                    opponent_name=creator_name,
                     amount=game_obj.bet_amount
                 )
                 await create_notification(
