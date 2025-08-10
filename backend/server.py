@@ -13636,12 +13636,11 @@ async def cancel_any_bet(
             detail="Failed to reset bet"
         )
 
-@api_router.post("/admin/bets/cleanup-stuck", response_model=dict)
-async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)):
-    """Clean up all stuck/hanging bets in the system (admin only)."""
+@api_router.post("/admin/bets/unfreeze-stuck", response_model=dict)
+async def unfreeze_all_stuck_bets(current_user: User = Depends(get_current_admin)):
+    """Разморозить все зависшие ставки (только для админов)."""
     try:
-        # Define cutoff time (24 hours ago)
-        cutoff_time = datetime.utcnow() - timedelta(hours=24)
+        # По определению: считаем зависшими ACTIVE с истекшим active_deadline
         
         # Find stuck bets - ACTIVE games with expired active_deadline
         now_ts = datetime.utcnow()
