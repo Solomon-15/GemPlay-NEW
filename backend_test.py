@@ -396,6 +396,9 @@ class MyBetsEndpointTester:
             self.test_user_token = self.admin_token
             print("✅ Using admin user for testing my-bets endpoint")
             
+            # Create a test game to have data
+            await self.create_test_game()
+            
             # Get my bets
             bets = await self.get_my_bets()
             if bets is None:
