@@ -208,9 +208,9 @@ const PlayerCard = React.memo(({
             </div>
 
             {/* Timer */}
-            {timeRemaining && (
+            {cancelAtHHMM && (
               <div className="text-text-secondary text-xs font-rajdhani mt-1">
-                Auto-cancel: {timeRemaining}
+                Auto-cancel: {cancelAtHHMM}
               </div>
             )}
           </div>
