@@ -15265,16 +15265,19 @@ async def modify_user_gems(
         await db.admin_logs.insert_one(admin_log.dict())
         
         # Send notification to user
-        action_word = "добавил" if change > 0 else "удалил"
-        default_message = f"Администратор {action_word} {abs(change)} {gem_type} гемов"
-        
-        notification = Notification(
-            user_id=user_id,
-            type="ADMIN_ACTION",
-            title="Изменение гемов",
-            message=notification_message or default_message
+        action_word_ru = "добавил" if change > 0 else "удалил"
+        default_message_ru = f"Администратор {action_word_ru} {abs(change)} {gem_type} гемов"
+        default_message_en = (
+            f"Gems {'added' if change > 0 else 'removed'}: {abs(change)} {gem_type}. Reason: {reason}"
         )
-        await db.notifications.insert_one(notification.dict())
+        await create_notification(
+            user_id=user_id,
+            notification_type=NotificationTypeEnum.ADMIN_NOTIFICATION,
+            payload=NotificationPayload(admin_message=notification_message or default_message_ru),
+            priority=NotificationPriorityEnum.INFO,
+            custom_title="Admin Action",
+            custom_message=default_message_en
+        )
         
         return {
             "message": f"Successfully modified {gem_type} gems by {change}",
