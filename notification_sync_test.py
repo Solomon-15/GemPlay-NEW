@@ -83,6 +83,27 @@ class NotificationSystemTester:
                 else:
                     logger.warning(f"⚠️ Failed to create user {user_data['username']}: {response.status_code}")
                 
+                # If user was created, activate them via admin
+                if response.status_code in [200, 201]:
+                    # Get user ID from admin endpoint
+                    headers = {"Authorization": f"Bearer {self.admin_token}"}
+                    search_response = self.session.get(f"{API_BASE}/admin/users", headers=headers, params={"search": user_data["email"]})
+                    if search_response.status_code == 200:
+                        users_data = search_response.json()
+                        users = users_data.get("users", [])
+                        for user in users:
+                            if user.get("email") == user_data["email"]:
+                                user_id = user.get("id")
+                                # Activate user
+                                activate_response = self.session.put(
+                                    f"{API_BASE}/admin/users/{user_id}/status",
+                                    json={"status": "ACTIVE"},
+                                    headers=headers
+                                )
+                                if activate_response.status_code == 200:
+                                    logger.info(f"✅ Activated test user: {user_data['username']}")
+                                break
+                
                 # Login user
                 login_data = {
                     "email": user_data["email"],
