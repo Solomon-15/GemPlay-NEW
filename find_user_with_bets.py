@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 import json
 
-BACKEND_URL = "https://ff95f906-ec70-47a9-aaf8-bb80b36481e0.preview.emergentagent.com/api"
+BACKEND_URL = "https://49b21745-59e5-4980-8f15-13cafed79fb5.preview.emergentagent.com/api"
 
 async def find_user_with_bets():
     """Find a user with existing bets"""
