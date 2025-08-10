@@ -16513,6 +16513,41 @@ async def get_regular_bots_list(
             
             remaining_slots = max(0, cycle_games - current_cycle_played)
             
+            # Рассчёт прибыли текущего активного цикла (по аналогии с /admin/bots/{id}/cycle-bets)
+            try:
+                cycle_len_cur = int(bot_doc.get("cycle_games", 12) or 12)
+                active_games_cur = await db.games.find({
+                    "creator_id": bot.id,
+                    "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+                }).sort("created_at", -1).to_list(1000)
+                completed_games_cur = await db.games.find({
+                    "creator_id": bot.id,
+                    "status": "COMPLETED"
+                }).sort("created_at", -1).to_list(1000)
+                combined_cur = active_games_cur + completed_games_cur
+                combined_cur_sorted = sorted(combined_cur, key=lambda g: g.get("created_at"), reverse=True)
+                current_cycle_games_list = combined_cur_sorted[:cycle_len_cur]
+                current_cycle_games_list = list(reversed(current_cycle_games_list))
+
+                wins_sum_cur = 0
+                losses_sum_cur = 0
+                draws_sum_cur = 0
+                for g in current_cycle_games_list:
+                    status_str = str(g.get("status", "waiting")).upper()
+                    if status_str == "COMPLETED":
+                        bet_amount = int(g.get("bet_amount", 0) or 0)
+                        if g.get("winner_id") == bot.id:
+                            wins_sum_cur += bet_amount
+                        elif g.get("winner_id"):
+                            losses_sum_cur += bet_amount
+                        else:
+                            draws_sum_cur += bet_amount
+                active_pool_cur = wins_sum_cur + losses_sum_cur
+                current_profit = wins_sum_cur - losses_sum_cur
+            except Exception:
+                active_pool_cur = 0
+                current_profit = 0
+
             bot_details.append({
                 "id": bot.id,
                 "name": bot.name or f"Bot #{bot.id[:8]}",
@@ -16535,6 +16570,7 @@ async def get_regular_bots_list(
                 "cycle_games": cycle_games,
                 "cycle_progress": cycle_progress,
                 "remaining_slots": remaining_slots,
+                "current_profit": current_profit,
                 
                 # НОВАЯ ФОРМУЛА 2.0: СУММА ЦИКЛА = точная сумма всех ставок (включая ничьи)
                 "cycle_total_amount": total_bet_sum,
