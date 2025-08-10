@@ -14976,13 +14976,15 @@ async def freeze_user_gems(
         await db.admin_logs.insert_one(admin_log.dict())
         
         # Send notification to user
-        notification = Notification(
+        # Admin panel remains Russian, but use unified creation for notifications
+        await create_notification(
             user_id=user_id,
-            type="ADMIN_ACTION",
-            title="Гемы заморожены",
-            message=f"Администратор заморозил {quantity} {gem_type} гемов. Причина: {reason}"
+            notification_type=NotificationTypeEnum.ADMIN_NOTIFICATION,
+            payload=NotificationPayload(admin_message=f"Администратор заморозил {quantity} {gem_type} гемов. Причина: {reason}"),
+            priority=NotificationPriorityEnum.WARNING,
+            custom_title="Admin Action",
+            custom_message=f"Gems frozen: {quantity} {gem_type}. Reason: {reason}"
         )
-        await db.notifications.insert_one(notification.dict())
         
         return {
             "message": f"Successfully froze {quantity} {gem_type} gems",
