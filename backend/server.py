@@ -8662,8 +8662,13 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
                 creator_display = {"id": creator_regular_bot["id"], "username": "Bot", "gender": creator_regular_bot.get("avatar_gender", "male")}
                 creator_username = "Bot"
             else:
-                creator_display = None
-                creator_username = "Bot" if game.get("is_regular_bot_game") else "Player"
+                # Документ не найден — но мы знаем тип из флагов; возвращаем объект с id и фолбэком имени
+                creator_display = {
+                    "id": game.get("creator_id"),
+                    "username": "Bot" if game.get("is_regular_bot_game") or game.get("creator_type") == "bot" else "Player",
+                    "gender": "male"
+                }
+                creator_username = creator_display["username"]
             
             # Normalize opponent display
             if opponent_user:
@@ -8673,7 +8678,11 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
             elif opponent_regular_bot:
                 opponent_display = {"id": opponent_regular_bot["id"], "username": "Bot", "gender": opponent_regular_bot.get("avatar_gender", "male")}
             else:
-                opponent_display = None
+                opponent_display = {
+                    "id": opponent_id,
+                    "username": "Bot" if game.get("is_regular_bot_game") or game.get("creator_type") == "bot" else "Player",
+                    "gender": "male"
+                }
             
             game_data = {
                 "game_id": game["id"],
