@@ -3279,7 +3279,7 @@ const RegularBotsManagement = () => {
                     {cycleData.cycle_info.progress}
                   </div>
                   <div className="text-text-secondary text-sm">
-                    Завершено игр (без ничьих)
+                    Завершено игр
                   </div>
                   <div className="mt-2 text-sm">
                     <div className="text-green-400">Побед: {cycleData.cycle_info.current_wins}</div>
@@ -3304,7 +3304,7 @@ const RegularBotsManagement = () => {
                       <span className="text-red-400 ml-2">${cycleData.cycle_stats.total_losses}</span>
                     </div>
                     <div className="border-t border-border-primary pt-2">
-                      <span className="text-text-secondary">Итого:</span>
+                      <span className="text-text-secondary">Прибыль:</span>
                       <span className={`ml-2 font-bold ${
                         cycleData.cycle_stats.net_profit >= 0 ? 'text-green-400' : 'text-red-400'
                       }`}>
