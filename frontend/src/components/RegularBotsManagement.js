@@ -911,9 +911,7 @@ const RegularBotsManagement = () => {
         draws_percentage: b.draws_percentage ?? 20.0,
         cycle_games: b.cycle_games ?? 12,
         pause_between_cycles: b.pause_between_cycles ?? 5,
-        pause_on_draw: b.pause_on_draw ?? 1,
-        // УДАЛЕНО: creation_mode (наследие)
-        // УДАЛЕНО: profit_strategy (наследие)
+        pause_on_draw: b.pause_on_draw ?? 1
       });
       
       setEditingBot(response.data.bot);
