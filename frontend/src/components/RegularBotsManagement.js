@@ -2124,7 +2124,11 @@ const RegularBotsManagement = () => {
                             className="text-green-400 hover:text-green-300 cursor-pointer font-roboto text-sm font-medium"
                             title="Показать историю цикла"
                           >
-                            {bot.cycle_progress || `${(bot.current_cycle_games || 0)}/${bot.cycle_games || 12}`}
+                            {(() => {
+                              const completed = (bot.current_cycle_wins || 0) + (bot.current_cycle_losses || 0) + (bot.current_cycle_draws || 0);
+                              const total = bot.cycle_games || 16;
+                              return `${completed}/${total}`;
+                            })()}
                           </button>
                         </div>
                       </div>
