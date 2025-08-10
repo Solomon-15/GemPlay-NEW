@@ -121,52 +121,49 @@ class MyBetsEndpointTester:
             print(f"❌ Test user login error: {e}")
             return False
             
-    async def get_existing_games_data(self) -> Optional[List[Dict[str, Any]]]:
-        """Get existing games data from various endpoints to test with"""
+    async def get_comprehensive_game_data(self) -> Optional[List[Dict[str, Any]]]:
+        """Get comprehensive game data from all endpoints to test different scenarios"""
         try:
             headers = {"Authorization": f"Bearer {self.admin_token}"}
+            all_games = []
             
-            # Try to get games from available games endpoint
+            # Get available games (should include human-bot games)
             async with self.session.get(f"{BACKEND_URL}/games/available", headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
-                    if isinstance(data, dict) and "games" in data:
-                        games = data["games"]
-                        print(f"✅ Found {len(games)} available games")
-                        return games[:10]  # Return first 10 for testing
-                    elif isinstance(data, list):
-                        print(f"✅ Found {len(data)} available games")
-                        return data[:10]
+                    games = data.get("games", data) if isinstance(data, dict) else data
+                    print(f"✅ Found {len(games)} available games")
+                    all_games.extend(games[:5])  # Take first 5
                         
-            # Try bot games
+            # Get bot games (regular bots)
             async with self.session.get(f"{BACKEND_URL}/bots/active-games", headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
-                    if isinstance(data, dict) and "games" in data:
-                        games = data["games"]
-                        print(f"✅ Found {len(games)} bot games")
-                        return games[:10]
-                    elif isinstance(data, list):
-                        print(f"✅ Found {len(data)} bot games")
-                        return data[:10]
+                    games = data.get("games", data) if isinstance(data, dict) else data
+                    print(f"✅ Found {len(games)} regular bot games")
+                    all_games.extend(games[:5])  # Take first 5
                         
-            # Try human bot games
+            # Get human bot games
             async with self.session.get(f"{BACKEND_URL}/games/active-human-bots", headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
-                    if isinstance(data, dict) and "games" in data:
-                        games = data["games"]
-                        print(f"✅ Found {len(games)} human bot games")
-                        return games[:10]
-                    elif isinstance(data, list):
-                        print(f"✅ Found {len(data)} human bot games")
-                        return data[:10]
+                    games = data.get("games", data) if isinstance(data, dict) else data
+                    print(f"✅ Found {len(games)} human bot games")
+                    all_games.extend(games[:5])  # Take first 5
                         
-            print("⚠️ No games found in any endpoint")
-            return []
+            # Get ongoing bot games
+            async with self.session.get(f"{BACKEND_URL}/bots/ongoing-games", headers=headers) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    games = data.get("games", data) if isinstance(data, dict) else data
+                    print(f"✅ Found {len(games)} ongoing bot games")
+                    all_games.extend(games[:3])  # Take first 3
+                        
+            print(f"✅ Total games collected: {len(all_games)}")
+            return all_games
             
         except Exception as e:
-            print(f"❌ Error getting existing games: {e}")
+            print(f"❌ Error getting comprehensive games: {e}")
             return []
         """Create a test game to have data for testing"""
         try:
