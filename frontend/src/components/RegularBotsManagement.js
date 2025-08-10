@@ -2053,7 +2053,7 @@ const RegularBotsManagement = () => {
                         className="text-blue-400 hover:text-blue-300 underline font-roboto text-sm cursor-pointer"
                         title="Показать активные ставки"
                       >
-                        {bot.remaining_slots || (bot.cycle_games - bot.current_cycle_games) || 0}
+                        {bot.remaining_slots ?? Math.max(0, (bot.cycle_games || 16) - ((bot.current_cycle_wins || 0) + (bot.current_cycle_losses || 0) + (bot.current_cycle_draws || 0)))}
                       </button>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-left">
