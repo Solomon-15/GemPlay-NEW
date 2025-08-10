@@ -1590,39 +1590,43 @@ const ProfitAdmin = ({ user }) => {
                         </div>
                       </div>
                       
-                      {/* Режимы создания ставок */}
-                      <div className="mb-4">
-                        <h6 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Доход по режимам создания ставок:</h6>
-                        <div className="space-y-2">
-                          {Object.entries(botIntegrationData.creation_modes).map(([mode, data]) => (
-                            <div key={mode} className="flex justify-between items-center bg-surface-card rounded-lg p-2">
-                              <span className="text-sm text-text-secondary">
-                                {mode === 'always-first' ? 'Always First' : 
-                                 mode === 'queue-based' ? 'Queue-Based' : 
-                                 mode === 'after-all' ? 'After All' : mode}
-                              </span>
-                              <span className="text-blue-400 font-bold">{formatCurrencyWithSymbol(data.revenue || 0, true)}</span>
-                            </div>
-                          ))}
+                      {/* Режимы создания ставок (legacy, может быть отсутствовать) */}
+                      {botIntegrationData?.creation_modes && Object.keys(botIntegrationData.creation_modes || {}).length > 0 && (
+                        <div className="mb-4">
+                          <h6 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Доход по режимам создания ставок:</h6>
+                          <div className="space-y-2">
+                            {Object.entries(botIntegrationData.creation_modes || {}).map(([mode, data]) => (
+                              <div key={mode} className="flex justify-between items-center bg-surface-card rounded-lg p-2">
+                                <span className="text-sm text-text-secondary">
+                                  {mode === 'always-first' ? 'Always First' : 
+                                   mode === 'queue-based' ? 'Queue-Based' : 
+                                   mode === 'after-all' ? 'After All' : mode}
+                                </span>
+                                <span className="text-blue-400 font-bold">{formatCurrencyWithSymbol(data?.revenue || 0, true)}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                       
-                      {/* Поведение ботов */}
-                      <div className="mb-4">
-                        <h6 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Доход по поведению ботов:</h6>
-                        <div className="space-y-2">
-                          {Object.entries(botIntegrationData.behaviors).map(([behavior, data]) => (
-                            <div key={behavior} className="flex justify-between items-center bg-surface-card rounded-lg p-2">
-                              <span className="text-sm text-text-secondary">
-                                {behavior === 'aggressive' ? 'Агрессивный' : 
-                                 behavior === 'balanced' ? 'Сбалансированный' : 
-                                 behavior === 'cautious' ? 'Осторожный' : behavior}
-                              </span>
-                              <span className="text-blue-400 font-bold">{formatCurrencyWithSymbol(data.revenue || 0, true)}</span>
-                            </div>
-                          ))}
+                      {/* Поведение ботов (legacy, может быть отсутствовать) */}
+                      {botIntegrationData?.behaviors && Object.keys(botIntegrationData.behaviors || {}).length > 0 && (
+                        <div className="mb-4">
+                          <h6 className="font-rajdhani text-sm font-bold text-blue-400 mb-2">Доход по поведению ботов:</h6>
+                          <div className="space-y-2">
+                            {Object.entries(botIntegrationData.behaviors || {}).map(([behavior, data]) => (
+                              <div key={behavior} className="flex justify-between items-center bg-surface-card rounded-lg p-2">
+                                <span className="text-sm text-text-secondary">
+                                  {behavior === 'aggressive' ? 'Агрессивный' : 
+                                   behavior === 'balanced' ? 'Сбалансированный' : 
+                                   behavior === 'cautious' ? 'Осторожный' : behavior}
+                                </span>
+                                <span className="text-blue-400 font-bold">{formatCurrencyWithSymbol(data?.revenue || 0, true)}</span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
                       
                       {/* Эффективность */}
                       <div>
