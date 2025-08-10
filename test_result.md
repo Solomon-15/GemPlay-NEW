@@ -119,7 +119,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus: ["Backend: add filters (start_ts/end_ts) and pagination to GET /api/admin/games/scan-inconsistencies","Frontend: restrict INCONSISTENT DATA banner to ADMIN/SUPER_ADMIN only","Frontend: add Scan Inconsistencies modal with presets, custom range and pagination"]
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
