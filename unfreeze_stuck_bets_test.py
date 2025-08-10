@@ -182,6 +182,16 @@ class UnfreezeStuckBetsTester:
                 if stats_after_response.status_code == 200:
                     stats_after = stats_after_response.json()
                     stuck_bets_after = stats_after.get("stuck_bets", 0)
+                    active_bets_after = stats_after.get("active_bets", 0)
+                    initial_active_bets = initial_stats.get("active_bets", 0)
+                    
+                    # KEY REQUIREMENT: Active bet count should NOT decrease after unfreezing
+                    if active_bets_after >= initial_active_bets:
+                        self.log_test("Active Bets Count Maintained", True, 
+                                    f"Active bets maintained or increased: {initial_active_bets} -> {active_bets_after}")
+                    else:
+                        self.log_test("Active Bets Count Maintained", False, 
+                                    f"CRITICAL: Active bets decreased after unfreezing: {initial_active_bets} -> {active_bets_after}")
                     
                     # Validate that stuck bets count changed appropriately
                     if total_processed > 0:
