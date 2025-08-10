@@ -11,7 +11,6 @@ const PlayerCard = React.memo(({
   onCancel,
   onOpenJoinBattle,  // Новый пропс для открытия модального окна
   onUpdateUser,
-  currentTime = new Date(),
   user
 }) => {
   const { gemsDefinitions, getGemByType } = useGems();
