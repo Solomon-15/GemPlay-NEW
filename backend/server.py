@@ -13785,6 +13785,10 @@ async def unfreeze_all_stuck_bets(current_user: User = Depends(get_current_admin
             "admin_username": current_user.username,
             "action": "unfreeze_stuck_bets",
             "details": cleanup_results,
+            "criteria": {
+                "status": "ACTIVE",
+                "active_deadline": "expired"
+            },
             "timestamp": datetime.utcnow()
         }
         await db.admin_logs.insert_one(admin_log)
