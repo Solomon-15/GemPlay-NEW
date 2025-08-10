@@ -498,7 +498,7 @@ const UserManagement = ({ user: currentUser }) => {
 
       setIsBanModalOpen(false);
       fetchUsers();
-      showSuccessRU('Пользователь забанен');
+      showSuccessRU('User has been banned');
     } catch (error) {
       console.error('Ошибка бана:', error);
       showErrorRU('Ошибка при бане пользователя');
