@@ -94,10 +94,8 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Unfreeze Stuck Bets Implementation and Testing"
-  stuck_tasks:
-    - "Unfreeze Stuck Bets Implementation and Testing"
+  current_focus: []
+  stuck_tasks: []
   test_all: false
   test_priority: "critical_first"
 
