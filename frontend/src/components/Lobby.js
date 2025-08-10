@@ -874,7 +874,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
                   onUpdateUser();
                 }
               }}
-              currentTime={new Date()}
             />
           ))}
           {ongoingBotBattles.length === 0 && (
