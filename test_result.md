@@ -92,8 +92,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Russian Review Lobby Requirements Testing"
-  stuck_tasks: []
+    - "Unfreeze Stuck Bets Implementation and Testing"
+  stuck_tasks:
+    - "Unfreeze Stuck Bets Implementation and Testing"
   test_all: false
   test_priority: "critical_first"
 
