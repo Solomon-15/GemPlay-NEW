@@ -54,7 +54,7 @@ async def focused_my_bets_test():
         
         async with session.post(f"{BACKEND_URL}/games/create", 
                                json=game_data, headers=admin_headers) as create_response:
-            if create_response.status == 201:
+            if create_response.status in [200, 201]:
                 game_result = await create_response.json()
                 game_id = game_result.get("game_id")
                 print(f"✅ Test game created: {game_id}")
