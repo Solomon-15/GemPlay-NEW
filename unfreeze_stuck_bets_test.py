@@ -99,7 +99,7 @@ class UnfreezeStuckBetsTester:
             
             if response.status_code == 200:
                 data = response.json()
-                expected_fields = ["success", "message", "total_processed", "cancelled_games", "total_gems_returned", "total_commission_returned"]
+                expected_fields = ["success", "message", "total_processed"]
                 
                 missing_fields = [field for field in expected_fields if field not in data]
                 if not missing_fields:
@@ -108,6 +108,16 @@ class UnfreezeStuckBetsTester:
                 else:
                     self.log_test("Unfreeze Stuck - Admin Auth", False, 
                                 f"Missing expected fields: {missing_fields}")
+                
+                # Check that OLD cancellation fields are NOT present (key requirement)
+                old_fields = ["cancelled_games", "total_gems_returned", "total_commission_returned"]
+                present_old_fields = [field for field in old_fields if field in data]
+                if not present_old_fields:
+                    self.log_test("Unfreeze - No Cancellation Fields", True, 
+                                "Response correctly does NOT include cancellation fields (gems_returned, commission_returned)")
+                else:
+                    self.log_test("Unfreeze - No Cancellation Fields", False, 
+                                f"Response incorrectly includes old cancellation fields: {present_old_fields}")
             else:
                 self.log_test("Unfreeze Stuck - Admin Auth", False, 
                             f"Expected 200, got {response.status_code}: {response.text}")
