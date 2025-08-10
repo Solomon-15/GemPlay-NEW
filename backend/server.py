@@ -5106,6 +5106,7 @@ async def gift_gems(
         
         payload = NotificationPayload(
             sender_name=sender_name,
+            sender_id=current_user.id,
             amount=quantity,
             action_url="/inventory"
         )
