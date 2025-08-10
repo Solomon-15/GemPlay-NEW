@@ -582,6 +582,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       <div 
         className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
+        role="dialog" aria-modal="true"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border-primary">
