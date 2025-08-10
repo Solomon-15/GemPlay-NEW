@@ -13690,60 +13690,57 @@ async def cancel_any_bet(
 
 @api_router.post("/admin/bets/unfreeze-stuck", response_model=dict)
 async def unfreeze_all_stuck_bets(current_user: User = Depends(get_current_admin)):
-    """Разморозить все зависшие ставки (только для админов)."""
+    """Разморозить все действительно зависшие ставки (>5 минут без хода одной из сторон) и перезапустить их.
+    Критерий зависания:
+      - status == ACTIVE
+      - отсутствует ход одной из сторон (opponent_move is None или creator_move is None)
+      - прошло > 5 минут с момента последнего обновления/присоединения/старта (updated_at|joined_at|started_at|created_at)
+    Действие:
+      - Вызываем handle_game_timeout(game_id), который возвращает ресурсы и переводит ставку в WAITING с новым commit-reveal
+    """
     try:
-        # По определению: считаем зависшими ACTIVE с истекшим active_deadline
-        
-        # Find stuck bets - ACTIVE games with expired active_deadline
-        now_ts = datetime.utcnow()
-        stuck_games = await db.games.find({
+        now = datetime.utcnow()
+        threshold = now - timedelta(minutes=5)
+
+        # Подбор зависших по критериям
+        query = {
             "status": "ACTIVE",
             "$and": [
-                {"active_deadline": {"$exists": True}},
-                {"active_deadline": {"$ne": None}},
-                {"active_deadline": {"$lt": now_ts}}
+                {"$or": [
+                    {"opponent_move": None},
+                    {"creator_move": None}
+                ]},
+                {"$or": [
+                    {"updated_at": {"$lt": threshold}},
+                    {"joined_at": {"$lt": threshold}},
+                    {"started_at": {"$lt": threshold}},
+                    {"created_at": {"$lt": threshold}}
+                ]}
             ]
-        }).to_list(1000)  # Limit to 1000 to prevent memory issues
-        
+        }
+
+        stuck_games = await db.games.find(query).to_list(1000)
+
         cleanup_results = {
             "total_processed": 0,
-            "unfrozen_games": []
+            "processed_games": []
         }
-        
+
         for game in stuck_games:
             game_id = game.get("id")
-            old_deadline = game.get("active_deadline")
-            # Extend deadline by 10 minutes (per admin request)
-            new_deadline = datetime.utcnow() + timedelta(minutes=5)
-            
-            # Unfreeze: keep status ACTIVE, extend deadline, clear locks
-            update_ops = {
-                "$set": {
-                    "status": "ACTIVE",
-                    "active_deadline": new_deadline,
-                    "updated_at": datetime.utcnow(),
-                    "unfrozen_at": datetime.utcnow(),
-                    "unfrozen_by": current_user.id
-                },
-                "$unset": {
-                    "processing_lock": "",
-                    "locked_by": "",
-                    "lock_acquired_at": "",
-                    "cancel_reason": "",
-                    "cancelled_by": "",
-                    "cancelled_at": ""
-                }
-            }
-            await db.games.update_one({"id": game_id}, update_ops)
-            
-            cleanup_results["unfrozen_games"].append({
-                "game_id": game_id,
-                "old_deadline": old_deadline,
-                "new_deadline": new_deadline
-            })
-            cleanup_results["total_processed"] += 1
-        
-        # Log admin action
+            try:
+                await handle_game_timeout(game_id)
+                cleanup_results["processed_games"].append({
+                    "game_id": game_id,
+                    "previous_status": "ACTIVE",
+                    "action": "timeout_recreate"
+                })
+                cleanup_results["total_processed"] += 1
+            except Exception as e:
+                logger.error(f"Failed to process stuck game {game_id}: {e}")
+                continue
+
+        # Лог админ-действия
         admin_log = {
             "admin_id": current_user.id,
             "admin_username": current_user.username,
@@ -13751,18 +13748,19 @@ async def unfreeze_all_stuck_bets(current_user: User = Depends(get_current_admin
             "details": cleanup_results,
             "criteria": {
                 "status": "ACTIVE",
-                "active_deadline": "expired"
+                "missing_move": True,
+                ">5min": True
             },
             "timestamp": datetime.utcnow()
         }
         await db.admin_logs.insert_one(admin_log)
-        
+
         return {
             "success": True,
-            "message": f"Разморожено {cleanup_results['total_processed']} зависших ставок",
+            "message": f"Обработано {cleanup_results['total_processed']} зависших ставок",
             **cleanup_results
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
