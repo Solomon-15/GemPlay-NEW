@@ -18181,7 +18181,7 @@ async def get_human_bots_stats(current_user: User = Depends(get_current_admin)):
             "win_percentage": round(win_percentage, 1),
             "total_bet_value": round(total_value, 2),
             "errors": 0,  # TODO: implement error tracking
-            "most_active": [{"id": bot.get("id"), "name": bot.get("name", "Unknown"), "games": bot.get("games_played", 0)} for bot in most_active]
+            "most_active": [{"id": bot.get("id"), "name": bot.get("name", "Unknown Bot"), "games": bot.get("games_played", 0)} for bot in most_active]
         }
         
     except Exception as e:
