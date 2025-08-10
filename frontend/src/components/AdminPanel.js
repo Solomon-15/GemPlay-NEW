@@ -46,6 +46,63 @@ const AdminPanel = ({ user, onClose }) => {
   const { showSuccessRU, showErrorRU } = useNotifications();
   const { confirm, confirmationModal } = useConfirmation();
 
+
+  // Scan Inconsistencies Modal state
+  const [scanModalOpen, setScanModalOpen] = useState(false);
+  const [scanPreset, setScanPreset] = useState('24h'); // '24h' | '7d' | '30d' | 'custom'
+  const [scanStart, setScanStart] = useState(''); // datetime-local string
+  const [scanEnd, setScanEnd] = useState('');   // datetime-local string
+  const [scanPage, setScanPage] = useState(1);
+  const [scanPageSize, setScanPageSize] = useState(50);
+  const [scanLoading, setScanLoading] = useState(false);
+  const [scanError, setScanError] = useState('');
+  const [scanResult, setScanResult] = useState({ items: [], found: 0, checked: 0, page: 1, pages: 0, period: {} });
+
+  const getPresetRange = () => {
+    const end = new Date();
+    let start = new Date(end);
+    if (scanPreset === '24h') start = new Date(end.getTime() - 24 * 3600 * 1000);
+    else if (scanPreset === '7d') start = new Date(end.getTime() - 7 * 24 * 3600 * 1000);
+    else if (scanPreset === '30d') start = new Date(end.getTime() - 30 * 24 * 3600 * 1000);
+    else if (scanPreset === 'custom') {
+      if (scanStart && scanEnd) {
+        return { start_ts: new Date(scanStart).toISOString(), end_ts: new Date(scanEnd).toISOString() };
+      }
+    }
+    return { start_ts: start.toISOString(), end_ts: end.toISOString() };
+  };
+
+  const runScanFetch = async (pageOverride, pageSizeOverride) => {
+    setScanLoading(true);
+    setScanError('');
+    try {
+      const token = localStorage.getItem('token');
+      const p = pageOverride || scanPage;
+      const ps = pageSizeOverride || scanPageSize;
+      const range = getPresetRange();
+      const res = await axios.get(`${API}/admin/games/scan-inconsistencies`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { start_ts: range.start_ts, end_ts: range.end_ts, page: p, page_size: ps }
+      });
+      const data = res.data || {};
+      setScanResult({
+        items: data.items || [],
+        found: data.found || 0,
+        checked: data.checked || 0,
+        page: data.page || p,
+        pages: data.pages || 0,
+        period: data.period || {}
+      });
+      setScanPage(data.page || p);
+      setScanPageSize(ps);
+    } catch (e) {
+      console.error('Scan inconsistencies error', e);
+      setScanError('Ошибка сканирования. Проверьте параметры и повторите.');
+    } finally {
+      setScanLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN' && user.role !== 'MODERATOR')) {
       return;
