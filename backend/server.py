@@ -7103,6 +7103,7 @@ async def determine_game_winner(game_id: str) -> dict:
                 opponent_payload = NotificationPayload(
                     game_id=game_id,
                     opponent_name=creator_name,
+                    opponent_id=game_obj.creator_id,
                     result="lost",
                     amount_lost=game_obj.bet_amount,
                     commission=0.0,  # Loser doesn't pay commission in new system
