@@ -16,21 +16,13 @@ const PlayerCard = React.memo(({
 }) => {
   const { gemsDefinitions, getGemByType } = useGems();
 
-  // Get time remaining for auto-cancel (24 hours format)
-  const getTimeRemaining = () => {
+  // Get time remaining for auto-cancel (static HH:MM of cancel time)
+  const getCancelTimeHHMM = () => {
     if (!game.created_at) return null;
-    
     const createdTime = new Date(game.created_at);
     const cancelTime = new Date(createdTime.getTime() + 24 * 60 * 60 * 1000); // 24 hours later
-    const now = currentTime;
-    const diff = cancelTime - now;
-    
-    if (diff <= 0) return null;
-    
-    // Return 24-hour format time when it will be cancelled
     const hours = cancelTime.getHours();
     const minutes = cancelTime.getMinutes();
-    
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
