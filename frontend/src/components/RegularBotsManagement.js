@@ -1130,7 +1130,8 @@ const RegularBotsManagement = () => {
       const lossesCount = games.filter(g => isLoss(g?.winner)).length;
       const drawsCount = games.filter(g => isDraw(g?.winner)).length;
       const completed = winsCount + lossesCount + drawsCount;
-      const cycleLength = Number(cycle?.cycle_info?.cycle_length || bot?.cycle_games || 16);
+      // Приоритет длины цикла: bot.cycle_games -> 16 (дефолт) -> ответ бэка
+      const cycleLength = Number((bot?.cycle_games && bot.cycle_games > 0) ? bot.cycle_games : (16));
 
       const totalBet = games.reduce((sum, g) => sum + Number(g?.bet_amount || 0), 0);
       const wonAmount = games.reduce((sum, g) => sum + (isWin(g?.winner) ? Number(g?.bet_amount || 0) : 0), 0);
