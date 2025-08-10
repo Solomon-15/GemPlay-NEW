@@ -32,7 +32,7 @@ async def find_user_with_bets():
         admin_headers = {"Authorization": f"Bearer {admin_token}"}
         
         # Get all games to find users who have created games
-        async with session.get(f"{BACKEND_URL}/admin/games/list?page=1&per_page=50", headers=admin_headers) as response:
+        async with session.get(f"{BACKEND_URL}/admin/games", headers=admin_headers) as response:
             if response.status == 200:
                 games_data = await response.json()
                 games = games_data.get("games", [])
