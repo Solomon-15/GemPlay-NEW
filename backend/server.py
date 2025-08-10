@@ -8696,6 +8696,13 @@ async def get_my_bets(current_user: User = Depends(get_current_user)):
                     "commission": game.get("commission_amount", 0),
                     "completed_at": game.get("completed_at")
                 })
+
+            # Гарантируем, что в ответе не будет "Unknown Player"
+            if game_data.get("creator_username") == "Unknown Player":
+                if game.get("creator_type") == "bot" or game.get("is_regular_bot_game"):
+                    game_data["creator_username"] = "Bot"
+                else:
+                    game_data["creator_username"] = "Player"
             
             result.append(game_data)
         
