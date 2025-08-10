@@ -252,9 +252,10 @@ class NotificationSystemTester:
             ]
             
             all_working = True
+            headers = {"Authorization": f"Bearer {self.admin_token}"}
             
             for endpoint, description in endpoints_to_test:
-                response = self.session.get(f"{API_BASE}{endpoint}")
+                response = self.session.get(f"{API_BASE}{endpoint}", headers=headers)
                 if response.status_code == 200:
                     data = response.json()
                     games_count = len(data.get("games", []))
