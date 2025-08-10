@@ -1,87 +1,93 @@
 <analysis>
-The previous AI engineer successfully initiated and progressed on multiple feature enhancements for a web application. The development workflow emphasized rapid MVP delivery, functional UI, and robust backend. The engineer diligently followed instructions, including using specific tools like  and , and adhering to strict environment variables and URL configurations. Critical attention was paid to testing, with a strong focus on using a  (though not explicitly called in this trajectory, its protocol was laid out) and manual verification. The engineer systematically addressed each user request, starting with clarifying questions, then performing extensive file searches to identify relevant code sections, and finally implementing targeted fixes. The approach involved identifying the core problem, implementing minimal changes, and then refining based on user feedback, such as adding robust backend validation and UI diagnostics. The engineer also effectively paused a task (unfreeze stuck bets) as requested by the user to prioritize another.
+The previous AI engineer successfully initiated and progressed on multiple feature enhancements for a web application, demonstrating strong adherence to the provided development workflow and environment constraints. Initially, the focus was on critical bug fixes like notification text correction and robust game outcome determination for bots, including implementing a Commit-Reveal system and backend validation. The engineer also added administrative diagnostic tools. A significant portion of the work involved client-side calculation and display of complex statistics, such as for bot cycle history. The workflow involved confirming plans with the user, implementing changes, and then performing targeted testing (backend via , frontend manually by the user). Troubleshooting involved addressing frontend caching issues and localization discrepancies in data parsing, indicating a detailed debugging process. The engineer also effectively managed task prioritization, pausing and resuming tasks as explicitly directed by the user, showcasing flexibility and user-centric development. The latest focus has been on refining the display of regular bot statistics, encountering and addressing visual inconsistencies.
 </analysis>
 
 <product_requirements>
-The user tasked the AI engineer with several improvements to an existing application, focusing on critical bug fixes and feature enhancements rather than minor UI or validation issues.
+The user tasked the AI engineer with several improvements to an existing application, primarily focusing on critical bug fixes and feature enhancements. The initial set of requirements included:
+1.  **Notification Text Correction**: Fixing Unknown Player displaying as sender instead of Bot for regular bot messages in notifications.
+2.  **Unfreeze Stuck Bets**: Enhancing an admin panel feature to identify and recreate/restart ACTIVE games stuck without moves for over 5 minutes. This task was explicitly paused, then redefined to recreate games, and subsequently deferred/cancelled in favor of a new priority.
+3.  **Correct Game Outcomes for Bot Players**: Addressing inconsistent RPS game results for Regular bots by ensuring predetermined outcomes align with bot moves chosen at the last moment using a Commit-Reveal system, along with frontend display consistency checks.
 
-1.  **Notification Text Correction**: Initially, the primary request was to fix notifications in the bell section where Unknown Player was displayed instead of Bot for messages originating from Regular bots. The rule for identifying a Regular bot was defined as , and the requirement was to replace the sender's name with Bot in the message text if the sender was a Regular bot. This applies to new notifications, with an option for migration of old ones.
-2.  **Unfreeze Stuck Bets (Paused)**: A later request involved enhancing an admin panel feature. The yellow Unfreeze Stuck Bets button in the Bets Management section (Ongoing Bot Battles and Ongoing Battles lists) needed to automatically identify games in ACTIVE status with no moves for over 5 minutes. Upon unfreezing, these games should be restarted/recreated with the same parameters. This task was explicitly paused by the user.
-3.  **Correct Game Outcomes for Bot Players**: The most recent and active task is to correct game outcomes for Regular bots in the Bot Players1 lobby section. The core issue was inconsistent RPS (Rock-Paper-Scissors) game results. The rules are standard: Rock beats Scissors, Scissors beats Paper, Paper beats Rock, and identical moves result in a draw. For human-vs-bot games, the outcome (win/loss/draw) should be predetermined by the system, and the bot's move should be chosen at the last moment, after the human player's move, but encrypted using a Commit-Reveal system. The fix needed to address both backend logic for outcome determination and frontend display inconsistencies.
-
+The most recent active task is to **edit, fix, and refine the Cycle and Bets columns within the 📈 Cycle History: modal window for Regular Bots in the admin panel**. This involves:
+*   Cycle Progress: Displaying , where X is completed games in the current cycle.
+*   Wins, Losses, Draws: Matching actual results of the current cycle.
+*   Finances block: Displaying accurate Staked, Won (pure winnings, from Cycle Amount), Lost (pure losses), and Profit (Won - Lost, with color-coding for negative values).
+*   Efficiency: Displaying ROI as  (excluding draws).
 </product_requirements>
 
 <key_technical_concepts>
-
--   **RPS Game Logic**: Implementation of standard Rock-Paper-Scissors rules for determining game outcomes.
--   **Commit-Reveal System**: A cryptographic protocol used for secure, delayed reveal of bot moves to prevent pre-computation or hacking.
--   **Notification System**: Handling of in-app notifications, including message generation and sender identification.
--   **API Endpoints**: Creation and modification of RESTful API endpoints for game management and admin functionalities.
--   **MongoDB**: Backend database for storing application data, including games, users, and notifications.
-
+-   **RPS Game Logic**: Standard Rock-Paper-Scissors rules for outcome determination.
+-   **Commit-Reveal System**: Cryptographic protocol for secure, delayed reveal of bot moves.
+-   **API Endpoints**: RESTful API for game management, administration, and data retrieval.
+-   **MongoDB**: NoSQL database for application data storage.
+-   **FastAPI**: Python framework for backend API development.
+-   **React**: JavaScript library for frontend UI development, including client-side data processing and display.
 </key_technical_concepts>
 
 <code_architecture>
-
-The application follows a typical full-stack architecture with a React-based frontend and a Python/FastAPI backend, interacting with a MongoDB database.
+The application follows a full-stack architecture with a React frontend and a Python/FastAPI backend, interacting with a MongoDB database.
 
 
 
 -   **/app/backend/server.py**:
-    -   **Summary**: This is the core backend file containing FastAPI routes, database interactions (MongoDB), game logic, and administrative functions. It defines models, handles game state, user interactions, and notifications.
+    -   **Summary**: Core backend for FastAPI routes, MongoDB interactions, game logic, and admin functions.
     -   **Changes Made**:
-        -   **Notification Fix**: Modified to ensure  is used consistently for bot messages (e.g., in timeout/recreation notifications), replacing direct . Also added  to the  for gift notifications.
-        -   **Game Outcome Logic**:  was heavily modified. It now ensures the bot's move aligns with the  (predefined outcome) according to RPS rules, generating a new salt and hash for the Commit-Reveal system at the last moment.
-        -   **Backend Validation**: Added a strict validation step within  to automatically regenerate the bot's move and commit data if the actual RPS outcome (based on chosen moves) does not match the . Logs inconsistencies.
-        -   **Admin Scan Endpoint**: Added a new GET endpoint  for administrators to scan for completed games where the  is inconsistent with the actual RPS outcome of  and .
+        -   **Notification Fix**: Ensured  is used for bot messages.
+        -   **Game Outcome Logic**: Modified  to dynamically choose bot moves based on  and regenerate commit data if outcomes are inconsistent.
+        -   **Admin Scan Endpoint**: Added  with /, / for scanning game inconsistencies.
+        -   **Unfreeze Stuck Bets**: Logic for  was analyzed, confirming it moves games to  and returns resources, contrary to a desired recreate behavior which was discussed but not implemented.
 
 -   **/app/frontend/src/components/NotificationBell.js**:
-    -   **Summary**: Renders the notification display in the frontend, fetching messages generated by the backend.
-    -   **Changes Made**: No direct functional changes were noted here, as the fix was primarily backend-driven, ensuring the correct message string arrives.
+    -   **Summary**: Renders notifications.
+    -   **Changes Made**: No direct changes, as backend handled the fixes.
 
 -   **/app/frontend/src/components/BetsManagement.js**:
-    -   **Summary**: This component manages the Bets Management section in the admin panel, including displaying ongoing battles and the Unfreeze Stuck Bets button.
-    -   **Changes Made**: No explicit changes were made in the trajectory as the unfreeze stuck bets task was paused.
+    -   **Summary**: Manages Bets Management in the admin panel, including Unfreeze Stuck Bets button.
+    -   **Changes Made**: No explicit functional changes in the trajectory, though the unfreeze button's backend behavior was extensively discussed.
 
 -   **/app/frontend/src/components/Lobby.js**:
-    -   **Summary**: Displays the game lobby, including sections for Bot Players.
-    -   **Changes Made**: No direct changes noted, though it's impacted by the backend logic changes that ensure correct game outcomes are displayed.
+    -   **Summary**: Displays game lobby.
+    -   **Changes Made**: No direct changes.
 
 -   **/app/frontend/src/components/JoinBattleModal.js**:
-    -   **Summary**: Likely handles the modal for joining a game/battle.
-    -   **Changes Made**: No direct changes noted, but it would consume the updated game outcome data from the backend.
+    -   **Summary**: Handles joining games.
+    -   **Changes Made**: No direct changes.
 
 -   **/app/frontend/src/components/BattleResultStep.js**:
-    -   **Summary**: Displays the results of a game battle to the user, showing selected moves and the outcome (victory/defeat/draw).
-    -   **Changes Made**: Modified to include client-side validation. It now calculates  based on the actual moves and compares it against the  received from the backend. If inconsistent, it visually displays INCONSISTENT DATA and highlights avatars in red for diagnostic purposes.
+    -   **Summary**: Displays game results.
+    -   **Changes Made**: Added client-side validation to show INCONSISTENT DATA warnings and highlight avatars if computed RPS outcome doesn't match backend result. Later restricted this display only to ADMIN/SUPER_ADMIN roles.
 
 -   **/app/frontend/src/components/AdminPanel.js**:
-    -   **Summary**: The main administrative dashboard providing access to various management tools.
-    -   **Changes Made**: A new Scan Inconsistencies button was added to the main dashboard panel. This button, accessible only to ADMIN/SUPER_ADMIN/MODERATOR roles, triggers the new backend endpoint  and displays a notification with the count of found inconsistencies, logging details to the console.
+    -   **Summary**: Main admin dashboard.
+    -   **Changes Made**: Added a Scan Inconsistencies button that opens a modal with period presets, datetime fields, page size selection, pagination, and a results table. It calls .
 
+-   **/app/frontend/src/components/RegularBotsManagement.js**:
+    -   **Summary**: Manages regular bot settings and displays cycle history.
+    -   **Changes Made**: This file was heavily modified to correctly display Cycle History modal statistics:
+        -   Progress:  (completed games / cycle length) calculated from actual game outcomes.
+        -   Wins, Losses, Draws: Recalculated based on game results.
+        -   Finances (Staked, Won, Lost, Profit): Recalculated from game  and outcome. Profit is color-coded.
+        -   Efficiency (ROI): Calculated as .
+        -   Column Cycle in the bot list table: Progress bar and text (X/Y) now based on  and . Remaining slots also calculated similarly.
+        -   Added version markers (v2, v2.1) for debugging. Improved outcome classification to handle English/Russian strings (e.g., Win, Победа).
 </code_architecture>
 
 <pending_tasks>
--   **Unfreeze Stuck Bets**: Implement the functionality for the Unfreeze Stuck Bets button in the admin panel. This involves finding games in ACTIVE status with no moves for > 5 minutes and recreating/restarting them. This task was explicitly paused.
--   **Admin Scan UI Enhancement**: Add options for period selection (dates/presets) and pagination with a results table within the admin panel's Scan Inconsistencies modal.
--   **Restrict Inconsistent Data Display**: Limit the display of INCONSISTENT DATA in  to only ADMIN and SUPER_ADMIN roles.
+-   **Unfreeze Stuck Bets (recreate games logic)**: The functionality to recreate rather than simply unfreeze/reset stuck games was discussed and planned for the  endpoint, but this specific task was explicitly cancelled by the user in favor of higher priority work. It remains unimplemented.
 </pending_tasks>
 
 <current_work>
-The most recent work involved enhancing the game outcome determination for Regular bots and adding diagnostic tools for administrators.
+The most immediate and ongoing work involves refining the display of cycle history and statistics for Regular Bots within the admin panel, primarily within .
 
-**1. Correct Game Outcomes for Bot Players:**
-    *   **Backend ()**: The  function was the primary focus. It now ensures that when a REGULAR bot is the creator, its move is dynamically selected *after* the human player's move. This selection is designed to align with a pre-determined  (win, loss, or draw) while strictly adhering to RPS rules. A new salt and hash are generated for the bot's move, effectively implementing a Commit-Reveal system at the very last moment.
-    *   **Backend Validation**: A robust validation step was added within . After the bot's move is determined, the system now re-evaluates the RPS outcome based on both the player's and bot's final moves. If this calculated outcome does not match the , the bot's move and its corresponding commit data (salt and hash) are *automatically regenerated* to ensure consistency. A warning is logged when such a re-generation occurs.
+The goal is to ensure the 📈 Cycle History: modal and the Cycle column in the bot list table show accurate, client-calculated data for:
+1.  **Cycle Progress**:  format, where  is the sum of completed games (Wins + Losses + Draws) and  is the bot's cycle length (defaulting to 16). This was initially displaying incorrectly (e.g., 4/12 instead of 4/16), indicating a potential miscalculation of the denominator.
+2.  **Wins, Losses, Draws**: These are now correctly recalculated from the actual game results within the modal's game list, rather than relying on potentially outdated backend summary data.
+3.  **Financials (Staked, Won, Lost, Profit)**: Staked sums all bets in the cycle. Won sums bets from winning games. Lost sums bets from losing games. Profit is Won - Lost, displayed with  precision and color-coded (green for non-negative, red for negative).
+4.  **Efficiency (ROI)**: Calculated as , excluding draws from the denominator, with  precision.
 
-**2. Diagnostic & Admin Tools:**
-    *   **Frontend Inconsistency Display ()**: The UI for displaying game results now includes a client-side check. It computes the RPS outcome () directly from the player's and opponent's moves. If  deviates from the  received from the backend, an INCONSISTENT DATA warning is displayed, avatars are highlighted in red, and a textual explanation is provided. This serves as an immediate visual diagnostic for QA/Admins.
-    *   **Admin Panel Scan ( and )**: A new backend API endpoint, , was implemented. This endpoint allows scanning completed games within a specified period (defaulting to the last 24 hours) to identify discrepancies between the  and the RPS outcome calculated from the  and . A Scan Inconsistencies button was added to the main dashboard of the  component, visible only to ADMIN/SUPER_ADMIN/MODERATOR roles. When clicked, it calls this new endpoint, displaying the count of found inconsistencies in a notification and logging detailed game IDs to the browser console.
-
-The current state is that the core logic for bot game outcomes is more robust, and new tools for identifying data inconsistencies have been provided.
-
+During implementation, a key debugging challenge was ensuring the frontend displayed the correct, updated bundle (using version markers like  in the modal title) and handling inconsistencies in game outcome string localization (Победа vs Win). The  vs  issue for the progress bar is the most recent point of contention, indicating the cycle length  is not correctly derived or applied.
 </current_work>
 
 <optional_next_step>
-The next steps involve refining the Scan Inconsistencies feature and restricting the INCONSISTENT DATA display.
+Investigate and fix why the progress bar for the Cycle column in  is displaying  instead of , ensuring the cycle length correctly defaults to 16 if not specified.
 </optional_next_step>
