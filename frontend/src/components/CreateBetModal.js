@@ -522,7 +522,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4" onWheel={(e)=>e.stopPropagation()} onTouchMove={(e)=>e.stopPropagation()}>
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg w-full max-w-lg max-h-[90vh] overflow-hidden" role="dialog" aria-modal="true">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border-primary">
