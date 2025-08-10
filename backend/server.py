@@ -17860,7 +17860,7 @@ async def get_bot_cycle_history(
             if opponent_id:
                 opponent_user = await db.users.find_one({"id": opponent_id})
                 if opponent_user:
-                    opponent_info = opponent_user.get("username", "Unknown")
+                    opponent_info = opponent_user.get("username", "Unknown Player")
                 else:
                     # Check if opponent is a bot
                     opponent_bot = await db.bots.find_one({"id": opponent_id})
