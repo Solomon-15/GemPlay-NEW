@@ -13784,7 +13784,7 @@ async def cleanup_all_stuck_bets(current_user: User = Depends(get_current_admin)
         admin_log = {
             "admin_id": current_user.id,
             "admin_username": current_user.username,
-            "action": "cleanup_all_stuck_bets",
+            "action": "unfreeze_stuck_bets",
             "details": cleanup_results,
             "timestamp": datetime.utcnow()
         }
