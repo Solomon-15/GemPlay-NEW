@@ -13447,13 +13447,19 @@ async def get_all_bets(
             # Calculate bet age in hours
             bet_age_hours = (datetime.utcnow() - game.get("created_at")).total_seconds() / 3600
             
-            # Determine stuck status by expired active_deadline on ACTIVE games
+            # Determine stuck status: ACTIVE без хода одной из сторон > 5 минут
             is_stuck = False
             try:
                 if game.get("status") == "ACTIVE":
-                    deadline = game.get("active_deadline")
-                    if deadline and isinstance(deadline, datetime):
-                        is_stuck = deadline < datetime.utcnow()
+                    last_threshold = datetime.utcnow() - timedelta(minutes=5)
+                    missing_move = game.get("opponent_move") is None or game.get("creator_move") is None
+                    time_candidates = [game.get("updated_at"), game.get("joined_at"), game.get("started_at"), game.get("created_at")]
+                    oldest = None
+                    for t in time_candidates:
+                        if isinstance(t, datetime):
+                            oldest = t if oldest is None or t < oldest else oldest
+                    if missing_move and oldest and oldest < last_threshold:
+                        is_stuck = True
             except Exception:
                 is_stuck = False
             
