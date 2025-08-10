@@ -13671,8 +13671,8 @@ async def unfreeze_all_stuck_bets(current_user: User = Depends(get_current_admin
         for game in stuck_games:
             game_id = game.get("id")
             old_deadline = game.get("active_deadline")
-            # Extend deadline by 1 minute (can be adjusted if needed)
-            new_deadline = datetime.utcnow() + timedelta(minutes=1)
+            # Extend deadline by 5 minutes (per admin request)
+            new_deadline = datetime.utcnow() + timedelta(minutes=5)
             
             # Unfreeze: keep status ACTIVE, extend deadline, clear locks
             update_ops = {
