@@ -1,5 +1,335 @@
 #!/usr/bin/env python3
 """
+Russian Review Backend Testing - Focused on Changed Areas
+Testing specific requirements:
+1. /api/admin/bots/regular/list - current_profit field and backward compatibility
+2. Regular endpoints functionality 
+3. Admin profit endpoints without legacy fields
+"""
+
+import requests
+import json
+import sys
+from datetime import datetime
+from typing import Dict, Any, List, Optional
+
+# Configuration
+BASE_URL = "https://8c9fa134-69e2-43fa-b7ef-b4ab7b224374.preview.emergentagent.com"
+API_BASE = f"{BASE_URL}/api"
+
+# Test credentials
+ADMIN_EMAIL = "admin@gemplay.com"
+ADMIN_PASSWORD = "Admin123!"
+
+class RussianReviewTester:
+    def __init__(self):
+        self.session = requests.Session()
+        self.admin_token = None
+        self.test_results = []
+        
+    def log_result(self, test_name: str, success: bool, details: str, data: Any = None):
+        """Log test result"""
+        result = {
+            "test": test_name,
+            "success": success,
+            "details": details,
+            "timestamp": datetime.now().isoformat(),
+            "data": data
+        }
+        self.test_results.append(result)
+        status = "✅ PASS" if success else "❌ FAIL"
+        print(f"{status} {test_name}: {details}")
+        
+    def authenticate_admin(self) -> bool:
+        """Authenticate as admin user"""
+        try:
+            response = self.session.post(f"{API_BASE}/auth/login", json={
+                "email": ADMIN_EMAIL,
+                "password": ADMIN_PASSWORD
+            })
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data.get("access_token")
+                self.session.headers.update({"Authorization": f"Bearer {self.admin_token}"})
+                self.log_result("Admin Authentication", True, f"Successfully authenticated as {ADMIN_EMAIL}")
+                return True
+            else:
+                self.log_result("Admin Authentication", False, f"Failed with status {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Admin Authentication", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_regular_bots_list_current_profit(self) -> bool:
+        """Test /api/admin/bots/regular/list for current_profit field and backward compatibility"""
+        try:
+            response = self.session.get(f"{API_BASE}/admin/bots/regular/list")
+            
+            if response.status_code != 200:
+                self.log_result("Regular Bots List - Current Profit", False, 
+                              f"API returned status {response.status_code}: {response.text}")
+                return False
+            
+            data = response.json()
+            bots = data.get("bots", [])
+            
+            if not bots:
+                self.log_result("Regular Bots List - Current Profit", False, "No bots found in response")
+                return False
+            
+            # Check each bot for required fields
+            issues = []
+            current_profit_values = []
+            
+            for i, bot in enumerate(bots):
+                bot_id = bot.get("id", f"bot_{i}")
+                
+                # Check current_profit field exists and is numeric
+                if "current_profit" not in bot:
+                    issues.append(f"Bot {bot_id}: missing current_profit field")
+                else:
+                    current_profit = bot["current_profit"]
+                    if not isinstance(current_profit, (int, float)):
+                        issues.append(f"Bot {bot_id}: current_profit is not numeric ({type(current_profit)})")
+                    else:
+                        current_profit_values.append(current_profit)
+                
+                # Check backward compatibility fields
+                required_fields = ["active_pool", "cycle_total_display"]
+                for field in required_fields:
+                    if field not in bot:
+                        issues.append(f"Bot {bot_id}: missing backward compatibility field '{field}'")
+                
+                # Check current_cycle_* fields default to 0
+                cycle_fields = ["current_cycle_wins", "current_cycle_losses", "current_cycle_draws"]
+                for field in cycle_fields:
+                    if field not in bot:
+                        issues.append(f"Bot {bot_id}: missing field '{field}'")
+                    elif bot[field] is None:
+                        issues.append(f"Bot {bot_id}: field '{field}' is null, should default to 0")
+            
+            if issues:
+                self.log_result("Regular Bots List - Current Profit", False, 
+                              f"Found {len(issues)} issues: {'; '.join(issues[:3])}{'...' if len(issues) > 3 else ''}")
+                return False
+            
+            self.log_result("Regular Bots List - Current Profit", True, 
+                          f"All {len(bots)} bots have current_profit field (values: {current_profit_values}) and backward compatibility fields")
+            return True
+            
+        except Exception as e:
+            self.log_result("Regular Bots List - Current Profit", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_regular_endpoints_functionality(self) -> bool:
+        """Test regular bot endpoints are not broken"""
+        try:
+            # First get list of bots to test with
+            list_response = self.session.get(f"{API_BASE}/admin/bots/regular/list")
+            if list_response.status_code != 200:
+                self.log_result("Regular Endpoints - Get Bot List", False, 
+                              f"Cannot get bot list: {list_response.status_code}")
+                return False
+            
+            bots = list_response.json().get("bots", [])
+            if not bots:
+                self.log_result("Regular Endpoints - Get Bot List", False, "No bots available for testing")
+                return False
+            
+            test_bot_id = bots[0]["id"]
+            endpoint_results = []
+            
+            # Test individual bot endpoint
+            bot_response = self.session.get(f"{API_BASE}/admin/bots/{test_bot_id}")
+            if bot_response.status_code == 200:
+                bot_data = bot_response.json()
+                # Check for required fields and no legacy fields
+                has_required = all(field in bot_data for field in ["wins_count", "losses_count", "draws_count"])
+                has_legacy = any(field in bot_data for field in ["win_percentage", "creation_mode", "profit_strategy"])
+                
+                if has_required and not has_legacy:
+                    endpoint_results.append("✅ /admin/bots/{id} - correct structure")
+                else:
+                    endpoint_results.append(f"❌ /admin/bots/{id} - structure issues (required: {has_required}, legacy: {has_legacy})")
+            else:
+                endpoint_results.append(f"❌ /admin/bots/{id} - status {bot_response.status_code}")
+            
+            # Test cycle-bets endpoint
+            cycle_bets_response = self.session.get(f"{API_BASE}/admin/bots/{test_bot_id}/cycle-bets")
+            if cycle_bets_response.status_code == 200:
+                endpoint_results.append("✅ /admin/bots/{id}/cycle-bets - working")
+            else:
+                endpoint_results.append(f"❌ /admin/bots/{id}/cycle-bets - status {cycle_bets_response.status_code}")
+            
+            # Test recalculate-bets endpoint
+            recalc_response = self.session.post(f"{API_BASE}/admin/bots/{test_bot_id}/recalculate-bets")
+            if recalc_response.status_code in [200, 201]:
+                endpoint_results.append("✅ /admin/bots/{id}/recalculate-bets - working")
+            else:
+                endpoint_results.append(f"❌ /admin/bots/{id}/recalculate-bets - status {recalc_response.status_code}")
+            
+            # Test lobby endpoints
+            lobby_endpoints = [
+                ("/games/available", "available games"),
+                ("/games/active-human-bots", "active human-bots"),
+                ("/bots/active-games", "active bot games"),
+                ("/bots/ongoing-games", "ongoing bot games")
+            ]
+            
+            for endpoint, description in lobby_endpoints:
+                lobby_response = self.session.get(f"{API_BASE}{endpoint}")
+                if lobby_response.status_code == 200:
+                    lobby_data = lobby_response.json()
+                    # Check for bot name masking (should show "Bot" not real names)
+                    if "games" in lobby_data:
+                        games = lobby_data["games"]
+                        bot_names = []
+                        for game in games[:5]:  # Check first 5 games
+                            creator_name = game.get("creator_username", "")
+                            if game.get("is_regular_bot_game") or game.get("creator_type") == "bot":
+                                bot_names.append(creator_name)
+                        
+                        if bot_names and all(name == "Bot" for name in bot_names):
+                            endpoint_results.append(f"✅ {endpoint} - bot name masking correct")
+                        elif bot_names:
+                            endpoint_results.append(f"⚠️ {endpoint} - bot names: {set(bot_names)}")
+                        else:
+                            endpoint_results.append(f"✅ {endpoint} - no bot games found")
+                    else:
+                        endpoint_results.append(f"✅ {endpoint} - working")
+                else:
+                    endpoint_results.append(f"❌ {endpoint} - status {lobby_response.status_code}")
+            
+            success_count = sum(1 for result in endpoint_results if result.startswith("✅"))
+            total_count = len(endpoint_results)
+            
+            success = success_count >= (total_count * 0.8)  # 80% success rate
+            
+            self.log_result("Regular Endpoints Functionality", success, 
+                          f"Tested {total_count} endpoints, {success_count} successful. Details: {'; '.join(endpoint_results)}")
+            return success
+            
+        except Exception as e:
+            self.log_result("Regular Endpoints Functionality", False, f"Exception: {str(e)}")
+            return False
+    
+    def test_admin_profit_endpoints(self) -> bool:
+        """Test admin profit endpoints work without legacy fields"""
+        try:
+            profit_endpoints = [
+                ("/admin/profit/stats", "profit stats"),
+                ("/admin/profit/bot-integration", "bot integration"),
+                ("/admin/profit/bot-revenue-details", "bot revenue details")
+            ]
+            
+            endpoint_results = []
+            
+            for endpoint, description in profit_endpoints:
+                try:
+                    response = self.session.get(f"{API_BASE}{endpoint}")
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        # Check for absence of legacy fields
+                        data_str = json.dumps(data).lower()
+                        legacy_fields = ["creation_mode", "creation_modes", "behavior", "behaviors"]
+                        has_legacy = any(field in data_str for field in legacy_fields)
+                        
+                        if has_legacy:
+                            endpoint_results.append(f"❌ {endpoint} - contains legacy fields")
+                        else:
+                            # Special check for bot-integration structure
+                            if "bot-integration" in endpoint:
+                                required_keys = ["bot_stats", "efficiency", "recent_transactions"]
+                                has_required = all(key in data for key in required_keys)
+                                if has_required:
+                                    endpoint_results.append(f"✅ {endpoint} - correct structure without legacy")
+                                else:
+                                    endpoint_results.append(f"⚠️ {endpoint} - missing required keys: {required_keys}")
+                            else:
+                                endpoint_results.append(f"✅ {endpoint} - working without legacy fields")
+                    else:
+                        endpoint_results.append(f"❌ {endpoint} - status {response.status_code}")
+                        
+                except Exception as e:
+                    endpoint_results.append(f"❌ {endpoint} - exception: {str(e)}")
+            
+            success_count = sum(1 for result in endpoint_results if result.startswith("✅"))
+            total_count = len(endpoint_results)
+            
+            success = success_count == total_count  # All must pass
+            
+            self.log_result("Admin Profit Endpoints", success, 
+                          f"Tested {total_count} endpoints, {success_count} successful. Details: {'; '.join(endpoint_results)}")
+            return success
+            
+        except Exception as e:
+            self.log_result("Admin Profit Endpoints", False, f"Exception: {str(e)}")
+            return False
+    
+    def run_all_tests(self) -> Dict[str, Any]:
+        """Run all Russian review tests"""
+        print("🚀 Starting Russian Review Backend Testing - Changed Areas Only")
+        print("=" * 70)
+        
+        # Authenticate
+        if not self.authenticate_admin():
+            return {"success": False, "error": "Authentication failed"}
+        
+        # Run tests
+        test_methods = [
+            self.test_regular_bots_list_current_profit,
+            self.test_regular_endpoints_functionality,
+            self.test_admin_profit_endpoints
+        ]
+        
+        results = []
+        for test_method in test_methods:
+            try:
+                result = test_method()
+                results.append(result)
+            except Exception as e:
+                print(f"❌ CRITICAL ERROR in {test_method.__name__}: {str(e)}")
+                results.append(False)
+        
+        # Summary
+        passed = sum(results)
+        total = len(results)
+        success_rate = (passed / total) * 100 if total > 0 else 0
+        
+        print("\n" + "=" * 70)
+        print(f"🎯 RUSSIAN REVIEW TESTING SUMMARY")
+        print(f"📊 Success Rate: {success_rate:.1f}% ({passed}/{total} tests passed)")
+        
+        if success_rate == 100:
+            print("🎉 ALL TESTS PASSED - Russian review requirements fully met!")
+        elif success_rate >= 80:
+            print("✅ MOSTLY SUCCESSFUL - Minor issues found")
+        else:
+            print("❌ SIGNIFICANT ISSUES - Requires attention")
+        
+        return {
+            "success": success_rate >= 80,
+            "success_rate": success_rate,
+            "passed": passed,
+            "total": total,
+            "results": self.test_results
+        }
+
+def main():
+    """Main test execution"""
+    tester = RussianReviewTester()
+    results = tester.run_all_tests()
+    
+    # Exit with appropriate code
+    sys.exit(0 if results["success"] else 1)
+
+if __name__ == "__main__":
+    main()
+"""
 RUSSIAN REVIEW TESTING - Three Critical Issues
 Протестировать все три критические проблемы которые были исправлены
 
