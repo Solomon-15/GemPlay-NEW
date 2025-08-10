@@ -355,7 +355,7 @@ function App() {
         {isAdminPanelOpen ? (
           <AdminPanel user={user} onClose={handleCloseAdminPanel} />
         ) : (
-          <div className="min-h-screen bg-gradient-primary flex">
+          <div className="min-h-screen bg-gradient-primary flex min-h-app">
             {/* Desktop Sidebar - Hidden on Mobile */}
             <div className="hidden md:block">
               <Sidebar 
