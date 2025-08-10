@@ -135,9 +135,15 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   // Block body scroll when dropdown is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      const { body } = document;
+      const prevOverflow = body.style.overflow;
+      const prevPaddingRight = body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
+      body.style.overflow = 'hidden';
       return () => {
-        document.body.style.overflow = 'unset';
+        body.style.overflow = prevOverflow || 'unset';
+        body.style.paddingRight = prevPaddingRight || '';
       };
     }
   }, [isOpen]);
