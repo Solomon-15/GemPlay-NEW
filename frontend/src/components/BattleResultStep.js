@@ -112,7 +112,7 @@ const BattleResultStep = ({
       {/* Result Header с увеличенным размером */}
       <div className="text-center py-4">
         <h3 className={`text-5xl font-russo mb-6 ${resultConfig.color} animate-pulse`}>
-          {isInconsistent ? 'INCONSISTENT DATA' : resultConfig.title}
+          {showInconsistent ? 'INCONSISTENT DATA' : resultConfig.title}
         </h3>
         {isInconsistent && (
           <div className="text-red-400 text-xs font-mono mt-2">
