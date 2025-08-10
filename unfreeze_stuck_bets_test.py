@@ -1,25 +1,23 @@
 #!/usr/bin/env python3
 """
-Unfreeze Stuck Bets Backend Testing
-===================================
+Unfreeze Stuck Bets Backend Testing - Post Logic Fix
+===================================================
 
-This test suite focuses on testing the new "unfreeze stuck bets" functionality
-and ensuring regression testing of existing admin bet endpoints.
-
-Test Coverage:
-1. New endpoint: POST /api/admin/bets/unfreeze-stuck
-2. Updated stats: GET /api/admin/bets/stats (stuck_bets calculation)
-3. Regression: All existing admin bet endpoints
-4. Authentication and authorization testing
+Testing specific requirements after main agent fixes:
+1. POST /api/admin/bets/unfreeze-stuck - should UNFREEZE (not cancel), keep ACTIVE status, set active_deadline=now+1min, remove lock fields, set unfrozen_at/unfrozen_by
+2. GET /api/admin/bets/stats - stuck_bets should count ACTIVE games with expired active_deadline
+3. GET /api/admin/bets/list - is_stuck field should be based on active_deadline (not >24h age)
+4. Basic authorization: 401 without token, 200 with admin token
+5. Regression testing of other admin bet endpoints
 """
 
 import requests
 import json
 import os
+import sys
+import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
-import uuid
-import random
 
 # Configuration
 BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://7b2a63c7-bf40-43a1-8f55-0ccf6c9e6341.preview.emergentagent.com')
