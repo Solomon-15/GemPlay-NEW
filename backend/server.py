@@ -13646,7 +13646,11 @@ async def unfreeze_all_stuck_bets(current_user: User = Depends(get_current_admin
         now_ts = datetime.utcnow()
         stuck_games = await db.games.find({
             "status": "ACTIVE",
-            "active_deadline": {"$exists": True, "$ne": None, "$lt": now_ts}
+            "$and": [
+                {"active_deadline": {"$exists": True}},
+                {"active_deadline": {"$ne": None}},
+                {"active_deadline": {"$lt": now_ts}}
+            ]
         }).to_list(1000)  # Limit to 1000 to prevent memory issues
         
         cleanup_results = {
