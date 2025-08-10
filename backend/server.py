@@ -6781,15 +6781,37 @@ async def choose_move_for_active_game(
             if creator_regular_bot and creator_regular_bot.get("bot_type") == "REGULAR":
                 creator_is_regular_bot = True
                 logger.info(f"🤖 Regular bot game detected: {game_obj.creator_id}")
-                
-                # Проверяем что ход уже установлен
-                if not game_obj.creator_move:
-                    # Генерируем случайный ход как fallback
-                    creator_move_to_set = random.choice(["rock", "paper", "scissors"])
-                    logger.warning(f"🤖 No creator_move for regular bot, generated fallback: {creator_move_to_set}")
-                else:
-                    creator_move_to_set = None  # Ход уже установлен
-                    logger.info(f"🤖 Regular bot creator_move already set: {game_obj.creator_move}")
+
+                # Определяем желаемый исход для бота (WIN/LOSS/DRAW)
+                intended = None
+                try:
+                    intended = (game.get("metadata", {}) or {}).get("intended_result")
+                except Exception:
+                    intended = None
+
+                if intended not in ["win", "loss", "draw"]:
+                    # Fallback к расчету вероятностного исхода
+                    outcome_calc = await calculate_bot_game_outcome(game_obj.creator_id, game_obj.bet_amount)
+                    intended = outcome_calc.lower() if outcome_calc else "draw"
+
+                # Выбираем ход бота под выбранный исход относительно хода игрока
+                def pick_bot_move(opponent_mv: str, desired: str) -> str:
+                    beats = {"rock": "paper", "paper": "scissors", "scissors": "rock"}
+                    loses = {"rock": "scissors", "paper": "rock", "scissors": "paper"}
+                    if desired == "win":
+                        return beats.get(opponent_mv, "rock")
+                    if desired == "loss":
+                        return loses.get(opponent_mv, "rock")
+                    return opponent_mv  # draw
+
+                bot_move_to_set = pick_bot_move(move, intended)
+
+                # Генерируем новый salt+hash под выбранный ход (commit для бота допускается более мягко)
+                import secrets
+                new_salt = secrets.token_hex(32)
+                new_hash = hash_move_with_salt(bot_move_to_set, new_salt)
+
+                creator_move_to_set = bot_move_to_set
         
         # Обновляем игру с ходом оппонента 
         update_data = {
@@ -6799,10 +6821,16 @@ async def choose_move_for_active_game(
             "updated_at": datetime.utcnow()
         }
         
-        # Добавляем ход создателя только если нужен fallback
+        # Если игра с обычным ботом — всегда устанавливаем ход создателя согласно желаемому исходу
         if creator_is_regular_bot and creator_move_to_set:
             update_data["creator_move"] = creator_move_to_set
-            logger.info(f"🤖 Setting fallback creator_move: {creator_move_to_set}")
+            # Также обновим commit данные, чтобы они соответствовали новому ходу бота
+            try:
+                update_data["creator_salt"] = new_salt
+                update_data["creator_move_hash"] = new_hash
+            except Exception:
+                pass
+            logger.info(f"🤖 Regular bot move set to: {creator_move_to_set} (intended)")
             
         await db.games.update_one(
             {"id": game_id},
