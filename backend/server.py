@@ -15060,13 +15060,14 @@ async def unfreeze_user_gems(
         await db.admin_logs.insert_one(admin_log.dict())
         
         # Send notification to user
-        notification = Notification(
+        await create_notification(
             user_id=user_id,
-            type="ADMIN_ACTION",
-            title="Гемы разморожены",
-            message=f"Администратор разморозил {quantity} {gem_type} гемов. Причина: {reason}"
+            notification_type=NotificationTypeEnum.ADMIN_NOTIFICATION,
+            payload=NotificationPayload(admin_message=f"Администратор разморозил {quantity} {gem_type} гемов. Причина: {reason}"),
+            priority=NotificationPriorityEnum.INFO,
+            custom_title="Admin Action",
+            custom_message=f"Gems unfrozen: {quantity} {gem_type}. Reason: {reason}"
         )
-        await db.notifications.insert_one(notification.dict())
         
         return {
             "message": f"Successfully unfroze {quantity} {gem_type} gems",
