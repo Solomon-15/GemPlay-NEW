@@ -662,7 +662,6 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
                   onUpdateUser();
                 }
               }}
-              currentTime={new Date()}
             />
           ))}
           {myBets.length === 0 && (
