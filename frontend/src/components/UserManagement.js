@@ -481,7 +481,7 @@ const UserManagement = ({ user: currentUser }) => {
 
   const submitBan = async () => {
     if (!banReason.trim()) {
-      showWarningRU('Укажите причину бана');
+      showWarningRU('Please specify a ban reason');
       return;
     }
 
