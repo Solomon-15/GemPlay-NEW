@@ -19828,16 +19828,16 @@ async def get_user_name_for_notification(user_id: str) -> str:
         # Try human bot first
         bot = await db.human_bots.find_one({"id": user_id})
         if bot:
-            return bot.get("name", "Бот")
+            return bot.get("name", "Bot")
         
         # Try regular user
         user = await db.users.find_one({"id": user_id})
         if user:
-            return user.get("username", "Игрок")
+            return user.get("username", "Player")
         
-        return "Неизвестный игрок"
+        return "Unknown Player"
     except Exception:
-        return "Игрок"
+        return "Player"
 
 
 # ==============================================================================
