@@ -530,6 +530,17 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           />
         );
       case 3:
+        if (resultPending || !battleResult) {
+          return (
+            <div className="flex items-center justify-center py-16">
+              <div className="text-center">
+                <div className="text-white font-rajdhani text-lg mb-3">⚔️ Starting Battle...</div>
+                <div className="w-12 h-12 border-4 border-accent-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="text-text-secondary text-sm mt-3">Определяем результат…</div>
+              </div>
+            </div>
+          );
+        }
         return (
           <BattleResultStep
             battleResult={battleResult}
