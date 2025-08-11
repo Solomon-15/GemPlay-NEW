@@ -3525,41 +3525,22 @@ const RegularBotsManagement = () => {
                 </div>
 
                 <div className="bg-surface-sidebar rounded-lg p-4">
+                  <h4 className="font-rajdhani font-bold text-white mb-2">Общая сумма:</h4>
+                  <div className="text-2xl font-rajdhani font-bold text-white">
+                    ${Number(cycleData.cycle_stats.total_bet_amount).toFixed(2)}
+                  </div>
+                  <div className="text-text-secondary text-sm">
+                    Сумма всех ставок
+                  </div>
+                </div>
+
+                <div className="bg-surface-sidebar rounded-lg p-4">
                   <h4 className="font-rajdhani font-bold text-white mb-2">Эффективность:</h4>
                   <div className="text-2xl font-rajdhani font-bold text-accent-primary">
                     {Number(cycleData.cycle_stats.win_rate).toFixed(1)}%
                   </div>
                   <div className="text-text-secondary text-sm">
                     Процент побед
-                  </div>
-                </div>
-              </div>
-
-              {/* Финансы переносим ниже, как просили */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-surface-sidebar rounded-lg p-4">
-                  <h4 className="font-rajdhani font-bold text-white mb-2">Финансы:</h4>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-text-secondary">Поставлено:</span>
-                      <span className="text-white ml-2">${Number(cycleData.cycle_stats.total_bet_amount).toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-secondary">Выиграно:</span>
-                      <span className="text-green-400 ml-2">${Number(cycleData.cycle_stats.total_winnings).toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-secondary">Проиграно:</span>
-                      <span className="text-red-400 ml-2">${Number(cycleData.cycle_stats.total_losses).toFixed(2)}</span>
-                    </div>
-                    <div className="border-t border-border-primary pt-2">
-                      <span className="text-text-secondary">Прибыль:</span>
-                      <span className={`ml-2 font-bold ${
-                        Number(cycleData.cycle_stats.net_profit) >= 0 ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        ${Number(cycleData.cycle_stats.net_profit).toFixed(2)}
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
