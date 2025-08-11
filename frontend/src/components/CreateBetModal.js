@@ -39,7 +39,8 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
 
   const steps = [
     { id: 1, name: 'Gem Selection', description: 'Choose gems and amount' },
-    { id: 2, name: 'Move & Create Bet', description: 'Choose your move' },
+    { id: 2, name: 'Move', description: 'Choose your move' },
+    { id: 3, name: 'Confirm', description: 'Create bet' }
   ];
 
   // Calculate total value when selectedGems changes
