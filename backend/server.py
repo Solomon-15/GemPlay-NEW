@@ -5092,6 +5092,8 @@ async def gift_gems(
         reference_id=recipient["id"],
         description=f"{(await get_gift_commission_rate_fraction())*100:.1f}% commission from gift: {quantity} {gem_type} gems to {recipient['username']}"
     )
+    profit_entry_dict = profit_entry.dict()
+    profit_entry_dict["status"] = "CONFIRMED"
     await db.profit_entries.insert_one(profit_entry.dict())
     
     # Create new notification for recipient using the notification system
