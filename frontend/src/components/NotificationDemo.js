@@ -18,7 +18,7 @@ const NotificationDemo = () => {
   };
 
   const handleBetCreatedRU = () => {
-    showSuccessRU('Ставка создана! $3.00 (3%) заморожено до завершения игры.', { duration: 7000 });
+    showSuccessRU(`Ставка создана! $${(3.0).toFixed(2)} (${(3.0).toFixed(1)}%) заморожено до завершения игры.`, { duration: 7000 });
   };
 
   const handleGameWon = () => {
