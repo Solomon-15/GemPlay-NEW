@@ -117,7 +117,8 @@ const ProfitAdmin = ({ user }) => {
       if (playerFilter) params.append('player_filter', playerFilter);
       if (amountFilter.min) params.append('amount_min', amountFilter.min);
       if (amountFilter.max) params.append('amount_max', amountFilter.max);
-      if (transactionIdFilter) params.append('transaction_id', transactionIdFilter);
+      if (transactionIdFilter) params.append('reference_id', transactionIdFilter);
+      if (entryStatusFilter) params.append('entry_status', entryStatusFilter);
 
       const response = await axios.get(`${API}/admin/profit/entries?${params}`, {
         headers: { Authorization: `Bearer ${token}` }
