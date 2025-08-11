@@ -1060,8 +1060,10 @@ const RegularBotsManagement = () => {
     }
   };
 
-  // Удалено по требованию: колонка «Ставки» и модалка активных ставок
+  // Удалено по требованию: handleActiveBetsModal
+  const handleActiveBetsModal = async (bot) => { return; }
 
+  const handleActiveBetsModalOld = async (bot) => {
     setSelectedBotForActiveBets(bot);
     setLoadingActiveBets(true);
     setIsActiveBetsModalOpen(true);
