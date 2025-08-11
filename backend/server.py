@@ -11808,7 +11808,7 @@ async def get_profit_stats(current_admin: User = Depends(get_current_admin)):
 async def get_profit_entries(
     page: int = 1,
     limit: int = 10,
-    entry_type: Optional[str] = None,
+    entry_type: Optional[str] = Query(None, alias="type"),  # accept legacy 'type' alias
     current_admin: User = Depends(get_current_admin)
 ):
     """Get profit entries with pagination."""
