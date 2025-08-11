@@ -106,7 +106,7 @@ const ProfitAdmin = ({ user }) => {
       const params = new URLSearchParams({
         page: pagination.currentPage.toString(),
         limit: pagination.itemsPerPage.toString(),
-        type: activeCategory, // Используем активную категорию
+        entry_type: activeCategory, // backend expects entry_type
         sort_by: sortBy,
         sort_order: sortOrder
       });
