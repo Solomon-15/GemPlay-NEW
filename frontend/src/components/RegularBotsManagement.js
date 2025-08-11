@@ -2153,10 +2153,13 @@ const RegularBotsManagement = () => {
                           return roi;
                         })();
                         
+                        const hasActual = Number.isFinite(roiActual);
+                        const displayActual = hasActual ? roiActual.toFixed(2) + '%' : '—';
+                        const displayClass = hasActual ? actualColor : 'text-gray-400';
                         return (
                           <div className="flex flex-col items-center justify-center leading-tight">
-                            <span className={`${actualColor} font-roboto text-sm font-bold`} title="Фактический ROI">
-                              {roiActual.toFixed(2)}%
+                            <span className={`${displayClass} font-roboto text-sm font-bold`} title="Фактический ROI (из модалки ‘Детали цикла’)">
+                              {displayActual}
                             </span>
                             <span className={`text-xs text-gray-400`} title="Плановый ROI">
                               {Number(roiPlanned).toFixed(2)}%
