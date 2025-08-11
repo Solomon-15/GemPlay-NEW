@@ -8944,7 +8944,7 @@ async def get_my_bets_paginated(
                 "my_move": game.get("creator_move" if is_creator else "opponent_move"),
                 "opponent_move": game.get("opponent_move" if is_creator else "creator_move"),
                 "commission": game.get("commission_amount", round_money(game["bet_amount"] * (await get_bet_commission_rate_fraction())) if game["status"] == "COMPLETED" else 0),
-                "winnings": game["bet_amount"] * 1.94 if result == "won" else 0
+                "winnings": round_money(game["bet_amount"] * (2 - (await get_bet_commission_rate_fraction()))) if result == "won" else 0
             }
             
             processed_games.append(game_data)
