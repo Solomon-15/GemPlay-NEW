@@ -596,7 +596,7 @@ const ProfitAdmin = ({ user }) => {
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Комиссия от Human-ботов</h3>
                   <p className="font-russo text-2xl font-bold text-cyan-400">{formatCurrencyWithSymbol(stats.human_bot_commission || 0, true)}</p>
-                  <p className="text-xs text-text-secondary mt-1">3% от выигрыша Human-ботов</p>
+                  <p className="text-xs text-text-secondary mt-1">Комиссия от выигрыша Human-ботов</p>
                   <p className="text-xs text-cyan-300 mt-1">Клик для детализации</p>
                 </div>
               </div>
