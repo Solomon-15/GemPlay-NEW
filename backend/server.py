@@ -16448,47 +16448,41 @@ async def get_regular_bots_simple(
 
 def compute_planned_roi_percent(min_bet: float, max_bet: float, cycle_games: int,
                                 wins_percentage: float, losses_percentage: float, draws_percentage: float) -> float:
+    """
+    Расчёт планового ROI строго по фронтенд-калькулятору из модалки создания бота:
+    - small/medium/large группы ставок: 25%/50%/оставшееся от числа игр (с округлением)
+    - средние значения ставок: 15%/50%/85% внутри диапазона [min,max]
+    - estimatedTotal = smallCount*smallAvg + mediumCount*mediumAvg + largeCount*largeAvg
+    - winsSum/lossesSum/drawsSum = round(estimatedTotal * %)
+    - ROI = (winsSum - lossesSum) / (winsSum + lossesSum) * 100
+    - Округление ROI до двух знаков после запятой
+    """
     try:
-        min_bet_int = int(round(min_bet or 0))
-        max_bet_int = int(round(max_bet or 0))
+        min_bet = float(min_bet or 0)
+        max_bet = float(max_bet or 0)
         games = int(cycle_games or 0)
-        if games <= 0:
+        if games <= 0 or max_bet <= 0 or max_bet < min_bet:
             return 0.0
-        # Точная сумма цикла
-        exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * games))
-        if exact_cycle_total <= 0:
+        # Распределение по группам
+        small_cnt = max(1, int(round(games * 0.25)))
+        medium_cnt = int(round(games * 0.5))
+        large_cnt = max(0, games - small_cnt - medium_cnt)
+        # Средние значения для групп
+        rng = max_bet - min_bet
+        small_avg = min_bet + rng * 0.15
+        medium_avg = min_bet + rng * 0.5
+        large_avg = min_bet + rng * 0.85
+        estimated_total = small_cnt * small_avg + medium_cnt * medium_avg + large_cnt * large_avg
+        # Суммы по исходам
+        wins_sum = round(estimated_total * float(wins_percentage or 0) / 100.0)
+        losses_sum = round(estimated_total * float(losses_percentage or 0) / 100.0)
+        # draws_sum тоже существует, но не входит в базу ROI
+        # draws_sum = round(estimated_total * float(draws_percentage or 0) / 100.0)
+        active_pool = wins_sum + losses_sum
+        if active_pool <= 0:
             return 0.0
-        # Сырые доли по %, затем метод наибольших остатков, чтобы суммы сошлись ровно
-        raw_w = exact_cycle_total * float(wins_percentage or 0) / 100.0
-        raw_l = exact_cycle_total * float(losses_percentage or 0) / 100.0
-        raw_d = exact_cycle_total * float(draws_percentage or 0) / 100.0
-        floors = [math.floor(raw_w), math.floor(raw_l), math.floor(raw_d)]
-        remainders = [raw_w - floors[0], raw_l - floors[1], raw_d - floors[2]]
-        sum_floors = sum(floors)
-        diff = exact_cycle_total - sum_floors
-        allocation = floors[:]
-        if diff != 0:
-            order = sorted(range(3), key=lambda i: remainders[i], reverse=(diff > 0))
-            step = 1 if diff > 0 else -1
-            for i in range(abs(diff)):
-                idx = order[i % 3]
-                allocation[idx] += step
-                if allocation[idx] < 0:
-                    allocation[idx] = 0
-        wins_sum, losses_sum, draws_sum = map(int, allocation)
-        # Защитная корректировка (на случай редких краёв)
-        adjust = exact_cycle_total - (wins_sum + losses_sum + draws_sum)
-        if adjust != 0:
-            order = sorted(range(3), key=lambda i: remainders[i], reverse=(adjust > 0))
-            for i in range(abs(adjust)):
-                idx = order[i % 3]
-                allocation[idx] += 1 if adjust > 0 else -1
-            wins_sum, losses_sum, draws_sum = map(int, allocation)
-        active_pool_planned = wins_sum + losses_sum
-        if active_pool_planned <= 0:
-            return 0.0
-        profit_planned = wins_sum - losses_sum
-        return round((profit_planned / active_pool_planned) * 100.0, 2)
+        profit = wins_sum - losses_sum
+        return round((profit / active_pool) * 100.0, 2)
     except Exception:
         return 0.0
 
