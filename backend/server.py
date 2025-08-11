@@ -11811,6 +11811,7 @@ async def get_profit_entries(
     page: int = 1,
     limit: int = 10,
     entry_type: Optional[str] = Query(None, alias="type"),  # accept legacy 'type' alias
+    entry_type_alt: Optional[str] = Query(None, alias="entry_type"),  # also accept 'entry_type'
     entry_status: Optional[str] = None,
     reference_id: Optional[str] = None,
     date_from: Optional[str] = None,
