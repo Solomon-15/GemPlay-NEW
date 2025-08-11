@@ -5946,7 +5946,8 @@ async def create_game(
                 )
         
         # Check if user has enough balance for commission (3% of bet amount)
-        commission_required = total_bet_amount * 0.03
+        commission_rate = await get_bet_commission_rate_fraction()
+        commission_required = round_money(total_bet_amount * commission_rate)
         user = await db.users.find_one({"id": current_user.id})
         
         logger.info(f"💰 COMMISSION DEBUG - User: {current_user.id}")
