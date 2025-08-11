@@ -11702,6 +11702,39 @@ async def update_user_balance(
         )
 
 # ==============================================================================
+# COMMISSION RATE HELPERS AND MONEY UTILS (centralized)
+# ==============================================================================
+
+def round_money(value: float) -> float:
+    try:
+        return float(f"{float(value):.2f}")
+    except Exception:
+        try:
+            return round(float(value), 2)
+        except Exception:
+            return 0.0
+
+async def get_bet_commission_rate_fraction() -> float:
+    """Return bet commission rate as fraction (e.g., 0.03 for 3%)."""
+    try:
+        settings_doc = await db.admin_settings.find_one({"type": "commission_settings"})
+        rate_percent = settings_doc.get("bet_commission_rate", 3.0) if settings_doc else 3.0
+        rate = max(0.0, float(rate_percent)) / 100.0
+        return rate
+    except Exception:
+        return 0.03
+
+async def get_gift_commission_rate_fraction() -> float:
+    """Return gift commission rate as fraction (e.g., 0.03 for 3%)."""
+    try:
+        settings_doc = await db.admin_settings.find_one({"type": "commission_settings"})
+        rate_percent = settings_doc.get("gift_commission_rate", 3.0) if settings_doc else 3.0
+        rate = max(0.0, float(rate_percent)) / 100.0
+        return rate
+    except Exception:
+        return 0.03
+
+# ==============================================================================
 # ADMIN PROFIT TRACKING API
 # ==============================================================================
 
