@@ -174,7 +174,7 @@ const ProfitAdmin = ({ user }) => {
         </svg>
       ),
       color: 'green',
-      description: '3% комиссия с PvP-игр'
+      description: 'Комиссия с PvP-игр (динамический процент)'
     },
     'HUMAN_BOT_COMMISSION': {
       name: 'Комиссия от Human-ботов',
