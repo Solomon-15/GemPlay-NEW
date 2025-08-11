@@ -12320,7 +12320,7 @@ async def get_human_bot_commission_breakdown(
             "summary": {
                 "top_earning_bot": bot_breakdown[0]["bot_name"] if bot_breakdown else None,
                 "top_earning_amount": bot_breakdown[0]["amount"] if bot_breakdown else 0,
-                "commission_rate": "3%"
+                "commission_rate": f"{int((await get_bet_commission_rate_fraction())*100)}%"
             }
         }
         
