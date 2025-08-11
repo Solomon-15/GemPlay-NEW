@@ -3174,7 +3174,7 @@ const RegularBotsManagement = () => {
             <div className="space-y-6">
               {/* Статистика цикла */}
               <div className="flex flex-wrap sm:flex-nowrap gap-4 items-stretch">
-                <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="bg-surface-sidebar rounded-lg p-4 flex-1 min-w-[220px]">
                   <h4 className="font-rajdhani font-bold text-white mb-2">Прогресс цикла:</h4>
                   <div className="text-2xl font-rajdhani font-bold text-green-400">
                     {(() => { const c = (cycleData?.cycle_info?.completed_games ?? 0); const t = (cycleData?.cycle_info?.cycle_length ?? 16); return `${c}/${t}`; })()}
