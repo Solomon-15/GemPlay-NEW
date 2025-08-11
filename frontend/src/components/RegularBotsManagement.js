@@ -1235,6 +1235,7 @@ const RegularBotsManagement = () => {
       const derived = getDerivedCycleStats(apiData, bot);
       const patched = {
         ...apiData,
+        games: Array.isArray(apiData?.games) ? apiData.games : [],
         cycle_info: {
           ...(apiData?.cycle_info || {}),
           progress: `${derived.completed}/${derived.cycleLength}`,
