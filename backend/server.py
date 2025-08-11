@@ -11814,6 +11814,7 @@ async def get_profit_entries(
     """Get profit entries with pagination."""
     try:
         query = {}
+        # Accept both 'entry_type' and legacy 'type' param for compatibility
         if entry_type:
             query["entry_type"] = entry_type
         
