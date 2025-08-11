@@ -281,7 +281,44 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       }, 1000);
     });
     
-    await completeBattle();
+    // После обратного отсчёта не показываем повторный выбор хода. Если ход не выбран —
+    // берём текущий выбранный (ожидается, что пользователь выбрал к моменту старта)
+    if (!selectedMove) {
+      showError('Выберите ход перед стартом битвы');
+      setLoading(false);
+      return;
+    }
+
+    // Переходим сразу к шагу 3: шлём choose-move и открываем результат
+    setResultPending(true);
+    setCurrentStep(3);
+    try {
+      const chooseMoveResult = await chooseMove(bet.id, selectedMove);
+      if (chooseMoveResult.game_id && chooseMoveResult.winner_id !== undefined) {
+        const battleOutcome = chooseMoveResult.winner_id === user.id ? 'win' : 
+                             (chooseMoveResult.winner_id ? 'lose' : 'draw');
+        setBattleResult({
+          result: battleOutcome,
+          opponentMove: chooseMoveResult.creator_move,
+          gameData: chooseMoveResult
+        });
+        await refreshAllData();
+        const globalRefresh = getGlobalLobbyRefresh();
+        globalRefresh.triggerLobbyRefresh();
+        await refreshWithDelay(800);
+        showSuccess(`Battle completed! ${battleOutcome === 'win' ? 'Victory!' : battleOutcome === 'lose' ? 'Defeat!' : 'Draw!'}`);
+      } else {
+        throw new Error('Неожиданная структура ответа при завершении битвы');
+      }
+    } catch (err) {
+      console.error('Ошибка завершения битвы:', err);
+      showError(err.message || 'Ошибка при завершении битвы');
+      // В случае ошибки откатываемся на шаг 2, чтобы пользователь мог повторить
+      setCurrentStep(2);
+    } finally {
+      setResultPending(false);
+      setLoading(false);
+    }
   };
 
   const leaveGame = async () => {
