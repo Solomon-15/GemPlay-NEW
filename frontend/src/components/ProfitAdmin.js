@@ -955,6 +955,7 @@ const ProfitAdmin = ({ user }) => {
                       setPlayerFilter('');
                       setAmountFilter({ min: '', max: '' });
                       setTransactionIdFilter('');
+                      setEntryStatusFilter('');
                     }}
                     className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-rajdhani rounded text-sm transition-colors"
                   >
