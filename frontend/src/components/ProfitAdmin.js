@@ -35,6 +35,7 @@ const ProfitAdmin = ({ user }) => {
   const [playerFilter, setPlayerFilter] = useState('');
   const [amountFilter, setAmountFilter] = useState({ min: '', max: '' });
   const [transactionIdFilter, setTransactionIdFilter] = useState('');
+  const [entryStatusFilter, setEntryStatusFilter] = useState('');
 
   const [activeModal, setActiveModal] = useState(null);
   const [modalData, setModalData] = useState([]);
