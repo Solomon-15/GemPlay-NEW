@@ -13302,7 +13302,8 @@ async def cleanup_stuck_bets(
                     cleanup_results["total_gems_returned"][gem_type] = cleanup_results["total_gems_returned"].get(gem_type, 0) + quantity
                 
                 # Return commission to creator
-                commission_amount = bet_amount * 0.03
+                commission_rate = await get_bet_commission_rate_fraction()
+                commission_amount = round_money(bet_amount * commission_rate)
                 creator_user = await db.users.find_one({"id": creator_id})
                 if creator_user:
                     await db.users.update_one(
