@@ -156,37 +156,41 @@ const RegularBotsManagement = () => {
   const handleCycleDetailsModal = async (cycle, bot) => {
     try {
       const token = localStorage.getItem('token');
-      // Use mock data for now since backend doesn't have real cycle details yet
-      const mockCycleDetails = {
-        id: cycle.id,
+      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-bets`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { cycle_number: cycle.cycle_number }
+      });
+      const data = response.data || {};
+      const sums = data.sums || {};
+      const games = Array.isArray(data.games) ? data.games : [];
+
+      const details = {
+        id: `${bot.id}:${cycle.cycle_number}`,
         bot_name: bot.name,
         cycle_number: cycle.cycle_number,
         completed_at: cycle.completed_at,
         duration: cycle.duration,
-        total_games: cycle.total_games || cycle.games_played || 12,
-        wins: cycle.wins || 7,
-        losses: cycle.losses || 4, 
-        draws: cycle.draws || 1,
-        total_bet: cycle.total_bet || cycle.total_wagered || 150.0,
-        total_winnings: cycle.total_winnings || 280.0,
-        profit: cycle.profit || 130.0,
-        win_rate: cycle.wins ? ((cycle.wins / (cycle.wins + cycle.losses + cycle.draws)) * 100).toFixed(1) : '58.3',
-        // Mock individual bets data - in real implementation this would come from API
-        bets: Array.from({ length: cycle.total_games || 12 }, (_, index) => ({
-          id: `bet_${cycle.id}_${index + 1}`,
-          game_number: index + 1,
-          bet_amount: Math.floor(Math.random() * 40) + 10, // Random bet between 10-50
-          result: index < (cycle.wins || 7) ? 'win' : 
-                 index < (cycle.wins || 7) + (cycle.losses || 4) ? 'loss' : 'draw',
-          payout: index < (cycle.wins || 7) ? (Math.floor(Math.random() * 40) + 10) * 1.94 : 0,
-          created_at: new Date(Date.now() - (12 - index) * 3600000).toISOString(), // Hours ago
-          move: ['rock', 'paper', 'scissors'][Math.floor(Math.random() * 3)],
-          opponent_move: ['rock', 'paper', 'scissors'][Math.floor(Math.random() * 3)]
+        total_games: games.length,
+        wins: games.filter(g => g.winner_id === bot.id).length,
+        losses: games.filter(g => g.winner_id && g.winner_id !== bot.id).length,
+        draws: games.filter(g => !g.winner_id).length,
+        total_bet: Number(sums.total_sum || 0),
+        profit: Number(sums.profit || 0),
+        win_rate: games.length > 0 ? ((games.filter(g => g.winner_id === bot.id).length / games.length) * 100).toFixed(1) : '0.0',
+        bets: games.map((g, i) => ({
+          id: g.id || g._id || `${bot.id}:${cycle.cycle_number}:${i+1}`,
+          game_number: i + 1,
+          bet_amount: Number(g.bet_amount || 0),
+          result: g.winner_id === bot.id ? 'win' : (g.winner_id ? 'loss' : 'draw'),
+          payout: g.winner_id === bot.id ? Number(g.bet_amount || 0) * 2 : 0,
+          created_at: g.created_at,
+          move: g.creator_move,
+          opponent_move: g.opponent_move
         }))
       };
 
       setSelectedCycleForDetails(cycle);
-      setCycleDetailsData(mockCycleDetails);
+      setCycleDetailsData(details);
       setIsCycleDetailsModalOpen(true);
     } catch (error) {
       console.error('Ошибка загрузки деталей цикла:', error);
