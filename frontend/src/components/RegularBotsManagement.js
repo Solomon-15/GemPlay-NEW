@@ -162,7 +162,7 @@ const RegularBotsManagement = () => {
       });
       const data = response.data || {};
       const sums = data.sums || {};
-      const games = Array.isArray(data.games) ? data.games : [];
+      const bets = Array.isArray(data.bets) ? data.bets : [];
 
       const details = {
         id: `${bot.id}:${cycle.cycle_number}`,
@@ -170,22 +170,25 @@ const RegularBotsManagement = () => {
         cycle_number: cycle.cycle_number,
         completed_at: cycle.completed_at,
         duration: cycle.duration,
-        total_games: games.length,
-        wins: games.filter(g => g.winner_id === bot.id).length,
-        losses: games.filter(g => g.winner_id && g.winner_id !== bot.id).length,
-        draws: games.filter(g => !g.winner_id).length,
+        total_games: bets.length,
+        wins: bets.filter(b => b.result === 'win').length,
+        losses: bets.filter(b => b.result === 'loss').length,
+        draws: bets.filter(b => b.result === 'draw').length,
         total_bet: Number(sums.total_sum || 0),
         profit: Number(sums.profit || 0),
-        win_rate: games.length > 0 ? ((games.filter(g => g.winner_id === bot.id).length / games.length) * 100).toFixed(1) : '0.0',
-        bets: games.map((g, i) => ({
-          id: g.id || g._id || `${bot.id}:${cycle.cycle_number}:${i+1}`,
-          game_number: i + 1,
-          bet_amount: Number(g.bet_amount || 0),
-          result: g.winner_id === bot.id ? 'win' : (g.winner_id ? 'loss' : 'draw'),
-          payout: g.winner_id === bot.id ? Number(g.bet_amount || 0) * 2 : 0,
-          created_at: g.created_at,
-          move: g.creator_move,
-          opponent_move: g.opponent_move
+        win_rate: bets.length > 0 ? ((bets.filter(b => b.result === 'win').length / bets.length) * 100).toFixed(1) : '0.0',
+        bets: bets.map((b, i) => ({
+          id: b.id || `${bot.id}:${cycle.cycle_number}:${i+1}`,
+          game_number: b.index || i + 1,
+          created_at: b.created_at,
+          duration: b.duration,
+          bet_amount: Number(b.bet_amount || 0),
+          bet_gems: b.bet_gems || {},
+          move: b.creator_move,
+          opponent_move: b.opponent_move,
+          opponent: b.opponent_name || 'N/A',
+          opponent_role: b.opponent_role || 'USER',
+          result: b.result
         }))
       };
 
