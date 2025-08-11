@@ -8389,7 +8389,6 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
                 reference_id=accumulator_id
             )
             await db.profit_entries.insert_one(profit_entry.dict())
-            
             logger.info(f"🎯 Bot {bot_id} cycle completed: profit ${profit:.2f} transferred to BOT_REVENUE")
         else:
             logger.info(f"🎯 Bot {bot_id} cycle completed: no profit (deficit: ${abs(profit):.2f})")
