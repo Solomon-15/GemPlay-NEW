@@ -16500,7 +16500,14 @@ async def get_regular_bots_list(
             except Exception:
                 roi_planned_percent_val = 0.0
             
-            bot_doc["roi_planned_percent"] = bot_doc.get("roi_planned_percent", roi_planned_percent_val)
+            try:
+                existing = bot_doc.get("roi_planned_percent")
+                if existing is not None and str(existing).strip() != "":
+                    bot_doc["roi_planned_percent"] = round(float(existing), 2)
+                else:
+                    bot_doc["roi_planned_percent"] = roi_planned_percent_val
+            except Exception:
+                bot_doc["roi_planned_percent"] = roi_planned_percent_val
             
             # Count active bets for this bot (ONLY as creator - regular bots don't join other bets)
             active_bets = await db.games.count_documents({
