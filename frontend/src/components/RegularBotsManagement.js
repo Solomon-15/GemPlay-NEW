@@ -1275,16 +1275,28 @@ const RegularBotsManagement = () => {
           winner: b.result === 'win' ? 'Победа' : b.result === 'loss' ? 'Поражение' : (b.result === 'draw' ? 'Ничья' : '—')
         }));
 
+        const winsCountNow = mappedGames.filter(g => g.winner === 'Победа').length;
+        const lossesCountNow = mappedGames.filter(g => g.winner === 'Поражение').length;
+        const drawsCountNow = mappedGames.filter(g => g.winner === 'Ничья').length;
+
         setCycleData(prev => ({
           ...(prev || {}),
           games: mappedGames,
+          cycle_info: {
+            ...(prev?.cycle_info || {}),
+            completed_games: mappedGames.length,
+            current_wins: winsCountNow,
+            current_losses: lossesCountNow,
+            draws: drawsCountNow,
+            cycle_length: prev?.cycle_info?.cycle_length || (bot?.cycle_games ?? 16)
+          },
           cycle_stats: {
             ...(prev?.cycle_stats || {}),
             total_bet_amount: Number(sums.total_sum || 0),
             total_winnings: Number((sums.wins_sum || 0) * 2),
             total_losses: Number(sums.losses_sum || 0),
             net_profit: Number(sums.profit || 0),
-            win_rate: mappedGames.length > 0 ? Math.round((mappedGames.filter(g => g.winner === 'Победа').length / mappedGames.length) * 1000) / 10 : 0
+            win_rate: mappedGames.length > 0 ? Math.round((winsCountNow / mappedGames.length) * 1000) / 10 : 0
           }
         }));
       } catch (e) {
