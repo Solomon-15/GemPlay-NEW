@@ -2153,12 +2153,11 @@ const RegularBotsManagement = () => {
                           const winPct = Number(bot.wins_percentage ?? 0);
                           const lossPct = Number(bot.losses_percentage ?? 0);
                           const cycleGames = Number(bot.cycle_games ?? 12) || 12;
-                          const minBet = Number(bot.min_bet_amount ?? 1) || 1;
-                          const maxBet = Number(bot.max_bet_amount ?? 50) || 50;
-                          const avgBet = (minBet + maxBet) / 2.0;
-                          const totalEst = Math.round(avgBet * cycleGames);
-                          const winsSumPlanned = Math.floor(totalEst * winPct / 100.0);
-                          const lossesSumPlanned = Math.ceil(totalEst * lossPct / 100.0);
+                          const minBet = Math.round(Number(bot.min_bet_amount ?? 1) || 1);
+                          const maxBet = Math.round(Number(bot.max_bet_amount ?? 50) || 50);
+                          const exactCycleTotal = Math.round(((minBet + maxBet) / 2.0) * cycleGames);
+                          const winsSumPlanned = Math.floor(exactCycleTotal * winPct / 100.0);
+                          const lossesSumPlanned = Math.ceil(exactCycleTotal * lossPct / 100.0);
                           const activePoolPlanned = winsSumPlanned + lossesSumPlanned;
                           const profitPlanned = winsSumPlanned - lossesSumPlanned;
                           const roi = activePoolPlanned > 0 ? (profitPlanned / activePoolPlanned) * 100.0 : 0.0;
