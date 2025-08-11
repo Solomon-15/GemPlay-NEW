@@ -16677,6 +16677,13 @@ async def get_regular_bots_list(
                 active_pool_cur = 0
                 current_profit = 0
 
+            # Берём окончательное плановое ROI из документа (с учётом сохранённого или пересчитанного)
+            roi_planned_out = bot_doc.get("roi_planned_percent")
+            try:
+                roi_planned_out = round(float(roi_planned_out), 2) if roi_planned_out is not None else roi_planned_percent_val
+            except Exception:
+                roi_planned_out = roi_planned_percent_val
+
             bot_details.append({
                 "id": bot.id,
                 "name": bot.name or f"Bot #{bot.id[:8]}",
