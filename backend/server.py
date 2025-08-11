@@ -11737,7 +11737,7 @@ async def get_gift_commission_rate_fraction() -> float:
         rate = max(0.0, float(rate_percent)) / 100.0
         return rate
     except Exception:
-        return 0.03
+        return 0.03  # default 3.0%
 
 # ==============================================================================
 # ADMIN PROFIT TRACKING API
