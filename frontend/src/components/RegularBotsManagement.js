@@ -636,6 +636,29 @@ const RegularBotsManagement = () => {
     }
   };
 
+  // Предзагрузка корректных сумм цикла как в модалке "Детали цикла"
+  const fetchAndCacheCycleSums = async (botId) => {
+    try {
+      const response = await axios.get(`${API}/admin/bots/${botId}/cycle-bets`, getApiConfig());
+      const sums = response.data?.sums;
+      if (sums) {
+        setCycleSumsByBot(prev => ({
+          ...prev,
+          [botId]: {
+            total_sum: Number(sums.total_sum || 0),
+            active_pool: Number(sums.active_pool || 0),
+            draws_sum: Number(sums.draws_sum || 0),
+            wins_sum: Number(sums.wins_sum || 0),
+            losses_sum: Number(sums.losses_sum || 0),
+            profit: Number(sums.profit || 0)
+          }
+        }));
+      }
+    } catch (err) {
+      // Тихо игнорируем ошибку, список всё равно отобразится с fallback
+      // console.warn('Не удалось предзагрузить суммы цикла для бота', botId, err);
+    }
+  };
 
 
   const fetchActiveBetsStats = async () => {
