@@ -1063,65 +1063,6 @@ const RegularBotsManagement = () => {
   // Удалено по требованию: handleActiveBetsModal
   const handleActiveBetsModal = async (bot) => { return; }
 
-  const handleActiveBetsModalOld = async (bot) => {
-    setSelectedBotForActiveBets(bot);
-    setLoadingActiveBets(true);
-    setIsActiveBetsModalOpen(true);
-    
-    try {
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.get(`${API}/admin/bots/${bot.id}/active-bets`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      console.log('Active Bets API Response:', response.data);
-      
-      const data = response.data;
-      
-      setActiveBetsData({
-        bets: data.bets || [],
-        totalBets: data.totalBets || 0,
-        totalBetAmount: data.totalBetAmount || 0,
-        gamesPlayed: data.gamesPlayed || 0,
-        botWins: data.botWins || 0,
-        playerWins: data.playerWins || 0,
-        draws: data.draws || 0,
-        remaining_slots: data.remaining_slots || 0,
-        current_cycle_played: data.current_cycle_played || 0,
-        cycle_games: data.cycle_games || 12,
-        actions_taken: data.actions_taken || { cancelled: 0, created: 0 }
-      });
-      
-      if (data.actions_taken?.cancelled > 0) {
-        showSuccessRU(`Отменено ${data.actions_taken.cancelled} лишних ставок`);
-      }
-      if (data.actions_taken?.created > 0) {
-        showSuccessRU(`Создано ${data.actions_taken.created} новых ставок`);
-      }
-      
-    } catch (error) {
-      console.error('Ошибка загрузки активных ставок:', error);
-      showErrorRU('Ошибка при загрузке активных ставок');
-      
-      setActiveBetsData({
-        bets: [],
-        totalBets: 0,
-        totalBetAmount: 0,
-        gamesPlayed: 0,
-        botWins: 0,
-        playerWins: 0,
-        draws: 0,
-        remaining_slots: 0,
-        current_cycle_played: 0,
-        cycle_games: 12,
-        actions_taken: { cancelled: 0, created: 0 }
-      });
-    } finally {
-      setLoadingActiveBets(false);
-    }
-  };
-
   const handleCycleBetsDetails = async (bot) => {
     try {
       const token = localStorage.getItem('token');
