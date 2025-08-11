@@ -7525,7 +7525,8 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 
                 if loser:
                     # This is a human player, handle normally
-                    loser_commission = game.bet_amount * 0.03
+                    commission_rate = await get_bet_commission_rate_fraction()
+                    loser_commission = round_money(game.bet_amount * commission_rate)
                     
                     logger.info(f"💰 RETURNING ${loser_commission} commission to LOSER {loser_id} (virtual_balance: {loser.get('virtual_balance', 0)} -> {loser.get('virtual_balance', 0) + loser_commission})")
                     
