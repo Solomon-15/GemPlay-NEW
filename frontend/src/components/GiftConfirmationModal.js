@@ -6,6 +6,25 @@ import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
+const useCommissionSettings = () => {
+  const [settings, setSettings] = React.useState({ bet_commission_rate: 3.0, gift_commission_rate: 3.0 });
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API}/admin/profit/commission-settings`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data) setSettings(res.data);
+      } catch (e) {
+        // keep defaults
+      }
+    };
+    fetchSettings();
+  }, []);
+  return settings;
+};
+
 const GiftConfirmationModal = ({ 
   isOpen, 
   onClose, 
