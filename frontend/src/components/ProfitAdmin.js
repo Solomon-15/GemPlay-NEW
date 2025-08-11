@@ -221,7 +221,7 @@ const ProfitAdmin = ({ user }) => {
         </svg>
       ),
       color: 'purple',
-      description: '3% за передачу гемов между игроками'
+      description: 'Комиссия за подарки (динамический процент)'
     }
   };
 
