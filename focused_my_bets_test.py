@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 import json
 
-BACKEND_URL = "https://df28b502-4a8b-41a3-806f-4aea5b27dbbf.preview.emergentagent.com/api"
+BACKEND_URL = "https://3228f7f2-31dc-43d9-b035-c3bf150c31a2.preview.emergentagent.com/api"
 
 async def focused_my_bets_test():
     """Create a focused test scenario for my-bets endpoint"""
