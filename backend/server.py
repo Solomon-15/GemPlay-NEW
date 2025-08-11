@@ -5094,7 +5094,7 @@ async def gift_gems(
     )
     profit_entry_dict = profit_entry.dict()
     profit_entry_dict["status"] = "CONFIRMED"
-    await db.profit_entries.insert_one(profit_entry.dict())
+    await db.profit_entries.insert_one(profit_entry_dict)
     
     # Create new notification for recipient using the notification system
     try:
