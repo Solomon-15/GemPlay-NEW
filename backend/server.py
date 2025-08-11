@@ -11805,33 +11805,83 @@ async def get_profit_entries(
     page: int = 1,
     limit: int = 10,
     entry_type: Optional[str] = Query(None, alias="type"),  # accept legacy 'type' alias
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    amount_min: Optional[float] = None,
+    amount_max: Optional[float] = None,
+    player_filter: Optional[str] = None,  # username/email contains; id prefix
+    sort_by: str = Query("date", pattern="^(date|amount|source)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_admin: User = Depends(get_current_admin)
 ):
-    """Get profit entries with pagination."""
+    """Get profit entries with pagination and filters."""
     try:
         query = {}
-        # Accept both 'entry_type' and legacy 'type' param for compatibility
         if entry_type:
             query["entry_type"] = entry_type
         
+        # Amount range
+        amount_filter = {}
+        if amount_min is not None:
+            amount_filter["$gte"] = float(amount_min)
+        if amount_max is not None:
+            amount_filter["$lte"] = float(amount_max)
+        if amount_filter:
+            query["amount"] = amount_filter
+        
+        # Date range
+        date_filter = {}
+        if date_from:
+            try:
+                date_filter["$gte"] = datetime.fromisoformat(date_from)
+            except Exception:
+                pass
+        if date_to:
+            try:
+                date_filter["$lte"] = datetime.fromisoformat(date_to)
+            except Exception:
+                pass
+        if date_filter:
+            query["created_at"] = date_filter
+        
+        # Player filter: username/email contains OR id prefix
+        user_ids = None
+        if player_filter:
+            pf = player_filter.strip()
+            # id prefix (quick path)
+            id_candidates = [u["id"] async for u in db.users.find({"id": {"$regex": f"^{pf}"}}, {"id": 1})]
+            # username/email contains (case-insensitive)
+            regex = {"$regex": pf, "$options": "i"}
+            name_candidates = [u["id"] async for u in db.users.find({"$or": [{"username": regex}, {"email": regex}]}, {"id": 1})]
+            user_ids = list({*id_candidates, *name_candidates})
+            if user_ids:
+                query["source_user_id"] = {"$in": user_ids}
+            else:
+                # No matches -> empty result quickly
+                return {"entries": [], "total_count": 0, "page": page, "limit": limit, "total_pages": 0}
+        
+        # Sorting
+        sort_field = {
+            "date": "created_at",
+            "amount": "amount",
+            "source": "source_user_id"
+        }.get(sort_by, "created_at")
+        sort_dir = -1 if sort_order == "desc" else 1
+        
         skip = (page - 1) * limit
         
-        # Get profit entries
-        entries = await db.profit_entries.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+        # Query
+        entries = await db.profit_entries.find(query).sort(sort_field, sort_dir).skip(skip).limit(limit).to_list(limit)
         
-        # Get user info for each entry and clean ObjectIds
         for entry in entries:
-            # Convert ObjectId to string if present
             if "_id" in entry:
                 entry["_id"] = str(entry["_id"])
-            
-            user = await db.users.find_one({"id": entry["source_user_id"]})
+            user = await db.users.find_one({"id": entry.get("source_user_id")})
             entry["source_user"] = {
-                "username": user["username"] if user else "Unknown",
-                "email": user["email"] if user else "Unknown"
+                "username": user.get("username", "Unknown") if user else "Unknown",
+                "email": user.get("email", "Unknown") if user else "Unknown"
             }
         
-        # Get total count
         total_count = await db.profit_entries.count_documents(query)
         
         return {
@@ -11841,13 +11891,9 @@ async def get_profit_entries(
             "limit": limit,
             "total_pages": (total_count + limit - 1) // limit
         }
-        
     except Exception as e:
         logger.error(f"Error fetching profit entries: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to fetch profit entries"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch profit entries")
 
 @api_router.get("/admin/profit/commission-settings", response_model=dict)
 async def get_commission_settings(current_admin: User = Depends(get_current_admin)):
