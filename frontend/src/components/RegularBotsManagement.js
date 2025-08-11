@@ -21,6 +21,7 @@ const RegularBotsManagement = () => {
     most_active: []
   });
   const [botsList, setBotsList] = useState([]);
+  const [cycleSumsByBot, setCycleSumsByBot] = useState({}); // { [botId]: { total_sum, active_pool, draws_sum, profit, wins_sum, losses_sum } }
   const [botSettings, setBotSettings] = useState({
     max_active_bets_regular: 5000000000,
     max_active_bets_human: 300000000
