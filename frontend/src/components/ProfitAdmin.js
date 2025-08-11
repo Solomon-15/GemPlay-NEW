@@ -471,7 +471,7 @@ const ProfitAdmin = ({ user }) => {
       ...entries.map(entry => [
         formatDateWithOffset(entry.created_at, user?.timezone_offset || 0).split(' ')[0],
         formatTimeWithOffset(entry.created_at, user?.timezone_offset || 0).split(' ')[1] || '',
-        `"${getEntryTypeName(entry.type)}"`,
+        `"${getEntryTypeName(entry.entry_type || entry.type)}"`,
         entry.amount.toFixed(2),
         `"${entry.source || '—'}"`,
         entry.source_user_id || entry.bot_id || '—',
