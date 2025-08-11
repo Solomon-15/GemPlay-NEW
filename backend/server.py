@@ -5945,7 +5945,7 @@ async def create_game(
                     detail=f"Insufficient {gem_type} gems. Available: {available_quantity}, Required: {quantity}"
                 )
         
-        # Check if user has enough balance for commission (3% of bet amount)
+        # Check if user has enough balance for commission (configured bet_commission_rate)
         commission_rate = await get_bet_commission_rate_fraction()
         commission_required = round_money(total_bet_amount * commission_rate)
         user = await db.users.find_one({"id": current_user.id})
