@@ -9115,7 +9115,8 @@ async def leave_game(game_id: str, current_user: User = Depends(get_current_user
         # **FIX: Handle creator's commission during bet recreation**
         creator_commission_returned = 0.0
         if not game_obj.is_regular_bot_game:
-            creator_commission_returned = game_obj.bet_amount * 0.03
+            commission_rate = await get_bet_commission_rate_fraction()
+            creator_commission_returned = round_money(game_obj.bet_amount * commission_rate)
             
             # Return creator's frozen commission
             await db.users.update_one(
