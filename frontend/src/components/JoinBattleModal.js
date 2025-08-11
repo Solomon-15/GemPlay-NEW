@@ -29,6 +29,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const [selectedGems, setSelectedGems] = useState({});
   const [selectedMove, setSelectedMove] = useState('');
   const [battleResult, setBattleResult] = useState(null);
+  const [resultPending, setResultPending] = useState(false);
   const [hasJoinedGame, setHasJoinedGame] = useState(false); // Отслеживаем, присоединился ли игрок
 
   // Блокировка управления на шаге результата (2 секунды)
