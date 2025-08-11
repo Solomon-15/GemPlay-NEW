@@ -2278,19 +2278,8 @@ async def check_and_complete_bot_cycle(bot_id: str):
             
             # Переводим прибыль в "Доход от ботов" если она положительная
             if cycle_profit > 0:
-                profit_entry = {
-                    "id": str(uuid.uuid4()),
-                    "entry_type": "REGULAR_BOT_CYCLE_PROFIT",
-                    "amount": cycle_profit,
-                    "source_user_id": bot_id,
-                    "description": f"Прибыль от цикла #{completed_cycles + 1} обычного бота {bot_doc.get('name', 'Bot')}",
-                    "reference_id": f"bot_cycle_{bot_id}_{completed_cycles + 1}",
-                    "created_at": datetime.utcnow(),
-                    "status": "CONFIRMED"
-                }
-                
-                await db.profit_entries.insert_one(profit_entry)
-                logger.info(f"💰 Transferred ${cycle_profit:.2f} profit from bot {bot_doc.get('name', 'Bot')} to profit pool")
+                # Legacy REGULAR_BOT_CYCLE_PROFIT disabled. BOT_REVENUE is recorded in complete_bot_cycle().
+                logger.info(f"💰 Cycle profit calculated ${cycle_profit:.2f} for bot {bot_doc.get('name', 'Bot')} (will be recorded as BOT_REVENUE on cycle accumulator completion)")
             
             # Обновляем бота в базе данных
             await db.bots.update_one({"id": bot_id}, {"$set": update_data})
