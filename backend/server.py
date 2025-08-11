@@ -11814,6 +11814,7 @@ async def get_profit_entries(
     entry_type_alt: Optional[str] = Query(None, alias="entry_type"),  # also accept 'entry_type'
     entry_status: Optional[str] = None,
     reference_id: Optional[str] = None,
+    reference_contains: Optional[str] = Query(None, alias="reference_id_contains"),
     date_from: Optional[str] = None,
     date_to: Optional[str] = None,
     amount_min: Optional[float] = None,
