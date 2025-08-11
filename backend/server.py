@@ -14944,7 +14944,8 @@ async def cancel_stuck_game(game_id: str):
             )
         
         # Return creator's commission
-        commission = game_obj.bet_amount * 0.03
+        commission_rate = await get_bet_commission_rate_fraction()
+        commission = round_money(game_obj.bet_amount * commission_rate)
         await db.users.update_one(
             {"id": game_obj.creator_id},
             {
