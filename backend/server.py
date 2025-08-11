@@ -5019,7 +5019,7 @@ async def gift_gems(
     if sender["virtual_balance"] < commission:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Insufficient balance for gift commission (3%)"
+            detail=f"Insufficient balance for gift commission ({int((await get_gift_commission_rate_fraction())*100)}%)"
         )
     
     # Deduct commission from sender
