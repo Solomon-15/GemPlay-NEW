@@ -61,7 +61,9 @@ const MyBets = ({ user, onUpdateUser }) => {
 
         // Update stats
         const statsData = response.data.stats;
-        const commission = statsData.total_winnings * 0.03; // 3% commission
+        const settingsRes = await axios.get(`${API}/admin/profit/commission-settings`, { headers: { Authorization: `Bearer ${token}` } });
+        const betRate = (settingsRes.data?.bet_commission_rate ?? 3.0) / 100.0;
+        const commission = statsData.total_winnings * betRate; // dynamic commission
         const netProfit = statsData.total_winnings - statsData.total_losses - commission;
         
         setStats({
