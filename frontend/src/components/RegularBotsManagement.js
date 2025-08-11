@@ -2140,21 +2140,28 @@ const RegularBotsManagement = () => {
                       {(() => {
                         // Фактический ROI: берём из модалки "Детали цикла" (sums.roi_active)
                         const sums = cycleSumsByBot[bot.id];
-                        const roiActual = (sums && typeof sums.roi_active === 'number') ? Number(sums.roi_active) : 0;
-                        const actualColor = roiActual < 0 ? 'text-red-400' : 'text-white';
+                        const roiActualVal = (sums && Number.isFinite(Number(sums.roi_active))) ? Number(sums.roi_active) : NaN;
+                        const actualColor = Number.isFinite(roiActualVal) && roiActualVal < 0 ? 'text-red-400' : 'text-white';
                         
-                        // Плановый ROI: нижняя строка
+                        // Плановый ROI: считаем как на бэке (avgBet, round/floor/ceil)
                         const roiPlanned = (() => {
                           const winPct = Number(bot.wins_percentage ?? 0);
                           const lossPct = Number(bot.losses_percentage ?? 0);
-                          const denom = winPct + lossPct; // ничьи не входят в базу ROI
-                          if (denom <= 0) return 0.0;
-                          const roi = ((winPct - lossPct) / denom) * 100.0;
+                          const cycleGames = Number(bot.cycle_games ?? 12) || 12;
+                          const minBet = Number(bot.min_bet_amount ?? 1) || 1;
+                          const maxBet = Number(bot.max_bet_amount ?? 50) || 50;
+                          const avgBet = (minBet + maxBet) / 2.0;
+                          const totalEst = Math.round(avgBet * cycleGames);
+                          const winsSumPlanned = Math.floor(totalEst * winPct / 100.0);
+                          const lossesSumPlanned = Math.ceil(totalEst * lossPct / 100.0);
+                          const activePoolPlanned = winsSumPlanned + lossesSumPlanned;
+                          const profitPlanned = winsSumPlanned - lossesSumPlanned;
+                          const roi = activePoolPlanned > 0 ? (profitPlanned / activePoolPlanned) * 100.0 : 0.0;
                           return roi;
                         })();
                         
-                        const hasActual = Number.isFinite(roiActual);
-                        const displayActual = hasActual ? roiActual.toFixed(2) + '%' : '—';
+                        const hasActual = Number.isFinite(roiActualVal);
+                        const displayActual = hasActual ? roiActualVal.toFixed(2) + '%' : '—';
                         const displayClass = hasActual ? actualColor : 'text-gray-400';
                         return (
                           <div className="flex flex-col items-center justify-center leading-tight">
