@@ -2188,6 +2188,7 @@ async def calculate_bot_game_outcome(bot_id: str, game_value: float) -> str:
         logger.error(f"Error in calculate_bot_game_outcome for bot {bot_id}: {e}")
         return "LOSS"  # По умолчанию проигрыш при ошибке
 
+# DEPRECATED: replaced by bot_profit_accumulators
 async def update_bot_cycle_stats(bot_id: str, outcome: str, game_value: float):
     """
     Обновляет статистику цикла бота после завершения игры.
