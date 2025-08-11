@@ -5097,7 +5097,7 @@ async def gift_gems(
         amount=commission,
         source_user_id=current_user.id,
         reference_id=recipient["id"],
-        description=f"3% commission from gift: {quantity} {gem_type} gems to {recipient['username']}"
+        description=f"{int((await get_gift_commission_rate_fraction())*100)}% commission from gift: {quantity} {gem_type} gems to {recipient['username']}"
     )
     await db.profit_entries.insert_one(profit_entry.dict())
     
