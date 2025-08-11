@@ -9351,7 +9351,8 @@ async def reset_all_games(current_admin: User = Depends(get_current_admin)):
             
             # If game has opponent, unfreeze their funds too
             if game_obj.opponent_id:
-                opponent_commission = game_obj.bet_amount * 0.03
+                commission_rate = await get_bet_commission_rate_fraction()
+                opponent_commission = round_money(game_obj.bet_amount * commission_rate)
                 await db.users.update_one(
                     {"id": game_obj.opponent_id},
                     {
