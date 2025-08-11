@@ -2158,15 +2158,7 @@ const RegularBotsManagement = () => {
                         {bot.is_active ? 'Активен' : 'Отключен'}
                       </span>
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-center">
-                      <button
-                        onClick={() => handleActiveBetsModal(bot)}
-                        className="text-blue-400 hover:text-blue-300 underline font-roboto text-sm cursor-pointer"
-                        title="Показать активные ставки"
-                      >
-                        {bot.remaining_slots ?? Math.max(0, (bot.cycle_games || 16) - ((bot.current_cycle_wins || 0) + (bot.current_cycle_losses || 0) + (bot.current_cycle_draws || 0)))}
-                      </button>
-                    </td>
+
                     <td className="px-4 py-4 whitespace-nowrap text-left">
                       <div className="text-white font-roboto text-xs space-y-1">
                         <div>Игры: {bot.completed_cycles || 0}</div>
