@@ -7451,7 +7451,9 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         reference_id=game.id,
                         description=f"{(await get_bet_commission_rate_fraction())*100:.1f}% commission from PvP game winner (${game.bet_amount} bet)"
                     )
-                    await db.profit_entries.insert_one(profit_entry.dict())
+                    profit_entry_dict = profit_entry.dict()
+                    profit_entry_dict["status"] = "CONFIRMED"
+                    await db.profit_entries.insert_one(profit_entry_dict)
                     
                     # Update Human-bot total commission if winner is a Human-bot
                     if is_winner_human_bot:
