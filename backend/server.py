@@ -16535,18 +16535,12 @@ async def get_regular_bots_list(
             try:
                 wins_pct = float(bot_doc.get("wins_percentage", 44.0) or 44.0)
                 losses_pct = float(bot_doc.get("losses_percentage", 36.0) or 36.0)
+                draws_pct = float(bot_doc.get("draws_percentage", 20.0) or 20.0)
                 cycle_games_val = int(bot_doc.get("cycle_games", 12) or 12)
                 min_bet_val = float(bot_doc.get("min_bet_amount", 1.0) or 1.0)
                 max_bet_val = float(bot_doc.get("max_bet_amount", 50.0) or 50.0)
-                # Калькулятор-эквивалент: целочисленные min/max и точная сумма цикла
-                min_bet_int = int(round(min_bet_val))
-                max_bet_int = int(round(max_bet_val))
-                exact_cycle_total_val = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games_val))
-                wins_sum_planned_val = math.floor(exact_cycle_total_val * wins_pct / 100.0)
-                losses_sum_planned_val = math.ceil(exact_cycle_total_val * losses_pct / 100.0)
-                active_pool_planned_val = wins_sum_planned_val + losses_sum_planned_val
-                profit_planned_val = wins_sum_planned_val - losses_sum_planned_val
-                roi_planned_percent_val = round(((profit_planned_val / active_pool_planned_val) * 100.0), 2) if active_pool_planned_val > 0 else 0.0
+                roi_planned_percent_val = compute_planned_roi_percent(min_bet_val, max_bet_val, cycle_games_val,
+                                                                       wins_pct, losses_pct, draws_pct)
             except Exception:
                 roi_planned_percent_val = 0.0
             
