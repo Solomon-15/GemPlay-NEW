@@ -7097,8 +7097,9 @@ async def determine_game_winner(game_id: str) -> dict:
                     winner_id, result_status = None, "draw"
                 
                 # Обновляем статистику цикла бота ровно с тем исходом, который применили
-                await update_bot_cycle_stats(bot_id, outcome_upper, game_obj.bet_amount)
-                logger.info(f"🎯 Regular bot {bot_id} game result: {outcome_upper} (bet: ${game_obj.bet_amount})")
+                # Sync simplified to accumulators only
+                await accumulate_bot_profit(game_obj, winner_id)
+                logger.info(f"🎯 Regular bot {bot_id} game result: {outcome_upper} (bet: ${game_obj.bet_amount}) [accumulator updated]")
             else:
                 # Fallback к обычной логике если не найден бот
                 winner_id, result_status = determine_rps_winner(game_obj.creator_move, game_obj.opponent_move, game_obj.creator_id, game_obj.opponent_id)
