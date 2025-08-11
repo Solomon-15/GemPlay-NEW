@@ -19894,7 +19894,7 @@ async def generate_notification_content(notification_type: NotificationTypeEnum,
             "emoji_map": {"won": "🏆", "lost": "💔", "draw": "🤝"},
             "title": "Match Result",
             "message_map": {
-                "won": "You won against {opponent_name}! Received: {total_gems:.0f} Gems (3% commission: ${commission:.2f})",
+                "won": "You won against {opponent_name}! Received: {total_gems:.0f} Gems ({commission_rate}% commission: ${commission:.2f})",
                 "lost": "You lost against {opponent_name}. Lost: {amount_lost:.0f} Gems",
                 "draw": "Draw against {opponent_name}. Bet returned: {amount:.0f} Gems"
             }
