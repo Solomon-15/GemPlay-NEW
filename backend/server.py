@@ -9005,7 +9005,8 @@ async def cancel_game(game_id: str, current_user: User = Depends(get_current_use
                 }
             )
         
-        commission_to_return = game_obj.bet_amount * 0.03
+        commission_rate = await get_bet_commission_rate_fraction()
+        commission_to_return = round_money(game_obj.bet_amount * commission_rate)
         
         await db.users.update_one(
             {"id": current_user.id},
