@@ -9697,7 +9697,7 @@ async def get_game_history(
                 "bet_gems": game["bet_gems"],
                 "status": game["status"],
                 "result": result,
-                "winnings": game["bet_amount"] * 1.94 if result == "won" else 0,
+                "winnings": round_money(game["bet_amount"] * (2 - (await get_bet_commission_rate_fraction()))) if result == "won" else 0,
                 "created_at": game["created_at"],
                 "completed_at": game.get("completed_at", game["created_at"]),
                 "game_duration": 120  # Mock duration in seconds
