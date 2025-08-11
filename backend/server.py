@@ -9089,7 +9089,8 @@ async def leave_game(game_id: str, current_user: User = Depends(get_current_user
         # Return opponent's commission (only if not a regular bot game)
         commission_to_return = 0.0
         if not game_obj.is_regular_bot_game:
-            commission_to_return = game_obj.bet_amount * 0.03
+            commission_rate = await get_bet_commission_rate_fraction()
+            commission_to_return = round_money(game_obj.bet_amount * commission_rate)
             
             # Return commission from frozen_balance to virtual_balance
             await db.users.update_one(
