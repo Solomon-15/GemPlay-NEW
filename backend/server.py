@@ -16707,6 +16707,7 @@ async def get_regular_bots_list(
                 "cycle_progress": cycle_progress,
                 "remaining_slots": remaining_slots,
                 "current_profit": current_profit,
+                "roi_planned_percent": roi_planned_out,
                 
                 # НОВАЯ ФОРМУЛА 2.0: СУММА ЦИКЛА = точная сумма всех ставок (включая ничьи)
                 "cycle_total_amount": total_bet_sum,
