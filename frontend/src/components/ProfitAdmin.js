@@ -117,7 +117,10 @@ const ProfitAdmin = ({ user }) => {
       if (playerFilter) params.append('player_filter', playerFilter);
       if (amountFilter.min) params.append('amount_min', amountFilter.min);
       if (amountFilter.max) params.append('amount_max', amountFilter.max);
-      if (transactionIdFilter) params.append('reference_id', transactionIdFilter);
+      if (transactionIdFilter) {
+        // отправляем и точный, и contains — бэк примет contains как приоритетный
+        params.append('reference_id_contains', transactionIdFilter);
+      }
       if (entryStatusFilter) params.append('entry_status', entryStatusFilter);
 
       const response = await axios.get(`${API}/admin/profit/entries?${params}`, {
