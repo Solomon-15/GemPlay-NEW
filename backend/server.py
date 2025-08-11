@@ -19933,6 +19933,12 @@ async def generate_notification_content(notification_type: NotificationTypeEnum,
     # Format message with payload data
     try:
         payload_dict = payload.model_dump() if payload else {}
+        # Inject commission_rate (%) into template context if available via payload.commission
+        try:
+            bet_rate = await get_bet_commission_rate_fraction()
+            payload_dict["commission_rate"] = int(bet_rate * 100)
+        except Exception:
+            payload_dict["commission_rate"] = 3
         message = message_template.format(**{k: v for k, v in payload_dict.items() if v is not None})
     except (KeyError, ValueError) as e:
         logger.warning(f"Error formatting notification message: {e}")
