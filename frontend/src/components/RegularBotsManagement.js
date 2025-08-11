@@ -1254,6 +1254,41 @@ const RegularBotsManagement = () => {
       };
       setCycleData(patched);
       setIsCycleModalOpen(true);
+
+      // Дополнительно подгружаем реальные ставки текущего цикла
+      try {
+        const cycleBetsResp = await axios.get(`${API}/admin/bots/${bot.id}/cycle-bets`, getApiConfig());
+        const sums = cycleBetsResp.data?.sums || {};
+        const bets = Array.isArray(cycleBetsResp.data?.bets) ? cycleBetsResp.data.bets : [];
+
+        const mappedGames = bets.map(b => ({
+          game_id: b.id || 'N/A',
+          created_at: b.created_at,
+          completed_at: b.completed_at || b.created_at,
+          bet_amount: Number(b.bet_amount || 0),
+          bet_gems: b.bet_gems || {},
+          creator_move: b.creator_move,
+          opponent_move: b.opponent_move,
+          opponent: b.opponent_name || 'N/A',
+          opponent_role: b.opponent_role || 'USER',
+          winner: b.result === 'win' ? 'Победа' : b.result === 'loss' ? 'Поражение' : (b.result === 'draw' ? 'Ничья' : '—')
+        }));
+
+        setCycleData(prev => ({
+          ...(prev || {}),
+          games: mappedGames,
+          cycle_stats: {
+            ...(prev?.cycle_stats || {}),
+            total_bet_amount: Number(sums.total_sum || 0),
+            total_winnings: Number((sums.wins_sum || 0) * 2),
+            total_losses: Number(sums.losses_sum || 0),
+            net_profit: Number(sums.profit || 0),
+            win_rate: mappedGames.length > 0 ? Math.round((mappedGames.filter(g => g.winner === 'Победа').length / mappedGames.length) * 1000) / 10 : 0
+          }
+        }));
+      } catch (e) {
+        // Тихо игнорируем, если нет ставок
+      }
     } catch (error) {
       console.error('Ошибка загрузки истории цикла:', error);
       showErrorRU('Ошибка при загрузке истории цикла');
