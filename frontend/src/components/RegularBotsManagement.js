@@ -2136,18 +2136,16 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       {(() => {
-                        // Фактический ROI (как есть с бэка)
-                        const roiActual = (bot.bot_profit_percent !== undefined ? bot.bot_profit_percent : 0);
-                        const actualColor = roiActual < 0 ? 'text-red-400' : 'text-orange-400';
+                        // Фактический ROI: берём из модалки "Детали цикла" (sums.roi_active)
+                        const sums = cycleSumsByBot[bot.id];
+                        const roiActual = (sums && typeof sums.roi_active === 'number') ? Number(sums.roi_active) : 0;
+                        const actualColor = roiActual < 0 ? 'text-red-400' : 'text-white';
                         
-                        // Плановый ROI: всегда показываем нижней строкой
-                        // Нижняя строка: индивидуальный плановый ROI по конфигурации бота
-                        // Плановый ROI берём только из wins_percentage/losses_percentage/draws_percentage
+                        // Плановый ROI: нижняя строка
                         const roiPlanned = (() => {
                           const winPct = Number(bot.wins_percentage ?? 0);
                           const lossPct = Number(bot.losses_percentage ?? 0);
-                          const drawPct = Number(bot.draws_percentage ?? 0);
-                          const denom = winPct + lossPct;
+                          const denom = winPct + lossPct; // ничьи не входят в базу ROI
                           if (denom <= 0) return 0.0;
                           const roi = ((winPct - lossPct) / denom) * 100.0;
                           return roi;
@@ -2156,7 +2154,7 @@ const RegularBotsManagement = () => {
                         return (
                           <div className="flex flex-col items-center justify-center leading-tight">
                             <span className={`${actualColor} font-roboto text-sm font-bold`} title="Фактический ROI">
-                              {Number(roiActual).toFixed(2)}%
+                              {roiActual.toFixed(2)}%
                             </span>
                             <span className={`text-xs text-gray-400`} title="Плановый ROI">
                               {Number(roiPlanned).toFixed(2)}%
