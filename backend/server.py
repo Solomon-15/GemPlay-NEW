@@ -13757,7 +13757,8 @@ async def cancel_any_bet(
                         gems_returned[gem_type] = gems_returned.get(gem_type, 0) + quantity
             
             # Return commission to both players
-            commission_amount = bet_amount * 0.03
+            commission_rate = await get_bet_commission_rate_fraction()
+            commission_amount = round_money(bet_amount * commission_rate)
             
             # Return to creator
             creator_user = await db.users.find_one({"id": creator_id})
