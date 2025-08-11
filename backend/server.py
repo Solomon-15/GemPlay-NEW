@@ -5011,7 +5011,8 @@ async def gift_gems(
     
     # Calculate commission based on admin settings (gift_commission_rate)
     gem_value = gem_def["price"] * quantity
-    commission = gem_value * 0.03
+    commission_rate = await get_gift_commission_rate_fraction()
+    commission = round_money(gem_value * commission_rate)
     
     # Check if sender has enough balance for commission
     sender = await db.users.find_one({"id": current_user.id})
