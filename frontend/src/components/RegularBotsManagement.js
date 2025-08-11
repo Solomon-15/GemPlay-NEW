@@ -2216,7 +2216,7 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-accent-primary font-roboto text-sm">
                         {(() => {
-                          const sums = cycleSumsByBot[bot.id] || bot.cycle_total_info;
+                          const sums = cycleSumsByBot[bot.id];
                           if (sums) {
                             const total = Number(sums.total_sum || 0);
                             const from = Number((sums.active_pool !== undefined ? sums.active_pool : (Number(sums.wins_sum || 0) + Number(sums.losses_sum || 0))));
