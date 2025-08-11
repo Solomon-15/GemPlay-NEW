@@ -1102,6 +1102,20 @@ const RegularBotsManagement = () => {
       };
 
       setCycleDetailsData(details);
+      // Кэшируем суммы цикла для списка по ID бота
+      if (details?.sums) {
+        setCycleSumsByBot(prev => ({
+          ...prev,
+          [bot.id]: {
+            total_sum: Number(details.sums.total_sum || 0),
+            active_pool: Number(details.sums.active_pool || 0),
+            draws_sum: Number(details.sums.draws_sum || 0),
+            wins_sum: Number(details.sums.wins_sum || 0),
+            losses_sum: Number(details.sums.losses_sum || 0),
+            profit: Number(details.sums.profit || 0)
+          }
+        }));
+      }
       setIsCycleDetailsModalOpen(true);
     } catch (error) {
       console.error('Ошибка загрузки деталей цикла:', error);
