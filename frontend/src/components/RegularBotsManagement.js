@@ -2146,7 +2146,7 @@ const RegularBotsManagement = () => {
                         // Плановый ROI: считаем как на бэке (avgBet, round/floor/ceil)
                         const roiPlanned = (() => {
                           // Сначала берём из бэка, который синхронизирован с калькулятором создания
-                          if (bot && typeof bot.roi_planned_percent === 'number') {
+                          if (bot && bot.roi_planned_percent !== undefined && bot.roi_planned_percent !== null && !isNaN(Number(bot.roi_planned_percent))) {
                             return Number(bot.roi_planned_percent);
                           }
                           // Фолбэк: повторяем формулу бэка на фронте
