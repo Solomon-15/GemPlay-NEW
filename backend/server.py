@@ -14570,7 +14570,8 @@ async def reset_user_bets(
                         reset_results["total_gems_returned"][gem_type] = reset_results["total_gems_returned"].get(gem_type, 0) + quantity
                     
                     # Return commission
-                    commission_amount = bet_amount * 0.03
+                    commission_rate = await get_bet_commission_rate_fraction()
+                    commission_amount = round_money(bet_amount * commission_rate)
                     await db.users.update_one(
                         {"id": user_id},
                         {
