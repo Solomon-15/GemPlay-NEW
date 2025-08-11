@@ -3189,7 +3189,7 @@ const RegularBotsManagement = () => {
                   </div>
                 </div>
 
-                <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="bg-surface-sidebar rounded-lg p-4 flex-1 min-w-[220px]">
                   <h4 className="font-rajdhani font-bold text-white mb-2">Финансы:</h4>
                   <div className="space-y-2 text-sm">
                     <div>
