@@ -11826,8 +11826,10 @@ async def get_profit_entries(
     """Get profit entries with pagination and filters."""
     try:
         query = {}
-        if entry_type:
-            query["entry_type"] = entry_type
+        # Determine effective entry_type (support both 'type' and 'entry_type')
+        effective_entry_type = entry_type or entry_type_alt
+        if effective_entry_type:
+            query["entry_type"] = effective_entry_type
         if reference_id:
             query["reference_id"] = reference_id
         
