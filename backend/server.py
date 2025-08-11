@@ -6270,7 +6270,8 @@ async def handle_game_timeout(game_id: str):
             
             # **FIX: Return creator's commission before recreating bet**
             if not is_regular_bot_game:
-                creator_commission = game_obj.bet_amount * 0.03
+                commission_rate = await get_bet_commission_rate_fraction()
+                creator_commission = round_money(game_obj.bet_amount * commission_rate)
                 await db.users.update_one(
                     {"id": game_obj.creator_id},
                     {
