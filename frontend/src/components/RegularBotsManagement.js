@@ -1284,7 +1284,7 @@ const RegularBotsManagement = () => {
           games: mappedGames,
           cycle_info: {
             ...(prev?.cycle_info || {}),
-            completed_games: mappedGames.length,
+            completed_games: (winsCountNow + lossesCountNow + drawsCountNow),
             current_wins: winsCountNow,
             current_losses: lossesCountNow,
             draws: drawsCountNow,
