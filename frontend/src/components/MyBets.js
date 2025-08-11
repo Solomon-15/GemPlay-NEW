@@ -728,7 +728,7 @@ const MyBets = ({ user, onUpdateUser }) => {
                 {selectedBet.status === 'COMPLETED' && selectedBet.commission !== undefined && (
                   <div className="bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-3">
                     <label className="block text-text-secondary text-sm mb-1">Commission</label>
-                    <div className="text-text-secondary font-rajdhani font-bold">${(selectedBet.commission || selectedBet.bet_amount * 0.03).toFixed(2)}</div>
+                    <div className="text-text-secondary font-rajdhani font-bold">${(selectedBet.commission ?? 0).toFixed(2)}</div>
                   </div>
                 )}
 
