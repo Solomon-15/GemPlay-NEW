@@ -11833,6 +11833,8 @@ async def get_profit_entries(
             query["entry_type"] = effective_entry_type
         if reference_id:
             query["reference_id"] = reference_id
+        if reference_contains:
+            query["reference_id"] = {"$regex": reference_contains, "$options": "i"}
         
         # Amount range
         amount_filter = {}
