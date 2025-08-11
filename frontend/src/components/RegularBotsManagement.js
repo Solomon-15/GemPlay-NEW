@@ -1494,7 +1494,7 @@ const RegularBotsManagement = () => {
       {/* Статистика активных ставок */}
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
         <h3 className="text-lg font-rajdhani font-bold text-white mb-3">Оставшиеся ставки обычных ботов</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="flex gap-4 flex-nowrap items-stretch">
           <div className="bg-surface-sidebar rounded-lg p-3">
             <div className="text-text-secondary text-sm">Оставшиеся ставки</div>
             <div className="text-white text-xl font-rajdhani font-bold">
