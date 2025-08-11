@@ -15635,6 +15635,21 @@ async def create_regular_bots(
         
         await db.bots.insert_one(bot.dict())
         created_bots.append(bot.id)
+
+        # Синхронизированный расчёт планового ROI при создании
+        try:
+            avg_bet = (min_bet + max_bet) / 2.0
+            total_est = round(avg_bet * cycle_games)
+            wins_sum_planned = math.floor(total_est * (wins_percentage or 0) / 100.0)
+            losses_sum_planned = math.ceil(total_est * (losses_percentage or 0) / 100.0)
+            active_pool_planned = wins_sum_planned + losses_sum_planned
+            profit_planned = wins_sum_planned - losses_sum_planned
+            roi_planned_percent = round(((profit_planned / active_pool_planned) * 100.0), 2) if active_pool_planned > 0 else 0.0
+            await db.bots.update_one({"id": bot.id}, {"$set": {
+                "roi_planned_percent": roi_planned_percent
+            }})
+        except Exception as _:
+            pass
         
         # ВАЖНО: Удаляем создание начальных ставок здесь
         # Ставки будут создаваться последовательно с задержкой через новую логику
