@@ -2130,8 +2130,8 @@ const RegularBotsManagement = () => {
                           onClick={() => handleCycleHistoryModal(bot)}
                           className="text-blue-400 hover:text-blue-300 cursor-pointer underline"
                           title="Показать историю циклов"
-                        >
-                          Общая Прибыль: ${Math.round(bot.total_net_profit || bot.bot_profit_amount || 0)}
+>
+                          Общая Прибыль: ${Math.round(bot.total_net_profit || 0)}
                         </button>
                       </div>
                     </td>
