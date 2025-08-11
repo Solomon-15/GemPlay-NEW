@@ -16449,6 +16449,56 @@ async def get_regular_bots_simple(
             detail="Failed to fetch regular bots"
         )
 
+# --- ROI PLANNING CALCULATOR (SAME AS CREATION CALCULATOR) ---
+# Используем точную сумму цикла и метод наибольших остатков для распределения W/L/D
+# Возвращает ROI_planned в процентах с точностью до двух знаков
+
+def compute_planned_roi_percent(min_bet: float, max_bet: float, cycle_games: int,
+                                wins_percentage: float, losses_percentage: float, draws_percentage: float) -> float:
+    try:
+        min_bet_int = int(round(min_bet or 0))
+        max_bet_int = int(round(max_bet or 0))
+        games = int(cycle_games or 0)
+        if games <= 0:
+            return 0.0
+        # Точная сумма цикла
+        exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * games))
+        if exact_cycle_total <= 0:
+            return 0.0
+        # Сырые доли по %, затем метод наибольших остатков, чтобы суммы сошлись ровно
+        raw_w = exact_cycle_total * float(wins_percentage or 0) / 100.0
+        raw_l = exact_cycle_total * float(losses_percentage or 0) / 100.0
+        raw_d = exact_cycle_total * float(draws_percentage or 0) / 100.0
+        floors = [math.floor(raw_w), math.floor(raw_l), math.floor(raw_d)]
+        remainders = [raw_w - floors[0], raw_l - floors[1], raw_d - floors[2]]
+        sum_floors = sum(floors)
+        diff = exact_cycle_total - sum_floors
+        allocation = floors[:]
+        if diff != 0:
+            order = sorted(range(3), key=lambda i: remainders[i], reverse=(diff > 0))
+            step = 1 if diff > 0 else -1
+            for i in range(abs(diff)):
+                idx = order[i % 3]
+                allocation[idx] += step
+                if allocation[idx] < 0:
+                    allocation[idx] = 0
+        wins_sum, losses_sum, draws_sum = map(int, allocation)
+        # Защитная корректировка (на случай редких краёв)
+        adjust = exact_cycle_total - (wins_sum + losses_sum + draws_sum)
+        if adjust != 0:
+            order = sorted(range(3), key=lambda i: remainders[i], reverse=(adjust > 0))
+            for i in range(abs(adjust)):
+                idx = order[i % 3]
+                allocation[idx] += 1 if adjust > 0 else -1
+            wins_sum, losses_sum, draws_sum = map(int, allocation)
+        active_pool_planned = wins_sum + losses_sum
+        if active_pool_planned <= 0:
+            return 0.0
+        profit_planned = wins_sum - losses_sum
+        return round((profit_planned / active_pool_planned) * 100.0, 2)
+    except Exception:
+        return 0.0
+
 @api_router.get("/admin/bots/regular/list", response_model=dict)
 async def get_regular_bots_list(
     page: int = 1,
