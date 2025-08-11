@@ -12127,7 +12127,7 @@ async def get_total_revenue_breakdown(
         if start_date:
             query["created_at"] = {"$gte": start_date}
         
-        bet_commission_total = 0
+        bet_commission_total = 0.0
         bet_commission_entries = await db.profit_entries.find(query).to_list(None)
         bet_commission_count = len(bet_commission_entries)
         for entry in bet_commission_entries:
