@@ -75,7 +75,7 @@ const History = ({ user }) => {
         },
         status: 'COMPLETED',
         result: outcome,
-        winnings: outcome === 'won' ? betAmount * 1.94 : 0, // 3% commission
+        winnings: outcome === 'won' ? betAmount * (2 - (3.0/100)) : 0, // dynamic commission in mock
         created_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
         completed_at: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
         game_duration: Math.floor(Math.random() * 300) + 30 // 30 seconds to 5 minutes
