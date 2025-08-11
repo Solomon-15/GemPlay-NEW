@@ -2236,6 +2236,7 @@ async def schedule_draw_replacement_bet(bot_id: str, delay_seconds: int = 1):
     logger.info(f"skip schedule_draw_replacement_bet for bot {bot_id}: disabled by new draw logic")
     return
 
+# DEPRECATED: replaced by complete_bot_cycle via accumulators
 async def check_and_complete_bot_cycle(bot_id: str):
     """
     Проверяет завершение цикла бота и переводит прибыль в 'Доход от ботов'.
