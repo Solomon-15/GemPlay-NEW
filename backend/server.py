@@ -5483,55 +5483,69 @@ async def force_complete_bot_cycle(
 @api_router.get("/admin/bots/{bot_id}/cycle-bets", response_model=dict)
 async def get_bot_cycle_bets(
     bot_id: str,
+    cycle_number: int = Query(None),
     current_user: User = Depends(get_current_admin)
 ):
-    """Получить детальный разбор текущего цикла бота с ROI и разбивкой W/L/D."""
+    """Детальный разбор ставок цикла. Если передан cycle_number — вернём ставки конкретного завершённого цикла.
+    Иначе — текущий цикл (активные + последние завершённые)."""
     try:
         bot = await db.bots.find_one({"id": bot_id})
         if not bot:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Бот не найден"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Бот не найден")
         
         cycle_len = int(bot.get("cycle_games", 12) or 12)
         min_bet = int(round(float(bot.get("min_bet_amount", 1))))
         max_bet = int(round(float(bot.get("max_bet_amount", 100))))
         
-        # Забираем игры бота (активные + завершенные) для текущего цикла
-        active_games = await db.games.find({
-            "creator_id": bot_id,
-            "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
-        }).sort("created_at", -1).to_list(1000)
-        completed_games = await db.games.find({
-            "creator_id": bot_id,
-            "status": "COMPLETED"
-        }).sort("created_at", -1).to_list(1000)
+        games_for_cycle = []
+        if cycle_number:
+            # Исторический завершённый цикл: берём только COMPLETED игры и группируем блоками по cycle_len
+            completed_games = await db.games.find({
+                "creator_id": bot_id,
+                "status": "COMPLETED"
+            }).sort("created_at", -1).to_list(5000)
+            blocks = []
+            block = []
+            for g in completed_games:
+                block.append(g)
+                if len(block) == cycle_len:
+                    blocks.append(list(reversed(block)))  # внутри цикла старые → новые
+                    block = []
+            idx = int(cycle_number) - 1
+            if idx < 0 or idx >= len(blocks):
+                raise HTTPException(status_code=404, detail="Указанный цикл не найден")
+            games_for_cycle = blocks[idx]
+        else:
+            # Текущий цикл: активные + завершённые, последние cycle_len игр
+            active_games = await db.games.find({
+                "creator_id": bot_id,
+                "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
+            }).sort("created_at", -1).to_list(1000)
+            completed_games = await db.games.find({
+                "creator_id": bot_id,
+                "status": "COMPLETED"
+            }).sort("created_at", -1).to_list(1000)
+            combined = active_games + completed_games
+            combined_sorted = sorted(combined, key=lambda g: g.get("created_at"), reverse=True)
+            games_for_cycle = list(reversed(combined_sorted[:cycle_len]))
         
-        # Текущий цикл: последние cycle_len игр (активные в начале + самые свежие завершенные)
-        combined = active_games + completed_games
-        combined_sorted = sorted(combined, key=lambda g: g.get("created_at"), reverse=True)
-        current_cycle_games = combined_sorted[:cycle_len]
-        current_cycle_games = list(reversed(current_cycle_games))  # старые первыми
-        
-        # Формируем списки и посчитаем суммы по W/L/D
+        # Подробные ставки
         wins_list, losses_list, draws_list = [], [], []
         formatted_bets = []
-        for i, game in enumerate(current_cycle_games):
-            status_str = str(game.get("status", "waiting")).lower()
-            # Определяем result
-            if status_str == "completed":
-                if game.get("winner_id") == bot_id:
+        for i, game in enumerate(games_for_cycle):
+            status_str = str(game.get("status", "waiting")).upper()
+            winner_id = game.get("winner_id")
+            if status_str == "COMPLETED":
+                if winner_id == bot_id:
                     result = "win"
-                elif game.get("winner_id"):
+                elif winner_id:
                     result = "loss"
                 else:
                     result = "draw"
             else:
-                # Для активных игр пока нет результата — считаем их нейтральными (не попадут в W/L/D)
                 result = None
             
-            bet_amount = int(game.get("bet_amount", 0))
+            bet_amount = int(game.get("bet_amount", 0) or 0)
             if result == "win":
                 wins_list.append(bet_amount)
             elif result == "loss":
@@ -5539,14 +5553,50 @@ async def get_bot_cycle_bets(
             elif result == "draw":
                 draws_list.append(bet_amount)
             
+            # Оппонент
+            opponent_id = game.get("opponent_id")
+            opponent_name = "N/A"
+            opponent_role = "USER"
+            if opponent_id:
+                opponent_user = await db.users.find_one({"id": opponent_id})
+                if opponent_user:
+                    opponent_name = opponent_user.get("username", "User")
+                    opponent_role = opponent_user.get("role", "USER")
+                else:
+                    opponent_bot = await db.bots.find_one({"id": opponent_id})
+                    if opponent_bot:
+                        opponent_name = f"🤖 {opponent_bot.get('name', 'Bot')}"
+                        opponent_role = "BOT"
+            
+            # Время и длительность
+            created_at = game.get("created_at")
+            completed_at = game.get("completed_at", created_at)
+            try:
+                start_ts = created_at.timestamp() if hasattr(created_at, 'timestamp') else None
+                end_ts = completed_at.timestamp() if hasattr(completed_at, 'timestamp') else None
+                duration_sec = int(end_ts - start_ts) if (start_ts and end_ts and end_ts >= start_ts) else None
+            except Exception:
+                duration_sec = None
+            def fmt_duration(sec):
+                if sec is None:
+                    return "—"
+                h = sec // 3600
+                m = (sec % 3600) // 60
+                s = sec % 60
+                return f"{h:02d}:{m:02d}:{s:02d}" if h > 0 else f"{m:02d}:{s:02d}"
+            
             formatted_bets.append({
-                "position": i + 1,
-                "amount": bet_amount,
-                "gems": game.get("bet_gems", {}),
-                "status": status_str,
-                "result": result,
-                "created_at": game.get("created_at"),
-                "opponent": game.get("opponent_name", "Ожидание")
+                "index": i + 1,
+                "id": game.get("id", "N/A"),
+                "created_at": created_at.isoformat() if hasattr(created_at, 'isoformat') else str(created_at),
+                "duration": fmt_duration(duration_sec),
+                "bet_amount": bet_amount,
+                "bet_gems": game.get("bet_gems", {}),
+                "creator_move": str(game.get("creator_move", "-")).lower(),
+                "opponent_move": str(game.get("opponent_move", "-")).lower(),
+                "opponent_name": opponent_name,
+                "opponent_role": opponent_role,
+                "result": result or "pending"
             })
         
         wins_sum = int(sum(wins_list))
@@ -5556,11 +5606,9 @@ async def get_bot_cycle_bets(
         active_pool = wins_sum + losses_sum
         profit = wins_sum - losses_sum
         roi_active = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
-        
-        # Если по текущему циклу часть игр активна и sum < теоретической, добавим теоретические опоры
         exact_cycle_total = int(round(((min_bet + max_bet) / 2.0) * cycle_len))
         
-        response = {
+        return {
             "success": True,
             "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
             "cycle_length": cycle_len,
@@ -5578,25 +5626,16 @@ async def get_bot_cycle_bets(
                 "wins_count": len(wins_list),
                 "losses_count": len(losses_list),
                 "draws_count": len(draws_list),
-                "total_count": len(current_cycle_games)
-            },
-            "breakdown": {
-                "wins": wins_list,
-                "losses": losses_list,
-                "draws": draws_list
+                "total_count": len(games_for_cycle)
             },
             "bets": formatted_bets
         }
-        return response
         
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting cycle bets: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Ошибка при получении ставок цикла"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Ошибка при получении ставок цикла")
 
 @api_router.post("/admin/bots/create-extended", response_model=dict)
 async def create_extended_bot(
