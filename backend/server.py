@@ -9673,7 +9673,8 @@ async def get_game_history(
                 if game["winner_id"] == current_user.id:
                     result = "won"
                     stats["total_won"] += 1
-                    stats["total_winnings"] += game["bet_amount"] * 1.94  # After 3% commission
+                    bet_rate = await get_bet_commission_rate_fraction()
+                    stats["total_winnings"] += round_money(game["bet_amount"] * (2 - bet_rate))  # after commission
                 else:
                     result = "lost"
                     stats["total_lost"] += 1
