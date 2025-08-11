@@ -17994,144 +17994,64 @@ async def get_bot_cycle_history(
     bot_id: str,
     current_user: User = Depends(get_current_admin)
 ):
-    """Get detailed cycle history for a bot."""
+    """Возвращает только полностью завершённые циклы. Одна строка = один цикл."""
     try:
-        # Find the bot first
         bot = await db.bots.find_one({"id": bot_id})
         if not bot:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Bot not found"
-            )
-        
-        # Get bot's current cycle settings
-        cycle_length = bot.get("cycle_length", 12)
-        current_cycle_games = bot.get("current_cycle_games", 0)
-        current_cycle_wins = bot.get("current_cycle_wins", 0)
-        
-        # Get recent completed games for current cycle
-        # We'll fetch more games and then filter for current cycle
-        completed_games = await db.games.find({
+            raise HTTPException(status_code=404, detail="Bot not found")
+
+        cycle_games = int(bot.get("cycle_games", 12) or 12)
+        # Берём завершённые игры в обратном порядке времени
+        games = await db.games.find({
             "creator_id": bot_id,
             "status": "COMPLETED"
-        }).sort("created_at", -1).to_list(None)
-        
-        logger.info(f"Found {len(completed_games)} completed games for bot {bot_id}")
-        
-        # Filter games to get only current cycle games
-        # This is a simplified version - in reality we'd need to track cycle boundaries
-        cycle_games = completed_games[:cycle_length] if len(completed_games) >= cycle_length else completed_games
-        
-        # Calculate statistics
-        wins_count = 0
-        losses_count = 0
-        draws_count = 0
-        total_bet_amount = 0
-        total_winnings = 0
-        total_losses = 0
-        
-        for game_doc in cycle_games:
-            # ИСПРАВЛЕНИЕ: Правильно получаем сумму ставки
-            game_bet = float(game_doc.get("bet_amount", game_doc.get("total_bet_amount", 0)))
-            total_bet_amount += game_bet
-            
-            game_status = game_doc.get("winner_id")
-            if game_status == bot_id:
-                wins_count += 1
-                # Calculate winnings (approximation)
-                total_winnings += game_bet * 2  # Simplified calculation
-            elif game_status is None or game_status == "DRAW":
-                draws_count += 1
-                # При ничье ставка возвращается (нет потерь)
-            else:
-                losses_count += 1
-                total_losses += game_bet
-        
-        completed_cycle_games = wins_count + losses_count + draws_count
-        # ИСПРАВЛЕНИЕ: net_profit = выигрыши - общие ставки (не только проигрышные)
-        net_profit = total_winnings - total_bet_amount
-        win_percentage = (wins_count / max(completed_cycle_games, 1)) * 100 if completed_cycle_games > 0 else 0
-        
-        # Prepare detailed game data
-        game_details = []
-        for game_doc in cycle_games:
-            # Get opponent info
-            opponent_id = game_doc.get("opponent_id")
-            opponent_info = "Не найден"
-            if opponent_id:
-                opponent_user = await db.users.find_one({"id": opponent_id})
-                if opponent_user:
-                    opponent_info = opponent_user.get("username", "Unknown Player")
-                else:
-                    # Check if opponent is a bot
-                    opponent_bot = await db.bots.find_one({"id": opponent_id})
-                    if opponent_bot:
-                        opponent_info = f"🤖 {opponent_bot.get('name', 'Bot')}"
-            
-            # ИСПРАВЛЕНИЯ: Правильные поля и русская локализация
-            winner_id = game_doc.get("winner_id")
-            if winner_id == bot_id:
-                winner_text = "Победа" 
-                result_for_frontend = "Победа"
-            elif winner_id is None or winner_id == "DRAW":
-                winner_text = "Ничья"
-                result_for_frontend = "Ничья" 
-            else:
-                winner_text = "Поражение"
-                result_for_frontend = "Поражение"
+        }).sort("created_at", -1).to_list(5000)
 
-            # Получаем роль соперника
-            opponent_role = "USER"  # по умолчанию
-            if opponent_id:
-                opponent_user = await db.users.find_one({"id": opponent_id})
-                if opponent_user:
-                    opponent_role = opponent_user.get("role", "USER")
-            
-            game_details.append({
-                "id": str(game_doc.get("_id", "")),
-                "game_id": game_doc.get("id", ""),
-                "opponent": opponent_info,
-                "opponent_role": opponent_role,
-                "bet_amount": round(float(game_doc.get("bet_amount", game_doc.get("total_bet_amount", 0))), 2),
-                "bet_gems": game_doc.get("bet_gems", {}),
-                "creator_move": game_doc.get("creator_move", ""),
-                "opponent_move": game_doc.get("opponent_move", ""),
-                "winner": result_for_frontend,
-                "winnings": round(float(game_doc.get("bet_amount", game_doc.get("total_bet_amount", 0))) * 2, 2) if winner_id == bot_id else 0,
-                "created_at": game_doc.get("created_at", datetime.utcnow()).isoformat() if hasattr(game_doc.get("created_at", datetime.utcnow()), 'isoformat') else str(game_doc.get("created_at", datetime.utcnow())),
-                "completed_at": game_doc.get("completed_at", game_doc.get("created_at", datetime.utcnow())).isoformat() if hasattr(game_doc.get("completed_at", game_doc.get("created_at", datetime.utcnow())), 'isoformat') else str(game_doc.get("completed_at", game_doc.get("created_at", datetime.utcnow()))),
-                "status": game_doc.get("status", "COMPLETED")
+        # Группируем по блокам ровно по cycle_games, только если блок полностью завершён
+        completed_cycles = []
+        block = []
+        for g in games:
+            block.append(g)
+            if len(block) == cycle_games:
+                # все игры уже COMPLETED (по условию выборки)
+                # Записываем блок как завершённый цикл, но в хронологическом порядке (старые → новые внутри цикла)
+                completed_cycles.append(list(reversed(block)))
+                block = []
+
+        # Собираем статистику по каждому завершённому циклу
+        cycles_resp = []
+        for idx, cycle_list in enumerate(completed_cycles, start=1):
+            wins_sum = sum(int(x.get("bet_amount", 0) or 0) for x in cycle_list if x.get("winner_id") == bot_id)
+            losses_sum = sum(int(x.get("bet_amount", 0) or 0) for x in cycle_list if x.get("winner_id") not in (None, bot_id))
+            draws_sum = sum(int(x.get("bet_amount", 0) or 0) for x in cycle_list if x.get("winner_id") is None)
+            total_sum = wins_sum + losses_sum + draws_sum
+            active_pool = wins_sum + losses_sum
+            profit = wins_sum - losses_sum
+            roi_active = round((profit / active_pool) * 100, 2) if active_pool > 0 else 0.0
+
+            cycles_resp.append({
+                "id": f"{bot_id}:{idx}",
+                "cycle_number": idx,
+                "completed_at": cycle_list[-1].get("created_at"),
+                "duration": "—",
+                "total_games": len(cycle_list),
+                "wins": sum(1 for x in cycle_list if x.get("winner_id") == bot_id),
+                "losses": sum(1 for x in cycle_list if x.get("winner_id") not in (None, bot_id)),
+                "draws": sum(1 for x in cycle_list if x.get("winner_id") is None),
+                "total_bet": total_sum,
+                "total_winnings": wins_sum * 2,  # по правилам платформы выигрыш ≈ 2x ставка победы
+                "profit": profit,
+                "roi_active": roi_active,
+                "actions": {"open_cycle_details": True, "cycle_id": f"{bot_id}:{idx}"}
             })
-        
-        return {
-            "bot_id": bot_id,
-            "bot_name": bot.get("name", "Bot"),
-            "cycle_info": {
-                "cycle_length": cycle_length,
-                "completed_games": completed_cycle_games,
-                "current_wins": wins_count,
-                "current_losses": losses_count,
-                "draws": draws_count,
-                "progress": f"{completed_cycle_games}/{cycle_length}"
-            },
-            "cycle_stats": {
-                "total_bet_amount": round(total_bet_amount, 2),
-                "total_winnings": round(total_winnings, 2),
-                "total_losses": round(total_losses, 2),
-                "net_profit": round(net_profit, 2),
-                "win_percentage": round(win_percentage, 1)
-            },
-            "games": game_details  # Use processed game details instead of raw MongoDB docs
-        }
-        
+
+        return {"games": cycles_resp}
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error fetching bot cycle history: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching cycle history: {str(e)}"
-        )
+        logger.error(f"Error fetching cycle history: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch cycle history")
 
 @api_router.get("/admin/bots/{bot_id}/completed-cycles", response_model=dict)
 async def get_bot_completed_cycles(
