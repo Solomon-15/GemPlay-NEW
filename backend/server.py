@@ -6243,7 +6243,8 @@ async def handle_game_timeout(game_id: str):
             # Return commission to opponent (if not a regular bot game)
             # This applies to: Live Players vs Live Players, Live Players vs Human-bots, Human-bots vs Live Players
             if not is_regular_bot_game:
-                commission = game_obj.bet_amount * 0.03
+                commission_rate = await get_bet_commission_rate_fraction()
+                commission = round_money(game_obj.bet_amount * commission_rate)
                 await db.users.update_one(
                     {"id": game_obj.opponent_id},
                     {
