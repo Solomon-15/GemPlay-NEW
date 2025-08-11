@@ -715,28 +715,31 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           {renderCurrentStep()}
         </div>
 
-        {/* Footer Navigation - только на первых двух шагах */}
-        {currentStep <= 2 && (
+        {/* Footer Navigation - изменение: на шаге 2 показываем только кнопку "Start Battle!" */}
+        {currentStep === 1 && (
           <div className="p-4 border-t border-border-primary">
             <div className="flex space-x-3">
-              {currentStep > 1 && (
-                <button
-                  type="button"
-                  onClick={goToPrevStep}
-                  disabled={loading}
-                  className="px-4 py-2 bg-surface-sidebar text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
-                >
-                  Back
-                </button>
-              )}
-              
               <button
                 type="button"
                 onClick={goToNextStep}
                 disabled={loading || !canGoNext}
                 className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
               >
-                {currentStep === 2 ? 'Start Battle!' : 'Next'}
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+        {currentStep === 2 && (
+          <div className="p-4 border-t border-border-primary">
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                onClick={startBattle}
+                disabled={loading || !canGoNext}
+                className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+              >
+                Start Battle!
               </button>
             </div>
           </div>
