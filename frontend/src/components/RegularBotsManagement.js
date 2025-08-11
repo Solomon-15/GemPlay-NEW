@@ -3353,7 +3353,7 @@ const RegularBotsManagement = () => {
               {/* Объединенный блок: Циклы и Настройки таймингов */}
               <div className="border border-border-primary rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-white mb-3">Циклы и Настройки таймингов</h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {/* Игр в цикле */}
                   <div>
                     <label className="block text-text-secondary text-sm mb-1">Игр в цикле:</label>
