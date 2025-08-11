@@ -3526,8 +3526,16 @@ const RegularBotsManagement = () => {
 
                 <div className="bg-surface-sidebar rounded-lg p-4">
                   <h4 className="font-rajdhani font-bold text-white mb-2">Общая сумма:</h4>
-                  <div className="text-2xl font-rajdhani font-bold text-white">
-                    ${Number(cycleData.cycle_stats.total_bet_amount).toFixed(2)}
+                  <div className="text-2xl font-rajdhani font-bold text-green-400">
+                    ${(() => {
+                      // Берём из модалки "Активные ставки" — колонка СТАВКИ → Общая сумма
+                      if (activeBetsData?.bets && Array.isArray(activeBetsData.bets)) {
+                        const total = activeBetsData.bets.reduce((sum, bet) => sum + (parseInt(bet.bet_amount || bet.amount || 0, 10)), 0);
+                        return Number(total).toFixed(2);
+                      }
+                      // Фолбэк на вычисленную сумму текущего/исторического цикла
+                      return Number(cycleData.cycle_stats.total_bet_amount).toFixed(2);
+                    })()}
                   </div>
                   <div className="text-text-secondary text-sm">
                     Сумма всех ставок
