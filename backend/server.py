@@ -2670,7 +2670,8 @@ async def join_human_bot_bet(human_bot: HumanBot):
         bot_move = HumanBotBehavior.get_move_choice(human_bot.character)
         
         # Freeze commission (for human bots, commission applies)
-        commission_amount = selected_game.bet_amount * 0.03  # 3% commission
+        commission_rate = await get_bet_commission_rate_fraction()
+        commission_amount = round_money(selected_game.bet_amount * commission_rate)  # commission from winner only
         
         # Check if human bot has enough balance for commission
         bot_record = await db.human_bots.find_one({"id": human_bot.id})
