@@ -930,6 +930,21 @@ const ProfitAdmin = ({ user }) => {
                       placeholder="Полный или частичный ID"
                     />
                   </div>
+                  
+                  {/* Фильтр по статусу записи */}
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-2">Статус записи</label>
+                    <select
+                      value={entryStatusFilter}
+                      onChange={(e) => { setEntryStatusFilter(e.target.value); if (pagination.currentPage !== 1) pagination.handlePageChange(1); else fetchEntries(); }}
+                      className="w-full bg-surface-sidebar border border-border-primary rounded px-3 py-1 text-white text-sm focus:outline-none focus:border-accent-primary"
+                    >
+                      <option value="">Все</option>
+                      <option value="CONFIRMED">Подтверждено</option>
+                      <option value="PENDING">В обработке</option>
+                      <option value="REVERSED">Сторнировано</option>
+                    </select>
+                  </div>
                 </div>
                 
                 {/* Кнопка сброса фильтров */}
