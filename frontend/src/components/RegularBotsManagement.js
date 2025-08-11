@@ -593,6 +593,15 @@ const RegularBotsManagement = () => {
       const botsData = response.data.bots || response.data;
       setBotsList(botsData); // Больше не сортируем здесь, используем getSortedBots
       
+      // Предзагружаем суммы цикла для каждого бота из модалки "Детали цикла"
+      if (Array.isArray(botsData)) {
+        botsData.forEach(b => {
+          if (b?.id && !cycleSumsByBot[b.id]) {
+            fetchAndCacheCycleSums(b.id);
+          }
+        });
+      }
+      
       clearSelection();
       
       if (response.data.total_count !== undefined) {
