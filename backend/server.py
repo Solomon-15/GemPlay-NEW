@@ -5407,42 +5407,21 @@ async def force_complete_bot_cycle(
     bot_id: str,
     current_user: User = Depends(get_current_admin)
 ):
-    """Принудительно завершить цикл бота."""
+    """Принудительно завершить цикл бота — ВЕРСИЯ 1 (устарела, перенаправляем на v2)."""
     try:
-        bot = await db.bots.find_one({"id": bot_id})
-        if not bot:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Бот не найден"
-            )
+        # Переиспользуем современную логику через аккумуляторы
+        accumulator = await db.bot_profit_accumulators.find_one({
+            "bot_id": bot_id,
+            "is_cycle_completed": False
+        })
+        if not accumulator:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active cycle found for this bot")
         
-        cancelled_bets = await db.games.update_many(
-            {"creator_id": bot_id, "status": "waiting"},
-            {"$set": {
-                "status": "cancelled",
-                "updated_at": datetime.utcnow()
-            }}
-        )
-        
-        completed_games = await db.games.find({
-            "creator_id": bot_id,
-            "status": "completed"
-        }).to_list(None)
-        
-        total_bet_amount = sum(game.get("bet_amount", 0) for game in completed_games)
-        total_winnings = sum(game.get("winnings", 0) for game in completed_games if game.get("winner_id") == bot_id)
-        cycle_profit = total_winnings - total_bet_amount
-        
-        await db.bots.update_one(
-            {"id": bot_id},
-            {"$set": {
-                "current_cycle_games": 0,
-                "current_cycle_wins": 0,
-                "current_cycle_losses": 0,
-                "bot_profit_amount": bot.get("bot_profit_amount", 0) + cycle_profit,
-                "bot_profit_percent": ((bot.get("bot_profit_amount", 0) + cycle_profit) / max(total_bet_amount, 1)) * 100,
-                "updated_at": datetime.utcnow()
-            }}
+        await complete_bot_cycle(
+            accumulator["id"],
+            accumulator["total_spent"],
+            accumulator["total_earned"],
+            bot_id
         )
         
         admin_log = AdminLog(
@@ -5451,20 +5430,18 @@ async def force_complete_bot_cycle(
             target_type="bot",
             target_id=bot_id,
             details={
-                "bot_name": bot.get("name", f"Bot #{bot_id[:8]}"),
-                "cancelled_bets": cancelled_bets.modified_count,
-                "cycle_profit": cycle_profit
+                "bot_name": (await db.bots.find_one({"id": bot_id})).get("name", f"Bot #{bot_id[:8]}") if await db.bots.find_one({"id": bot_id}) else f"Bot #{bot_id[:8]}",
+                "cycle_profit": accumulator["total_earned"] - accumulator["total_spent"]
             }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
         return {
             "success": True,
-            "message": f"Цикл бота завершен принудительно. Прибыль: ${cycle_profit:.2f}",
-            "profit": cycle_profit,
-            "cancelled_bets": cancelled_bets.modified_count
+            "message": "Цикл бота завершен (через аккумулятор).",
+            "profit": accumulator["total_earned"] - accumulator["total_spent"],
+            "cancelled_bets": 0
         }
-        
     except HTTPException:
         raise
     except Exception as e:
