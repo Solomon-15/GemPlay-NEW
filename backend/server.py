@@ -11848,6 +11848,10 @@ async def get_profit_entries(
         if date_filter:
             query["created_at"] = date_filter
         
+        # Entry status filter
+        if entry_status:
+            query["status"] = entry_status
+
         # Player filter: username/email contains OR id prefix
         user_ids = None
         if player_filter:
