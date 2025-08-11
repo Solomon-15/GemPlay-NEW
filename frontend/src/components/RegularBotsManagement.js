@@ -2170,9 +2170,9 @@ const RegularBotsManagement = () => {
                       <div className="text-accent-primary font-roboto text-sm">
                         {bot.cycle_total_info ? (
                           <div title={`Общая сумма: ${bot.cycle_total_info.total_sum}, Ничьи: ${bot.cycle_total_info.draws_sum}`}>
-                            <span className="font-bold">{bot.cycle_total_info.active_pool}</span>
+                            <span className="font-bold">{bot.cycle_total_info.total_sum}</span>
                             <div className="text-xs text-gray-400">
-                              (из {bot.cycle_total_info.total_sum}, ничьи: {bot.cycle_total_info.draws_sum})
+                              (из {bot.cycle_total_info.active_pool}, ничьи: {bot.cycle_total_info.draws_sum})
                             </div>
                           </div>
                         ) : (
