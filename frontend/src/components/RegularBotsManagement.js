@@ -2126,7 +2126,6 @@ const RegularBotsManagement = () => {
                       <div className="text-white font-roboto text-xs space-y-1">
                         <div>Игры: {bot.completed_cycles || 0}</div>
                         <div>W/L/D: {(bot.current_cycle_wins || 0)}/{(bot.current_cycle_losses || 0)}/{(bot.current_cycle_draws || 0)}</div>
-                        <div className="text-green-400">Прибыль: ${Math.round(bot.current_cycle_profit || 0)}</div>
                         <button
                           onClick={() => handleCycleHistoryModal(bot)}
                           className="text-blue-400 hover:text-blue-300 cursor-pointer underline"
