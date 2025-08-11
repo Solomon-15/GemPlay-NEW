@@ -6578,7 +6578,8 @@ async def join_game(
             )
         
         # Check if user has enough balance for commission
-        commission_required = game_obj.bet_amount * 0.03
+        commission_rate = await get_bet_commission_rate_fraction()
+        commission_required = round_money(game_obj.bet_amount * commission_rate)
         user = await db.users.find_one({"id": current_user.id})
         
         # Check if the game creator is a regular bot
