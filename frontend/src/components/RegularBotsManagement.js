@@ -2183,16 +2183,23 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-accent-primary font-roboto text-sm">
-                        {bot.cycle_total_info ? (
-                          <div title={`Общая сумма: ${bot.cycle_total_info.total_sum}, Ничьи: ${bot.cycle_total_info.draws_sum}`}>
-                            <span className="font-bold">{bot.cycle_total_info.total_sum}</span>
-                            <div className="text-xs text-gray-400">
-                              (из {bot.cycle_total_info.active_pool}, ничьи: {bot.cycle_total_info.draws_sum})
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="font-bold">{cycleDetailsData.sums?.total_sum || 0}</span>
-                        )}
+                        {(() => {
+                          const sums = cycleSumsByBot[bot.id] || bot.cycle_total_info;
+                          if (sums) {
+                            const total = Number(sums.total_sum || 0);
+                            const from = Number((sums.active_pool !== undefined ? sums.active_pool : (Number(sums.wins_sum || 0) + Number(sums.losses_sum || 0))));
+                            const draws = Number(sums.draws_sum || 0);
+                            return (
+                              <div title={`Общая сумма: ${total}, Ничьи: ${draws}`}>
+                                <span className="font-bold">{total}</span>
+                                <div className="text-xs text-gray-400">
+                                  (из {from}, ничьи: {draws})
+                                </div>
+                              </div>
+                            );
+                          }
+                          return <span className="font-bold">0</span>;
+                        })()}
                         <div>
                           <button
                             onClick={() => handleCycleBetsDetails(bot)}
