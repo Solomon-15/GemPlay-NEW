@@ -7431,7 +7431,8 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     logger.info(f"💰 REGULAR BOT GAME - Winner {winner_id} gets full payout, no commission involved")
                 else:
                     # Normal human vs human game with commission
-                    commission_to_deduct = game.bet_amount * 0.03  # 3% от ставки победителя
+                    commission_rate = await get_bet_commission_rate_fraction()
+                    commission_to_deduct = round_money(game.bet_amount * commission_rate)  # winner commission
                     
                     new_winner_frozen = winner["frozen_balance"] - commission_to_deduct
                     new_winner_balance = winner["virtual_balance"]  # virtual_balance не изменяется
