@@ -2224,7 +2224,8 @@ async def update_bot_cycle_stats(bot_id: str, outcome: str, game_value: float):
         await db.bots.update_one({"id": bot_id}, {"$set": update_data})
         
         # Проверяем завершение цикла
-        await check_and_complete_bot_cycle(bot_id)
+        # Legacy cycle completion disabled in favor of accumulators
+        # await check_and_complete_bot_cycle(bot_id)
         
     except Exception as e:
         logger.error(f"Error updating bot cycle stats for {bot_id}: {e}")
