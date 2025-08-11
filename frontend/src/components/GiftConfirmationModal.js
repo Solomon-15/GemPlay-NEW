@@ -43,7 +43,9 @@ const GiftConfirmationModal = ({
   const [searchTimer, setSearchTimer] = useState(null);
 
   const totalValue = gemPrice * quantity;
-  const commission = totalValue * 0.03; // 3% комиссия
+  const { gift_commission_rate } = useCommissionSettings();
+  const commissionRate = (gift_commission_rate ?? 3.0) / 100.0;
+  const commission = totalValue * commissionRate; // dynamic commission
   const finalValue = totalValue; // Получатель получает полную стоимость
 
   const searchRecipient = async (identifier) => {
