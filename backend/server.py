@@ -15638,15 +15638,8 @@ async def create_regular_bots(
 
         # Синхронизированный расчёт планового ROI при создании
         try:
-            # Синхронизация с калькулятором: используем целочисленные min/max и точную сумму цикла
-            min_bet_int = int(round(min_bet))
-            max_bet_int = int(round(max_bet))
-            exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
-            wins_sum_planned = math.floor(exact_cycle_total * (wins_percentage or 0) / 100.0)
-            losses_sum_planned = math.ceil(exact_cycle_total * (losses_percentage or 0) / 100.0)
-            active_pool_planned = wins_sum_planned + losses_sum_planned
-            profit_planned = wins_sum_planned - losses_sum_planned
-            roi_planned_percent = round(((profit_planned / active_pool_planned) * 100.0), 2) if active_pool_planned > 0 else 0.0
+            roi_planned_percent = compute_planned_roi_percent(min_bet, max_bet, cycle_games,
+                                                              wins_percentage, losses_percentage, draws_percentage)
             await db.bots.update_one({"id": bot.id}, {"$set": {
                 "roi_planned_percent": roi_planned_percent
             }})
