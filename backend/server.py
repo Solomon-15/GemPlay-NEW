@@ -11821,6 +11821,8 @@ async def get_profit_entries(
         query = {}
         if entry_type:
             query["entry_type"] = entry_type
+        if reference_id:
+            query["reference_id"] = reference_id
         
         # Amount range
         amount_filter = {}
