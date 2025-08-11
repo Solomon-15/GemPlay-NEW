@@ -5009,7 +5009,7 @@ async def gift_gems(
             detail="Some gems are frozen in active bets"
         )
     
-    # Calculate commission (3% of total gem value)
+    # Calculate commission based on admin settings (gift_commission_rate)
     gem_value = gem_def["price"] * quantity
     commission = gem_value * 0.03
     
