@@ -2168,7 +2168,7 @@ const RegularBotsManagement = () => {
                             <span className={`${displayClass} font-roboto text-sm font-bold`} title="Фактический ROI (из модалки ‘Детали цикла’)">
                               {displayActual}
                             </span>
-                            <span className={`text-xs text-gray-400`} title="Плановый ROI">
+                            <span className={`text-xs text-yellow-400`} title="Плановый ROI">
                               {Number(roiPlanned).toFixed(2)}%
                             </span>
                           </div>
