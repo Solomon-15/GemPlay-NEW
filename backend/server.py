@@ -7583,7 +7583,8 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     
                     # Process commission return for human players only
                     if player:
-                        commission_to_return = game.bet_amount * 0.03
+                        commission_rate = await get_bet_commission_rate_fraction()
+                        commission_to_return = round_money(game.bet_amount * commission_rate)
                         
                         logger.info(f"DRAW - Returning {commission_to_return} commission to player {player_id} (virtual_balance: {player.get('virtual_balance', 0)} -> {player.get('virtual_balance', 0) + commission_to_return})")
                         
