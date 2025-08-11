@@ -40,10 +40,7 @@ const RegularBotsManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingBot, setDeletingBot] = useState(null);
   const [deleteReason, setDeleteReason] = useState('');
-  const [isActiveBetsModalOpen, setIsActiveBetsModalOpen] = useState(false);
-  const [selectedBotForActiveBets, setSelectedBotForActiveBets] = useState(null);
-  const [activeBetsData, setActiveBetsData] = useState(null);
-  const [loadingActiveBets, setLoadingActiveBets] = useState(false);
+
   const [loadingStates, setLoadingStates] = useState({});
   const [isCycleModalOpen, setIsCycleModalOpen] = useState(false);
   const [cycleBot, setCycleBot] = useState(null);
