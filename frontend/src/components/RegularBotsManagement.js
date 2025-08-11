@@ -3173,7 +3173,7 @@ const RegularBotsManagement = () => {
 
             <div className="space-y-6">
               {/* Статистика цикла */}
-              <div className="flex flex-nowrap gap-4 items-stretch">
+              <div className="flex flex-wrap sm:flex-nowrap gap-4 items-stretch">
                 <div className="bg-surface-sidebar rounded-lg p-4">
                   <h4 className="font-rajdhani font-bold text-white mb-2">Прогресс цикла:</h4>
                   <div className="text-2xl font-rajdhani font-bold text-green-400">
