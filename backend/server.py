@@ -7496,14 +7496,8 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 if loser and winner_id != loser_id and not is_winner_human_bot:
                     bot_revenue = game.bet_amount  # Bot wins the full bet amount
                     
-                    profit_entry = ProfitEntry(
-                        entry_type="BOT_REVENUE",
-                        amount=bot_revenue,
-                        source_user_id=loser_id,
-                        reference_id=game.id,
-                        description=f"Regular bot victory revenue: ${bot_revenue} from player {loser.get('username', 'Unknown')}"
-                    )
-                    await db.profit_entries.insert_one(profit_entry.dict())
+                    # Disabled per-game BOT_REVENUE logging. Revenue will be recorded only at cycle completion.
+                    pass
             
             # **CORRECTED COMMISSION LOGIC according to new table:**
             # For ALL game types (except Regular bot): ONLY WINNER pays commission
