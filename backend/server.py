@@ -8894,7 +8894,8 @@ async def get_my_bets_paginated(
             if game.get("winner_id"):
                 if game["winner_id"] == current_user.id:
                     stats["total_won"] += 1
-                    stats["total_winnings"] += game["bet_amount"] * 1.94  # After 3% commission
+                    bet_rate = await get_bet_commission_rate_fraction()
+                    stats["total_winnings"] += round_money(game["bet_amount"] * (2 - bet_rate))  # after commission
                 else:
                     stats["total_lost"] += 1
                     stats["total_losses"] += game["bet_amount"]
