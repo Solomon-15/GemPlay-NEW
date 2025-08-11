@@ -16479,6 +16479,25 @@ async def get_regular_bots_list(
         for bot_doc in bots:
             bot = Bot(**bot_doc)
             
+            # Planned ROI synced to creation calculator if available
+            try:
+                wins_pct = float(bot_doc.get("wins_percentage", 44.0) or 44.0)
+                losses_pct = float(bot_doc.get("losses_percentage", 36.0) or 36.0)
+                cycle_games_val = int(bot_doc.get("cycle_games", 12) or 12)
+                min_bet_val = float(bot_doc.get("min_bet_amount", 1.0) or 1.0)
+                max_bet_val = float(bot_doc.get("max_bet_amount", 50.0) or 50.0)
+                avg_bet_val = (min_bet_val + max_bet_val) / 2.0
+                total_est_val = round(avg_bet_val * cycle_games_val)
+                wins_sum_planned_val = math.floor(total_est_val * wins_pct / 100.0)
+                losses_sum_planned_val = math.ceil(total_est_val * losses_pct / 100.0)
+                active_pool_planned_val = wins_sum_planned_val + losses_sum_planned_val
+                profit_planned_val = wins_sum_planned_val - losses_sum_planned_val
+                roi_planned_percent_val = round(((profit_planned_val / active_pool_planned_val) * 100.0), 2) if active_pool_planned_val > 0 else 0.0
+            except Exception:
+                roi_planned_percent_val = 0.0
+            
+            bot_doc["roi_planned_percent"] = bot_doc.get("roi_planned_percent", roi_planned_percent_val)
+            
             # Count active bets for this bot (ONLY as creator - regular bots don't join other bets)
             active_bets = await db.games.count_documents({
                 "creator_id": bot.id,
