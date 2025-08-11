@@ -7508,7 +7508,8 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     human_bot = await db.human_bots.find_one({"id": loser_id})
                     if human_bot:
                         # Return commission directly to Human-bot
-                        loser_commission = game.bet_amount * 0.03
+                        commission_rate = await get_bet_commission_rate_fraction()
+                        loser_commission = round_money(game.bet_amount * commission_rate)
                         logger.info(f"💰 RETURNING ${loser_commission} commission to Human-bot {human_bot['name']}")
                         
                         await db.human_bots.update_one(
