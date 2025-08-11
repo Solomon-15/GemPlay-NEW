@@ -16672,12 +16672,25 @@ async def get_regular_bots_list(
             # Плановый ROI: всегда берём из текущего калькулятора, чтобы совпадало с предпросмотром
             roi_planned_out = roi_planned_percent_val
 
+            # Совокупная чистая прибыль всех завершённых циклов
+            try:
+                completed_games = await db.games.find({
+                    "creator_id": bot.id,
+                    "status": "COMPLETED"
+                }).to_list(100000)
+                total_wins_sum_all = sum(int(g.get("bet_amount", 0) or 0) for g in completed_games if g.get("winner_id") == bot.id)
+                total_losses_sum_all = sum(int(g.get("bet_amount", 0) or 0) for g in completed_games if g.get("winner_id") not in (None, bot.id))
+                total_profit_all_cycles = total_wins_sum_all - total_losses_sum_all
+            except Exception:
+                total_profit_all_cycles = 0
+
             bot_details.append({
                 "id": bot.id,
                 "name": bot.name or f"Bot #{bot.id[:8]}",
                 "status": "Активен" if bot.is_active else "Отключён",
                 "is_active": bot.is_active,
                 "active_bets": active_bets,
+                "total_net_profit": total_profit_all_cycles,
                 "games_stats": {
                     "wins": wins,
                     "losses": losses,
