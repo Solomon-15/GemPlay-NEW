@@ -15638,10 +15638,12 @@ async def create_regular_bots(
 
         # Синхронизированный расчёт планового ROI при создании
         try:
-            avg_bet = (min_bet + max_bet) / 2.0
-            total_est = round(avg_bet * cycle_games)
-            wins_sum_planned = math.floor(total_est * (wins_percentage or 0) / 100.0)
-            losses_sum_planned = math.ceil(total_est * (losses_percentage or 0) / 100.0)
+            # Синхронизация с калькулятором: используем целочисленные min/max и точную сумму цикла
+            min_bet_int = int(round(min_bet))
+            max_bet_int = int(round(max_bet))
+            exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
+            wins_sum_planned = math.floor(exact_cycle_total * (wins_percentage or 0) / 100.0)
+            losses_sum_planned = math.ceil(exact_cycle_total * (losses_percentage or 0) / 100.0)
             active_pool_planned = wins_sum_planned + losses_sum_planned
             profit_planned = wins_sum_planned - losses_sum_planned
             roi_planned_percent = round(((profit_planned / active_pool_planned) * 100.0), 2) if active_pool_planned > 0 else 0.0
