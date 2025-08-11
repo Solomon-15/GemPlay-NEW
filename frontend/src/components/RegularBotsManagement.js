@@ -3228,7 +3228,7 @@ const RegularBotsManagement = () => {
                   </div>
                 </div>
 
-                <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="bg-surface-sidebar rounded-lg p-4 flex-1 min-w-[220px]">
                   <h4 className="font-rajdhani font-bold text-white mb-2">Эффективность:</h4>
                   <div className="text-2xl font-rajdhani font-bold text-accent-primary">
                     {Number(cycleData.cycle_stats.win_rate).toFixed(1)}%
