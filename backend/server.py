@@ -16449,28 +16449,36 @@ async def get_regular_bots_simple(
 def compute_planned_roi_percent(min_bet: float, max_bet: float, cycle_games: int,
                                 wins_percentage: float, losses_percentage: float, draws_percentage: float) -> float:
     """
-    Плановый ROI как в вашей ожидаемой логике (даёт 10.05% для Bot#1):
-    - exact_cycle_total = round(((round(min_bet) + round(max_bet)) / 2) * cycle_games)
-    - wins_sum_planned = floor(exact_cycle_total * wins% / 100)
-    - losses_sum_planned = ceil(exact_cycle_total * losses% / 100)
-    - active_pool = wins_sum_planned + losses_sum_planned
-    - profit = wins_sum_planned - losses_sum_planned
-    - ROI_plan = round((profit / active_pool) * 100, 2)
+    Плановый ROI строго как в предпросмотре калькулятора на фронтенде (скрин с 10.05%):
+    1) estimated_total строится через 3 группы ставок:
+       - smallCnt = round(N * 0.25), mediumCnt = round(N * 0.5), largeCnt = N - smallCnt - mediumCnt (но small >= 1)
+       - smallAvg = min + (max-min)*0.15, mediumAvg = min + (max-min)*0.5, largeAvg = min + (max-min)*0.85
+       - estimated_total = smallCnt*smallAvg + mediumCnt*mediumAvg + largeCnt*largeAvg
+    2) wins_sum = round(estimated_total * wins%), losses_sum = round(estimated_total * losses%)
+    3) ROI_plan = (wins_sum - losses_sum) / (wins_sum + losses_sum) * 100, округление до 2 знаков
     """
     try:
-        min_bet_int = int(round(float(min_bet or 0)))
-        max_bet_int = int(round(float(max_bet or 0)))
+        min_bet_f = float(min_bet or 0)
+        max_bet_f = float(max_bet or 0)
         games = int(cycle_games or 0)
-        if games <= 0:
+        if games <= 0 or max_bet_f <= 0 or max_bet_f < min_bet_f:
             return 0.0
-        exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * games))
-        if exact_cycle_total <= 0:
-            return 0.0
-        wins_sum = math.floor(exact_cycle_total * float(wins_percentage or 0) / 100.0)
-        losses_sum = math.ceil(exact_cycle_total * float(losses_percentage or 0) / 100.0)
+        # 1) Группы
+        small_cnt = max(1, int(round(games * 0.25)))
+        medium_cnt = int(round(games * 0.5))
+        large_cnt = max(0, games - small_cnt - medium_cnt)
+        rng = max_bet_f - min_bet_f
+        small_avg = min_bet_f + rng * 0.15
+        medium_avg = min_bet_f + rng * 0.5
+        large_avg = min_bet_f + rng * 0.85
+        estimated_total = small_cnt * small_avg + medium_cnt * medium_avg + large_cnt * large_avg
+        # 2) Суммы по исходам (округление к ближайшему целому)
+        wins_sum = int(round(estimated_total * float(wins_percentage or 0) / 100.0))
+        losses_sum = int(round(estimated_total * float(losses_percentage or 0) / 100.0))
         active_pool = wins_sum + losses_sum
         if active_pool <= 0:
             return 0.0
+        # 3) ROI
         profit = wins_sum - losses_sum
         return round((profit / active_pool) * 100.0, 2)
     except Exception:
