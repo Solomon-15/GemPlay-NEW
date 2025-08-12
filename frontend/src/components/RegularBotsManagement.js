@@ -1095,7 +1095,8 @@ const RegularBotsManagement = () => {
             wins_sum: Number(details.sums.wins_sum || 0),
             losses_sum: Number(details.sums.losses_sum || 0),
             profit: Number(details.sums.profit || 0),
-            roi_active: Number(details.sums.roi_active || 0)
+            roi_active: Number(details.sums.roi_active || 0),
+            exact_cycle_total: Number((details && details.exact_cycle_total) || 0)
           }
         }));
       }
