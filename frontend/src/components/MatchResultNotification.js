@@ -32,15 +32,6 @@ const parseOpponent = (notification) => {
   return 'Opponent';
 };
 
-const parseGemsReceived = (notification) => {
-  const payload = notification?.payload || {};
-  if (typeof payload.gems_received === 'number') return payload.gems_received;
-  const msg = notification?.message || '';
-  const match = msg.match(/Received:\s*(\d+)\s*Gems/i);
-  if (match) return Number(match[1]);
-  if (typeof payload.amount === 'number') return payload.amount;
-  return null;
-};
 
 const parseMoves = (notification) => {
   const p = notification?.payload || {};
