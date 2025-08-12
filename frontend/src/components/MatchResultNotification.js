@@ -95,12 +95,12 @@ const MatchResultNotification = ({ notification, user }) => {
   const outcome = parseOutcome(notification);
   const styles = outcomeStyles(outcome);
   const opponent = parseOpponent(notification);
-  const gems = parseGemsReceived(notification);
   const moves = parseMoves(notification);
-  const { isBot, amount: commissionAmount, percent: commissionPercent, paidByYou } = parseCommission(notification);
+  const bets = parseBets(notification);
+  const { isBotGame, isHumanBot, percent: commissionPercent, commissionAmountUsd } = parseCommission(notification);
 
-  // Show commission line only when: non-bot game AND commissionAmount > 0 AND paid by current user
-  const showCommission = !isBot && typeof commissionAmount === 'number' && commissionAmount > 0 && paidByYou === true;
+  // Показ комиссии: нет для обычных ботов; есть для игроков и Human‑ботов только при победе
+  const showCommission = (outcome === 'win') && (!isBotGame || (isBotGame && isHumanBot)) && commissionAmountUsd > 0;
 
   const dateStr = formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset);
 
