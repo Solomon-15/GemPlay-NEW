@@ -192,8 +192,8 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         break;
     }
     
-    if (isValid && currentStep < 3) {
-      setCurrentStep(currentStep + 1);
+    if (isValid) {
+      setCurrentStep(Math.min(2, currentStep + 1));
     }
   };
 
