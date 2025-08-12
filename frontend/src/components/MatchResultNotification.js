@@ -148,17 +148,15 @@ const MatchResultNotification = ({ notification, user }) => {
       </div>
 
       {/* 3 строка — Icons: player vs opponent */}
-      {(moves.player || moves.opponent) && (
-        <div className="mt-2 flex items-center space-x-2">
-          <div className="flex items-center space-x-1">
-            <MoveIcon move={moves.player} />
-          </div>
-          <span className="text-text-secondary text-xs font-rajdhani">vs</span>
-          <div className="flex items-center space-x-1">
-            <MoveIcon move={moves.opponent} />
-          </div>
+      <div className="mt-2 flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
+          <MoveIcon move={moves.player} />
         </div>
-      )}
+        <span className="text-text-secondary text-xs font-rajdhani">vs</span>
+        <div className="flex items-center space-x-1">
+          <MoveIcon move={moves.opponent} />
+        </div>
+      </div>
 
       {/* 4 строка — Commission */}
       {showCommission && (
