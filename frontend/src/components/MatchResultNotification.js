@@ -156,7 +156,7 @@ const MatchResultNotification = ({ notification, user, showIcons = true, onDelet
 
         {/* Средняя колонка — большие иконки ходов */}
         <div className="col-span-4 sm:col-span-3 flex items-center justify-center">
-          {showIcons && moves.player && moves.opponent && (
+          {showIcons && (
             <div className="flex items-center space-x-4">
               <img src={moveIconMap[moves.player]} alt={capitalize(moves.player)} className="w-12 h-12 sm:w-14 sm:h-14" />
               <span className="text-text-secondary text-base font-rajdhani">vs</span>
