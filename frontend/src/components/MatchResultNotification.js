@@ -100,7 +100,7 @@ const MatchResultNotification = ({ notification, user, showIcons = true, onDelet
     <div className="w-full">
       <div className="grid grid-cols-12 items-center gap-3">
         {/* Левая колонка — текстовая часть */}
-        <div className="col-span-6 sm:col-span-7">
+        <div className="pl-6 col-span-7 sm:col-span-7">
           {/* 1 строка — Match Result */}
           <div className="text-white font-rajdhani font-bold text-sm sm:text-base">Match Result</div>
 
