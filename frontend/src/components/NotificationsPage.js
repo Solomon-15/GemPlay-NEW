@@ -170,7 +170,7 @@ const NotificationsPage = ({ user }) => {
                 }`}
                 onClick={(event) => handleNotificationClick(notification, event)}
               >
-                <div className="pb-8 pr-10">
+                <div className="flex items-center pr-10 py-4 min-h-[112px]">
                   {renderNotification(notification)}
                 </div>
                 {/* Кнопка удаления в правом нижнем углу (только для страницы Notifications) */}
