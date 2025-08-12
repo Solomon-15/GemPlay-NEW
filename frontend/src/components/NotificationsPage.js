@@ -55,7 +55,7 @@ const NotificationsPage = ({ user }) => {
 
   // Filter notifications based on selected filters
   const filteredNotifications = persistentNotifications.filter(notification => {
-    if (filter === 'unread' &amp;&amp; notification.is_read) return false;
+    if (filter === 'unread' && notification.is_read) return false;
     if (filter === 'read' &amp;&amp; !notification.is_read) return false;
     if (typeFilter !== 'all' &amp;&amp; notification.type !== typeFilter) return false;
     return true;
