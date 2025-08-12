@@ -18,6 +18,7 @@ import RoleManagement from './RoleManagement';
 import { useNotifications } from './NotificationContext';
 import useConfirmation from '../hooks/useConfirmation';
 import ConfirmationModal from './ConfirmationModal';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -35,7 +36,47 @@ const AdminPanel = ({ user, onClose }) => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(null);
   const [clearCacheLoading, setClearCacheLoading] = useState(false);
-  
+  const [navLoading, setNavLoading] = useState(false);
+  const navTimerRef = useRef(null);
+  const navShownAtRef = useRef(0);
+
+  const MIN_VISIBLE_MS = 600; // минимальное время видимости спиннера
+  const DELAY_MS = 1000; // задержка перед показом
+
+  const clearNavTimer = () => {
+    if (navTimerRef.current) {
+      clearTimeout(navTimerRef.current);
+      navTimerRef.current = null;
+    }
+  };
+
+  const showNavLoaderDelayed = () => {
+    clearNavTimer();
+    navTimerRef.current = setTimeout(() => {
+      navShownAtRef.current = Date.now();
+      setNavLoading(true);
+    }, DELAY_MS);
+  };
+
+  const hideNavLoaderWithMinimum = () => {
+    // если таймер ещё не успел показать — просто отменяем
+    if (!navLoading) {
+      clearNavTimer();
+      return;
+    }
+    const elapsed = Date.now() - navShownAtRef.current;
+    const remain = Math.max(0, MIN_VISIBLE_MS - elapsed);
+    clearNavTimer();
+    if (remain > 0) {
+      navTimerRef.current = setTimeout(() => {
+        setNavLoading(false);
+        clearNavTimer();
+      }, remain);
+    } else {
+      setNavLoading(false);
+    }
+  };
+
   // States for bet volume filters
   const [betVolumeFilters, setBetVolumeFilters] = useState({
     period: 'all_time',
@@ -136,6 +177,26 @@ const AdminPanel = ({ user, onClose }) => {
   useEffect(() => {
     fetchDashboardStats();
   }, [betVolumeFilters]); // Re-fetch when bet volume filters change
+
+  // Delayed loader on initial admin load
+  useEffect(() => {
+    if (loading) {
+      showNavLoaderDelayed();
+    } else {
+      hideNavLoaderWithMinimum();
+    }
+    return () => clearNavTimer();
+  }, [loading]);
+
+  // Helper: switch section with delayed loader
+  const switchSection = (sectionId) => {
+    if (activeSection === sectionId) return;
+    // показываем лоадер с задержкой
+    showNavLoaderDelayed();
+    setActiveSection(sectionId);
+    // на следующем тике пробуем скрыть (если секция уже быстрая)
+    setTimeout(() => hideNavLoaderWithMinimum(), 0);
+  };
 
   // Removed handleTokenExpired - now handled by global interceptor
 
@@ -1451,7 +1512,7 @@ const AdminPanel = ({ user, onClose }) => {
             {filteredAdminSections.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveSection(item.id)}
+                onClick={() => switchSection(item.id)}
                 className={`admin-tooltip w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-lg transition-all duration-200 ${
                   activeSection === item.id
                     ? 'bg-accent-primary bg-opacity-20 text-accent-primary border-l-4 border-accent-primary'
@@ -1472,8 +1533,13 @@ const AdminPanel = ({ user, onClose }) => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 p-8 overflow-auto">
+      <div className="flex-1 p-8 overflow-auto relative">
         {renderContent()}
+        {navLoading && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black bg-opacity-30">
+            <Loader size={48} ariaLabel="Loading section" />
+          </div>
+        )}
       </div>
       
       {/* Notification Container */}
