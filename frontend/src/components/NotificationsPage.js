@@ -61,7 +61,7 @@ const NotificationsPage = ({ user }) => {
     return true;
   });
 
-  const renderNotification = (notification) =&gt; {
+  const renderNotification = (notification) => {
     if (notification.type === 'match_result') {
       return <MatchResultNotification notification={notification} user={user} />;
     }
