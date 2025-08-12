@@ -82,7 +82,7 @@ const MoveIcon = ({ move }) => {
   return <img src={src} alt={capitalize(move)} className="w-5 h-5 sm:w-6 sm:h-6" />;
 };
 
-const MatchResultNotification = ({ notification, user }) => {
+const MatchResultNotification = ({ notification, user, showIcons = true }) => {
   const outcome = parseOutcome(notification);
   const styles = outcomeStyles(outcome);
   const opponent = parseOpponent(notification);
