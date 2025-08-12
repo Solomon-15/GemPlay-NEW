@@ -24,7 +24,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
 
   // Calculate precise dropdown position with fixed positioning
   const calculateDropdownPosition = useCallback(() => {
-    if (bellRef.current &amp;&amp; isOpen) {
+    if (bellRef.current && isOpen) {
       const bellRect = bellRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
@@ -92,7 +92,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
       let scrollableParent = bellRef.current?.parentElement;
       const scrollListeners = [];
       
-      while (scrollableParent &amp;&amp; scrollableParent !== document.body) {
+      while (scrollableParent && scrollableParent !== document.body) {
         if (scrollableParent.scrollHeight &gt; scrollableParent.clientHeight) {
           scrollableParent.addEventListener('scroll', handleScroll, { passive: true });
           scrollListeners.push(scrollableParent);
@@ -152,10 +152,10 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
 
   // Handle click outside with improved logic
   const handleClickOutside = (event) => {
-    if (isOpen &amp;&amp; 
-        dropdownRef.current &amp;&amp; 
-        !dropdownRef.current.contains(event.target) &amp;&amp; 
-        bellRef.current &amp;&amp; 
+    if (isOpen && 
+        dropdownRef.current && 
+        !dropdownRef.current.contains(event.target) && 
+        bellRef.current && 
         !bellRef.current.contains(event.target)) {
       setIsOpen(false);
     }
@@ -236,7 +236,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
           </svg>
           
           {/* Notification Dot - only show when there are unread notifications */}
-          {unreadCount &gt; 0 &amp;&amp; (
+          {unreadCount &gt; 0 && (
             <div className="absolute -top-1 -right-1 flex items-center justify-center">
               <div className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></div>
               <div className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></div>
@@ -245,7 +245,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
         </div>
         
         {/* Unread Count Badge */}
-        {unreadCount &gt; 0 &amp;&amp; (
+        {unreadCount &gt; 0 && (
           <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1 border-2 border-surface-primary">
             {unreadCount &gt; 99 ? '99+' : unreadCount}
           </span>
@@ -253,7 +253,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
       </button>
 
       {/* Notifications Dropdown - Fixed Positioning with Mobile Adaptation */}
-      {isOpen &amp;&amp; (
+      {isOpen && (
         <>
           {/* Mobile backdrop */}
           <div 
@@ -278,10 +278,10 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-rajdhani font-bold text-lg">Notifications</h3>
                 <div className="flex items-center space-x-3">
-                  {loading &amp;&amp; (
+                  {loading && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-primary"></div>
                   )}
-                  {unreadCount &gt; 0 &amp;&amp; (
+                  {unreadCount &gt; 0 && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
