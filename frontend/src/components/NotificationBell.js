@@ -52,7 +52,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
           top: bellRect.bottom + 2, // Прямо под колокольчиком с небольшим отступом
           left: Math.max(10, bellRect.left - 10), // Левый край соприкасается с иконкой, минимум 10px от края
           maxHeight: Math.min(maxHeight, availableHeight), // Меньшее из двух значений
-          width: Math.min(300, viewportWidth - 20) // Фиксированная ширина с учетом отступов
+          width: Math.min(380, viewportWidth - 20) // Чуть шире, чтобы влезли иконки и корзина
         };
         setDropdownPosition(position);
       } else {
@@ -60,7 +60,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
           top: bellRect.bottom + 2,
           left: bellRect.left,
           maxHeight: viewportHeight - bellRect.bottom - 20,
-          maxWidth: Math.min(320, viewportWidth - bellRect.left - 20)
+          maxWidth: Math.min(420, viewportWidth - bellRect.left - 20)
         };
         setDropdownPosition(position);
       }
