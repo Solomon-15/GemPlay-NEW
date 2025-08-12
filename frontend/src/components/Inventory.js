@@ -5,6 +5,7 @@ import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 import { useNotifications } from './NotificationContext';
 import { formatGemValue } from '../utils/economy';
 import GiftConfirmationModal from './GiftConfirmationModal';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -229,7 +230,7 @@ const Inventory = ({ user, onUpdateUser }) => {
   if (loading) {
     return (
       <div className="min-h-screen min-h-app bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Loading Inventory...</div>
+        <Loader ariaLabel="Loading Inventory" />
       </div>
     );
   }

@@ -1257,3 +1257,13 @@ button {
   border-left: 4px solid #f59e0b;
   color: #f59e0b;
 }
+
+@keyframes spin3s {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-3s {
+  animation: spin3s 3s linear infinite;
+  will-change: transform;
+}

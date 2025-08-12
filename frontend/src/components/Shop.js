@@ -6,6 +6,7 @@ import { useGems } from './GemsContext';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 import GemsHeader from './GemsHeader';
 import { useSound, useHoverSound } from '../hooks/useSound';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -96,7 +97,7 @@ const Shop = ({ user, onUpdateUser }) => {
   if (loading) {
     return (
       <div className="min-h-screen min-h-app bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Loading Shop...</div>
+        <Loader ariaLabel="Loading Shop" />
       </div>
     );
   }

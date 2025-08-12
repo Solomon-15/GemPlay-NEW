@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import GemsHeader from './GemsHeader';
+import Loader from './Loader';
 import PlayerCard from './PlayerCard';
 import CreateBetModal from './CreateBetModal';
 import JoinBattleModal from './JoinBattleModal';
@@ -630,7 +631,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   if (loading) {
     return (
       <div className="min-h-screen min-h-app bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Loading Lobby...</div>
+        <Loader ariaLabel="Loading Lobby" />
       </div>
     );
   }

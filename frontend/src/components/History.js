@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -162,7 +163,7 @@ const History = ({ user }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Loading History...</div>
+        <Loader ariaLabel="Loading History" />
       </div>
     );
   }

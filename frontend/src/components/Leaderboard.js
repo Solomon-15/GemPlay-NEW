@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -83,7 +84,7 @@ const Leaderboard = ({ user }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Загрузка рейтинга...</div>
+        <Loader ariaLabel="Loading Leaderboard" />
       </div>
     );
   }
