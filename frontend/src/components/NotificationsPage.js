@@ -89,7 +89,7 @@ const NotificationsPage = ({ user }) => {
               </p>
             </div>
             
-            {unreadCount &gt; 0 &amp;&amp; (
+            {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
                 className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary-dark transition-colors"
