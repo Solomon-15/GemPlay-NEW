@@ -1991,7 +1991,11 @@ const RegularBotsManagement = () => {
                     )}
                   </div>
                 </th>
-
+                
+                <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom">
+                  Количество циклов
+                </th>
+                
                 <th 
                   className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase tracking-wider align-bottom cursor-pointer hover:bg-surface-card"
                   onClick={() => handleSort('total_net_profit')}
