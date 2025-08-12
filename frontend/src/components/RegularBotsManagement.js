@@ -2261,7 +2261,7 @@ const RegularBotsManagement = () => {
                           // 1) Берём exact_cycle_total из API /cycle-bets (кэшируется в cycleSumsByBot)
                           // 2) Фолбэк сразу после создания бота: считаем по формуле ((min+max)/2)*cycle_games
                           const sums = cycleSumsByBot[bot.id];
-                          let val = Number((sums && sums.exact_cycle_total) || 0);
+                          let val = Number((sums && sums.total_sum) || 0);
                           if (!(val > 0)) {
                             const minBet = Math.round(Number(bot.min_bet_amount ?? bot.min_bet ?? 1));
                             const maxBet = Math.round(Number(bot.max_bet_amount ?? bot.max_bet ?? 50));
