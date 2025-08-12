@@ -2228,7 +2228,7 @@ const RegularBotsManagement = () => {
                         {(() => {
                           const sums = cycleSumsByBot[bot.id];
                           if (sums) {
-                            const total = Number(sums.total_sum || 0);
+                            const total = Number(sums.exact_cycle_total || sums.total_sum || 0);
                             const from = Number((sums.active_pool !== undefined ? sums.active_pool : (Number(sums.wins_sum || 0) + Number(sums.losses_sum || 0))));
                             const draws = Number(sums.draws_sum || 0);
                             return (
@@ -2251,6 +2251,17 @@ const RegularBotsManagement = () => {
                             Детали цикла
                           </button>
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
+                      <div className="text-white font-roboto text-sm">
+                        {(() => {
+                          // Сумма ставок (фиксированная сумма всех ставок одного цикла):
+                          // Берём exact_cycle_total из API /cycle-bets (кэшируется в cycleSumsByBot)
+                          const sums = cycleSumsByBot[bot.id];
+                          const val = Number((sums && sums.exact_cycle_total) || 0);
+                          return val > 0 ? val : '—';
+                        })()}
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
