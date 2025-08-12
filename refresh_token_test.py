@@ -24,7 +24,7 @@ from datetime import datetime
 import concurrent.futures
 
 # Configuration
-BASE_URL = "https://service-refresh.preview.emergentagent.com/api"
+BASE_URL = "https://russian-scribe.preview.emergentagent.com/api"
 
 # Admin user credentials for testing
 ADMIN_USER = {

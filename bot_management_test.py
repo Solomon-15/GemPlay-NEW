@@ -13,7 +13,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://service-refresh.preview.emergentagent.com/api"
+BASE_URL = "https://russian-scribe.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

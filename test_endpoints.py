@@ -4,7 +4,7 @@ import requests
 import json
 
 # Test the exact problematic endpoints
-BASE_URL = "https://service-refresh.preview.emergentagent.com/api"
+BASE_URL = "https://russian-scribe.preview.emergentagent.com/api"
 
 def test_login():
     """Test admin login"""
