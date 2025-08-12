@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNotifications } from './NotificationContext';
+import MatchResultNotification from './MatchResultNotification';
+import { formatDateTimeDDMMYYYYHHMMSS } from '../utils/timeUtils';
 
-const NotificationsPage = () => {
+const NotificationsPage = ({ user }) =&gt; {
   const {
     persistentNotifications,
     unreadCount,
@@ -16,11 +18,11 @@ const NotificationsPage = () => {
   const [filter, setFilter] = useState('all'); // all, unread, read
   const [typeFilter, setTypeFilter] = useState('all');
 
-  useEffect(() => {
+  useEffect(() =&gt; {
     fetchNotifications(page, 20);
   }, [page, fetchNotifications]);
 
-  const handleNotificationClick = async (notification, event) => {
+  const handleNotificationClick = async (notification, event) =&gt; {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -29,27 +31,9 @@ const NotificationsPage = () => {
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
-    
   };
 
-  const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return 'just now';
-    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
-    
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours} hrs ago`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 30) return `${diffInDays} days ago`;
-    
-    return date.toLocaleDateString('en-US');
-  };
-
-  const getPriorityColor = (priority) => {
+  const getPriorityColor = (priority) =&gt; {
     switch (priority) {
       case 'error': return 'border-l-red-500 bg-red-500 bg-opacity-5';
       case 'warning': return 'border-l-yellow-500 bg-yellow-500 bg-opacity-5';
@@ -57,7 +41,7 @@ const NotificationsPage = () => {
     }
   };
 
-  const getTypeLabel = (type) => {
+  const getTypeLabel = (type) =&gt; {
     const typeLabels = {
       bet_accepted: 'Bet Accepted',
       match_result: 'Match Result',
@@ -70,12 +54,25 @@ const NotificationsPage = () => {
   };
 
   // Filter notifications based on selected filters
-  const filteredNotifications = persistentNotifications.filter(notification => {
-    if (filter === 'unread' && notification.is_read) return false;
-    if (filter === 'read' && !notification.is_read) return false;
-    if (typeFilter !== 'all' && notification.type !== typeFilter) return false;
+  const filteredNotifications = persistentNotifications.filter(notification =&gt; {
+    if (filter === 'unread' &amp;&amp; notification.is_read) return false;
+    if (filter === 'read' &amp;&amp; !notification.is_read) return false;
+    if (typeFilter !== 'all' &amp;&amp; notification.type !== typeFilter) return false;
     return true;
   });
+
+  const renderNotification = (notification) =&gt; {
+    if (notification.type === 'match_result') {
+      return <MatchResultNotification notification={notification} user={user} />;
+    }
+    return (
+      <div className="p-3">
+        <div className="text-white font-rajdhani font-bold text-base">{notification.title || 'Notification'}</div>
+        <p className="text-sm text-gray-300 mt-1">{notification.message}</p>
+        <div className="text-xs text-gray-500 mt-1">{formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset)}</div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-surface-primary">
@@ -88,11 +85,11 @@ const NotificationsPage = () => {
                 🔔 Notifications
               </h1>
               <p className="text-text-secondary">
-                {unreadCount > 0 ? `You have ${unreadCount} unread notifications` : 'All notifications are read'}
+                {unreadCount &gt; 0 ? `You have ${unreadCount} unread notifications` : 'All notifications are read'}
               </p>
             </div>
             
-            {unreadCount > 0 && (
+            {unreadCount &gt; 0 &amp;&amp; (
               <button
                 onClick={markAllAsRead}
                 className="px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary-dark transition-colors"
@@ -111,7 +108,7 @@ const NotificationsPage = () => {
               <label className="text-sm text-text-secondary">Status:</label>
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value)}
+                onChange={(e) =&gt; setFilter(e.target.value)}
                 className="px-3 py-1 bg-surface-sidebar border border-border-primary rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary"
               >
                 <option value="all">All</option>
@@ -125,7 +122,7 @@ const NotificationsPage = () => {
               <label className="text-sm text-text-secondary">Type:</label>
               <select
                 value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
+                onChange={(e) =&gt; setTypeFilter(e.target.value)}
                 className="px-3 py-1 bg-surface-sidebar border border-border-primary rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary"
               >
                 <option value="all">All types</option>
@@ -163,69 +160,37 @@ const NotificationsPage = () => {
               </p>
             </div>
           ) : (
-            filteredNotifications.map(notification => (
+            filteredNotifications.map(notification =&gt; (
               <div
                 key={notification.id}
-                className={`bg-surface-card border border-gray-700 rounded-lg p-4 cursor-pointer hover:bg-surface-sidebar transition-colors border-l-4 ${getPriorityColor(notification.priority)} ${
+                className={`bg-surface-card border border-gray-700 rounded-lg p-0 cursor-pointer hover:bg-surface-sidebar transition-colors border-l-4 ${getPriorityColor(notification.priority)} ${
                   !notification.is_read ? 'ring-1 ring-accent-primary ring-opacity-30' : ''
                 }`}
-                onClick={(event) => handleNotificationClick(notification, event)}
+                onClick={(event) =&gt; handleNotificationClick(notification, event)}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
-                    <span className="text-2xl flex-shrink-0 mt-1">{notification.emoji}</span>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className={`text-lg font-rajdhani font-bold ${
-                          !notification.is_read ? 'text-white' : 'text-gray-300'
-                        }`}>
-                          {notification.title}
-                        </h3>
-                        
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs bg-surface-sidebar px-2 py-1 rounded text-text-secondary">
-                            {getTypeLabel(notification.type)}
-                          </span>
-                          {!notification.is_read && (
-                            <div className="w-2 h-2 bg-accent-primary rounded-full"></div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <p className={`text-sm mb-3 ${
-                        !notification.is_read ? 'text-gray-300' : 'text-gray-400'
-                      }`}>
-                        {notification.message}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-500">
-                          {formatTimeAgo(notification.created_at)}
-                        </span>
-                        
-                        <div className="flex items-center space-x-2">
-                          {notification.payload?.action_url && (
-                            <span className="text-xs text-accent-primary">
-                              Click to navigate →
-                            </span>
-                          )}
-                          
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notification.id);
-                            }}
-                            className="text-gray-500 hover:text-red-400 transition-colors"
-                            title="Delete notification"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                {renderNotification(notification)}
+                <div className="flex items-center justify-between px-3 pb-3">
+                  <span className="text-xs text-gray-500">
+                    {formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset)}
+                  </span>
+                  <div className="flex items-center space-x-2">
+                    {notification.payload?.action_url &amp;&amp; (
+                      <span className="text-xs text-accent-primary">
+                        Click to navigate →
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) =&gt; {
+                        e.stopPropagation();
+                        deleteNotification(notification.id);
+                      }}
+                      className="text-gray-500 hover:text-red-400 transition-colors"
+                      title="Delete notification"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -234,10 +199,10 @@ const NotificationsPage = () => {
         </div>
 
         {/* Load More Button (if needed) */}
-        {filteredNotifications.length >= 20 && (
+        {filteredNotifications.length &gt;= 20 &amp;&amp; (
           <div className="text-center mt-8">
             <button
-              onClick={() => setPage(prev => prev + 1)}
+              onClick={() =&gt; setPage(prev =&gt; prev + 1)}
               disabled={loading}
               className="px-6 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary-dark disabled:opacity-50 transition-colors"
             >

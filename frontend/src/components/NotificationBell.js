@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNotifications } from './NotificationContext';
+import MatchResultNotification from './MatchResultNotification';
+import { formatDateTimeDDMMYYYYHHMMSS } from '../utils/timeUtils';
 
-const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
+const NotificationBell = ({ isCollapsed, setCurrentView, user }) =&gt; {
   const [isOpen, setIsOpen] = useState(false);
   const bellRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -21,13 +23,13 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   const [expandedNotificationId, setExpandedNotificationId] = useState(null);
 
   // Calculate precise dropdown position with fixed positioning
-  const calculateDropdownPosition = useCallback(() => {
-    if (bellRef.current && isOpen) {
+  const calculateDropdownPosition = useCallback(() =&gt; {
+    if (bellRef.current &amp;&amp; isOpen) {
       const bellRect = bellRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
-      const isMobile = viewportWidth <= 768;
+      const isMobile = viewportWidth &lt;= 768;
       
       if (isMobile) {
         const maxHeight = viewportHeight * 0.8; // 80% высоты экрана
@@ -53,31 +55,31 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   }, [isOpen]);
 
   // Force position recalculation when dropdown opens
-  useEffect(() => {
+  useEffect(() =&gt; {
     if (isOpen) {
       // Immediate calculation
       calculateDropdownPosition();
       
       // Also calculate after a small delay to ensure DOM is updated
-      const timeoutId = setTimeout(() => {
+      const timeoutId = setTimeout(() =&gt; {
         calculateDropdownPosition();
       }, 10);
       
-      return () => clearTimeout(timeoutId);
+      return () =&gt; clearTimeout(timeoutId);
     }
   }, [isOpen, calculateDropdownPosition]);
 
   // Update position when bell is clicked, window resizes, or scrolls
-  useEffect(() => {
+  useEffect(() =&gt; {
     if (isOpen) {
       // Calculate initial position
       calculateDropdownPosition();
       
-      const handleResize = () => {
+      const handleResize = () =&gt; {
         calculateDropdownPosition();
       };
       
-      const handleScroll = () => {
+      const handleScroll = () =&gt; {
         calculateDropdownPosition();
       };
       
@@ -90,21 +92,21 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
       let scrollableParent = bellRef.current?.parentElement;
       const scrollListeners = [];
       
-      while (scrollableParent && scrollableParent !== document.body) {
-        if (scrollableParent.scrollHeight > scrollableParent.clientHeight) {
+      while (scrollableParent &amp;&amp; scrollableParent !== document.body) {
+        if (scrollableParent.scrollHeight &gt; scrollableParent.clientHeight) {
           scrollableParent.addEventListener('scroll', handleScroll, { passive: true });
           scrollListeners.push(scrollableParent);
         }
         scrollableParent = scrollableParent.parentElement;
       }
       
-      return () => {
+      return () =&gt; {
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('scroll', handleScroll);
         document.removeEventListener('scroll', handleScroll, { capture: true });
         
         // Remove listeners from scrollable parents
-        scrollListeners.forEach(element => {
+        scrollListeners.forEach(element =&gt; {
           element.removeEventListener('scroll', handleScroll);
         });
       };
@@ -112,7 +114,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   }, [isOpen, calculateDropdownPosition]);
 
   // Handle bell click with position calculation
-  const handleBellClick = () => {
+  const handleBellClick = () =&gt; {
     if (!isOpen) {
       fetchNotifications();
     }
@@ -120,28 +122,28 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     
     // Force position recalculation after state change
     if (!isOpen) {
-      setTimeout(() => {
+      setTimeout(() =&gt; {
         calculateDropdownPosition();
       }, 0);
     }
   };
 
   // Toggle expanded notification
-  const toggleExpandedNotification = (notificationId, event) => {
+  const toggleExpandedNotification = (notificationId, event) =&gt; {
     event.stopPropagation();
     setExpandedNotificationId(expandedNotificationId === notificationId ? null : notificationId);
   };
 
   // Block body scroll when dropdown is open
-  useEffect(() => {
+  useEffect(() =&gt; {
     if (isOpen) {
       const { body } = document;
       const prevOverflow = body.style.overflow;
       const prevPaddingRight = body.style.paddingRight;
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
+      if (scrollbarWidth &gt; 0) body.style.paddingRight = `${scrollbarWidth}px`;
       body.style.overflow = 'hidden';
-      return () => {
+      return () =&gt; {
         body.style.overflow = prevOverflow || 'unset';
         body.style.paddingRight = prevPaddingRight || '';
       };
@@ -149,17 +151,17 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   }, [isOpen]);
 
   // Handle click outside with improved logic
-  const handleClickOutside = (event) => {
-    if (isOpen && 
-        dropdownRef.current && 
-        !dropdownRef.current.contains(event.target) && 
-        bellRef.current && 
+  const handleClickOutside = (event) =&gt; {
+    if (isOpen &amp;&amp; 
+        dropdownRef.current &amp;&amp; 
+        !dropdownRef.current.contains(event.target) &amp;&amp; 
+        bellRef.current &amp;&amp; 
         !bellRef.current.contains(event.target)) {
       setIsOpen(false);
     }
   };
 
-  const handleNotificationClick = async (notification, event) => {
+  const handleNotificationClick = async (notification, event) =&gt; {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -169,42 +171,40 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     if (!notification.is_read) {
       await markAsRead(notification.id);
     }
-    
-    
   };
 
-  // Format time as HH:MM:SS (time when message arrived) with user's timezone offset
-  const formatTimeAgo = (dateString) => {
-    const date = new Date(dateString);
-    // Apply user's timezone offset (if available)
-    const userTimezoneOffset = user?.timezone_offset || 0;
-    const adjustedTime = new Date(date.getTime() + (userTimezoneOffset * 3600000));
-    
-    // Format as HH:MM:SS
-    const hours = adjustedTime.getHours().toString().padStart(2, '0');
-    const minutes = adjustedTime.getMinutes().toString().padStart(2, '0');
-    const seconds = adjustedTime.getSeconds().toString().padStart(2, '0');
-    
-    return `${hours}:${minutes}:${seconds}`;
+  useEffect(() =&gt; {
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () =&gt; {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [isOpen]);
+
+  const renderNotification = (notification) =&gt; {
+    if (notification.type === 'match_result') {
+      return (
+        <MatchResultNotification notification={notification} user={user} />
+      );
+    }
+    // Fallback generic renderer
+    return (
+      <div className="p-3">
+        <div className="text-white font-rajdhani font-bold text-sm">{notification.title || 'Notification'}</div>
+        <div className="text-xs text-gray-300 mt-1">{notification.message}</div>
+        <div className="text-[11px] text-gray-500 mt-1">{formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset)}</div>
+      </div>
+    );
   };
 
-  // Get priority color
-  const getPriorityColor = (priority) => {
+  const getPriorityColor = (priority) =&gt; {
     switch (priority) {
       case 'error': return 'border-l-red-500';
       case 'warning': return 'border-l-yellow-500';
       default: return 'border-l-accent-primary';
     }
   };
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isOpen]);
 
   return (
     <div className="relative">
@@ -236,7 +236,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
           </svg>
           
           {/* Notification Dot - only show when there are unread notifications */}
-          {unreadCount > 0 && (
+          {unreadCount &gt; 0 &amp;&amp; (
             <div className="absolute -top-1 -right-1 flex items-center justify-center">
               <div className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></div>
               <div className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></div>
@@ -245,20 +245,20 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
         </div>
         
         {/* Unread Count Badge */}
-        {unreadCount > 0 && (
+        {unreadCount &gt; 0 &amp;&amp; (
           <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1 border-2 border-surface-primary">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {unreadCount &gt; 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
       {/* Notifications Dropdown - Fixed Positioning with Mobile Adaptation */}
-      {isOpen && (
+      {isOpen &amp;&amp; (
         <>
           {/* Mobile backdrop */}
           <div 
             className="fixed inset-0 bg-black bg-opacity-25 z-40 sm:hidden"
-            onClick={() => setIsOpen(false)}
+            onClick={() =&gt; setIsOpen(false)}
           />
           
           <div 
@@ -278,12 +278,12 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-rajdhani font-bold text-lg">Notifications</h3>
                 <div className="flex items-center space-x-3">
-                  {loading && (
+                  {loading &amp;&amp; (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-primary"></div>
                   )}
-                  {unreadCount > 0 && (
+                  {unreadCount &gt; 0 &amp;&amp; (
                     <button
-                      onClick={(e) => {
+                      onClick={(e) =&gt; {
                         e.stopPropagation();
                         markAllAsRead();
                       }}
@@ -293,7 +293,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                     </button>
                   )}
                   <button
-                    onClick={() => setIsOpen(false)}
+                    onClick={() =&gt; setIsOpen(false)}
                     className="text-gray-400 hover:text-white transition-colors sm:hidden p-1"
                     aria-label="Close"
                   >
@@ -320,81 +320,28 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-700">
-                  {persistentNotifications.slice(0, 10).map(notification => (
+                  {persistentNotifications.slice(0, 10).map(notification =&gt; (
                     <div
                       key={notification.id}
                       className={`border-l-4 ${getPriorityColor(notification.priority)} ${
                         !notification.is_read ? 'bg-accent-primary bg-opacity-5' : ''
                       }`}
                     >
-                      {/* Основное уведомление */}
                       <div
-                        onClick={(event) => handleNotificationClick(notification, event)}
+                        onClick={(event) =&gt; handleNotificationClick(notification, event)}
                         className="p-3 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200"
                       >
-                        <div className="flex items-start space-x-3">
-                          <span className="text-lg flex-shrink-0 mt-0.5 select-none">{notification.emoji}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className={`text-sm leading-tight break-words ${!notification.is_read ? 'font-bold text-white' : 'text-gray-300'}`}>
-                              {notification.title}
-                            </div>
-                            <div className="text-xs text-gray-400 mt-1 line-clamp-2 leading-tight break-words">
-                              {expandedNotificationId === notification.id 
-                                ? notification.message 
-                                : (notification.message.length > 60 
-                                    ? notification.message.substring(0, 60) + '...' 
-                                    : notification.message)
-                              }
-                            </div>
-                            <div className="flex items-center justify-between mt-2">
-                              <div className="text-xs text-gray-500 flex-shrink-0">
-                                {formatTimeAgo(notification.created_at)}
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                {!notification.is_read && (
-                                  <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
-                                )}
-                                {/* Expand button */}
-                                {notification.message.length > 60 && (
-                                  <button
-                                    onClick={(e) => toggleExpandedNotification(notification.id, e)}
-                                    className="text-accent-primary hover:text-accent-primary-dark text-xs font-medium"
-                                  >
-                                    {expandedNotificationId === notification.id ? 'Hide' : 'Details'}
-                                  </button>
-                                )}
-                              </div>
-                            </div>
+                        {renderNotification(notification)}
+                        <div className="mt-2 flex items-center justify-between">
+                          <div className="text-[11px] text-gray-500">
+                            {formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset)}
                           </div>
+                          {!notification.is_read &amp;&amp; (
+                            <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
+                          )}
+                          {/* Expand toggle preserved for generic messages if needed */}
                         </div>
                       </div>
-
-                      {/* Expanded content */}
-                      {expandedNotificationId === notification.id && (
-                        <div className="px-3 pb-3 border-t border-gray-600 bg-surface-sidebar bg-opacity-50">
-                          <div className="pt-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="text-xs text-gray-400 font-medium">Full text:</div>
-                              <button
-                                onClick={(e) => toggleExpandedNotification(notification.id, e)}
-                                className="text-gray-400 hover:text-white text-xs p-1"
-                                aria-label="Close expanded view"
-                              >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </div>
-                            <div className="text-sm text-gray-300 leading-relaxed break-words">
-                              {notification.message}
-                            </div>
-                            <div className="text-xs text-gray-500 pt-1 border-t border-gray-600">
-                              <div>Date: {new Date(notification.created_at).toLocaleString('en-US')}</div>
-                              <div>Sender: {notification.type === 'admin_notification' ? 'Administrator' : 'System'}</div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -404,7 +351,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
             {/* Footer - Sticky */}
             <div className="sticky bottom-0 p-3 border-t border-gray-700 bg-surface-card rounded-b-lg">
               <button 
-                onClick={(e) => {
+                onClick={(e) =&gt; {
                   e.preventDefault();
                   e.stopPropagation();
                   if (setCurrentView) {
