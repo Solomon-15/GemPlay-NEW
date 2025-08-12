@@ -187,7 +187,11 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     const ntitle = (notification.title || '').toString();
     if (ntype === 'match_result' || ntitle === 'Match Result') {
       return (
-        <MatchResultNotification notification={notification} user={user} />
+        <MatchResultNotification 
+          notification={notification}
+          user={user}
+          onDelete={(id) => deleteNotification(id)}
+        />
       );
     }
     // Fallback generic renderer
