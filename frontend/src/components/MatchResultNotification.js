@@ -101,8 +101,8 @@ const MatchResultNotification = ({ notification, user }) => {
   const moves = parseMoves(notification);
   const { isBot, amount: commissionAmount, percent: commissionPercent, paidByYou } = parseCommission(notification);
 
-  // Show commission line only when: non-bot game AND commissionAmount &gt; 0 AND (paidByYou === true OR paidByYou is undefined but amount exists in message)
-  const showCommission = !isBot &amp;&amp; typeof commissionAmount === 'number' &amp;&amp; commissionAmount &gt; 0 &amp;&amp; (paidByYou === true || paidByYou === undefined);
+  // Show commission line only when: non-bot game AND commissionAmount > 0 AND paid by current user
+  const showCommission = !isBot && typeof commissionAmount === 'number' && commissionAmount > 0 && paidByYou === true;
 
   const dateStr = formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset);
 
