@@ -108,12 +108,25 @@ const MatchResultNotification = ({ notification, user }) => {
         {(() => {
           const p = bets.player;
           const o = bets.opponent;
-          if (outcome === 'win' && typeof p === 'number' && typeof o === 'number') {
-            return (
-              <span className="ml-1 text-text-secondary font-medium">
-                Received: <span className={`font-extrabold ${styles.strong}`}>{p}/{o} Gems</span>
-              </span>
-            );
+          if (outcome === 'win') {
+            let pVal = p;
+            let oVal = o;
+            // Fallback for legacy payloads that only had total_gems (sum of both bets before commission)
+            if ((typeof pVal !== 'number' || typeof oVal !== 'number')) {
+              const legacy = notification?.payload || {};
+              if (typeof legacy.total_gems === 'number' && legacy.total_gems > 0) {
+                const half = Math.round(legacy.total_gems / 2);
+                pVal = half;
+                oVal = half;
+              }
+            }
+            if (typeof pVal === 'number' && typeof oVal === 'number') {
+              return (
+                <span className="ml-1 text-text-secondary font-medium">
+                  Received: <span className={`font-extrabold ${styles.strong}`}>{pVal}/{oVal} Gems</span>
+                </span>
+              );
+            }
           }
           if (outcome === 'lose' || outcome === 'draw') {
             // Fallbacks for legacy payloads
