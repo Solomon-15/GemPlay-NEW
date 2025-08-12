@@ -113,10 +113,10 @@ const MatchResultNotification = ({ notification, user }) => {
 
       {/* 2 строка — Outcome + Received */}
       <div className={`mt-1 text-xs sm:text-sm font-rajdhani font-bold ${styles.text}`}>
-        {outcome === 'win' &amp;&amp; `You won against ${opponent}!`}
-        {outcome === 'lose' &amp;&amp; `You lost against ${opponent}.`}
-        {outcome === 'draw' &amp;&amp; `Draw against ${opponent}.`}
-        {typeof gems === 'number' &amp;&amp; (
+        {outcome === 'win' && `You won against ${opponent}!`}
+        {outcome === 'lose' && `You lost against ${opponent}.`}
+        {outcome === 'draw' && `Draw against ${opponent}.`}
+        {typeof gems === 'number' && (
           <span className="ml-1 text-text-secondary font-medium">
             Received: <span className={`font-extrabold ${styles.strong}`}>{gems} Gems</span>
           </span>
