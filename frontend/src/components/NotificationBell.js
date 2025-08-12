@@ -349,7 +349,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                     >
                       <div
                         onClick={(event) => handleNotificationClick(notification, event)}
-                        className="relative p-3 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200"
+                        className="relative p-3 pb-7 pr-8 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200"
                       >
                         {renderNotification(notification)}
                         {/* Кнопка удаления в правом нижнем углу (для всех уведомлений) */}
