@@ -3,7 +3,7 @@ import { useNotifications } from './NotificationContext';
 import MatchResultNotification from './MatchResultNotification';
 import { formatDateTimeDDMMYYYYHHMMSS } from '../utils/timeUtils';
 
-const NotificationsPage = ({ user }) =&gt; {
+const NotificationsPage = ({ user }) => {
   const {
     persistentNotifications,
     unreadCount,
