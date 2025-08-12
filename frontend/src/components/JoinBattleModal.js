@@ -678,11 +678,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             <div className={`flex items-center space-x-2 ${
               timeRemaining <= 10 ? 'text-red-400' : timeRemaining <= 20 ? 'text-yellow-400' : 'text-text-secondary'
             }`}>
-              <svg className={`w-5 h-5 ${isFlashing ? 'animate-ping' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-5 h-5 ${(isFlashing && timeRemaining <= 20) ? 'animate-ping' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className={`font-rajdhani font-bold text-lg ${
-                isBlinking ? 'animate-pulse' : ''
+                (isBlinking || (isFlashing && timeRemaining <= 10)) ? 'animate-pulse' : ''
               }`}>
                 {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
               </span>
