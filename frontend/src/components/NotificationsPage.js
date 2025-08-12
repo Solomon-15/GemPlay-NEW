@@ -65,7 +65,7 @@ const NotificationsPage = ({ user }) => {
     const ntype = (notification.type || '').toString().toLowerCase();
     const ntitle = (notification.title || '').toString();
     if (ntype === 'match_result' || ntitle === 'Match Result') {
-      return <MatchResultNotification notification={notification} user={user} />;
+      return <MatchResultNotification notification={notification} user={user} onDelete={(id) => deleteNotification(id)} />;
     }
     return (
       <div className="p-3">
