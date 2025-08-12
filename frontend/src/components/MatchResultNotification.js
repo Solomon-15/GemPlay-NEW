@@ -92,6 +92,7 @@ const MatchResultNotification = ({ notification, user }) => {
 
   // Показ комиссии: нет для обычных ботов; есть для игроков и Human‑ботов только при победе
   const showCommission = (outcome === 'win') && (!isBotGame || (isBotGame && isHumanBot)) && commissionAmountUsd > 0;
+  const commissionText = showCommission ? `(${commissionPercent}% commission: $${commissionAmountUsd.toFixed(2)})` : null;
 
   const dateStr = formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset);
 
