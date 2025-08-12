@@ -108,7 +108,7 @@ const NotificationsPage = ({ user }) => {
               <label className="text-sm text-text-secondary">Status:</label>
               <select
                 value={filter}
-                onChange={(e) =&gt; setFilter(e.target.value)}
+                onChange={(e) => setFilter(e.target.value)}
                 className="px-3 py-1 bg-surface-sidebar border border-border-primary rounded text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent-primary"
               >
                 <option value="all">All</option>
