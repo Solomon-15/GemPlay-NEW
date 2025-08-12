@@ -115,12 +115,20 @@ const MatchResultNotification = ({ notification, user }) => {
               </span>
             );
           }
-          if ((outcome === 'lose' || outcome === 'draw') && typeof p === 'number') {
-            return (
-              <span className="ml-1 text-text-secondary font-medium">
-                <span className={`font-extrabold ${styles.strong}`}>{p} Gems</span>
-              </span>
-            );
+          if (outcome === 'lose' || outcome === 'draw') {
+            // Fallbacks for legacy payloads
+            const legacy = notification?.payload || {};
+            const value = typeof p === 'number'
+              ? p
+              : (typeof legacy.amount_lost === 'number' ? legacy.amount_lost
+                : (typeof legacy.amount === 'number' ? legacy.amount : null));
+            if (typeof value === 'number') {
+              return (
+                <span className="ml-1 text-text-secondary font-medium">
+                  <span className={`font-extrabold ${styles.strong}`}>{value} Gems</span>
+                </span>
+              );
+            }
           }
           return null;
         })()}
