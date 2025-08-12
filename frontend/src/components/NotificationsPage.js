@@ -160,7 +160,7 @@ const NotificationsPage = ({ user }) => {
               </p>
             </div>
           ) : (
-            filteredNotifications.map(notification =&gt; (
+            filteredNotifications.map(notification => (
               <div
                 key={notification.id}
                 className={`bg-surface-card border border-gray-700 rounded-lg p-0 cursor-pointer hover:bg-surface-sidebar transition-colors border-l-4 ${getPriorityColor(notification.priority)} ${
