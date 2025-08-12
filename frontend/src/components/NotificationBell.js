@@ -287,8 +287,8 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
             style={{
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
-              width: `${dropdownPosition.width || Math.min(320, dropdownPosition.maxWidth || 320)}px`,
-              maxHeight: `${dropdownPosition.maxHeight || 400}px`,
+              width: `${dropdownPosition.width || Math.min(420, dropdownPosition.maxWidth || 420)}px`,
+              maxHeight: `${dropdownPosition.maxHeight || 480}px`,
               opacity: isOpen ? 1 : 0,
               transform: isOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-8px)'
             }}
