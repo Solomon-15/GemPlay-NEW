@@ -4697,7 +4697,7 @@ async def sell_gems(gem_type: GemType, quantity: int, current_user: User = Depen
 # ==============================================================================
 
 @api_router.get("/admin/gems", response_model=List[GemAdminResponse])
-async def get_gems_admin(current_admin: User = Depends(get_current_admin)):
+async def get_gems_admin(current_admin: User = Depends(get_current_super_admin)):
     """Get all gems for admin management."""
     try:
         gems = await db.gem_definitions.find({}).to_list(100)
@@ -4726,7 +4726,7 @@ async def get_gems_admin(current_admin: User = Depends(get_current_admin)):
 @api_router.post("/admin/gems", response_model=dict)
 async def create_gem_admin(
     request: CreateGemRequest,
-    current_admin: User = Depends(get_current_admin)
+    current_admin: User = Depends(get_current_super_admin)
 ):
     """Create a new gem type."""
     try:
@@ -4789,7 +4789,7 @@ async def create_gem_admin(
 async def update_gem_admin(
     gem_id: str,
     request: UpdateGemRequest,
-    current_admin: User = Depends(get_current_admin)
+    current_admin: User = Depends(get_current_super_admin)
 ):
     """Update an existing gem."""
     try:
@@ -4866,7 +4866,7 @@ async def update_gem_admin(
 @api_router.delete("/admin/gems/{gem_id}", response_model=dict)
 async def delete_gem_admin(
     gem_id: str,
-    current_admin: User = Depends(get_current_admin)
+    current_admin: User = Depends(get_current_super_admin)
 ):
     """Delete a gem (only non-default gems can be deleted)."""
     try:

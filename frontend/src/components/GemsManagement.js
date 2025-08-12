@@ -42,7 +42,13 @@ const GemsManagement = () => {
       setGems(response.data);
     } catch (error) {
       console.error('Error fetching gems:', error);
-      showError('Ошибка загрузки гемов');
+      // Если ошибка 403 (нет прав), просто показываем пустой список без ошибки
+      if (error.response?.status === 403) {
+        setGems([]);
+        console.log('У пользователя нет прав для управления гемами');
+      } else {
+        showError('Ошибка загрузки гемов');
+      }
     } finally {
       setLoading(false);
     }
@@ -84,7 +90,11 @@ const GemsManagement = () => {
       fetchGems();
     } catch (error) {
       console.error('Error creating gem:', error);
-      showError(error.response?.data?.detail || 'Ошибка создания гема');
+      if (error.response?.status === 403) {
+        showError('Недостаточно прав для создания гемов. Требуется роль SUPER_ADMIN.');
+      } else {
+        showError(error.response?.data?.detail || 'Ошибка создания гема');
+      }
     } finally {
       setSaving(false);
     }
@@ -109,7 +119,11 @@ const GemsManagement = () => {
       fetchGems();
     } catch (error) {
       console.error('Error updating gem:', error);
-      showError(error.response?.data?.detail || 'Ошибка обновления гема');
+      if (error.response?.status === 403) {
+        showError('Недостаточно прав для обновления гемов. Требуется роль SUPER_ADMIN.');
+      } else {
+        showError(error.response?.data?.detail || 'Ошибка обновления гема');
+      }
     } finally {
       setSaving(false);
     }
@@ -142,7 +156,11 @@ const GemsManagement = () => {
       fetchGems();
     } catch (error) {
       console.error('Error deleting gem:', error);
-      showError(error.response?.data?.detail || 'Ошибка удаления гема');
+      if (error.response?.status === 403) {
+        showError('Недостаточно прав для удаления гемов. Требуется роль SUPER_ADMIN.');
+      } else {
+        showError(error.response?.data?.detail || 'Ошибка удаления гема');
+      }
     }
   };
 
@@ -179,6 +197,30 @@ const GemsManagement = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-white text-xl font-roboto">Загрузка гемов...</div>
+      </div>
+    );
+  }
+
+  // Если гемы не загружены из-за отсутствия прав, показываем информативное сообщение
+  if (gems.length === 0 && !loading) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <h2 className="font-russo text-2xl text-white">Управление гемами</h2>
+        </div>
+
+        {/* Access Denied Message */}
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="text-white text-xl font-roboto mb-4">
+              Управление гемами недоступно
+            </div>
+            <div className="text-text-secondary text-sm font-roboto">
+              Для управления гемами требуется роль SUPER_ADMIN
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
