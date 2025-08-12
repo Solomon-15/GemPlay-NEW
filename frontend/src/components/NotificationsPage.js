@@ -85,7 +85,7 @@ const NotificationsPage = ({ user }) => {
                 🔔 Notifications
               </h1>
               <p className="text-text-secondary">
-                {unreadCount &gt; 0 ? `You have ${unreadCount} unread notifications` : 'All notifications are read'}
+                {unreadCount > 0 ? `You have ${unreadCount} unread notifications` : 'All notifications are read'}
               </p>
             </div>
             
