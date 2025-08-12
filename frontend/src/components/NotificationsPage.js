@@ -165,12 +165,28 @@ const NotificationsPage = ({ user }) => {
             filteredNotifications.map(notification => (
               <div
                 key={notification.id}
-                className={`bg-surface-card border border-gray-700 rounded-lg p-0 cursor-pointer hover:bg-surface-sidebar transition-colors border-l-4 ${getPriorityColor(notification.priority)} ${
+                className={`relative bg-surface-card border border-gray-700 rounded-lg p-0 cursor-pointer hover:bg-surface-sidebar transition-colors border-l-4 ${getPriorityColor(notification.priority)} ${
                   !notification.is_read ? 'ring-1 ring-accent-primary ring-opacity-30' : ''
                 }`}
                 onClick={(event) => handleNotificationClick(notification, event)}
               >
-                {renderNotification(notification)}
+                <div className="pb-8 pr-10">
+                  {renderNotification(notification)}
+                </div>
+                {/* Кнопка удаления в правом нижнем углу (только для страницы Notifications) */}
+                <button
+                  aria-label="Delete notification"
+                  className="absolute bottom-2 right-3 text-gray-500 hover:text-red-400 transition-colors p-1 z-10"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deleteNotification(notification.id);
+                  }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
               </div>
             ))
           )}
