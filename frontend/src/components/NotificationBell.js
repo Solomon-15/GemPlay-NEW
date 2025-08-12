@@ -335,16 +335,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                         className="p-3 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200"
                       >
                         {renderNotification(notification)}
-                        {notification.type !== 'match_result' && (
-                          <div className="mt-2 flex items-center justify-between">
-                            <div className="text-[11px] text-gray-500">
-                              {formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset)}
-                            </div>
-                            {!notification.is_read && (
-                              <div className="w-2 h-2 bg-accent-primary rounded-full flex-shrink-0"></div>
-                            )}
-                          </div>
-                        )}
+                        {/* Убираем дублирующий футер для всех, чтобы оставить только контент карточки */}
                       </div>
                     </div>
                   ))}
