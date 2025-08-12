@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNotifications } from './NotificationContext';
 import { useApi } from '../hooks/useApi';
 import ProfitChart from './ProfitChart';
+import Loader from './Loader';
 
 const NewBotAnalytics = () => {
   const [activeTab, setActiveTab] = useState('human'); // 'human' or 'regular'
@@ -330,8 +331,7 @@ const NewBotAnalytics = () => {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
         <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary mx-auto mb-4"></div>
-          <p className="font-rajdhani text-text-secondary">Загрузка аналитики...</p>
+          <Loader size={48} ariaLabel="Loading analytics" />
         </div>
       </div>
     );

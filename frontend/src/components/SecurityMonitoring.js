@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -112,7 +113,7 @@ const SecurityMonitoring = ({ user }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="text-white text-xl font-roboto">Загружается мониторинг безопасности...</div>
+        <Loader size={32} ariaLabel="Loading security monitoring" />
       </div>
     );
   }

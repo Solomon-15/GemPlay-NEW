@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Loader from './Loader';
 import { useNotifications } from './NotificationContext';
 import useConfirmation from '../hooks/useConfirmation';
 import ConfirmationModal from './ConfirmationModal';
@@ -254,7 +255,7 @@ const SoundsAdmin = ({ user }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-white text-xl font-rajdhani">Загрузка звуков...</div>
+        <Loader size={32} ariaLabel="Loading sounds" />
       </div>
     );
   }
@@ -370,7 +371,7 @@ const SoundsAdmin = ({ user }) => {
                             disabled={uploading}
                           />
                           <span className="text-blue-400 hover:text-blue-300 text-sm">
-                            {uploading ? '⏳' : '📁'}
+                            {uploading ? <Loader size={14} ariaLabel="Uploading sound" /> : '📁'}
                           </span>
                         </label>
                       </div>

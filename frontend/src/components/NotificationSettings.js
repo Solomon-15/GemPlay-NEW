@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNotifications } from './NotificationContext';
+import Loader from './Loader';
 
 const NotificationSettings = () => {
   const { 
@@ -94,8 +95,7 @@ const NotificationSettings = () => {
     return (
       <div className="bg-surface-card p-6 rounded-lg">
         <div className="flex items-center space-x-2 mb-4">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-accent-primary"></div>
-          <h3 className="text-white text-lg font-rajdhani font-bold">Загрузка настроек уведомлений...</h3>
+          <Loader size={20} ariaLabel="Loading notification settings" />
         </div>
       </div>
     );
@@ -129,7 +129,7 @@ const NotificationSettings = () => {
             
             <div className="flex items-center ml-4">
               {saving && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-primary mr-2"></div>
+                <Loader size={16} ariaLabel="Saving notification settings" />
               )}
               <label className="relative inline-flex items-center cursor-pointer">
                 <input

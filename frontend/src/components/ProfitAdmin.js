@@ -12,6 +12,7 @@ import {
   generateExpensesData, 
   generateNetProfitData 
 } from '../utils/chartUtils';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -1366,8 +1367,7 @@ const ProfitAdmin = ({ user }) => {
 
                   {modalLoading ? (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"></div>
-                      <p className="text-cyan-400">Загрузка данных...</p>
+                      <Loader size={48} ariaLabel="Loading data" />
                     </div>
                   ) : modalError ? (
                     <div className="text-center py-8">
@@ -1672,8 +1672,7 @@ const ProfitAdmin = ({ user }) => {
 
                   {modalLoading ? (
                     <div className="text-center py-8">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
-                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
+                      <Loader size={32} ariaLabel="Loading data" />
                     </div>
                   ) : modalError ? (
                     <div className="text-center py-8">
@@ -1822,8 +1821,7 @@ const ProfitAdmin = ({ user }) => {
 
                   {modalLoading ? (
                     <div className="text-center py-8">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-400"></div>
-                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
+                      <Loader size={32} ariaLabel="Loading data" />
                     </div>
                   ) : modalError ? (
                     <div className="text-center py-8">
@@ -1953,8 +1951,7 @@ const ProfitAdmin = ({ user }) => {
 
                   {modalLoading ? (
                     <div className="text-center py-8">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-400"></div>
-                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
+                      <Loader size={32} ariaLabel="Loading data" />
                     </div>
                   ) : modalError ? (
                     <div className="text-center py-8">
@@ -2116,8 +2113,7 @@ const ProfitAdmin = ({ user }) => {
 
                   {modalLoading ? (
                     <div className="text-center py-8">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-red-400"></div>
-                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
+                      <Loader size={32} ariaLabel="Loading data" />
                     </div>
                   ) : modalError ? (
                     <div className="text-center py-8">
@@ -2263,8 +2259,7 @@ const ProfitAdmin = ({ user }) => {
 
                   {modalLoading ? (
                     <div className="text-center py-8">
-                      <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
-                      <p className="text-sm text-text-secondary mt-2">Загрузка данных...</p>
+                      <Loader size={32} ariaLabel="Loading data" />
                     </div>
                   ) : modalError ? (
                     <div className="text-center py-8">

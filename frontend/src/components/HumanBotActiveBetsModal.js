@@ -4,6 +4,7 @@ import { formatDollarsAsGems, formatBetAmountAsGems, preloadGemPrices } from '..
 import { formatTimeWithOffset, formatDateWithOffset } from '../utils/timeUtils';
 import useConfirmation from '../hooks/useConfirmation';
 import ConfirmationModal from './ConfirmationModal';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -259,10 +260,7 @@ const HumanBotActiveBetsModal = ({
         
         {loading ? (
           <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
-            <span className="ml-3 text-text-secondary">
-              {showAllBets ? 'Загрузка всех ставок...' : 'Загрузка активных ставок...'}
-            </span>
+            <Loader size={24} ariaLabel="Loading active bets" />
           </div>
         ) : (
           <div className="space-y-4">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNotifications } from './NotificationContext';
 import MatchResultNotification from './MatchResultNotification';
 import { formatDateTimeDDMMYYYYHHMMSS } from '../utils/timeUtils';
+import Loader from './Loader';
 
 const NotificationsPage = ({ user }) => {
   const {
@@ -143,8 +144,9 @@ const NotificationsPage = ({ user }) => {
         <div className="space-y-4">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto"></div>
-              <p className="text-text-secondary mt-2">Loading notifications...</p>
+              <div className="mx-auto">
+                <Loader size={32} ariaLabel="Loading notifications" />
+              </div>
             </div>
           ) : filteredNotifications.length === 0 ? (
             <div className="text-center py-12">

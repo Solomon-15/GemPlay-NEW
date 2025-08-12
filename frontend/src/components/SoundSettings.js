@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import soundManager from '../utils/SoundManager';
+import Loader from './Loader';
 
 const SoundSettings = ({ isOpen, onClose }) => {
   const [volume, setVolume] = useState(soundManager.volume);
@@ -146,7 +147,7 @@ const SoundSettings = ({ isOpen, onClose }) => {
                 disabled={reloading}
                 className="w-full px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors text-sm disabled:opacity-50"
               >
-                {reloading ? '🔄 Перезагружаем...' : '🔄 Перезагрузить звуки'}
+                {reloading ? <Loader size={16} ariaLabel="Reloading sounds" /> : '🔄 Перезагрузить звуки'}
               </button>
             </div>
           )}

@@ -1,5 +1,6 @@
 import { formatAsGems } from '../utils/economy';
 import { formatTimeWithOffset } from '../utils/timeUtils';
+import Loader from './Loader';
 
 const HumanBotCommissionModal = ({
   isOpen,
@@ -57,8 +58,7 @@ const HumanBotCommissionModal = ({
         <div className="p-6">
           {loading ? (
             <div className="flex justify-center items-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary"></div>
-              <span className="ml-2 text-text-secondary">Загружаем данные о комиссиях...</span>
+              <Loader size={24} ariaLabel="Loading commissions" />
             </div>
           ) : data && data.commission_entries ? (
             <>
