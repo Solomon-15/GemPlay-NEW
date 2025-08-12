@@ -15,7 +15,8 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     loading,
     fetchNotifications,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    deleteNotification
   } = useNotifications();
   
   // Глобальный слушатель для клика по корзине внутри карточки
