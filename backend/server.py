@@ -19850,11 +19850,28 @@ class NotificationPayload(BaseModel):
     opponent_name: Optional[str] = None
     opponent_id: Optional[str] = None
     amount: Optional[float] = None
-    result: Optional[str] = None  # won/lost/draw
+    result: Optional[str] = None  # won/lost/draw (legacy)
+    outcome: Optional[str] = None  # win/lose/draw (for frontend rendering)
     amount_won: Optional[float] = None
     amount_lost: Optional[float] = None
-    commission: Optional[float] = None  # Commission amount
-    total_gems: Optional[float] = None  # Total gems before commission
+    commission: Optional[float] = None  # Commission amount (legacy)
+    total_gems: Optional[float] = None  # Total gems before commission (legacy)
+
+    # New RPS notification fields
+    player_move: Optional[str] = None  # 'rock' | 'paper' | 'scissors'
+    opponent_move: Optional[str] = None  # 'rock' | 'paper' | 'scissors'
+    player_bet_gems: Optional[float] = None
+    opponent_bet_gems: Optional[float] = None
+    player_bet_usd: Optional[float] = None
+    opponent_bet_usd: Optional[float] = None
+
+    commission_percent: Optional[float] = None  # e.g., 3
+    commission_amount_usd: Optional[float] = None
+
+    is_bot_game: Optional[bool] = None
+    is_human_bot: Optional[bool] = None
+
+    # Generic fields
     sender_name: Optional[str] = None
     sender_id: Optional[str] = None
     category: Optional[str] = None
