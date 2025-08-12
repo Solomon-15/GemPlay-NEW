@@ -2229,7 +2229,7 @@ const RegularBotsManagement = () => {
                         {(() => {
                           const sums = cycleSumsByBot[bot.id];
                           if (sums) {
-                            const total = Number(sums.exact_cycle_total || sums.total_sum || 0);
+                            const total = Number(sums.total_sum || 0);
                             const from = Number((sums.active_pool !== undefined ? sums.active_pool : (Number(sums.wins_sum || 0) + Number(sums.losses_sum || 0))));
                             const draws = Number(sums.draws_sum || 0);
                             return (
