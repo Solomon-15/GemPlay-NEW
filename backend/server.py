@@ -7154,6 +7154,39 @@ async def determine_game_winner(game_id: str) -> dict:
             # Determine winnings/losses for notifications
             total_pot = game_obj.bet_amount * 2 if not is_regular_bot_game else game_obj.bet_amount
             winnings = total_pot - commission_amount if winner_id else 0
+
+            # Compute gem values for each side for payload (in "Gems" units)
+            def _calc_gems_value(gems):
+                try:
+                    total = 0.0
+                    if isinstance(gems, dict):
+                        for gtype, qty in gems.items():
+                            price = GEM_PRICES.get(str(gtype), 0)
+                            total += float(qty) * float(price)
+                    elif isinstance(gems, list):
+                        for item in gems:
+                            if isinstance(item, dict):
+                                gtype = item.get('type') or item.get('gem_type') or item.get('name')
+                                qty = item.get('quantity') or item.get('qty') or 0
+                                price = GEM_PRICES.get(str(gtype), 0)
+                                total += float(qty) * float(price)
+                    return round(total)
+                except Exception:
+                    return round(game_obj.bet_amount)
+
+            creator_gems_value = _calc_gems_value(game_obj.bet_gems)
+            opponent_gems_value = _calc_gems_value(game_obj.opponent_gems) if getattr(game_obj, 'opponent_gems', None) else round(game_obj.bet_amount)
+
+            # Commission percent to expose in payload (integer)
+            try:
+                commission_rate_curr = await get_bet_commission_rate_fraction()
+            except Exception:
+                commission_rate_curr = 0.03
+            commission_percent_int = int(round(commission_rate_curr * 100))
+
+            # Bot flags
+            is_bot_game_flag = bool(getattr(game_obj, 'is_bot_game', False) or getattr(game_obj, 'bot_id', None) or (getattr(game_obj, 'creator_type', '') in ['bot','human_bot']) or (getattr(game_obj, 'opponent_type', '') in ['bot','human_bot']))
+            is_human_bot_flag = (getattr(game_obj, 'bot_type', None) == 'HUMAN') or (getattr(game_obj, 'creator_type', '') == 'human_bot') or (getattr(game_obj, 'opponent_type', '') == 'human_bot')
             
             # Send notification to creator
             if result_status == "creator_wins":
