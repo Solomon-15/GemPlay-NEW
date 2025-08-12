@@ -352,6 +352,10 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                         className="relative p-3 pb-7 pr-8 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200"
                       >
                         {renderNotification(notification)}
+                        {/* Индикатор непрочитанного */}
+                        {!notification.is_read && (
+                          <span className="absolute top-2 left-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                        )}
                         {/* Кнопка удаления в правом нижнем углу (для всех уведомлений) */}
                         <button
                           aria-label="Delete notification"
