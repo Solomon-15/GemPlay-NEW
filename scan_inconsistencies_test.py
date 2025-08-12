@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://3228f7f2-31dc-43d9-b035-c3bf150c31a2.preview.emergentagent.com/api"
+BACKEND_URL = "https://f69ab665-caf1-44ae-a7f3-6839d9a82e50.preview.emergentagent.com/api"
 
 class ScanInconsistenciesTester:
     def __init__(self):

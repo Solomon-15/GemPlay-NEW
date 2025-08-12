@@ -32,7 +32,7 @@ import random
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://3228f7f2-31dc-43d9-b035-c3bf150c31a2.preview.emergentagent.com/api"
+BASE_URL = "https://f69ab665-caf1-44ae-a7f3-6839d9a82e50.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
@@ -644,7 +644,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://3228f7f2-31dc-43d9-b035-c3bf150c31a2.preview.emergentagent.com/api"
+BASE_URL = "https://f69ab665-caf1-44ae-a7f3-6839d9a82e50.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
