@@ -180,7 +180,7 @@ const NotificationsPage = ({ user }) => {
                       </span>
                     )}
                     <button
-                      onClick={(e) =&gt; {
+                      onClick={(e) => {
                         e.stopPropagation();
                         deleteNotification(notification.id);
                       }}
