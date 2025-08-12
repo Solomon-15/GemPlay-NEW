@@ -2257,9 +2257,16 @@ const RegularBotsManagement = () => {
                       <div className="text-white font-roboto text-sm">
                         {(() => {
                           // Сумма ставок (фиксированная сумма всех ставок одного цикла):
-                          // Берём exact_cycle_total из API /cycle-bets (кэшируется в cycleSumsByBot)
+                          // 1) Берём exact_cycle_total из API /cycle-bets (кэшируется в cycleSumsByBot)
+                          // 2) Фолбэк сразу после создания бота: считаем по формуле ((min+max)/2)*cycle_games
                           const sums = cycleSumsByBot[bot.id];
-                          const val = Number((sums && sums.exact_cycle_total) || 0);
+                          let val = Number((sums && sums.exact_cycle_total) || 0);
+                          if (!(val > 0)) {
+                            const minBet = Math.round(Number(bot.min_bet_amount ?? bot.min_bet ?? 1));
+                            const maxBet = Math.round(Number(bot.max_bet_amount ?? bot.max_bet ?? 50));
+                            const cycleGames = Math.max(1, Number(bot.cycle_games ?? 12));
+                            val = Math.round(((minBet + maxBet) / 2.0) * cycleGames);
+                          }
                           return val > 0 ? val : '—';
                         })()}
                       </div>
