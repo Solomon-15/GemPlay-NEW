@@ -41,7 +41,7 @@ const NotificationsPage = ({ user }) => {
     }
   };
 
-  const getTypeLabel = (type) =&gt; {
+  const getTypeLabel = (type) => {
     const typeLabels = {
       bet_accepted: 'Bet Accepted',
       match_result: 'Match Result',
