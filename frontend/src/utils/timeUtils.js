@@ -36,7 +36,7 @@ export const formatTimeOnlyWithOffset = (dateString, timezoneOffset = 0) => {
 /**
  * Format datetime as dd.mm.yyyy, HH:MM:SS with optional timezone offset (hours)
  */
-export const formatDateTimeDDMMYYYYHHMMSS = (dateString, timezoneOffset = null) =&gt; {
+export const formatDateTimeDDMMYYYYHHMMSS = (dateString, timezoneOffset = null) => {
   const raw = new Date(dateString);
   const d = timezoneOffset === null ? raw : new Date(raw.getTime() + timezoneOffset * 3600000);
   const dd = d.getDate().toString().padStart(2, '0');
