@@ -202,7 +202,7 @@ const NotificationsPage = ({ user }) => {
         {filteredNotifications.length >= 20 && (
           <div className="text-center mt-8">
             <button
-              onClick={() =&gt; setPage(prev =&gt; prev + 1)}
+              onClick={() => setPage(prev => prev + 1)}
               disabled={loading}
               className="px-6 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-primary-dark disabled:opacity-50 transition-colors"
             >
