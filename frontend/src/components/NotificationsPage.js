@@ -174,7 +174,7 @@ const NotificationsPage = ({ user }) => {
                     {formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset)}
                   </span>
                   <div className="flex items-center space-x-2">
-                    {notification.payload?.action_url &amp;&amp; (
+                    {notification.payload?.action_url && (
                       <span className="text-xs text-accent-primary">
                         Click to navigate →
                       </span>
