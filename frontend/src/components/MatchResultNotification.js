@@ -100,15 +100,15 @@ const MatchResultNotification = ({ notification, user, showIcons = true, onDelet
     <div className="p-3">
       <div className="grid grid-cols-12 items-center gap-3">
         {/* Левая колонка — текстовая часть */}
-        <div className="col-span-7 sm:col-span-8">
+        <div className="col-span-6 sm:col-span-7">
           {/* 1 строка — Match Result */}
           <div className="text-white font-rajdhani font-bold text-sm sm:text-base">Match Result</div>
 
           {/* 2 строка — Outcome + Received */}
           <div className={`mt-1 text-xs sm:text-sm font-rajdhani font-bold ${styles.text}`}>
-            {outcome === 'win' && `You won against ${opponent}!`}
-            {outcome === 'lose' && `You lost against ${opponent}.`}
-            {outcome === 'draw' && `Draw against ${opponent}.`}
+            {outcome === 'win' && `WON ${opponent}!`}
+            {outcome === 'lose' && `LOST ${opponent}.`}
+            {outcome === 'draw' && `DRAW ${opponent}.`}
             {(() => {
               const p = bets.player;
               const o = bets.opponent;
@@ -157,19 +157,19 @@ const MatchResultNotification = ({ notification, user, showIcons = true, onDelet
         {/* Средняя колонка — большие иконки ходов */}
         <div className="col-span-4 sm:col-span-3 flex items-center justify-center">
           {showIcons && (
-            <div className="flex items-center space-x-4">
-              <img src={moveIconMap[moves.player]} alt={capitalize(moves.player)} className="w-12 h-12 sm:w-14 sm:h-14" />
+            <div className="flex space-x-1">
+              <img src={moveIconMap[moves.player]} alt={capitalize(moves.player)} className="w-10 h-10 sm:w-12 sm:h-12" />
               <span className="text-text-secondary text-base font-rajdhani">vs</span>
-              <img src={moveIconMap[moves.opponent]} alt={capitalize(moves.opponent)} className="w-12 h-12 sm:w-14 sm:h-14" />
+              <img src={moveIconMap[moves.opponent]} alt={capitalize(moves.opponent)} className="w-10 h-10 sm:w-12 sm:h-12" />
             </div>
           )}
         </div>
 
         {/* Правая колонка — корзина в правом нижнем углу */}
-        <div className="col-span-1 relative">
+        <div className="col-span-1 relative ">
           <button
             data-notification-id={notification.id}
-            className="absolute bottom-1 right-1 text-gray-500 hover:text-red-400 transition-colors p-1"
+            className="absolute bottom-1 right-1 text-gray-500 hover:text-red-400 transition-colors p-1 "
             title="Delete notification"
             onClick={(e) => {
               e.preventDefault();

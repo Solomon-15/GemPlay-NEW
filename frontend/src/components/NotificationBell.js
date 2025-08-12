@@ -314,7 +314,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                   )}
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="text-gray-400 hover:text-white transition-colors sm:hidden p-1"
+                    className="text-gray-400 hover:text-white transition-colors "
                     aria-label="Close"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
