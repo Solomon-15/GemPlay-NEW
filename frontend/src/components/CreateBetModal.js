@@ -458,51 +458,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     </div>
   );
 
-  const renderStep3 = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-white font-rajdhani text-xl mb-4">Confirm Your Bet</h3>
-      </div>
 
-      <div className="bg-surface-sidebar rounded-lg p-4 space-y-3">
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Bet Amount:</span>
-          <span className="text-white font-rajdhani font-bold">{formatDollarsAsGems(totalGemValue)}</span>
-        </div>
-        
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Commission (3%):</span>
-          <span className="text-orange-400 font-rajdhani font-bold">
-            {formatDollarsAsGems(totalGemValue * COMMISSION_RATE)}
-          </span>
-        </div>
-        
-        <div className="flex justify-between">
-          <span className="text-text-secondary">Your Move:</span>
-          <span className="text-white font-rajdhani font-bold capitalize">{selectedMove}</span>
-        </div>
-
-        <div className="border-t border-border-primary pt-3 mt-3">
-          <div className="text-text-secondary text-sm mb-2">Selected Gems (from Inventory):</div>
-          <div className="space-y-2">
-            {renderSelectedGems()}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-yellow-900 bg-opacity-20 border border-yellow-500 border-opacity-30 rounded-lg p-4">
-        <div className="flex items-start space-x-2">
-          <svg className="w-5 h-5 text-yellow-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <div className="text-yellow-400 text-sm">
-            <div className="font-bold mb-1">Important:</div>
-            <div>Your gems and commission will be frozen in inventory until the game completes. The bet will auto-cancel in 24 hours if no opponent joins.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   // Prevent body scroll while modal open (and avoid layout jumps)
   useEffect(() => {
