@@ -33,7 +33,7 @@ const NotificationsPage = ({ user }) => {
     }
   };
 
-  const getPriorityColor = (priority) =&gt; {
+  const getPriorityColor = (priority) => {
     switch (priority) {
       case 'error': return 'border-l-red-500 bg-red-500 bg-opacity-5';
       case 'warning': return 'border-l-yellow-500 bg-yellow-500 bg-opacity-5';
