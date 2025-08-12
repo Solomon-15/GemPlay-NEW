@@ -580,7 +580,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               </button>
             )}
             
-            {currentStep < 3 ? (
+            {currentStep === 1 && (
               <button
                 onClick={handleNext}
                 disabled={loading}
@@ -588,7 +588,8 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               >
                 Next
               </button>
-            ) : (
+            )}
+            {currentStep === 2 && (
               <button
                 onClick={handleCreateBet}
                 disabled={loading}
