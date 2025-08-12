@@ -23,7 +23,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   const [expandedNotificationId, setExpandedNotificationId] = useState(null);
 
   // Calculate precise dropdown position with fixed positioning
-  const calculateDropdownPosition = useCallback(() =&gt; {
+  const calculateDropdownPosition = useCallback(() => {
     if (bellRef.current &amp;&amp; isOpen) {
       const bellRect = bellRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
@@ -55,31 +55,31 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   }, [isOpen]);
 
   // Force position recalculation when dropdown opens
-  useEffect(() =&gt; {
+  useEffect(() => {
     if (isOpen) {
       // Immediate calculation
       calculateDropdownPosition();
       
       // Also calculate after a small delay to ensure DOM is updated
-      const timeoutId = setTimeout(() =&gt; {
+      const timeoutId = setTimeout(() => {
         calculateDropdownPosition();
       }, 10);
       
-      return () =&gt; clearTimeout(timeoutId);
+      return () => clearTimeout(timeoutId);
     }
   }, [isOpen, calculateDropdownPosition]);
 
   // Update position when bell is clicked, window resizes, or scrolls
-  useEffect(() =&gt; {
+  useEffect(() => {
     if (isOpen) {
       // Calculate initial position
       calculateDropdownPosition();
       
-      const handleResize = () =&gt; {
+      const handleResize = () => {
         calculateDropdownPosition();
       };
       
-      const handleScroll = () =&gt; {
+      const handleScroll = () => {
         calculateDropdownPosition();
       };
       
@@ -100,13 +100,13 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
         scrollableParent = scrollableParent.parentElement;
       }
       
-      return () =&gt; {
+      return () => {
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('scroll', handleScroll);
         document.removeEventListener('scroll', handleScroll, { capture: true });
         
         // Remove listeners from scrollable parents
-        scrollListeners.forEach(element =&gt; {
+        scrollListeners.forEach(element => {
           element.removeEventListener('scroll', handleScroll);
         });
       };
@@ -114,7 +114,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   }, [isOpen, calculateDropdownPosition]);
 
   // Handle bell click with position calculation
-  const handleBellClick = () =&gt; {
+  const handleBellClick = () => {
     if (!isOpen) {
       fetchNotifications();
     }
@@ -122,20 +122,20 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     
     // Force position recalculation after state change
     if (!isOpen) {
-      setTimeout(() =&gt; {
+      setTimeout(() => {
         calculateDropdownPosition();
       }, 0);
     }
   };
 
   // Toggle expanded notification
-  const toggleExpandedNotification = (notificationId, event) =&gt; {
+  const toggleExpandedNotification = (notificationId, event) => {
     event.stopPropagation();
     setExpandedNotificationId(expandedNotificationId === notificationId ? null : notificationId);
   };
 
   // Block body scroll when dropdown is open
-  useEffect(() =&gt; {
+  useEffect(() => {
     if (isOpen) {
       const { body } = document;
       const prevOverflow = body.style.overflow;
@@ -143,7 +143,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       if (scrollbarWidth &gt; 0) body.style.paddingRight = `${scrollbarWidth}px`;
       body.style.overflow = 'hidden';
-      return () =&gt; {
+      return () => {
         body.style.overflow = prevOverflow || 'unset';
         body.style.paddingRight = prevPaddingRight || '';
       };
@@ -151,7 +151,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   }, [isOpen]);
 
   // Handle click outside with improved logic
-  const handleClickOutside = (event) =&gt; {
+  const handleClickOutside = (event) => {
     if (isOpen &amp;&amp; 
         dropdownRef.current &amp;&amp; 
         !dropdownRef.current.contains(event.target) &amp;&amp; 
@@ -161,7 +161,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     }
   };
 
-  const handleNotificationClick = async (notification, event) =&gt; {
+  const handleNotificationClick = async (notification, event) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -173,16 +173,16 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     }
   };
 
-  useEffect(() =&gt; {
+  useEffect(() => {
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () =&gt; {
+      return () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }
   }, [isOpen]);
 
-  const renderNotification = (notification) =&gt; {
+  const renderNotification = (notification) => {
     if (notification.type === 'match_result') {
       return (
         <MatchResultNotification notification={notification} user={user} />
@@ -198,7 +198,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     );
   };
 
-  const getPriorityColor = (priority) =&gt; {
+  const getPriorityColor = (priority) => {
     switch (priority) {
       case 'error': return 'border-l-red-500';
       case 'warning': return 'border-l-yellow-500';
@@ -258,7 +258,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
           {/* Mobile backdrop */}
           <div 
             className="fixed inset-0 bg-black bg-opacity-25 z-40 sm:hidden"
-            onClick={() =&gt; setIsOpen(false)}
+            onClick={() => setIsOpen(false)}
           />
           
           <div 
@@ -283,7 +283,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                   )}
                   {unreadCount &gt; 0 &amp;&amp; (
                     <button
-                      onClick={(e) =&gt; {
+                      onClick={(e) => {
                         e.stopPropagation();
                         markAllAsRead();
                       }}
@@ -293,7 +293,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                     </button>
                   )}
                   <button
-                    onClick={() =&gt; setIsOpen(false)}
+                    onClick={() => setIsOpen(false)}
                     className="text-gray-400 hover:text-white transition-colors sm:hidden p-1"
                     aria-label="Close"
                   >
@@ -320,7 +320,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-700">
-                  {persistentNotifications.slice(0, 10).map(notification =&gt; (
+                  {persistentNotifications.slice(0, 10).map(notification => (
                     <div
                       key={notification.id}
                       className={`border-l-4 ${getPriorityColor(notification.priority)} ${
@@ -328,7 +328,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                       }`}
                     >
                       <div
-                        onClick={(event) =&gt; handleNotificationClick(notification, event)}
+                        onClick={(event) => handleNotificationClick(notification, event)}
                         className="p-3 cursor-pointer hover:bg-surface-sidebar transition-colors duration-200"
                       >
                         {renderNotification(notification)}
@@ -352,7 +352,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
             {/* Footer - Sticky */}
             <div className="sticky bottom-0 p-3 border-t border-gray-700 bg-surface-card rounded-b-lg">
               <button 
-                onClick={(e) =&gt; {
+                onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   if (setCurrentView) {
