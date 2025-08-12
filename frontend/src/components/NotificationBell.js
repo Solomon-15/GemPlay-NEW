@@ -29,7 +29,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
-      const isMobile = viewportWidth &lt;= 768;
+      const isMobile = viewportWidth <= 768;
       
       if (isMobile) {
         const maxHeight = viewportHeight * 0.8; // 80% высоты экрана
@@ -93,7 +93,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
       const scrollListeners = [];
       
       while (scrollableParent && scrollableParent !== document.body) {
-        if (scrollableParent.scrollHeight &gt; scrollableParent.clientHeight) {
+        if (scrollableParent.scrollHeight > scrollableParent.clientHeight) {
           scrollableParent.addEventListener('scroll', handleScroll, { passive: true });
           scrollListeners.push(scrollableParent);
         }
@@ -141,7 +141,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
       const prevOverflow = body.style.overflow;
       const prevPaddingRight = body.style.paddingRight;
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      if (scrollbarWidth &gt; 0) body.style.paddingRight = `${scrollbarWidth}px`;
+      if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
       body.style.overflow = 'hidden';
       return () => {
         body.style.overflow = prevOverflow || 'unset';
@@ -236,7 +236,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
           </svg>
           
           {/* Notification Dot - only show when there are unread notifications */}
-          {unreadCount &gt; 0 && (
+          {unreadCount > 0 && (
             <div className="absolute -top-1 -right-1 flex items-center justify-center">
               <div className="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></div>
               <div className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></div>
@@ -245,9 +245,9 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
         </div>
         
         {/* Unread Count Badge */}
-        {unreadCount &gt; 0 && (
+        {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[1.25rem] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1 border-2 border-surface-primary">
-            {unreadCount &gt; 99 ? '99+' : unreadCount}
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
@@ -281,7 +281,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
                   {loading && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent-primary"></div>
                   )}
-                  {unreadCount &gt; 0 && (
+                  {unreadCount > 0 && (
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
