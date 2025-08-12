@@ -170,6 +170,10 @@ const NotificationsPage = ({ user }) => {
                 }`}
                 onClick={(event) => handleNotificationClick(notification, event)}
               >
+                {/* Индикатор непрочитанного */}
+                {!notification.is_read && (
+                  <span className="absolute top-2 left-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
                 <div className="flex items-center pr-10 py-4 min-h-[112px]">
                   {renderNotification(notification)}
                 </div>
