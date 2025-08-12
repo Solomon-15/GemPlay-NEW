@@ -97,7 +97,7 @@ const MatchResultNotification = ({ notification, user, showIcons = true, onDelet
   const dateStr = formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset);
 
   return (
-    <div className="p-3">
+    <div className="w-full">
       <div className="grid grid-cols-12 items-center gap-3">
         {/* Левая колонка — текстовая часть */}
         <div className="col-span-6 sm:col-span-7">
