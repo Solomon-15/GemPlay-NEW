@@ -3,7 +3,7 @@ import { useNotifications } from './NotificationContext';
 import MatchResultNotification from './MatchResultNotification';
 import { formatDateTimeDDMMYYYYHHMMSS } from '../utils/timeUtils';
 
-const NotificationBell = ({ isCollapsed, setCurrentView, user }) =&gt; {
+const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const bellRef = useRef(null);
   const dropdownRef = useRef(null);
