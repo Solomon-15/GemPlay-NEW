@@ -21,7 +21,7 @@ export const formatDateWithOffset = (dateString, timezoneOffset = 0) => {
 /**
  * Format time as HH:MM:SS with user's timezone offset
  */
-export const formatTimeOnlyWithOffset = (dateString, timezoneOffset = 0) =&gt; {
+export const formatTimeOnlyWithOffset = (dateString, timezoneOffset = 0) => {
   const date = new Date(dateString);
   // Apply user's timezone offset directly (assume dateString is UTC)
   const adjustedTime = new Date(date.getTime() + (timezoneOffset * 3600000));
