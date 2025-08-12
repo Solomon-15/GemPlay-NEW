@@ -19,7 +19,7 @@ const GoogleAuth = ({ onLogin, onError }) => {
     };
 
     const initializeGoogleSignIn = () => {
-      if (!GOOGLE_CLIENT_ID) {
+      if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.trim() === '') {
         console.warn('Google Client ID не настроен');
         return;
       }
@@ -68,7 +68,7 @@ const GoogleAuth = ({ onLogin, onError }) => {
       return;
     }
 
-    if (!GOOGLE_CLIENT_ID) {
+    if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.trim() === '') {
       onError('Google авторизация не настроена');
       return;
     }

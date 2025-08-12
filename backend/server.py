@@ -4697,7 +4697,7 @@ async def sell_gems(gem_type: GemType, quantity: int, current_user: User = Depen
 # ==============================================================================
 
 @api_router.get("/admin/gems", response_model=List[GemAdminResponse])
-async def get_gems_admin(current_admin: User = Depends(get_current_super_admin)):
+async def get_gems_admin(current_admin: User = Depends(get_current_admin)):
     """Get all gems for admin management."""
     try:
         gems = await db.gem_definitions.find({}).to_list(100)
@@ -4726,7 +4726,7 @@ async def get_gems_admin(current_admin: User = Depends(get_current_super_admin))
 @api_router.post("/admin/gems", response_model=dict)
 async def create_gem_admin(
     request: CreateGemRequest,
-    current_admin: User = Depends(get_current_super_admin)
+    current_admin: User = Depends(get_current_admin)
 ):
     """Create a new gem type."""
     try:
@@ -4789,7 +4789,7 @@ async def create_gem_admin(
 async def update_gem_admin(
     gem_id: str,
     request: UpdateGemRequest,
-    current_admin: User = Depends(get_current_super_admin)
+    current_admin: User = Depends(get_current_admin)
 ):
     """Update an existing gem."""
     try:
@@ -4866,7 +4866,7 @@ async def update_gem_admin(
 @api_router.delete("/admin/gems/{gem_id}", response_model=dict)
 async def delete_gem_admin(
     gem_id: str,
-    current_admin: User = Depends(get_current_super_admin)
+    current_admin: User = Depends(get_current_admin)
 ):
     """Delete a gem (only non-default gems can be deleted)."""
     try:
@@ -14980,43 +14980,7 @@ async def reset_user_balance(
             detail="Failed to reset user balance"
         )
 
-# Add SUPER_ADMIN dependency function
-async def get_current_super_admin(token: str = Depends(oauth2_scheme)):
-    """Get current user and verify SUPER_ADMIN role."""
-    try:
-        # Decode token to get user ID
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Could not validate credentials",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # Get user from database
-    user = await db.users.find_one({"id": user_id})
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
-        )
-    
-    # Convert to User object and check SUPER_ADMIN role
-    user_obj = User(**user)
-    if user_obj.role != "SUPER_ADMIN":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="SUPER_ADMIN access required"
-        )
-    
-    return user_obj
+
 
 @api_router.post("/games/{game_id}/force-complete", response_model=dict)
 async def force_complete_game(

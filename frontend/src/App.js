@@ -172,6 +172,7 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
                       : 'border-border-primary'
                   }`}
                   required
+                  autoComplete="username"
                 />
                 {usernameError && (
                   <p className="mt-1 text-xs text-red-400 font-roboto">
@@ -197,6 +198,7 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
             onChange={(e) => setFormData({...formData, email: e.target.value})}
             className="w-full px-4 py-3 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
             required
+            autoComplete="email"
           />
           
           <input
@@ -206,6 +208,7 @@ const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
             onChange={(e) => setFormData({...formData, password: e.target.value})}
             className="w-full px-4 py-3 bg-surface-sidebar border border-border-primary rounded-lg text-white font-roboto"
             required
+            autoComplete={isLogin ? "current-password" : "new-password"}
           />
           
           <button
