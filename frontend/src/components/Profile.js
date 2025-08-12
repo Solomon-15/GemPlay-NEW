@@ -6,6 +6,7 @@ import { useNotifications } from './NotificationContext';
 import { handleUsernameInput, validateUsername } from '../utils/usernameValidation';
 import HeaderPortfolio from './HeaderPortfolio';
 import NotificationSettings from './NotificationSettings';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;

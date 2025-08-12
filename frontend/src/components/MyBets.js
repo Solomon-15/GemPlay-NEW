@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useGems } from './GemsContext';
+import Loader from './Loader';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -310,7 +311,7 @@ const MyBets = ({ user, onUpdateUser }) => {
   if (loading && bets.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-xl font-roboto">Loading...</div>
+      <Loader ariaLabel="Loading My Bets" />
       </div>
     );
   }
