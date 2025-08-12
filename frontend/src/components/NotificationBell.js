@@ -183,7 +183,9 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
   }, [isOpen]);
 
   const renderNotification = (notification) => {
-    if (notification.type === 'match_result') {
+    const ntype = (notification.type || '').toString().toLowerCase();
+    const ntitle = (notification.title || '').toString();
+    if (ntype === 'match_result' || ntitle === 'Match Result') {
       return (
         <MatchResultNotification notification={notification} user={user} />
       );
