@@ -16,7 +16,7 @@ import hashlib
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://russian-scribe.preview.emergentagent.com/api"
+BASE_URL = "https://russian-writer-2.preview.emergentagent.com/api"
 
 # Test results tracking
 test_results = {

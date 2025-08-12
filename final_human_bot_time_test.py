@@ -18,7 +18,7 @@ import json
 import sys
 from datetime import datetime
 
-BASE_URL = "https://russian-scribe.preview.emergentagent.com/api"
+BASE_URL = "https://russian-writer-2.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
