@@ -141,7 +141,7 @@ const MatchResultNotification = ({ notification, user }) => {
 
       {/* 4 строка — Commission */}
       {showCommission && (
-        <div className="mt-1 text-xs text-text-secondary font-rajdhani">({commissionPercent}% commission: ${commissionAmount.toFixed(2)})</div>
+        <div className="mt-1 text-xs text-text-secondary font-rajdhani">({commissionPercent}% commission: ${commissionAmountUsd.toFixed(2)})</div>
       )}
 
       {/* 5 строка — дата и время */}
