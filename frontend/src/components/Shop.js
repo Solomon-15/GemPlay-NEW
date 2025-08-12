@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { formatCurrencyWithSymbol, formatDollarAmount, formatGemValue } from '../utils/economy';
 import { useNotifications } from './NotificationContext';
@@ -21,11 +21,23 @@ const Shop = ({ user, onUpdateUser }) => {
   const [loading, setLoading] = useState(true);
   const [buyingGem, setBuyingGem] = useState(null);
   const [quantities, setQuantities] = useState({});
+  const [showDelayedLoader, setShowDelayedLoader] = useState(false);
+  const loaderTimerRef = useRef(null);
 
   useEffect(() => {
     fetchGems();
     fetchBalance();
   }, []);
+
+  useEffect(() => {
+    if (loading) {
+      loaderTimerRef.current = setTimeout(() => setShowDelayedLoader(true), 1000);
+    } else {
+      clearTimeout(loaderTimerRef.current);
+      setShowDelayedLoader(false);
+    }
+    return () => clearTimeout(loaderTimerRef.current);
+  }, [loading]);
 
   const fetchGems = async () => {
     try {
@@ -97,7 +109,7 @@ const Shop = ({ user, onUpdateUser }) => {
   if (loading) {
     return (
       <div className="min-h-screen min-h-app bg-gradient-primary flex items-center justify-center">
-        <Loader ariaLabel="Loading Shop" />
+        {showDelayedLoader ? <Loader ariaLabel="Loading Shop" /> : null}
       </div>
     );
   }

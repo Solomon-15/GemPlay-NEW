@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useGems } from './GemsContext';
 import Loader from './Loader';
@@ -308,10 +308,30 @@ const MyBets = ({ user, onUpdateUser }) => {
     );
   };
 
+  const InfoLoader = () => (
+    <div className="flex items-center space-x-2">
+      <div className="w-4 h-4 rounded-full bg-accent-primary animate-pulse" />
+      <span className="text-text-secondary text-sm">Обновляем статистику...</span>
+    </div>
+  );
+
+  const [showDelayedLoader, setShowDelayedLoader] = useState(false);
+  const loaderTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (loading && bets.length === 0) {
+      loaderTimerRef.current = setTimeout(() => setShowDelayedLoader(true), 1000);
+    } else {
+      clearTimeout(loaderTimerRef.current);
+      setShowDelayedLoader(false);
+    }
+    return () => clearTimeout(loaderTimerRef.current);
+  }, [loading, bets.length]);
+
   if (loading && bets.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-      <Loader ariaLabel="Loading My Bets" />
+      {showDelayedLoader ? <Loader ariaLabel="Loading My Bets" /> : null}
       </div>
     );
   }

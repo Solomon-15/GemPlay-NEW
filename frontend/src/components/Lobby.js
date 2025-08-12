@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import GemsHeader from './GemsHeader';
 import Loader from './Loader';
@@ -628,10 +628,23 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     }));
   }, []);
 
+  const [showDelayedLoader, setShowDelayedLoader] = useState(false);
+  const loaderTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (loading) {
+      loaderTimerRef.current = setTimeout(() => setShowDelayedLoader(true), 1000);
+    } else {
+      clearTimeout(loaderTimerRef.current);
+      setShowDelayedLoader(false);
+    }
+    return () => clearTimeout(loaderTimerRef.current);
+  }, [loading]);
+ 
   if (loading) {
     return (
       <div className="min-h-screen min-h-app bg-gradient-primary flex items-center justify-center">
-        <Loader ariaLabel="Loading Lobby" />
+        {showDelayedLoader ? <Loader ariaLabel="Loading Lobby" /> : null}
       </div>
     );
   }

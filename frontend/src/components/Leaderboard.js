@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import Loader from './Loader';
 
@@ -76,15 +76,28 @@ const Leaderboard = ({ user }) => {
 
   const getRankColor = (rank) => {
     if (rank === 1) return 'text-yellow-400';
-    if (rank === 2) return 'text-gray-300';
+    if (rank === 2) return 'text-gray-400';
     if (rank === 3) return 'text-amber-600';
     return 'text-blue-400';
   };
 
+  const [showDelayedLoader, setShowDelayedLoader] = useState(false);
+  const loaderTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (loading) {
+      loaderTimerRef.current = setTimeout(() => setShowDelayedLoader(true), 1000);
+    } else {
+      clearTimeout(loaderTimerRef.current);
+      setShowDelayedLoader(false);
+    }
+    return () => clearTimeout(loaderTimerRef.current);
+  }, [loading]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <Loader ariaLabel="Loading Leaderboard" />
+        {showDelayedLoader ? <Loader ariaLabel="Loading Leaderboard" /> : null}
       </div>
     );
   }

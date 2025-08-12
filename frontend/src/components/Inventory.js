@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useGems } from './GemsContext';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
@@ -19,6 +19,8 @@ const Inventory = ({ user, onUpdateUser }) => {
   const [sellingGem, setSellingGem] = useState(null);
   const [quantities, setQuantities] = useState({});
   const [tooltipVisible, setTooltipVisible] = useState(null);
+  const [showDelayedLoader, setShowDelayedLoader] = useState(false);
+  const loaderTimerRef = useRef(null);
   
   // Gift modal state
   const [showGiftModal, setShowGiftModal] = useState(false);
@@ -36,6 +38,16 @@ const Inventory = ({ user, onUpdateUser }) => {
     
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (loading) {
+      loaderTimerRef.current = setTimeout(() => setShowDelayedLoader(true), 1000);
+    } else {
+      clearTimeout(loaderTimerRef.current);
+      setShowDelayedLoader(false);
+    }
+    return () => clearTimeout(loaderTimerRef.current);
+  }, [loading]);
 
   const fetchInventory = async () => {
     try {
@@ -230,7 +242,7 @@ const Inventory = ({ user, onUpdateUser }) => {
   if (loading) {
     return (
       <div className="min-h-screen min-h-app bg-gradient-primary flex items-center justify-center">
-        <Loader ariaLabel="Loading Inventory" />
+        {showDelayedLoader ? <Loader ariaLabel="Loading Inventory" /> : null}
       </div>
     );
   }

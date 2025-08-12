@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications } from './NotificationContext';
 import Loader from './Loader';
 
@@ -20,6 +20,10 @@ const NotificationSettings = () => {
   
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+  const [showDelayedPageLoader, setShowDelayedPageLoader] = useState(false);
+  const [showDelayedSaving, setShowDelayedSaving] = useState(false);
+  const pageTimerRef = useRef(null);
+  const savingTimerRef = useRef(null);
 
   // Load settings when component mounts or settings change
   useEffect(() => {
@@ -28,12 +32,25 @@ const NotificationSettings = () => {
     }
   }, [notificationSettings]);
 
+  // Delayed page loader
+  useEffect(() => {
+    if (loading) {
+      pageTimerRef.current = setTimeout(() => setShowDelayedPageLoader(true), 1000);
+    } else {
+      clearTimeout(pageTimerRef.current);
+      setShowDelayedPageLoader(false);
+    }
+    return () => clearTimeout(pageTimerRef.current);
+  }, [loading]);
+
   const handleSettingChange = async (key, value) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     
     setSaving(true);
     setSaveStatus('');
+    clearTimeout(savingTimerRef.current);
+    savingTimerRef.current = setTimeout(() => setShowDelayedSaving(true), 1000);
     
     try {
       const success = await updateNotificationSettings(newSettings);
@@ -49,6 +66,9 @@ const NotificationSettings = () => {
       setTimeout(() => setSaveStatus(''), 3000);
     } finally {
       setSaving(false);
+      // hide delayed saving indicator
+      clearTimeout(savingTimerRef.current);
+      setShowDelayedSaving(false);
     }
   };
 
@@ -95,7 +115,7 @@ const NotificationSettings = () => {
     return (
       <div className="bg-surface-card p-6 rounded-lg">
         <div className="flex items-center space-x-2 mb-4">
-          <Loader size={20} ariaLabel="Loading notification settings" />
+          {showDelayedPageLoader ? <Loader size={20} ariaLabel="Loading notification settings" /> : null}
         </div>
       </div>
     );
@@ -128,9 +148,9 @@ const NotificationSettings = () => {
             </div>
             
             <div className="flex items-center ml-4">
-              {saving && (
+              {saving && showDelayedSaving ? (
                 <Loader size={16} ariaLabel="Saving notification settings" />
-              )}
+              ) : null}
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
