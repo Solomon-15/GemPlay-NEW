@@ -7251,10 +7251,19 @@ async def determine_game_winner(game_id: str) -> dict:
                     game_id=game_id,
                     opponent_name=creator_name,
                     result="won",
+                    outcome="win",
                     amount_won=winnings,
                     total_gems=total_gems_won,
                     commission=commission_amount,
-                    action_url="/games/history"
+                    action_url="/games/history",
+                    player_move=str(game_obj.opponent_move.value if game_obj.opponent_move else ''),
+                    opponent_move=str(game_obj.creator_move.value if game_obj.creator_move else ''),
+                    player_bet_gems=opponent_gems_value,
+                    opponent_bet_gems=creator_gems_value,
+                    commission_percent=commission_percent_int,
+                    commission_amount_usd=float(commission_amount),
+                    is_bot_game=is_bot_game_flag,
+                    is_human_bot=is_human_bot_flag
                 )
             else:  # draw
                 creator_payload = NotificationPayload(
