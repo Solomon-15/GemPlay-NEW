@@ -22,6 +22,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   const [currentStep, setCurrentStep] = useState(1); // 1: выбор гемов, 2: выбор хода, 3: результат
   const [loading, setLoading] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(60); // 1-минутный таймер
+  // Состояния для визуальных эффектов таймера
+  const [didFlash20, setDidFlash20] = useState(false);
+  const [didFlash10, setDidFlash10] = useState(false);
+  const [isFlashing, setIsFlashing] = useState(false);
+  const [isBlinking, setIsBlinking] = useState(false);
   
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownNumber, setCountdownNumber] = useState(3);
