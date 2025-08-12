@@ -156,11 +156,11 @@ const MatchResultNotification = ({ notification, user, showIcons = true }) => {
 
         {/* Средняя колонка — большие иконки ходов */}
         <div className="col-span-4 sm:col-span-3 flex items-center justify-center">
-          {showIcons && (
-            <div className="flex items-center space-x-3">
-              <img src={moveIconMap[moves.player]} alt={capitalize(moves.player)} className="w-8 h-8 sm:w-12 sm:h-12" />
-              <span className="text-text-secondary text-sm font-rajdhani">vs</span>
-              <img src={moveIconMap[moves.opponent]} alt={capitalize(moves.opponent)} className="w-8 h-8 sm:w-12 sm:h-12" />
+          {showIcons && moves.player && moves.opponent && (
+            <div className="flex items-center space-x-4">
+              <img src={moveIconMap[moves.player]} alt={capitalize(moves.player)} className="w-12 h-12 sm:w-14 sm:h-14" />
+              <span className="text-text-secondary text-base font-rajdhani">vs</span>
+              <img src={moveIconMap[moves.opponent]} alt={capitalize(moves.opponent)} className="w-12 h-12 sm:w-14 sm:h-14" />
             </div>
           )}
         </div>
