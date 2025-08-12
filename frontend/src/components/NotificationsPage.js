@@ -166,7 +166,7 @@ const NotificationsPage = ({ user }) => {
                 className={`bg-surface-card border border-gray-700 rounded-lg p-0 cursor-pointer hover:bg-surface-sidebar transition-colors border-l-4 ${getPriorityColor(notification.priority)} ${
                   !notification.is_read ? 'ring-1 ring-accent-primary ring-opacity-30' : ''
                 }`}
-                onClick={(event) =&gt; handleNotificationClick(notification, event)}
+                onClick={(event) => handleNotificationClick(notification, event)}
               >
                 {renderNotification(notification)}
                 <div className="flex items-center justify-between px-3 pb-3">
