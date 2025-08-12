@@ -389,12 +389,26 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           handleClose();
           return 0;
         }
-        return prev - 1;
+        const next = prev - 1;
+        // Вспышка на 20 секундах — однократно
+        if (next === 20 && !didFlash20) {
+          setDidFlash20(true);
+          setIsFlashing(true);
+          setTimeout(() => setIsFlashing(false), 300); // короткая вспышка
+        }
+        // Вспышка на 10 секундах и старт мигания текста — однократно
+        if (next === 10 && !didFlash10) {
+          setDidFlash10(true);
+          setIsFlashing(true);
+          setTimeout(() => setIsFlashing(false), 300);
+          setIsBlinking(true);
+        }
+        return next;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [currentStep, hasJoinedGame]);
+  }, [currentStep, hasJoinedGame, didFlash20, didFlash10]);
 
   const handleStrategySelect = async (strategy) => {
     setLoading(true);
