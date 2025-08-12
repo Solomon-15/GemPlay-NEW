@@ -165,11 +165,11 @@ const MatchResultNotification = ({ notification, user, showIcons = true, onDelet
           )}
         </div>
 
-        {/* Правая колонка — корзина */}
-        <div className="col-span-1 flex items-start justify-end">
+        {/* Правая колонка — корзина в правом нижнем углу */}
+        <div className="col-span-1 relative">
           <button
             data-notification-id={notification.id}
-            className="text-gray-500 hover:text-red-400 transition-colors p-1"
+            className="absolute bottom-1 right-1 text-gray-500 hover:text-red-400 transition-colors p-1"
             title="Delete notification"
             onClick={(e) => {
               e.preventDefault();
