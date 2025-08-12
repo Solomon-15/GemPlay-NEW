@@ -44,8 +44,8 @@ const parseGemsReceived = (notification) => {
 
 const parseMoves = (notification) => {
   const p = notification?.payload || {};
-  const playerMove = (p.player_move || p.your_move || p.opponent_move_you || p.creator_move || '').toString().toLowerCase();
-  const opponentMove = (p.opponent_move || p.their_move || p.creator_move_opponent || p.opponent || '').toString().toLowerCase();
+  const playerMove = (p.player_move || '').toString().toLowerCase();
+  const opponentMove = (p.opponent_move || '').toString().toLowerCase();
   const valid = ['rock','paper','scissors'];
   return {
     player: valid.includes(playerMove) ? playerMove : null,
@@ -53,24 +53,22 @@ const parseMoves = (notification) => {
   };
 };
 
+const parseBets = (notification) => {
+  const p = notification?.payload || {};
+  const player = typeof p.player_bet_gems === 'number' ? p.player_bet_gems : null;
+  const opponent = typeof p.opponent_bet_gems === 'number' ? p.opponent_bet_gems : null;
+  return { player, opponent };
+};
+
 const parseCommission = (notification) => {
   const p = notification?.payload || {};
-  const isBot = !!p.is_bot_game;
-  let amount = null;
-  let percent = p.commission_percent || 3;
-  let paidByYou = p.commission_paid_by_you; // boolean | undefined
-
-  if (typeof p.commission_amount === 'number') amount = p.commission_amount;
-
-  if (amount === null) {
-    const msg = notification?.message || '';
-    const m = msg.match(/commission:\s*\$([0-9]+(?:\.[0-9]{1,2})?)/i);
-    if (m) {
-      amount = Number(m[1]);
-    }
-  }
-
-  return { isBot, amount, percent, paidByYou };
+  const isBotGame = !!p.is_bot_game;
+  const isHumanBot = !!p.is_human_bot;
+  const percent = typeof p.commission_percent === 'number' ? p.commission_percent : 3;
+  // Базовая сумма для расчёта комиссии: USD если есть, иначе считаем 1:1 от Gems
+  const baseUsd = typeof p.player_bet_usd === 'number' ? p.player_bet_usd : (typeof p.player_bet_gems === 'number' ? p.player_bet_gems : 0);
+  const commissionAmountUsd = typeof p.commission_amount_usd === 'number' ? p.commission_amount_usd : (baseUsd * percent / 100);
+  return { isBotGame, isHumanBot, percent, commissionAmountUsd };
 };
 
 const outcomeStyles = (outcome) => {
