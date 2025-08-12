@@ -17,6 +17,18 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
     markAsRead,
     markAllAsRead
   } = useNotifications();
+  
+  // Глобальный слушатель для клика по корзине внутри карточки
+  useEffect(() => {
+    const handler = (e) => {
+      const id = e.detail?.id;
+      if (id) {
+        deleteNotification(id);
+      }
+    };
+    window.addEventListener('delete-notification', handler);
+    return () => window.removeEventListener('delete-notification', handler);
+  }, []);
 
   // Enhanced positioning calculation for perfect alignment
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
