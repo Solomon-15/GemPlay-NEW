@@ -195,6 +195,7 @@ const NotificationBell = ({ isCollapsed, setCurrentView, user }) => {
       <div className="p-3">
         <div className="text-white font-rajdhani font-bold text-sm">{notification.title || 'Notification'}</div>
         <div className="text-xs text-gray-300 mt-1">{notification.message}</div>
+        {/* Убираем дубли для match_result — но это fallback, сюда они не попадут */}
         <div className="text-[11px] text-gray-500 mt-1">{formatDateTimeDDMMYYYYHHMMSS(notification.created_at, user?.timezone_offset)}</div>
       </div>
     );
