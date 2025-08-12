@@ -18,7 +18,7 @@ const NotificationsPage = ({ user }) => {
   const [filter, setFilter] = useState('all'); // all, unread, read
   const [typeFilter, setTypeFilter] = useState('all');
 
-  useEffect(() =&gt; {
+  useEffect(() => {
     fetchNotifications(page, 20);
   }, [page, fetchNotifications]);
 
