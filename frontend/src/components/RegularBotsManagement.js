@@ -2123,6 +2123,16 @@ const RegularBotsManagement = () => {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
+                      <div className="text-white font-roboto text-sm">
+                        {(() => {
+                          // Количество циклов: общее число завершённых + текущий цикл
+                          const finished = Number(bot.completed_cycles || 0);
+                          const hasCurrent = (((bot.current_cycle_wins||0) + (bot.current_cycle_losses||0) + (bot.current_cycle_draws||0)) > 0) || (bot.is_active);
+                          return finished + (hasCurrent ? 1 : 0);
+                        })()}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-center">
                       {(() => {
                         // Фактический ROI: берём из модалки "Детали цикла" (sums.roi_active)
                         const sums = cycleSumsByBot[bot.id];
