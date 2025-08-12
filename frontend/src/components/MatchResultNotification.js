@@ -105,11 +105,25 @@ const MatchResultNotification = ({ notification, user }) => {
         {outcome === 'win' && `You won against ${opponent}!`}
         {outcome === 'lose' && `You lost against ${opponent}.`}
         {outcome === 'draw' && `Draw against ${opponent}.`}
-        {typeof gems === 'number' && (
-          <span className="ml-1 text-text-secondary font-medium">
-            Received: <span className={`font-extrabold ${styles.strong}`}>{gems} Gems</span>
-          </span>
-        )}
+        {(() => {
+          const p = bets.player;
+          const o = bets.opponent;
+          if (outcome === 'win' && typeof p === 'number' && typeof o === 'number') {
+            return (
+              <span className="ml-1 text-text-secondary font-medium">
+                Received: <span className={`font-extrabold ${styles.strong}`}>{p}/{o} Gems</span>
+              </span>
+            );
+          }
+          if ((outcome === 'lose' || outcome === 'draw') && typeof p === 'number') {
+            return (
+              <span className="ml-1 text-text-secondary font-medium">
+                <span className={`font-extrabold ${styles.strong}`}>{p} Gems</span>
+              </span>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       {/* 3 строка — Icons: player vs opponent */}
