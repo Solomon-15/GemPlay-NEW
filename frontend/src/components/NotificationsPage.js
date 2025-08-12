@@ -22,7 +22,7 @@ const NotificationsPage = ({ user }) => {
     fetchNotifications(page, 20);
   }, [page, fetchNotifications]);
 
-  const handleNotificationClick = async (notification, event) =&gt; {
+  const handleNotificationClick = async (notification, event) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
