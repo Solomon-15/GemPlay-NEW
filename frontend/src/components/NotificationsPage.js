@@ -199,7 +199,7 @@ const NotificationsPage = ({ user }) => {
         </div>
 
         {/* Load More Button (if needed) */}
-        {filteredNotifications.length &gt;= 20 &amp;&amp; (
+        {filteredNotifications.length >= 20 && (
           <div className="text-center mt-8">
             <button
               onClick={() =&gt; setPage(prev =&gt; prev + 1)}
