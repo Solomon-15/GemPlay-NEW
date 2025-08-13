@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 import json
 
-BACKEND_URL = "https://slavic-scribe-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://pishi-po-russki.preview.emergentagent.com/api"
 SUPER_ADMIN_EMAIL = "admin@gemplay.com"
 SUPER_ADMIN_PASSWORD = "Admin123!"
 

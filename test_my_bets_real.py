@@ -7,7 +7,7 @@ import asyncio
 import aiohttp
 import json
 
-BACKEND_URL = "https://slavic-scribe-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://pishi-po-russki.preview.emergentagent.com/api"
 
 async def test_my_bets_with_real_user():
     """Test my-bets endpoint by creating a real user and game"""

@@ -19,7 +19,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://slavic-scribe-1.preview.emergentagent.com/api"
+BASE_URL = "https://pishi-po-russki.preview.emergentagent.com/api"
 
 # Test results tracking
 test_results = []
