@@ -2203,7 +2203,11 @@ const RegularBotsManagement = () => {
                             {(() => {
                               const completed = (bot.current_cycle_wins || 0) + (bot.current_cycle_losses || 0) + (bot.current_cycle_draws || 0);
                               const total = (bot.cycle_games && bot.cycle_games > 0) ? bot.cycle_games : 16;
-                              return `${completed}/${total}`;
+                              const currentPlayedRaw = (bot.current_cycle_games !== undefined && bot.current_cycle_games !== null)
+                                ? Number(bot.current_cycle_games)
+                                : completed;
+                              const currentPlayed = Math.min(Math.max(Number(currentPlayedRaw) || 0, 0), 4);
+                              return `${currentPlayed}/4`;
                             })()}
                           </button>
                         </div>
