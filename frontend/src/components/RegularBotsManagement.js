@@ -2115,7 +2115,7 @@ const RegularBotsManagement = () => {
                           // Количество циклов: общее число завершённых + текущий цикл
                           const finished = Number(bot.completed_cycles || 0);
                           const currentCycleGames = Number(bot.current_cycle_games || 0);
-                          const hasCurrentCycle = currentCycleGames > 0 || bot.is_active;
+                          const hasCurrentCycle = (bot.is_active ? true : currentCycleGames > 0);
                           return finished + (hasCurrentCycle ? 1 : 0);
                         })()}
                       </div>
