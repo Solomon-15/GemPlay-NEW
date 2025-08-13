@@ -2112,12 +2112,16 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {(() => {
-                          // Количество циклов: общее число завершённых + текущий цикл
-                          const finished = Number(bot.completed_cycles || 0);
-                          const currentCycleGamesFromCounter = Number((bot.current_cycle_games !== undefined && bot.current_cycle_games !== null) ? bot.current_cycle_games : 0);
-                          const currentCycleGamesFromBreakdown = Number(bot.current_cycle_wins || 0) + Number(bot.current_cycle_losses || 0) + Number(bot.current_cycle_draws || 0);
-                          const currentCycleGames = currentCycleGamesFromCounter > 0 ? currentCycleGamesFromCounter : currentCycleGamesFromBreakdown;
-                          const hasCurrentCycle = (bot.is_active || currentCycleGames > 0);
+                          // Количество циклов = завершённые циклы + текущий (включительно)
+                          // Завершённые циклы считаем как floor(total_completed_games / cycle_games)
+                          const totalCompleted = Number((bot.games_stats && bot.games_stats.total) || 0);
+                          const cycleLen = (Number(bot.cycle_games) && Number(bot.cycle_games) > 0) ? Number(bot.cycle_games) : 12;
+                          const finished = Math.floor(totalCompleted / cycleLen);
+                          // Определяем, существует ли текущий цикл
+                          const currentPlayedCounter = (bot.current_cycle_games !== undefined && bot.current_cycle_games !== null) ? Number(bot.current_cycle_games) : 0;
+                          const currentPlayedBreakdown = Number(bot.current_cycle_wins || 0) + Number(bot.current_cycle_losses || 0) + Number(bot.current_cycle_draws || 0);
+                          const currentPlayed = currentPlayedCounter > 0 ? currentPlayedCounter : currentPlayedBreakdown;
+                          const hasCurrentCycle = !!(bot.is_active || currentPlayed > 0 || (Number(bot.active_bets || 0) > 0));
                           return finished + (hasCurrentCycle ? 1 : 0);
                         })()}
                       </div>
