@@ -24,7 +24,7 @@ import hashlib
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://russian-writer-2.preview.emergentagent.com/api"
+BASE_URL = "https://slavic-scribe-1.preview.emergentagent.com/api"
 
 # Test users for authorization testing
 TEST_USERS = [

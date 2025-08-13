@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any, Optional, List, Tuple
 
 # Configuration
-BASE_URL = "https://russian-writer-2.preview.emergentagent.com/api"
+BASE_URL = "https://slavic-scribe-1.preview.emergentagent.com/api"
 
 def make_request(
     method: str, 
