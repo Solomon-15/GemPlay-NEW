@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional
 import random
 
 # Configuration
-BASE_URL = "https://pishi-po-russki.preview.emergentagent.com/api"
+BASE_URL = "https://cyrillic-writer-7.preview.emergentagent.com/api"
 
 def generate_test_email():
     """Generate unique test email"""
