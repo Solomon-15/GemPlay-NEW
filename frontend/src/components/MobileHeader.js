@@ -282,12 +282,12 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
           </div>
         </div>
       ) : portfolioData ? (
-        <div className="flex space-x-2 px-4 py-2 border-b border-border-primary">
+        <div className="flex space-x-2 px-20 py-2 border-b border-border-primary">
           {/* Balance Block */}
           <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
             <div className="text-center">
               <h3 className="font-rajdhani text-xs font-semibold text-white mb-0">Balance</h3>
-              <div className="font-rajdhani text-sm font-bold text-green-400 break-words whitespace-nowrap">
+              <div className="font-rajdhani text-xl font-bold text-green-400 break-words whitespace-nowrap">
                 ${formatNumber(portfolioData.balance.total)}
               </div>
               {portfolioData.balance.frozen > 0 && (
@@ -305,7 +305,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
           <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
             <div className="text-center">
               <h3 className="font-rajdhani text-xs font-semibold text-white mb-0">Gems</h3>
-              <div className="font-rajdhani text-s font-bold text-purple-400 break-words whitespace-nowrap">
+              <div className="font-rajdhani text-xl font-bold text-purple-400 break-words whitespace-nowrap">
                 {formatNumber(portfolioData.gems.totalCount)}/{formatNumber(portfolioData.gems.totalValue)}
               </div>
               {portfolioData.gems.frozenCount > 0 && (
@@ -323,7 +323,7 @@ const MobileHeader = ({ currentView, setCurrentView, user, onOpenAdminPanel, onL
           <div className="bg-surface-card rounded-lg px-2 py-2 border border-green-500/20 min-w-0 flex-1">
             <div className="text-center">
               <h3 className="font-rajdhani text-xs font-semibold text-white mb-0">Total</h3>
-              <div className="font-rajdhani text-s font-bold text-accent-primary break-words whitespace-nowrap">
+              <div className="font-rajdhani text-xl font-bold text-accent-primary break-words whitespace-nowrap">
                 ${formatNumber(portfolioData.total.value)}
               </div>
               <div className="text-xs text-text-secondary">
