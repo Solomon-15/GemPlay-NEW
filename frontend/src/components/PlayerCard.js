@@ -313,7 +313,7 @@ const PlayerCard = memo(({
                   My Bet
                 </span>
               )}
-              {isBot && game.creator_type === 'bot' && (
+              {isBot && game.is_bot_game && game.bot_type !== 'HUMAN' && (
                 <span className="bg-blue-600 text-white text-xs font-rajdhani font-bold px-2 py-1 rounded">
                   AI
                 </span>
