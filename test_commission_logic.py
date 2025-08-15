@@ -30,7 +30,7 @@ async def test_commission_logic():
             print(f"   Комиссия от ставок: ${bet_commission}")
             
             # Получить детализацию Human-bot комиссий
-            detail_response = requests.get(f"{API}/admin/profit/human-bot-commission-details", timeout=10)
+            detail_response = requests.get(f"{API}/admin/profit/human-bot-commission-breakdown", timeout=10)
             if detail_response.status_code == 200:
                 details = detail_response.json()
                 print(f"   Всего записей HUMAN_BOT_COMMISSION: {details.get('summary', {}).get('total_transactions', 0)}")
