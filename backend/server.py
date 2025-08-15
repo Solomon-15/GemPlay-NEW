@@ -7722,6 +7722,7 @@ async def is_human_bot_user(user_id: str) -> bool:
 async def distribute_game_rewards(game: Game, winner_id: str, commission_amount: float):
     """Distribute gems and handle commissions after game completion."""
     try:
+        logger.info(f"🎯 DISTRIBUTE_GAME_REWARDS called: game={game.id[:8]}..., winner={winner_id[:8] if winner_id else 'None'}..., commission_amount={commission_amount}")
         # Check if this is a regular bot game (no commission)
         is_regular_bot_game = getattr(game, 'is_regular_bot_game', False)
         
