@@ -7860,6 +7860,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     await db.transactions.insert_one(commission_transaction.dict())
                 
                 # Record profit entry from bet commission (only if commission was charged)
+                logger.info(f"🔍 PROFIT ENTRY CHECK: is_regular_bot_game={is_regular_bot_game}, commission_amount={commission_amount}")
                 if not is_regular_bot_game and commission_amount > 0:
                     # Determine if players are Human-bots
                     is_winner_human_bot = await is_human_bot_user(winner_id)
