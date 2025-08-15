@@ -8,7 +8,7 @@ import aiohttp
 import json
 import os
 
-BACKEND_URL = "https://blok-klik-v5.preview.emergentagent.com/api"
+BACKEND_URL = "https://slavic-ai.preview.emergentagent.com/api"
 
 async def debug_my_bets():
     """Debug the my-bets endpoint response"""

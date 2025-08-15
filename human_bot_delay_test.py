@@ -24,7 +24,7 @@ import random
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://blok-klik-v5.preview.emergentagent.com/api"
+BACKEND_URL = "https://slavic-ai.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gemplay.com"
 ADMIN_PASSWORD = "Admin123!"
 

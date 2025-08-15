@@ -27,7 +27,7 @@ from datetime import datetime, timedelta
 import subprocess
 
 # Configuration
-BASE_URL = "https://blok-klik-v5.preview.emergentagent.com/api"
+BASE_URL = "https://slavic-ai.preview.emergentagent.com/api"
 TEST_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

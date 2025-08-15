@@ -19,7 +19,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://blok-klik-v5.preview.emergentagent.com/api"
+BASE_URL = "https://slavic-ai.preview.emergentagent.com/api"
 
 # Test results tracking
 test_results = []
