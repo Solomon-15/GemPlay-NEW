@@ -7861,13 +7861,25 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                 
                 # Record profit entry from bet commission (only if commission was charged)
                 if not is_regular_bot_game and commission_amount > 0:
-                    # Determine if winner is a Human-bot
+                    # Determine if players are Human-bots
                     is_winner_human_bot = await is_human_bot_user(winner_id)
+                    is_creator_human_bot = await is_human_bot_user(game.creator_id)
+                    is_opponent_human_bot = await is_human_bot_user(game.opponent_id) if game.opponent_id else False
                     
-                    # Commission type depends on who wins (who pays the commission)
-                    # If winner is Human-bot -> HUMAN_BOT_COMMISSION
-                    # If winner is live player -> BET_COMMISSION
-                    entry_type = "HUMAN_BOT_COMMISSION" if is_winner_human_bot else "BET_COMMISSION"
+                    # New commission logic based on player types:
+                    # 1. If Human-bots play against each other -> HUMAN_BOT_COMMISSION
+                    # 2. If live player vs Human-bot and Human-bot wins -> HUMAN_BOT_COMMISSION  
+                    # 3. If live player vs Human-bot and live player wins -> BET_COMMISSION
+                    
+                    if is_creator_human_bot and is_opponent_human_bot:
+                        # Case 1: Human-bot vs Human-bot
+                        entry_type = "HUMAN_BOT_COMMISSION"
+                    elif is_winner_human_bot:
+                        # Case 2: Human-bot wins (against live player)
+                        entry_type = "HUMAN_BOT_COMMISSION"
+                    else:
+                        # Case 3: Live player wins (against Human-bot or another live player)
+                        entry_type = "BET_COMMISSION"
                     
                     profit_entry = ProfitEntry(
                         entry_type=entry_type,
