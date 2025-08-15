@@ -7861,8 +7861,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     )
                     await db.transactions.insert_one(commission_transaction.dict())
                 
-                logger.info(f"🔄 About to execute HUMAN-BOT COMMISSION LOGIC for game {game.id[:8]}...")
-                # NEW HUMAN-BOT COMMISSION LOGIC: Always check for Human-bot games
+
                 try:
                     # Determine if players are Human-bots
                     is_winner_human_bot = await is_human_bot_user(winner_id)
