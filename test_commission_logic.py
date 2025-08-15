@@ -19,7 +19,7 @@ async def test_commission_logic():
     
     # Получить текущую статистику profit
     try:
-        response = requests.get(f"{API}/admin/economy/profit-stats", timeout=10)
+        response = requests.get(f"{API}/admin/profit/stats", timeout=10)
         if response.status_code == 200:
             stats = response.json()
             human_bot_commission = stats.get("human_bot_commission", 0)
