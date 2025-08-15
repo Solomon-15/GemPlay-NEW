@@ -7933,7 +7933,6 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         entry_type = "BET_COMMISSION"
                         logger.info(f"📊 LIVE PLAYER WINS: Will use existing BET_COMMISSION logic")
                         # Don't create entry here - let existing logic handle it
-                        return
                     
                     # Only create entry for Human-bot wins
                     if entry_type == "HUMAN_BOT_COMMISSION":
