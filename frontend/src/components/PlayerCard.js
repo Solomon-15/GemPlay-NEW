@@ -19,6 +19,17 @@ const PlayerCard = memo(({
   
   const isBot = game.creator_type === 'bot' || game.creator_type === 'human_bot';
   
+  // Debug logging
+  if (game.creator_username === 'Bot' || game.creator_info?.username === 'Bot') {
+    console.log('Bot card data:', {
+      creator_type: game.creator_type,
+      bot_type: game.bot_type,
+      is_bot_game: game.is_bot_game,
+      isBot: isBot,
+      creator_username: game.creator_username || game.creator_info?.username
+    });
+  }
+  
   // Проверка доступности средств для игры
   const canAcceptBet = useMemo(() => {
     if (!user || !game) return false;
