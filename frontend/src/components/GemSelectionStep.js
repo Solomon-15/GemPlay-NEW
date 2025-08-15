@@ -110,11 +110,15 @@ const GemSelectionStep = ({
               handleStrategyClick('small');
             }}
             disabled={loading || strategyButtonsDisabled.small}
-            className="px-3 py-3 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s"
+            className={`px-3 py-3 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s ${
+              strategyButtonsDisabled.small 
+                ? 'bg-gray-600' 
+                : 'bg-red-600 hover:bg-red-700 hover:scale-105'
+            }`}
             title="🔴 Use more cheap gems (Ruby, Amber, then others)"
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
             ) : (
               '🔴 Small'
             )}
@@ -128,11 +132,15 @@ const GemSelectionStep = ({
               handleStrategyClick('smart');
             }}
             disabled={loading || strategyButtonsDisabled.smart}
-            className="px-3 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s"
+            className={`px-3 py-3 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s ${
+              strategyButtonsDisabled.smart 
+                ? 'bg-gray-600' 
+                : 'bg-green-600 hover:bg-green-700 hover:scale-105'
+            }`}
             title="🟢 Balanced mid-range gems (60% mid, 30% low, 10% high)"
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
             ) : (
               '🟢 Smart'
             )}
@@ -146,11 +154,15 @@ const GemSelectionStep = ({
               handleStrategyClick('big');
             }}
             disabled={loading || strategyButtonsDisabled.big}
-            className="px-3 py-3 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s"
+            className={`px-3 py-3 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s ${
+              strategyButtonsDisabled.big 
+                ? 'bg-gray-600' 
+                : 'bg-purple-600 hover:bg-purple-700 hover:scale-105'
+            }`}
             title="🟣 Use fewer expensive gems (Magic, Sapphire, then others)"
           >
             {loading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>
             ) : (
               '🟣 Big'
             )}

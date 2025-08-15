@@ -764,9 +764,13 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
                 type="button"
                 onClick={goToNextStep}
                 disabled={loading || !canGoNext || isJoining}
-                className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                className={`flex-1 px-4 py-2 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 ${
+                  isJoining 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-accent hover:scale-105'
+                }`}
               >
-                Next
+                {isJoining ? 'Joining...' : 'Next'}
               </button>
             </div>
           </div>
@@ -778,7 +782,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
                 type="button"
                 onClick={startBattle}
                 disabled={loading || !canGoNext || isStartingBattle}
-                className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                className={`flex-1 px-4 py-2 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 ${
+                  isStartingBattle 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-accent hover:scale-105'
+                }`}
               >
                 {loading || isStartingBattle ? 'Starting...' : 'Start Battle!'}
               </button>

@@ -246,7 +246,11 @@ const PlayerCard = memo(({
                 <button
                   onClick={handleCancelClick}
                   disabled={isCancelling}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`px-4 py-2 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isCancelling 
+                      ? 'bg-gray-600' 
+                      : 'bg-red-600 hover:bg-red-700 hover:scale-105'
+                  }`}
                 >
                   {isCancelling ? 'Cancelling...' : 'Cancel'}
                 </button>
@@ -262,7 +266,11 @@ const PlayerCard = memo(({
               <button
                 onClick={handleAcceptClick}
                 disabled={isAccepting}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-4 py-2 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isAccepting 
+                    ? 'bg-gray-600' 
+                    : 'bg-green-600 hover:bg-green-700 hover:scale-105'
+                }`}
               >
                 {isAccepting ? 'Accepting...' : 'Accept'}
               </button>

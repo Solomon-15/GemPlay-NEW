@@ -352,7 +352,11 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           <button
             onClick={() => handleStrategySelect('small')}
             disabled={!betAmount || parseFloat(betAmount) <= 0 || loading || strategyButtonsDisabled.small}
-            className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className={`px-4 py-3 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center ${
+              strategyButtonsDisabled.small 
+                ? 'bg-gray-600' 
+                : 'bg-red-600 hover:bg-red-700 hover:scale-105'
+            }`}
             title="🔴 Use more cheap gems (Ruby, Amber, Topaz)"
           >
             {loading ? (
@@ -364,7 +368,11 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           <button
             onClick={() => handleStrategySelect('smart')}
             disabled={!betAmount || parseFloat(betAmount) <= 0 || loading || strategyButtonsDisabled.smart}
-            className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className={`px-4 py-3 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center ${
+              strategyButtonsDisabled.smart 
+                ? 'bg-gray-600' 
+                : 'bg-green-600 hover:bg-green-700 hover:scale-105'
+            }`}
             title="🟢 Balanced mid-range gems (60% mid, 30% low, 10% high)"
           >
             {loading ? (
@@ -376,7 +384,11 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           <button
             onClick={() => handleStrategySelect('big')}
             disabled={!betAmount || parseFloat(betAmount) <= 0 || loading || strategyButtonsDisabled.big}
-            className="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className={`px-4 py-3 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center ${
+              strategyButtonsDisabled.big 
+                ? 'bg-gray-600' 
+                : 'bg-purple-600 hover:bg-purple-700 hover:scale-105'
+            }`}
             title="🟣 Use fewer expensive gems (Magic, Sapphire, Aquamarine)"
           >
             {loading ? (
@@ -569,7 +581,11 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               <button
                 onClick={handleBack}
                 disabled={loading || isNavigating}
-                className="px-4 py-2 bg-surface-sidebar text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                className={`px-4 py-2 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 ${
+                  isNavigating 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-surface-sidebar hover:scale-105'
+                }`}
               >
                 Back
               </button>
@@ -579,7 +595,11 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               <button
                 onClick={handleNext}
                 disabled={loading || isNavigating}
-                className="flex-1 px-4 py-4 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                className={`flex-1 px-4 py-4 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 ${
+                  isNavigating 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-accent hover:scale-105'
+                }`}
               >
                 Next
               </button>
@@ -588,7 +608,11 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               <button
                 onClick={handleCreateBet}
                 disabled={loading || isCreatingBet}
-                className="flex-1 px-4 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                className={`flex-1 px-4 py-4 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 ${
+                  isCreatingBet 
+                    ? 'bg-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:scale-105'
+                }`}
               >
                 {loading || isCreatingBet ? 'Creating...' : 'Create Bet'}
               </button>
