@@ -266,15 +266,20 @@ const PlayerCard = memo(({
         <div className="flex items-center space-x-4">
           {/* Avatar */}
           <div className="flex-shrink-0">
-            {isBot ? (
-              <div className="w-14 h-14 rounded-full bg-blue-700 flex items-center justify-center text-white text-lg">
-                🤖
+            {isBot && game.bot_type !== 'HUMAN' && game.creator_type !== 'human_bot' ? (
+              <div className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center">
+                <img 
+                  src="/Bot.svg" 
+                  alt="Bot Avatar" 
+                  className="w-10 h-10"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
               </div>
             ) : (
               <img 
                 src={avatarIcon} 
                 alt="Player Avatar" 
-                className="w-14 h-14 rounded-full bg-surface-sidebar p-1"
+                className="w-14 h-14 rounded-full object-cover"
               />
             )}
           </div>
