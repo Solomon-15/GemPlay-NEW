@@ -18,17 +18,7 @@ const PlayerCard = memo(({
   const [isCancelling, setIsCancelling] = useState(false);
   
   const isBot = game.creator_type === 'bot' || game.creator_type === 'human_bot' || game.is_bot_game;
-  
-  // Debug logging
-  if (game.creator_username === 'Bot' || game.creator_info?.username === 'Bot') {
-    console.log('Bot card data:', {
-      creator_type: game.creator_type,
-      bot_type: game.bot_type,
-      is_bot_game: game.is_bot_game,
-      isBot: isBot,
-      creator_username: game.creator_username || game.creator_info?.username
-    });
-  }
+
   
   // Проверка доступности средств для игры
   const canAcceptBet = useMemo(() => {
