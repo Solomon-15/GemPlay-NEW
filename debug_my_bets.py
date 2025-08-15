@@ -8,7 +8,7 @@ import aiohttp
 import json
 import os
 
-BACKEND_URL = "https://opus-assistant.preview.emergentagent.com/api"
+BACKEND_URL = "https://opus-shop-next.preview.emergentagent.com/api"
 
 async def debug_my_bets():
     """Debug the my-bets endpoint response"""

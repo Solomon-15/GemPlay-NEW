@@ -4,7 +4,7 @@ import json
 import time
 
 # Configuration
-BASE_URL = "https://opus-assistant.preview.emergentagent.com/api"
+BASE_URL = "https://opus-shop-next.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

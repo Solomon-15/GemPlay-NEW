@@ -27,7 +27,7 @@ import hashlib
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://opus-assistant.preview.emergentagent.com/api"
+BASE_URL = "https://opus-shop-next.preview.emergentagent.com/api"
 
 # Test Results Tracking
 test_results = []

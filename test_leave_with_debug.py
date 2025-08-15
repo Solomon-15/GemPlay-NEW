@@ -9,7 +9,7 @@ import random
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://opus-assistant.preview.emergentagent.com/api"
+BASE_URL = "https://opus-shop-next.preview.emergentagent.com/api"
 
 def generate_unique_id():
     """Generate unique ID for test users"""
