@@ -1050,7 +1050,26 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
         <div className="flex space-x-1 bg-surface-sidebar rounded-lg p-1">
           {[
             { id: 'live-players', label: 'Live Players', icon: '👥', count: availableBets.length + myBets.length + ongoingBattles.length },
-            { id: 'bot-players', label: 'Bot Players', icon: '🤖', count: availableBots.length + ongoingBotBattles.length }
+            { 
+              id: 'bot-players', 
+              label: 'Bot Players', 
+              icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                     className="inline-block">
+                  <title>Bot 01 — Head + antenna</title>
+                  <line x1="12" y1="4" x2="12" y2="7"/>
+                  <circle cx="12" cy="3" r="1"/>
+                  <rect x="5" y="7" width="14" height="10" rx="3"/>
+                  <line x1="3" y1="12" x2="5" y2="12"/>
+                  <line x1="19" y1="12" x2="21" y2="12"/>
+                  <circle cx="9.5" cy="12" r="1" fill="currentColor" stroke="none"/>
+                  <circle cx="14.5" cy="12" r="1" fill="currentColor" stroke="none"/>
+                  <line x1="8.5" y1="15" x2="15.5" y2="15"/>
+                </svg>
+              ), 
+              count: availableBots.length + ongoingBotBattles.length 
+            }
           ].map((tab) => (
             <button
               key={tab.id}
