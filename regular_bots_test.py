@@ -22,7 +22,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://slavic-ai.preview.emergentagent.com/api"
+BASE_URL = "https://russian-writing-4.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
@@ -927,7 +927,7 @@ import sys
 from typing import Dict, Any, Optional, List, Tuple
 
 # Configuration
-BASE_URL = "https://slavic-ai.preview.emergentagent.com/api"
+BASE_URL = "https://russian-writing-4.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

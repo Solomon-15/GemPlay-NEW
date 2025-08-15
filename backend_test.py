@@ -16,7 +16,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://slavic-ai.preview.emergentagent.com/api"
+BACKEND_URL = "https://russian-writing-4.preview.emergentagent.com/api"
 
 class MyBetsEndpointTester:
     def __init__(self):

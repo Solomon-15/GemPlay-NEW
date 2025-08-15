@@ -11,7 +11,7 @@ from typing import Dict, Any, List
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://slavic-ai.preview.emergentagent.com/api"
+BASE_URL = "https://russian-writing-4.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

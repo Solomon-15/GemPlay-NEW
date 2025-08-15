@@ -18,7 +18,7 @@ import os
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://slavic-ai.preview.emergentagent.com/api"
+BACKEND_URL = "https://russian-writing-4.preview.emergentagent.com/api"
 SUPER_ADMIN_EMAIL = "admin@gemplay.com"
 SUPER_ADMIN_PASSWORD = "Admin123!"
 

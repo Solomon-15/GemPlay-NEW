@@ -19,7 +19,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://slavic-ai.preview.emergentagent.com/api"
+BASE_URL = "https://russian-writing-4.preview.emergentagent.com/api"
 
 # Test users
 MODERATOR_USER = {
