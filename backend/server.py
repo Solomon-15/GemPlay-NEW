@@ -3798,6 +3798,45 @@ async def cleanup_expired_reservations():
             logger.error(f"Error in cleanup_expired_reservations: {e}")
             await asyncio.sleep(60)  # Sleep longer on error
 
+async def check_gem_combination_possible(available_gems: list, target_amount: float) -> bool:
+    """
+    Check if it's possible to form an exact combination of gems that equals target amount.
+    Uses dynamic programming approach for subset sum problem.
+    """
+    # Convert to cents to avoid floating point issues
+    target_cents = int(target_amount * 100)
+    
+    # Create a list of all individual gems with their values in cents
+    gem_values = []
+    for gem in available_gems:
+        gem_value_cents = int(gem["price"] * 100)
+        for _ in range(gem["available_quantity"]):
+            gem_values.append(gem_value_cents)
+    
+    # Edge cases
+    if target_cents == 0:
+        return True
+    if not gem_values or target_cents < 0:
+        return False
+    
+    # Dynamic programming approach
+    # dp[i] will be True if sum i is possible
+    dp = [False] * (target_cents + 1)
+    dp[0] = True  # Base case: sum 0 is always possible (select nothing)
+    
+    # For each gem value
+    for gem_value in gem_values:
+        # Traverse from right to left to avoid using same gem multiple times
+        for current_sum in range(target_cents, gem_value - 1, -1):
+            if dp[current_sum - gem_value]:
+                dp[current_sum] = True
+                
+                # Early exit if we found the target
+                if current_sum == target_cents:
+                    return True
+    
+    return dp[target_cents]
+
 # ==============================================================================
 # API ROUTES
 # ==============================================================================
@@ -6549,21 +6588,68 @@ async def reserve_game(
                     detail="Game is already reserved by another player"
                 )
         
-        # Check if user has enough gems for the bet amount
+        # Get user's gems and check total value
         user_total_gem_value = 0
         user_gems = await db.user_gems.find({"user_id": current_user.id}).to_list(None)
+        available_gems = []  # For combination check
         
         for user_gem in user_gems:
             gem_def = await db.gem_definitions.find_one({"type": user_gem["gem_type"]})
             if gem_def:
                 available_quantity = user_gem["quantity"] - user_gem["frozen_quantity"]
-                user_total_gem_value += gem_def["price"] * available_quantity
+                if available_quantity > 0:
+                    user_total_gem_value += gem_def["price"] * available_quantity
+                    available_gems.append({
+                        "type": user_gem["gem_type"],
+                        "available_quantity": available_quantity,
+                        "price": gem_def["price"]
+                    })
         
+        # Check 1: Total gem value
         if user_total_gem_value < game_obj.bet_amount:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Insufficient gems to join this bet"
+                detail="You don't have enough gems — purchase more."
             )
+        
+        # Check 2: Can form exact combination
+        # Try to find a combination that sums to exact bet amount
+        can_form_combination = await check_gem_combination_possible(available_gems, game_obj.bet_amount)
+        
+        if not can_form_combination:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You don't possess the required gem combination. Please buy from the Gem Shop."
+            )
+        
+        # Check 3: Commission (skip only for regular bots)
+        # Check if current user is a regular bot
+        is_regular_bot = False
+        
+        bot_check = await db.bots.find_one({"id": current_user.id})
+        if bot_check and bot_check.get("bot_type") == "REGULAR":
+            is_regular_bot = True
+        
+        # Only skip commission for regular bots
+        # Human-bots and live players pay commission
+        if not is_regular_bot:
+            commission_rate = await get_bet_commission_rate_fraction()
+            commission_required = round_money(game_obj.bet_amount * commission_rate)
+            
+            # Check if playing against regular bot (no commission)
+            is_regular_bot_game = False
+            if game_obj.creator_type == "bot":
+                creator_bot = await db.bots.find_one({"id": game_obj.creator_id})
+                if creator_bot and creator_bot.get("bot_type") == "REGULAR":
+                    is_regular_bot_game = True
+            
+            if not is_regular_bot_game and commission_required > 0:
+                user = await db.users.find_one({"id": current_user.id})
+                if user["virtual_balance"] < commission_required:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Insufficient funds for the commission — please top up your balance."
+                    )
         
         # Reserve the game atomically
         reservation_time = datetime.utcnow()

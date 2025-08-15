@@ -220,16 +220,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
 
   const handleOpenJoinBattle = async (game) => {
     try {
-      // First check if user has enough gems for this bet
-      const userTotalGemValue = stats.gems || 0;
-      const betAmount = game.bet_amount || 0;
-      
-      if (userTotalGemValue < betAmount) {
-        showError('Insufficient gems to join this bet');
-        return;
-      }
-      
-      // Reserve the game
+      // Reserve the game (all checks are done on backend)
       const token = localStorage.getItem('token');
       const response = await axios.post(
         `${API}/games/${game.game_id || game.id}/reserve`,
