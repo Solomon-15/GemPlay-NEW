@@ -218,26 +218,77 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     }
   };
 
-  const handleOpenJoinBattle = (game) => {
-    const isBotGame = availableBots.some(botGame => 
-      (botGame.game_id || botGame.id) === (game.game_id || game.id)
-    ) || ongoingBotBattles.some(botGame => 
-      (botGame.game_id || botGame.id) === (game.game_id || game.id)
-    );
-    
-    const gameWithBotFlag = {
-      ...game,
-      is_bot_game: isBotGame
-    };
-    
-    setSelectedBetForJoin(gameWithBotFlag);
-    setShowJoinBattleModal(true);
+  const handleOpenJoinBattle = async (game) => {
+    try {
+      // First check if user has enough gems for this bet
+      const userTotalGemValue = stats.gems || 0;
+      const betAmount = game.bet_amount || 0;
+      
+      if (userTotalGemValue < betAmount) {
+        showError('Insufficient gems to join this bet');
+        return;
+      }
+      
+      // Reserve the game
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/games/${game.game_id || game.id}/reserve`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        // Remove the game from lists immediately
+        setAvailableBets(prev => prev.filter(g => (g.game_id || g.id) !== (game.game_id || game.id)));
+        setAvailableBots(prev => prev.filter(g => (g.game_id || g.id) !== (game.game_id || game.id)));
+        
+        // Determine if it's a bot game
+        const isBotGame = availableBots.some(botGame => 
+          (botGame.game_id || botGame.id) === (game.game_id || game.id)
+        ) || ongoingBotBattles.some(botGame => 
+          (botGame.game_id || botGame.id) === (game.game_id || game.id)
+        );
+        
+        const gameWithBotFlag = {
+          ...game,
+          is_bot_game: isBotGame,
+          reserved_until: response.data.reserved_until
+        };
+        
+        setSelectedBetForJoin(gameWithBotFlag);
+        setShowJoinBattleModal(true);
+      }
+    } catch (error) {
+      if (error.response?.data?.detail) {
+        showError(error.response.data.detail);
+      } else {
+        showError('Failed to reserve game');
+      }
+    }
   };
 
-  const handleCloseJoinBattle = () => {
+  const handleCloseJoinBattle = async (gameJoined = false) => {
     modalSound.onClose();
+    
+    // Unreserve the game if modal is closed without joining
+    if (!gameJoined && selectedBetForJoin && selectedBetForJoin.reserved_until) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(
+          `${API}/games/${selectedBetForJoin.game_id || selectedBetForJoin.id}/unreserve`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (error) {
+        console.error('Failed to unreserve game:', error);
+      }
+    }
+    
     setSelectedBetForJoin(null);
     setShowJoinBattleModal(false);
+    
+    // Refresh lobby data to show the unreserved game again
+    fetchLobbyData();
   };
 
   const InfoBlock = ({ title, value, icon, color }) => (

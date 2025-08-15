@@ -293,6 +293,7 @@ class GameStatus(str, Enum):
     CANCELLED = "CANCELLED"
     TIMEOUT = "TIMEOUT"  # Игра завершена по таймауту
     FROZEN = "FROZEN"  # Игра заморожена (бот деактивирован)
+    RESERVED = "RESERVED"  # Игра зарезервирована игроком (60 сек)
 
 class GameMove(str, Enum):
     ROCK = "rock"
@@ -454,6 +455,9 @@ class Game(BaseModel):
     bot_type: Optional[str] = None  # "REGULAR", "HUMAN"
     is_regular_bot_game: bool = False  # Флаг для игр против обычных ботов (без комиссии)
     metadata: Optional[Dict[str, Any]] = None  # Дополнительные метаданные игры
+    reserved_by: Optional[str] = None  # ID пользователя, который зарезервировал игру
+    reserved_at: Optional[datetime] = None  # Время резервирования
+    reservation_expires_at: Optional[datetime] = None  # Время истечения резервирования
 
 class Transaction(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
@@ -3494,7 +3498,7 @@ async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
         if can_play_with_bots and can_play_with_players:
             # Can play with both bots and players - but EXCLUDE Regular bots
             query_conditions.append({
-                "status": "WAITING",
+                "status": "WAITING",  # Exclude RESERVED games
                 "creator_id": {"$ne": bot.id},  # Exclude own bets
                 "$or": [
                     {"creator_type": "human_bot"},  # Other human bots
@@ -3504,14 +3508,14 @@ async def find_available_bets_for_bot(bot: HumanBot, settings: dict) -> list:
         elif can_play_with_bots:
             # Only with other human bots - EXCLUDE Regular bots
             query_conditions.append({
-                "status": "WAITING",
+                "status": "WAITING",  # Exclude RESERVED games
                 "creator_type": "human_bot",
                 "creator_id": {"$ne": bot.id}  # Exclude own bets
             })
         elif can_play_with_players:
             # Only with live players - EXCLUDE Regular bots and Human-bots
             query_conditions.append({
-                "status": "WAITING",
+                "status": "WAITING",  # Exclude RESERVED games
                 "creator_type": {"$nin": ["human_bot", "bot"]}  # Live players only (exclude both bot types)
             })
         
@@ -3566,9 +3570,34 @@ async def join_available_bet_as_human_bot(bot: HumanBot, bet_game: dict):
         random_completion_seconds = random.randint(15, 60)  # Random time between 15 seconds and 1 minute
         completion_deadline = datetime.utcnow() + timedelta(seconds=random_completion_seconds)
         
-        # Update game with bot as opponent
-        await db.games.update_one(
-            {"id": game_id, "status": "WAITING"},
+        # First reserve the game (similar to human players clicking Accept)
+        reservation_result = await db.games.update_one(
+            {
+                "id": game_id,
+                "status": "WAITING"
+            },
+            {
+                "$set": {
+                    "status": "RESERVED",
+                    "reserved_by": bot.id,
+                    "reserved_at": datetime.utcnow(),
+                    "reservation_expires_at": datetime.utcnow() + timedelta(seconds=60),
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        if reservation_result.modified_count == 0:
+            logger.warning(f"Human-bot {bot.name} failed to reserve game {game_id} - already taken")
+            return
+        
+        # Then immediately join the game (Human-bots don't wait)
+        join_result = await db.games.update_one(
+            {
+                "id": game_id,
+                "status": "RESERVED",
+                "reserved_by": bot.id
+            },
             {
                 "$set": {
                     "opponent_id": bot.id,
@@ -3580,10 +3609,18 @@ async def join_available_bet_as_human_bot(bot: HumanBot, bet_game: dict):
                     "active_deadline": completion_deadline,  # Random completion time
                     "human_bot_completion_time": random_completion_seconds,  # Store for logging
                     "joined_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow()
+                    "updated_at": datetime.utcnow(),
+                    # Clear reservation fields
+                    "reserved_by": None,
+                    "reserved_at": None,
+                    "reservation_expires_at": None
                 }
             }
         )
+        
+        if join_result.modified_count == 0:
+            logger.error(f"Human-bot {bot.name} reserved but failed to join game {game_id}")
+            return
         
         logger.info(f"Human-bot {bot.name} will complete game {game_id} in {random_completion_seconds} seconds")
         
@@ -3721,8 +3758,45 @@ async def startup_event():
         # Run database migrations
         await migrate_human_bots_fields()
         logger.info("Application startup completed successfully")
+        
+        # Start background task for cleaning up expired reservations
+        asyncio.create_task(cleanup_expired_reservations())
     except Exception as e:
         logger.error(f"Error during application startup: {e}")
+
+async def cleanup_expired_reservations():
+    """Background task to clean up expired game reservations."""
+    logger.info("Starting cleanup_expired_reservations background task")
+    
+    while True:
+        try:
+            # Find and update expired reservations
+            current_time = datetime.utcnow()
+            result = await db.games.update_many(
+                {
+                    "status": "RESERVED",
+                    "reservation_expires_at": {"$lt": current_time}
+                },
+                {
+                    "$set": {
+                        "status": "WAITING",
+                        "reserved_by": None,
+                        "reserved_at": None,
+                        "reservation_expires_at": None,
+                        "updated_at": current_time
+                    }
+                }
+            )
+            
+            if result.modified_count > 0:
+                logger.info(f"Cleaned up {result.modified_count} expired game reservations")
+            
+            # Run every 10 seconds
+            await asyncio.sleep(10)
+            
+        except Exception as e:
+            logger.error(f"Error in cleanup_expired_reservations: {e}")
+            await asyncio.sleep(60)  # Sleep longer on error
 
 # ==============================================================================
 # API ROUTES
@@ -6428,6 +6502,167 @@ async def debug_user_games(user_id: str, current_user: User = Depends(get_curren
             detail="Debug check failed"
         )
 
+@api_router.post("/games/{game_id}/reserve", response_model=dict)
+async def reserve_game(
+    game_id: str,
+    current_user: User = Depends(get_current_user_with_security)
+):
+    """Reserve a game slot when Accept button is clicked (60 second reservation)."""
+    logger.info(f"🔒 RESERVE_GAME called for user {current_user.id}, game {game_id}")
+    
+    try:
+        # Get the game
+        game = await db.games.find_one({"id": game_id})
+        if not game:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Game not found"
+            )
+        
+        game_obj = Game(**game)
+        
+        # Validate game state
+        if game_obj.status != GameStatus.WAITING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Game is not available for joining"
+            )
+        
+        if game_obj.creator_id == current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot join your own game"
+            )
+        
+        if game_obj.opponent_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Game already has an opponent"
+            )
+        
+        # Check if game is already reserved by someone else
+        if game_obj.reserved_by and game_obj.reserved_by != current_user.id:
+            # Check if reservation expired
+            if game_obj.reservation_expires_at and datetime.utcnow() < game_obj.reservation_expires_at:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Game is already reserved by another player"
+                )
+        
+        # Check if user has enough gems for the bet amount
+        user_total_gem_value = 0
+        user_gems = await db.user_gems.find({"user_id": current_user.id}).to_list(None)
+        
+        for user_gem in user_gems:
+            gem_def = await db.gem_definitions.find_one({"type": user_gem["gem_type"]})
+            if gem_def:
+                available_quantity = user_gem["quantity"] - user_gem["frozen_quantity"]
+                user_total_gem_value += gem_def["price"] * available_quantity
+        
+        if user_total_gem_value < game_obj.bet_amount:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Insufficient gems to join this bet"
+            )
+        
+        # Reserve the game atomically
+        reservation_time = datetime.utcnow()
+        reservation_expires = reservation_time + timedelta(seconds=60)
+        
+        update_result = await db.games.update_one(
+            {
+                "id": game_id,
+                "status": "WAITING",
+                "$or": [
+                    {"reserved_by": None},
+                    {"reserved_by": current_user.id},
+                    {"reservation_expires_at": {"$lt": datetime.utcnow()}}
+                ]
+            },
+            {
+                "$set": {
+                    "status": "RESERVED",
+                    "reserved_by": current_user.id,
+                    "reserved_at": reservation_time,
+                    "reservation_expires_at": reservation_expires,
+                    "updated_at": reservation_time
+                }
+            }
+        )
+        
+        if update_result.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to reserve game - it may be already reserved"
+            )
+        
+        logger.info(f"✅ Game {game_id} reserved by user {current_user.id} until {reservation_expires}")
+        
+        return {
+            "success": True,
+            "game_id": game_id,
+            "reserved_until": reservation_expires.isoformat(),
+            "message": "Game reserved successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error reserving game: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reserve game"
+        )
+
+@api_router.post("/games/{game_id}/unreserve", response_model=dict)
+async def unreserve_game(
+    game_id: str,
+    current_user: User = Depends(get_current_user_with_security)
+):
+    """Cancel game reservation when modal is closed without joining."""
+    logger.info(f"🔓 UNRESERVE_GAME called for user {current_user.id}, game {game_id}")
+    
+    try:
+        # Update game to remove reservation
+        update_result = await db.games.update_one(
+            {
+                "id": game_id,
+                "status": "RESERVED",
+                "reserved_by": current_user.id
+            },
+            {
+                "$set": {
+                    "status": "WAITING",
+                    "reserved_by": None,
+                    "reserved_at": None,
+                    "reservation_expires_at": None,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        if update_result.modified_count == 0:
+            # Game might already be unreserved or joined
+            return {
+                "success": True,
+                "message": "No reservation to cancel"
+            }
+        
+        logger.info(f"✅ Game {game_id} unreserved by user {current_user.id}")
+        
+        return {
+            "success": True,
+            "game_id": game_id,
+            "message": "Reservation cancelled successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error unreserving game: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to unreserve game"
+        )
+
 @api_router.post("/games/{game_id}/join", response_model=dict)
 async def join_game(
     request: Request,
@@ -6451,8 +6686,14 @@ async def join_game(
         
         game_obj = Game(**game)
         
-        # Validate game state
-        if game_obj.status != GameStatus.WAITING:
+        # Validate game state - allow joining if WAITING or RESERVED by current user
+        if game_obj.status == GameStatus.RESERVED:
+            if game_obj.reserved_by != current_user.id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Game is reserved by another player"
+                )
+        elif game_obj.status != GameStatus.WAITING:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Game is not available for joining"
@@ -6636,7 +6877,11 @@ async def join_game(
             "status": "ACTIVE",  # Mark as active - waiting for opponent to choose move
             "active_deadline": active_deadline,
             "is_regular_bot_game": is_regular_bot_game,
-            "updated_at": datetime.utcnow()
+            "updated_at": datetime.utcnow(),
+            # Clear reservation fields when joining
+            "reserved_by": None,
+            "reserved_at": None,
+            "reservation_expires_at": None
         }
         
         # Add human_bot_completion_time only if it's a Human-bot game
@@ -6647,7 +6892,10 @@ async def join_game(
             {
                 "id": game_id,
                 "opponent_id": None,  # Only update if opponent_id is still None
-                "status": "WAITING"   # And status is still WAITING
+                "$or": [
+                    {"status": "WAITING"},
+                    {"status": "RESERVED", "reserved_by": current_user.id}
+                ]
             },
             {"$set": update_data}
         )
@@ -8572,11 +8820,17 @@ async def force_complete_bot_cycle_v2(
 async def get_available_games(current_user: User = Depends(get_current_user)):
     """Get list of available games for joining."""
     try:
-        # Get waiting games (exclude frozen games)
+        # Get waiting games (exclude frozen and reserved games)
         # For Human-bot games: show ALL waiting games (no user exclusion)
         # For regular user games: exclude current user's own games
         games = await db.games.find({
-            "status": GameStatus.WAITING  # Only waiting games, not frozen
+            "$and": [
+                {"status": {"$in": [GameStatus.WAITING, GameStatus.RESERVED]}},
+                {"$or": [
+                    {"status": GameStatus.WAITING},
+                    {"status": GameStatus.RESERVED, "reserved_by": current_user.id}  # Show only games reserved by current user
+                ]}
+            ]
         }).sort("created_at", -1).to_list(None)  # Removed limit to show all available games
         
         result = []
@@ -10578,11 +10832,17 @@ async def get_active_bot_games(current_user: User = Depends(get_current_user)):
         if not bot_ids:
             return []
         
-        # Find games created by active bots with status WAITING
+        # Find games created by active bots with status WAITING (exclude reserved games)
         # Use the dynamic limit from settings
         bot_games = await db.games.find({
             "creator_id": {"$in": bot_ids},
-            "status": "WAITING"
+            "$and": [
+                {"status": {"$in": [GameStatus.WAITING, GameStatus.RESERVED]}},
+                {"$or": [
+                    {"status": GameStatus.WAITING},
+                    {"status": GameStatus.RESERVED, "reserved_by": current_user.id}  # Show only games reserved by current user
+                ]}
+            ]
         }).sort("created_at", -1).to_list(None)  # Removed limit to show all bot games
         
         result = []

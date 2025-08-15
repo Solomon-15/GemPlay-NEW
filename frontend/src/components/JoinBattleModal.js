@@ -9,6 +9,7 @@ import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
 import useDataRefresh from '../hooks/useDataRefresh';
 
 const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
+  const [isGameJoined, setIsGameJoined] = useState(false); // Track if game was successfully joined
   if (!bet || !user || !onClose) {
     console.error('JoinBattleModal: Missing required props', { bet, user, onClose });
     return null;
@@ -132,6 +133,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       
       if (result.status === 'ACTIVE') {
         console.log('🎮 Game is now ACTIVE - moving to step 2 for move selection');
+        setIsGameJoined(true); // Mark game as successfully joined
         
         // FIXED: Use centralized data refresh to prevent desynchronization
         await refreshAllData();
@@ -375,7 +377,10 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     if (hasJoinedGame && currentStep < 3) {
       await leaveGame();
     }
-    onClose();
+    // Pass whether the game was joined successfully
+    if (typeof onClose === 'function') {
+      onClose(isGameJoined);
+    }
   };
 
   useEffect(() => {
@@ -461,7 +466,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             Balance: ${totalBalance.toFixed(2)} | Frozen: ${frozenBalance.toFixed(2)} | Available: ${availableForSpending.toFixed(2)}
           </p>
           <button
-            onClick={onClose}
+            onClick={() => onClose(isGameJoined)}
             className="w-full py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors"
           >
             Close
@@ -493,7 +498,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             Your total gem value: ${totalGemValue.toFixed(2)}
           </p>
           <button
-            onClick={onClose}
+            onClick={() => onClose(isGameJoined)}
             className="w-full py-2 bg-red-600 text-white font-rajdhani font-bold rounded-lg hover:bg-red-700 transition-colors"
           >
             Close
