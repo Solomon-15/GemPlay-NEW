@@ -7866,6 +7866,8 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     is_creator_human_bot = await is_human_bot_user(game.creator_id)
                     is_opponent_human_bot = await is_human_bot_user(game.opponent_id) if game.opponent_id else False
                     
+                    logger.info(f"🔍 COMMISSION DEBUG: Game {game.id[:8]}... | Creator: {'Human-bot' if is_creator_human_bot else 'Live'} | Opponent: {'Human-bot' if is_opponent_human_bot else 'Live'} | Winner: {'Human-bot' if is_winner_human_bot else 'Live'}")
+                    
                     # New commission logic based on player types:
                     # 1. If Human-bots play against each other -> HUMAN_BOT_COMMISSION
                     # 2. If live player vs Human-bot and Human-bot wins -> HUMAN_BOT_COMMISSION  
@@ -7874,12 +7876,15 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     if is_creator_human_bot and is_opponent_human_bot:
                         # Case 1: Human-bot vs Human-bot
                         entry_type = "HUMAN_BOT_COMMISSION"
+                        logger.info(f"📊 COMMISSION TYPE: HUMAN_BOT_COMMISSION (Human-bot vs Human-bot)")
                     elif is_winner_human_bot:
                         # Case 2: Human-bot wins (against live player)
                         entry_type = "HUMAN_BOT_COMMISSION"
+                        logger.info(f"📊 COMMISSION TYPE: HUMAN_BOT_COMMISSION (Human-bot wins)")
                     else:
                         # Case 3: Live player wins (against Human-bot or another live player)
                         entry_type = "BET_COMMISSION"
+                        logger.info(f"📊 COMMISSION TYPE: BET_COMMISSION (Live player wins)")
                     
                     profit_entry = ProfitEntry(
                         entry_type=entry_type,
