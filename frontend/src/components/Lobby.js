@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import axios from 'axios';
 import GemsHeader from './GemsHeader';
 import Loader from './Loader';
@@ -74,23 +74,22 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const canCreateBet = useCallback(() => {
     // Проверка наличия гемов
     const hasGems = gemsData && gemsData.some(gem => gem.available_quantity > 0);
-    if (!hasGems) {
-      showError('Your inventory is empty — please purchase gems.');
-      return false;
-    }
-
+    
     // Проверка баланса для комиссии
     const totalBalance = user?.virtual_balance || 0;
     const frozenBalance = user?.frozen_balance || 0;
     const availableForCommission = totalBalance - frozenBalance;
+    const hasBalance = availableForCommission > 0;
     
-    if (availableForCommission <= 0) {
-      showError('You have no funds to pay the commission — top up your balance and retry.');
-      return false;
-    }
+    return {
+      canCreate: hasGems && hasBalance,
+      hasGems,
+      hasBalance
+    };
+  }, [gemsData, user]);
 
-    return true;
-  }, [gemsData, user, showError]);
+  // Мемоизируем результат проверки
+  const createBetCheck = useMemo(() => canCreateBet(), [canCreateBet]);
 
   const fetchLobbyData = async () => {
     try {
@@ -993,20 +992,31 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       <div className="text-center mb-8">
         <button 
           onClick={() => {
-            if (!canCreateBet()) {
-              return; // Прерываем если проверки не прошли
+            if (!createBetCheck.canCreate) {
+              if (!createBetCheck.hasGems) {
+                showError('Your inventory is empty — please purchase gems.');
+              } else if (!createBetCheck.hasBalance) {
+                showError('You have no funds to pay the commission — top up your balance and retry.');
+              }
+              return;
             }
             game.createBet();
             modalSound.onOpen();
             setShowCreateBetModal(true);
           }}
-          {...hoverProps}
-          className="px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-rajdhani font-bold text-xl rounded-lg hover:scale-105 hover:from-green-400 hover:to-green-500 transition-all duration-300 shadow-lg hover:shadow-green-500/50"
+          disabled={!createBetCheck.canCreate}
+          {...(createBetCheck.canCreate ? hoverProps : {})}
+          className={`px-8 py-4 text-white font-rajdhani font-bold text-xl rounded-lg transition-all duration-300 shadow-lg ${
+            createBetCheck.canCreate 
+              ? 'bg-gradient-to-r from-green-500 to-green-600 hover:scale-105 hover:from-green-400 hover:to-green-500 hover:shadow-green-500/50' 
+              : 'bg-gray-600 cursor-not-allowed opacity-50'
+          }`}
+          title={!createBetCheck.canCreate ? 'Insufficient funds or gems' : ''}
         >
           <svg className="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
-          CREATE BET
+          Create Bet
         </button>
       </div>
 
