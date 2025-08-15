@@ -268,12 +268,18 @@ const PlayerCard = memo(({
           <div className="flex-shrink-0">
             {isBot && game.bot_type !== 'HUMAN' && game.creator_type !== 'human_bot' ? (
               <div className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center">
-                <img 
-                  src="/Bot.svg" 
-                  alt="Bot Avatar" 
-                  className="w-10 h-10"
-                  style={{ filter: 'brightness(0) invert(1)' }}
-                />
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
+                     fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <title>Bot 01 — Head + antenna</title>
+                  <line x1="12" y1="4" x2="12" y2="7"/>
+                  <circle cx="12" cy="3" r="1"/>
+                  <rect x="5" y="7" width="14" height="10" rx="3"/>
+                  <line x1="3" y1="12" x2="5" y2="12"/>
+                  <line x1="19" y1="12" x2="21" y2="12"/>
+                  <circle cx="9.5" cy="12" r="1" fill="white" stroke="none"/>
+                  <circle cx="14.5" cy="12" r="1" fill="white" stroke="none"/>
+                  <line x1="8.5" y1="15" x2="15.5" y2="15"/>
+                </svg>
               </div>
             ) : (
               <img 
