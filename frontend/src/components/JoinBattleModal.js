@@ -445,12 +445,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     }
   };
 
-  const steps = [
-    { id: 1, name: 'Gem Selection', description: 'Select your gems' },
-    { id: 2, name: 'Move Selection', description: 'Choose your move' },
-    { id: 3, name: 'Battle Result', description: 'Battle result' }
-  ];
-
   const totalBalance = user?.virtual_balance || 0;
   const frozenBalance = user?.frozen_balance || 0; 
   const availableForSpending = totalBalance - frozenBalance;
@@ -699,31 +693,6 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="p-4 border-b border-border-primary">
-          <div className="flex items-center space-x-2">
-            {steps.map((step, index) => (
-              <React.Fragment key={step.id}>
-                <div className={`flex-1 flex items-center space-x-2 ${
-                  currentStep >= step.id ? 'text-accent-primary' : 'text-text-secondary'
-                }`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    currentStep >= step.id ? 'bg-accent-primary text-white' : 'bg-surface-sidebar text-text-secondary'
-                  }`}>
-                    {step.id}
-                  </div>
-                  <span className="text-xs font-rajdhani hidden sm:block">{step.name}</span>
-                </div>
-                {index < steps.length - 1 && (
-                  <div className={`w-8 h-0.5 ${
-                    currentStep > step.id ? 'bg-accent-primary' : 'bg-surface-sidebar'
-                  }`} />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
         </div>
 
         {/* Time Warning - показываем когда остается мало времени */}

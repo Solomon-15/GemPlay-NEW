@@ -38,8 +38,6 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   ];
 
   const steps = [
-    { id: 1, name: 'Gem Selection', description: 'Choose gems and amount' },
-    { id: 2, name: 'Move', description: 'Choose your move' }
   ];
 
   // Calculate total value when selectedGems changes
@@ -277,7 +275,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   };
 
   const renderStep1 = () => (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Fixed Bet Amount at Top */}
       <div className="sticky top-0 bg-surface-card border-b border-border-primary p-4 -mx-4 mb-0 z-10">
         <label className="block text-white font-rajdhani text-lg mb-3">
@@ -285,21 +283,21 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         </label>
         <div className="relative">
           <input
-            type="number"
+            type="number" 
             value={betAmount}
             onChange={(e) => handleAmountChange(e.target.value)}
             placeholder="Enter amount..."
             min={MIN_BET}
             max={MAX_BET}
-            className="w-full px-4 py-3 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white text-xl font-rajdhani font-bold text-center focus:outline-none focus:border-accent-primary"
+            className="placeholder:text-xl w-full px-4 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white text-3xl font-rajdhani font-bold text-center focus:outline-none focus:border-accent-primary"
           />
           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-400 text-xl font-bold">
-            $
+             <img src="/gems/gem-green.svg" alt="Gem" width="20" height="20" style={{ verticalAlign: 'middle' }} />
           </div>
         </div>
         <div className="flex justify-between text-text-secondary text-sm mt-2">
-          <span>Min: ${MIN_BET}</span>
-          <span>Max: ${MAX_BET}</span>
+          <span>Min: {MIN_BET} </span>
+          <span>Max: {MAX_BET}</span>
         </div>
       </div>
 
@@ -362,7 +360,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
             {formatDollarsAsGems(totalGemValue)}
             {betAmount && parseFloat(betAmount) > 0 && (
               <span className="text-text-secondary text-sm ml-2">
-                / {formatDollarAmount(parseFloat(betAmount))}
+                / {(parseFloat(betAmount))}
               </span>
             )}
           </div>
@@ -394,7 +392,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
             return (
               <div key={gem.type} className="bg-surface-card rounded-lg p-3 border border-opacity-20" style={{ borderColor: gem.color }}>
                 <div className="text-center mb-2">
-                  <img src={gem.icon} alt={gem.name} className="w-8 h-8 mx-auto mb-1" />
+                  <img src={gem.icon} alt={gem.name} className="w-14 h-14 mx-auto mb-1" />
                   <div className="text-white font-rajdhani font-bold text-xs">{gem.name}</div>
                   <div className="text-text-secondary text-xs">{formatDollarsAsGems(gem.price)}</div>
                 </div>
@@ -433,13 +431,12 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-white font-rajdhani text-xl mb-2">Choose Your Move</h3>
-        <p className="text-text-secondary">Select your strategy for the battle</p>
-        <div className="text-green-400 font-rajdhani text-lg mt-2">
-          Betting: {formatDollarsAsGems(totalGemValue)}
+        <div className="text-green-400 font-rajdhani text-6xl mt-2 font-bold">
+          {(totalGemValue)}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3">
         {moves.map(move => (
           <button
             key={move.id}
@@ -450,7 +447,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
                 : 'border-surface-sidebar hover:border-accent-primary border-opacity-50'
             }`}
           >
-            <img src={move.icon} alt={move.name} className="w-16 h-16 mx-auto mb-3" />
+            <img src={move.icon} alt={move.name} className="w-24 h-24 mx-auto mb-10" />
             <div className="text-white font-rajdhani font-bold text-lg">{move.name}</div>
           </button>
         ))}
@@ -493,7 +490,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         </div>
 
         {/* Progress Steps */}
-        <div className="p-4 border-b border-border-primary">
+        <div className="">
           <div className="flex items-center space-x-2">
             {steps.map((step, index) => (
               <React.Fragment key={step.id}>
@@ -540,7 +537,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               <button
                 onClick={handleNext}
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                className="flex-1 px-4 py-4 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
               >
                 Next
               </button>
@@ -549,7 +546,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
               <button
                 onClick={handleCreateBet}
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
+                className="flex-1 px-4 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
               >
                 {loading ? 'Creating...' : 'Create Bet'}
               </button>

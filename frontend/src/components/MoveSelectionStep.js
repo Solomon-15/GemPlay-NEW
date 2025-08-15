@@ -24,9 +24,8 @@ const MoveSelectionStep = ({
       {/* Header */}
       <div className="text-center">
         <h3 className="text-white font-rajdhani text-xl mb-2">Choose Your Move</h3>
-        <p className="text-text-secondary mb-2">Select your strategy for the battle</p>
-        <div className="text-green-400 font-rajdhani text-lg">
-          Betting: {formatGemValue(totalGemValue)}
+        <div className="text-green-400 font-rajdhani text-6xl font-bold">
+          {(totalGemValue)}
         </div>
       </div>
 
@@ -47,7 +46,7 @@ const MoveSelectionStep = ({
             }`}
           >
             <div className="flex flex-col items-center space-y-2">
-              <img src={move.icon} alt={move.name} className="w-16 h-16" />
+              <img src={move.icon} alt={move.name} className="w-24 h-24" />
               <span className="text-white font-rajdhani font-bold">{move.name}</span>
             </div>
           </button>
@@ -65,26 +64,6 @@ const MoveSelectionStep = ({
         </div>
       )}
 
-      {/* Battle Summary */}
-      <div className="bg-surface-sidebar rounded-lg p-4">
-        <h5 className="text-white font-rajdhani font-bold mb-3">Battle Summary</h5>
-        <div className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-text-secondary">Target Amount:</span>
-            <span className="text-white font-rajdhani font-bold">{formatGemValue(targetAmount)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">Your Bet:</span>
-            <span className="text-green-400 font-rajdhani font-bold">{formatGemValue(totalGemValue)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-text-secondary">Your Move:</span>
-            <span className="text-accent-primary font-rajdhani font-bold">
-              {selectedMove ? moves.find(m => m.id === selectedMove)?.name : 'Not selected'}
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Instructions */}
       <div className="bg-blue-900 bg-opacity-20 border border-blue-600 rounded-lg p-4">

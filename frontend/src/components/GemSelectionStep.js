@@ -78,11 +78,11 @@ const GemSelectionStep = ({
       {/* Header */}
       <div className="text-center">
         <h3 className="text-white font-rajdhani text-xl mb-2">Match Opponent's Bet</h3>
-        <div className="text-green-400 font-rajdhani text-2xl font-bold">
-          {formatCurrency(targetAmount)}
+        <div className="text-green-400 font-rajdhani text-6xl font-bold">
+          {(targetAmount)}
         </div>
         <div className="text-blue-400 font-rajdhani text-lg">
-          Your Bet: {formatCurrency(totalGemValue)}
+          Your Bet: {(totalGemValue)}
         </div>
         {commissionAmount > 0 && (
           <div className="text-orange-400 font-rajdhani text-sm">
@@ -92,7 +92,7 @@ const GemSelectionStep = ({
         
         {Math.abs(totalGemValue - targetAmount) > 0.01 && (
           <div className="text-red-400 text-sm mt-1">
-            ⚠️ Amount mismatch: {formatCurrency(Math.abs(totalGemValue - targetAmount))}
+            ⚠️ Amount mismatch: {(Math.abs(totalGemValue - targetAmount))}
           </div>
         )}
       </div>
@@ -109,7 +109,7 @@ const GemSelectionStep = ({
               handleStrategyClick('small');
             }}
             disabled={loading}
-            className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
+            className="px-3 py-3 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s"
             title="🔴 Use more cheap gems (Ruby, Amber, then others)"
           >
             {loading ? (
@@ -127,7 +127,7 @@ const GemSelectionStep = ({
               handleStrategyClick('smart');
             }}
             disabled={loading}
-            className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
+            className="px-3 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s"
             title="🟢 Balanced mid-range gems (60% mid, 30% low, 10% high)"
           >
             {loading ? (
@@ -145,7 +145,7 @@ const GemSelectionStep = ({
               handleStrategyClick('big');
             }}
             disabled={loading}
-            className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
+            className="px-3 py-3 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s"
             title="🟣 Use fewer expensive gems (Magic, Sapphire, then others)"
           >
             {loading ? (
@@ -158,8 +158,8 @@ const GemSelectionStep = ({
       </div>
 
       {/* Selected Gems Display */}
-      <div className="bg-surface-sidebar rounded-lg p-4">
-        <h5 className="text-white font-rajdhani font-bold mb-2">Selected Gems</h5>
+      <div className="space-y-3">
+        <h5 className="text-white font-rajdhani text-lg">Selected Gems</h5>
         {Object.keys(selectedGems).length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {Object.entries(selectedGems)
@@ -182,16 +182,16 @@ const GemSelectionStep = ({
               })}
           </div>
         ) : (
-          <div className="text-text-secondary text-center py-4">
-            No gems selected. Use Auto Combination or select manually below.
+          <div className="text-text-secondary text-sm text-center py-2">
+            No gems selected. <br /> Use Auto Combination or select manually below.
           </div>
         )}
       </div>
 
       {/* Mini-Inventory */}
       <div className="space-y-3">
-        <h5 className="text-white font-rajdhani font-bold">Your Inventory</h5>
-        <div className="flex flex-wrap gap-3">
+        <h5 className="text-white font-rajdhani text-lg">Your Inventory</h5>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
           {gemsData && Array.isArray(gemsData) ? gemsData.map(gem => {
             const available = gem.available_quantity || 0;
             const selected = selectedGems[gem.type] || 0;
@@ -199,9 +199,9 @@ const GemSelectionStep = ({
             if (!gem.has_available && selected <= 0) return null;
             
             return (
-              <div key={gem.type} className="bg-surface-card rounded-lg p-3 border border-opacity-20 min-w-[140px]" style={{ borderColor: gem.color }}>
-                <div className="flex items-center space-x-2 mb-2">
-                  <img src={gem.icon} alt={gem.name} className="w-5 h-5" />
+              <div key={gem.type} className="bg-surface-card rounded-lg p-4 border border-opacity-20 min-w-[140px]" style={{ borderColor: gem.color }}>
+                <div className="text-center mb-2">
+                  <img src={gem.icon} alt={gem.name} className="w-14 h-14 mx-auto mb-1" />
                   <div>
                     <div className="text-white font-rajdhani font-bold text-xs">{gem.name}</div>
                     <div className="text-text-secondary text-xs">{formatCurrency(gem.price)}</div>
@@ -217,7 +217,7 @@ const GemSelectionStep = ({
                       handleGemQuantityChange(gem.type, Math.max(0, selected - 1));
                     }}
                     disabled={selected <= 0}
-                    className="w-5 h-5 bg-red-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
+                    className="w-6 h-6 bg-red-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
                   >
                     −
                   </button>
@@ -235,7 +235,7 @@ const GemSelectionStep = ({
                       handleGemQuantityChange(gem.type, selected + 1);
                     }}
                     disabled={selected >= available}
-                    className="w-5 h-5 bg-green-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
+                    className="w-6 h-6 bg-green-600 text-white rounded text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-all"
                   >
                     +
                   </button>
