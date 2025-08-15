@@ -74,6 +74,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const canCreateBet = useCallback(() => {
     // Проверка наличия гемов
     const hasGems = gemsData && gemsData.some(gem => gem.available_quantity > 0);
+    const totalGemCount = gemsData ? gemsData.reduce((sum, gem) => sum + gem.available_quantity, 0) : 0;
     
     // Проверка баланса для комиссии
     const totalBalance = user?.virtual_balance || 0;
@@ -81,10 +82,23 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
     const availableForCommission = totalBalance - frozenBalance;
     const hasBalance = availableForCommission > 0;
     
+    // Формируем детальную подсказку
+    let tooltip = '';
+    if (!hasGems && !hasBalance) {
+      tooltip = `Need at least 1 gem (you have 0) and funds for commission (you have $${availableForCommission.toFixed(2)} available)`;
+    } else if (!hasGems) {
+      tooltip = `Need at least 1 gem to create a bet (you have 0 gems)`;
+    } else if (!hasBalance) {
+      // Минимальная комиссия = 3% от минимальной ставки ($1)
+      const minCommission = 0.03;
+      tooltip = `Need at least $${minCommission.toFixed(2)} for commission (you have $${availableForCommission.toFixed(2)} available)`;
+    }
+    
     return {
       canCreate: hasGems && hasBalance,
       hasGems,
-      hasBalance
+      hasBalance,
+      tooltip
     };
   }, [gemsData, user]);
 
@@ -1011,7 +1025,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
               ? 'bg-gradient-to-r from-green-500 to-green-600 hover:scale-105 hover:from-green-400 hover:to-green-500 hover:shadow-green-500/50' 
               : 'bg-gray-600 cursor-not-allowed opacity-50'
           }`}
-          title={!createBetCheck.canCreate ? 'Insufficient funds or gems' : ''}
+          title={createBetCheck.tooltip || ''}
         >
           <svg className="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
