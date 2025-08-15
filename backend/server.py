@@ -7933,10 +7933,13 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     
                     # Update Human-bot total commission if winner is a Human-bot
                     if is_winner_human_bot:
-                        await db.human_bots.update_one(
-                            {"id": winner_id},
-                            {"$inc": {"total_commission_paid": commission_amount}}
-                        )
+                        try:
+                            await db.human_bots.update_one(
+                                {"id": winner_id},
+                                {"$inc": {"total_commission_paid": commission_amount}}
+                            )
+                        except Exception as e:
+                            logger.error(f"❌ Error in Human-bot commission processing: {e}")
             
             # Check if this is a bot game and record bot revenue (exclude Human-bots)
             if game.is_bot_game:
