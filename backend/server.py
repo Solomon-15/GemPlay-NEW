@@ -7862,11 +7862,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     await db.transactions.insert_one(commission_transaction.dict())
                 
 
-                # Determine if players are Human-bots
-                is_winner_human_bot = await is_human_bot_user(winner_id)
-                is_creator_human_bot = await is_human_bot_user(game.creator_id)
-                is_opponent_human_bot = await is_human_bot_user(game.opponent_id) if game.opponent_id else False
-                
+
 
             
             # Check if this is a bot game and record bot revenue (exclude Human-bots)
