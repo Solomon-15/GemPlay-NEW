@@ -17,7 +17,7 @@ const PlayerCard = memo(({
   const [isAccepting, setIsAccepting] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   
-  const isBot = game.creator_type === 'bot' || game.creator_type === 'human_bot';
+  const isBot = game.creator_type === 'bot' || game.creator_type === 'human_bot' || game.is_bot_game;
   
   // Debug logging
   if (game.creator_username === 'Bot' || game.creator_info?.username === 'Bot') {
