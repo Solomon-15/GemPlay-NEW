@@ -41,6 +41,18 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   // Блокировка управления на шаге результата (2 секунды)
   const [resultControlsLocked, setResultControlsLocked] = useState(false);
   const resultLockTimerRef = useRef(null);
+  
+  // Защита от многократных нажатий для кнопок стратегий
+  const [lastClickedStrategy, setLastClickedStrategy] = useState(null);
+  const [strategyButtonsDisabled, setStrategyButtonsDisabled] = useState({
+    small: false,
+    smart: false,
+    big: false
+  });
+  
+  // Защита от многократных нажатий для критических кнопок
+  const [isJoining, setIsJoining] = useState(false);
+  const [isStartingBattle, setIsStartingBattle] = useState(false);
 
   useEffect(() => {
     if (currentStep === 3) {
@@ -99,7 +111,10 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   };
 
   const joinGame = async () => {
+    if (isJoining) return; // Защита от повторных нажатий
+    
     setLoading(true);
+    setIsJoining(true);
     
     try {
       console.log('🎮 === JOINING GAME (STEP 1→2) ===');
@@ -156,11 +171,13 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       console.error('🚨 Join game error:', error);
       showError(error.message || 'Ошибка при присоединении к игре');
       setHasJoinedGame(false); // Reset if failed
+      setIsJoining(false); // Сбрасываем флаг при ошибке
       
       // FIXED: Refresh data even on error to ensure consistency
       await refreshAllData();
     } finally {
       setLoading(false);
+      // Не сбрасываем isJoining после успеха, т.к. переходим на следующий шаг
     }
   };
 
@@ -264,12 +281,15 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   };
 
   const startBattle = async () => {
+    if (isStartingBattle) return; // Защита от повторных нажатий
+    
     const isValid = await validateBeforeBattle();
     if (!isValid) {
       return;
     }
     
     setLoading(true);
+    setIsStartingBattle(true);
     
     setShowCountdown(true);
     setCountdownNumber(3);
@@ -293,6 +313,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     if (!selectedMove) {
       showError('Выберите ход перед стартом битвы');
       setLoading(false);
+      setIsStartingBattle(false);
       return;
     }
 
@@ -322,9 +343,11 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
       showError(err.message || 'Ошибка при завершении битвы');
       // В случае ошибки откатываемся на шаг 2, чтобы пользователь мог повторить
       setCurrentStep(2);
+      setIsStartingBattle(false); // Сбрасываем флаг при ошибке
     } finally {
       setResultPending(false);
       setLoading(false);
+      // Не сбрасываем isStartingBattle после успеха, т.к. игра завершена
     }
   };
 
@@ -416,7 +439,20 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
   }, [currentStep, hasJoinedGame, didFlash20, didFlash10]);
 
   const handleStrategySelect = async (strategy) => {
+    // Проверка на блокировку кнопки
+    if (strategyButtonsDisabled[strategy]) {
+      return; // Кнопка заблокирована, игнорируем клик
+    }
+    
     setLoading(true);
+    
+    // Блокируем текущую кнопку и разблокируем остальные
+    setStrategyButtonsDisabled({
+      small: strategy === 'small',
+      smart: strategy === 'smart',
+      big: strategy === 'big'
+    });
+    setLastClickedStrategy(strategy);
     
     try {
       // CRITICAL FIX: Get fresh gem data and store it for consistent use
@@ -528,6 +564,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             loading={loading}
             onStrategySelect={handleStrategySelect}
             showError={showError}
+            strategyButtonsDisabled={strategyButtonsDisabled}
           />
         );
       case 2:
@@ -726,7 +763,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
               <button
                 type="button"
                 onClick={goToNextStep}
-                disabled={loading || !canGoNext}
+                disabled={loading || !canGoNext || isJoining}
                 className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
               >
                 Next
@@ -740,10 +777,10 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
               <button
                 type="button"
                 onClick={startBattle}
-                disabled={loading || !canGoNext}
+                disabled={loading || !canGoNext || isStartingBattle}
                 className="flex-1 px-4 py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
               >
-                Start Battle!
+                {loading || isStartingBattle ? 'Starting...' : 'Start Battle!'}
               </button>
             </div>
           </div>

@@ -8,7 +8,8 @@ const GemSelectionStep = ({
   gemsData,
   loading,
   onStrategySelect,
-  showError
+  showError,
+  strategyButtonsDisabled = { small: false, smart: false, big: false }
 }) => {
   const formatCurrency = (amount) => {
     try {
@@ -108,7 +109,7 @@ const GemSelectionStep = ({
               e.stopPropagation();
               handleStrategyClick('small');
             }}
-            disabled={loading}
+            disabled={loading || strategyButtonsDisabled.small}
             className="px-3 py-3 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s"
             title="🔴 Use more cheap gems (Ruby, Amber, then others)"
           >
@@ -126,7 +127,7 @@ const GemSelectionStep = ({
               e.stopPropagation();
               handleStrategyClick('smart');
             }}
-            disabled={loading}
+            disabled={loading || strategyButtonsDisabled.smart}
             className="px-3 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s"
             title="🟢 Balanced mid-range gems (60% mid, 30% low, 10% high)"
           >
@@ -144,7 +145,7 @@ const GemSelectionStep = ({
               e.stopPropagation();
               handleStrategyClick('big');
             }}
-            disabled={loading}
+            disabled={loading || strategyButtonsDisabled.big}
             className="px-3 py-3 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-s"
             title="🟣 Use fewer expensive gems (Magic, Sapphire, then others)"
           >

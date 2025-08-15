@@ -1,20 +1,24 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { useGems } from './GemsContext';
 import { formatDollarsAsGems } from '../utils/gemUtils';
 
-const PlayerCard = React.memo(({ 
+const PlayerCard = memo(({ 
   game, 
-  isMyBet = false, 
+  user,
+  isMyBet = false,
   isOngoing = false,
-  isBot = false,
-  onAccept, 
+  onAccept,
   onCancel,
-  onOpenJoinBattle,  // Новый пропс для открытия модального окна
-  onUpdateUser,
-  user
+  onOpenJoinBattle 
 }) => {
   const { gemsDefinitions, getGemByType } = useGems();
 
+  // Защита от многократных нажатий
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  
+  const isBot = game.creator_type === 'bot' || game.creator_type === 'human_bot';
+  
   // Get time remaining for auto-cancel (static HH:MM of cancel time)
   const getCancelTimeHHMM = () => {
     if (!game.created_at) return null;
@@ -130,18 +134,32 @@ const PlayerCard = React.memo(({
   };
 
   const handleAcceptClick = useCallback(() => {
+    if (isAccepting) return; // Защита от повторных нажатий
+    
+    setIsAccepting(true);
+    
     if (onAccept) {
       onAccept(game.game_id || game.id); // Передаем ID игры, а не объект
     } else if (onOpenJoinBattle) {
       onOpenJoinBattle(game); // Передаем весь объект игры
     }
-  }, [onAccept, onOpenJoinBattle, game.game_id, game.id, game]);
+    
+    // Сбрасываем флаг через небольшую задержку на случай если модалка не открылась
+    setTimeout(() => setIsAccepting(false), 1000);
+  }, [onAccept, onOpenJoinBattle, game.game_id, game.id, game, isAccepting]);
 
   const handleCancelClick = useCallback(() => {
+    if (isCancelling) return; // Защита от повторных нажатий
+    
+    setIsCancelling(true);
+    
     if (onCancel) {
       onCancel(game.game_id || game.id);
     }
-  }, [onCancel, game.game_id, game.id]);
+    
+    // Сбрасываем флаг через небольшую задержку на случай ошибки
+    setTimeout(() => setIsCancelling(false), 1000);
+  }, [onCancel, game.game_id, game.id, isCancelling]);
 
   const totalAmount = useMemo(() => getTotalBetAmount(), [game.bet_amount, game.bet_gems, gemsDefinitions]);
   const cancelAtHHMM = useMemo(() => getCancelTimeHHMM(), [game.created_at]);
@@ -227,9 +245,10 @@ const PlayerCard = React.memo(({
               ) : (
                 <button
                   onClick={handleCancelClick}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105"
+                  disabled={isCancelling}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Cancel
+                  {isCancelling ? 'Cancelling...' : 'Cancel'}
                 </button>
               )
             ) : isOngoing ? (
@@ -242,9 +261,10 @@ const PlayerCard = React.memo(({
             ) : (
               <button
                 onClick={handleAcceptClick}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105"
+                disabled={isAccepting}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Accept
+                {isAccepting ? 'Accepting...' : 'Accept'}
               </button>
             )}
           </div>

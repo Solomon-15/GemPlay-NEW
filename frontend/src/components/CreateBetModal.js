@@ -26,6 +26,18 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   // Step 2: Move selection
   const [selectedMove, setSelectedMove] = useState('');
   
+  // Защита от многократных нажатий для кнопок стратегий
+  const [lastClickedStrategy, setLastClickedStrategy] = useState(null);
+  const [strategyButtonsDisabled, setStrategyButtonsDisabled] = useState({
+    small: false,
+    smart: false,
+    big: false
+  });
+  
+  // Защита от многократных нажатий для критических кнопок
+  const [isCreatingBet, setIsCreatingBet] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  
   // Constants
   const MIN_BET = 1;
   const MAX_BET = 3000;
@@ -57,6 +69,11 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
    * Enhanced strategy handler with improved error handling
    */
   const handleStrategySelect = (strategy) => {
+    // Проверка на блокировку кнопки
+    if (strategyButtonsDisabled[strategy]) {
+      return; // Кнопка заблокирована, игнорируем клик
+    }
+    
     if (!betAmount || parseFloat(betAmount) <= 0) {
       showError('Please enter a valid bet amount first');
       return;
@@ -76,6 +93,14 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     }
     
     setLoading(true);
+    
+    // Блокируем текущую кнопку и разблокируем остальные
+    setStrategyButtonsDisabled({
+      small: strategy === 'small',
+      smart: strategy === 'smart',
+      big: strategy === 'big'
+    });
+    setLastClickedStrategy(strategy);
     
     try {
       console.log(`Attempting ${strategy} strategy for $${amount} with gems:`, gemsData.map(g => `${g.name}: ${g.available_quantity}`));
@@ -179,6 +204,8 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
   };
 
   const handleNext = () => {
+    if (isNavigating) return; // Защита от повторных нажатий
+    
     let isValid = false;
     
     switch (currentStep) {
@@ -191,20 +218,32 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
     }
     
     if (isValid) {
+      setIsNavigating(true);
       setCurrentStep(Math.min(2, currentStep + 1));
+      // Сбрасываем флаг через небольшую задержку
+      setTimeout(() => setIsNavigating(false), 300);
     }
   };
 
   const handleBack = () => {
+    if (isNavigating) return; // Защита от повторных нажатий
+    
     if (currentStep > 1) {
+      setIsNavigating(true);
       setCurrentStep(currentStep - 1);
+      // Сбрасываем флаг через небольшую задержку
+      setTimeout(() => setIsNavigating(false), 300);
     }
   };
 
   const handleCreateBet = async () => {
+    if (isCreatingBet) return; // Защита от повторных нажатий
+    
     if (!validateStep2()) return;
     
     setLoading(true);
+    setIsCreatingBet(true);
+    
     try {
       const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/games/create`, {
         method: 'POST',
@@ -232,11 +271,14 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         onClose();
       } else {
         showError(data.detail || 'Failed to create bet');
+        setIsCreatingBet(false); // Сбрасываем флаг при ошибке
       }
     } catch (error) {
       showError('Network error. Please try again.');
+      setIsCreatingBet(false); // Сбрасываем флаг при ошибке
     } finally {
       setLoading(false);
+      // Не сбрасываем isCreatingBet после успеха, т.к. модалка закрывается
     }
   };
 
@@ -309,7 +351,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         <div className="grid grid-cols-3 gap-3">
           <button
             onClick={() => handleStrategySelect('small')}
-            disabled={!betAmount || parseFloat(betAmount) <= 0 || loading}
+            disabled={!betAmount || parseFloat(betAmount) <= 0 || loading || strategyButtonsDisabled.small}
             className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             title="🔴 Use more cheap gems (Ruby, Amber, Topaz)"
           >
@@ -321,7 +363,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           </button>
           <button
             onClick={() => handleStrategySelect('smart')}
-            disabled={!betAmount || parseFloat(betAmount) <= 0 || loading}
+            disabled={!betAmount || parseFloat(betAmount) <= 0 || loading || strategyButtonsDisabled.smart}
             className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             title="🟢 Balanced mid-range gems (60% mid, 30% low, 10% high)"
           >
@@ -333,7 +375,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
           </button>
           <button
             onClick={() => handleStrategySelect('big')}
-            disabled={!betAmount || parseFloat(betAmount) <= 0 || loading}
+            disabled={!betAmount || parseFloat(betAmount) <= 0 || loading || strategyButtonsDisabled.big}
             className="px-4 py-3 bg-purple-600 hover:bg-purple-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             title="🟣 Use fewer expensive gems (Magic, Sapphire, Aquamarine)"
           >
@@ -526,7 +568,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
             {currentStep > 1 && (
               <button
                 onClick={handleBack}
-                disabled={loading}
+                disabled={loading || isNavigating}
                 className="px-4 py-2 bg-surface-sidebar text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
               >
                 Back
@@ -536,7 +578,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
             {currentStep === 1 && (
               <button
                 onClick={handleNext}
-                disabled={loading}
+                disabled={loading || isNavigating}
                 className="flex-1 px-4 py-4 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
               >
                 Next
@@ -545,10 +587,10 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
             {currentStep === 2 && (
               <button
                 onClick={handleCreateBet}
-                disabled={loading}
+                disabled={loading || isCreatingBet}
                 className="flex-1 px-4 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300 disabled:opacity-50"
               >
-                {loading ? 'Creating...' : 'Create Bet'}
+                {loading || isCreatingBet ? 'Creating...' : 'Create Bet'}
               </button>
             )}
           </div>
