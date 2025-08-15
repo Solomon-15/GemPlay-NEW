@@ -378,7 +378,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
           <div className="flex items-center space-x-4">
             {/* Bot Avatar */}
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
                      fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <title>Bot 01 — Head + antenna</title>

@@ -268,7 +268,7 @@ const PlayerCard = memo(({
           {/* Avatar */}
           <div className="flex-shrink-0">
             {isBot && game.is_bot_game && game.bot_type !== 'HUMAN' ? (
-              <div className="w-14 h-14 rounded-full bg-purple-600 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-purple-700 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24"
                      fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <title>Bot 01 — Head + antenna</title>
