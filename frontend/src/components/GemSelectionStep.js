@@ -204,7 +204,7 @@ const GemSelectionStep = ({
       {/* Mini-Inventory */}
       <div className="space-y-3">
         <h5 className="text-white font-rajdhani text-lg">Your Inventory</h5>
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
           {gemsData && Array.isArray(gemsData) ? gemsData.map(gem => {
             const available = gem.available_quantity || 0;
             const selected = selectedGems[gem.type] || 0;

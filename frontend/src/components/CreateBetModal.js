@@ -437,7 +437,7 @@ const CreateBetModal = ({ user, onClose, onUpdateUser }) => {
         <label className="block text-white font-rajdhani text-lg mb-3">
           Your Inventory
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
           {gemsData.map(gem => {
             const selected = selectedGems[gem.type] || 0;
             
