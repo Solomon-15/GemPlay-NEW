@@ -76,19 +76,33 @@ const Inventory = ({ user, onUpdateUser }) => {
   };
 
   const handleQuantityChange = (gemType, quantity, maxQuantity) => {
+    // Преобразуем в число и ограничиваем диапазон
+    const numQuantity = parseInt(quantity) || 0;
+    const validQuantity = Math.max(1, Math.min(maxQuantity, numQuantity));
+    
     setQuantities(prev => ({
       ...prev,
-      [gemType]: Math.max(1, Math.min(maxQuantity, parseInt(quantity) || 1))
+      [gemType]: validQuantity
     }));
   };
 
   const handleSellGem = async (gemType) => {
     const gem = gems.find(g => g.type === gemType);
-    const quantity = quantities[gemType] || 1;
+    const requestedQuantity = quantities[gemType] || 1;
     const availableQuantity = gem.quantity - gem.frozen_quantity;
     
-    if (quantity > availableQuantity) {
-      showError('Cannot sell more gems than available');
+    // Корректируем количество, если оно превышает доступное
+    const actualQuantity = Math.min(requestedQuantity, availableQuantity);
+    
+    if (availableQuantity === 0) {
+      showError('No available gems to sell');
+      return;
+    }
+    
+    if (requestedQuantity > availableQuantity) {
+      // Обновляем количество в форме на максимально доступное
+      handleQuantityChange(gemType, availableQuantity, availableQuantity);
+      showError(`Only ${availableQuantity} gems available. Quantity adjusted.`);
       return;
     }
 
@@ -96,11 +110,11 @@ const Inventory = ({ user, onUpdateUser }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/gems/sell?gem_type=${gemType}&quantity=${quantity}`, {}, {
+      const response = await axios.post(`${API}/gems/sell?gem_type=${gemType}&quantity=${actualQuantity}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const totalValue = formatGemValue(gem.price * quantity);
+      const totalValue = formatGemValue(gem.price * actualQuantity);
       const gemDisplayName = gemType === 'Ruby' ? 'Rubies' : 
                             gemType === 'Emerald' ? 'Emeralds' :
                             gemType === 'Sapphire' ? 'Sapphires' :
@@ -109,15 +123,15 @@ const Inventory = ({ user, onUpdateUser }) => {
                             gemType === 'Amber' ? 'Ambers' :
                             gemType === 'Magic' ? 'Magic gems' : `${gemType}s`;
       
-      const finalGemName = quantity === 1 ? gemType : gemDisplayName;
-      showSuccess(`✅ You sold ${quantity} ${finalGemName} for $${totalValue}`);
+      const finalGemName = actualQuantity === 1 ? gemType : gemDisplayName;
+      showSuccess(`✅ You sold ${actualQuantity} ${finalGemName} for $${totalValue}`);
       
       await fetchInventory();
       await fetchBalance();
       
       const globalRefresh = getGlobalLobbyRefresh();
       globalRefresh.triggerLobbyRefresh();
-      console.log(`💰 Sold ${quantity} ${gemType} gems - triggering lobby refresh`);
+      console.log(`💰 Sold ${actualQuantity} ${gemType} gems - triggering lobby refresh`);
       
       if (onUpdateUser) {
         onUpdateUser();
@@ -131,17 +145,25 @@ const Inventory = ({ user, onUpdateUser }) => {
 
   const handleGiftGem = (gemType) => {
     const gem = gems.find(g => g.type === gemType);
-    const quantity = quantities[gemType] || 1;
+    const requestedQuantity = quantities[gemType] || 1;
     const availableQuantity = gem.quantity - gem.frozen_quantity;
     
-    if (quantity > availableQuantity) {
-      showError('Cannot gift more gems than available');
+    // Корректируем количество, если оно превышает доступное
+    const actualQuantity = Math.min(requestedQuantity, availableQuantity);
+    
+    if (availableQuantity === 0) {
+      showError('No available gems to gift');
       return;
+    }
+    
+    if (requestedQuantity > availableQuantity) {
+      // Обновляем количество в форме на максимально доступное
+      handleQuantityChange(gemType, availableQuantity, availableQuantity);
     }
 
     setSelectedGemForGift({
       gemType,
-      quantity,
+      quantity: actualQuantity,
       gemPrice: gem.price,
       availableQuantity
     });
@@ -432,15 +454,50 @@ const Inventory = ({ user, onUpdateUser }) => {
                       <label className="font-roboto text-text-secondary text-xs block mb-2">
                         Quantity to sell/gift:
                       </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max={availableQuantity}
-                        value={quantity}
-                        onChange={(e) => handleQuantityChange(gem.type, e.target.value, availableQuantity)}
-                        className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-rajdhani text-center text-sm"
-                        disabled={availableQuantity === 0}
-                      />
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => handleQuantityChange(gem.type, quantity - 1, availableQuantity)}
+                          disabled={availableQuantity === 0 || quantity <= 1}
+                          className={`w-8 h-8 rounded-lg font-rajdhani font-bold text-lg transition-all duration-200 ${
+                            availableQuantity > 0 && quantity > 1
+                              ? 'bg-surface-sidebar border border-border-primary text-white hover:bg-surface-hover hover:border-accent-primary'
+                              : 'bg-surface-sidebar border border-gray-700 text-gray-600 cursor-not-allowed'
+                          }`}
+                        >
+                          -
+                        </button>
+                        
+                        <input
+                          type="number"
+                          min="1"
+                          max={availableQuantity}
+                          value={quantity}
+                          onChange={(e) => handleQuantityChange(gem.type, e.target.value, availableQuantity)}
+                          onBlur={(e) => {
+                            // При потере фокуса корректируем значение, если оно выходит за допустимые пределы
+                            const value = parseInt(e.target.value) || 1;
+                            if (value > availableQuantity) {
+                              handleQuantityChange(gem.type, availableQuantity, availableQuantity);
+                            } else if (value < 1) {
+                              handleQuantityChange(gem.type, 1, availableQuantity);
+                            }
+                          }}
+                          className="w-20 px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white font-rajdhani text-center text-sm"
+                          disabled={availableQuantity === 0}
+                        />
+                        
+                        <button
+                          onClick={() => handleQuantityChange(gem.type, quantity + 1, availableQuantity)}
+                          disabled={availableQuantity === 0 || quantity >= availableQuantity}
+                          className={`w-8 h-8 rounded-lg font-rajdhani font-bold text-lg transition-all duration-200 ${
+                            availableQuantity > 0 && quantity < availableQuantity
+                              ? 'bg-surface-sidebar border border-border-primary text-white hover:bg-surface-hover hover:border-accent-primary'
+                              : 'bg-surface-sidebar border border-gray-700 text-gray-600 cursor-not-allowed'
+                          }`}
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                     
                     {/* Total Value */}

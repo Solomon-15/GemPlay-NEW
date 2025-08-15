@@ -65,10 +65,15 @@ const Shop = ({ user, onUpdateUser }) => {
     }
   };
 
-  const handleQuantityChange = (gemType, quantity) => {
+  const handleQuantityChange = (gemType, quantity, gemPrice) => {
+    // Рассчитываем максимальное количество, которое можно купить
+    const maxAffordable = balance ? Math.floor(balance.virtual_balance / gemPrice) : 0;
+    const numQuantity = parseInt(quantity) || 0;
+    const validQuantity = Math.max(1, Math.min(maxAffordable, numQuantity));
+    
     setQuantities(prev => ({
       ...prev,
-      [gemType]: Math.max(1, parseInt(quantity) || 1)
+      [gemType]: validQuantity
     }));
   };
 
@@ -201,14 +206,53 @@ const Shop = ({ user, onUpdateUser }) => {
                     <label className="font-roboto text-text-secondary text-sm block mb-2">
                       Quantity:
                     </label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="1000"
-                      value={quantity}
-                      onChange={(e) => handleQuantityChange(gem.type, e.target.value)}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani text-center"
-                    />
+                    <div className="flex items-center justify-center space-x-2">
+                      <button
+                        onClick={() => handleQuantityChange(gem.type, quantity - 1, gem.price)}
+                        disabled={quantity <= 1}
+                        className={`w-8 h-8 rounded-lg font-rajdhani font-bold text-lg transition-all duration-200 ${
+                          quantity > 1
+                            ? 'bg-surface-sidebar border border-accent-primary border-opacity-30 text-white hover:bg-surface-hover hover:border-opacity-60'
+                            : 'bg-surface-sidebar border border-gray-700 text-gray-600 cursor-not-allowed'
+                        }`}
+                      >
+                        -
+                      </button>
+                      
+                      <input
+                        type="number"
+                        min="1"
+                        max={balance ? Math.floor(balance.virtual_balance / gem.price) : 0}
+                        value={quantity}
+                        onChange={(e) => handleQuantityChange(gem.type, e.target.value, gem.price)}
+                        onBlur={(e) => {
+                          // При потере фокуса корректируем значение
+                          const maxAffordable = balance ? Math.floor(balance.virtual_balance / gem.price) : 0;
+                          const value = parseInt(e.target.value) || 1;
+                          if (value > maxAffordable) {
+                            handleQuantityChange(gem.type, maxAffordable, gem.price);
+                          } else if (value < 1) {
+                            handleQuantityChange(gem.type, 1, gem.price);
+                          }
+                        }}
+                        className="w-20 px-3 py-2 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-white font-rajdhani text-center"
+                      />
+                      
+                      <button
+                        onClick={() => handleQuantityChange(gem.type, quantity + 1, gem.price)}
+                        disabled={!balance || quantity >= Math.floor(balance.virtual_balance / gem.price)}
+                        className={`w-8 h-8 rounded-lg font-rajdhani font-bold text-lg transition-all duration-200 ${
+                          balance && quantity < Math.floor(balance.virtual_balance / gem.price)
+                            ? 'bg-surface-sidebar border border-accent-primary border-opacity-30 text-white hover:bg-surface-hover hover:border-opacity-60'
+                            : 'bg-surface-sidebar border border-gray-700 text-gray-600 cursor-not-allowed'
+                        }`}
+                      >
+                        +
+                      </button>
+                    </div>
+                    {balance && quantity >= Math.floor(balance.virtual_balance / gem.price) && (
+                      <p className="text-xs text-warning mt-1">Max affordable quantity</p>
+                    )}
                   </div>
                   
                   {/* Total Cost */}
