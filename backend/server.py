@@ -7794,6 +7794,7 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
             logger.error(f"Game {game.id} has invalid opponent_gems format: {type(opponent_gems)}")
         
         if winner_id:
+            logger.info(f"🎮 Processing winner rewards for game {game.id[:8]}..., winner: {winner_id[:8] if winner_id else 'None'}...")
             # Winner gets all gems (double the bet)
             if isinstance(game.bet_gems, dict):
                 for gem_type, quantity in game.bet_gems.items():
