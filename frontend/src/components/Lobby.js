@@ -7,6 +7,8 @@ import CreateBetModal from './CreateBetModal';
 import JoinBattleModal from './JoinBattleModal';
 import { useNotifications } from './NotificationContext';
 import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
+import useLobbyRefresh from '../hooks/useLobbyRefresh';
+import { useGems } from './GemsContext';
 import { useSound, useHoverSound, useModalSound } from '../hooks/useSound';
 import { formatDollarsAsGems, getGemPrices, preloadGemPrices } from '../utils/gemUtils';
 
@@ -18,6 +20,7 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
   const { game, ui } = useSound();
   const hoverProps = useHoverSound(true);
   const modalSound = useModalSound();
+  const { gemsData } = useGems();
   const [stats, setStats] = useState({ available: 0, gems: 0, total: 0 });
   const [myBets, setMyBets] = useState([]);
   const [availableBets, setAvailableBets] = useState([]);
@@ -66,6 +69,28 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       unregister();
     };
   }, []);
+
+  // Функция проверки возможности создания ставки
+  const canCreateBet = useCallback(() => {
+    // Проверка наличия гемов
+    const hasGems = gemsData && gemsData.some(gem => gem.available_quantity > 0);
+    if (!hasGems) {
+      showError('Your inventory is empty — please purchase gems.');
+      return false;
+    }
+
+    // Проверка баланса для комиссии
+    const totalBalance = user?.virtual_balance || 0;
+    const frozenBalance = user?.frozen_balance || 0;
+    const availableForCommission = totalBalance - frozenBalance;
+    
+    if (availableForCommission <= 0) {
+      showError('You have no funds to pay the commission — top up your balance and retry.');
+      return false;
+    }
+
+    return true;
+  }, [gemsData, user, showError]);
 
   const fetchLobbyData = async () => {
     try {
@@ -968,6 +993,9 @@ const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
       <div className="text-center mb-8">
         <button 
           onClick={() => {
+            if (!canCreateBet()) {
+              return; // Прерываем если проверки не прошли
+            }
             game.createBet();
             modalSound.onOpen();
             setShowCreateBetModal(true);

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import { useGems } from './GemsContext';
 import { formatDollarsAsGems } from '../utils/gemUtils';
 
@@ -18,6 +18,52 @@ const PlayerCard = memo(({
   const [isCancelling, setIsCancelling] = useState(false);
   
   const isBot = game.creator_type === 'bot' || game.creator_type === 'human_bot';
+  
+  // Проверка доступности средств для игры
+  const canAcceptBet = useMemo(() => {
+    if (!user || !game) return false;
+    
+    // Получаем сумму ставки
+    let betAmount = 0;
+    if (game.bet_amount) {
+      betAmount = game.bet_amount;
+    } else if (game.bet_gems && Object.keys(game.bet_gems).length > 0) {
+      betAmount = Object.entries(game.bet_gems).reduce((total, [gemType, quantity]) => {
+        const gem = getGemByType(gemType);
+        const gemValue = gem ? gem.price * quantity : 0;
+        return total + gemValue;
+      }, 0);
+    }
+    
+    const COMMISSION_RATE = 0.03;
+    const isBotGame = game.is_bot_game || false;
+    const commissionRequired = isBotGame ? 0 : betAmount * COMMISSION_RATE;
+    
+    // Проверка баланса для комиссии
+    const totalBalance = user.virtual_balance || 0;
+    const frozenBalance = user.frozen_balance || 0;
+    const availableForCommission = totalBalance - frozenBalance;
+    
+    if (availableForCommission < commissionRequired) {
+      return false;
+    }
+    
+    // Проверка наличия достаточного количества гемов
+    const totalGemValue = gemsDefinitions.reduce((sum, gem) => 
+      sum + (gem.available_quantity * gem.price), 0
+    );
+    
+    return totalGemValue >= betAmount;
+  }, [user, game, gemsDefinitions, getGemByType]);
+  
+  // Эффект для автоматической разблокировки кнопки Accept когда появляются средства
+  useEffect(() => {
+    if (isAccepting && canAcceptBet) {
+      // Если кнопка была заблокирована из-за недостатка средств,
+      // но теперь средства появились - разблокируем
+      setIsAccepting(false);
+    }
+  }, [canAcceptBet, isAccepting]);
   
   // Get time remaining for auto-cancel (static HH:MM of cancel time)
   const getCancelTimeHHMM = () => {
@@ -136,6 +182,51 @@ const PlayerCard = memo(({
   const handleAcceptClick = useCallback(() => {
     if (isAccepting) return; // Защита от повторных нажатий
     
+    // Проверяем доступность средств
+    if (!canAcceptBet) {
+      // Получаем сумму ставки для расчета комиссии
+      let betAmount = 0;
+      if (game.bet_amount) {
+        betAmount = game.bet_amount;
+      } else if (game.bet_gems && Object.keys(game.bet_gems).length > 0) {
+        betAmount = Object.entries(game.bet_gems).reduce((total, [gemType, quantity]) => {
+          const gem = getGemByType(gemType);
+          const gemValue = gem ? gem.price * quantity : 0;
+          return total + gemValue;
+        }, 0);
+      }
+      
+      const COMMISSION_RATE = 0.03;
+      const isBotGame = game.is_bot_game || false;
+      const commissionRequired = isBotGame ? 0 : betAmount * COMMISSION_RATE;
+      
+      // Проверка баланса для комиссии
+      const totalBalance = user.virtual_balance || 0;
+      const frozenBalance = user.frozen_balance || 0;
+      const availableForCommission = totalBalance - frozenBalance;
+      
+      if (availableForCommission < commissionRequired) {
+        // Показываем ошибку о недостатке средств для комиссии
+        if (onOpenJoinBattle) {
+          onOpenJoinBattle(game); // Открываем модалку, которая покажет ошибку
+        }
+        return;
+      }
+      
+      // Проверка наличия гемов
+      const totalGemValue = gemsDefinitions.reduce((sum, gem) => 
+        sum + (gem.available_quantity * gem.price), 0
+      );
+      
+      if (totalGemValue < betAmount) {
+        // Показываем ошибку о недостатке гемов
+        if (onOpenJoinBattle) {
+          onOpenJoinBattle(game); // Открываем модалку, которая покажет ошибку
+        }
+        return;
+      }
+    }
+    
     setIsAccepting(true);
     
     if (onAccept) {
@@ -144,9 +235,12 @@ const PlayerCard = memo(({
       onOpenJoinBattle(game); // Передаем весь объект игры
     }
     
-    // Сбрасываем флаг через небольшую задержку на случай если модалка не открылась
-    setTimeout(() => setIsAccepting(false), 1000);
-  }, [onAccept, onOpenJoinBattle, game.game_id, game.id, game, isAccepting]);
+    // Сбрасываем флаг только если средств достаточно
+    if (canAcceptBet) {
+      setTimeout(() => setIsAccepting(false), 1000);
+    }
+    // Если средств недостаточно, флаг остается true и кнопка остается заблокированной
+  }, [onAccept, onOpenJoinBattle, game, isAccepting, canAcceptBet, user, gemsDefinitions, getGemByType]);
 
   const handleCancelClick = useCallback(() => {
     if (isCancelling) return; // Защита от повторных нажатий
@@ -265,12 +359,13 @@ const PlayerCard = memo(({
             ) : (
               <button
                 onClick={handleAcceptClick}
-                disabled={isAccepting}
+                disabled={isAccepting || !canAcceptBet}
                 className={`px-4 py-2 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  isAccepting 
+                  isAccepting || !canAcceptBet
                     ? 'bg-gray-600' 
                     : 'bg-green-600 hover:bg-green-700 hover:scale-105'
                 }`}
+                title={!canAcceptBet ? 'Insufficient funds or gems' : ''}
               >
                 {isAccepting ? 'Accepting...' : 'Accept'}
               </button>
