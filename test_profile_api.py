@@ -7,7 +7,7 @@ import json
 import time
 
 # Configuration
-BASE_URL = "https://cyrillic-writer-7.preview.emergentagent.com/api"
+BASE_URL = "https://opus-assistant.preview.emergentagent.com/api"
 
 def test_profile_update():
     """Test profile update endpoint"""

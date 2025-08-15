@@ -18,7 +18,7 @@ import sys
 from typing import Dict, Any, Optional, List, Tuple
 
 # Configuration
-BASE_URL = "https://cyrillic-writer-7.preview.emergentagent.com/api"
+BASE_URL = "https://opus-assistant.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

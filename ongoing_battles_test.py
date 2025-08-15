@@ -19,7 +19,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://cyrillic-writer-7.preview.emergentagent.com/api"
+BASE_URL = "https://opus-assistant.preview.emergentagent.com/api"
 
 # Test users
 MODERATOR_USER = {
