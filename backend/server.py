@@ -7880,6 +7880,85 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     # Disabled per-game BOT_REVENUE logging. Revenue will be recorded only at cycle completion.
                     pass
             
+            # ===== NEW HUMAN-BOT COMMISSION LOGIC =====
+            # This logic runs for ALL games (with or without winner) to track Human-bot commissions
+            try:
+                # Determine if players are Human-bots
+                is_winner_human_bot = False
+                is_creator_human_bot = False 
+                is_opponent_human_bot = False
+                
+                if winner_id:
+                    is_winner_human_bot = await is_human_bot_user(winner_id)
+                is_creator_human_bot = await is_human_bot_user(game.creator_id)
+                is_opponent_human_bot = await is_human_bot_user(game.opponent_id) if game.opponent_id else False
+                
+                logger.info(f"🔍 HUMAN-BOT ANALYSIS: Game {game.id[:8]}... | Creator: {'Human-bot' if is_creator_human_bot else 'Live'} | Opponent: {'Human-bot' if is_opponent_human_bot else 'Live'} | Winner: {'Human-bot' if is_winner_human_bot else 'Live'} | Commission: ${commission_amount}")
+                
+                # Special handling for Human-bot vs Human-bot games
+                if is_creator_human_bot and is_opponent_human_bot and not is_regular_bot_game and winner_id:
+                    # For Human-bot vs Human-bot games, create HUMAN_BOT_COMMISSION entry
+                    # Use the actual commission amount that was calculated
+                    if commission_amount > 0:
+                        logger.info(f"📊 HUMAN-BOT vs HUMAN-BOT: Creating HUMAN_BOT_COMMISSION entry for ${commission_amount}")
+                        
+                        profit_entry = ProfitEntry(
+                            entry_type="HUMAN_BOT_COMMISSION",
+                            amount=commission_amount,
+                            source_user_id=winner_id,
+                            reference_id=game.id,
+                            description=f"Commission from Human-bot vs Human-bot game (${game.bet_amount} bet)"
+                        )
+                        profit_entry_dict = profit_entry.dict()
+                        profit_entry_dict["status"] = "CONFIRMED"
+                        await db.profit_entries.insert_one(profit_entry_dict)
+                        
+                        # Update Human-bot total commission
+                        await db.human_bots.update_one(
+                            {"id": winner_id},
+                            {"$inc": {"total_commission_paid": commission_amount}}
+                        )
+                        
+                        logger.info(f"✅ Created HUMAN_BOT_COMMISSION entry: ${commission_amount} for Human-bot vs Human-bot game")
+                
+                # Handle Human-bot vs Live player games with commission > 0
+                elif not is_regular_bot_game and commission_amount > 0 and winner_id:
+                    # Determine commission type based on winner
+                    if is_winner_human_bot:
+                        # Human-bot wins against live player -> HUMAN_BOT_COMMISSION
+                        entry_type = "HUMAN_BOT_COMMISSION"
+                        logger.info(f"📊 HUMAN-BOT WINS: Creating HUMAN_BOT_COMMISSION entry for ${commission_amount}")
+                    else:
+                        # Live player wins -> BET_COMMISSION (existing logic will handle this)
+                        entry_type = "BET_COMMISSION"
+                        logger.info(f"📊 LIVE PLAYER WINS: Will use existing BET_COMMISSION logic")
+                        # Don't create entry here - let existing logic handle it
+                        return
+                    
+                    # Only create entry for Human-bot wins
+                    if entry_type == "HUMAN_BOT_COMMISSION":
+                        profit_entry = ProfitEntry(
+                            entry_type=entry_type,
+                            amount=commission_amount,
+                            source_user_id=winner_id,
+                            reference_id=game.id,
+                            description=f"Commission from Human-bot win vs live player (${game.bet_amount} bet)"
+                        )
+                        profit_entry_dict = profit_entry.dict()
+                        profit_entry_dict["status"] = "CONFIRMED"
+                        await db.profit_entries.insert_one(profit_entry_dict)
+                        
+                        # Update Human-bot total commission
+                        await db.human_bots.update_one(
+                            {"id": winner_id},
+                            {"$inc": {"total_commission_paid": commission_amount}}
+                        )
+                        
+                        logger.info(f"✅ Created HUMAN_BOT_COMMISSION entry: ${commission_amount} for Human-bot win")
+                        
+            except Exception as e:
+                logger.error(f"❌ Error in HUMAN-BOT COMMISSION LOGIC: {e}")
+            
             # **CORRECTED COMMISSION LOGIC according to new table:**
             # For ALL game types (except Regular bot): ONLY WINNER pays commission
             # LOSER gets commission returned to their balance
