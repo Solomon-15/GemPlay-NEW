@@ -7859,26 +7859,52 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                     )
                     await db.transactions.insert_one(commission_transaction.dict())
                 
-                # Record profit entry from bet commission (only if commission was charged)
+                # NEW HUMAN-BOT COMMISSION LOGIC: Always check for Human-bot games
+                # Determine if players are Human-bots
+                is_winner_human_bot = await is_human_bot_user(winner_id)
+                is_creator_human_bot = await is_human_bot_user(game.creator_id)
+                is_opponent_human_bot = await is_human_bot_user(game.opponent_id) if game.opponent_id else False
+                
+                logger.info(f"🔍 COMMISSION DEBUG: Game {game.id[:8]}... | Creator: {'Human-bot' if is_creator_human_bot else 'Live'} | Opponent: {'Human-bot' if is_opponent_human_bot else 'Live'} | Winner: {'Human-bot' if is_winner_human_bot else 'Live'}")
                 logger.info(f"🔍 PROFIT ENTRY CHECK: is_regular_bot_game={is_regular_bot_game}, commission_amount={commission_amount}")
-                if not is_regular_bot_game and commission_amount > 0:
-                    # Determine if players are Human-bots
-                    is_winner_human_bot = await is_human_bot_user(winner_id)
-                    is_creator_human_bot = await is_human_bot_user(game.creator_id)
-                    is_opponent_human_bot = await is_human_bot_user(game.opponent_id) if game.opponent_id else False
+                
+                # Special handling for Human-bot vs Human-bot games
+                if is_creator_human_bot and is_opponent_human_bot and not is_regular_bot_game:
+                    # For Human-bot vs Human-bot games, create HUMAN_BOT_COMMISSION entry even if commission_amount is 0
+                    # This ensures the commission shows up in statistics
+                    commission_rate = await get_bet_commission_rate_fraction()
+                    theoretical_commission = round_money(game.bet_amount * commission_rate)
                     
-                    logger.info(f"🔍 COMMISSION DEBUG: Game {game.id[:8]}... | Creator: {'Human-bot' if is_creator_human_bot else 'Live'} | Opponent: {'Human-bot' if is_opponent_human_bot else 'Live'} | Winner: {'Human-bot' if is_winner_human_bot else 'Live'}")
+                    logger.info(f"📊 SPECIAL CASE: Human-bot vs Human-bot - creating HUMAN_BOT_COMMISSION entry for ${theoretical_commission}")
                     
+                    profit_entry = ProfitEntry(
+                        entry_type="HUMAN_BOT_COMMISSION",
+                        amount=theoretical_commission,
+                        source_user_id=winner_id,
+                        reference_id=game.id,
+                        description=f"{commission_rate*100:.1f}% commission from Human-bot vs Human-bot game (${game.bet_amount} bet)"
+                    )
+                    profit_entry_dict = profit_entry.dict()
+                    profit_entry_dict["status"] = "CONFIRMED"
+                    await db.profit_entries.insert_one(profit_entry_dict)
+                    
+                    # Update Human-bot total commission
+                    if is_winner_human_bot:
+                        await db.human_bots.update_one(
+                            {"id": winner_id},
+                            {"$inc": {"total_commission_paid": theoretical_commission}}
+                        )
+                    
+                    logger.info(f"✅ Created HUMAN_BOT_COMMISSION entry: ${theoretical_commission}")
+                
+                # Regular commission logic for other games
+                elif not is_regular_bot_game and commission_amount > 0:
                     # New commission logic based on player types:
-                    # 1. If Human-bots play against each other -> HUMAN_BOT_COMMISSION
-                    # 2. If live player vs Human-bot and Human-bot wins -> HUMAN_BOT_COMMISSION  
-                    # 3. If live player vs Human-bot and live player wins -> BET_COMMISSION
+                    # 1. If live player vs Human-bot and Human-bot wins -> HUMAN_BOT_COMMISSION  
+                    # 2. If live player vs Human-bot and live player wins -> BET_COMMISSION
+                    # 3. Live player vs Live player -> BET_COMMISSION
                     
-                    if is_creator_human_bot and is_opponent_human_bot:
-                        # Case 1: Human-bot vs Human-bot
-                        entry_type = "HUMAN_BOT_COMMISSION"
-                        logger.info(f"📊 COMMISSION TYPE: HUMAN_BOT_COMMISSION (Human-bot vs Human-bot)")
-                    elif is_winner_human_bot:
+                    if is_winner_human_bot:
                         # Case 2: Human-bot wins (against live player)
                         entry_type = "HUMAN_BOT_COMMISSION"
                         logger.info(f"📊 COMMISSION TYPE: HUMAN_BOT_COMMISSION (Human-bot wins)")
