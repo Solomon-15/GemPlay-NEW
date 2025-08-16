@@ -8,7 +8,7 @@ import aiohttp
 import json
 import os
 
-BACKEND_URL = "https://russian-commission.preview.emergentagent.com/api"
+BACKEND_URL = "https://dohody-v2.preview.emergentagent.com/api"
 
 async def debug_my_bets():
     """Debug the my-bets endpoint response"""
