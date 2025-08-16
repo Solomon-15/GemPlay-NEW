@@ -2083,6 +2083,17 @@ async def maintain_all_bots_active_bets():
                             logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')} created initial cycle of {cycle_games} bets")
                         else:
                             logger.warning(f"❌ Failed to create initial cycle for bot {fresh_bot_doc.get('name', 'Unknown')}")
+                    
+                    elif games_played == 0 and fresh_bot_doc.get("has_completed_cycles", False) and fresh_bot_doc.get("last_cycle_completed_at") is None:
+                        # Бот уже имел циклы, но статистика сброшена и нет активной паузы
+                        # Это означает что предыдущий цикл завершился и нужно создать новый
+                        logger.info(f"🔄 Bot {fresh_bot_doc.get('name', 'Unknown')}: ready for new cycle after stats reset")
+                        
+                        success = await create_full_bot_cycle(fresh_bot_doc)
+                        if success:
+                            logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')} created new cycle of {cycle_games} bets")
+                        else:
+                            logger.warning(f"❌ Failed to create new cycle for bot {fresh_bot_doc.get('name', 'Unknown')}")
                 else:
                     # Есть активные ставки → НЕ создавать новые
                     # НОВАЯ ЛОГИКА: При ничьей замены не создаются автоматически
