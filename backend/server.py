@@ -1997,71 +1997,76 @@ async def maintain_all_bots_active_bets():
                 cycle_completed = games_played >= cycle_games
                 
                 if current_active_bets == 0:
-                    if cycle_completed or games_played == 0:
-                        # Проверяем паузу между циклами только для завершенных циклов
-                        if cycle_completed:
-                            last_cycle_completed_at = bot_doc.get("last_cycle_completed_at")
-                            pause_between_cycles = bot_doc.get("pause_between_cycles", 5)  # По умолчанию 5 секунд
-                            
-                            # Для существующих ботов, у которых нет времени завершения цикла,
-                            # разрешаем создание нового цикла сразу (первый раз после обновления)
-                            if last_cycle_completed_at:
-                                # Вычисляем время с момента завершения последнего цикла
-                                current_time = datetime.utcnow()
-                                time_since_completion = (current_time - last_cycle_completed_at).total_seconds()
-                                
-                                if time_since_completion < pause_between_cycles:
-                                    # Пауза еще не завершена - не создаем новый цикл
-                                    remaining_pause = pause_between_cycles - time_since_completion
-                                    logger.info(f"🕐 Bot {bot_doc['name']}: pause in progress, {remaining_pause:.1f}s remaining (pause: {pause_between_cycles}s)")
-                                    continue  # Переходим к следующему боту
+                    # Новая логика: сначала проверяем завершение цикла и время паузы
+                    if cycle_completed:
+                        last_cycle_completed_at = bot_doc.get("last_cycle_completed_at")
+                        pause_between_cycles = bot_doc.get("pause_between_cycles", 5)
                         
-                        # Цикл завершен и пауза прошла, или бот новый → создать новый цикл
-                        reason = "cycle completed after pause" if cycle_completed else "new bot initialization"
-                        if cycle_completed:
-                            logger.info(f"🎯 Bot {bot_doc['name']}: pause completed, starting new cycle ({reason})")
-                        else:
-                            logger.info(f"🎯 Bot {bot_doc['name']}: starting new cycle ({reason})")
-                        
-                        # Создаем полный цикл ставок за один вызов
-                        success = await create_full_bot_cycle(bot_doc)
-                        
-                        if success:
-                            logger.info(f"✅ Bot {bot_doc['name']} created full cycle of {cycle_games} bets")
-                        else:
-                            logger.warning(f"❌ Failed to create full cycle for bot {bot_doc['name']}")
-                        
-                        # Сброс статистики цикла для нового цикла
-                        if cycle_completed:
-                            # ИСПРАВЛЕНИЕ: Удаляем все завершенные игры предыдущего цикла пакетно
-                            deleted_result = await db.games.delete_many({
-                                "creator_id": bot_id,
-                                "status": "COMPLETED"
-                            })
-                            logger.info(f"🗑️ Bot {bot_doc['name']}: deleted {deleted_result.deleted_count} completed games after cycle completion")
-                            
-                            # Сохраняем время завершения цикла для применения паузы
+                        if last_cycle_completed_at is None:
+                            # Цикл только что завершился - сохраняем время завершения и начинаем паузу
                             cycle_completion_time = datetime.utcnow()
-                            pause_between_cycles = bot_doc.get("pause_between_cycles", 5)
-                            
-                            logger.info(f"🏁 Bot {bot_doc['name']}: cycle completed, pause of {pause_between_cycles}s will be applied before next cycle")
+                            logger.info(f"🏁 Bot {bot_doc.get('name', 'Unknown')}: cycle completed, starting pause of {pause_between_cycles}s before next cycle")
                             
                             await db.bots.update_one(
                                 {"id": bot_id},
-                                {
-                                    "$set": {
-                                        "current_cycle_wins": 0,
-                                        "current_cycle_losses": 0,  
-                                        "current_cycle_draws": 0,
-                                        "current_cycle_profit": 0.0,
-                                        "last_cycle_completed_at": cycle_completion_time
-                                    }
-                                }
+                                {"$set": {"last_cycle_completed_at": cycle_completion_time}}
                             )
+                            continue  # Не создаем новый цикл, ждем завершения паузы
+                        else:
+                            # Цикл был завершен ранее - проверяем, истекла ли пауза
+                            current_time = datetime.utcnow()
+                            time_since_completion = (current_time - last_cycle_completed_at).total_seconds()
+                            
+                            if time_since_completion < pause_between_cycles:
+                                # Пауза еще не завершена
+                                remaining_pause = pause_between_cycles - time_since_completion
+                                logger.info(f"🕐 Bot {bot_doc.get('name', 'Unknown')}: pause in progress, {remaining_pause:.1f}s remaining")
+                                continue  # Не создаем новый цикл
+                            else:
+                                # Пауза завершена - можно создать новый цикл
+                                logger.info(f"✅ Bot {bot_doc.get('name', 'Unknown')}: pause completed, creating new cycle")
+                                
+                                # Удаляем завершенные игры предыдущего цикла
+                                deleted_result = await db.games.delete_many({
+                                    "creator_id": bot_id,
+                                    "status": "COMPLETED"
+                                })
+                                logger.info(f"🗑️ Bot {bot_doc.get('name', 'Unknown')}: deleted {deleted_result.deleted_count} completed games")
+                                
+                                # Сбрасываем статистику цикла и время завершения
+                                await db.bots.update_one(
+                                    {"id": bot_id},
+                                    {
+                                        "$set": {
+                                            "current_cycle_wins": 0,
+                                            "current_cycle_losses": 0,  
+                                            "current_cycle_draws": 0,
+                                            "current_cycle_profit": 0.0
+                                        },
+                                        "$unset": {"last_cycle_completed_at": ""}
+                                    }
+                                )
+                                
+                                # Создаем новый цикл
+                                success = await create_full_bot_cycle(bot_doc)
+                                if success:
+                                    logger.info(f"✅ Bot {bot_doc.get('name', 'Unknown')} created new cycle of {cycle_games} bets")
+                                else:
+                                    logger.warning(f"❌ Failed to create new cycle for bot {bot_doc.get('name', 'Unknown')}")
+                    
+                    elif games_played == 0:
+                        # Новый бот или бот без активных игр - создаем первый цикл без паузы
+                        logger.info(f"🎯 Bot {bot_doc.get('name', 'Unknown')}: starting initial cycle")
+                        
+                        success = await create_full_bot_cycle(bot_doc)
+                        if success:
+                            logger.info(f"✅ Bot {bot_doc.get('name', 'Unknown')} created initial cycle of {cycle_games} bets")
+                        else:
+                            logger.warning(f"❌ Failed to create initial cycle for bot {bot_doc.get('name', 'Unknown')}")
                 else:
                     # Есть активные ставки → НЕ создавать новые
                     # НОВАЯ ЛОГИКА: При ничьей замены не создаются автоматически
-                    logger.debug(f"Bot {bot_doc['name']}: {current_active_bets} active bets, cycle progress: {games_played}/{cycle_games}")
+                    logger.debug(f"Bot {bot_doc.get('name', 'Unknown')}: {current_active_bets} active bets, cycle progress: {games_played}/{cycle_games}")
                     
             except Exception as e:
                 logger.error(f"Error maintaining bets for bot {bot_doc.get('name', 'unknown')}: {e}")
