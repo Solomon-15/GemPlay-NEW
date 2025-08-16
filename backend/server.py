@@ -1985,10 +1985,10 @@ async def maintain_all_bots_active_bets():
                 
                 cycle_games = fresh_bot_doc.get("cycle_games", 12)
                 
-                # Подсчитываем активные ставки (WAITING)
+                # Подсчитываем активные ставки (WAITING и ACTIVE)
                 current_active_bets = await db.games.count_documents({
                     "creator_id": bot_id,
-                    "status": "WAITING"
+                    "status": {"$in": ["WAITING", "ACTIVE"]}
                 })
                 
                 # Получаем СВЕЖУЮ статистику цикла
