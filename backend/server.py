@@ -1973,7 +1973,9 @@ async def maintain_all_bots_active_bets():
         
         for bot_doc in active_bots:
             try:
-                bot_id = bot_doc["id"]
+                bot_id = bot_doc.get("id")
+                if not bot_id:
+                    continue  # Пропускаем бота без ID
                 
                 # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Получаем свежие данные бота из БД
                 # так как они могли измениться в предыдущих итерациях
@@ -2093,7 +2095,10 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
     Создает полный цикл ставок для бота за один вызов с точной суммой.
     """
     try:
-        bot_id = bot_doc["id"]
+        bot_id = bot_doc.get("id")
+        if not bot_id:
+            logger.error("create_full_bot_cycle called with bot without ID")
+            return False
         cycle_games = bot_doc.get("cycle_games", 12)
         min_bet = bot_doc.get("min_bet_amount", 1.0)
         max_bet = bot_doc.get("max_bet_amount", 50.0)
@@ -17193,9 +17198,10 @@ async def get_regular_bots_list(
             try:
                 existing = bot_doc.get("roi_planned_percent")
                 if existing is not None and str(existing).strip() != "":
-                    bot_doc["roi_planned_percent"] = round(float(existing), 2)
+                    roi_value = round(float(existing), 2)
                 else:
-                    bot_doc["roi_planned_percent"] = roi_planned_percent_val
+                    roi_value = roi_planned_percent_val
+                bot_doc["roi_planned_percent"] = roi_value
             except Exception:
                 bot_doc["roi_planned_percent"] = roi_planned_percent_val
             
@@ -17477,7 +17483,7 @@ async def get_bot_details(
         
         # Compose response without legacy fields
         bot_resp = {
-            "id": bot_doc["id"],
+            "id": bot_doc.get("id"),
             "name": bot_doc.get("name", ""),
             "status": "Активен" if bot_doc.get("is_active", True) else "Отключён",
             "is_active": bot_doc.get("is_active", True),
