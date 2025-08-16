@@ -2084,7 +2084,15 @@ async def maintain_all_bots_active_bets():
                     logger.debug(f"Bot {fresh_bot_doc.get('name', 'Unknown')}: {current_active_bets} active bets, cycle progress: {games_played}/{cycle_games}")
                     
             except Exception as e:
-                logger.error(f"Error maintaining bets for bot {fresh_bot_doc.get('name', 'unknown') if 'fresh_bot_doc' in locals() else 'unknown'}: {e}")
+                bot_name = "unknown"
+                try:
+                    if 'fresh_bot_doc' in locals() and fresh_bot_doc:
+                        bot_name = fresh_bot_doc.get('name', 'unknown')
+                    elif 'bot_doc' in locals() and bot_doc:
+                        bot_name = bot_doc.get('name', 'unknown')
+                except:
+                    pass
+                logger.error(f"Error maintaining bets for bot {bot_name}: {e}")
                 continue
                 
     except Exception as e:
