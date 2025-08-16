@@ -18654,6 +18654,7 @@ async def get_bot_cycle_history(
                 "draws": sum(1 for x in cycle_list if x.get("winner_id") is None),
                 "total_bet": total_sum,
                 "total_winnings": wins_sum * 2,  # по правилам платформы выигрыш ≈ 2x ставка победы
+                "total_losses": losses_sum,  # Сумма проигранных ставок
                 "profit": profit,
                 "roi_active": roi_active,
                 "actions": {"open_cycle_details": True, "cycle_id": f"{bot_id}:{idx}"}

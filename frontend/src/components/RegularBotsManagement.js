@@ -3816,6 +3816,7 @@ const RegularBotsManagement = () => {
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">W/L/D</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ставки</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Выигрыш</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Проигрыш</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Прибыль</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Действия</th>
                       </tr>
@@ -3858,6 +3859,11 @@ const RegularBotsManagement = () => {
                           <td className="px-4 py-3 text-center">
                             <span className="text-green-400 font-roboto text-sm font-bold">
                               ${Math.round(cycle.total_winnings || 0)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-red-400 font-roboto text-sm font-bold">
+                              ${Math.round(cycle.total_losses || 0)}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
