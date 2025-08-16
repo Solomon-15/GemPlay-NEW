@@ -7913,12 +7913,6 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         profit_entry_dict["status"] = "CONFIRMED"
                         await db.profit_entries.insert_one(profit_entry_dict)
                         
-                        # Update Human-bot total commission
-                        await db.human_bots.update_one(
-                            {"id": winner_id},
-                            {"$inc": {"total_commission_paid": commission_amount}}
-                        )
-                        
                         logger.info(f"✅ Created HUMAN_BOT_COMMISSION entry: ${commission_amount} for Human-bot vs Human-bot game")
                 
                 # Handle Human-bot vs Live player games with commission > 0
@@ -7929,12 +7923,11 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         entry_type = "HUMAN_BOT_COMMISSION"
                         logger.info(f"📊 HUMAN-BOT WINS: Creating HUMAN_BOT_COMMISSION entry for ${commission_amount}")
                     else:
-                        # Live player wins -> BET_COMMISSION (existing logic will handle this)
+                        # Live player wins against Human-bot -> BET_COMMISSION
                         entry_type = "BET_COMMISSION"
-                        logger.info(f"📊 LIVE PLAYER WINS: Will use existing BET_COMMISSION logic")
-                        # Don't create entry here - let existing logic handle it
+                        logger.info(f"📊 LIVE PLAYER WINS vs HUMAN-BOT: Creating BET_COMMISSION entry for ${commission_amount}")
                     
-                    # Only create entry for Human-bot wins
+                    # Create appropriate profit entry
                     if entry_type == "HUMAN_BOT_COMMISSION":
                         profit_entry = ProfitEntry(
                             entry_type=entry_type,
@@ -7947,14 +7940,40 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
                         profit_entry_dict["status"] = "CONFIRMED"
                         await db.profit_entries.insert_one(profit_entry_dict)
                         
-                        # Update Human-bot total commission
-                        await db.human_bots.update_one(
-                            {"id": winner_id},
-                            {"$inc": {"total_commission_paid": commission_amount}}
-                        )
-                        
                         logger.info(f"✅ Created HUMAN_BOT_COMMISSION entry: ${commission_amount} for Human-bot win")
+                    else:
+                        # BET_COMMISSION for live player win
+                        profit_entry = ProfitEntry(
+                            entry_type=entry_type,
+                            amount=commission_amount,
+                            source_user_id=winner_id,
+                            reference_id=game.id,
+                            description=f"Commission from live player win vs Human-bot (${game.bet_amount} bet)"
+                        )
+                        profit_entry_dict = profit_entry.dict()
+                        profit_entry_dict["status"] = "CONFIRMED"
+                        await db.profit_entries.insert_one(profit_entry_dict)
                         
+                        logger.info(f"✅ Created BET_COMMISSION entry: ${commission_amount} for live player win")
+                        
+                # Handle games between live players (no Human-bots involved)
+                elif not is_regular_bot_game and not is_creator_human_bot and not is_opponent_human_bot and commission_amount > 0 and winner_id:
+                    # Live player vs Live player -> BET_COMMISSION
+                    logger.info(f"📊 LIVE vs LIVE: Creating BET_COMMISSION entry for ${commission_amount}")
+                    
+                    profit_entry = ProfitEntry(
+                        entry_type="BET_COMMISSION",
+                        amount=commission_amount,
+                        source_user_id=winner_id,
+                        reference_id=game.id,
+                        description=f"Commission from PvP game between live players (${game.bet_amount} bet)"
+                    )
+                    profit_entry_dict = profit_entry.dict()
+                    profit_entry_dict["status"] = "CONFIRMED"
+                    await db.profit_entries.insert_one(profit_entry_dict)
+                    
+                    logger.info(f"✅ Created BET_COMMISSION entry: ${commission_amount} for live player PvP")
+                    
             except Exception as e:
                 logger.error(f"❌ Error in HUMAN-BOT COMMISSION LOGIC: {e}")
             
@@ -22571,26 +22590,42 @@ async def get_human_bots_total_commission(
 ):
     """Get total commission from all Human-bots with optional bot breakdown."""
     try:
-        # Get all Human-bots
-        all_bots = await db.human_bots.find({}).to_list(None)
+        # Calculate total commission from profit_entries to ensure consistency
+        human_bot_commission_entries = await db.profit_entries.find({
+            "entry_type": "HUMAN_BOT_COMMISSION"
+        }).to_list(None)
         
-        # Calculate total commission across all Human-bots
+        # Group commissions by bot
+        bot_commission_map = {}
         total_commission = 0.0
-        bot_commissions = []
         
-        for bot in all_bots:
-            bot_commission = bot.get("total_commission_paid", 0.0)
-            total_commission += bot_commission
+        for entry in human_bot_commission_entries:
+            bot_id = entry.get("source_user_id")
+            amount = entry.get("amount", 0)
+            total_commission += amount
             
-            if bot_commission > 0:  # Only include bots that have paid commission
+            if bot_id not in bot_commission_map:
+                bot_commission_map[bot_id] = {
+                    "total": 0,
+                    "count": 0
+                }
+            
+            bot_commission_map[bot_id]["total"] += amount
+            bot_commission_map[bot_id]["count"] += 1
+        
+        # Get bot details
+        bot_commissions = []
+        for bot_id, commission_data in bot_commission_map.items():
+            bot = await db.human_bots.find_one({"id": bot_id})
+            if bot:
                 bot_commissions.append({
                     "id": bot["id"],
                     "name": bot["name"],
                     "character": bot["character"],
-                    "total_commission_paid": bot_commission,
+                    "total_commission_paid": commission_data["total"],
                     "is_active": bot.get("is_active", True),
-                    "total_games_played": bot.get("total_games_played", 0),
-                    "total_games_won": bot.get("total_games_won", 0)
+                    "total_games_played": commission_data["count"],
+                    "total_games_won": commission_data["count"]  # All commission entries are from wins
                 })
         
         # Sort by commission paid (descending)
@@ -22601,10 +22636,13 @@ async def get_human_bots_total_commission(
         paginated_bots = bot_commissions[skip:skip + limit]
         total_pages = (len(bot_commissions) + limit - 1) // limit
         
+        # Get total bots count
+        total_bots = await db.human_bots.count_documents({})
+        
         return {
             "success": True,
             "total_commission": total_commission,
-            "total_bots": len(all_bots),
+            "total_bots": total_bots,
             "bots_with_commission": len(bot_commissions),
             "bot_commissions": paginated_bots,
             "pagination": {
