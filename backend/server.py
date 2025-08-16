@@ -551,6 +551,7 @@ class Bot(BaseModel):
     last_game_time: Optional[datetime] = None
     last_bet_time: Optional[datetime] = None
     last_cycle_completed_at: Optional[datetime] = None  # Время завершения последнего цикла
+    has_completed_cycles: bool = False  # Флаг указывающий что бот уже имел завершенные циклы
     
     avatar_gender: str = "male"
     simple_mode: bool = False  # Для Human ботов - простой режим
@@ -2007,6 +2008,7 @@ async def maintain_all_bots_active_bets():
                 
                 if current_active_bets == 0:
                     # Новая логика: сначала проверяем завершение цикла и время паузы
+                    logger.debug(f"Bot {fresh_bot_doc.get('name', 'Unknown')}: no active bets, checking cycle status (games_played={games_played}, cycle_games={cycle_games})")
                     if cycle_completed:
                         last_cycle_completed_at = fresh_bot_doc.get("last_cycle_completed_at")
                         pause_between_cycles = fresh_bot_doc.get("pause_between_cycles", 5)
@@ -2050,7 +2052,8 @@ async def maintain_all_bots_active_bets():
                                             "current_cycle_wins": 0,
                                             "current_cycle_losses": 0,  
                                             "current_cycle_draws": 0,
-                                            "current_cycle_profit": 0.0
+                                            "current_cycle_profit": 0.0,
+                                            "has_completed_cycles": True  # Отмечаем что бот уже имел завершенные циклы
                                         },
                                         "$unset": {"last_cycle_completed_at": ""}
                                     }
@@ -2069,9 +2072,16 @@ async def maintain_all_bots_active_bets():
                                 else:
                                     logger.warning(f"❌ Failed to create new cycle for bot {fresh_bot_doc.get('name', 'Unknown')}")
                     
-                    elif games_played == 0:
-                        # Новый бот или бот без активных игр - создаем первый цикл без паузы
-                        logger.info(f"🎯 Bot {fresh_bot_doc.get('name', 'Unknown')}: starting initial cycle")
+                    elif games_played == 0 and not fresh_bot_doc.get("has_completed_cycles", False):
+                        # ТОЛЬКО для новых ботов (никогда не имели завершенного цикла) - создаем первый цикл без паузы
+                        # Это предотвращает race condition когда статистика сброшена но ставки еще создаются
+                        logger.info(f"🎯 Bot {fresh_bot_doc.get('name', 'Unknown')}: starting initial cycle (new bot)")
+                        
+                        # Отмечаем что у бота теперь есть циклы
+                        await db.bots.update_one(
+                            {"id": bot_id},
+                            {"$set": {"has_completed_cycles": True}}
+                        )
                         
                         success = await create_full_bot_cycle(fresh_bot_doc)
                         if success:
@@ -17571,6 +17581,22 @@ async def recalculate_bot_bets(
             "creator_id": bot_id,
             "status": "WAITING"
         })
+        
+        # КРИТИЧЕСКИ ВАЖНО: Сбрасываем паузу между циклами при админском пересоздании
+        # Это предотвращает конфликты с автоматической логикой паузы
+        await db.bots.update_one(
+            {"id": bot_id},
+            {
+                "$set": {
+                    "current_cycle_wins": 0,
+                    "current_cycle_losses": 0,  
+                    "current_cycle_draws": 0,
+                    "current_cycle_profit": 0.0,
+                    "has_completed_cycles": True  # Админское пересоздание также означает что у бота были циклы
+                },
+                "$unset": {"last_cycle_completed_at": ""}
+            }
+        )
         
         # Create a full cycle using the NEW formula 2.0 with exact sums and planned outcomes
         success = await create_full_bot_cycle(bot)
