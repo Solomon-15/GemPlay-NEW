@@ -1974,7 +1974,14 @@ async def maintain_all_bots_active_bets():
         for bot_doc in active_bots:
             try:
                 bot_id = bot_doc["id"]
-                cycle_games = bot_doc.get("cycle_games", 12)
+                
+                # КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: Получаем свежие данные бота из БД
+                # так как они могли измениться в предыдущих итерациях
+                fresh_bot_doc = await db.bots.find_one({"id": bot_id})
+                if not fresh_bot_doc or not fresh_bot_doc.get("is_active", False):
+                    continue  # Бот удален или деактивирован
+                
+                cycle_games = fresh_bot_doc.get("cycle_games", 12)
                 
                 # Подсчитываем активные ставки (WAITING)
                 current_active_bets = await db.games.count_documents({
@@ -1982,10 +1989,10 @@ async def maintain_all_bots_active_bets():
                     "status": "WAITING"
                 })
                 
-                # Получаем статистику цикла
-                current_wins = bot_doc.get("current_cycle_wins", 0)
-                current_losses = bot_doc.get("current_cycle_losses", 0) 
-                current_draws = bot_doc.get("current_cycle_draws", 0)
+                # Получаем СВЕЖУЮ статистику цикла
+                current_wins = fresh_bot_doc.get("current_cycle_wins", 0)
+                current_losses = fresh_bot_doc.get("current_cycle_losses", 0) 
+                current_draws = fresh_bot_doc.get("current_cycle_draws", 0)
                 # НОВАЯ ЛОГИКА: Ничьи входят в цикл
                 games_played = current_wins + current_losses + current_draws
                 
@@ -1999,13 +2006,13 @@ async def maintain_all_bots_active_bets():
                 if current_active_bets == 0:
                     # Новая логика: сначала проверяем завершение цикла и время паузы
                     if cycle_completed:
-                        last_cycle_completed_at = bot_doc.get("last_cycle_completed_at")
-                        pause_between_cycles = bot_doc.get("pause_between_cycles", 5)
+                        last_cycle_completed_at = fresh_bot_doc.get("last_cycle_completed_at")
+                        pause_between_cycles = fresh_bot_doc.get("pause_between_cycles", 5)
                         
                         if last_cycle_completed_at is None:
                             # Цикл только что завершился - сохраняем время завершения и начинаем паузу
                             cycle_completion_time = datetime.utcnow()
-                            logger.info(f"🏁 Bot {bot_doc.get('name', 'Unknown')}: cycle completed, starting pause of {pause_between_cycles}s before next cycle")
+                            logger.info(f"🏁 Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle completed, starting pause of {pause_between_cycles}s before next cycle")
                             
                             await db.bots.update_one(
                                 {"id": bot_id},
@@ -2020,18 +2027,18 @@ async def maintain_all_bots_active_bets():
                             if time_since_completion < pause_between_cycles:
                                 # Пауза еще не завершена
                                 remaining_pause = pause_between_cycles - time_since_completion
-                                logger.info(f"🕐 Bot {bot_doc.get('name', 'Unknown')}: pause in progress, {remaining_pause:.1f}s remaining")
+                                logger.info(f"🕐 Bot {fresh_bot_doc.get('name', 'Unknown')}: pause in progress, {remaining_pause:.1f}s remaining")
                                 continue  # Не создаем новый цикл
                             else:
                                 # Пауза завершена - можно создать новый цикл
-                                logger.info(f"✅ Bot {bot_doc.get('name', 'Unknown')}: pause completed, creating new cycle")
+                                logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')}: pause completed, creating new cycle")
                                 
                                 # Удаляем завершенные игры предыдущего цикла
                                 deleted_result = await db.games.delete_many({
                                     "creator_id": bot_id,
                                     "status": "COMPLETED"
                                 })
-                                logger.info(f"🗑️ Bot {bot_doc.get('name', 'Unknown')}: deleted {deleted_result.deleted_count} completed games")
+                                logger.info(f"🗑️ Bot {fresh_bot_doc.get('name', 'Unknown')}: deleted {deleted_result.deleted_count} completed games")
                                 
                                 # Сбрасываем статистику цикла и время завершения
                                 await db.bots.update_one(
@@ -2047,29 +2054,35 @@ async def maintain_all_bots_active_bets():
                                     }
                                 )
                                 
-                                # Создаем новый цикл
-                                success = await create_full_bot_cycle(bot_doc)
+                                # Получаем обновленные данные бота для create_full_bot_cycle
+                                updated_bot_doc = await db.bots.find_one({"id": bot_id})
+                                if not updated_bot_doc:
+                                    logger.error(f"Bot {bot_id} disappeared after stats reset")
+                                    continue
+                                
+                                # Создаем новый цикл с обновленными данными
+                                success = await create_full_bot_cycle(updated_bot_doc)
                                 if success:
-                                    logger.info(f"✅ Bot {bot_doc.get('name', 'Unknown')} created new cycle of {cycle_games} bets")
+                                    logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')} created new cycle of {cycle_games} bets")
                                 else:
-                                    logger.warning(f"❌ Failed to create new cycle for bot {bot_doc.get('name', 'Unknown')}")
+                                    logger.warning(f"❌ Failed to create new cycle for bot {fresh_bot_doc.get('name', 'Unknown')}")
                     
                     elif games_played == 0:
                         # Новый бот или бот без активных игр - создаем первый цикл без паузы
-                        logger.info(f"🎯 Bot {bot_doc.get('name', 'Unknown')}: starting initial cycle")
+                        logger.info(f"🎯 Bot {fresh_bot_doc.get('name', 'Unknown')}: starting initial cycle")
                         
-                        success = await create_full_bot_cycle(bot_doc)
+                        success = await create_full_bot_cycle(fresh_bot_doc)
                         if success:
-                            logger.info(f"✅ Bot {bot_doc.get('name', 'Unknown')} created initial cycle of {cycle_games} bets")
+                            logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')} created initial cycle of {cycle_games} bets")
                         else:
-                            logger.warning(f"❌ Failed to create initial cycle for bot {bot_doc.get('name', 'Unknown')}")
+                            logger.warning(f"❌ Failed to create initial cycle for bot {fresh_bot_doc.get('name', 'Unknown')}")
                 else:
                     # Есть активные ставки → НЕ создавать новые
                     # НОВАЯ ЛОГИКА: При ничьей замены не создаются автоматически
-                    logger.debug(f"Bot {bot_doc.get('name', 'Unknown')}: {current_active_bets} active bets, cycle progress: {games_played}/{cycle_games}")
+                    logger.debug(f"Bot {fresh_bot_doc.get('name', 'Unknown')}: {current_active_bets} active bets, cycle progress: {games_played}/{cycle_games}")
                     
             except Exception as e:
-                logger.error(f"Error maintaining bets for bot {bot_doc.get('name', 'unknown')}: {e}")
+                logger.error(f"Error maintaining bets for bot {fresh_bot_doc.get('name', 'unknown') if 'fresh_bot_doc' in locals() else 'unknown'}: {e}")
                 continue
                 
     except Exception as e:
