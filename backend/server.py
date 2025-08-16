@@ -2044,31 +2044,26 @@ async def maintain_all_bots_active_bets():
                                 })
                                 logger.info(f"🗑️ Bot {fresh_bot_doc.get('name', 'Unknown')}: deleted {deleted_result.deleted_count} completed games")
                                 
-                                # Сбрасываем статистику цикла и время завершения
-                                await db.bots.update_one(
-                                    {"id": bot_id},
-                                    {
-                                        "$set": {
-                                            "current_cycle_wins": 0,
-                                            "current_cycle_losses": 0,  
-                                            "current_cycle_draws": 0,
-                                            "current_cycle_profit": 0.0,
-                                            "has_completed_cycles": True  # Отмечаем что бот уже имел завершенные циклы
-                                        },
-                                        "$unset": {"last_cycle_completed_at": ""}
-                                    }
-                                )
-                                
-                                # Получаем обновленные данные бота для create_full_bot_cycle
-                                updated_bot_doc = await db.bots.find_one({"id": bot_id})
-                                if not updated_bot_doc:
-                                    logger.error(f"Bot {bot_id} disappeared after stats reset")
-                                    continue
-                                
-                                # Создаем новый цикл с обновленными данными
-                                success = await create_full_bot_cycle(updated_bot_doc)
+                                # КРИТИЧЕСКИ ВАЖНО: Создаем новый цикл ПЕРЕД сбросом статистики
+                                # Иначе cycle_completed станет False и логика сломается
+                                success = await create_full_bot_cycle(fresh_bot_doc)
                                 if success:
                                     logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')} created new cycle of {cycle_games} bets")
+                                    
+                                    # ТОЛЬКО после успешного создания цикла сбрасываем статистику
+                                    await db.bots.update_one(
+                                        {"id": bot_id},
+                                        {
+                                            "$set": {
+                                                "current_cycle_wins": 0,
+                                                "current_cycle_losses": 0,  
+                                                "current_cycle_draws": 0,
+                                                "current_cycle_profit": 0.0,
+                                                "has_completed_cycles": True  # Отмечаем что бот уже имел завершенные циклы
+                                            },
+                                            "$unset": {"last_cycle_completed_at": ""}
+                                        }
+                                    )
                                 else:
                                     logger.warning(f"❌ Failed to create new cycle for bot {fresh_bot_doc.get('name', 'Unknown')}")
                     
