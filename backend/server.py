@@ -8115,20 +8115,21 @@ async def update_independent_counters(game: Game, winner_id: str, commission_amo
                 upsert=True
             )
             
-            # Update period revenue counter if there was commission
-            if commission_amount > 0:
-                # **CORRECTED: Only winner pays commission for ALL game types**
-                # No special logic for Human-bots - same commission rules for everyone
-                total_commission = commission_amount  # Only winner's commission
-                
-                await db.human_bot_counters.update_one(
-                    {"type": "global"},
-                    {
-                        "$inc": {"period_revenue": total_commission},
-                        "$set": {"updated_at": datetime.utcnow()}
-                    },
-                    upsert=True
-                )
+            # Update period revenue counter ONLY if Human-bot wins and gets commission
+            if commission_amount > 0 and winner_id:
+                # Check if the winner is a Human-bot
+                winner_is_human_bot = await is_human_bot_user(winner_id)
+                if winner_is_human_bot:
+                    # Only count commission when Human-bot wins (matching HUMAN_BOT_COMMISSION logic)
+                    await db.human_bot_counters.update_one(
+                        {"type": "global"},
+                        {
+                            "$inc": {"period_revenue": commission_amount},
+                            "$set": {"updated_at": datetime.utcnow()}
+                        },
+                        upsert=True
+                    )
+                    logger.info(f"Updated period_revenue: +${commission_amount} for Human-bot winner")
                 
         logger.info(f"Updated independent counters for game {game.id}")
         
@@ -21661,7 +21662,14 @@ async def get_human_bots_stats(current_admin: User = Depends(get_current_admin))
             await db.human_bot_counters.insert_one(counters)
         
         total_games_played = counters.get("total_games_played", 0)
-        period_revenue = counters.get("period_revenue", 0.0)
+        
+        # Calculate period_revenue from profit_entries to ensure consistency
+        # This matches the data shown in ProfitAdmin
+        human_bot_commission_entries = await db.profit_entries.find({
+            "entry_type": "HUMAN_BOT_COMMISSION"
+        }).to_list(None)
+        
+        period_revenue = sum(entry.get("amount", 0) for entry in human_bot_commission_entries)
         
         # Calculate character distribution
         character_distribution = {}
@@ -22447,9 +22455,14 @@ async def reset_total_games_counter(
 async def reset_period_revenue_counter(
     current_admin: User = Depends(get_current_admin)
 ):
-    """Reset the independent period revenue counter."""
+    """Reset the independent period revenue counter - now clears HUMAN_BOT_COMMISSION entries."""
     try:
-        # Reset the period revenue counter
+        # Delete all HUMAN_BOT_COMMISSION entries from profit_entries
+        result = await db.profit_entries.delete_many({
+            "entry_type": "HUMAN_BOT_COMMISSION"
+        })
+        
+        # Also reset the counter in human_bot_counters for backward compatibility
         await db.human_bot_counters.update_one(
             {"type": "global"},
             {
@@ -22467,15 +22480,18 @@ async def reset_period_revenue_counter(
             action="RESET_PERIOD_REVENUE_COUNTER",
             target_type="counter",
             target_id="global",
-            details={"counter_type": "period_revenue"}
+            details={
+                "counter_type": "period_revenue",
+                "deleted_entries": result.deleted_count
+            }
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        logger.info(f"Admin {current_admin.username} reset period revenue counter")
+        logger.info(f"Admin {current_admin.username} reset period revenue counter. Deleted {result.deleted_count} HUMAN_BOT_COMMISSION entries")
         
         return {
             "success": True,
-            "message": "Period revenue counter reset successfully"
+            "message": f"Period revenue counter reset successfully. Deleted {result.deleted_count} commission entries."
         }
     
     except Exception as e:
@@ -22483,6 +22499,68 @@ async def reset_period_revenue_counter(
         raise HTTPException(
             status_code=500,
             detail="Failed to reset period revenue counter"
+        )
+
+@api_router.post("/admin/human-bots/sync-commission-data")
+async def sync_human_bot_commission_data(
+    current_admin: User = Depends(get_current_admin)
+):
+    """Synchronize Human-bot commission data between counters and profit_entries."""
+    try:
+        # Calculate total commission from profit_entries
+        human_bot_commission_entries = await db.profit_entries.find({
+            "entry_type": "HUMAN_BOT_COMMISSION"
+        }).to_list(None)
+        
+        total_commission_from_entries = sum(entry.get("amount", 0) for entry in human_bot_commission_entries)
+        
+        # Get current counter value
+        counter = await db.human_bot_counters.find_one({"type": "global"})
+        current_period_revenue = counter.get("period_revenue", 0.0) if counter else 0.0
+        
+        # Update counter to match profit_entries
+        await db.human_bot_counters.update_one(
+            {"type": "global"},
+            {
+                "$set": {
+                    "period_revenue": total_commission_from_entries,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=current_admin.id,
+            action="SYNC_COMMISSION_DATA",
+            target_type="counter",
+            target_id="global",
+            details={
+                "old_period_revenue": current_period_revenue,
+                "new_period_revenue": total_commission_from_entries,
+                "commission_entries_count": len(human_bot_commission_entries),
+                "difference": total_commission_from_entries - current_period_revenue
+            }
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"Admin {current_admin.username} synced commission data. Old: ${current_period_revenue}, New: ${total_commission_from_entries}")
+        
+        return {
+            "success": True,
+            "message": "Commission data synchronized successfully",
+            "old_value": current_period_revenue,
+            "new_value": total_commission_from_entries,
+            "entries_count": len(human_bot_commission_entries),
+            "difference": total_commission_from_entries - current_period_revenue
+        }
+    
+    except Exception as e:
+        logger.error(f"Error syncing commission data: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to sync commission data"
         )
 
 @api_router.get("/admin/human-bots-total-commission", response_model=dict)
