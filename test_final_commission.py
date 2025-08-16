@@ -5,7 +5,7 @@
 import requests
 import json
 
-BACKEND_URL = "https://0fd37152-eac8-415b-8910-24613a0545f4.preview.emergentagent.com"
+BACKEND_URL = "https://russian-commission.preview.emergentagent.com"
 API = f"{BACKEND_URL}/api"
 
 def test_final_commission_logic():
