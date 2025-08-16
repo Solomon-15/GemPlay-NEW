@@ -550,6 +550,7 @@ class Bot(BaseModel):
     
     last_game_time: Optional[datetime] = None
     last_bet_time: Optional[datetime] = None
+    last_cycle_completed_at: Optional[datetime] = None  # Время завершения последнего цикла
     
     avatar_gender: str = "male"
     simple_mode: bool = False  # Для Human ботов - простой режим
@@ -1997,9 +1998,30 @@ async def maintain_all_bots_active_bets():
                 
                 if current_active_bets == 0:
                     if cycle_completed or games_played == 0:
-                        # Цикл завершен или бот новый → создать новый цикл
-                        reason = "cycle completed" if cycle_completed else "new bot initialization"
-                        logger.info(f"🎯 Bot {bot_doc['name']}: starting new cycle ({reason})")
+                        # Проверяем паузу между циклами только для завершенных циклов
+                        if cycle_completed:
+                            last_cycle_completed_at = bot_doc.get("last_cycle_completed_at")
+                            pause_between_cycles = bot_doc.get("pause_between_cycles", 5)  # По умолчанию 5 секунд
+                            
+                            # Для существующих ботов, у которых нет времени завершения цикла,
+                            # разрешаем создание нового цикла сразу (первый раз после обновления)
+                            if last_cycle_completed_at:
+                                # Вычисляем время с момента завершения последнего цикла
+                                current_time = datetime.utcnow()
+                                time_since_completion = (current_time - last_cycle_completed_at).total_seconds()
+                                
+                                if time_since_completion < pause_between_cycles:
+                                    # Пауза еще не завершена - не создаем новый цикл
+                                    remaining_pause = pause_between_cycles - time_since_completion
+                                    logger.info(f"🕐 Bot {bot_doc['name']}: pause in progress, {remaining_pause:.1f}s remaining (pause: {pause_between_cycles}s)")
+                                    continue  # Переходим к следующему боту
+                        
+                        # Цикл завершен и пауза прошла, или бот новый → создать новый цикл
+                        reason = "cycle completed after pause" if cycle_completed else "new bot initialization"
+                        if cycle_completed:
+                            logger.info(f"🎯 Bot {bot_doc['name']}: pause completed, starting new cycle ({reason})")
+                        else:
+                            logger.info(f"🎯 Bot {bot_doc['name']}: starting new cycle ({reason})")
                         
                         # Создаем полный цикл ставок за один вызов
                         success = await create_full_bot_cycle(bot_doc)
@@ -2018,6 +2040,12 @@ async def maintain_all_bots_active_bets():
                             })
                             logger.info(f"🗑️ Bot {bot_doc['name']}: deleted {deleted_result.deleted_count} completed games after cycle completion")
                             
+                            # Сохраняем время завершения цикла для применения паузы
+                            cycle_completion_time = datetime.utcnow()
+                            pause_between_cycles = bot_doc.get("pause_between_cycles", 5)
+                            
+                            logger.info(f"🏁 Bot {bot_doc['name']}: cycle completed, pause of {pause_between_cycles}s will be applied before next cycle")
+                            
                             await db.bots.update_one(
                                 {"id": bot_id},
                                 {
@@ -2025,7 +2053,8 @@ async def maintain_all_bots_active_bets():
                                         "current_cycle_wins": 0,
                                         "current_cycle_losses": 0,  
                                         "current_cycle_draws": 0,
-                                        "current_cycle_profit": 0.0
+                                        "current_cycle_profit": 0.0,
+                                        "last_cycle_completed_at": cycle_completion_time
                                     }
                                 }
                             )
