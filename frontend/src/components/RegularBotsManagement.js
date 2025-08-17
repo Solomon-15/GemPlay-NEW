@@ -3557,14 +3557,28 @@ const RegularBotsManagement = () => {
               <h3 className="font-rajdhani text-2xl font-bold text-white">
                 📊 История циклов — {selectedBotForCycleHistory.name}
               </h3>
-              <button
-                onClick={() => setIsCycleHistoryModalOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center space-x-4">
+                {/* Общая прибыль */}
+                <div className="text-right">
+                  <div className="text-sm text-text-secondary font-rajdhani">Общая прибыль:</div>
+                  <div className={`text-2xl font-rajdhani font-bold ${
+                    cycleHistoryData.reduce((total, cycle) => total + (cycle.profit || 0), 0) >= 0 
+                      ? 'text-green-400' 
+                      : 'text-red-400'
+                  }`}>
+                    {cycleHistoryData.reduce((total, cycle) => total + (cycle.profit || 0), 0) >= 0 ? '+' : ''}
+                    ${Math.round(cycleHistoryData.reduce((total, cycle) => total + (cycle.profit || 0), 0))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsCycleHistoryModalOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -3983,27 +3997,39 @@ const RegularBotsManagement = () => {
                                     <div className="text-center">
                                       <div className="flex items-center justify-center space-x-2 mb-1">
                                         <span className="text-xs text-text-secondary">Бот:</span>
-                                        <img 
-                                          src={`/${bet.creator_move === 'ROCK' ? 'Rock' : bet.creator_move === 'PAPER' ? 'Paper' : 'Scissors'}.svg`} 
-                                          alt={bet.creator_move} 
-                                          className="w-4 h-4"
-                                        />
+                                        {(() => {
+                                          const move = bet.creator_move?.toUpperCase();
+                                          let iconName = 'Rock'; // по умолчанию
+                                          if (move === 'ROCK') iconName = 'Rock';
+                                          else if (move === 'PAPER') iconName = 'Paper';
+                                          else if (move === 'SCISSORS') iconName = 'Scissors';
+                                          return (
+                                            <img 
+                                              src={`/${iconName}.svg`} 
+                                              alt={move} 
+                                              className="w-4 h-4"
+                                            />
+                                          );
+                                        })()}
                                       </div>
                                       <div className="flex items-center justify-center space-x-2 mb-1">
                                         <span className="text-xs text-text-secondary">Противник:</span>
-                                        <img 
-                                          src={`/${bet.opponent_move === 'ROCK' ? 'Rock' : bet.opponent_move === 'PAPER' ? 'Paper' : 'Scissors'}.svg`} 
-                                          alt={bet.opponent_move} 
-                                          className="w-4 h-4"
-                                        />
+                                        {(() => {
+                                          const move = bet.opponent_move?.toUpperCase();
+                                          let iconName = 'Rock'; // по умолчанию
+                                          if (move === 'ROCK') iconName = 'Rock';
+                                          else if (move === 'PAPER') iconName = 'Paper';
+                                          else if (move === 'SCISSORS') iconName = 'Scissors';
+                                          return (
+                                            <img 
+                                              src={`/${iconName}.svg`} 
+                                              alt={move} 
+                                              className="w-4 h-4"
+                                            />
+                                          );
+                                        })()}
                                       </div>
-                                      <div className={`text-xs font-bold mt-1 ${
-                                        calculatedResult === 'win' ? 'text-green-400' :
-                                        calculatedResult === 'loss' ? 'text-red-400' : 'text-yellow-400'
-                                      }`}>
-                                        {calculatedResult === 'win' ? 'Выигрыш' : 
-                                         calculatedResult === 'loss' ? 'Проигрыш' : 'Ничья'}
-                                      </div>
+
                                     </div>
                                   );
                                 }
@@ -4016,10 +4042,12 @@ const RegularBotsManagement = () => {
                           <td className="px-3 py-2">
                             <span className={`px-2 py-1 rounded-full text-xs font-roboto font-bold ${
                               bet.result_class === 'win' 
-                                ? 'bg-green-500 bg-opacity-20 text-green-400' 
+                                ? 'bg-green-600 text-white' 
                                 : bet.result_class === 'loss'
-                                ? 'bg-red-500 bg-opacity-20 text-red-400'
-                                : 'bg-yellow-500 bg-opacity-20 text-yellow-400'
+                                ? 'bg-red-600 text-white'
+                                : bet.result_class === 'draw'
+                                ? 'bg-yellow-600 text-white'
+                                : 'bg-gray-600 text-white'
                             }`}>
                               {bet.result_class === 'win' ? 'Выигрыш' : bet.result_class === 'loss' ? 'Проигрыш' : bet.result_class === 'draw' ? 'Ничья' : bet.result || 'Ожидание'}
                             </span>
