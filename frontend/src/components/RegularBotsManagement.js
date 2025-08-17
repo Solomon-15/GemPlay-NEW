@@ -2269,7 +2269,7 @@ const RegularBotsManagement = () => {
                         const displayClass = hasActual ? actualColor : 'text-gray-400';
                         return (
                           <div className="flex flex-col items-center justify-center leading-tight">
-                            <span className={`${displayClass} font-roboto text-sm font-bold`} title="Фактический ROI (из модалки ‘Детали цикла’)">
+                            <span className={`${displayClass} font-roboto text-sm font-bold`} title="Фактический ROI (из модалки 'Детали цикла')">
                               {displayActual}
                             </span>
                             <span className={`text-xs text-yellow-400`} title="Плановый ROI (из бэкенда)">
@@ -4119,7 +4119,7 @@ const RegularBotsManagement = () => {
           <div className="bg-surface-card border border-green-500 border-opacity-50 rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-rajdhani text-xl font-bold text-green-400">
-                📈 История цикла: {cycleDetailsData.bot_name} — Цикл #{cycleDetailsData.cycle_number}
+                📊 Детали цикла: {cycleDetailsData.bot_name} — Цикл #{cycleDetailsData.cycle_number}
               </h3>
               <button
                 onClick={() => setIsCycleDetailsModalOpen(false)}
@@ -4203,6 +4203,9 @@ const RegularBotsManagement = () => {
                           ID
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          Ставка
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
                           Гемы
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
@@ -4236,20 +4239,45 @@ const RegularBotsManagement = () => {
                             </button>
                           </td>
                           <td className="px-3 py-2 text-white font-roboto text-sm">
+                            ${bet.bet_amount || 0}
+                          </td>
+                          <td className="px-3 py-2 text-white font-roboto text-sm">
                             {/* Гемы в 3 ряда */}
-                            <div className="flex flex-col space-y-1">
+                            <div className="grid grid-cols-1 gap-1">
                               {bet.bet_gems && Object.keys(bet.bet_gems).length > 0 ? (
-                                Object.entries(bet.bet_gems).map(([gemType, count], i) => (
-                                  <div key={i} className="flex items-center space-x-1">
-                                    <span className="text-xs">💎</span>
-                                    <span className="text-xs">{count}</span>
-                                  </div>
-                                ))
+                                (() => {
+                                  const gemIconMap = {
+                                    'Ruby': '/gems/gem-red.svg',
+                                    'Amber': '/gems/gem-orange.svg',
+                                    'Topaz': '/gems/gem-yellow.svg',
+                                    'Emerald': '/gems/gem-green.svg',
+                                    'Aquamarine': '/gems/gem-cyan.svg',
+                                    'Sapphire': '/gems/gem-blue.svg',
+                                    'Magic': '/gems/gem-purple.svg'
+                                  };
+                                  
+                                  const gemEntries = Object.entries(bet.bet_gems);
+                                  const rows = [];
+                                  for (let i = 0; i < gemEntries.length; i += 3) {
+                                    rows.push(gemEntries.slice(i, i + 3));
+                                  }
+                                  return rows.map((row, rowIndex) => (
+                                    <div key={rowIndex} className="flex items-center space-x-3">
+                                      {row.map(([gemType, count]) => (
+                                        <div key={gemType} className="flex items-center space-x-1">
+                                          <img 
+                                            src={gemIconMap[gemType] || '/gems/gem-red.svg'} 
+                                            alt={gemType} 
+                                            className="w-4 h-4"
+                                          />
+                                          <span className="text-xs font-bold">{count}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ));
+                                })()
                               ) : (
-                                <div className="flex items-center space-x-1">
-                                  <span className="text-xs">💰</span>
-                                  <span className="text-xs">${bet.bet_amount}</span>
-                                </div>
+                                <span className="text-xs text-text-secondary">—</span>
                               )}
                             </div>
                           </td>
