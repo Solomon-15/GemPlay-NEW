@@ -196,40 +196,33 @@ const RegularBotsManagement = () => {
   const handleCycleDetailsModal = async (cycle, bot) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-bets`, {
+      const response = await axios.get(`${API}/admin/bots/${bot.id}/completed-cycle-bets`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { cycle_number: cycle.cycle_number }
+        params: { cycle_id: cycle.id }
       });
+      
       const data = response.data || {};
-      const sums = data.sums || {};
       const bets = Array.isArray(data.bets) ? data.bets : [];
+      const cycleData = data.cycle || {};
 
       const details = {
-        id: `${bot.id}:${cycle.cycle_number}`,
+        id: cycle.id,
         bot_name: bot.name,
         cycle_number: cycle.cycle_number,
-        completed_at: cycle.completed_at,
+        completed_at: cycle.end_time || cycle.completed_at,
         duration: cycle.duration,
+        start_time: cycle.start_time,
+        end_time: cycle.end_time,
         total_games: bets.length,
-        wins: bets.filter(b => b.result === 'win').length,
-        losses: bets.filter(b => b.result === 'loss').length,
-        draws: bets.filter(b => b.result === 'draw').length,
-        total_bet: Number(sums.total_sum || 0),
-        profit: Number(sums.profit || 0),
-        win_rate: bets.length > 0 ? ((bets.filter(b => b.result === 'win').length / bets.length) * 100).toFixed(1) : '0.0',
-        bets: bets.map((b, i) => ({
-          id: b.id || `${bot.id}:${cycle.cycle_number}:${i+1}`,
-          game_number: b.index || i + 1,
-          created_at: b.created_at,
-          duration: b.duration,
-          bet_amount: Number(b.bet_amount || 0),
-          bet_gems: b.bet_gems || {},
-          move: b.creator_move,
-          opponent_move: b.opponent_move,
-          opponent: b.opponent_name || 'N/A',
-          opponent_role: b.opponent_role || 'USER',
-          result: b.result
-        }))
+        wins: bets.filter(b => b.result_class === 'win').length,
+        losses: bets.filter(b => b.result_class === 'loss').length,
+        draws: bets.filter(b => b.result_class === 'draw').length,
+        total_bet: cycleData.total_bet_amount || 0,
+        total_winnings: cycleData.total_winnings || 0,
+        total_losses: cycleData.total_losses || 0,
+        profit: cycleData.net_profit || 0,
+        win_rate: bets.length > 0 ? ((bets.filter(b => b.result_class === 'win').length / bets.length) * 100).toFixed(1) : '0.0',
+        bets: bets
       };
 
       setSelectedCycleForDetails(cycle);
@@ -4079,28 +4072,22 @@ const RegularBotsManagement = () => {
                     <thead className="bg-surface-sidebar">
                       <tr>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
-                          #
+                          №
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
-                          Дата
+                          ID
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
-                          Ставка
+                          Гемы
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
-                          Ход
+                          Ходы
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
-                          Против
+                          Соперник
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
                           Результат
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
-                          Выплата
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
-                          P&L
                         </th>
                       </tr>
                     </thead>
@@ -4110,51 +4097,70 @@ const RegularBotsManagement = () => {
                           <td className="px-3 py-2 text-white font-roboto text-sm">
                             {bet.game_number}
                           </td>
-                          <td className="px-3 py-2 text-text-secondary font-roboto text-xs">
-                            {new Date(bet.created_at).toLocaleString('ru-RU', {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                          <td className="px-3 py-2 text-white font-roboto text-xs">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(bet.id);
+                                // Показываем уведомление о копировании
+                                showSuccessRU('ID скопирован в буфер обмена');
+                              }}
+                              className="text-blue-400 hover:text-blue-300 underline"
+                              title={`Полный ID: ${bet.id}\nНажмите для копирования`}
+                            >
+                              {bet.id ? `${bet.id.substring(0, 4)}…${bet.id.substring(bet.id.length - 4)}` : '—'}
+                            </button>
                           </td>
                           <td className="px-3 py-2 text-white font-roboto text-sm">
-                            ${bet.bet_amount}
+                            {/* Гемы в 3 ряда */}
+                            <div className="flex flex-col space-y-1">
+                              {bet.bet_gems && Object.keys(bet.bet_gems).length > 0 ? (
+                                Object.entries(bet.bet_gems).map(([gemType, count], i) => (
+                                  <div key={i} className="flex items-center space-x-1">
+                                    <span className="text-xs">💎</span>
+                                    <span className="text-xs">{count}</span>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="flex items-center space-x-1">
+                                  <span className="text-xs">💰</span>
+                                  <span className="text-xs">${bet.bet_amount}</span>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            {/* Ходы Бот/Противник с иконками */}
+                            <div className="flex flex-col space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs text-text-secondary">Бот:</span>
+                                <img 
+                                  src={`/${bet.creator_move === 'ROCK' ? 'Rock' : bet.creator_move === 'PAPER' ? 'Paper' : 'Scissors'}.svg`} 
+                                  alt={bet.creator_move} 
+                                  className="w-4 h-4"
+                                />
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs text-text-secondary">Противник:</span>
+                                <img 
+                                  src={`/${bet.opponent_move === 'ROCK' ? 'Rock' : bet.opponent_move === 'PAPER' ? 'Paper' : 'Scissors'}.svg`} 
+                                  alt={bet.opponent_move} 
+                                  className="w-4 h-4"
+                                />
+                              </div>
+                            </div>
                           </td>
                           <td className="px-3 py-2 text-white font-roboto text-sm">
-                            {bet.move === 'rock' ? '🪨' : bet.move === 'paper' ? '📄' : '✂️'}
-                          </td>
-                          <td className="px-3 py-2 text-white font-roboto text-sm">
-                            {bet.opponent_move === 'rock' ? '🪨' : bet.opponent_move === 'paper' ? '📄' : '✂️'}
+                            {bet.opponent_name || 'Неизвестно'}
                           </td>
                           <td className="px-3 py-2">
                             <span className={`px-2 py-1 rounded-full text-xs font-roboto font-bold ${
-                              bet.result === 'win' 
+                              bet.result_class === 'win' 
                                 ? 'bg-green-500 bg-opacity-20 text-green-400' 
-                                : bet.result === 'loss'
+                                : bet.result_class === 'loss'
                                 ? 'bg-red-500 bg-opacity-20 text-red-400'
                                 : 'bg-yellow-500 bg-opacity-20 text-yellow-400'
                             }`}>
-                              {bet.result === 'win' ? 'Выигрыш' : bet.result === 'loss' ? 'Проигрыш' : 'Ничья'}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 text-white font-roboto text-sm">
-                            {bet.result === 'win' ? `$${Math.round(bet.payout)}` : '—'}
-                          </td>
-                          <td className="px-3 py-2">
-                            <span className={`font-roboto text-sm font-bold ${
-                              bet.result === 'win' 
-                                ? 'text-green-400' 
-                                : bet.result === 'loss'
-                                ? 'text-red-400'
-                                : 'text-text-secondary'
-                            }`}>
-                              {bet.result === 'win' 
-                                ? `+$${Math.round(bet.payout - bet.bet_amount)}` 
-                                : bet.result === 'loss'
-                                ? `-$${bet.bet_amount}`
-                                : '$0'
-                              }
+                              {bet.result}
                             </span>
                           </td>
                         </tr>

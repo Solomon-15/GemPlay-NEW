@@ -18991,6 +18991,88 @@ async def get_bot_cycle_history(
         logger.error(f"Error fetching cycle history: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch cycle history")
 
+@api_router.get("/admin/bots/{bot_id}/completed-cycle-bets", response_model=dict)
+async def get_completed_cycle_bets(
+    bot_id: str,
+    cycle_id: str,
+    current_user: User = Depends(get_current_admin)
+):
+    """Возвращает детальный список ставок завершённого цикла"""
+    try:
+        bot = await db.bots.find_one({"id": bot_id})
+        if not bot:
+            raise HTTPException(status_code=404, detail="Bot not found")
+
+        # Получаем данные о завершённом цикле
+        completed_cycle = await db.completed_cycles.find_one({"id": cycle_id, "bot_id": bot_id})
+        if not completed_cycle:
+            raise HTTPException(status_code=404, detail="Completed cycle not found")
+
+        # Получаем все игры этого цикла по времени
+        start_time = completed_cycle["start_time"]
+        end_time = completed_cycle["end_time"]
+        
+        games = await db.games.find({
+            "creator_id": bot_id,
+            "status": "COMPLETED",
+            "created_at": {
+                "$gte": start_time,
+                "$lte": end_time
+            }
+        }).sort("created_at", 1).to_list(1000)
+
+        # Форматируем данные для frontend
+        bets_list = []
+        for i, game in enumerate(games, 1):
+            # Определяем результат
+            winner_id = game.get("winner_id")
+            if winner_id == bot_id:
+                result = "Выигрыш"
+                result_class = "win"
+            elif winner_id is None:
+                result = "Ничья"
+                result_class = "draw"
+            else:
+                result = "Поражение"
+                result_class = "loss"
+
+            # Получаем ходы
+            bot_move = game.get("creator_move", "").upper()
+            opponent_move = game.get("opponent_move", "").upper()
+
+            # Получаем соперника
+            opponent_id = game.get("opponent_id")
+            opponent_name = "Неизвестно"
+            if opponent_id:
+                opponent = await db.users.find_one({"id": opponent_id})
+                if opponent:
+                    opponent_name = opponent.get("username", opponent.get("name", "Пользователь"))
+
+            bets_list.append({
+                "id": game.get("id", ""),
+                "game_number": i,
+                "bet_amount": float(game.get("bet_amount", 0)),
+                "bet_gems": game.get("bet_gems", {}),
+                "creator_move": bot_move,
+                "opponent_move": opponent_move,
+                "opponent_name": opponent_name,
+                "result": result,
+                "result_class": result_class,
+                "created_at": game.get("created_at")
+            })
+
+        return {
+            "cycle": completed_cycle,
+            "bets": bets_list,
+            "total_bets": len(bets_list)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching completed cycle bets: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch completed cycle bets")
+
 @api_router.get("/admin/bots/{bot_id}/completed-cycles", response_model=dict)
 async def get_bot_completed_cycles(
     bot_id: str,
