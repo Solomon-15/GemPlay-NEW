@@ -4225,7 +4225,7 @@ const RegularBotsManagement = () => {
                               <div className="text-xs text-text-secondary">Начало:</div>
                               <div>{bet.created_at ? new Date(bet.created_at).toLocaleDateString('ru-RU') + ' ' + new Date(bet.created_at).toLocaleTimeString('ru-RU') : '—'}</div>
                               <div className="text-xs text-text-secondary">Завершение:</div>
-                              <div>{bet.completed_at ? new Date(bet.completed_at).toLocaleDateString('ru-RU') + ' ' + new Date(bet.completed_at).toLocaleTimeString('ru-RU') : (bet.created_at ? new Date(bet.created_at).toLocaleDateString('ru-RU') + ' ' + new Date(bet.created_at).toLocaleTimeString('ru-RU') : '—')}</div>
+                              <div>{bet.completed_at ? new Date(bet.completed_at).toLocaleDateString('ru-RU') + ' ' + new Date(bet.completed_at).toLocaleTimeString('ru-RU') : '—'}</div>
                             </div>
                           </td>
                           <td className="px-3 py-2 text-green-400 font-roboto text-sm font-bold">
@@ -4303,7 +4303,7 @@ const RegularBotsManagement = () => {
                                 ? 'bg-red-500 bg-opacity-20 text-red-400'
                                 : 'bg-yellow-500 bg-opacity-20 text-yellow-400'
                             }`}>
-                              {bet.result}
+                              {bet.result_class === 'win' ? 'Выигрыш' : bet.result_class === 'loss' ? 'Проигрыш' : bet.result_class === 'draw' ? 'Ничья' : bet.result || 'Ожидание'}
                             </span>
                           </td>
                         </tr>

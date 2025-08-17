@@ -5923,6 +5923,7 @@ async def get_bot_cycle_bets(
                 "index": i + 1,
                 "id": game.get("id", "N/A"),
                 "created_at": created_at.isoformat() if hasattr(created_at, 'isoformat') else str(created_at),
+                "completed_at": completed_at.isoformat() if hasattr(completed_at, 'isoformat') else str(completed_at),
                 "duration": fmt_duration(duration_sec),
                 "bet_amount": bet_amount,
                 "bet_gems": game.get("bet_gems", {}),
@@ -19217,7 +19218,8 @@ async def get_completed_cycle_bets(
                 "opponent_name": opponent_name,
                 "result": result,
                 "result_class": result_class,
-                "created_at": game.get("created_at")
+                "created_at": game.get("created_at"),
+                "completed_at": game.get("completed_at", game.get("created_at"))
             })
 
         return {
