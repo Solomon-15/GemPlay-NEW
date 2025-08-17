@@ -17090,6 +17090,13 @@ async def get_regular_bots_simple(
             })
             bot["active_bets"] = active_bets_count
             
+            # НОВОЕ: Подсчёт всех завершённых ставок в текущем цикле
+            completed_bets_count = await db.games.count_documents({
+                "creator_id": bot["id"],
+                "status": "COMPLETED"
+            })
+            bot["completed_bets"] = completed_bets_count
+            
             # Calculate ROI_active from completed games (platform view: +B on win, -B on loss)
             try:
                 wins_sum_agg = await db.games.aggregate([
