@@ -6,7 +6,7 @@ import asyncio
 import requests
 import json
 
-BACKEND_URL = "https://russianparts.preview.emergentagent.com"
+BACKEND_URL = "https://rusdetails-1.preview.emergentagent.com"
 API = f"{BACKEND_URL}/api"
 
 async def test_commission_logic():

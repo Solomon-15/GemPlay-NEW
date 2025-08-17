@@ -6,7 +6,7 @@ Test get_current_admin_user function specifically
 import requests
 import json
 
-BASE_URL = "https://russianparts.preview.emergentagent.com/api"
+BASE_URL = "https://rusdetails-1.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

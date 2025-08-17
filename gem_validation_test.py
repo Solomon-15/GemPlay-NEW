@@ -17,7 +17,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://russianparts.preview.emergentagent.com/api"
+BASE_URL = "https://rusdetails-1.preview.emergentagent.com/api"
 
 class GemValidationTester:
     def __init__(self):
