@@ -31,7 +31,7 @@ import hashlib
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://rusdetails-1.preview.emergentagent.com/api"
+BASE_URL = "https://detali-shop.preview.emergentagent.com/api"
 
 class BackButtonBlockingTester:
     def __init__(self):

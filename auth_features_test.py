@@ -25,7 +25,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://rusdetails-1.preview.emergentagent.com/api"
+BASE_URL = "https://detali-shop.preview.emergentagent.com/api"
 
 # Test users as specified in the review
 TEST_USERS = {

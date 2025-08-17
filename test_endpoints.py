@@ -4,7 +4,7 @@ import requests
 import json
 
 # Test the exact problematic endpoints
-BASE_URL = "https://rusdetails-1.preview.emergentagent.com/api"
+BASE_URL = "https://detali-shop.preview.emergentagent.com/api"
 
 def test_login():
     """Test admin login"""

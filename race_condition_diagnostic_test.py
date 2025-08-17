@@ -23,7 +23,7 @@ from datetime import datetime, timedelta
 import pytz
 
 # Configuration
-BASE_URL = "https://rusdetails-1.preview.emergentagent.com/api"
+BASE_URL = "https://detali-shop.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
