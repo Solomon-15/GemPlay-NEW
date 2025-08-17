@@ -22,6 +22,7 @@ const ProfitAdmin = ({ user }) => {
   const [entries, setEntries] = useState([]);
   const [commissionSettings, setCommissionSettings] = useState(null);
   const [botIntegrationData, setBotIntegrationData] = useState(null);
+  const [totalBotCycleProfit, setTotalBotCycleProfit] = useState(0);
   const [dateFilter, setDateFilter] = useState({ from: '', to: '' });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
@@ -76,6 +77,47 @@ const ProfitAdmin = ({ user }) => {
     }
   }, [pagination.currentPage]);
 
+  // Функция для загрузки суммарной прибыли от всех циклов обычных ботов
+  const fetchTotalBotCycleProfit = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Получаем список всех ботов
+      const botsResponse = await axios.get(`${API}/admin/bots`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { limit: 1000 } // Получаем всех ботов
+      });
+      
+      const bots = botsResponse.data.bots || botsResponse.data;
+      let totalProfit = 0;
+      
+      // Для каждого бота получаем историю циклов и суммируем прибыль
+      const profitPromises = bots.map(async (bot) => {
+        try {
+          const cycleHistoryResponse = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          const cycleHistoryData = cycleHistoryResponse.data.games || [];
+          const botProfit = cycleHistoryData.reduce((total, cycle) => total + (cycle.profit || 0), 0);
+          return botProfit;
+        } catch (error) {
+          // Если не удалось получить историю для бота, возвращаем 0
+          console.warn(`Не удалось получить историю циклов для бота ${bot.id}:`, error);
+          return 0;
+        }
+      });
+      
+      const allProfits = await Promise.all(profitPromises);
+      totalProfit = allProfits.reduce((sum, profit) => sum + profit, 0);
+      
+      setTotalBotCycleProfit(totalProfit);
+    } catch (error) {
+      console.error('Ошибка загрузки прибыли от циклов ботов:', error);
+      setTotalBotCycleProfit(0);
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -95,6 +137,9 @@ const ProfitAdmin = ({ user }) => {
       setStats(statsResponse.data);
       setCommissionSettings(settingsResponse.data);
       setBotIntegrationData(botIntegrationResponse.data);
+      
+      // Загружаем прибыль от циклов ботов
+      await fetchTotalBotCycleProfit();
     } catch (error) {
       console.error('Ошибка загрузки данных о прибыли:', error);
     } finally {
@@ -309,7 +354,7 @@ const ProfitAdmin = ({ user }) => {
     return (stats.bet_commission || 0) + 
            (stats.human_bot_commission || 0) + 
            (stats.gift_commission || 0) + 
-           (stats.bot_revenue || 0);
+           totalBotCycleProfit;
   };
 
   const calculateExpenses = (stats) => {
@@ -654,7 +699,7 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   </div>
                   <h3 className="font-roboto text-text-secondary text-sm mb-1">Доход от ботов</h3>
-                  <p className="font-russo text-2xl font-bold text-blue-400">{formatCurrencyWithSymbol(stats.bot_revenue || 0, true)}</p>
+                  <p className="font-russo text-2xl font-bold text-blue-400">{formatCurrencyWithSymbol(totalBotCycleProfit, true)}</p>
                   <div className="text-xs text-text-secondary mt-1">
                     {botIntegrationData && (
                       <div className="space-y-1">
