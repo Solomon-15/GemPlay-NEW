@@ -1856,6 +1856,19 @@ async def startup_event():
     # Initialize default gem definitions
     await initialize_default_gems()
     
+    # Create indexes for optimization
+    logger.info("Creating database indexes...")
+    
+    # Indexes for cycle_games collection
+    await db.cycle_games.create_index([("cycle_id", 1), ("bot_id", 1)])
+    await db.cycle_games.create_index([("game_id", 1)])
+    
+    # Indexes for completed_cycles collection
+    await db.completed_cycles.create_index([("bot_id", 1)])
+    await db.completed_cycles.create_index([("cycle_number", -1)])
+    
+    logger.info("Database indexes created")
+    
     # Create default admin users
     admin_users = [
         {
@@ -2043,6 +2056,22 @@ async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
         
         # Сохраняем в коллекцию completed_cycles
         await db.completed_cycles.insert_one(completed_cycle)
+        
+        # Сохраняем игры цикла в отдельную коллекцию для быстрого доступа
+        cycle_games_to_save = []
+        for game in completed_games:
+            cycle_game = {
+                "cycle_id": completed_cycle["id"],
+                "bot_id": bot_id,
+                "game_id": game.get("id"),
+                "game_data": game,  # Сохраняем полные данные игры
+                "created_at": datetime.utcnow()
+            }
+            cycle_games_to_save.append(cycle_game)
+        
+        if cycle_games_to_save:
+            await db.cycle_games.insert_many(cycle_games_to_save)
+            logger.info(f"✅ Saved {len(cycle_games_to_save)} games for cycle #{cycle_number}")
         
         # Обновляем счётчик завершённых циклов у бота
         await db.bots.update_one(
@@ -19070,18 +19099,31 @@ async def get_completed_cycle_bets(
             else:
                 raise HTTPException(status_code=404, detail="Completed cycle not found")
 
-        # Получаем все игры этого цикла по времени
-        start_time = completed_cycle["start_time"]
-        end_time = completed_cycle["end_time"]
+        # Сначала пытаемся получить сохраненные игры цикла
+        cycle_games = await db.cycle_games.find({
+            "cycle_id": cycle_id,
+            "bot_id": bot_id
+        }).sort("game_data.created_at", 1).to_list(1000)
         
-        games = await db.games.find({
-            "creator_id": bot_id,
-            "status": "COMPLETED",
-            "created_at": {
-                "$gte": start_time,
-                "$lte": end_time
-            }
-        }).sort("created_at", 1).to_list(1000)
+        games = []
+        if cycle_games:
+            # Используем сохраненные игры
+            games = [cg["game_data"] for cg in cycle_games]
+            logger.info(f"Found {len(games)} saved games for cycle {cycle_id}")
+        else:
+            # Fallback: получаем игры по времени (для старых циклов)
+            start_time = completed_cycle["start_time"]
+            end_time = completed_cycle["end_time"]
+            
+            games = await db.games.find({
+                "creator_id": bot_id,
+                "status": "COMPLETED",
+                "created_at": {
+                    "$gte": start_time,
+                    "$lte": end_time
+                }
+            }).sort("created_at", 1).to_list(1000)
+            logger.info(f"Found {len(games)} games by time range for cycle {cycle_id}")
         
         # Если это временный цикл и нет реальных игр, генерируем демо-игры
         if not games and cycle_id.startswith("temp_cycle_"):
