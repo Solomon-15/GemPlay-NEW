@@ -85,9 +85,7 @@ const RegularBotsManagement = () => {
   const [deleteReason, setDeleteReason] = useState('');
 
   const [loadingStates, setLoadingStates] = useState({});
-  const [isCycleModalOpen, setIsCycleModalOpen] = useState(false);
-  const [cycleBot, setCycleBot] = useState(null);
-  const [cycleData, setCycleData] = useState(null);
+
   
   const [editingBotLimits, setEditingBotLimits] = useState({}); // {botId: {limit: value, saving: false}}
   const [botLimitsValidation, setBotLimitsValidation] = useState({});
@@ -1306,88 +1304,7 @@ const RegularBotsManagement = () => {
     }
   };
 
-  const handleCycleModal = async (bot) => {
-    try {
-      const response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, getApiConfig());
-      
-      setCycleBot(bot);
-      const apiData = response.data;
-      // Пересчитываем корректные показатели цикла на клиенте согласно требованиям
-      const derived = getDerivedCycleStats(apiData, bot);
-      const patched = {
-        ...apiData,
-        games: Array.isArray(apiData?.games) ? apiData.games : [],
-        cycle_info: {
-          ...(apiData?.cycle_info || {}),
-          progress: `${derived.completed}/${derived.cycleLength}`,
-          completed_games: derived.completed,
-          current_wins: derived.winsCount,
-          current_losses: derived.lossesCount,
-          draws: derived.drawsCount,
-          cycle_length: derived.cycleLength
-        },
-        cycle_stats: {
-          total_bet_amount: Number(derived.totalBet),
-          total_winnings: Number(derived.wonAmount),
-          total_losses: Number(derived.lostAmount),
-          net_profit: Number(derived.netProfit),
-          win_rate: Number(derived.winRate)
-        }
-      };
-      setCycleData(patched);
-      setIsCycleModalOpen(true);
 
-      // Дополнительно подгружаем реальные ставки текущего цикла
-      try {
-        const cycleBetsResp = await axios.get(`${API}/admin/bots/${bot.id}/cycle-bets`, getApiConfig());
-        const sums = cycleBetsResp.data?.sums || {};
-        const bets = Array.isArray(cycleBetsResp.data?.bets) ? cycleBetsResp.data.bets : [];
-
-        const mappedGames = bets.map(b => ({
-          game_id: b.id || 'N/A',
-          created_at: b.created_at,
-          completed_at: b.completed_at || b.created_at,
-          bet_amount: Number(b.bet_amount || 0),
-          bet_gems: b.bet_gems || {},
-          creator_move: b.creator_move,
-          opponent_move: b.opponent_move,
-          opponent: b.opponent_name || 'N/A',
-          opponent_role: b.opponent_role || 'USER',
-          winner: b.result === 'win' ? 'Победа' : b.result === 'loss' ? 'Поражение' : (b.result === 'draw' ? 'Ничья' : '—')
-        }));
-
-        const winsCountNow = mappedGames.filter(g => g.winner === 'Победа').length;
-        const lossesCountNow = mappedGames.filter(g => g.winner === 'Поражение').length;
-        const drawsCountNow = mappedGames.filter(g => g.winner === 'Ничья').length;
-
-        setCycleData(prev => ({
-          ...(prev || {}),
-          games: mappedGames,
-          cycle_info: {
-            ...(prev?.cycle_info || {}),
-            completed_games: (winsCountNow + lossesCountNow + drawsCountNow),
-            current_wins: winsCountNow,
-            current_losses: lossesCountNow,
-            draws: drawsCountNow,
-            cycle_length: prev?.cycle_info?.cycle_length || (bot?.cycle_games ?? 16)
-          },
-          cycle_stats: {
-            ...(prev?.cycle_stats || {}),
-            total_bet_amount: Number(sums.total_sum || 0),
-            total_winnings: Number((sums.wins_sum || 0) * 2),
-            total_losses: Number(sums.losses_sum || 0),
-            net_profit: Number(sums.profit || 0),
-            win_rate: mappedGames.length > 0 ? Math.round((winsCountNow / mappedGames.length) * 1000) / 10 : 0
-          }
-        }));
-      } catch (e) {
-        // Тихо игнорируем, если нет ставок
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки истории цикла:', error);
-      showErrorRU('Ошибка при загрузке истории цикла');
-    }
-  };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('ru-RU');
@@ -2250,17 +2167,10 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {(() => {
-                          // Количество циклов = завершённые циклы + текущий (включительно)
-                          // Завершённые циклы считаем как floor(total_completed_games / cycle_games)
-                          const totalCompleted = Number((bot.games_stats && bot.games_stats.total) || 0);
-                          const cycleLen = (Number(bot.cycle_games) && Number(bot.cycle_games) > 0) ? Number(bot.cycle_games) : 12;
-                          const finished = Math.floor(totalCompleted / cycleLen);
-                          // Определяем, существует ли текущий цикл
-                          const currentPlayedCounter = (bot.current_cycle_games !== undefined && bot.current_cycle_games !== null) ? Number(bot.current_cycle_games) : 0;
-                          const currentPlayedBreakdown = Number(bot.current_cycle_wins || 0) + Number(bot.current_cycle_losses || 0) + Number(bot.current_cycle_draws || 0);
-                          const currentPlayed = currentPlayedCounter > 0 ? currentPlayedCounter : currentPlayedBreakdown;
-                          const hasCurrentCycle = !!(bot.is_active || currentPlayed > 0 || (Number(bot.active_bets || 0) > 0));
-                          return finished + (hasCurrentCycle ? 1 : 0);
+                          // Количество циклов = завершённые циклы + текущий активный цикл
+                          const completedCycles = Number(bot.completed_cycles || 0);
+                          const hasActiveCycle = bot.is_active || Number(bot.current_cycle_games || 0) > 0 || Number(bot.active_bets || 0) > 0;
+                          return completedCycles + (hasActiveCycle ? 1 : 0);
                         })()}
                       </div>
                     </td>
@@ -2343,11 +2253,7 @@ const RegularBotsManagement = () => {
                           ></div>
                         </div>
                         <div className="flex items-center justify-center space-x-2">
-                          <button
-                            onClick={() => handleCycleModal(bot)}
-                            className="text-green-400 hover:text-green-300 cursor-pointer font-roboto text-sm font-medium"
-                            title="Показать историю цикла"
-                          >
+                          <div className="text-green-400 font-roboto text-sm font-medium">
                             {(() => {
                               // X = количество всех завершённых ставок (новая логика)
                               const completedBets = bot.completed_bets || 0;
@@ -2355,7 +2261,7 @@ const RegularBotsManagement = () => {
                               const total = (bot.cycle_games && bot.cycle_games > 0) ? bot.cycle_games : 16;
                               return `${completedBets}/${total}`;
                             })()}
-                          </button>
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -3303,255 +3209,7 @@ const RegularBotsManagement = () => {
 
       {/* Модальное окно активных ставок */}
 
-      {/* Модальное окно истории цикла */}
-      {isCycleModalOpen && cycleBot && cycleData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-card border border-green-500 border-opacity-50 rounded-lg p-6 max-w-6xl w-full mx-4 max-h-[85vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-rajdhani text-xl font-bold text-green-400">
-                📈 История цикла: {cycleData.bot_name} <span className="ml-2 text-xs text-gray-400">v2.1</span>
-              </h3>
-              <button
-                onClick={() => setIsCycleModalOpen(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
 
-            <div className="space-y-6">
-              {/* Статистика цикла */}
-              <div className="flex flex-wrap sm:flex-nowrap gap-4 items-stretch">
-                <div className="bg-surface-sidebar rounded-lg p-4 flex-1 min-w-[220px]">
-                  <h4 className="font-rajdhani font-bold text-white mb-2">Прогресс цикла:</h4>
-                  <div className="text-2xl font-rajdhani font-bold text-green-400">
-                    {(() => { const c = (cycleData?.cycle_info?.completed_games ?? 0); const t = (cycleData?.cycle_info?.cycle_length ?? 16); return `${c}/${t}`; })()}
-                  </div>
-                  <div className="text-text-secondary text-sm">
-                    Завершено игр
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <div className="text-green-400">Побед: {cycleData.cycle_info.current_wins}</div>
-                    <div className="text-red-400">Поражений: {cycleData.cycle_info.current_losses}</div>
-                    <div className="text-yellow-400">Ничьих: {cycleData.cycle_info.draws}</div>
-                  </div>
-                </div>
-
-                <div className="bg-surface-sidebar rounded-lg p-4 flex-1 min-w-[220px]">
-                  <h4 className="font-rajdhani font-bold text-white mb-2">Финансы:</h4>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-text-secondary">Поставлено:</span>
-                      <span className="text-white ml-2">${Number(cycleData.cycle_stats.total_bet_amount).toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-secondary">Выиграно:</span>
-                      <span className="text-green-400 ml-2">${Number(cycleData.cycle_stats.total_winnings).toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-text-secondary">Проиграно:</span>
-                      <span className="text-red-400 ml-2">${Number(cycleData.cycle_stats.total_losses).toFixed(2)}</span>
-                    </div>
-                    <div className="border-t border-border-primary pt-2">
-                      <span className="text-text-secondary">Прибыль:</span>
-                      <span className={`ml-2 font-bold ${
-                        Number(cycleData.cycle_stats.net_profit) >= 0 ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        ${Number(cycleData.cycle_stats.net_profit).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-surface-sidebar rounded-lg p-4 flex-1 min-w-[220px]">
-                  <h4 className="font-rajdhani font-bold text-white mb-2">Общая сумма:</h4>
-                  <div className="text-2xl font-rajdhani font-bold text-green-400">
-                    ${(() => {
-                      // Используем вычисленную сумму текущего/исторического цикла
-                      return Number(cycleData.cycle_stats.total_bet_amount).toFixed(2);
-                    })()}
-                  </div>
-                  <div className="text-text-secondary text-sm">
-                    Сумма всех ставок
-                  </div>
-                </div>
-
-                <div className="bg-surface-sidebar rounded-lg p-4 flex-1 min-w-[220px]">
-                  <h4 className="font-rajdhani font-bold text-white mb-2">Эффективность:</h4>
-                  <div className="text-2xl font-rajdhani font-bold text-accent-primary">
-                    {Number(cycleData.cycle_stats.win_rate).toFixed(1)}%
-                  </div>
-                  <div className="text-text-secondary text-sm">
-                    Процент побед
-                  </div>
-                </div>
-              </div>
-
-              {/* Таблица игр */}
-              <div className="bg-surface-sidebar rounded-lg overflow-hidden">
-                <div className="p-4 border-b border-border-primary">
-                  <h4 className="font-rajdhani font-bold text-white">Лог матчей текущего цикла</h4>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-surface-card">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">№</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">ID</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата начала / завершения</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Время</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ставка</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Гемы</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ходы</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Соперник</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Результат</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-primary">
-                      {cycleData.games.map((game, index) => {
-                        // Функция для получения иконки хода
-                        const getMoveIcon = (move) => {
-                          switch (move?.toUpperCase()) {
-                            case 'ROCK': return '🪨';
-                            case 'PAPER': return '📄';
-                            case 'SCISSORS': return '✂️';
-                            default: return '—';
-                          }
-                        };
-
-                        // Функция для форматирования гемов с настоящими иконками из /app/frontend/public/gems
-                        const formatGemsWithIcons = (gems) => {
-                          if (!gems || typeof gems !== 'object') return '—';
-                          
-                          const gemIconMap = {
-                            'Ruby': '/gems/gem-red.svg',
-                            'Amber': '/gems/gem-orange.svg', 
-                            'Topaz': '/gems/gem-yellow.svg',
-                            'Emerald': '/gems/gem-green.svg',
-                            'Aquamarine': '/gems/gem-cyan.svg',
-                            'Sapphire': '/gems/gem-blue.svg',
-                            'Magic': '/gems/gem-purple.svg'
-                          };
-                          
-                          return Object.entries(gems)
-                            .filter(([gemType, qty]) => qty > 0)
-                            .map(([gemType, qty]) => (
-                              <span key={gemType} className="inline-flex items-center mr-2">
-                                <img 
-                                  src={gemIconMap[gemType] || '/gems/gem-red.svg'} 
-                                  alt={gemType} 
-                                  className="w-4 h-4 inline-block mr-1"
-                                />
-                                ×{qty}
-                              </span>
-                            ));
-                        };
-
-                        // Функция для получения цвета роли пользователя (модератор желтый)
-                        const getRoleColor = (role) => {
-                          const roleColors = {
-                            'USER': 'bg-blue-600',
-                            'MODERATOR': 'bg-yellow-600', 
-                            'ADMIN': 'bg-purple-600',
-                            'SUPER_ADMIN': 'bg-red-600'
-                          };
-                          return roleColors[role] || 'bg-gray-600';
-                        };
-
-                        // Сокращенный ID (первые 4 + последние 4)
-                        const shortId = game.game_id && game.game_id.length > 8 
-                          ? `${game.game_id.substring(0, 4)}…${game.game_id.substring(game.game_id.length - 4)}`
-                          : game.game_id || 'N/A';
-
-                        return (
-                          <tr key={game.game_id} className="transition-colors hover:border-l-4 hover:bg-gray-900 hover:bg-opacity-20 hover:border-green-400">
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-roboto text-white font-bold">
-                                {index + 1}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-roboto text-white font-mono">
-                                {shortId}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-roboto text-white">
-                                <div className="space-y-1">
-                                  <div className="text-xs text-text-secondary">Начало:</div>
-                                  <div>{new Date(game.created_at).toLocaleDateString('ru-RU')} {new Date(game.created_at).toLocaleTimeString('ru-RU')}</div>
-                                  <div className="text-xs text-text-secondary">Завершение:</div>
-                                  <div>{new Date(game.completed_at || game.created_at).toLocaleDateString('ru-RU')} {new Date(game.completed_at || game.created_at).toLocaleTimeString('ru-RU')}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-roboto text-white">
-                                {new Date(game.completed_at || game.created_at).toLocaleDateString('ru-RU')}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-roboto text-white">
-                                {new Date(game.completed_at || game.created_at).toLocaleTimeString('ru-RU')}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-roboto font-bold text-green-400">
-                                ${game.bet_amount || game.amount || 0}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-roboto text-white">
-                                {formatGemsWithIcons(game.bet_gems)}
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-roboto text-white">
-                                <div className="space-y-1">
-                                  <div><span className="text-green-400 font-bold">Бот:</span> {getMoveIcon(game.creator_move)}</div>
-                                  <div><span className="text-orange-400 font-bold">Соперник:</span> {getMoveIcon(game.opponent_move)}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-roboto font-bold text-white ${getRoleColor(game.opponent_role || 'USER')}`}>
-                                {game.opponent || 'N/A'}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3">
-                              <div className="text-sm font-roboto">
-                                <span className={`font-bold ${
-                                  game.winner === 'Победа' ? 'text-green-400' : 
-                                  game.winner === 'Поражение' ? 'text-red-400' : 'text-gray-400'
-                                }`}>
-                                  {game.winner || 'Ничья'}
-                                </span>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Кнопки */}
-              <div className="flex justify-end pt-4">
-                <button
-                  onClick={() => setIsCycleModalOpen(false)}
-                  className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                >
-                  Закрыть
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Модальное окно удаления бота */}
       {isDeleteModalOpen && deletingBot && (
@@ -4205,7 +3863,7 @@ const RegularBotsManagement = () => {
                       {cycleDetailsData.bets.map((bet, index) => (
                         <tr key={bet.id} className="hover:bg-surface-sidebar hover:bg-opacity-30">
                           <td className="px-3 py-2 text-white font-roboto text-sm">
-                            {bet.game_number}
+                            {index + 1}
                           </td>
                           <td className="px-3 py-2 text-white font-roboto text-xs">
                             <button
