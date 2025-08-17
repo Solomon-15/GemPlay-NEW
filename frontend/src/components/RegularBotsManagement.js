@@ -4040,17 +4040,45 @@ const RegularBotsManagement = () => {
                             {bet.opponent_name || 'Неизвестно'}
                           </td>
                           <td className="px-3 py-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-roboto font-bold ${
-                              bet.result_class === 'win' 
-                                ? 'bg-green-600 text-white' 
-                                : bet.result_class === 'loss'
-                                ? 'bg-red-600 text-white'
-                                : bet.result_class === 'draw'
-                                ? 'bg-yellow-600 text-white'
-                                : 'bg-gray-600 text-white'
-                            }`}>
-                              {bet.result_class === 'win' ? 'Выигрыш' : bet.result_class === 'loss' ? 'Проигрыш' : bet.result_class === 'draw' ? 'Ничья' : bet.result || 'Ожидание'}
-                            </span>
+                            {(() => {
+                              // Универсальная функция для получения результата из любого поля
+                              const getResultType = () => {
+                                // Сначала пробуем result_class (для завершённых циклов)
+                                if (bet.result_class) {
+                                  return bet.result_class.toLowerCase();
+                                }
+                                // Затем пробуем result (для текущего цикла)
+                                if (bet.result) {
+                                  return bet.result.toLowerCase();
+                                }
+                                return 'pending';
+                              };
+                              
+                              const resultType = getResultType();
+                              
+                              // Определяем цвет фона и текст
+                              const getResultStyle = () => {
+                                switch (resultType) {
+                                  case 'win':
+                                    return { bg: 'bg-green-600', text: 'Выигрыш' };
+                                  case 'loss':
+                                  case 'lose':
+                                    return { bg: 'bg-red-600', text: 'Проигрыш' };
+                                  case 'draw':
+                                    return { bg: 'bg-yellow-600', text: 'Ничья' };
+                                  default:
+                                    return { bg: 'bg-gray-600', text: 'Ожидание' };
+                                }
+                              };
+                              
+                              const style = getResultStyle();
+                              
+                              return (
+                                <span className={`px-2 py-1 rounded-full text-xs font-roboto font-bold ${style.bg} text-white`}>
+                                  {style.text}
+                                </span>
+                              );
+                            })()}
                           </td>
                         </tr>
                       ))}
