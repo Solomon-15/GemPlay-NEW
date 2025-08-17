@@ -2167,10 +2167,19 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {(() => {
-                          // Количество циклов = завершённые циклы + текущий активный цикл
+                          // Общее количество циклов = завершённые циклы + текущий активный цикл (если есть)
                           const completedCycles = Number(bot.completed_cycles || 0);
-                          const hasActiveCycle = bot.is_active || Number(bot.current_cycle_games || 0) > 0 || Number(bot.active_bets || 0) > 0;
-                          return completedCycles + (hasActiveCycle ? 1 : 0);
+                          
+                          // Проверяем наличие текущего активного цикла по любому из признаков:
+                          // - бот активен, ИЛИ
+                          // - есть игры в текущем цикле, ИЛИ 
+                          // - есть активные ставки
+                          const hasActiveCycle = bot.is_active || 
+                                                Number(bot.current_cycle_games || 0) > 0 || 
+                                                Number(bot.active_bets || 0) > 0;
+                          
+                          const totalCycles = completedCycles + (hasActiveCycle ? 1 : 0);
+                          return totalCycles;
                         })()}
                       </div>
                     </td>
@@ -2184,7 +2193,7 @@ const RegularBotsManagement = () => {
                           className="text-blue-400 hover:text-blue-300 cursor-pointer underline"
                           title="Показать историю циклов"
 >
-                          Общая Прибыль: <span className="font-bold">${Math.round(bot.total_net_profit || 0)}</span>
+                          Общая Прибыль: <span className="font-black text-sm">${Math.round(bot.total_net_profit || 0)}</span>
                         </button>
                       </div>
                     </td>
