@@ -22,7 +22,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://modalni-dialogi.preview.emergentagent.com/api"
+BASE_URL = "https://ru-modals.preview.emergentagent.com/api"
 
 SUPER_ADMIN_USER = {
     "email": "superadmin@gemplay.com", 

@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 
 # Configuration
-BACKEND_URL = "https://modalni-dialogi.preview.emergentagent.com/api"
+BACKEND_URL = "https://ru-modals.preview.emergentagent.com/api"
 
 class ScanInconsistenciesTester:
     def __init__(self):

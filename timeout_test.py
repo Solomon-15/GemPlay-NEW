@@ -16,7 +16,7 @@ import hashlib
 from datetime import datetime, timedelta
 
 # Configuration
-BASE_URL = "https://modalni-dialogi.preview.emergentagent.com/api"
+BASE_URL = "https://ru-modals.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

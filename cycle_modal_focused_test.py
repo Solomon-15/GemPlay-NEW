@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://modalni-dialogi.preview.emergentagent.com/api"
+BASE_URL = "https://ru-modals.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
