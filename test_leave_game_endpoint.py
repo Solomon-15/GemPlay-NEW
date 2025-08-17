@@ -13,7 +13,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://ru-modals.preview.emergentagent.com/api"
+BASE_URL = "https://income-bot-3.preview.emergentagent.com/api"
 
 def generate_test_email():
     """Generate unique test email"""
