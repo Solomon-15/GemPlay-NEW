@@ -249,10 +249,19 @@ const RegularBotsManagement = () => {
   const handleCycleDetailsModal = async (cycle, bot) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/${bot.id}/completed-cycle-bets`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { cycle_id: cycle.id }
-      });
+      
+      // Если это текущий цикл (id === 'current-cycle'), используем другой эндпоинт
+      let response;
+      if (cycle.id === 'current-cycle') {
+        response = await axios.get(`${API}/admin/bots/${bot.id}/cycle-bets`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } else {
+        response = await axios.get(`${API}/admin/bots/${bot.id}/completed-cycle-bets`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { cycle_id: cycle.id }
+        });
+      }
       
       const data = response.data || {};
       const bets = Array.isArray(data.bets) ? data.bets : [];
@@ -279,26 +288,52 @@ const RegularBotsManagement = () => {
         return roi;
       })();
 
-      const details = {
-        id: cycle.id,
-        bot_name: bot.name,
-        cycle_number: cycle.cycle_number,
-        completed_at: cycle.end_time || cycle.completed_at,
-        duration: cycle.duration,
-        start_time: cycle.start_time,
-        end_time: cycle.end_time,
-        total_games: bets.length,
-        wins: bets.filter(b => b.result_class === 'win').length,
-        losses: bets.filter(b => b.result_class === 'loss').length,
-        draws: bets.filter(b => b.result_class === 'draw').length,
-        total_bet: cycleData.total_bet_amount || 0,
-        total_winnings: cycleData.total_winnings || 0,
-        total_losses: cycleData.total_losses || 0,
-        profit: cycleData.net_profit || 0,
-        win_rate: bets.length > 0 ? ((bets.filter(b => b.result_class === 'win').length / bets.length) * 100).toFixed(1) : '0.0',
-        bets: bets,
-        planned_roi: roiPlanned // Добавляем плановый ROI для колонки Винрейт
-      };
+      let details;
+      if (cycle.id === 'current-cycle') {
+        // Для текущего цикла используем данные из /cycle-bets
+        details = {
+          id: cycle.id,
+          bot_name: data.bot_name || bot.name,
+          cycle_number: cycle.cycle_number,
+          completed_at: cycle.end_time || cycle.completed_at,
+          duration: cycle.duration,
+          start_time: cycle.start_time,
+          end_time: cycle.end_time,
+          total_games: bets.length,
+          wins: bets.filter(b => b.result === 'win').length,
+          losses: bets.filter(b => b.result === 'loss').length,
+          draws: bets.filter(b => b.result === 'draw').length,
+          total_bet: data.sums?.total_sum || 0,
+          total_winnings: data.sums?.wins_sum || 0,
+          total_losses: data.sums?.losses_sum || 0,
+          profit: data.sums?.profit || 0,
+          win_rate: bets.length > 0 ? ((bets.filter(b => b.result === 'win').length / bets.length) * 100).toFixed(1) : '0.0',
+          bets: bets,
+          planned_roi: roiPlanned
+        };
+      } else {
+        // Для завершённых циклов используем данные из /completed-cycle-bets
+        details = {
+          id: cycle.id,
+          bot_name: bot.name,
+          cycle_number: cycle.cycle_number,
+          completed_at: cycle.end_time || cycle.completed_at,
+          duration: cycle.duration,
+          start_time: cycle.start_time,
+          end_time: cycle.end_time,
+          total_games: bets.length,
+          wins: bets.filter(b => b.result_class === 'win').length,
+          losses: bets.filter(b => b.result_class === 'loss').length,
+          draws: bets.filter(b => b.result_class === 'draw').length,
+          total_bet: cycleData.total_bet_amount || 0,
+          total_winnings: cycleData.total_winnings || 0,
+          total_losses: cycleData.total_losses || 0,
+          profit: cycleData.net_profit || 0,
+          win_rate: bets.length > 0 ? ((bets.filter(b => b.result_class === 'win').length / bets.length) * 100).toFixed(1) : '0.0',
+          bets: bets,
+          planned_roi: roiPlanned
+        };
+      }
 
       setSelectedCycleForDetails(cycle);
       setCycleDetailsData(details);
@@ -1190,58 +1225,20 @@ const RegularBotsManagement = () => {
       });
 
       const data = response.data || {};
+      const bets = data.bets || [];
       
-      // Рассчитываем плановый ROI (из бэкенда) для колонки Винрейт
-      const roiPlanned = (() => {
-        // Берём строго из поля, которое отдаёт бэк (пересчитанное по калькулятору предпросмотра)
-        if (bot && bot.roi_planned_percent !== undefined && bot.roi_planned_percent !== null && isFinite(Number(bot.roi_planned_percent))) {
-          return Number(bot.roi_planned_percent);
-        }
-        // Фолбэк: повторяем формулу бэка на фронте
-        const winPct = Number(bot.wins_percentage ?? 0);
-        const lossPct = Number(bot.losses_percentage ?? 0);
-        const cycleGames = Number(bot.cycle_games ?? 12) || 12;
-        const minBet = Math.round(Number(bot.min_bet_amount ?? 1) || 1);
-        const maxBet = Math.round(Number(bot.max_bet_amount ?? 50) || 50);
-        const exactCycleTotal = Math.round(((minBet + maxBet) / 2.0) * cycleGames);
-        const winsSumPlanned = Math.floor(exactCycleTotal * winPct / 100.0);
-        const lossesSumPlanned = Math.ceil(exactCycleTotal * lossPct / 100.0);
-        const activePoolPlanned = winsSumPlanned + lossesSumPlanned;
-        const profitPlanned = winsSumPlanned - lossesSumPlanned;
-        const roi = activePoolPlanned > 0 ? (profitPlanned / activePoolPlanned) * 100.0 : 0.0;
-        return roi;
-      })();
-      
-      // Собираем удобные для отображения поля
-      const details = {
-        bot_name: data.bot_name || bot.name,
-        cycle_length: data.cycle_length,
-        exact_cycle_total: data.exact_cycle_total,
-        sums: data.sums || { wins_sum: 0, losses_sum: 0, draws_sum: 0, total_sum: 0, active_pool: 0, profit: 0, roi_active: 0 },
-        counts: data.counts || { wins_count: 0, losses_count: 0, draws_count: 0, total_count: 0 },
-        breakdown: data.breakdown || { wins: [], losses: [], draws: [] },
-        bets: data.bets || [],
-        planned_roi: roiPlanned // Добавляем плановый ROI для колонки Винрейт
+      // Создаём фиктивный объект цикла для использования с handleCycleDetailsModal
+      const fakeCycle = {
+        id: 'current-cycle',
+        cycle_number: 'Текущий',
+        end_time: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        duration: '—',
+        start_time: bets.length > 0 ? bets[0].created_at : new Date().toISOString()
       };
-
-      setCycleDetailsData(details);
-      // Кэшируем суммы цикла для списка по ID бота
-      if (details?.sums) {
-        setCycleSumsByBot(prev => ({
-          ...prev,
-          [bot.id]: {
-            total_sum: Number(details.sums.total_sum || 0),
-            active_pool: Number(details.sums.active_pool || 0),
-            draws_sum: Number(details.sums.draws_sum || 0),
-            wins_sum: Number(details.sums.wins_sum || 0),
-            losses_sum: Number(details.sums.losses_sum || 0),
-            profit: Number(details.sums.profit || 0),
-            roi_active: Number(details.sums.roi_active || 0),
-            exact_cycle_total: Number((details && details.exact_cycle_total) || 0)
-          }
-        }));
-      }
-      setIsCycleDetailsModalOpen(true);
+      
+      // Используем унифицированную модалку
+      await handleCycleDetailsModal(fakeCycle, bot);
     } catch (error) {
       console.error('Ошибка загрузки деталей цикла:', error);
       showErrorRU('Ошибка при загрузке деталей цикла');
@@ -2556,76 +2553,6 @@ const RegularBotsManagement = () => {
       </div>
 
       {/* Модальное окно создания бота */}
-      {/* Модалка деталей цикла (W/L/D, суммы, ROI) */}
-      {isCycleDetailsModalOpen && cycleDetailsData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-6 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-rajdhani text-xl font-bold text-white">
-                Детали цикла: {cycleDetailsData.bot_name}
-              </h3>
-              <button onClick={() => setIsCycleDetailsModalOpen(false)} className="text-gray-400 hover:text-white">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-4 gap-4 mb-4">
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs">Длина цикла</div>
-                <div className="text-white text-lg font-bold">{cycleDetailsData.cycle_length}</div>
-              </div>
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs">Теоретическая сумма</div>
-                <div className="text-white text-lg font-bold">{cycleDetailsData.exact_cycle_total}</div>
-              </div>
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs">ROI</div>
-                <div className="text-white text-lg font-bold">{Number(cycleDetailsData.sums?.roi_active || 0).toFixed(2)}%</div>
-              </div>
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs">Винрейт</div>
-                <div className="text-yellow-400 text-lg font-bold">{Number(cycleDetailsData.planned_roi || 0).toFixed(2)}%</div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs">Победы (сумма)</div>
-                <div className="text-green-400 text-lg font-bold">{cycleDetailsData.sums?.wins_sum || 0}</div>
-              </div>
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs">Поражения (сумма)</div>
-                <div className="text-red-400 text-lg font-bold">{cycleDetailsData.sums?.losses_sum || 0}</div>
-              </div>
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs">Ничьи (сумма)</div>
-                <div className="text-yellow-400 text-lg font-bold">{cycleDetailsData.sums?.draws_sum || 0}</div>
-              </div>
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs">Общая сумма</div>
-                <div className="text-white text-lg font-bold">{cycleDetailsData.sums?.total_sum || 0}</div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs mb-2">Ставки Побед</div>
-                <div className="text-white text-sm break-words">{(cycleDetailsData.breakdown?.wins || []).join(', ') || '—'}</div>
-              </div>
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs mb-2">Ставки Поражений</div>
-                <div className="text-white text-sm break-words">{(cycleDetailsData.breakdown?.losses || []).join(', ') || '—'}</div>
-              </div>
-              <div className="bg-surface-sidebar rounded-lg p-4">
-                <div className="text-text-secondary text-xs mb-2">Ставки Ничьих</div>
-                <div className="text-white text-sm break-words">{(cycleDetailsData.breakdown?.draws || []).join(', ') || '—'}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {isCreateModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -4193,17 +4120,27 @@ const RegularBotsManagement = () => {
 
             {/* Краткая статистика цикла */}
             <div className="bg-surface-sidebar border border-border-primary rounded-lg p-4 mb-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Верхний ряд: Сумма ставок, Выигрыши, Проигрыши */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
                 <div className="text-center">
-                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Дата завершения</div>
-                  <div className="text-white font-roboto text-sm">
-                    {new Date(cycleDetailsData.completed_at).toLocaleDateString('ru-RU')}
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Сумма ставок</div>
+                  <div className="text-white font-roboto text-sm">${Math.round(cycleDetailsData.total_bet)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Выигрыши</div>
+                  <div className="text-green-400 font-roboto text-sm font-bold">
+                    ${Math.round(cycleDetailsData.total_winnings)}
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Длительность</div>
-                  <div className="text-white font-roboto text-sm">{cycleDetailsData.duration}</div>
+                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Проигрыши</div>
+                  <div className="text-red-400 font-roboto text-sm font-bold">
+                    ${Math.round(cycleDetailsData.total_losses)}
+                  </div>
                 </div>
+              </div>
+              {/* Нижний ряд: Игры, Винрейт, Чистая прибыль */}
+              <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
                   <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Игры</div>
                   <div className="text-accent-primary font-roboto text-sm font-bold">
@@ -4214,24 +4151,6 @@ const RegularBotsManagement = () => {
                   <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Винрейт</div>
                   <div className="text-yellow-400 font-roboto text-sm font-bold">
                     {Number(cycleDetailsData.planned_roi || 0).toFixed(2)}%
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">W/L/D</div>
-                  <div className="text-white font-roboto text-sm">
-                    <span className="text-green-400">{cycleDetailsData.wins}</span>/
-                    <span className="text-red-400">{cycleDetailsData.losses}</span>/
-                    <span className="text-yellow-400">{cycleDetailsData.draws}</span>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Сумма ставок</div>
-                  <div className="text-white font-roboto text-sm">${Math.round(cycleDetailsData.total_bet)}</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Выигрыши</div>
-                  <div className="text-green-400 font-roboto text-sm font-bold">
-                    ${Math.round(cycleDetailsData.total_winnings)}
                   </div>
                 </div>
                 <div className="text-center">
