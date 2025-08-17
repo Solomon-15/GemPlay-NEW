@@ -17,7 +17,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://popup-manager.preview.emergentagent.com/api"
+BASE_URL = "https://modalni-dialogi.preview.emergentagent.com/api"
 
 class GemValidationTester:
     def __init__(self):

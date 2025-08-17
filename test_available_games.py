@@ -2,7 +2,7 @@
 import requests
 import json
 
-BASE_URL = 'https://popup-manager.preview.emergentagent.com/api'
+BASE_URL = 'https://modalni-dialogi.preview.emergentagent.com/api'
 
 # Login first
 login_data = {'email': 'admin@gemplay.com', 'password': 'Admin123!'}

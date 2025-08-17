@@ -19,7 +19,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://popup-manager.preview.emergentagent.com/api"
+BASE_URL = "https://modalni-dialogi.preview.emergentagent.com/api"
 
 # Test results tracking
 test_results = []

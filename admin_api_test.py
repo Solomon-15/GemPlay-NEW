@@ -8,7 +8,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://popup-manager.preview.emergentagent.com/api"
+BASE_URL = "https://modalni-dialogi.preview.emergentagent.com/api"
 ADMIN_CREDENTIALS = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"

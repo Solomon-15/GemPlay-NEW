@@ -10,7 +10,7 @@ from typing import Dict, Any, Optional
 import random
 
 # Configuration
-BASE_URL = "https://popup-manager.preview.emergentagent.com/api"
+BASE_URL = "https://modalni-dialogi.preview.emergentagent.com/api"
 
 def generate_test_email():
     """Generate unique test email"""

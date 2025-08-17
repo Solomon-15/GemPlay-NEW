@@ -6,7 +6,7 @@ import asyncio
 import requests
 import json
 
-BACKEND_URL = "https://popup-manager.preview.emergentagent.com"
+BACKEND_URL = "https://modalni-dialogi.preview.emergentagent.com"
 API = f"{BACKEND_URL}/api"
 
 async def test_commission_logic():

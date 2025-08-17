@@ -4,7 +4,7 @@ import requests
 import json
 
 # Test the exact problematic endpoints
-BASE_URL = "https://popup-manager.preview.emergentagent.com/api"
+BASE_URL = "https://modalni-dialogi.preview.emergentagent.com/api"
 
 def test_login():
     """Test admin login"""
