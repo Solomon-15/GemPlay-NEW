@@ -17161,6 +17161,35 @@ async def get_regular_bots_simple(
                         "remaining_seconds": 0,
                         "total_seconds": bot.get("pause_between_cycles", 5)
                     }
+            
+            # НОВОЕ: Добавляем расчёт фиксированной прибыли за текущий цикл
+            try:
+                # Проверяем есть ли активный цикл (есть активные или завершенные игры)
+                total_games_in_cycle = await db.games.count_documents({
+                    "creator_id": bot_id,
+                    "status": {"$in": ["WAITING", "ACTIVE", "COMPLETED"]}
+                })
+                
+                if total_games_in_cycle > 0:
+                    # Цикл активен - рассчитываем фиксированную прибыль
+                    min_bet = float(bot.get("min_bet_amount", 1.0) or 1.0)
+                    max_bet = float(bot.get("max_bet_amount", 50.0) or 50.0)
+                    cycle_games = int(bot.get("cycle_games", 12) or 12)
+                    wins_pct = float(bot.get("wins_percentage", 44.0) or 44.0)
+                    losses_pct = float(bot.get("losses_percentage", 36.0) or 36.0)
+                    draws_pct = float(bot.get("draws_percentage", 20.0) or 20.0)
+                    
+                    planned_profit = compute_cycle_planned_profit(
+                        min_bet, max_bet, cycle_games, 
+                        wins_pct, losses_pct, draws_pct
+                    )
+                    
+                    bot["cycle_planned_profit"] = round(planned_profit, 2)
+                else:
+                    # Нет активного цикла
+                    bot["cycle_planned_profit"] = None
+            except Exception:
+                bot["cycle_planned_profit"] = None
         
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
@@ -17183,6 +17212,39 @@ async def get_regular_bots_simple(
 # --- ROI PLANNING CALCULATOR (SAME AS CREATION CALCULATOR) ---
 # Используем точную сумму цикла и метод наибольших остатков для распределения W/L/D
 # Возвращает ROI_planned в процентах с точностью до двух знаков
+
+def compute_cycle_planned_profit(min_bet: float, max_bet: float, cycle_games: int,
+                                wins_percentage: float, losses_percentage: float, draws_percentage: float) -> float:
+    """
+    Рассчитывает фиксированную планируемую прибыль за один цикл в долларах.
+    Использует ту же логику что и compute_planned_roi_percent, но возвращает прибыль в долларах.
+    """
+    try:
+        min_bet_f = float(min_bet or 0)
+        max_bet_f = float(max_bet or 0)
+        games = int(cycle_games or 0)
+        if games <= 0 or max_bet_f <= 0 or max_bet_f < min_bet_f:
+            return 0.0
+        
+        # 1) Группы ставок
+        small_cnt = max(1, int(round(games * 0.25)))
+        medium_cnt = int(round(games * 0.5))
+        large_cnt = max(0, games - small_cnt - medium_cnt)
+        rng = max_bet_f - min_bet_f
+        small_avg = min_bet_f + rng * 0.15
+        medium_avg = min_bet_f + rng * 0.5
+        large_avg = min_bet_f + rng * 0.85
+        estimated_total = small_cnt * small_avg + medium_cnt * medium_avg + large_cnt * large_avg
+        
+        # 2) Суммы по исходам
+        wins_sum = int(round(estimated_total * float(wins_percentage or 0) / 100.0))
+        losses_sum = int(round(estimated_total * float(losses_percentage or 0) / 100.0))
+        
+        # 3) Планируемая прибыль = wins_sum - losses_sum
+        planned_profit = wins_sum - losses_sum
+        return float(planned_profit)
+    except Exception:
+        return 0.0
 
 def compute_planned_roi_percent(min_bet: float, max_bet: float, cycle_games: int,
                                 wins_percentage: float, losses_percentage: float, draws_percentage: float) -> float:
