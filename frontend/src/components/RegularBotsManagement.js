@@ -65,6 +65,7 @@ const RegularBotsManagement = () => {
   });
   const [botsList, setBotsList] = useState([]);
   const [cycleSumsByBot, setCycleSumsByBot] = useState({}); // { [botId]: { total_sum, active_pool, draws_sum, profit, wins_sum, losses_sum } }
+  const [cycleHistoryProfitByBot, setCycleHistoryProfitByBot] = useState({}); // { [botId]: totalProfitFromCompletedCycles }
   const [botSettings, setBotSettings] = useState({
     max_active_bets_regular: 5000000000,
     max_active_bets_human: 300000000
@@ -754,6 +755,10 @@ const RegularBotsManagement = () => {
           if (b?.id && !cycleSumsByBot[b.id]) {
             fetchAndCacheCycleSums(b.id);
           }
+          // Предзагружаем общую прибыль из истории циклов для колонки "Статистика"
+          if (b?.id && cycleHistoryProfitByBot[b.id] === undefined) {
+            fetchAndCacheCycleHistoryProfit(b.id);
+          }
         });
       }
       
@@ -826,6 +831,29 @@ const RegularBotsManagement = () => {
     }
   };
 
+  // Предзагрузка общей прибыли из истории циклов (для колонки "Статистика")
+  const fetchAndCacheCycleHistoryProfit = async (botId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/admin/bots/${botId}/cycle-history`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const cycleHistoryData = response.data.games || [];
+      // Кэшируем данные только если есть завершённые циклы (непустая история)
+      if (cycleHistoryData.length > 0) {
+        const totalProfit = cycleHistoryData.reduce((total, cycle) => total + (cycle.profit || 0), 0);
+        setCycleHistoryProfitByBot(prev => ({
+          ...prev,
+          [botId]: totalProfit
+        }));
+      }
+      // Если история пуста, не кэшируем, чтобы использовался fallback
+    } catch (err) {
+      // Тихо игнорируем ошибку, будем использовать fallback значение
+      // console.warn('Не удалось предзагрузить прибыль из истории циклов для бота', botId, err);
+    }
+  };
 
   const fetchActiveBetsStats = async () => {
     try {
@@ -2193,7 +2221,9 @@ const RegularBotsManagement = () => {
                           className="text-blue-400 hover:text-blue-300 cursor-pointer underline"
                           title="Показать историю циклов"
 >
-                          Общая Прибыль: <span className="font-black text-sm">${Math.round(bot.total_net_profit || 0)}</span>
+                          Общая Прибыль: <span className="font-black text-sm">
+                            ${Math.round(cycleHistoryProfitByBot[bot.id] !== undefined ? cycleHistoryProfitByBot[bot.id] : (bot.total_net_profit || 0))}
+                          </span>
                         </button>
                       </div>
                     </td>
