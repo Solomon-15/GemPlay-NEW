@@ -510,6 +510,23 @@ class FrozenBalance(BaseModel):
     released_at: Optional[datetime] = None
     is_active: bool = True
 
+class CompletedCycle(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    bot_id: str
+    cycle_number: int
+    start_time: datetime
+    end_time: datetime
+    duration_seconds: int
+    total_bets: int
+    wins_count: int
+    losses_count: int
+    draws_count: int
+    total_bet_amount: float
+    total_winnings: float
+    total_losses: float
+    net_profit: float
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 class Bot(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
@@ -552,6 +569,8 @@ class Bot(BaseModel):
     last_bet_time: Optional[datetime] = None
     last_cycle_completed_at: Optional[datetime] = None  # Время завершения последнего цикла
     has_completed_cycles: bool = False  # Флаг указывающий что бот уже имел завершенные циклы
+    current_cycle_start_time: Optional[datetime] = None  # Время начала текущего цикла
+    completed_cycles_count: int = 0  # Количество завершённых циклов
     
     avatar_gender: str = "male"
     simple_mode: bool = False  # Для Human ботов - простой режим
@@ -1952,6 +1971,90 @@ async def bot_automation_loop():
             logger.error(f"Error in bot automation loop: {e}")
             await asyncio.sleep(5)  # Пауза даже при ошибке
 
+async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
+    """Сохраняет данные о завершённом цикле в базу данных"""
+    try:
+        bot_id = bot_doc.get("id")
+        if not bot_id:
+            return
+        
+        # Получаем все завершённые игры текущего цикла
+        completed_games = await db.games.find({
+            "creator_id": bot_id,
+            "status": "COMPLETED"
+        }).sort("created_at", 1).to_list(1000)
+        
+        if not completed_games:
+            logger.warning(f"No completed games found for bot {bot_id} cycle")
+            return
+        
+        # Рассчитываем статистику цикла
+        wins_count = 0
+        losses_count = 0
+        draws_count = 0
+        total_bet_amount = 0.0
+        total_winnings = 0.0
+        total_losses = 0.0
+        
+        for game in completed_games:
+            bet_amount = float(game.get("bet_amount", 0))
+            total_bet_amount += bet_amount
+            
+            winner_id = game.get("winner_id")
+            if winner_id == bot_id:
+                # Победа - получаем удвоенную сумму ставки
+                wins_count += 1
+                total_winnings += bet_amount  # Чистый выигрыш = ставка
+            elif winner_id is None:
+                # Ничья - возвращается ставка
+                draws_count += 1
+            else:
+                # Поражение - теряем ставку
+                losses_count += 1
+                total_losses += bet_amount
+        
+        net_profit = total_winnings - total_losses
+        
+        # Определяем время начала цикла
+        start_time = bot_doc.get("current_cycle_start_time") or completed_games[0].get("created_at") or completion_time
+        duration_seconds = int((completion_time - start_time).total_seconds())
+        
+        # Получаем номер следующего цикла
+        cycle_number = bot_doc.get("completed_cycles_count", 0) + 1
+        
+        # Создаем запись о завершённом цикле
+        completed_cycle = {
+            "id": str(uuid.uuid4()),
+            "bot_id": bot_id,
+            "cycle_number": cycle_number,
+            "start_time": start_time,
+            "end_time": completion_time,
+            "duration_seconds": duration_seconds,
+            "total_bets": len(completed_games),
+            "wins_count": wins_count,
+            "losses_count": losses_count,
+            "draws_count": draws_count,
+            "total_bet_amount": total_bet_amount,
+            "total_winnings": total_winnings,
+            "total_losses": total_losses,
+            "net_profit": net_profit,
+            "created_at": datetime.utcnow()
+        }
+        
+        # Сохраняем в коллекцию completed_cycles
+        await db.completed_cycles.insert_one(completed_cycle)
+        
+        # Обновляем счётчик завершённых циклов у бота
+        await db.bots.update_one(
+            {"id": bot_id},
+            {"$inc": {"completed_cycles_count": 1}}
+        )
+        
+        logger.info(f"✅ Saved completed cycle #{cycle_number} for bot {bot_doc.get('name', 'Unknown')}: profit=${net_profit:.2f}, duration={duration_seconds}s")
+        
+    except Exception as e:
+        logger.error(f"Error saving completed cycle for bot {bot_doc.get('id', 'unknown')}: {e}")
+
 async def maintain_all_bots_active_bets():
     """
     Поддерживает циклы ставок для всех активных ботов.
@@ -2050,8 +2153,14 @@ async def maintain_all_bots_active_bets():
                     pause_between_cycles = fresh_bot_doc.get("pause_between_cycles", 5)
                     
                     if last_cycle_completed_at is None:
-                        # Цикл только что завершился - начинаем паузу
+                        # Цикл только что завершился - сохраняем данные о завершённом цикле
                         cycle_completion_time = datetime.utcnow()
+                        logger.info(f"🏁 Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle fully completed, saving cycle data")
+                        
+                        # Сохраняем данные о завершённом цикле
+                        await save_completed_cycle(fresh_bot_doc, cycle_completion_time)
+                        
+                        # Начинаем паузу
                         logger.info(f"⏱️ Bot {fresh_bot_doc.get('name', 'Unknown')}: starting pause of {pause_between_cycles}s")
                         
                         await db.bots.update_one(
@@ -2147,6 +2256,13 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
         exact_total_amount = average_bet * cycle_games
         
         logger.info(f"🎯 Bot {bot_id}: Creating complete cycle - {cycle_games} bets with exact total {exact_total_amount}")
+        
+        # Устанавливаем время начала цикла
+        cycle_start_time = datetime.utcnow()
+        await db.bots.update_one(
+            {"id": bot_id},
+            {"$set": {"current_cycle_start_time": cycle_start_time}}
+        )
         
         # Получаем проценты исходов от бота
         wins_percentage = bot_doc.get("wins_percentage", 35)
@@ -18818,56 +18934,53 @@ async def get_bot_cycle_history(
     bot_id: str,
     current_user: User = Depends(get_current_admin)
 ):
-    """Возвращает только полностью завершённые циклы. Одна строка = один цикл."""
+    """Возвращает историю завершённых циклов из коллекции completed_cycles"""
     try:
         bot = await db.bots.find_one({"id": bot_id})
         if not bot:
             raise HTTPException(status_code=404, detail="Bot not found")
 
-        cycle_games = int(bot.get("cycle_games", 12) or 12)
-        # Берём завершённые игры в обратном порядке времени
-        games = await db.games.find({
-            "creator_id": bot_id,
-            "status": "COMPLETED"
-        }).sort("created_at", -1).to_list(5000)
+        # Получаем завершённые циклы из коллекции (новые сверху)
+        completed_cycles = await db.completed_cycles.find({
+            "bot_id": bot_id
+        }).sort("end_time", -1).to_list(1000)
 
-        # Группируем по блокам ровно по cycle_games, только если блок полностью завершён
-        completed_cycles = []
-        block = []
-        for g in games:
-            block.append(g)
-            if len(block) == cycle_games:
-                # все игры уже COMPLETED (по условию выборки)
-                # Записываем блок как завершённый цикл, но в хронологическом порядке (старые → новые внутри цикла)
-                completed_cycles.append(list(reversed(block)))
-                block = []
-
-        # Собираем статистику по каждому завершённому циклу
+        # Форматируем данные для frontend
         cycles_resp = []
-        for idx, cycle_list in enumerate(completed_cycles, start=1):
-            wins_sum = sum(int(x.get("bet_amount", 0) or 0) for x in cycle_list if x.get("winner_id") == bot_id)
-            losses_sum = sum(int(x.get("bet_amount", 0) or 0) for x in cycle_list if x.get("winner_id") not in (None, bot_id))
-            draws_sum = sum(int(x.get("bet_amount", 0) or 0) for x in cycle_list if x.get("winner_id") is None)
-            total_sum = wins_sum + losses_sum + draws_sum
-            active_pool = wins_sum + losses_sum
-            profit = wins_sum - losses_sum
-            roi_active = round((profit / active_pool) * 100, 2) if active_pool > 0 else 0.0
+        for cycle in completed_cycles:
+            # Форматируем длительность
+            duration_seconds = cycle.get("duration_seconds", 0)
+            if duration_seconds > 0:
+                hours = duration_seconds // 3600
+                minutes = (duration_seconds % 3600) // 60
+                seconds = duration_seconds % 60
+                if hours > 0:
+                    duration = f"{hours}ч {minutes}м {seconds}с"
+                elif minutes > 0:
+                    duration = f"{minutes}м {seconds}с"
+                else:
+                    duration = f"{seconds}с"
+            else:
+                duration = "—"
 
             cycles_resp.append({
-                "id": f"{bot_id}:{idx}",
-                "cycle_number": idx,
-                "completed_at": cycle_list[-1].get("created_at"),
-                "duration": "—",
-                "total_games": len(cycle_list),
-                "wins": sum(1 for x in cycle_list if x.get("winner_id") == bot_id),
-                "losses": sum(1 for x in cycle_list if x.get("winner_id") not in (None, bot_id)),
-                "draws": sum(1 for x in cycle_list if x.get("winner_id") is None),
-                "total_bet": total_sum,
-                "total_winnings": wins_sum * 2,  # по правилам платформы выигрыш ≈ 2x ставка победы
-                "total_losses": losses_sum,  # Сумма проигранных ставок
-                "profit": profit,
-                "roi_active": roi_active,
-                "actions": {"open_cycle_details": True, "cycle_id": f"{bot_id}:{idx}"}
+                "id": cycle["id"],
+                "cycle_number": cycle["cycle_number"],
+                "start_time": cycle["start_time"],
+                "end_time": cycle["end_time"],
+                "completed_at": cycle["end_time"],  # Для совместимости с frontend
+                "duration": duration,
+                "total_bets": cycle["total_bets"],
+                "total_games": cycle["total_bets"],  # Для совместимости
+                "wins": cycle["wins_count"],
+                "losses": cycle["losses_count"],
+                "draws": cycle["draws_count"],
+                "total_bet": cycle["total_bet_amount"],
+                "total_winnings": cycle["total_winnings"],
+                "total_losses": cycle["total_losses"],
+                "profit": cycle["net_profit"],
+                "roi_active": round((cycle["net_profit"] / (cycle["total_winnings"] + cycle["total_losses"]) * 100), 2) if (cycle["total_winnings"] + cycle["total_losses"]) > 0 else 0.0,
+                "actions": {"open_cycle_details": True, "cycle_id": cycle["id"]}
             })
 
         return {"games": cycles_resp}

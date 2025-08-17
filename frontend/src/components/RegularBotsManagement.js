@@ -3889,11 +3889,10 @@ const RegularBotsManagement = () => {
                     <thead className="bg-surface-sidebar">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">№</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата завершения</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата начала / завершения</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Время цикла</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Игры</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">W/L/D</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ставки</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">W / L / D</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Выигрыш</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Проигрыш</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Прибыль</th>
@@ -3904,35 +3903,49 @@ const RegularBotsManagement = () => {
                       {cycleHistoryData.map((cycle, index) => (
                         <tr key={cycle.id || index} className="hover:bg-surface-sidebar hover:bg-opacity-30">
                           <td className="px-4 py-3 text-white font-roboto text-sm">
-                            {index + 1}
+                            {cycle.cycle_number || index + 1}
                           </td>
                           <td className="px-4 py-3 text-white font-roboto text-sm">
-                            {new Date(cycle.completed_at || cycle.created_at).toLocaleDateString('ru-RU')}
+                            <div className="space-y-1">
+                              <div className="text-xs text-text-secondary">
+                                Начало: {cycle.start_time ? new Date(cycle.start_time).toLocaleDateString('ru-RU', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                }) : '—'}
+                              </div>
+                              <div className="text-xs">
+                                Завершение: {cycle.end_time ? new Date(cycle.end_time).toLocaleDateString('ru-RU', {
+                                  day: '2-digit',
+                                  month: '2-digit',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                }) : '—'}
+                              </div>
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-white font-roboto text-sm">
                             {cycle.duration || '—'}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span className="text-accent-primary font-roboto text-sm font-bold">
-                              {cycle.total_games || cycle.games_played || 0}
+                              {cycle.total_bets || cycle.total_games || 0}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
                             <span className="text-green-400 text-xs font-roboto font-bold">
                               {cycle.wins || 0}
                             </span>
-                            /
+                            {' / '}
                             <span className="text-red-400 text-xs font-roboto font-bold">
                               {cycle.losses || 0}
                             </span>
-                            /
+                            {' / '}
                             <span className="text-yellow-400 text-xs font-roboto font-bold">
                               {cycle.draws || 0}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span className="text-white font-roboto text-sm">
-                              ${Math.round(cycle.total_bet || cycle.total_wagered || 0)}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
@@ -3949,14 +3962,14 @@ const RegularBotsManagement = () => {
                             <span className={`font-roboto text-sm font-bold ${
                               (cycle.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                             }`}>
-                              ${Math.round(cycle.profit || 0)}
+                              {(cycle.profit || 0) >= 0 ? '+' : ''}${Math.round(cycle.profit || 0)}
                             </span>
                           </td>
                           <td className="px-4 py-3 text-center">
                             <button
                               onClick={() => handleCycleDetailsModal(cycle, selectedBotForCycleHistory)}
                               className="text-blue-400 hover:text-blue-300 text-sm underline"
-                              title="Показать детали цикла"
+                              title="Показать детальный список всех ставок этого цикла"
                             >
                               Детали
                             </button>
