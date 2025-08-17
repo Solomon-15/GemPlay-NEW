@@ -258,6 +258,27 @@ const RegularBotsManagement = () => {
       const bets = Array.isArray(data.bets) ? data.bets : [];
       const cycleData = data.cycle || {};
 
+      // Рассчитываем плановый ROI (из бэкенда) для колонки Винрейт
+      const roiPlanned = (() => {
+        // Берём строго из поля, которое отдаёт бэк (пересчитанное по калькулятору предпросмотра)
+        if (bot && bot.roi_planned_percent !== undefined && bot.roi_planned_percent !== null && isFinite(Number(bot.roi_planned_percent))) {
+          return Number(bot.roi_planned_percent);
+        }
+        // Фолбэк: повторяем формулу бэка на фронте
+        const winPct = Number(bot.wins_percentage ?? 0);
+        const lossPct = Number(bot.losses_percentage ?? 0);
+        const cycleGames = Number(bot.cycle_games ?? 12) || 12;
+        const minBet = Math.round(Number(bot.min_bet_amount ?? 1) || 1);
+        const maxBet = Math.round(Number(bot.max_bet_amount ?? 50) || 50);
+        const exactCycleTotal = Math.round(((minBet + maxBet) / 2.0) * cycleGames);
+        const winsSumPlanned = Math.floor(exactCycleTotal * winPct / 100.0);
+        const lossesSumPlanned = Math.ceil(exactCycleTotal * lossPct / 100.0);
+        const activePoolPlanned = winsSumPlanned + lossesSumPlanned;
+        const profitPlanned = winsSumPlanned - lossesSumPlanned;
+        const roi = activePoolPlanned > 0 ? (profitPlanned / activePoolPlanned) * 100.0 : 0.0;
+        return roi;
+      })();
+
       const details = {
         id: cycle.id,
         bot_name: bot.name,
@@ -275,7 +296,8 @@ const RegularBotsManagement = () => {
         total_losses: cycleData.total_losses || 0,
         profit: cycleData.net_profit || 0,
         win_rate: bets.length > 0 ? ((bets.filter(b => b.result_class === 'win').length / bets.length) * 100).toFixed(1) : '0.0',
-        bets: bets
+        bets: bets,
+        planned_roi: roiPlanned // Добавляем плановый ROI для колонки Винрейт
       };
 
       setSelectedCycleForDetails(cycle);
@@ -1168,6 +1190,28 @@ const RegularBotsManagement = () => {
       });
 
       const data = response.data || {};
+      
+      // Рассчитываем плановый ROI (из бэкенда) для колонки Винрейт
+      const roiPlanned = (() => {
+        // Берём строго из поля, которое отдаёт бэк (пересчитанное по калькулятору предпросмотра)
+        if (bot && bot.roi_planned_percent !== undefined && bot.roi_planned_percent !== null && isFinite(Number(bot.roi_planned_percent))) {
+          return Number(bot.roi_planned_percent);
+        }
+        // Фолбэк: повторяем формулу бэка на фронте
+        const winPct = Number(bot.wins_percentage ?? 0);
+        const lossPct = Number(bot.losses_percentage ?? 0);
+        const cycleGames = Number(bot.cycle_games ?? 12) || 12;
+        const minBet = Math.round(Number(bot.min_bet_amount ?? 1) || 1);
+        const maxBet = Math.round(Number(bot.max_bet_amount ?? 50) || 50);
+        const exactCycleTotal = Math.round(((minBet + maxBet) / 2.0) * cycleGames);
+        const winsSumPlanned = Math.floor(exactCycleTotal * winPct / 100.0);
+        const lossesSumPlanned = Math.ceil(exactCycleTotal * lossPct / 100.0);
+        const activePoolPlanned = winsSumPlanned + lossesSumPlanned;
+        const profitPlanned = winsSumPlanned - lossesSumPlanned;
+        const roi = activePoolPlanned > 0 ? (profitPlanned / activePoolPlanned) * 100.0 : 0.0;
+        return roi;
+      })();
+      
       // Собираем удобные для отображения поля
       const details = {
         bot_name: data.bot_name || bot.name,
@@ -1176,7 +1220,8 @@ const RegularBotsManagement = () => {
         sums: data.sums || { wins_sum: 0, losses_sum: 0, draws_sum: 0, total_sum: 0, active_pool: 0, profit: 0, roi_active: 0 },
         counts: data.counts || { wins_count: 0, losses_count: 0, draws_count: 0, total_count: 0 },
         breakdown: data.breakdown || { wins: [], losses: [], draws: [] },
-        bets: data.bets || []
+        bets: data.bets || [],
+        planned_roi: roiPlanned // Добавляем плановый ROI для колонки Винрейт
       };
 
       setCycleDetailsData(details);
@@ -2526,7 +2571,7 @@ const RegularBotsManagement = () => {
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-4 gap-4 mb-4">
               <div className="bg-surface-sidebar rounded-lg p-4">
                 <div className="text-text-secondary text-xs">Длина цикла</div>
                 <div className="text-white text-lg font-bold">{cycleDetailsData.cycle_length}</div>
@@ -2538,6 +2583,10 @@ const RegularBotsManagement = () => {
               <div className="bg-surface-sidebar rounded-lg p-4">
                 <div className="text-text-secondary text-xs">ROI</div>
                 <div className="text-white text-lg font-bold">{Number(cycleDetailsData.sums?.roi_active || 0).toFixed(2)}%</div>
+              </div>
+              <div className="bg-surface-sidebar rounded-lg p-4">
+                <div className="text-text-secondary text-xs">Винрейт</div>
+                <div className="text-yellow-400 text-lg font-bold">{Number(cycleDetailsData.planned_roi || 0).toFixed(2)}%</div>
               </div>
             </div>
 
@@ -4152,8 +4201,8 @@ const RegularBotsManagement = () => {
                 </div>
                 <div className="text-center">
                   <div className="text-text-secondary text-xs font-rajdhani uppercase mb-1">Винрейт</div>
-                  <div className="text-orange-400 font-roboto text-sm font-bold">
-                    {cycleDetailsData.win_rate}%
+                  <div className="text-yellow-400 font-roboto text-sm font-bold">
+                    {Number(cycleDetailsData.planned_roi || 0).toFixed(2)}%
                   </div>
                 </div>
                 <div className="text-center">
