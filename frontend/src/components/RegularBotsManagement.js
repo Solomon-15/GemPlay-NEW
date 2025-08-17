@@ -169,6 +169,10 @@ const RegularBotsManagement = () => {
   const [cycleHistoryData, setCycleHistoryData] = useState([]);
   const [selectedBotForCycleHistory, setSelectedBotForCycleHistory] = useState(null);
   const [isCycleHistoryModalOpen, setIsCycleHistoryModalOpen] = useState(false);
+  
+  // Состояния для сортировки истории циклов
+  const [cycleSortField, setCycleSortField] = useState(null);
+  const [cycleSortDirection, setCycleSortDirection] = useState('asc'); // 'asc' или 'desc'
 
   // States for cycle details modal
   const [selectedCycleForDetails, setSelectedCycleForDetails] = useState(null);
@@ -190,6 +194,55 @@ const RegularBotsManagement = () => {
       console.error('Ошибка загрузки истории циклов:', error);
       showErrorRU('Ошибка при загрузке истории циклов');
     }
+  };
+
+  // Функция для сортировки истории циклов
+  const handleCycleSorting = (field) => {
+    const newDirection = cycleSortField === field && cycleSortDirection === 'asc' ? 'desc' : 'asc';
+    setCycleSortField(field);
+    setCycleSortDirection(newDirection);
+
+    const sortedData = [...cycleHistoryData].sort((a, b) => {
+      let valueA, valueB;
+
+      switch (field) {
+        case 'duration':
+          // Преобразуем длительность в секунды для сортировки
+          valueA = a.duration_seconds || 0;
+          valueB = b.duration_seconds || 0;
+          break;
+        case 'total_bets':
+          valueA = a.total_bets || a.total_games || 0;
+          valueB = b.total_bets || b.total_games || 0;
+          break;
+        case 'wins':
+          valueA = a.wins || 0;
+          valueB = b.wins || 0;
+          break;
+        case 'total_winnings':
+          valueA = a.total_winnings || 0;
+          valueB = b.total_winnings || 0;
+          break;
+        case 'total_losses':
+          valueA = a.total_losses || 0;
+          valueB = b.total_losses || 0;
+          break;
+        case 'profit':
+          valueA = a.profit || 0;
+          valueB = b.profit || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (newDirection === 'asc') {
+        return valueA - valueB;
+      } else {
+        return valueB - valueA;
+      }
+    });
+
+    setCycleHistoryData(sortedData);
   };
 
   // Функция для открытия модального окна деталей цикла
@@ -3883,12 +3936,84 @@ const RegularBotsManagement = () => {
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">№</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата начала / завершения</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Время цикла</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ставки</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">W / L / D</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Выигрыш</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Проигрыш</th>
-                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Прибыль</th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleCycleSorting('duration')}
+                        >
+                          <div className="flex items-center space-x-1">
+                            <span>Время цикла</span>
+                            {cycleSortField === 'duration' && (
+                              <span className="text-accent-primary">
+                                {cycleSortDirection === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleCycleSorting('total_bets')}
+                        >
+                          <div className="flex items-center space-x-1">
+                            <span>Ставки</span>
+                            {cycleSortField === 'total_bets' && (
+                              <span className="text-accent-primary">
+                                {cycleSortDirection === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleCycleSorting('wins')}
+                        >
+                          <div className="flex items-center space-x-1">
+                            <span>W / L / D</span>
+                            {cycleSortField === 'wins' && (
+                              <span className="text-accent-primary">
+                                {cycleSortDirection === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleCycleSorting('total_winnings')}
+                        >
+                          <div className="flex items-center space-x-1">
+                            <span>Выигрыш</span>
+                            {cycleSortField === 'total_winnings' && (
+                              <span className="text-accent-primary">
+                                {cycleSortDirection === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleCycleSorting('total_losses')}
+                        >
+                          <div className="flex items-center space-x-1">
+                            <span>Проигрыш</span>
+                            {cycleSortField === 'total_losses' && (
+                              <span className="text-accent-primary">
+                                {cycleSortDirection === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleCycleSorting('profit')}
+                        >
+                          <div className="flex items-center space-x-1">
+                            <span>Прибыль</span>
+                            {cycleSortField === 'profit' && (
+                              <span className="text-accent-primary">
+                                {cycleSortDirection === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Действия</th>
                       </tr>
                     </thead>

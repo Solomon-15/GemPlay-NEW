@@ -18994,7 +18994,7 @@ async def get_bot_cycle_history(
 @api_router.get("/admin/bots/{bot_id}/completed-cycle-bets", response_model=dict)
 async def get_completed_cycle_bets(
     bot_id: str,
-    cycle_id: str,
+    cycle_id: str = Query(...),
     current_user: User = Depends(get_current_admin)
 ):
     """Возвращает детальный список ставок завершённого цикла"""
