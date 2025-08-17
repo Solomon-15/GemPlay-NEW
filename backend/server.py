@@ -146,6 +146,19 @@ logger = logging.getLogger(__name__)
 # UTILITY FUNCTIONS
 # ==============================================================================
 
+def serialize_object_ids(obj):
+    """Convert ObjectId fields to strings in a dictionary/object recursively"""
+    if isinstance(obj, dict):
+        return {k: serialize_object_ids(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [serialize_object_ids(item) for item in obj]
+    elif isinstance(obj, ObjectId):
+        return str(obj)
+    elif hasattr(obj, '__dict__'):
+        return {k: serialize_object_ids(v) for k, v in obj.__dict__.items()}
+    else:
+        return obj
+
 def get_user_online_status(user_data):
     """
     Определяет онлайн статус пользователя на основе времени последней активности.
