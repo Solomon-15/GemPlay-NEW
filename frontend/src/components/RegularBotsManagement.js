@@ -2195,19 +2195,17 @@ const RegularBotsManagement = () => {
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="text-white font-roboto text-sm">
                         {(() => {
-                          // Общее количество циклов = завершённые циклы + текущий активный цикл (если есть)
+                          // Количество циклов = завершённые циклы + текущий активный цикл
                           const completedCycles = Number(bot.completed_cycles || 0);
                           
-                          // Проверяем наличие текущего активного цикла по любому из признаков:
-                          // - бот активен, ИЛИ
-                          // - есть игры в текущем цикле, ИЛИ 
-                          // - есть активные ставки
-                          const hasActiveCycle = bot.is_active || 
-                                                Number(bot.current_cycle_games || 0) > 0 || 
-                                                Number(bot.active_bets || 0) > 0;
+                          // Текущий активный цикл существует, если:
+                          // - бот активен И есть активность (игры в цикле ИЛИ активные ставки)
+                          // - ИЛИ есть незавершённая активность даже у неактивного бота
+                          const hasCurrentActivity = Number(bot.current_cycle_games || 0) > 0 || 
+                                                    Number(bot.active_bets || 0) > 0;
+                          const hasActiveCycle = bot.is_active || hasCurrentActivity;
                           
-                          const totalCycles = completedCycles + (hasActiveCycle ? 1 : 0);
-                          return totalCycles;
+                          return completedCycles + (hasActiveCycle ? 1 : 0);
                         })()}
                       </div>
                     </td>
