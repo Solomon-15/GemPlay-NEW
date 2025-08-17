@@ -20,7 +20,7 @@ import random
 import string
 
 # Configuration
-BASE_URL = "https://dohody-v2.preview.emergentagent.com/api"
+BASE_URL = "https://russianparts.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
