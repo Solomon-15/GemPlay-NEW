@@ -1704,7 +1704,7 @@ const ProfitAdmin = ({ user }) => {
                           </div>
                           <div className="bg-surface-card rounded-lg p-3">
                             <div className="text-xs text-text-secondary mb-1">Доход за бота</div>
-                            <div className="text-lg font-bold text-blue-400">{formatCurrencyWithSymbol(botIntegrationData.efficiency.revenue_per_bot || 0, true)}</div>
+                            <div className="text-lg font-bold text-blue-400">{formatCurrencyWithSymbol(totalBotCycleProfit, true)}</div>
                           </div>
                           <div className="bg-surface-card rounded-lg p-3">
                             <div className="text-xs text-text-secondary mb-1">Игр на бота</div>
