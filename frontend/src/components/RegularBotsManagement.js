@@ -3930,35 +3930,58 @@ const RegularBotsManagement = () => {
                             </div>
                           </td>
                           <td className="px-3 py-2 text-center">
-                            {/* Ходы Бот/Противник с иконками */}
+                            {/* Ходы Бот/Противник с иконками и результатом */}
                             <div className="flex flex-col space-y-2">
                               {(() => {
                                 // Определяем, началась ли ставка (есть ли ходы)
                                 const gameStarted = bet.creator_move && bet.opponent_move && bet.result !== 'pending';
                                 
                                 if (!gameStarted) {
-                                  // Для не начатых ставок показываем красный крест
+                                  // Для не начатых ставок показываем заглушку
                                   return (
-                                    <>
-                                      <div className="flex items-center space-x-2">
+                                    <div className="text-center">
+                                      <div className="flex items-center justify-center space-x-2 mb-1">
                                         <span className="text-xs text-text-secondary">Бот:</span>
                                         <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                                           <span className="text-white text-xs font-bold">✕</span>
                                         </div>
                                       </div>
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center justify-center space-x-2 mb-1">
                                         <span className="text-xs text-text-secondary">Противник:</span>
                                         <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                                           <span className="text-white text-xs font-bold">✕</span>
                                         </div>
                                       </div>
-                                    </>
+                                      <div className="text-xs text-gray-400 mt-1">не начато</div>
+                                    </div>
                                   );
                                 } else {
-                                  // Для начатых ставок показываем обычные иконки
+                                  // Для начатых ставок показываем иконки и вычисляем результат по К-Н-Б
+                                  
+                                  // Функция для вычисления результата по правилам К-Н-Б
+                                  const calculateRPSResult = (botMove, opponentMove) => {
+                                    const bot = botMove?.toUpperCase();
+                                    const opponent = opponentMove?.toUpperCase();
+                                    
+                                    if (bot === opponent) return 'draw';
+                                    
+                                    // Правила К-Н-Б: камень>ножницы, ножницы>бумага, бумага>камень
+                                    if (
+                                      (bot === 'ROCK' && opponent === 'SCISSORS') ||
+                                      (bot === 'SCISSORS' && opponent === 'PAPER') ||
+                                      (bot === 'PAPER' && opponent === 'ROCK')
+                                    ) {
+                                      return 'win';
+                                    } else {
+                                      return 'loss';
+                                    }
+                                  };
+                                  
+                                  const calculatedResult = calculateRPSResult(bet.creator_move, bet.opponent_move);
+                                  
                                   return (
-                                    <>
-                                      <div className="flex items-center space-x-2">
+                                    <div className="text-center">
+                                      <div className="flex items-center justify-center space-x-2 mb-1">
                                         <span className="text-xs text-text-secondary">Бот:</span>
                                         <img 
                                           src={`/${bet.creator_move === 'ROCK' ? 'Rock' : bet.creator_move === 'PAPER' ? 'Paper' : 'Scissors'}.svg`} 
@@ -3966,7 +3989,7 @@ const RegularBotsManagement = () => {
                                           className="w-4 h-4"
                                         />
                                       </div>
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center justify-center space-x-2 mb-1">
                                         <span className="text-xs text-text-secondary">Противник:</span>
                                         <img 
                                           src={`/${bet.opponent_move === 'ROCK' ? 'Rock' : bet.opponent_move === 'PAPER' ? 'Paper' : 'Scissors'}.svg`} 
@@ -3974,7 +3997,14 @@ const RegularBotsManagement = () => {
                                           className="w-4 h-4"
                                         />
                                       </div>
-                                    </>
+                                      <div className={`text-xs font-bold mt-1 ${
+                                        calculatedResult === 'win' ? 'text-green-400' :
+                                        calculatedResult === 'loss' ? 'text-red-400' : 'text-yellow-400'
+                                      }`}>
+                                        {calculatedResult === 'win' ? 'Выигрыш' : 
+                                         calculatedResult === 'loss' ? 'Проигрыш' : 'Ничья'}
+                                      </div>
+                                    </div>
                                   );
                                 }
                               })()}
