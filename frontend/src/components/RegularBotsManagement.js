@@ -10,6 +10,49 @@ import ConfirmationModal from './ConfirmationModal';
 import InputModal from './InputModal';
 import API, { getApiConfig } from '../utils/api';
 
+// Компонент для отображения обратного отсчёта паузы
+const PauseCountdown = ({ remainingSeconds: initialSeconds, botId }) => {
+  const [remainingSeconds, setRemainingSeconds] = useState(initialSeconds);
+
+  useEffect(() => {
+    setRemainingSeconds(initialSeconds);
+  }, [initialSeconds]);
+
+  useEffect(() => {
+    if (remainingSeconds <= 0) return;
+
+    const interval = setInterval(() => {
+      setRemainingSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [remainingSeconds]);
+
+  if (remainingSeconds <= 0) return null;
+
+  const formatTime = (seconds) => {
+    if (seconds < 60) {
+      return `${seconds}с`;
+    } else {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}м ${secs}с`;
+    }
+  };
+
+  return (
+    <div className="text-orange-400 font-roboto text-xs font-bold animate-pulse">
+      ⏳ {formatTime(remainingSeconds)}
+    </div>
+  );
+};
+
 const RegularBotsManagement = () => {
   const [stats, setStats] = useState({
     active_bots: 0,
@@ -563,6 +606,13 @@ const RegularBotsManagement = () => {
     fetchStats();
     fetchBotsList();
     fetchActiveBetsStats();
+    
+    // Периодическое обновление для синхронизации таймеров паузы
+    const interval = setInterval(() => {
+      fetchBotsList();
+    }, 5000); // Обновляем каждые 5 секунд
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -586,7 +636,7 @@ const RegularBotsManagement = () => {
   const fetchBotsList = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/admin/bots/regular/list`, {
+      const response = await axios.get(`${API}/admin/bots`, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           page: pagination.currentPage,
@@ -2305,9 +2355,17 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center space-x-1">
-                        <span className="text-cyan-400 font-roboto text-sm font-bold">
-                          {bot.pause_between_cycles ? `${bot.pause_between_cycles}с` : '5с'}
-                        </span>
+                        <div className="flex flex-col items-center">
+                          <span className="text-cyan-400 font-roboto text-sm font-bold">
+                            {bot.pause_between_cycles ? `${bot.pause_between_cycles}с` : '5с'}
+                          </span>
+                          {bot.pause_status && bot.pause_status.is_active && (
+                            <PauseCountdown 
+                              remainingSeconds={bot.pause_status.remaining_seconds} 
+                              botId={bot.id}
+                            />
+                          )}
+                        </div>
                         <button
                           onClick={() => handleEditPause(bot)}
                           className="text-gray-400 hover:text-white transition-colors p-1"

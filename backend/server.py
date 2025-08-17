@@ -17127,6 +17127,40 @@ async def get_regular_bots_simple(
                     bot["roi_active"] = round((profit_planned / active_pool_planned * 100), 2) if active_pool_planned > 0 else 0.0
                 except Exception:
                     pass
+            
+            # НОВОЕ: Добавляем информацию о состоянии паузы
+            bot_id = bot.get("id")
+            if bot_id:
+                try:
+                    # Проверяем есть ли активная пауза
+                    last_cycle_completed_at = bot.get("last_cycle_completed_at")
+                    pause_between_cycles = bot.get("pause_between_cycles", 5)
+                    
+                    if last_cycle_completed_at:
+                        # Пауза активна - рассчитываем остаток времени
+                        current_time = datetime.utcnow()
+                        time_since_completion = (current_time - last_cycle_completed_at).total_seconds()
+                        remaining_pause = max(0, pause_between_cycles - time_since_completion)
+                        
+                        bot["pause_status"] = {
+                            "is_active": remaining_pause > 0,
+                            "remaining_seconds": int(remaining_pause) if remaining_pause > 0 else 0,
+                            "total_seconds": pause_between_cycles
+                        }
+                    else:
+                        # Пауза не активна
+                        bot["pause_status"] = {
+                            "is_active": False,
+                            "remaining_seconds": 0,
+                            "total_seconds": pause_between_cycles
+                        }
+                except Exception:
+                    # Если ошибка - показываем что пауза не активна
+                    bot["pause_status"] = {
+                        "is_active": False,
+                        "remaining_seconds": 0,
+                        "total_seconds": bot.get("pause_between_cycles", 5)
+                    }
         
         # Calculate total pages
         total_pages = (total_count + limit - 1) // limit
