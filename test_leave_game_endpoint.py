@@ -13,7 +13,7 @@ import string
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://detali-shop.preview.emergentagent.com/api"
+BASE_URL = "https://popup-manager.preview.emergentagent.com/api"
 
 def generate_test_email():
     """Generate unique test email"""
