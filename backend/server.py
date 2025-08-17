@@ -19077,7 +19077,11 @@ async def get_completed_cycle_bets(
                 # Генерируем демо-данные для временного цикла
                 cycle_parts = cycle_id.split("_")
                 if len(cycle_parts) >= 4:
-                    cycle_num = int(cycle_parts[3])
+                    try:
+                        cycle_num = int(cycle_parts[3])
+                    except ValueError:
+                        logger.error(f"Invalid cycle number in temp cycle ID: {cycle_id}")
+                        raise HTTPException(status_code=400, detail="Invalid temporary cycle ID format")
                     completed_cycle = {
                         "id": cycle_id,
                         "bot_id": bot_id,
@@ -19152,7 +19156,7 @@ async def get_completed_cycle_bets(
                     "winner_id": winner_id,
                     "bet_amount": 50.0 + (i * 10),
                     "bet_gems": {"Ruby": 2, "Emerald": 1} if i % 2 == 0 else {"Sapphire": 1, "Topaz": 3},
-                    "created_at": start_time + timedelta(hours=i),
+                    "created_at": completed_cycle["start_time"] + timedelta(hours=i),
                     "status": "COMPLETED"
                 })
 
