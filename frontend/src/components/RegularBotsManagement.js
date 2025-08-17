@@ -3473,6 +3473,7 @@ const RegularBotsManagement = () => {
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">№</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">ID</th>
+                        <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата начала / завершения</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Дата</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Время</th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Ставка</th>
@@ -3548,6 +3549,16 @@ const RegularBotsManagement = () => {
                             <td className="px-4 py-3">
                               <div className="text-sm font-roboto text-white font-mono">
                                 {shortId}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-roboto text-white">
+                                <div className="space-y-1">
+                                  <div className="text-xs text-text-secondary">Начало:</div>
+                                  <div>{new Date(game.created_at).toLocaleDateString('ru-RU')} {new Date(game.created_at).toLocaleTimeString('ru-RU')}</div>
+                                  <div className="text-xs text-text-secondary">Завершение:</div>
+                                  <div>{new Date(game.completed_at || game.created_at).toLocaleDateString('ru-RU')} {new Date(game.completed_at || game.created_at).toLocaleTimeString('ru-RU')}</div>
+                                </div>
                               </div>
                             </td>
                             <td className="px-4 py-3">
@@ -4252,6 +4263,9 @@ const RegularBotsManagement = () => {
                           ID
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
+                          Дата начала / завершения
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
                           Ставка
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">
@@ -4286,6 +4300,14 @@ const RegularBotsManagement = () => {
                             >
                               {bet.id ? `${bet.id.substring(0, 4)}…${bet.id.substring(bet.id.length - 4)}` : '—'}
                             </button>
+                          </td>
+                          <td className="px-3 py-2 text-white font-roboto text-xs">
+                            <div className="space-y-1">
+                              <div className="text-xs text-text-secondary">Начало:</div>
+                              <div>{bet.created_at ? new Date(bet.created_at).toLocaleDateString('ru-RU') + ' ' + new Date(bet.created_at).toLocaleTimeString('ru-RU') : '—'}</div>
+                              <div className="text-xs text-text-secondary">Завершение:</div>
+                              <div>{bet.completed_at ? new Date(bet.completed_at).toLocaleDateString('ru-RU') + ' ' + new Date(bet.completed_at).toLocaleTimeString('ru-RU') : (bet.created_at ? new Date(bet.created_at).toLocaleDateString('ru-RU') + ' ' + new Date(bet.created_at).toLocaleTimeString('ru-RU') : '—')}</div>
+                            </div>
                           </td>
                           <td className="px-3 py-2 text-green-400 font-roboto text-sm font-bold">
                             ${bet.bet_amount || 0}
