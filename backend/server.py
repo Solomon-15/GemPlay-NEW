@@ -19221,8 +19221,8 @@ async def get_completed_cycle_bets(
             })
 
         return {
-            "cycle": completed_cycle,
-            "bets": bets_list,
+            "cycle": serialize_object_ids(completed_cycle),
+            "bets": serialize_object_ids(bets_list),
             "total_bets": len(bets_list)
         }
 
