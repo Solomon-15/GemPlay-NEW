@@ -3512,7 +3512,7 @@ const RegularBotsManagement = () => {
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              <div className="text-sm font-roboto font-bold text-accent-primary">
+                              <div className="text-sm font-roboto font-bold text-green-400">
                                 ${game.bet_amount || game.amount || 0}
                               </div>
                             </td>
@@ -4238,7 +4238,7 @@ const RegularBotsManagement = () => {
                               {bet.id ? `${bet.id.substring(0, 4)}…${bet.id.substring(bet.id.length - 4)}` : '—'}
                             </button>
                           </td>
-                          <td className="px-3 py-2 text-white font-roboto text-sm">
+                          <td className="px-3 py-2 text-green-400 font-roboto text-sm font-bold">
                             ${bet.bet_amount || 0}
                           </td>
                           <td className="px-3 py-2 text-white font-roboto text-sm">
