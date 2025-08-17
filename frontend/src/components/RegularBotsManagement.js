@@ -2184,7 +2184,7 @@ const RegularBotsManagement = () => {
                           className="text-blue-400 hover:text-blue-300 cursor-pointer underline"
                           title="Показать историю циклов"
 >
-                          Общая Прибыль: ${Math.round(bot.total_net_profit || 0)}
+                          Общая Прибыль: <span className="font-bold">${Math.round(bot.total_net_profit || 0)}</span>
                         </button>
                       </div>
                     </td>
