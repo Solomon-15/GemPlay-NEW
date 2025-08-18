@@ -102,6 +102,24 @@ const RegularBotsManagement = () => {
   const [botProfitAccumulators, setBotProfitAccumulators] = useState([]);
   const [botProfitPagination, setBotProfitPagination] = useState({ current_page: 1, total_pages: 1 });
 
+  // Состояния для быстрого запуска ботов
+  const [isQuickLaunchModalOpen, setIsQuickLaunchModalOpen] = useState(false);
+  const [quickLaunchPresets, setQuickLaunchPresets] = useState([]);
+  const [isCreatingPreset, setIsCreatingPreset] = useState(false);
+  const [currentPreset, setCurrentPreset] = useState({
+    name: '',
+    buttonName: '',
+    buttonColor: 'blue',
+    min_bet_amount: 1.0,
+    max_bet_amount: 50.0,
+    wins_percentage: 44.0,
+    losses_percentage: 36.0,
+    draws_percentage: 20.0,
+    cycle_games: 16,
+    pause_between_cycles: 5,
+    pause_on_draw: 5
+  });
+
   const pagination = usePagination(1, 10);
 
   const [sortField, setSortField] = useState('created_at');
@@ -2014,7 +2032,19 @@ const RegularBotsManagement = () => {
       {/* Таблица ботов */}
       <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg overflow-hidden">
         <div className="p-4 border-b border-border-primary">
-          <h3 className="text-lg font-rajdhani font-bold text-white">Список обычных ботов</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-rajdhani font-bold text-white">Список обычных ботов</h3>
+            <button
+              onClick={() => setIsQuickLaunchModalOpen(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-rajdhani font-bold text-sm transition-colors flex items-center space-x-2"
+              title="Быстрый запуск ботов по пресетам"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span>⚡ Быстрый запуск</span>
+            </button>
+          </div>
         </div>
 
         {/* Панель массовых действий */}
