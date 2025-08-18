@@ -230,6 +230,13 @@ const RegularBotsManagement = () => {
           valueA = a.profit || 0;
           valueB = b.profit || 0;
           break;
+        case 'roi':
+          // Вычисляем ROI как (profit / activePool) * 100
+          const activePoolA = (a.total_winnings || 0) + (a.total_losses || 0);
+          const activePoolB = (b.total_winnings || 0) + (b.total_losses || 0);
+          valueA = activePoolA > 0 ? ((a.profit || 0) / activePoolA) * 100 : 0;
+          valueB = activePoolB > 0 ? ((b.profit || 0) / activePoolB) * 100 : 0;
+          break;
         default:
           return 0;
       }
@@ -3716,6 +3723,19 @@ const RegularBotsManagement = () => {
                             )}
                           </div>
                         </th>
+                        <th 
+                          className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase cursor-pointer hover:text-white transition-colors"
+                          onClick={() => handleCycleSorting('roi')}
+                        >
+                          <div className="flex items-center space-x-1">
+                            <span>ROI</span>
+                            {cycleSortField === 'roi' && (
+                              <span className="text-accent-primary">
+                                {cycleSortDirection === 'asc' ? '↑' : '↓'}
+                              </span>
+                            )}
+                          </div>
+                        </th>
                         <th className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase">Действия</th>
                       </tr>
                     </thead>
@@ -3784,6 +3804,19 @@ const RegularBotsManagement = () => {
                             }`}>
                               {(cycle.profit || 0) >= 0 ? '+' : ''}${Math.round(cycle.profit || 0)}
                             </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {(() => {
+                              const activePool = (cycle.total_winnings || 0) + (cycle.total_losses || 0);
+                              const roi = activePool > 0 ? ((cycle.profit || 0) / activePool) * 100 : 0;
+                              return (
+                                <span className={`font-roboto text-sm font-bold ${
+                                  roi >= 0 ? 'text-blue-400' : 'text-red-400'
+                                }`}>
+                                  {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="px-4 py-3 text-center">
                             <button
