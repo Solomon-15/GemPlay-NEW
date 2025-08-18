@@ -117,7 +117,10 @@ const RegularBotsManagement = () => {
     draws_percentage: 20.0,
     cycle_games: 16,
     pause_between_cycles: 5,
-    pause_on_draw: 5
+    pause_on_draw: 5,
+                          wins_count: 7,
+                          losses_count: 6,
+                          draws_count: 3
   });
 
   const pagination = usePagination(1, 10);
@@ -4303,7 +4306,7 @@ const RegularBotsManagement = () => {
                             const token = localStorage.getItem('token');
                             
                             const botData = {
-                              name: (() => { let maxNumber = 0; botsList.forEach(bot => { const match = bot.name.match(/Bot#(\d+)/); if (match) { const number = parseInt(match[1]); if (number > maxNumber) { maxNumber = number; } } }); const nextNumber = maxNumber + 1; return `Bot#${nextNumber.toString().padStart(5, "0")}`; })(),
+                              name: "Bot",
                               min_bet_amount: preset.min_bet_amount,
                               max_bet_amount: preset.max_bet_amount,
                               wins_percentage: preset.wins_percentage,
@@ -4578,7 +4581,10 @@ const RegularBotsManagement = () => {
                           draws_percentage: 20.0,
                           cycle_games: 16,
                           pause_between_cycles: 5,
-                          pause_on_draw: 5
+                          pause_on_draw: 5,
+                          wins_count: 7,
+                          losses_count: 6,
+                          draws_count: 3
                         });
                         setIsCreatingPreset(false);
                         showSuccessRU('Пресет добавлен');
