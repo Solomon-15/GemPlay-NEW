@@ -4303,7 +4303,7 @@ const RegularBotsManagement = () => {
                             const token = localStorage.getItem('token');
                             
                             const botData = {
-                              name: (() => { let maxNumber = 0; botsList.forEach(bot => { const match = bot.name.match(/Bot#(\d+)/); if (match) { const number = parseInt(match[1]); if (number > maxNumber) { maxNumber = number; } } }); const nextNumber = maxNumber + 1; return `Bot#${nextNumber.toString().padStart(5, "0")}`; })(),
+                              name: generateNextBotNumber(),
                               min_bet_amount: preset.min_bet_amount,
                               max_bet_amount: preset.max_bet_amount,
                               wins_percentage: preset.wins_percentage,
