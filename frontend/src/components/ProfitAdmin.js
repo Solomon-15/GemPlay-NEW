@@ -77,41 +77,19 @@ const ProfitAdmin = ({ user }) => {
     }
   }, [pagination.currentPage]);
 
-  // Функция для загрузки суммарной прибыли от всех циклов обычных ботов
+  // Функция для загрузки суммарной прибыли от всех циклов обычных ботов (новый API)
   const fetchTotalBotCycleProfit = async () => {
     try {
       const token = localStorage.getItem('token');
       
-      // Получаем список всех ботов
-      const botsResponse = await axios.get(`${API}/admin/bots`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { limit: 1000 } // Получаем всех ботов
+      // Используем новый эндпоинт который читает данные из completed_cycles
+      const response = await axios.get(`${API}/admin/profit/bot-revenue-summary?period=all`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       
-      const bots = botsResponse.data.bots || botsResponse.data;
-      let totalProfit = 0;
+      const totalRevenue = response.data.revenue?.total || 0;
+      setTotalBotCycleProfit(totalRevenue);
       
-      // Для каждого бота получаем историю циклов и суммируем прибыль
-      const profitPromises = bots.map(async (bot) => {
-        try {
-          const cycleHistoryResponse = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          const cycleHistoryData = cycleHistoryResponse.data.games || [];
-          const botProfit = cycleHistoryData.reduce((total, cycle) => total + (cycle.profit || 0), 0);
-          return botProfit;
-        } catch (error) {
-          // Если не удалось получить историю для бота, возвращаем 0
-          console.warn(`Не удалось получить историю циклов для бота ${bot.id}:`, error);
-          return 0;
-        }
-      });
-      
-      const allProfits = await Promise.all(profitPromises);
-      totalProfit = allProfits.reduce((sum, profit) => sum + profit, 0);
-      
-      setTotalBotCycleProfit(totalProfit);
     } catch (error) {
       console.error('Ошибка загрузки прибыли от циклов ботов:', error);
       setTotalBotCycleProfit(0);
@@ -397,7 +375,7 @@ const ProfitAdmin = ({ user }) => {
       
       switch (type) {
         case 'bot_revenue':
-          const botRevenueResponse = await axios.get(`${API}/admin/profit/bot-revenue-details?period=${period}`, {
+          const botRevenueResponse = await axios.get(`${API}/admin/profit/bot-cycles-history?page=1&limit=50&sort_by=end_time&sort_order=desc`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           setModalData(botRevenueResponse.data);
@@ -1732,27 +1710,29 @@ const ProfitAdmin = ({ user }) => {
                     </div>
                   ) : (
                     <>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                         <div className="bg-surface-sidebar rounded-lg p-4">
                           <span className="text-sm text-text-secondary">Общий доход:</span>
                           <div className="text-2xl font-bold text-blue-400">
-                            {formatCurrencyWithSymbol(modalData.total_revenue || 0, true)}
+                            {formatCurrencyWithSymbol(modalData.summary?.total_profit || 0, true)}
                           </div>
-                          <div className="text-xs text-blue-300 mt-1">
-                            {modalData.period === 'day' && 'за день'}
-                            {modalData.period === 'week' && 'за неделю'}
-                            {modalData.period === 'month' && 'за месяц'}
-                            {modalData.period === 'all' && 'за все время'}
+                          <div className="text-xs text-blue-300 mt-1">за все время</div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Всего циклов:</span>
+                          <div className="text-2xl font-bold text-blue-400">{modalData.summary?.total_cycles || 0}</div>
+                        </div>
+                        <div className="bg-surface-sidebar rounded-lg p-4">
+                          <span className="text-sm text-text-secondary">Прибыльных:</span>
+                          <div className="text-2xl font-bold text-green-400">{modalData.summary?.profitable_cycles || 0}</div>
+                          <div className="text-xs text-green-300 mt-1">
+                            {modalData.summary?.profitability_rate?.toFixed(1) || 0}% успешных
                           </div>
                         </div>
                         <div className="bg-surface-sidebar rounded-lg p-4">
-                          <span className="text-sm text-text-secondary">Активных ботов:</span>
-                          <div className="text-2xl font-bold text-blue-400">{modalData.active_bots || 0}</div>
-                        </div>
-                        <div className="bg-surface-sidebar rounded-lg p-4">
-                          <span className="text-sm text-text-secondary">Средний доход:</span>
+                          <span className="text-sm text-text-secondary">Средний ROI:</span>
                           <div className="text-2xl font-bold text-blue-400">
-                            {formatCurrencyWithSymbol(modalData.avg_revenue_per_bot || 0, true)}
+                            {modalData.summary?.avg_roi?.toFixed(1) || 0}%
                           </div>
                         </div>
                       </div>
@@ -1782,42 +1762,49 @@ const ProfitAdmin = ({ user }) => {
                         </p>
                       </div>
 
-                      {modalData.entries && modalData.entries.length > 0 ? (
+                      {modalData.cycles && modalData.cycles.length > 0 ? (
                         <div className="space-y-3">
-                          <h5 className="font-rajdhani text-sm font-bold text-blue-400">Детализация по ботам:</h5>
-                          <div className="max-h-64 overflow-y-auto space-y-2">
-                            {modalData.entries.map((bot, index) => (
-                              <div key={index} className="bg-surface-sidebar rounded-lg p-3">
+                          <h5 className="font-rajdhani text-sm font-bold text-blue-400">Последние завершенные циклы:</h5>
+                          <div className="max-h-80 overflow-y-auto space-y-2">
+                            {modalData.cycles.map((cycle, index) => (
+                              <div key={index} className={`bg-surface-sidebar rounded-lg p-3 border-l-4 ${
+                                cycle.is_profitable ? 'border-green-500' : 'border-red-500'
+                              }`}>
                                 <div className="flex justify-between items-center">
                                   <div>
-                                    <div className="font-medium text-white">{bot.bot_name}</div>
+                                    <div className="font-medium text-white">{cycle.bot_name}</div>
                                     <div className="text-xs text-text-secondary">
-                                      {bot.games_played} игр • {bot.win_rate?.toFixed(1)}% побед
+                                      Цикл #{cycle.cycle_number} • {cycle.total_games} игр • {cycle.win_rate_percent}% побед
+                                    </div>
+                                    <div className="text-xs text-text-secondary mt-1">
+                                      {new Date(cycle.end_time).toLocaleDateString('ru-RU')} • {cycle.duration_hours}ч • ROI: {cycle.roi_percent}%
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-lg font-bold text-blue-400">
-                                      {formatCurrencyWithSymbol(bot.total_revenue || 0, true)}
+                                    <div className={`text-lg font-bold ${
+                                      cycle.is_profitable ? 'text-green-400' : 'text-red-400'
+                                    }`}>
+                                      {cycle.net_profit >= 0 ? '+' : ''}{formatCurrencyWithSymbol(cycle.net_profit || 0, true)}
                                     </div>
                                     <div className="text-xs text-text-secondary">
-                                      {bot.cycles_completed} циклов
+                                      {formatCurrencyWithSymbol(cycle.total_bet_amount || 0, true)} объем
                                     </div>
                                   </div>
                                 </div>
                               </div>
                             ))}
                           </div>
+                          
+                          {modalData.pagination && modalData.pagination.total_count > modalData.cycles.length && (
+                            <div className="text-center text-xs text-text-secondary pt-2">
+                              Показано {modalData.cycles.length} из {modalData.pagination.total_count} циклов
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="text-center text-text-secondary py-8">
                           <div className="text-lg mb-2">📊</div>
-                          <p className="text-sm">Нет данных о доходах от ботов</p>
-                          <p className="text-xs mt-1">
-                            {modalData.period === 'day' && 'за выбранный день'}
-                            {modalData.period === 'week' && 'за выбранную неделю'}
-                            {modalData.period === 'month' && 'за выбранный месяц'}
-                            {modalData.period === 'all' && 'за все время'}
-                          </p>
+                          <p className="text-sm">Нет данных о завершенных циклах</p>
                         </div>
                       )}
                     </>

@@ -2048,7 +2048,34 @@ async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
         # Получаем номер следующего цикла
         cycle_number = bot_doc.get("completed_cycles_count", 0) + 1
         
-        # Создаем запись о завершённом цикле
+        # Рассчитываем дополнительные метрики
+        total_games = len(completed_games)
+        win_rate_percent = (wins_count / total_games * 100) if total_games > 0 else 0
+        average_bet_amount = total_bet_amount / total_games if total_games > 0 else 0
+        profit_per_game = net_profit / total_games if total_games > 0 else 0
+        games_per_hour = (total_games / (duration_seconds / 3600)) if duration_seconds > 0 else 0
+        roi_percent = (net_profit / total_bet_amount * 100) if total_bet_amount > 0 else 0
+        
+        # Определяем категории
+        is_profitable = net_profit > 0
+        if net_profit > total_bet_amount * 0.5:  # ROI > 50%
+            profit_category = "HIGH_PROFIT"
+        elif net_profit > 0:
+            profit_category = "LOW_PROFIT"
+        elif abs(net_profit) <= total_bet_amount * 0.05:  # Потери < 5%
+            profit_category = "BREAK_EVEN"
+        else:
+            profit_category = "LOSS"
+        
+        # Категория размера ставок
+        if average_bet_amount < 10:
+            bet_size_category = "SMALL"
+        elif average_bet_amount <= 50:
+            bet_size_category = "MEDIUM"
+        else:
+            bet_size_category = "LARGE"
+        
+        # Создаем запись о завершённом цикле с расширенными данными
         completed_cycle = {
             "id": str(uuid.uuid4()),
             "bot_id": bot_id,
@@ -2056,7 +2083,7 @@ async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
             "start_time": start_time,
             "end_time": completion_time,
             "duration_seconds": duration_seconds,
-            "total_bets": len(completed_games),
+            "total_bets": total_games,
             "wins_count": wins_count,
             "losses_count": losses_count,
             "draws_count": draws_count,
@@ -2064,6 +2091,26 @@ async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
             "total_winnings": total_winnings,
             "total_losses": total_losses,
             "net_profit": net_profit,
+            
+            # Новые поля для отчетности
+            "bot_name": bot_doc.get("name", bot_doc.get("username", f"Bot_{bot_id[:8]}")),
+            "cycle_target_games": bot_doc.get("cycle_games", 12),
+            "average_bet_amount": round(average_bet_amount, 2),
+            "win_rate_percent": round(win_rate_percent, 2),
+            "profit_per_game": round(profit_per_game, 2),
+            "games_per_hour": round(games_per_hour, 2),
+            "roi_percent": round(roi_percent, 2),
+            
+            # Категории для фильтрации
+            "is_profitable": is_profitable,
+            "profit_category": profit_category,
+            "bet_size_category": bet_size_category,
+            
+            # Дополнительные поля
+            "bot_created_at": bot_doc.get("created_at", datetime.utcnow()),
+            "created_by_system_version": "v2.0_accumulators",
+            "migration_source": "NEW",
+            
             "created_at": datetime.utcnow()
         }
         
@@ -9103,23 +9150,11 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             }
         )
         
+        # Логируем завершение цикла - данные сохраняются в completed_cycles через save_completed_cycle()
         if profit > 0:
-            bot = await db.bots.find_one({"id": bot_id})
-            bot_name = bot.get("name", "Unknown Bot") if bot else "Unknown Bot"
-            
-            profit_entry = ProfitEntry(
-                entry_type="BOT_REVENUE",
-                amount=profit,
-                source_user_id=bot_id,
-                description=f"Прибыль от цикла бота {bot_name}: ${profit:.2f} (заработано: ${total_earned:.2f}, потрачено: ${total_spent:.2f})",
-                reference_id=accumulator_id
-            )
-            profit_entry_dict = profit_entry.dict()
-            profit_entry_dict["status"] = "CONFIRMED"
-            await db.profit_entries.insert_one(profit_entry_dict)
-            logger.info(f"🎯 Bot {bot_id} cycle completed: profit ${profit:.2f} transferred to BOT_REVENUE")
+            logger.info(f"🎯 Bot {bot_id} cycle completed: profit ${profit:.2f} (will be recorded in completed_cycles)")
         else:
-            logger.info(f"🎯 Bot {bot_id} cycle completed: no profit (deficit: ${abs(profit):.2f})")
+            logger.info(f"🎯 Bot {bot_id} cycle completed: deficit ${abs(profit):.2f} (will be recorded in completed_cycles)")
         
         await db.bots.update_one(
             {"id": bot_id},
@@ -12847,6 +12882,354 @@ async def get_bot_revenue_details(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch bot revenue details"
+        )
+
+@api_router.get("/admin/profit/bot-cycles-history", response_model=dict)
+async def get_bot_cycles_history(
+    page: int = 1,
+    limit: int = 20,
+    bot_name: Optional[str] = None,
+    is_profitable: Optional[bool] = None,
+    profit_category: Optional[str] = None,
+    bet_size_category: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    min_duration_hours: Optional[float] = None,
+    max_duration_hours: Optional[float] = None,
+    min_games: Optional[int] = None,
+    max_games: Optional[int] = None,
+    min_roi: Optional[float] = None,
+    max_roi: Optional[float] = None,
+    sort_by: str = "end_time",
+    sort_order: str = "desc",
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get bot cycles history with advanced filtering for admin dashboard."""
+    try:
+        # Build filter query
+        filter_query = {}
+        
+        if bot_name:
+            filter_query["bot_name"] = {"$regex": bot_name, "$options": "i"}
+        
+        if is_profitable is not None:
+            filter_query["is_profitable"] = is_profitable
+        
+        if profit_category:
+            filter_query["profit_category"] = profit_category
+        
+        if bet_size_category:
+            filter_query["bet_size_category"] = bet_size_category
+        
+        # Date filters
+        if date_from or date_to:
+            date_filter = {}
+            if date_from:
+                try:
+                    date_filter["$gte"] = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+                except ValueError:
+                    pass
+            if date_to:
+                try:
+                    date_filter["$lte"] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+                except ValueError:
+                    pass
+            if date_filter:
+                filter_query["end_time"] = date_filter
+        
+        # Duration filters (convert hours to seconds)
+        if min_duration_hours is not None or max_duration_hours is not None:
+            duration_filter = {}
+            if min_duration_hours is not None:
+                duration_filter["$gte"] = min_duration_hours * 3600
+            if max_duration_hours is not None:
+                duration_filter["$lte"] = max_duration_hours * 3600
+            filter_query["duration_seconds"] = duration_filter
+        
+        # Games count filters
+        if min_games is not None or max_games is not None:
+            games_filter = {}
+            if min_games is not None:
+                games_filter["$gte"] = min_games
+            if max_games is not None:
+                games_filter["$lte"] = max_games
+            filter_query["total_bets"] = games_filter
+        
+        # ROI filters
+        if min_roi is not None or max_roi is not None:
+            roi_filter = {}
+            if min_roi is not None:
+                roi_filter["$gte"] = min_roi
+            if max_roi is not None:
+                roi_filter["$lte"] = max_roi
+            filter_query["roi_percent"] = roi_filter
+        
+        # Get total count
+        total_count = await db.completed_cycles.count_documents(filter_query)
+        
+        # Build sort criteria
+        sort_direction = -1 if sort_order == "desc" else 1
+        sort_criteria = [(sort_by, sort_direction)]
+        
+        # Get paginated results
+        skip = (page - 1) * limit
+        cycles = await db.completed_cycles.find(filter_query).sort(sort_criteria).skip(skip).limit(limit).to_list(limit)
+        
+        # Format results
+        formatted_cycles = []
+        for cycle in cycles:
+            formatted_cycle = {
+                "id": cycle.get("id"),
+                "bot_id": cycle.get("bot_id"),
+                "bot_name": cycle.get("bot_name", "Unknown Bot"),
+                "cycle_number": cycle.get("cycle_number"),
+                "start_time": cycle.get("start_time"),
+                "end_time": cycle.get("end_time"),
+                "duration_hours": round(cycle.get("duration_seconds", 0) / 3600, 2),
+                "total_games": cycle.get("total_bets", 0),
+                "wins": cycle.get("wins_count", 0),
+                "losses": cycle.get("losses_count", 0),
+                "draws": cycle.get("draws_count", 0),
+                "win_rate_percent": cycle.get("win_rate_percent", 0),
+                "total_bet_amount": cycle.get("total_bet_amount", 0),
+                "net_profit": cycle.get("net_profit", 0),
+                "roi_percent": cycle.get("roi_percent", 0),
+                "profit_per_game": cycle.get("profit_per_game", 0),
+                "games_per_hour": cycle.get("games_per_hour", 0),
+                "average_bet_amount": cycle.get("average_bet_amount", 0),
+                "is_profitable": cycle.get("is_profitable", False),
+                "profit_category": cycle.get("profit_category", "UNKNOWN"),
+                "bet_size_category": cycle.get("bet_size_category", "UNKNOWN"),
+                "created_at": cycle.get("created_at")
+            }
+            formatted_cycles.append(formatted_cycle)
+        
+        # Calculate summary statistics
+        if cycles:
+            total_profit = sum(c.get("net_profit", 0) for c in cycles)
+            total_games = sum(c.get("total_bets", 0) for c in cycles)
+            profitable_cycles = len([c for c in cycles if c.get("is_profitable", False)])
+            avg_roi = sum(c.get("roi_percent", 0) for c in cycles) / len(cycles)
+        else:
+            total_profit = 0
+            total_games = 0
+            profitable_cycles = 0
+            avg_roi = 0
+        
+        return {
+            "success": True,
+            "cycles": formatted_cycles,
+            "pagination": {
+                "current_page": page,
+                "total_pages": (total_count + limit - 1) // limit,
+                "total_count": total_count,
+                "limit": limit
+            },
+            "summary": {
+                "total_profit": total_profit,
+                "total_games": total_games,
+                "profitable_cycles": profitable_cycles,
+                "total_cycles": len(cycles),
+                "profitability_rate": (profitable_cycles / len(cycles) * 100) if cycles else 0,
+                "avg_roi": round(avg_roi, 2)
+            },
+            "filters_applied": filter_query
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching bot cycles history: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bot cycles history"
+        )
+
+@api_router.get("/admin/profit/bot-revenue-summary", response_model=dict)
+async def get_bot_revenue_summary(
+    period: str = "month",  # day, week, month, all
+    current_admin: User = Depends(get_current_admin)
+):
+    """Get bot revenue summary for profit dashboard tile."""
+    try:
+        # Calculate date filter based on period
+        now = datetime.utcnow()
+        date_filter = {}
+        if period == "day":
+            date_filter = {"end_time": {"$gte": now - timedelta(days=1)}}
+        elif period == "week":
+            date_filter = {"end_time": {"$gte": now - timedelta(weeks=1)}}
+        elif period == "month":
+            date_filter = {"end_time": {"$gte": now - timedelta(days=30)}}
+        # For "all", no date filter
+        
+        # Get aggregated statistics from completed_cycles
+        pipeline = [
+            {"$match": date_filter} if date_filter else {"$match": {}},
+            {"$group": {
+                "_id": None,
+                "total_revenue": {"$sum": "$net_profit"},
+                "total_cycles": {"$sum": 1},
+                "profitable_cycles": {"$sum": {"$cond": ["$is_profitable", 1, 0]}},
+                "total_games": {"$sum": "$total_bets"},
+                "total_bet_amount": {"$sum": "$total_bet_amount"},
+                "avg_roi": {"$avg": "$roi_percent"},
+                "avg_games_per_cycle": {"$avg": "$total_bets"},
+                "avg_cycle_duration": {"$avg": "$duration_seconds"}
+            }}
+        ]
+        
+        result = await db.completed_cycles.aggregate(pipeline).to_list(1)
+        
+        if result:
+            stats = result[0]
+            total_revenue = stats.get("total_revenue", 0)
+            total_cycles = stats.get("total_cycles", 0)
+            profitable_cycles = stats.get("profitable_cycles", 0)
+            total_games = stats.get("total_games", 0)
+            total_bet_amount = stats.get("total_bet_amount", 0)
+            avg_roi = stats.get("avg_roi", 0)
+            avg_games_per_cycle = stats.get("avg_games_per_cycle", 0)
+            avg_cycle_duration_hours = (stats.get("avg_cycle_duration", 0) / 3600)
+        else:
+            total_revenue = 0
+            total_cycles = 0
+            profitable_cycles = 0
+            total_games = 0
+            total_bet_amount = 0
+            avg_roi = 0
+            avg_games_per_cycle = 0
+            avg_cycle_duration_hours = 0
+        
+        # Get active bots count
+        active_bots = await db.bots.count_documents({"bot_type": "REGULAR", "is_active": True})
+        total_bots = await db.bots.count_documents({"bot_type": "REGULAR"})
+        
+        # Get recent cycles for trend analysis
+        recent_cycles = await db.completed_cycles.find(
+            date_filter if date_filter else {}
+        ).sort("end_time", -1).limit(10).to_list(10)
+        
+        return {
+            "success": True,
+            "period": period,
+            "revenue": {
+                "total": total_revenue,
+                "avg_per_cycle": total_revenue / total_cycles if total_cycles > 0 else 0,
+                "today": 0,  # Will be calculated separately if needed
+                "this_week": 0,  # Will be calculated separately if needed
+                "this_month": 0  # Will be calculated separately if needed
+            },
+            "cycles": {
+                "total": total_cycles,
+                "profitable": profitable_cycles,
+                "profitability_rate": (profitable_cycles / total_cycles * 100) if total_cycles > 0 else 0,
+                "avg_games": round(avg_games_per_cycle, 1),
+                "avg_duration_hours": round(avg_cycle_duration_hours, 2)
+            },
+            "bots": {
+                "active": active_bots,
+                "total": total_bots,
+                "utilization_rate": (active_bots / total_bots * 100) if total_bots > 0 else 0
+            },
+            "performance": {
+                "total_games": total_games,
+                "total_bet_volume": total_bet_amount,
+                "avg_roi": round(avg_roi, 2),
+                "revenue_per_game": total_revenue / total_games if total_games > 0 else 0
+            },
+            "recent_cycles": len(recent_cycles)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching bot revenue summary: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch bot revenue summary"
+        )
+
+@api_router.get("/admin/profit/bot-cycles-export", response_model=dict)
+async def export_bot_cycles_csv(
+    bot_name: Optional[str] = None,
+    is_profitable: Optional[bool] = None,
+    profit_category: Optional[str] = None,
+    bet_size_category: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    current_admin: User = Depends(get_current_admin)
+):
+    """Export bot cycles data to CSV format."""
+    try:
+        # Use same filter logic as history endpoint
+        filter_query = {}
+        
+        if bot_name:
+            filter_query["bot_name"] = {"$regex": bot_name, "$options": "i"}
+        
+        if is_profitable is not None:
+            filter_query["is_profitable"] = is_profitable
+        
+        if profit_category:
+            filter_query["profit_category"] = profit_category
+        
+        if bet_size_category:
+            filter_query["bet_size_category"] = bet_size_category
+        
+        # Date filters
+        if date_from or date_to:
+            date_filter = {}
+            if date_from:
+                try:
+                    date_filter["$gte"] = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+                except ValueError:
+                    pass
+            if date_to:
+                try:
+                    date_filter["$lte"] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+                except ValueError:
+                    pass
+            if date_filter:
+                filter_query["end_time"] = date_filter
+        
+        # Get all matching cycles (limit to reasonable amount)
+        cycles = await db.completed_cycles.find(filter_query).sort("end_time", -1).limit(1000).to_list(1000)
+        
+        # Format for CSV
+        csv_data = []
+        for cycle in cycles:
+            csv_row = {
+                "Дата завершения": cycle.get("end_time", "").strftime("%Y-%m-%d %H:%M:%S") if cycle.get("end_time") else "",
+                "Имя бота": cycle.get("bot_name", ""),
+                "Номер цикла": cycle.get("cycle_number", 0),
+                "Игр всего": cycle.get("total_bets", 0),
+                "Побед": cycle.get("wins_count", 0),
+                "Поражений": cycle.get("losses_count", 0),
+                "Ничьих": cycle.get("draws_count", 0),
+                "Процент побед": f"{cycle.get('win_rate_percent', 0):.1f}%",
+                "Сумма ставок": f"${cycle.get('total_bet_amount', 0):.2f}",
+                "Чистая прибыль": f"${cycle.get('net_profit', 0):.2f}",
+                "ROI": f"{cycle.get('roi_percent', 0):.1f}%",
+                "Прибыль за игру": f"${cycle.get('profit_per_game', 0):.2f}",
+                "Средняя ставка": f"${cycle.get('average_bet_amount', 0):.2f}",
+                "Длительность (часы)": f"{cycle.get('duration_seconds', 0) / 3600:.2f}",
+                "Игр в час": f"{cycle.get('games_per_hour', 0):.1f}",
+                "Категория прибыли": cycle.get("profit_category", ""),
+                "Размер ставок": cycle.get("bet_size_category", ""),
+                "Прибыльный": "Да" if cycle.get("is_profitable", False) else "Нет"
+            }
+            csv_data.append(csv_row)
+        
+        return {
+            "success": True,
+            "data": csv_data,
+            "total_records": len(csv_data),
+            "export_timestamp": datetime.utcnow().isoformat(),
+            "filters_applied": filter_query
+        }
+        
+    except Exception as e:
+        logger.error(f"Error exporting bot cycles: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to export bot cycles data"
         )
 
 @api_router.get("/admin/profit/frozen-funds-details", response_model=dict)
