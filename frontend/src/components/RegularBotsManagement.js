@@ -4530,6 +4530,75 @@ const RegularBotsManagement = () => {
                     </div>
                   </div>
 
+                  {/* Превью ROI расчетов */}
+                  <div className="mt-6 border border-purple-500 bg-purple-900 bg-opacity-20 rounded-lg p-4">
+                    <h4 className="font-rajdhani font-bold text-purple-400 mb-3">📊 Превью ROI расчетов</h4>
+                    {(() => {
+                      // Расчет ROI для пресета (аналогично calculateCycleAmounts)
+                      const min_bet = parseFloat(currentPreset.min_bet_amount);
+                      const max_bet = parseFloat(currentPreset.max_bet_amount);
+                      const games = parseInt(currentPreset.cycle_games);
+                      
+                      if (!min_bet || !max_bet || !games) {
+                        return (
+                          <div className="text-text-secondary text-sm">
+                            Заполните все поля для расчета ROI
+                          </div>
+                        );
+                      }
+                      
+                      // 1. Имитируем равномерное распределение ставок
+                      const smallBetsCount = Math.max(1, Math.round(games * 0.25));
+                      const mediumBetsCount = Math.round(games * 0.5);
+                      const largeBetsCount = games - smallBetsCount - mediumBetsCount;
+                      
+                      const smallAvg = min_bet + (max_bet - min_bet) * 0.15;
+                      const mediumAvg = min_bet + (max_bet - min_bet) * 0.5;
+                      const largeAvg = min_bet + (max_bet - min_bet) * 0.85;
+                      
+                      const estimatedTotal = (smallBetsCount * smallAvg) + (mediumBetsCount * mediumAvg) + (largeBetsCount * largeAvg);
+                      
+                      // 2. Рассчитываем суммы по процентам исходов
+                      const winsSum = Math.round(estimatedTotal * currentPreset.wins_percentage / 100);
+                      const lossesSum = Math.round(estimatedTotal * currentPreset.losses_percentage / 100);
+                      const drawsSum = Math.round(estimatedTotal * currentPreset.draws_percentage / 100);
+                      
+                      // 3. Активный пул и ROI
+                      const activePool = winsSum + lossesSum;
+                      const profit = winsSum - lossesSum;
+                      const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
+                      
+                      return (
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <div className="text-text-secondary">Общая сумма цикла:</div>
+                            <div className="text-white font-bold">{Math.round(estimatedTotal)}</div>
+                          </div>
+                          <div>
+                            <div className="text-text-secondary">Активный пул:</div>
+                            <div className="text-purple-300 font-bold">{activePool}</div>
+                          </div>
+                          <div>
+                            <div className="text-text-secondary">Прибыль:</div>
+                            <div className={`font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {profit}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-text-secondary">ROI_active:</div>
+                            <div className={`font-bold text-lg ${roiActive >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {Math.round(roiActive * 100) / 100}%
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    <div className="text-xs text-purple-200 mt-3 border-t border-purple-700 pt-2">
+                      <div><strong>Формула ROI:</strong> (Прибыль ÷ Активный пул) × 100%</div>
+                      <div><strong>Активный пул:</strong> Сумма побед + Сумма поражений (ничьи не участвуют в ROI)</div>
+                    </div>
+                  </div>
+
                   {/* Валидация процентов */}
                   <div className="mt-4">
                     <div className={`text-sm ${Math.abs((currentPreset.wins_percentage + currentPreset.losses_percentage + currentPreset.draws_percentage) - 100) < 0.1 ? 'text-green-400' : 'text-red-400'}`}>
