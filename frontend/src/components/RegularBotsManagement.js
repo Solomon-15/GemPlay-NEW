@@ -4402,8 +4402,22 @@ const RegularBotsManagement = () => {
                           try {
                             const token = localStorage.getItem('token');
                             
+                            // Генерируем автоматический номер бота
+                            let maxNumber = 0;
+                            botsList.forEach(bot => {
+                              const match = bot.name.match(/Bot#(\d+)/);
+                              if (match) {
+                                const number = parseInt(match[1]);
+                                if (number > maxNumber) {
+                                  maxNumber = number;
+                                }
+                              }
+                            });
+                            const nextNumber = maxNumber + 1;
+                            const botName = `Bot#${nextNumber.toString().padStart(5, '0')}`;
+                            
                             const botData = {
-                              name: "Bot",
+                              name: botName,
                               min_bet_amount: preset.min_bet_amount,
                               max_bet_amount: preset.max_bet_amount,
                               wins_percentage: preset.wins_percentage,
