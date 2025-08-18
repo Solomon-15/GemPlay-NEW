@@ -4276,7 +4276,7 @@ const RegularBotsManagement = () => {
       {/* Модальное окно быстрого запуска ботов */}
       {isQuickLaunchModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-card border border-accent-primary border-opacity-50 rounded-lg w-full max-w-5xl mx-4 max-h-[85vh] overflow-hidden">
+          <div className="bg-surface-card border border-accent-primary border-opacity-50 rounded-lg w-full max-w-5xl mx-4 max-h-[90vh] overflow-hidden">
             {/* Заголовок */}
             <div className="flex justify-between items-center p-4 border-b border-border-primary bg-surface-sidebar">
               <div className="flex items-center space-x-3">
@@ -4300,7 +4300,7 @@ const RegularBotsManagement = () => {
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
               {/* Быстрые кнопки пресетов */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
@@ -4737,8 +4737,8 @@ const RegularBotsManagement = () => {
             </div>
 
             {/* Подвал */}
-            <div className="flex justify-between items-center p-4 border-t border-border-primary bg-surface-sidebar">
-              <div className="text-text-secondary text-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 border-t border-border-primary bg-surface-sidebar min-h-[80px]">
+              <div className="text-text-secondary text-sm flex-1">
                 💡 <strong>Совет:</strong> Можно создавать несколько ботов с одинаковыми параметрами, кликая по кнопке пресета многократно
               </div>
               <button

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест подвала модального окна</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #ffffff;
+            padding: 20px;
+            margin: 0;
+            height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-modal {
+            background: #2d3748;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            max-height: 90vh;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #4a5568;
+            background: #374151;
+        }
+        .modal-content {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(90vh - 180px);
+            background: #2d3748;
+        }
+        .modal-footer {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-top: 1px solid #4a5568;
+            background: #374151;
+            min-height: 80px;
+        }
+        @media (min-width: 640px) {
+            .modal-footer {
+                flex-direction: row;
+            }
+        }
+        .advice-text {
+            color: #9ca3af;
+            font-size: 14px;
+            flex: 1;
+        }
+        .close-btn {
+            padding: 8px 24px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .close-btn:hover {
+            background: #4b5563;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .comparison-card {
+            background: rgba(51, 65, 85, 0.6);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .comparison-card.after {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        .demo-content {
+            background: rgba(59, 130, 246, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; margin-bottom: 30px;">🔧 Тест исправления подвала модального окна</h1>
+        
+        <div class="comparison">
+            <div class="comparison-card">
+                <h3 style="color: #ef4444;">❌ Было (проблема)</h3>
+                <ul style="font-size: 14px; color: #e5e7eb;">
+                    <li>Высота: 85vh</li>
+                    <li>Контент: calc(85vh - 120px)</li>
+                    <li>Подвал: без min-height</li>
+                    <li>Flexbox: только горизонтальный</li>
+                    <li><strong>Результат: подвал обрезался</strong></li>
+                </ul>
+            </div>
+            
+            <div class="comparison-card after">
+                <h3 style="color: #10b981;">✅ Стало (исправлено)</h3>
+                <ul style="font-size: 14px; color: #e5e7eb;">
+                    <li>Высота: 90vh (+5vh)</li>
+                    <li>Контент: calc(90vh - 180px)</li>
+                    <li>Подвал: min-height 80px</li>
+                    <li>Flexbox: адаптивный (col/row)</li>
+                    <li><strong>Результат: подвал полностью видим</strong></li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 style="text-align: center; margin: 30px 0;">📱 Демонстрация исправленного подвала</h2>
+        
+        <div class="test-modal">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="padding: 8px; background: #3b82f6; border-radius: 8px;">
+                        <svg style="width: 20px; height: 20px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-weight: bold;">⚡ Быстрый запуск ботов</h3>
+                        <p style="margin: 0; font-size: 14px; color: #9ca3af;">Запуск ботов по готовым пресетам</p>
+                    </div>
+                </div>
+                <button style="background: none; border: none; color: #9ca3af; cursor: pointer;">
+                    <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-content">
+                <div class="demo-content">
+                    <h4>🛠️ Конструктор пресетов</h4>
+                    <p>Здесь располагается содержимое модального окна:</p>
+                    <ul>
+                        <li>Быстрые кнопки пресетов</li>
+                        <li>Конструктор с полями параметров</li>
+                        <li>Превью ROI расчетов</li>
+                        <li>Пресеты ROI (новое поле!)</li>
+                        <li>Валидация данных</li>
+                    </ul>
+                    <div style="background: rgba(139, 92, 246, 0.2); padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <strong>📊 Превью ROI расчетов</strong>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 14px;">
+                            <div>Общая сумма цикла: 850</div>
+                            <div>Активный пул: 680</div>
+                            <div>Прибыль: 68</div>
+                            <div>ROI_active: 10%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ИСПРАВЛЕННЫЙ ПОДВАЛ -->
+            <div class="modal-footer">
+                <div class="advice-text">
+                    💡 <strong>Совет:</strong> Можно создавать несколько ботов с одинаковыми параметрами, кликая по кнопке пресета многократно
+                </div>
+                <button class="close-btn">Закрыть</button>
+            </div>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; border-radius: 15px; text-align: center; margin-top: 30px;">
+            <h2>🎉 РЕЗУЛЬТАТ ИСПРАВЛЕНИЯ</h2>
+            <div style="font-size: 20px; margin: 15px 0;">
+                <strong>ПОДВАЛ МОДАЛЬНОГО ОКНА ИСПРАВЛЕН!</strong>
+            </div>
+            <div style="font-size: 16px; opacity: 0.9;">
+                ✅ Увеличена высота модального окна (85vh → 90vh)<br>
+                ✅ Добавлена минимальная высота подвала (80px)<br>
+                ✅ Улучшена адаптивность (колонка/строка)<br>
+                ✅ Весь текст и кнопка полностью видны
+            </div>
+        </div>
+    </div>
+</body>
+</html>
