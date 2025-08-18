@@ -1,0 +1,1138 @@
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import axios from 'axios';
+import GemsHeader from './GemsHeader';
+import Loader from './Loader';
+import PlayerCard from './PlayerCard';
+import CreateBetModal from './CreateBetModal';
+import JoinBattleModal from './JoinBattleModal';
+import { useNotifications } from './NotificationContext';
+import { getGlobalLobbyRefresh } from '../hooks/useLobbyRefresh';
+import useLobbyRefresh from '../hooks/useLobbyRefresh';
+import { useGems } from './GemsContext';
+import { useSound, useHoverSound, useModalSound } from '../hooks/useSound';
+import { formatDollarsAsGems, getGemPrices, preloadGemPrices } from '../utils/gemUtils';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+const Lobby = ({ user, onUpdateUser, setCurrentView }) => {
+  const { showSuccess, showError } = useNotifications();
+  const { game, ui } = useSound();
+  const hoverProps = useHoverSound(true);
+  const modalSound = useModalSound();
+  const { gemsData } = useGems();
+  const [stats, setStats] = useState({ available: 0, gems: 0, total: 0 });
+  const [myBets, setMyBets] = useState([]);
+  const [availableBets, setAvailableBets] = useState([]);
+  const [ongoingBattles, setOngoingBattles] = useState([]);
+  const [availableBots, setAvailableBots] = useState([]);
+  const [ongoingBotBattles, setOngoingBotBattles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('live-players');
+  const [showCreateBetModal, setShowCreateBetModal] = useState(false);
+  const [gemPrices, setGemPrices] = useState([]);
+  
+  const [betFilters, setBetFilters] = useState({
+    minAmount: '',
+    maxAmount: ''
+  });
+  
+  const [selectedBetForJoin, setSelectedBetForJoin] = useState(null);
+  const [showJoinBattleModal, setShowJoinBattleModal] = useState(false);
+  
+  const [currentPage, setCurrentPage] = useState({
+    myBets: 1,
+    availableBets: 1,
+    ongoingBattles: 1,
+    availableBots: 1,
+    ongoingBotBattles: 1
+  });
+
+  useEffect(() => {
+    fetchLobbyData();
+    
+    // Preload gem prices
+    preloadGemPrices(user?.role).then(() => {
+      getGemPrices(user?.role).then(setGemPrices);
+    });
+    
+    const interval = setInterval(fetchLobbyData, 10000);
+    
+    const globalRefresh = getGlobalLobbyRefresh();
+    const unregister = globalRefresh.registerRefreshCallback(() => {
+      // Reduced logging for performance
+      fetchLobbyData();
+    });
+    
+    return () => {
+      clearInterval(interval);
+      unregister();
+    };
+  }, []);
+
+  // Функция проверки возможности создания ставки
+  const canCreateBet = useCallback(() => {
+    // Проверка наличия гемов
+    const hasGems = gemsData && gemsData.some(gem => gem.available_quantity > 0);
+    const totalGemCount = gemsData ? gemsData.reduce((sum, gem) => sum + gem.available_quantity, 0) : 0;
+    
+    // Проверка баланса для комиссии
+    const totalBalance = user?.virtual_balance || 0;
+    const frozenBalance = user?.frozen_balance || 0;
+    const availableForCommission = totalBalance - frozenBalance;
+    const hasBalance = availableForCommission > 0;
+    
+    // Формируем детальную подсказку
+    let tooltip = '';
+    if (!hasGems && !hasBalance) {
+      tooltip = `Need at least 1 gem (you have 0) and funds for commission (you have $${availableForCommission.toFixed(2)} available)`;
+    } else if (!hasGems) {
+      tooltip = `Need at least 1 gem to create a bet (you have 0 gems)`;
+    } else if (!hasBalance) {
+      // Минимальная комиссия = 3% от минимальной ставки ($1)
+      const minCommission = 0.03;
+      tooltip = `Need at least $${minCommission.toFixed(2)} for commission (you have $${availableForCommission.toFixed(2)} available)`;
+    }
+    
+    return {
+      canCreate: hasGems && hasBalance,
+      hasGems,
+      hasBalance,
+      tooltip
+    };
+  }, [gemsData, user]);
+
+  // Мемоизируем результат проверки
+  const createBetCheck = useMemo(() => canCreateBet(), [canCreateBet]);
+
+  const fetchLobbyData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // Выполняем основные запросы параллельно для снижения латентности и лагов UI
+      const [balanceResponse, gamesResponse, myBetsResponse, botGamesResponse] = await Promise.all([
+        axios.get(`${API}/economy/balance`, { headers }),
+        axios.get(`${API}/games/available`, { headers }),
+        axios.get(`${API}/games/my-bets`, { headers }),
+        axios.get(`${API}/bots/active-games`, { headers })
+      ]);
+
+      setStats({
+        available: balanceResponse.data.virtual_balance || 0,
+        gems: balanceResponse.data.total_gem_value || 0,
+        total: balanceResponse.data.total_value || 0
+      });
+
+      // Filter games - separate human bots from regular bots
+      const allGames = gamesResponse.data || [];
+          
+      // Available bets (Live Players) должны включать только:
+      // 1. Игры живых игроков (is_bot_game is false или undefined) со статусом WAITING
+      // 2. Human-bot игры (is_human_bot is true) со статусом WAITING
+      // 3. Исключить игры где текущий пользователь участвует
+      setAvailableBets(allGames.filter(game => {
+        // Только WAITING игры в Available Bets
+        if (game.status !== 'WAITING') {
+          return false;
+        }
+        
+        // Исключить игры где пользователь уже участвует
+        if (game.creator_id === user?.id || game.opponent_id === user?.id) {
+          return false;
+        }
+        
+        // Если это не бот-игра вообще, включаем (живые игроки)
+        if (!game.is_bot_game) {
+          return true;
+        }
+        
+        // Если это бот-игра, включаем только если это Human-бот
+        if (game.is_bot_game && game.is_human_bot) {
+          return true;
+        }
+        
+        // Исключаем игры обычных ботов из Live Players
+        return false;
+      }));
+      
+      // Available Bots (Bot Players) - только обычные боты со статусом WAITING
+      const activeBotGames = botGamesResponse.data || [];
+      setAvailableBots(activeBotGames.filter(game => 
+        game.status === 'WAITING' && 
+        game.is_bot_game && 
+        !game.is_human_bot &&  // Исключаем Human-ботов
+        game.creator_id !== user?.id && 
+        game.opponent_id !== user?.id
+      ));
+      
+      const userGames = myBetsResponse.data || [];
+      // My Bets: Only show WAITING games that user created
+      const myWaitingBets = userGames.filter(game => 
+        game.status === 'WAITING' && game.is_creator === true
+      );
+      setMyBets(myWaitingBets);
+      // Reduced logging for performance
+      
+      // Ongoing battles (Live Players) должны включать только:
+      // 1. ACTIVE игры пользователя с живыми игроками
+      // 2. ACTIVE игры пользователя с Human-ботами
+      // 3. Public ACTIVE игры Human-ботов
+      const userOngoingBattles = userGames.filter(game => 
+        (game.status === 'ACTIVE' || game.status === 'REVEAL') && 
+        (game.is_creator === true || game.is_creator === false) &&
+        (!game.is_bot_game || game.is_human_bot)  // Исключаем обычных ботов
+      );
+      
+      // Также включить все ACTIVE игры где пользователь участвует (только с живыми игроками и Human-ботами)
+      const activeUserGames = allGames.filter(game => {
+        return game.status === 'ACTIVE' && 
+               (game.creator_id === user?.id || game.opponent_id === user?.id) &&
+               (!game.is_bot_game || game.is_human_bot);  // Исключаем обычных ботов
+      });
+      
+      // Get active Human-bot games for display in ongoing battles (для всех пользователей)
+      try {
+        const token = localStorage.getItem('token');
+        let humanBotGames = [];
+        
+        // Fetch public active Human-bot games
+        const humanBotGamesResponse = await axios.get(`${API}/games/active-human-bots`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        // Фильтруем только Human-боты (исключаем обычных ботов)
+        humanBotGames = (humanBotGamesResponse.data || []).filter(game => {
+          // Исключаем игры где creator или opponent - обычные боты (username = "Unknown" и отсутствие is_human_bot)
+          const isRegularBotGame = (game.creator_info?.username === "Unknown" || game.opponent_info?.username === "Unknown") && 
+                                  !game.is_human_bot;
+          return !isRegularBotGame;
+        });
+        
+        // Объединить все ongoing battles для Live Players
+        const allOngoingBattles = [...userOngoingBattles, ...activeUserGames, ...humanBotGames];
+        
+        // Удалить дубликаты по game ID
+        const uniqueOngoingBattles = allOngoingBattles.filter((game, index, self) => 
+          index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
+        );
+        
+        setOngoingBattles(uniqueOngoingBattles);
+      } catch (error) {
+        console.error('Error fetching Human-bot games:', error);
+        // Fallback: combine user battles with active user games (исключая обычных ботов)
+        const fallbackOngoingBattles = [...userOngoingBattles, ...activeUserGames];
+        const uniqueFallbackBattles = fallbackOngoingBattles.filter((game, index, self) => 
+          index === self.findIndex(g => (g.game_id || g.id) === (game.game_id || game.id))
+        );
+        setOngoingBattles(uniqueFallbackBattles);
+      }
+      
+      // Ongoing Bot Battles (Bot Players) - используем новый dedicated endpoint
+      try {
+        const ongoingBotsResponse = await axios.get(`${API}/bots/ongoing-games`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        setOngoingBotBattles(ongoingBotsResponse.data || []);
+      } catch (error) {
+        console.error('Error fetching ongoing bot battles:', error);
+        
+        // Fallback: filter from user games
+        setOngoingBotBattles(userGames.filter(game => 
+          (game.status === 'ACTIVE' || game.status === 'REVEAL') && 
+          game.is_bot_game && 
+          !game.is_human_bot  // Только обычные боты, исключаем Human-ботов
+        ));
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching lobby data:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleOpenJoinBattle = async (game) => {
+    try {
+      // Reserve the game (all checks are done on backend)
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/games/${game.game_id || game.id}/reserve`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        // Remove the game from lists immediately
+        setAvailableBets(prev => prev.filter(g => (g.game_id || g.id) !== (game.game_id || game.id)));
+        setAvailableBots(prev => prev.filter(g => (g.game_id || g.id) !== (game.game_id || game.id)));
+        
+        // Determine if it's a bot game
+        const isBotGame = availableBots.some(botGame => 
+          (botGame.game_id || botGame.id) === (game.game_id || game.id)
+        ) || ongoingBotBattles.some(botGame => 
+          (botGame.game_id || botGame.id) === (game.game_id || game.id)
+        );
+        
+        const gameWithBotFlag = {
+          ...game,
+          is_bot_game: isBotGame,
+          reserved_until: response.data.reserved_until
+        };
+        
+        setSelectedBetForJoin(gameWithBotFlag);
+        setShowJoinBattleModal(true);
+      }
+    } catch (error) {
+      if (error.response?.data?.detail) {
+        showError(error.response.data.detail);
+      } else {
+        showError('Failed to reserve game');
+      }
+    }
+  };
+
+  const handleCloseJoinBattle = async (gameJoined = false) => {
+    modalSound.onClose();
+    
+    // Unreserve the game if modal is closed without joining
+    if (!gameJoined && selectedBetForJoin && selectedBetForJoin.reserved_until) {
+      try {
+        const token = localStorage.getItem('token');
+        await axios.post(
+          `${API}/games/${selectedBetForJoin.game_id || selectedBetForJoin.id}/unreserve`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (error) {
+        console.error('Failed to unreserve game:', error);
+      }
+    }
+    
+    setSelectedBetForJoin(null);
+    setShowJoinBattleModal(false);
+    
+    // Refresh lobby data to show the unreserved game again
+    fetchLobbyData();
+  };
+
+  const InfoBlock = ({ title, value, icon, color }) => (
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4 text-center">
+      <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-2 ${color}`}>
+        {icon}
+      </div>
+      <h3 className="font-rajdhani font-bold text-lg text-white">{title}</h3>
+      <p className="font-roboto text-2xl font-bold text-accent-primary">
+        {typeof value === 'number' ? `$${Math.floor(value)}` : value}
+      </p>
+    </div>
+  );
+
+  const GameCard = ({ game, onJoin, isBot = false }) => {
+    const isActiveBotEntry = game.is_bot && game.bot_id;
+    
+    // For bots, use unified styling similar to PlayerCard
+    if (isBot || isActiveBotEntry) {
+      // Calculate total gems value using real gem prices
+      const getTotalGemsValue = () => {
+        if (!game.bet_gems || typeof game.bet_gems !== 'object') return 0;
+        
+        let total = 0;
+        Object.entries(game.bet_gems).forEach(([gemType, quantity]) => {
+          const gemInfo = gemPrices.find(gem => gem.name.toLowerCase() === gemType.toLowerCase());
+          const price = gemInfo ? gemInfo.price : 1; // fallback to $1 if gem not found
+          total += price * quantity;
+        });
+        
+        return total;
+      };
+
+      // Get sorted gems by price (ascending) using real gem prices
+      const getSortedGems = () => {
+        if (!game.bet_gems || typeof game.bet_gems !== 'object') return [];
+        
+        return Object.entries(game.bet_gems)
+          .map(([gemType, quantity]) => {
+            const gemInfo = gemPrices.find(gem => gem.name.toLowerCase() === gemType.toLowerCase());
+            return {
+              type: gemType,
+              quantity: quantity,
+              price: gemInfo ? gemInfo.price : 1,
+              icon: `/gems/gem-${gemType.toLowerCase()}.svg`,
+              color: gemInfo ? gemInfo.color : '#ef4444'
+            };
+          })
+          .filter(gem => gem.quantity > 0)
+          .sort((a, b) => a.price - b.price); // Sort by price ascending
+      };
+
+      const sortedGems = getSortedGems();
+      const totalGemsValue = getTotalGemsValue();
+
+      return (
+        <div className="bg-[#09295e] border border-[#23d364] border-opacity-30 hover:border-opacity-50 rounded-lg p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
+          <div className="flex items-center space-x-4">
+            {/* Bot Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                     fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <title>Bot 01 — Head + antenna</title>
+                  <line x1="12" y1="4" x2="12" y2="7"/>
+                  <circle cx="12" cy="3" r="1"/>
+                  <rect x="5" y="7" width="14" height="10" rx="3"/>
+                  <line x1="3" y1="12" x2="5" y2="12"/>
+                  <line x1="19" y1="12" x2="21" y2="12"/>
+                  <circle cx="9.5" cy="12" r="1" fill="white" stroke="none"/>
+                  <circle cx="14.5" cy="12" r="1" fill="white" stroke="none"/>
+                  <line x1="8.5" y1="15" x2="15.5" y2="15"/>
+                </svg>
+              </div>
+            </div>
+
+            {/* Bot Info */}
+            <div className="flex-1 min-w-0">
+              {/* Bot Name - Always show "Bot" */}
+              <div className="flex items-center space-x-2 mb-1">
+                <h3 className="text-white font-rajdhani font-bold text-lg">
+                  {'Bot'}
+                </h3>
+                <span className="bg-blue-600 text-white text-xs font-rajdhani font-bold px-2 py-1 rounded">
+                  {game.bot_type === 'HUMAN' ? 'Human-like' : 'AI'}
+                </span>
+              </div>
+
+              {/* Gems Row with SVG Icons */}
+              {sortedGems.length > 0 && (
+                <div className="flex items-center space-x-2 mb-2 overflow-x-auto">
+                  {sortedGems.map((gem, index) => (
+                    <div key={gem.type} className="flex items-center space-x-1 flex-shrink-0">
+                      <img 
+                        src={gem.icon} 
+                        alt={gem.type} 
+                        className="w-4 h-4" 
+                        style={{ filter: `hue-rotate(0deg)` }}
+                      />
+                      <span className="text-text-secondary text-xs font-rajdhani font-bold">
+                        ×{gem.quantity}
+                      </span>
+                      {index < sortedGems.length - 1 && (
+                        <span className="text-text-secondary text-xs mx-1">•</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Total Gems Value (displayed as gems, not dollars) */}
+              <div className="text-green-400 font-rajdhani font-bold text-xl">
+                {formatDollarsAsGems(totalGemsValue)}
+              </div>
+
+              {/* Bot Status */}
+              <div className="text-text-secondary text-xs font-rajdhani mt-1">
+                Available for challenge
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={() => onJoin(game.game_id || game.id)}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 hover:scale-105"
+              >
+                Accept
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Original GameCard for non-bot games (if needed)
+    return (
+      <div className="bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg p-4 hover:border-accent-primary hover:border-opacity-100 hover:shadow-lg hover:shadow-accent-primary/20 transition-all duration-300">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-700">
+              👤
+            </div>
+            <div>
+              <h4 className="font-rajdhani font-bold text-white">
+                {game.creator_username || game.creator?.username || 'Unknown Player'}
+              </h4>
+              <p className="font-roboto text-xs text-text-secondary">
+                {new Date(game.created_at).toLocaleTimeString()}
+              </p>
+            </div>
+          </div>
+          <span className="px-2 py-1 text-white text-xs rounded-full font-rajdhani bg-green-700">
+            WAITING
+          </span>
+        </div>
+        
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between">
+            <span className="font-roboto text-text-secondary">Bet Amount:</span>
+            <span className="font-rajdhani text-green-400 font-bold">
+              {formatDollarsAsGems(game.bet_amount)}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-roboto text-text-secondary">Gems:</span>
+            <span className="font-rajdhani text-white text-sm">
+              {typeof game.bet_gems === 'object' ? 
+                Object.entries(game.bet_gems).map(([type, qty]) => `${type}: ${qty}`).join(', ') : 
+                'Various'
+              }
+            </span>
+          </div>
+        </div>
+        
+        <button
+          onClick={() => onJoin(game.game_id || game.id)}
+          className="w-full py-2 bg-gradient-accent text-white font-rajdhani font-bold rounded-lg hover:scale-105 transition-all duration-300"
+        >
+          JOIN BATTLE
+        </button>
+      </div>
+    );
+  };
+
+  const SectionBlock = ({ title, icon, count, children, color = 'text-blue-400' }) => (
+    <div className="bg-surface-card border border-accent-primary border-opacity-30 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-2">
+          <div className={color}>{icon}</div>
+          <h3 className="font-rajdhani font-bold text-lg text-white">{title}</h3>
+        </div>
+        <span className="px-2 py-1 bg-accent-dark text-white text-xs rounded-full font-rajdhani">
+          {count}
+        </span>
+      </div>
+      {children}
+    </div>
+  );
+
+  const PaginationControls = ({ currentPage, totalItems, onPageChange, section, itemsPerPage }) => {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    if (totalPages <= 1) return null;
+
+    return (
+      <div className="flex justify-center items-center space-x-2 mt-4">
+        <button
+          onClick={() => onPageChange(section, Math.max(1, currentPage - 1))}
+          disabled={currentPage === 1}
+          className="px-3 py-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="font-roboto text-text-secondary">
+          {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => onPageChange(section, Math.min(totalPages, currentPage + 1))}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 bg-surface-sidebar border border-accent-primary border-opacity-30 rounded-lg text-text-secondary hover:text-white disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
+  const handlePageChange = (section, newPage) => {
+    setCurrentPage(prev => ({ ...prev, [section]: newPage }));
+  };
+
+  const handleJoinGame = async (gameId) => {
+    try {
+      console.log('Attempting to join game:', gameId);
+      
+      // All games (including bot games) now have real game IDs
+      // So we can directly try to join them
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/games/${gameId}/join`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        showSuccess('Successfully joined the game');
+        // Refresh the lobby data after joining
+        await fetchLobbyData();
+        if (onUpdateUser) {
+          onUpdateUser();
+        }
+      } else {
+        showError('Failed to join game');
+      }
+    } catch (error) {
+      console.error('Error handling game join:', error);
+      
+      // Extract error message safely
+      let errorMessage = 'Failed to join game';
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        // Handle different error response formats
+        if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.detail) {
+          // FastAPI HTTPException format
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            // Pydantic validation errors
+            errorMessage = errorData.detail.map(err => err.msg || err.message || 'Validation error').join(', ');
+          } else if (typeof errorData.detail === 'object') {
+            errorMessage = errorData.detail.msg || errorData.detail.message || 'Validation error';
+          }
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(errorMessage);
+    }
+  };
+
+  const handleCancelBet = async (gameId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`${API}/games/${gameId}/cancel`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      console.log('Cancel bet response:', response.data); // Debug log
+      
+      if (response.data && response.data.success) {
+        showSuccess('Bet cancelled successfully');
+        
+        const globalRefresh = getGlobalLobbyRefresh();
+        globalRefresh.triggerLobbyRefresh();
+        console.log('❌ Bet cancelled - triggering lobby refresh');
+        
+        await fetchLobbyData();
+        if (onUpdateUser) {
+          onUpdateUser();
+        }
+      } else {
+        console.error('Cancel bet failed - no success field:', response.data);
+        showError('Failed to cancel bet - unexpected response format');
+      }
+    } catch (error) {
+      console.error('Error cancelling bet:', error);
+      console.error('Error response:', error.response?.data);
+      
+      // Extract error message safely
+      let errorMessage = 'Failed to cancel bet';
+      
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        
+        if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.detail) {
+          if (typeof errorData.detail === 'string') {
+            errorMessage = errorData.detail;
+          } else if (Array.isArray(errorData.detail)) {
+            errorMessage = errorData.detail.map(err => err.msg || err.message || 'Validation error').join(', ');
+          }
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showError(errorMessage);
+      // Even if the API call fails, we can still refresh the data
+      await fetchLobbyData();
+    }
+  };
+
+  const getPaginatedItems = (items, page, itemsPerPage) => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return items.slice(startIndex, endIndex);
+  };
+
+  const getFilteredAvailableBets = () => {
+    let filtered = availableBets;
+    
+    if (betFilters.minAmount) {
+      const minAmount = parseFloat(betFilters.minAmount);
+      if (!isNaN(minAmount)) {
+        filtered = filtered.filter(game => (game.bet_amount || 0) >= minAmount);
+      }
+    }
+    
+    if (betFilters.maxAmount) {
+      const maxAmount = parseFloat(betFilters.maxAmount);
+      if (!isNaN(maxAmount)) {
+        filtered = filtered.filter(game => (game.bet_amount || 0) <= maxAmount);
+      }
+    }
+    
+    return filtered;
+  };
+
+  const handleFilterChange = useCallback((field, value) => {
+    setBetFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    setCurrentPage(prev => ({
+      ...prev,
+      availableBets: 1
+    }));
+  }, []);
+
+  const handleMinAmountChange = useCallback((e) => {
+    handleFilterChange('minAmount', e.target.value);
+  }, [handleFilterChange]);
+
+  const handleMaxAmountChange = useCallback((e) => {
+    handleFilterChange('maxAmount', e.target.value);
+  }, [handleFilterChange]);
+
+  const clearFilters = useCallback(() => {
+    setBetFilters({
+      minAmount: '',
+      maxAmount: ''
+    });
+    setCurrentPage(prev => ({
+      ...prev,
+      availableBets: 1
+    }));
+  }, []);
+
+  const [showDelayedLoader, setShowDelayedLoader] = useState(false);
+  const loaderTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (loading) {
+      loaderTimerRef.current = setTimeout(() => setShowDelayedLoader(true), 1000);
+    } else {
+      clearTimeout(loaderTimerRef.current);
+      setShowDelayedLoader(false);
+    }
+    return () => clearTimeout(loaderTimerRef.current);
+  }, [loading]);
+ 
+  if (loading) {
+    return (
+      <div className="min-h-screen min-h-app bg-gradient-primary flex items-center justify-center">
+        {showDelayedLoader ? <Loader ariaLabel="Loading Lobby" /> : null}
+      </div>
+    );
+  }
+
+  const LivePlayersContent = () => (
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* My Bets */}
+      <SectionBlock
+        title="My Bets"
+        count={myBets.length}
+        color="text-green-400"
+        icon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {getPaginatedItems(myBets, currentPage.myBets, 8).map((game) => (
+            <PlayerCard 
+              key={game.game_id || game.id} 
+              game={game} 
+              user={user}
+              isMyBet={true}
+              onCancel={handleCancelBet}
+              onUpdateUser={() => {
+                fetchLobbyData();
+                if (onUpdateUser) {
+                  onUpdateUser();
+                }
+              }}
+            />
+          ))}
+          {myBets.length === 0 && (
+            <div className="col-span-full text-text-secondary text-center py-8">
+              You have no active bets
+            </div>
+          )}
+        </div>
+        <PaginationControls
+          currentPage={currentPage.myBets}
+          totalItems={myBets.length}
+          onPageChange={handlePageChange}
+          section="myBets"
+          itemsPerPage={8}
+        />
+      </SectionBlock>
+
+      {/* Available Bets */}
+      <SectionBlock
+        title="Available Bets"
+        count={getFilteredAvailableBets().length}
+        color="text-blue-400"
+        icon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        }
+      >
+        {/* Фильтры по сумме ставки */}
+        <div className="mb-4 bg-surface-dark border border-accent-primary border-opacity-20 rounded-lg p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-text-secondary">Мин. сумма:</label>
+              <input
+                type="number"
+                placeholder="$0"
+                value={betFilters.minAmount}
+                onChange={handleMinAmountChange}
+                className="w-20 px-2 py-1 bg-surface-card border border-accent-primary border-opacity-30 rounded text-white text-sm focus:outline-none focus:border-accent-primary"
+                min="0"
+                step="1"
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-text-secondary">Макс. сумма:</label>
+              <input
+                type="number"
+                placeholder="$∞"
+                value={betFilters.maxAmount}
+                onChange={handleMaxAmountChange}
+                className="w-20 px-2 py-1 bg-surface-card border border-accent-primary border-opacity-30 rounded text-white text-sm focus:outline-none focus:border-accent-primary"
+                min="0"
+                step="1"
+              />
+            </div>
+            
+            {(betFilters.minAmount || betFilters.maxAmount) && (
+              <button
+                onClick={clearFilters}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded transition-colors"
+              >
+                Очистить
+              </button>
+            )}
+            
+            <div className="text-sm text-text-secondary">
+              Показано: {getFilteredAvailableBets().length} из {availableBets.length} ставок
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ willChange: 'transform' }}>
+          {getPaginatedItems(getFilteredAvailableBets(), currentPage.availableBets, 12).map((game) => (
+            <PlayerCard 
+              key={game.game_id || game.id} 
+              game={game} 
+              user={user}
+              onOpenJoinBattle={handleOpenJoinBattle}
+              onUpdateUser={() => {
+                fetchLobbyData();
+                if (onUpdateUser) {
+                  onUpdateUser();
+                }
+              }}
+            />
+          ))}
+          {getFilteredAvailableBets().length === 0 && availableBets.length > 0 && (
+            <div className="col-span-full text-text-secondary text-center py-8">
+              Нет ставок, соответствующих фильтрам
+            </div>
+          )}
+          {availableBets.length === 0 && (
+            <div className="col-span-full text-text-secondary text-center py-8">
+              No available bets
+            </div>
+          )}
+        </div>
+        <PaginationControls
+          currentPage={currentPage.availableBets}
+          totalItems={getFilteredAvailableBets().length}
+          onPageChange={handlePageChange}
+          section="availableBets"
+          itemsPerPage={12}
+        />
+      </SectionBlock>
+
+      {/* Ongoing Battles */}
+      <SectionBlock
+        title="Ongoing Battles"
+        count={ongoingBattles.length}
+        color="text-orange-400"
+        icon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ willChange: 'transform' }}>
+          {getPaginatedItems(ongoingBattles, currentPage.ongoingBattles, 8).map((game) => (
+            <PlayerCard 
+              key={game.game_id || game.id} 
+              game={game} 
+              isOngoing={true}
+            />
+          ))}
+          {ongoingBattles.length === 0 && (
+            <div className="col-span-full text-text-secondary text-center py-8">
+              No active battles
+            </div>
+          )}
+        </div>
+        <PaginationControls
+          currentPage={currentPage.ongoingBattles}
+          totalItems={ongoingBattles.length}
+          onPageChange={handlePageChange}
+          section="ongoingBattles"
+          itemsPerPage={8}
+        />
+      </SectionBlock>
+    </div>
+  );
+
+  const BotPlayersContent = () => (
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Available Bots */}
+      <SectionBlock
+        title="Available Bots"
+        count={availableBots.length}
+        color="text-cyan-400"
+        icon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ willChange: 'transform' }}>
+          {getPaginatedItems(availableBots, currentPage.availableBots, 12).map((game) => (
+            <PlayerCard 
+              key={game.game_id || game.id} 
+              game={game} 
+              user={user}
+              onOpenJoinBattle={handleOpenJoinBattle}
+              onUpdateUser={() => {
+                fetchLobbyData();
+                if (onUpdateUser) {
+                  onUpdateUser();
+                }
+              }}
+              isBot={true}
+            />
+          ))}
+          {availableBots.length === 0 && (
+            <div className="col-span-full text-text-secondary text-center py-8">
+              No available bots
+            </div>
+          )}
+        </div>
+        <PaginationControls
+          currentPage={currentPage.availableBots}
+          totalItems={availableBots.length}
+          onPageChange={handlePageChange}
+          section="availableBots"
+          itemsPerPage={12}
+        />
+      </SectionBlock>
+
+      {/* Ongoing Bot Battles */}
+      <SectionBlock
+        title="Ongoing Bot Battles"
+        count={ongoingBotBattles.length}
+        color="text-red-400"
+        icon={
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" style={{ willChange: 'transform' }}>
+          {getPaginatedItems(ongoingBotBattles, currentPage.ongoingBotBattles, 8).map((game) => (
+            <PlayerCard 
+              key={game.game_id || game.id} 
+              game={game} 
+              user={user}
+              isOngoing={true}
+              isBot={true}
+              onUpdateUser={() => {
+                fetchLobbyData();
+                if (onUpdateUser) {
+                  onUpdateUser();
+                }
+              }}
+            />
+          ))}
+          {ongoingBotBattles.length === 0 && (
+            <div className="col-span-full text-text-secondary text-center py-8">
+              No ongoing bot battles
+            </div>
+          )}
+        </div>
+        <PaginationControls
+          currentPage={currentPage.ongoingBotBattles}
+          totalItems={ongoingBotBattles.length}
+          onPageChange={handlePageChange}
+          section="ongoingBotBattles"
+          itemsPerPage={8}
+        />
+      </SectionBlock>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen min-h-app bg-gradient-primary p-4 sm:p-6">
+      {/* Header */}
+      <div className="text-center mb-8">
+        <h1 className="font-russo text-3xl sm:text-4xl md:text-6xl text-accent-primary mb-4">
+          Game Lobby
+        </h1>
+        <p className="font-roboto text-lg sm:text-xl text-text-secondary">
+          Join battles, create bets, and dominate the arena
+        </p>
+      </div>
+
+      {/* Gems Header */}
+      <GemsHeader user={user} />
+
+      {/* Create Bet Button */}
+      <div className="text-center mb-8">
+        <button 
+          onClick={() => {
+            if (!createBetCheck.canCreate) {
+              if (!createBetCheck.hasGems) {
+                showError('Your inventory is empty — please purchase gems.');
+              } else if (!createBetCheck.hasBalance) {
+                showError('You have no funds to pay the commission — top up your balance and retry.');
+              }
+              return;
+            }
+            game.createBet();
+            modalSound.onOpen();
+            setShowCreateBetModal(true);
+          }}
+          disabled={!createBetCheck.canCreate}
+          {...(createBetCheck.canCreate ? hoverProps : {})}
+          className={`px-8 py-4 text-white font-rajdhani font-bold text-xl rounded-lg transition-all duration-300 shadow-lg ${
+            createBetCheck.canCreate 
+              ? 'bg-gradient-to-r from-green-500 to-green-600 hover:scale-105 hover:from-green-400 hover:to-green-500 hover:shadow-green-500/50' 
+              : 'bg-gray-600 cursor-not-allowed opacity-50'
+          }`}
+          title={createBetCheck.tooltip || ''}
+        >
+          <svg className="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Create Bet
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="max-w-6xl mx-auto mb-8">
+        <div className="flex space-x-1 bg-surface-sidebar rounded-lg p-1">
+          {[
+            { id: 'live-players', label: 'Live Players', icon: '👥', count: availableBets.length + myBets.length + ongoingBattles.length },
+            { 
+              id: 'bot-players', 
+              label: 'Bot Players', 
+              icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                     className="inline-block">
+                  <title>Bot 01 — Head + antenna</title>
+                  <line x1="12" y1="4" x2="12" y2="7"/>
+                  <circle cx="12" cy="3" r="1"/>
+                  <rect x="5" y="7" width="14" height="10" rx="3"/>
+                  <line x1="3" y1="12" x2="5" y2="12"/>
+                  <line x1="19" y1="12" x2="21" y2="12"/>
+                  <circle cx="9.5" cy="12" r="1" fill="currentColor" stroke="none"/>
+                  <circle cx="14.5" cy="12" r="1" fill="currentColor" stroke="none"/>
+                  <line x1="8.5" y1="15" x2="15.5" y2="15"/>
+                </svg>
+              ), 
+              count: availableBots.length + ongoingBotBattles.length 
+            }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                ui.click();
+                setActiveTab(tab.id);
+              }}
+              {...hoverProps}
+              className={`flex-1 py-3 px-4 rounded-lg font-rajdhani font-bold transition-all duration-300 ${
+                activeTab === tab.id
+                  ? 'bg-accent-primary text-white shadow-lg'
+                  : 'text-text-secondary hover:text-white hover:bg-surface-card'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+              <span className="ml-2 px-2 py-1 bg-white/20 rounded-full text-xs">
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div>
+        {activeTab === 'live-players' && <LivePlayersContent />}
+        {activeTab === 'bot-players' && <BotPlayersContent />}
+      </div>
+
+      {/* Create Bet Modal */}
+      {showCreateBetModal && (
+        <CreateBetModal
+          user={user}
+          onClose={() => {
+            modalSound.onClose();
+            setShowCreateBetModal(false);
+          }}
+          onUpdateUser={onUpdateUser}
+        />
+      )}
+
+      {showJoinBattleModal && selectedBetForJoin && (
+        <JoinBattleModal
+          bet={{
+            id: selectedBetForJoin.game_id || selectedBetForJoin.id,
+            bet_amount: selectedBetForJoin.bet_amount,
+            bet_gems: selectedBetForJoin.bet_gems,
+            creator: selectedBetForJoin.creator,
+            is_bot_game: selectedBetForJoin.is_bot_game  // Флаг игры с ботом
+          }}
+          user={user}
+          onClose={handleCloseJoinBattle}
+          onUpdateUser={() => {
+            fetchLobbyData();
+            if (onUpdateUser) {
+              onUpdateUser();
+            }
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+export default Lobby;
