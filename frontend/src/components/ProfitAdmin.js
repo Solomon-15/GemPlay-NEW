@@ -419,6 +419,81 @@ const ProfitAdmin = ({ user }) => {
     }
   };
 
+  // Функция для расчёта среднего ROI по всем циклам всех ботов
+  const calculateAverageROIFromAllCycles = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Получаем список всех ботов
+      const botsResponse = await axios.get(`${API}/admin/bots`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { page: 1, limit: 1000 } // Получаем все боты
+      });
+      
+      const bots = botsResponse.data.bots || botsResponse.data || [];
+      let allROIValues = [];
+      let processedBots = 0;
+      let totalCycles = 0;
+      
+      console.log(`🤖 Расчёт среднего ROI: обрабатываем ${bots.length} ботов...`);
+      
+      // Для каждого бота получаем историю циклов
+      for (const bot of bots) {
+        try {
+          const cycleHistoryResponse = await axios.get(`${API}/admin/bots/${bot.id}/cycle-history`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          const cycles = cycleHistoryResponse.data.games || [];
+          let botROIValues = [];
+          
+          // Извлекаем ROI из каждого цикла
+          cycles.forEach(cycle => {
+            let roi;
+            if (cycle.roi_active !== undefined && cycle.roi_active !== null) {
+              roi = Number(cycle.roi_active);
+            } else {
+              // Fallback расчёт как в RegularBotsManagement
+              const activePool = (cycle.total_winnings || 0) + (cycle.total_losses || 0);
+              roi = activePool > 0 ? ((cycle.profit || 0) / activePool) * 100 : 0;
+            }
+            
+            // Проверяем валидность ROI
+            if (Number.isFinite(roi)) {
+              botROIValues.push(roi);
+              allROIValues.push(roi);
+            }
+          });
+          
+          totalCycles += botROIValues.length;
+          processedBots++;
+          
+          if (botROIValues.length > 0) {
+            console.log(`📊 Бот ${bot.name || bot.id.substring(0, 8)}: ${botROIValues.length} циклов, средний ROI: ${(botROIValues.reduce((sum, roi) => sum + roi, 0) / botROIValues.length).toFixed(2)}%`);
+          }
+          
+        } catch (error) {
+          console.warn(`⚠️ Не удалось загрузить циклы для бота ${bot.name || bot.id}:`, error.message);
+        }
+      }
+      
+      console.log(`✅ Обработано ботов: ${processedBots}/${bots.length}, всего циклов: ${totalCycles}`);
+      
+      // Рассчитываем средний ROI
+      if (allROIValues.length > 0) {
+        const averageROI = allROIValues.reduce((sum, roi) => sum + roi, 0) / allROIValues.length;
+        console.log(`🎯 Средний ROI по всем циклам: ${averageROI.toFixed(2)}%`);
+        return averageROI;
+      }
+      
+      console.log(`⚠️ Не найдено циклов для расчёта среднего ROI`);
+      return 0;
+    } catch (error) {
+      console.error('❌ Ошибка расчёта среднего ROI:', error);
+      return 0;
+    }
+  };
+
   const loadModalData = async (type, period = activePeriod) => {
     setModalLoading(true);
     setModalError(null);
@@ -431,7 +506,20 @@ const ProfitAdmin = ({ user }) => {
           const botRevenueResponse = await axios.get(`${API}/admin/profit/bot-cycles-history?page=1&limit=50&sort_by=end_time&sort_order=desc`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          setModalData(botRevenueResponse.data);
+          
+          // Рассчитываем средний ROI по всем циклам всех ботов
+          const averageROI = await calculateAverageROIFromAllCycles();
+          
+          // Обновляем данные с новым средним ROI
+          const updatedData = {
+            ...botRevenueResponse.data,
+            summary: {
+              ...botRevenueResponse.data.summary,
+              avg_roi: averageROI
+            }
+          };
+          
+          setModalData(updatedData);
           break;
           
         case 'frozen_funds':
@@ -1785,7 +1873,7 @@ const ProfitAdmin = ({ user }) => {
                         <div className="bg-surface-sidebar rounded-lg p-4">
                           <span className="text-sm text-text-secondary">Средний ROI:</span>
                           <div className="text-2xl font-bold text-blue-400">
-                            {modalData.summary?.avg_roi?.toFixed(1) || 0}%
+                            {modalData.summary?.avg_roi?.toFixed(2) || 0.00}%
                           </div>
                         </div>
                       </div>
