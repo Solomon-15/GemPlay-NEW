@@ -107,7 +107,7 @@ const RegularBotsManagement = () => {
   const [quickLaunchPresets, setQuickLaunchPresets] = useState([]);
   const [isCreatingPreset, setIsCreatingPreset] = useState(false);
   const [currentPreset, setCurrentPreset] = useState({
-    name: '',
+    name: 'Bot',
     buttonName: '',
     buttonColor: 'blue',
     min_bet_amount: 1.0,
@@ -4383,7 +4383,7 @@ const RegularBotsManagement = () => {
                         value={currentPreset.name}
                         onChange={(e) => setCurrentPreset(prev => ({ ...prev, name: e.target.value }))}
                         className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto text-sm focus:outline-none focus:border-accent-primary"
-                        placeholder="Например: Агрессивный"
+                        placeholder="Bot"
                       />
                     </div>
 
@@ -4493,14 +4493,46 @@ const RegularBotsManagement = () => {
                       />
                     </div>
 
-                    {/* Баланс игр (автоматический расчет) */}
-                    <div>
+                    {/* Баланс игр (ручная настройка) */}
+                    <div className="col-span-3">
                       <label className="block text-text-secondary text-sm mb-2">⚖️ Баланс игр</label>
-                      <div className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-accent-primary font-roboto text-sm">
-                        W/L/D: {Math.round(currentPreset.cycle_games * currentPreset.wins_percentage / 100)}/{Math.round(currentPreset.cycle_games * currentPreset.losses_percentage / 100)}/{Math.round(currentPreset.cycle_games * currentPreset.draws_percentage / 100)}
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-text-secondary text-xs mb-1">Победы (W)</label>
+                          <input
+                            type="number"
+                            value={currentPreset.wins_count || 0}
+                            onChange={(e) => setCurrentPreset(prev => ({ ...prev, wins_count: parseInt(e.target.value) || 0 }))}
+                            min="0"
+                            max={currentPreset.cycle_games || 100}
+                            className="w-full px-2 py-1 bg-surface-card border border-border-primary rounded text-white font-roboto text-sm focus:outline-none focus:border-green-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-text-secondary text-xs mb-1">Поражения (L)</label>
+                          <input
+                            type="number"
+                            value={currentPreset.losses_count || 0}
+                            onChange={(e) => setCurrentPreset(prev => ({ ...prev, losses_count: parseInt(e.target.value) || 0 }))}
+                            min="0"
+                            max={currentPreset.cycle_games || 100}
+                            className="w-full px-2 py-1 bg-surface-card border border-border-primary rounded text-white font-roboto text-sm focus:outline-none focus:border-red-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-text-secondary text-xs mb-1">Ничьи (D)</label>
+                          <input
+                            type="number"
+                            value={currentPreset.draws_count || 0}
+                            onChange={(e) => setCurrentPreset(prev => ({ ...prev, draws_count: parseInt(e.target.value) || 0 }))}
+                            min="0"
+                            max={currentPreset.cycle_games || 100}
+                            className="w-full px-2 py-1 bg-surface-card border border-border-primary rounded text-white font-roboto text-sm focus:outline-none focus:border-yellow-400"
+                          />
+                        </div>
                       </div>
                       <div className="text-xs text-text-secondary mt-1">
-                        Автоматический расчет на основе процентов
+                        Общий баланс: {(currentPreset.wins_count || 0) + (currentPreset.losses_count || 0) + (currentPreset.draws_count || 0)} из {currentPreset.cycle_games || 0} игр
                       </div>
                     </div>
 
@@ -4640,7 +4672,7 @@ const RegularBotsManagement = () => {
                         
                         // Сброс формы
                         setCurrentPreset({
-                          name: '',
+                          name: 'Bot',
                           buttonName: '',
                           buttonColor: 'blue',
                           min_bet_amount: 1.0,
