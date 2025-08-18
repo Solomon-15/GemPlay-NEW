@@ -106,6 +106,7 @@ const RegularBotsManagement = () => {
   const [isQuickLaunchModalOpen, setIsQuickLaunchModalOpen] = useState(false);
   const [quickLaunchPresets, setQuickLaunchPresets] = useState([]);
   const [isCreatingPreset, setIsCreatingPreset] = useState(false);
+  const [selectedPresetForQuickLaunch, setSelectedPresetForQuickLaunch] = useState("Custom");
   const [currentPreset, setCurrentPreset] = useState({
     name: 'Bot',
     buttonName: '',
@@ -564,6 +565,25 @@ const RegularBotsManagement = () => {
       wins_percentage: Number(preset.wins.toFixed(1)),
       losses_percentage: Number(preset.losses.toFixed(1)),
       draws_percentage: Number(preset.draws.toFixed(1))
+    }));
+  };
+
+  // Функция применения ROI пресета для быстрого запуска
+  const applyROIPresetForQuickLaunch = (preset) => {
+    if (!preset || preset.custom) {
+      setSelectedPresetForQuickLaunch("Custom");
+      return;
+    }
+    setSelectedPresetForQuickLaunch(preset.name);
+    setCurrentPreset(prev => ({
+      ...prev,
+      wins_percentage: Number(preset.wins.toFixed(1)),
+      losses_percentage: Number(preset.losses.toFixed(1)),
+      draws_percentage: Number(preset.draws.toFixed(1)),
+      // Автоматически пересчитываем counts
+      wins_count: Math.round(prev.cycle_games * preset.wins / 100),
+      losses_count: Math.round(prev.cycle_games * preset.losses / 100),
+      draws_count: Math.round(prev.cycle_games * preset.draws / 100)
     }));
   };
   
@@ -4411,6 +4431,23 @@ const RegularBotsManagement = () => {
                         <option value="yellow">🟡 Желтый</option>
                         <option value="purple">🟣 Фиолетовый</option>
                         <option value="orange">🟠 Оранжевый</option>
+                      </select>
+                    </div>
+
+                    {/* Пресет ROI */}
+                    <div>
+                      <label className="block text-text-secondary text-sm mb-2">Пресет ROI</label>
+                      <select
+                        value={selectedPresetForQuickLaunch}
+                        onChange={(e) => {
+                          const preset = defaultPresets.find(p => p.name === e.target.value);
+                          applyROIPresetForQuickLaunch(preset);
+                        }}
+                        className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto text-sm focus:outline-none focus:border-accent-primary"
+                      >
+                        {defaultPresets.map(preset => (
+                          <option key={preset.name} value={preset.name}>{preset.name}</option>
+                        ))}
                       </select>
                     </div>
 
