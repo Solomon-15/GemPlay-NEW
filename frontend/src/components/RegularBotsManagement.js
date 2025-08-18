@@ -107,6 +107,11 @@ const RegularBotsManagement = () => {
   const [quickLaunchPresets, setQuickLaunchPresets] = useState([]);
   const [isCreatingPreset, setIsCreatingPreset] = useState(false);
   const [selectedPresetForQuickLaunch, setSelectedPresetForQuickLaunch] = useState("Custom");
+  
+  // Состояния для перетаскивания модального окна
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [currentPreset, setCurrentPreset] = useState({
     name: 'Bot',
     buttonName: '',
@@ -586,6 +591,58 @@ const RegularBotsManagement = () => {
       draws_count: Math.round(prev.cycle_games * preset.draws / 100)
     }));
   };
+
+  // Функции для перетаскивания модального окна
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - modalPosition.x,
+      y: e.clientY - modalPosition.y
+    });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
+    // Ограничиваем перемещение в пределах экрана
+    const maxX = window.innerWidth - 400; // минимум 400px видимой области
+    const maxY = window.innerHeight - 200; // минимум 200px видимой области
+    
+    setModalPosition({
+      x: Math.max(-200, Math.min(maxX, newX)), // разрешаем частичный выход за край
+      y: Math.max(0, Math.min(maxY, newY))
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Сброс позиции при открытии модального окна
+  useEffect(() => {
+    if (isQuickLaunchModalOpen) {
+      setModalPosition({ x: 0, y: 0 });
+      setIsDragging(false);
+    }
+  }, [isQuickLaunchModalOpen]);
+
+  // Добавляем глобальные обработчики событий для перетаскивания
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = 'none'; // Отключаем выделение текста при перетаскивании
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.userSelect = '';
+      };
+    }
+  }, [isDragging, dragStart, modalPosition]);
   
   const saveCustomPreset = () => {
     if (!newPresetName.trim()) return;
@@ -4275,18 +4332,38 @@ const RegularBotsManagement = () => {
       
       {/* Модальное окно быстрого запуска ботов */}
       {isQuickLaunchModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-surface-card border border-accent-primary border-opacity-50 rounded-lg w-full max-w-5xl mx-4 max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50">
+          <div 
+            className="bg-surface-card border border-accent-primary border-opacity-50 rounded-lg w-full max-w-5xl max-h-[90vh] overflow-hidden shadow-2xl"
+            style={{
+              position: 'absolute',
+              left: `${50 + (modalPosition.x / window.innerWidth) * 100}%`,
+              top: `${50 + (modalPosition.y / window.innerHeight) * 100}%`,
+              transform: 'translate(-50%, -50%)',
+              cursor: isDragging ? 'grabbing' : 'default'
+            }}
+          >
             {/* Заголовок */}
-            <div className="flex justify-between items-center p-4 border-b border-border-primary bg-surface-sidebar">
+            <div 
+              className="flex justify-between items-center p-4 border-b border-border-primary bg-surface-sidebar cursor-grab select-none"
+              onMouseDown={handleMouseDown}
+              style={{
+                cursor: isDragging ? 'grabbing' : 'grab'
+              }}
+            >
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-600 rounded-lg">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <div>
-                  <h3 className="font-rajdhani text-xl font-bold text-white">⚡ Быстрый запуск ботов</h3>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2">
+                    <h3 className="font-rajdhani text-xl font-bold text-white">⚡ Быстрый запуск ботов</h3>
+                    <div className="text-text-secondary text-xs bg-blue-600 bg-opacity-20 px-2 py-1 rounded">
+                      🖱️ Перетаскиваемое
+                    </div>
+                  </div>
                   <p className="text-text-secondary text-sm">Запуск ботов по готовым пресетам</p>
                 </div>
               </div>
