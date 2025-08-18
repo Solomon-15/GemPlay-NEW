@@ -231,11 +231,20 @@ const RegularBotsManagement = () => {
           valueB = b.profit || 0;
           break;
         case 'roi':
-          // Вычисляем ROI как (profit / activePool) * 100
-          const activePoolA = (a.total_winnings || 0) + (a.total_losses || 0);
-          const activePoolB = (b.total_winnings || 0) + (b.total_losses || 0);
-          valueA = activePoolA > 0 ? ((a.profit || 0) / activePoolA) * 100 : 0;
-          valueB = activePoolB > 0 ? ((b.profit || 0) / activePoolB) * 100 : 0;
+          // Используем roi_active от backend, если доступно, иначе вычисляем самостоятельно
+          if (a.roi_active !== undefined && a.roi_active !== null) {
+            valueA = Number(a.roi_active);
+          } else {
+            const activePoolA = (a.total_winnings || 0) + (a.total_losses || 0);
+            valueA = activePoolA > 0 ? ((a.profit || 0) / activePoolA) * 100 : 0;
+          }
+          
+          if (b.roi_active !== undefined && b.roi_active !== null) {
+            valueB = Number(b.roi_active);
+          } else {
+            const activePoolB = (b.total_winnings || 0) + (b.total_losses || 0);
+            valueB = activePoolB > 0 ? ((b.profit || 0) / activePoolB) * 100 : 0;
+          }
           break;
         default:
           return 0;
@@ -3726,6 +3735,7 @@ const RegularBotsManagement = () => {
                         <th 
                           className="px-4 py-3 text-left text-xs font-rajdhani font-bold text-text-secondary uppercase cursor-pointer hover:text-white transition-colors"
                           onClick={() => handleCycleSorting('roi')}
+                          title="ROI (Return on Investment) = (Прибыль / Активный пул) × 100%. Активный пул = Выигрыш + Проигрыш"
                         >
                           <div className="flex items-center space-x-1">
                             <span>ROI</span>
@@ -3807,12 +3817,27 @@ const RegularBotsManagement = () => {
                           </td>
                           <td className="px-4 py-3 text-center">
                             {(() => {
-                              const activePool = (cycle.total_winnings || 0) + (cycle.total_losses || 0);
-                              const roi = activePool > 0 ? ((cycle.profit || 0) / activePool) * 100 : 0;
+                              // Используем roi_active от backend, если доступно, иначе вычисляем самостоятельно
+                              let roi;
+                              let source = '';
+                              if (cycle.roi_active !== undefined && cycle.roi_active !== null) {
+                                roi = Number(cycle.roi_active);
+                                source = 'от сервера';
+                              } else {
+                                const activePool = (cycle.total_winnings || 0) + (cycle.total_losses || 0);
+                                roi = activePool > 0 ? ((cycle.profit || 0) / activePool) * 100 : 0;
+                                source = `расчёт: ${cycle.profit || 0} / ${activePool} × 100%`;
+                              }
+                              
+                              const tooltipText = `ROI: ${roi.toFixed(1)}% (${source})`;
+                              
                               return (
-                                <span className={`font-roboto text-sm font-bold ${
-                                  roi >= 0 ? 'text-blue-400' : 'text-red-400'
-                                }`}>
+                                <span 
+                                  className={`font-roboto text-sm font-bold cursor-help ${
+                                    roi >= 0 ? 'text-blue-400' : 'text-red-400'
+                                  }`}
+                                  title={tooltipText}
+                                >
                                   {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
                                 </span>
                               );
