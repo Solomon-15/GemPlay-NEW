@@ -12,7 +12,7 @@ from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://income-bot-3.preview.emergentagent.com/api"
+BASE_URL = "https://write-russian-2.preview.emergentagent.com/api"
 ADMIN_USER = {
     "email": "admin@gemplay.com",
     "password": "Admin123!"
