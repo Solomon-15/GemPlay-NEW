@@ -3829,7 +3829,7 @@ const RegularBotsManagement = () => {
                                 source = `расчёт: ${cycle.profit || 0} / ${activePool} × 100%`;
                               }
                               
-                              const tooltipText = `ROI: ${roi.toFixed(1)}% (${source})`;
+                              const tooltipText = `ROI: ${roi.toFixed(2)}% (${source})`;
                               
                               return (
                                 <span 
@@ -3838,7 +3838,7 @@ const RegularBotsManagement = () => {
                                   }`}
                                   title={tooltipText}
                                 >
-                                  {roi >= 0 ? '+' : ''}{roi.toFixed(1)}%
+                                  {roi >= 0 ? '+' : ''}{roi.toFixed(2)}%
                                 </span>
                               );
                             })()}
