@@ -613,7 +613,7 @@ const RegularBotsManagement = () => {
     
     setModalPosition({
       x: Math.max(-200, Math.min(maxX, newX)), // разрешаем частичный выход за край
-      y: Math.max(0, Math.min(maxY, newY))
+      y: Math.max(-200, Math.min(maxY, newY)) // разрешаем выход вверх тоже
     });
   };
 

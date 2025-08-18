@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демо неограниченного перетаскивания</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            color: #ffffff;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        .demo-modal {
+            position: absolute;
+            background: #2d3748;
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            border-radius: 12px;
+            width: 500px;
+            max-height: 400px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            transition: box-shadow 0.3s ease;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .demo-modal.dragging {
+            box-shadow: 0 35px 70px rgba(59, 130, 246, 0.4);
+            z-index: 1000;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #4a5568;
+            background: #374151;
+            cursor: grab;
+            user-select: none;
+        }
+        .modal-header:active {
+            cursor: grabbing;
+        }
+        .modal-header.dragging {
+            cursor: grabbing;
+            background: #4f46e5;
+        }
+        .modal-content {
+            padding: 20px;
+            background: #2d3748;
+            height: 200px;
+            overflow-y: auto;
+        }
+        .modal-footer {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-top: 1px solid #4a5568;
+            background: #374151;
+            min-height: 80px;
+        }
+        @media (min-width: 640px) {
+            .modal-footer {
+                flex-direction: row;
+            }
+        }
+        .instruction {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(16, 185, 129, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+            z-index: 100;
+        }
+        .position-info {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 100;
+        }
+        .boundaries {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+        .boundary-line {
+            position: absolute;
+            background: rgba(239, 68, 68, 0.3);
+            pointer-events: none;
+        }
+        .boundary-line.top {
+            top: -200px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(16, 185, 129, 0.5);
+        }
+        .boundary-line.left {
+            top: 0;
+            left: -200px;
+            width: 2px;
+            height: 100%;
+            background: rgba(16, 185, 129, 0.5);
+        }
+        .boundary-line.right {
+            top: 0;
+            right: 400px;
+            width: 2px;
+            height: 100%;
+            background: rgba(239, 68, 68, 0.5);
+        }
+        .boundary-line.bottom {
+            bottom: 200px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(239, 68, 68, 0.5);
+        }
+        .reset-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="boundaries">
+        <div class="boundary-line top" title="Новая граница: -200px вверх"></div>
+        <div class="boundary-line left" title="Граница: -200px влево"></div>
+        <div class="boundary-line right" title="Граница: 400px справа остается видимым"></div>
+        <div class="boundary-line bottom" title="Граница: 200px снизу остается видимым"></div>
+    </div>
+
+    <div class="instruction">
+        <h3>🖱️ Тест неограниченного перетаскивания</h3>
+        <p style="font-size: 14px; line-height: 1.5;">
+            <strong>Что изменилось:</strong><br>
+            ✅ Можно перетаскивать вверх за экран<br>
+            🔲 Границы: -200px вверх (было 0px)
+        </p>
+        <p style="font-size: 14px;">
+            <strong>Как тестировать:</strong><br>
+            1. Перетащите окно вверх за экран<br>
+            2. Попробуйте все направления<br>
+            3. Проверьте ограничения
+        </p>
+        <button class="reset-btn" onclick="resetPosition()">🎯 В центр</button>
+    </div>
+
+    <div 
+        id="demoModal" 
+        class="demo-modal"
+    >
+        <div 
+            id="modalHeader"
+            class="modal-header"
+        >
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="padding: 8px; background: #3b82f6; border-radius: 8px;">
+                    <svg style="width: 20px; height: 20px; color: white;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h3 style="margin: 0; font-weight: bold;">⚡ Быстрый запуск ботов</h3>
+                        <div style="background: rgba(59, 130, 246, 0.2); padding: 2px 8px; border-radius: 4px; font-size: 12px;">
+                            🖱️ Перетаскиваемое
+                        </div>
+                    </div>
+                    <p style="margin: 0; font-size: 14px; color: #9ca3af;">Можно перетаскивать ВВЕРХ!</p>
+                </div>
+            </div>
+            <button style="background: none; border: none; color: #9ca3af; cursor: pointer;">
+                <svg style="width: 24px; height: 24px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="modal-content">
+            <h4>🎯 Тест перетаскивания вверх</h4>
+            <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <strong>🆕 Новая возможность:</strong><br>
+                Теперь модальное окно можно перетащить вверх за пределы экрана!
+            </div>
+            <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px;">
+                <strong>🔲 Границы:</strong><br>
+                • Вверх: -200px (было 0px)<br>
+                • Вниз: screen - 200px<br>
+                • Влево: -200px<br>
+                • Вправо: screen - 400px
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <div style="color: #9ca3af; font-size: 14px; flex: 1;">
+                💡 <strong>Совет:</strong> Можно создавать несколько ботов с одинаковыми параметрами, кликая по кнопке пресета многократно
+            </div>
+            <button style="padding: 8px 24px; background: #6b7280; color: white; border: none; border-radius: 8px; font-weight: bold;">
+                Закрыть
+            </button>
+        </div>
+    </div>
+
+    <div class="position-info" id="positionInfo">
+        Позиция: x: 0, y: 0<br>
+        Перетаскивание: неактивно
+    </div>
+
+    <script>
+        let isDragging = false;
+        let dragStart = { x: 0, y: 0 };
+        let modalPosition = { x: 0, y: 0 };
+
+        const modal = document.getElementById('demoModal');
+        const header = document.getElementById('modalHeader');
+        const positionInfo = document.getElementById('positionInfo');
+
+        function updatePositionInfo() {
+            const canMoveUp = modalPosition.y >= -200;
+            positionInfo.innerHTML = `
+                Позиция: x: ${Math.round(modalPosition.x)}, y: ${Math.round(modalPosition.y)}<br>
+                Перетаскивание: ${isDragging ? 'активно' : 'неактивно'}<br>
+                Можно вверх: ${canMoveUp ? 'ДА' : 'НЕТ'}
+            `;
+        }
+
+        function handleMouseDown(e) {
+            isDragging = true;
+            dragStart = {
+                x: e.clientX - modalPosition.x,
+                y: e.clientY - modalPosition.y
+            };
+            header.classList.add('dragging');
+            modal.classList.add('dragging');
+            document.body.style.userSelect = 'none';
+            updatePositionInfo();
+        }
+
+        function handleMouseMove(e) {
+            if (!isDragging) return;
+            
+            const newX = e.clientX - dragStart.x;
+            const newY = e.clientY - dragStart.y;
+            
+            // Новые ограничения (как в исправленном коде)
+            const maxX = window.innerWidth - 400;
+            const maxY = window.innerHeight - 200;
+            
+            modalPosition = {
+                x: Math.max(-200, Math.min(maxX, newX)),
+                y: Math.max(-200, Math.min(maxY, newY)) // НОВОЕ: -200 вместо 0
+            };
+            
+            modal.style.left = `${50 + (modalPosition.x / window.innerWidth) * 100}%`;
+            modal.style.top = `${50 + (modalPosition.y / window.innerHeight) * 100}%`;
+            
+            updatePositionInfo();
+        }
+
+        function handleMouseUp() {
+            isDragging = false;
+            header.classList.remove('dragging');
+            modal.classList.remove('dragging');
+            document.body.style.userSelect = '';
+            updatePositionInfo();
+        }
+
+        function resetPosition() {
+            modalPosition = { x: 0, y: 0 };
+            modal.style.left = '50%';
+            modal.style.top = '50%';
+            updatePositionInfo();
+        }
+
+        // Добавляем обработчики событий
+        header.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+
+        // Инициализация
+        updatePositionInfo();
+    </script>
+</body>
+</html>
