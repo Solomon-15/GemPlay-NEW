@@ -4303,7 +4303,7 @@ const RegularBotsManagement = () => {
                             const token = localStorage.getItem('token');
                             
                             const botData = {
-                              name: `${preset.name}-${Date.now()}`,
+                              name: preset.name,
                               min_bet_amount: preset.min_bet_amount,
                               max_bet_amount: preset.max_bet_amount,
                               wins_percentage: preset.wins_percentage,
@@ -4488,6 +4488,17 @@ const RegularBotsManagement = () => {
                         step="0.1"
                         className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto text-sm focus:outline-none focus:border-accent-primary"
                       />
+                    </div>
+
+                    {/* Баланс игр (автоматический расчет) */}
+                    <div>
+                      <label className="block text-text-secondary text-sm mb-2">⚖️ Баланс игр</label>
+                      <div className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-accent-primary font-roboto text-sm">
+                        W/L/D: {Math.round(currentPreset.cycle_games * currentPreset.wins_percentage / 100)}/{Math.round(currentPreset.cycle_games * currentPreset.losses_percentage / 100)}/{Math.round(currentPreset.cycle_games * currentPreset.draws_percentage / 100)}
+                      </div>
+                      <div className="text-xs text-text-secondary mt-1">
+                        Автоматический расчет на основе процентов
+                      </div>
                     </div>
 
                     {/* Паузы */}
