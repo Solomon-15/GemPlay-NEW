@@ -19,7 +19,18 @@ const BotCycleModal = ({ bot, onClose }) => {
       const response = await botsApi.getCycleHistory(bot.id);
       
       if (response.success) {
-        setCycleData(response);
+        // ИСПРАВЛЕНО: Фильтруем фиктивные циклы на frontend как дополнительная защита
+        if (response.games) {
+          const realCycles = response.games.filter(game => 
+            !game.id || !game.id.startsWith('temp_cycle_')
+          );
+          setCycleData({
+            ...response,
+            games: realCycles
+          });
+        } else {
+          setCycleData(response);
+        }
       }
       setLoading(false);
     } catch (error) {

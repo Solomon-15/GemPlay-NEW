@@ -840,9 +840,15 @@ const RegularBotsManagement = () => {
       });
       
       const cycleHistoryData = response.data.games || [];
-      // Кэшируем данные только если есть завершённые циклы (непустая история)
-      if (cycleHistoryData.length > 0) {
-        const totalProfit = cycleHistoryData.reduce((total, cycle) => total + (cycle.profit || 0), 0);
+      
+      // ИСПРАВЛЕНО: Фильтруем фиктивные циклы перед подсчётом прибыли
+      const realCycles = cycleHistoryData.filter(cycle => 
+        !cycle.id || !cycle.id.startsWith('temp_cycle_')
+      );
+      
+      // Кэшируем данные только если есть реальные завершённые циклы
+      if (realCycles.length > 0) {
+        const totalProfit = realCycles.reduce((total, cycle) => total + (cycle.profit || 0), 0);
         setCycleHistoryProfitByBot(prev => ({
           ...prev,
           [botId]: totalProfit

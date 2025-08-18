@@ -1879,6 +1879,12 @@ async def startup_event():
     # Indexes for completed_cycles collection
     await db.completed_cycles.create_index([("bot_id", 1)])
     await db.completed_cycles.create_index([("cycle_number", -1)])
+    # ИСПРАВЛЕНО: Добавляем уникальный составной индекс для предотвращения дублей
+    await db.completed_cycles.create_index(
+        [("bot_id", 1), ("cycle_number", 1)], 
+        unique=True,
+        name="unique_bot_cycle"
+    )
     
     logger.info("Database indexes created")
     
@@ -2048,6 +2054,16 @@ async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
         # Получаем номер следующего цикла
         cycle_number = bot_doc.get("completed_cycles_count", 0) + 1
         
+        # ИСПРАВЛЕНО: Проверяем, не существует ли уже цикл с таким номером для этого бота
+        existing_cycle = await db.completed_cycles.find_one({
+            "bot_id": bot_id,
+            "cycle_number": cycle_number
+        })
+        
+        if existing_cycle:
+            logger.warning(f"Cycle #{cycle_number} for bot {bot_id} already exists, skipping save to prevent duplicate")
+            return
+        
         # Рассчитываем дополнительные метрики
         total_games = len(completed_games)
         win_rate_percent = (wins_count / total_games * 100) if total_games > 0 else 0
@@ -2114,8 +2130,17 @@ async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
             "created_at": datetime.utcnow()
         }
         
-        # Сохраняем в коллекцию completed_cycles
-        await db.completed_cycles.insert_one(completed_cycle)
+        # ИСПРАВЛЕНО: Сохраняем в коллекцию completed_cycles с обработкой дублей
+        try:
+            await db.completed_cycles.insert_one(completed_cycle)
+        except Exception as insert_error:
+            # Проверяем, не ошибка ли уникальности (дублирование)
+            if "duplicate key" in str(insert_error).lower() or "E11000" in str(insert_error):
+                logger.warning(f"Cycle #{cycle_number} for bot {bot_id} already exists in database, skipping insert")
+                return  # Выходим, не обновляя счётчик
+            else:
+                # Другая ошибка - пробрасываем дальше
+                raise insert_error
         
         # Сохраняем игры цикла в отдельную коллекцию для быстрого доступа
         cycle_games_to_save = []
@@ -9166,11 +9191,26 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             }
         )
         
-        # КРИТИЧНО: Сохраняем завершенный цикл в completed_cycles
-        bot = await db.bots.find_one({"id": bot_id})
-        if bot:
-            await save_completed_cycle(bot, datetime.utcnow())
-            logger.info(f"✅ Bot {bot_id} cycle data saved to completed_cycles")
+        # ИСПРАВЛЕНО: Проверяем, не сохранён ли уже цикл в completed_cycles
+        # Получаем данные аккумулятора для определения номера цикла
+        accumulator = await db.bot_profit_accumulators.find_one({"id": accumulator_id})
+        if accumulator:
+            cycle_number = accumulator.get("cycle_number", 1)
+            
+            # Проверяем существование цикла в completed_cycles
+            existing_cycle = await db.completed_cycles.find_one({
+                "bot_id": bot_id,
+                "cycle_number": cycle_number
+            })
+            
+            if not existing_cycle:
+                # Цикла нет - сохраняем через save_completed_cycle
+                bot = await db.bots.find_one({"id": bot_id})
+                if bot:
+                    await save_completed_cycle(bot, datetime.utcnow())
+                    logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} data saved to completed_cycles")
+            else:
+                logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} already exists in completed_cycles, skipping duplicate save")
         
     except Exception as e:
         logger.error(f"Error completing bot cycle: {e}")
@@ -19377,27 +19417,11 @@ async def get_bot_cycle_history(
             "bot_id": bot_id
         }).sort("end_time", -1).to_list(1000)
 
-        # Если циклов нет в базе, но бот имеет завершенные циклы, генерируем временные данные
-        if not completed_cycles and bot.get("completed_cycles", 0) > 0:
-            logger.warning(f"Bot {bot_id} has {bot.get('completed_cycles', 0)} completed cycles but none in database")
-            # Генерируем временные данные для демонстрации
-            for i in range(min(bot.get("completed_cycles", 0), 5)):  # Максимум 5 последних
-                temp_cycle = {
-                    "id": f"temp_cycle_{bot_id}_{i+1}",
-                    "cycle_number": bot.get("completed_cycles", 0) - i,
-                    "start_time": datetime.utcnow() - timedelta(days=(i+1)*7),
-                    "end_time": datetime.utcnow() - timedelta(days=i*7),
-                    "duration_seconds": 86400 * 7,  # 7 дней
-                    "total_bets": 20 + (i * 5),
-                    "wins_count": 10 + (i * 2),
-                    "losses_count": 8 + (i * 2),
-                    "draws_count": 2 + (i * 1),
-                    "total_bet_amount": 1000.0 + (i * 500),
-                    "total_winnings": 1200.0 + (i * 600),
-                    "total_losses": 800.0 + (i * 400),
-                    "net_profit": 400.0 + (i * 200)
-                }
-                completed_cycles.append(temp_cycle)
+        # ИСПРАВЛЕНО: Убираем генерацию фиктивных циклов
+        # Отображаем только реально завершённые и сохранённые циклы
+        if not completed_cycles:
+            logger.info(f"No completed cycles found in database for bot {bot_id}")
+            # Возвращаем пустой список вместо генерации фиктивных данных
 
         # Форматируем данные для frontend
         cycles_resp = []
