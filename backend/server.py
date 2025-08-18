@@ -12953,7 +12953,8 @@ async def get_bot_cycles_history(
     """Get bot cycles history with advanced filtering for admin dashboard."""
     try:
         # Build filter query
-        filter_query = {}
+        # ИСПРАВЛЕНО: Исключаем фиктивные циклы из результатов
+        filter_query = {"id": {"$not": {"$regex": "^temp_cycle_"}}}
         
         if bot_name:
             filter_query["bot_name"] = {"$regex": bot_name, "$options": "i"}
@@ -13108,8 +13109,13 @@ async def get_bot_revenue_summary(
         # For "all", no date filter
         
         # Get aggregated statistics from completed_cycles
+        # ИСПРАВЛЕНО: Исключаем фиктивные циклы из агрегации
+        base_filter = {"id": {"$not": {"$regex": "^temp_cycle_"}}}
+        if date_filter:
+            base_filter.update(date_filter)
+        
         pipeline = [
-            {"$match": date_filter} if date_filter else {"$match": {}},
+            {"$match": base_filter},
             {"$group": {
                 "_id": None,
                 "total_revenue": {"$sum": "$net_profit"},
