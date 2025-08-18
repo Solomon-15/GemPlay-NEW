@@ -128,31 +128,74 @@ const ProfitAdmin = ({ user }) => {
   const fetchEntries = async () => {
     try {
       const token = localStorage.getItem('token');
-      const params = new URLSearchParams({
-        page: pagination.currentPage.toString(),
-        limit: pagination.itemsPerPage.toString(),
-        entry_type: activeCategory, // backend expects entry_type
-        sort_by: sortBy,
-        sort_order: sortOrder
-      });
+      
+      // Для категории BOT_CYCLES используем новый эндпоинт
+      if (activeCategory === 'BOT_CYCLES') {
+        const params = new URLSearchParams({
+          page: pagination.currentPage.toString(),
+          limit: pagination.itemsPerPage.toString(),
+          sort_by: sortBy === 'date' ? 'end_time' : sortBy,
+          sort_order: sortOrder
+        });
 
-      if (dateFilter.from) params.append('date_from', dateFilter.from);
-      if (dateFilter.to) params.append('date_to', dateFilter.to);
-      if (playerFilter) params.append('player_filter', playerFilter);
-      if (amountFilter.min) params.append('amount_min', amountFilter.min);
-      if (amountFilter.max) params.append('amount_max', amountFilter.max);
-      if (transactionIdFilter) {
-        // отправляем и точный, и contains — бэк примет contains как приоритетный
-        params.append('reference_id_contains', transactionIdFilter);
+        if (dateFilter.from) params.append('date_from', dateFilter.from);
+        if (dateFilter.to) params.append('date_to', dateFilter.to);
+        if (playerFilter) params.append('bot_name', playerFilter); // Поиск по имени бота
+        
+        const response = await axios.get(`${API}/admin/profit/bot-cycles-history?${params}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        // Преобразуем данные циклов в формат совместимый с entries
+        const cyclesData = response.data.cycles || [];
+        const formattedEntries = cyclesData.map(cycle => ({
+          id: cycle.id,
+          entry_type: 'BOT_CYCLES',
+          amount: cycle.net_profit,
+          source_user_id: cycle.bot_id,
+          description: `Цикл #${cycle.cycle_number} бота ${cycle.bot_name}: ${cycle.total_games} игр, ROI ${cycle.roi_percent}%`,
+          created_at: cycle.end_time,
+          reference_id: cycle.id,
+          // Дополнительные поля для отображения
+          bot_name: cycle.bot_name,
+          cycle_number: cycle.cycle_number,
+          total_games: cycle.total_games,
+          win_rate: cycle.win_rate_percent,
+          roi_percent: cycle.roi_percent,
+          is_profitable: cycle.is_profitable,
+          duration_hours: cycle.duration_hours
+        }));
+
+        setEntries(formattedEntries);
+        pagination.updatePagination(response.data.pagination?.total_count || 0);
+      } else {
+        // Для остальных категорий используем стандартный эндпоинт
+        const params = new URLSearchParams({
+          page: pagination.currentPage.toString(),
+          limit: pagination.itemsPerPage.toString(),
+          entry_type: activeCategory, // backend expects entry_type
+          sort_by: sortBy,
+          sort_order: sortOrder
+        });
+
+        if (dateFilter.from) params.append('date_from', dateFilter.from);
+        if (dateFilter.to) params.append('date_to', dateFilter.to);
+        if (playerFilter) params.append('player_filter', playerFilter);
+        if (amountFilter.min) params.append('amount_min', amountFilter.min);
+        if (amountFilter.max) params.append('amount_max', amountFilter.max);
+        if (transactionIdFilter) {
+          // отправляем и точный, и contains — бэк примет contains как приоритетный
+          params.append('reference_id_contains', transactionIdFilter);
+        }
+        if (entryStatusFilter) params.append('entry_status', entryStatusFilter);
+
+        const response = await axios.get(`${API}/admin/profit/entries?${params}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        setEntries(response.data.entries || []);
+        pagination.updatePagination(response.data.total_count || 0);
       }
-      if (entryStatusFilter) params.append('entry_status', entryStatusFilter);
-
-      const response = await axios.get(`${API}/admin/profit/entries?${params}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setEntries(response.data.entries || []);
-      pagination.updatePagination(response.data.total_count || 0);
     } catch (error) {
       console.error('Ошибка загрузки записей прибыли:', error);
     }
@@ -162,8 +205,7 @@ const ProfitAdmin = ({ user }) => {
     const types = {
       'bet_commission': '💰 Комиссия от ставок',
       'gift_commission': '🎁 Комиссия от подарков',
-      'bot_profit': '🤖 Доход от ботов',
-      'BOT_REVENUE': '🤖 Доход от ботов',
+      'BOT_CYCLES': '🤖 Завершенный цикл бота',
       'human_bot_profit': '🤖 Доход от Human ботов',
       'penalty': '🚨 Штрафы и удержания',
       'refund': '🔄 Возвраты средств',
@@ -179,8 +221,7 @@ const ProfitAdmin = ({ user }) => {
     const colors = {
       'bet_commission': 'text-green-400',
       'gift_commission': 'text-purple-400',
-      'bot_profit': 'text-blue-400',
-      'BOT_REVENUE': 'text-blue-400',
+      'BOT_CYCLES': 'text-blue-400',
       'human_bot_profit': 'text-cyan-400',
       'penalty': 'text-red-400',
       'refund': 'text-yellow-400',
@@ -221,7 +262,7 @@ const ProfitAdmin = ({ user }) => {
       color: 'cyan',
       description: 'Комиссия с игр Human-ботов (динамический процент)'
     },
-    'BOT_REVENUE': {
+    'BOT_CYCLES': {
       name: 'Доход от Обычных ботов',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +277,7 @@ const ProfitAdmin = ({ user }) => {
         </svg>
       ),
       color: 'blue',
-      description: 'Прибыль когда боты выигрывают против игроков'
+      description: 'Завершенные циклы обычных ботов с детальной статистикой'
     },
     'GIFT_COMMISSION': {
       name: 'Комиссия от подарков',
@@ -258,7 +299,7 @@ const ProfitAdmin = ({ user }) => {
     const colors = {
       'BET_COMMISSION': 'bg-green-600',
       'HUMAN_BOT_COMMISSION': 'bg-cyan-600',
-      'BOT_REVENUE': 'bg-blue-600', 
+      'BOT_CYCLES': 'bg-blue-600', 
       'GIFT_COMMISSION': 'bg-purple-600'
     };
     return colors[categoryKey] || 'bg-gray-600';
@@ -268,7 +309,7 @@ const ProfitAdmin = ({ user }) => {
     const colors = {
       'BET_COMMISSION': 'bg-green-600/20',
       'HUMAN_BOT_COMMISSION': 'bg-cyan-600/20',
-      'BOT_REVENUE': 'bg-blue-600/20',
+      'BOT_CYCLES': 'bg-blue-600/20',
       'GIFT_COMMISSION': 'bg-purple-600/20'
     };
     return colors[categoryKey] || 'bg-gray-600/20';
@@ -300,15 +341,27 @@ const ProfitAdmin = ({ user }) => {
   const getActionType = (entry, category) => {
     if (category === 'BET_COMMISSION') {
       return 'Комиссия с выигрыша';
-    } else if (category === 'BOT_REVENUE') {
-      return 'Выигрыш бота против игрока';
+    } else if (category === 'BOT_CYCLES') {
+      return entry.is_profitable ? 'Прибыльный цикл' : 'Убыточный цикл';
     } else if (category === 'GIFT_COMMISSION') {
       return 'Комиссия с подарка';
+    } else if (category === 'HUMAN_BOT_COMMISSION') {
+      return 'Комиссия от Human-бота';
     }
     return 'Неизвестно';
   };
 
   const getPlayerInfo = (entry) => {
+    // Для циклов ботов показываем имя бота
+    if (entry.entry_type === 'BOT_CYCLES' && entry.bot_name) {
+      return (
+        <div>
+          <div className="font-medium">{entry.bot_name}</div>
+          <div className="text-xs text-text-secondary">Цикл #{entry.cycle_number}</div>
+        </div>
+      );
+    }
+    
     if (entry.bot_id) {
       return `Bot_${entry.bot_id.substring(0, 8)}`;
     }

@@ -9166,6 +9166,12 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             }
         )
         
+        # КРИТИЧНО: Сохраняем завершенный цикл в completed_cycles
+        bot = await db.bots.find_one({"id": bot_id})
+        if bot:
+            await save_completed_cycle(bot, datetime.utcnow())
+            logger.info(f"✅ Bot {bot_id} cycle data saved to completed_cycles")
+        
     except Exception as e:
         logger.error(f"Error completing bot cycle: {e}")
 
