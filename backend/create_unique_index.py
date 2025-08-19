@@ -66,8 +66,12 @@ async def create_unique_index():
         client.close()
         print("🔌 Соединение с базой данных закрыто.")
 
-if __name__ == "__main__":
+def main():
+    """Главная функция скрипта."""
     print("🔧 Скрипт создания уникального индекса для completed_cycles")
     print("=" * 60)
     
     asyncio.run(create_unique_index())
+
+if __name__ == "__main__":
+    main()

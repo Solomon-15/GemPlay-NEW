@@ -19500,8 +19500,17 @@ async def get_completed_cycle_bets(
             logger.error(f"Bot not found: {bot_id}")
             raise HTTPException(status_code=404, detail="Bot not found")
 
+        # ИСПРАВЛЕНО: Проверяем что это не фиктивный цикл
+        if cycle_id.startswith("temp_cycle_"):
+            logger.warning(f"Attempted to fetch fake cycle: {cycle_id}")
+            raise HTTPException(status_code=404, detail="Fake cycle not accessible")
+        
         # Получаем данные о завершённом цикле
-        completed_cycle = await db.completed_cycles.find_one({"id": cycle_id, "bot_id": bot_id})
+        completed_cycle = await db.completed_cycles.find_one({
+            "id": cycle_id, 
+            "bot_id": bot_id,
+            "id": {"$not": {"$regex": "^temp_cycle_"}}
+        })
         if not completed_cycle:
             logger.error(f"Completed cycle not found - cycle_id: {cycle_id}, bot_id: {bot_id}")
             

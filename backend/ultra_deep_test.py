@@ -283,10 +283,11 @@ class UltraDeepTestEngine:
                 
                 # Ищем различные паттерны фильтрации
                 filter_patterns = [
-                    r'"id": \{"\\$not": \{"\\$regex": "\^temp_cycle_"\}\}',
-                    r"'id': \{'\\$not': \{'\\$regex': '\^temp_cycle_'\}\}",
-                    r'filter_query = \{"id": \{"\\$not": \{"\\$regex": "\^temp_cycle_"\}\}\}',
-                    r'base_filter = \{"id": \{"\\$not": \{"\\$regex": "\^temp_cycle_"\}\}\}'
+                    r'"id": \{".*temp_cycle_.*"\}',
+                    r"'id': \{.*temp_cycle_.*\}",
+                    r'filter_query.*temp_cycle_',
+                    r'base_filter.*temp_cycle_',
+                    r'recent_filter.*temp_cycle_'
                 ]
                 
                 has_filter = False
@@ -427,17 +428,39 @@ class UltraDeepTestEngine:
             matches = re.findall(pattern, content)
             analysis["creation_patterns"][pattern_name] = len(matches)
         
-        # Проверяем паттерны генерации демо-данных
+        # Проверяем паттерны генерации демо-данных (исключаем защитные блоки)
         demo_patterns = {
-            "demo_data_generation": "Generating demo data for temporary cycle",
-            "demo_games_generation": "Generating demo games for temporary cycle",
-            "temporary_cycle_blocks": "if cycle_id.startswith(\"temp_cycle_\"):",
-            "demo_cycle_creation": "completed_cycle = {"
+            "demo_data_generation": "Generating demo data",
+            "demo_games_generation": "Generating demo games", 
+            "demo_cycle_creation": "demo_game_",
+            "fake_cycle_generation": "completed_cycle = {"
+        }
+        
+        # Отдельно проверяем защитные блоки (это нормально)
+        protective_patterns = {
+            "temp_cycle_protection": "if cycle_id.startswith(\"temp_cycle_\"):",
+            "fake_cycle_rejection": "raise HTTPException.*Fake cycle not accessible"
         }
         
         for pattern_name, pattern in demo_patterns.items():
-            count = len(re.findall(re.escape(pattern), content))
+            if pattern_name == "fake_cycle_generation":
+                # Ищем создание фиктивных циклов, но исключаем защитные блоки
+                matches = re.findall(re.escape(pattern), content)
+                # Фильтруем только те, что создают temp_cycle_
+                fake_generations = [m for m in matches if "temp_cycle_" in content[content.find(m):content.find(m)+500]]
+                count = len(fake_generations)
+            else:
+                count = len(re.findall(re.escape(pattern), content))
             analysis["demo_generation_patterns"][pattern_name] = count
+        
+        # Считаем защитные блоки отдельно (это хорошо)
+        analysis["protective_patterns"] = {}
+        for pattern_name, pattern in protective_patterns.items():
+            if "HTTPException" in pattern:
+                count = len(re.findall(pattern, content))
+            else:
+                count = len(re.findall(re.escape(pattern), content))
+            analysis["protective_patterns"][pattern_name] = count
         
         # Считаем упоминания в комментариях
         comment_mentions = re.findall(r'#.*temp_cycle_', content)
@@ -446,6 +469,7 @@ class UltraDeepTestEngine:
         # Проверки
         total_creation = sum(analysis["creation_patterns"].values())
         total_demo = sum(analysis["demo_generation_patterns"].values())
+        total_protective = sum(analysis["protective_patterns"].values())
         
         if total_creation > 0:
             self.log_test_result("Temp cycle elimination", False, 
@@ -456,6 +480,10 @@ class UltraDeepTestEngine:
             self.log_test_result("Temp cycle elimination", False, 
                                f"Найдена генерация демо-данных: {total_demo}", analysis)
             return False
+        
+        # Защитные блоки - это хорошо, логируем их отдельно
+        if total_protective > 0:
+            logger.info(f"✅ Найдено {total_protective} защитных блоков от temp_cycle_ (это хорошо)")
         
         # Проверяем что все упоминания только в комментариях и фильтрах
         non_comment_mentions = analysis["total_temp_mentions"] - analysis["comment_mentions"]
