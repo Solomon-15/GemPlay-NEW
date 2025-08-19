@@ -2111,7 +2111,7 @@ async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
             
             # Новые поля для отчетности
             "bot_name": bot_doc.get("name", bot_doc.get("username", f"Bot_{bot_id[:8]}")),
-            "cycle_target_games": bot_doc.get("cycle_games", 16),
+            "cycle_target_games": bot_doc.get("cycle_games", 12),
             "average_bet_amount": round(average_bet_amount, 2),
             "win_rate_percent": round(win_rate_percent, 2),
             "profit_per_game": round(profit_per_game, 2),
@@ -2205,7 +2205,7 @@ async def maintain_all_bots_active_bets():
                 if not fresh_bot_doc or not fresh_bot_doc.get("is_active", False):
                     continue  # Бот удален или деактивирован
                 
-                cycle_games = fresh_bot_doc.get("cycle_games", 16)
+                cycle_games = fresh_bot_doc.get("cycle_games", 12)
                 
                 # НОВАЯ ПРАВИЛЬНАЯ ЛОГИКА ОПРЕДЕЛЕНИЯ ЗАВЕРШЕНИЯ ЦИКЛА
                 
@@ -2228,7 +2228,7 @@ async def maintain_all_bots_active_bets():
                 })
                 
                 # 4. ПРАВИЛЬНОЕ определение состояния цикла
-                cycle_games_target = fresh_bot_doc.get("cycle_games", 16)
+                cycle_games_target = fresh_bot_doc.get("cycle_games", 12)
                 
                 # Цикл считается ПОЛНОСТЬЮ завершенным только если:
                 # - Создано достаточно игр (total_games_in_cycle >= cycle_games_target)
@@ -2363,7 +2363,7 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
         if not bot_id:
             logger.error("create_full_bot_cycle called with bot without ID")
             return False
-        cycle_games = bot_doc.get("cycle_games", 16)
+        cycle_games = bot_doc.get("cycle_games", 12)
         min_bet = bot_doc.get("min_bet_amount", 1.0)
         max_bet = bot_doc.get("max_bet_amount", 50.0)
         win_percentage = bot_doc.get("win_percentage", 55.0)
@@ -2468,7 +2468,7 @@ async def calculate_bot_game_outcome(bot_id: str, game_value: float) -> str:
         current_cycle_losses = bot_doc.get("current_cycle_losses", 0)
         current_cycle_gem_value_won = bot_doc.get("current_cycle_gem_value_won", 0.0)
         current_cycle_gem_value_total = bot_doc.get("current_cycle_gem_value_total", 0.0)
-        cycle_games = bot_doc.get("cycle_games", 16)
+        cycle_games = bot_doc.get("cycle_games", 12)
         
         # Общая сумма гемов с учетом новой ставки
         total_gems_in_cycle = current_cycle_gem_value_total + game_value
@@ -2575,7 +2575,7 @@ async def check_and_complete_bot_cycle(bot_id: str):
             
         current_wins = bot_doc.get("current_cycle_wins", 0)
         current_losses = bot_doc.get("current_cycle_losses", 0)
-        cycle_games = bot_doc.get("cycle_games", 16)
+        cycle_games = bot_doc.get("cycle_games", 12)
         
         # Проверяем завершение цикла (ничьи считаются в общем количестве игр)
         current_draws = bot_doc.get("current_cycle_draws", 0)
@@ -2632,7 +2632,7 @@ async def calculate_real_cycle_total_amount(bot_doc: dict) -> float:
     """
     try:
         # Получаем базовые параметры
-        cycle_games = bot_doc.get('cycle_games', 16)
+        cycle_games = bot_doc.get('cycle_games', 12)
         min_bet = bot_doc.get('min_bet_amount', 1.0)
         max_bet = bot_doc.get('max_bet_amount', 100.0)
         
@@ -2663,7 +2663,7 @@ async def get_bot_cycle_statistics():
             current_wins = bot.get("current_cycle_wins", 0)
             current_losses = bot.get("current_cycle_losses", 0)
             current_draws = bot.get("current_cycle_draws", 0)
-            cycle_games = bot.get("cycle_games", 16)
+            cycle_games = bot.get("cycle_games", 12)
             
             games_in_current_cycle = current_wins + current_losses
             games_remaining = max(0, cycle_games - games_in_current_cycle)
@@ -5713,7 +5713,7 @@ async def get_bot_win_rate_analysis(bot_id: str, current_user: User = Depends(ge
         # Legacy removed: profit_strategy
         bot_behavior = bot.get("bot_behavior", "balanced")
         
-        cycle_games = bot.get("cycle_games", 16)
+        cycle_games = bot.get("cycle_games", 12)
         current_cycle_games = bot.get("current_cycle_games", 0)
         current_cycle_wins = bot.get("current_cycle_wins", 0)
         current_cycle_win_rate = (current_cycle_wins / current_cycle_games * 100) if current_cycle_games > 0 else 0
@@ -5902,7 +5902,7 @@ async def get_bot_cycle_bets(
         if not bot:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Бот не найден")
         
-        cycle_len = int(bot.get("cycle_games", 16) or 16)
+        cycle_len = int(bot.get("cycle_games", 12) or 12)
         min_bet = int(round(float(bot.get("min_bet_amount", 1))))
         max_bet = int(round(float(bot.get("max_bet_amount", 100))))
         
@@ -6056,7 +6056,7 @@ async def create_extended_bot(
     try:
         name = bot_config.get("name", "")
         creation_mode = bot_config.get("creation_mode", "queue-based")
-        cycle_games = bot_config.get("cycle_games", 16)
+        cycle_games = bot_config.get("cycle_games", 12)
         bot_behavior = bot_config.get("bot_behavior", "balanced")
         bot_type = bot_config.get("bot_type", "type-1")
         custom_min_bet = bot_config.get("custom_min_bet", 1)
@@ -8551,9 +8551,9 @@ class RegularBotSystem:
         if not bot:
             return {"passed": False, "reason": "Bot not found"}
         
-        cycle_limit = bot.get("current_limit") or bot.get("cycle_games", 16)
+        cycle_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
         if cycle_limit is None:
-            cycle_limit = 16  # fallback для старых ботов
+            cycle_limit = 12  # fallback для старых ботов
         
         current_bets = await self.db.games.count_documents({
             "creator_id": bot_id,
@@ -8608,7 +8608,7 @@ class RegularBotSystem:
         
         cycle_stats = {
             "current_games": bot.get("current_cycle_games", 0),
-            "total_games": bot.get("cycle_games", 16),
+            "total_games": bot.get("cycle_games", 12),
             "won_value": bot.get("current_cycle_gem_value_won", 0.0),
             "total_value": bot.get("current_cycle_gem_value_total", 0.0),
             "target_win_rate": bot.get("win_rate", 0.55)
@@ -8923,7 +8923,7 @@ class RegularBotSystem:
             return
         
         current_games = bot.get("current_cycle_games", 0)
-        cycle_games = bot.get("cycle_games", 16)
+        cycle_games = bot.get("cycle_games", 12)
         
         if current_games >= cycle_games:
             cycle_stats = {
@@ -9063,7 +9063,7 @@ async def maintain_bot_active_bets(game: Game):
             "status": "WAITING"
         })
         
-        cycle_limit = bot.get("current_limit") or bot.get("cycle_games", 16)
+        cycle_limit = bot.get("current_limit") or bot.get("cycle_games", 12)
         if current_active_bets >= cycle_limit:
             logger.info(f"🚫 Cycle limit reached for bot {bot_id}: {current_active_bets}/{cycle_limit}")
             return
@@ -9097,7 +9097,7 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             logger.error(f"Bot {bot_id} not found")
             return
         
-        cycle_length = bot.get("cycle_games", 16)  # ИСПРАВЛЕНО: используем cycle_games вместо cycle_length
+        cycle_length = bot.get("cycle_games", 12)  # ИСПРАВЛЕНО: используем cycle_games вместо cycle_length
         
         accumulator = await db.bot_profit_accumulators.find_one({
             "bot_id": bot_id,
@@ -10559,7 +10559,7 @@ async def get_bots(current_user: User = Depends(get_current_admin)):
                 "min_bet": bot.get("min_bet", 1.0),
                 "max_bet": bot.get("max_bet", 1000.0),
                 "win_rate": bot.get("win_rate", 0.6),
-                "cycle_games": bot.get("cycle_games", 16),
+                "cycle_games": bot.get("cycle_games", 12),
                 "current_cycle_games": bot.get("current_cycle_games", 0),
                 "current_cycle_wins": bot.get("current_cycle_wins", 0),
                 "pause_between_games": bot.get("pause_between_games", 60),
@@ -10600,7 +10600,7 @@ async def create_bot(
             win_rate=min(max(bot_data["win_rate"], 0.1), 0.9),  # 10% to 90%
             min_bet=bot_data.get("min_bet", 1.0),
             max_bet=bot_data.get("max_bet", 1000.0),
-            cycle_games=bot_data.get("cycle_games", 16),
+            cycle_games=bot_data.get("cycle_games", 12),
             pause_between_games=bot_data.get("pause_between_games", 60),
             avatar_gender=bot_data.get("avatar_gender", "male"),
             simple_mode=bot_data.get("simple_mode", False)
@@ -13849,7 +13849,7 @@ async def update_bot_cycle_tracking(bot_id: str, bot_won: bool):
         new_cycle_wins = bot.get("current_cycle_wins", 0) + (1 if bot_won else 0)
         
         # Reset cycle if we've reached the limit
-        if new_cycle_games >= bot.get("cycle_games", 16):
+        if new_cycle_games >= bot.get("cycle_games", 12):
             new_cycle_games = 0
             new_cycle_wins = 0
         
@@ -16891,7 +16891,7 @@ async def create_regular_bots(
         losses_percentage = bot_config.get("losses_percentage", 36.0) # % поражений
         draws_percentage = bot_config.get("draws_percentage", 20.0)   # % ничьих
         
-        cycle_games = bot_config.get("cycle_games", 16)  # 1-66
+        cycle_games = bot_config.get("cycle_games", 12)  # 1-66
         pause_between_cycles = bot_config.get("pause_between_cycles", 5)  # Пауза между циклами
         pause_on_draw = bot_config.get("pause_on_draw", 5)  # Пауза при ничье и между ставками
         profit_strategy = bot_config.get("profit_strategy", "balanced")
@@ -17175,7 +17175,7 @@ async def create_bot_bet(bot: Bot) -> bool:
             "status": "WAITING"
         })
         
-        cycle_games = bot_doc.get("cycle_games", 16)
+        cycle_games = bot_doc.get("cycle_games", 12)
         if bot_active_bets >= cycle_games:
             logger.info(f"🚫 Cycle limit reached for bot {bot.id}: {bot_active_bets}/{cycle_games}")
             return False
@@ -17513,7 +17513,7 @@ async def create_individual_bot(
     try:
         name = bot_config.get("name", "Bot #001")
         pause_timer = bot_config.get("pause_timer", 5)  # теперь секунды
-        cycle_games = bot_config.get("cycle_games", 16)
+        cycle_games = bot_config.get("cycle_games", 12)
         cycle_total_amount = bot_config.get("cycle_total_amount", 500.0)
         win_percentage = bot_config.get("win_percentage", 60.0)
         min_bet = bot_config.get("min_bet_amount", 1.0)
@@ -17724,7 +17724,7 @@ async def get_regular_bots_simple(
                 try:
                     wins_pct = float(bot.get("wins_percentage", 44.0) or 44.0)
                     losses_pct = float(bot.get("losses_percentage", 36.0) or 36.0)
-                    cycle_games = int(bot.get("cycle_games", 16) or 16)
+                    cycle_games = int(bot.get("cycle_games", 12) or 12)
                     min_bet = float(bot.get("min_bet_amount", 1.0) or 1.0)
                     max_bet = float(bot.get("max_bet_amount", 50.0) or 50.0)
                     avg_bet = (min_bet + max_bet) / 2.0
@@ -17783,7 +17783,7 @@ async def get_regular_bots_simple(
                     # Цикл активен - рассчитываем фиксированную прибыль
                     min_bet = float(bot.get("min_bet_amount", 1.0) or 1.0)
                     max_bet = float(bot.get("max_bet_amount", 50.0) or 50.0)
-                    cycle_games = int(bot.get("cycle_games", 16) or 16)
+                    cycle_games = int(bot.get("cycle_games", 12) or 12)
                     wins_pct = float(bot.get("wins_percentage", 44.0) or 44.0)
                     losses_pct = float(bot.get("losses_percentage", 36.0) or 36.0)
                     draws_pct = float(bot.get("draws_percentage", 20.0) or 20.0)
@@ -17930,7 +17930,7 @@ async def get_regular_bots_list(
                 wins_pct = float(bot_doc.get("wins_percentage", 44.0) or 44.0)
                 losses_pct = float(bot_doc.get("losses_percentage", 36.0) or 36.0)
                 draws_pct = float(bot_doc.get("draws_percentage", 20.0) or 20.0)
-                cycle_games_val = int(bot_doc.get("cycle_games", 16) or 16)
+                cycle_games_val = int(bot_doc.get("cycle_games", 12) or 12)
                 min_bet_val = float(bot_doc.get("min_bet_amount", 1.0) or 1.0)
                 max_bet_val = float(bot_doc.get("max_bet_amount", 50.0) or 50.0)
                 roi_planned_percent_val = compute_planned_roi_percent(min_bet_val, max_bet_val, cycle_games_val,
@@ -18029,7 +18029,7 @@ async def get_regular_bots_list(
                 bot_profit_amount = 0.0
                 bot_profit_percent = 0.0
             
-            cycle_games = bot_doc.get('cycle_games', 16)
+            cycle_games = bot_doc.get('cycle_games', 12)
             if cycle_games <= 0:
                 cycle_games = 12  # Значение по умолчанию
             
@@ -18046,7 +18046,7 @@ async def get_regular_bots_list(
             
             # Рассчёт прибыли текущего активного цикла (по аналогии с /admin/bots/{id}/cycle-bets)
             try:
-                cycle_len_cur = int(bot_doc.get("cycle_games", 16) or 16)
+                cycle_len_cur = int(bot_doc.get("cycle_games", 12) or 12)
                 active_games_cur = await db.games.find({
                     "creator_id": bot.id,
                     "status": {"$in": ["WAITING", "ACTIVE", "REVEAL"]}
@@ -18145,7 +18145,7 @@ async def get_regular_bots_list(
                 "max_bet": bot_doc.get('max_bet_amount', 50.0),
                 "pause_timer": bot_doc.get('pause_timer', 5),
                 "pause_between_games": bot_doc.get('pause_between_games', 5),
-                "current_limit": bot_doc.get('current_limit', bot_doc.get('cycle_games', 16)),
+                "current_limit": bot_doc.get('current_limit', bot_doc.get('cycle_games', 12)),
                 "bot_type_name": bot_doc.get('bot_type_name', 'Type 1'),
                 "bot_type_id": bot_doc.get('bot_type_id', 'type-1'),
                 "bot_behavior": bot_doc.get('bot_behavior', 'balanced'),
@@ -18237,7 +18237,7 @@ async def get_bot_details(
             # Core user-defined parameters
             "min_bet_amount": bot_doc.get("min_bet_amount", 1.0),
             "max_bet_amount": bot_doc.get("max_bet_amount", 50.0),
-            "cycle_games": bot_doc.get("cycle_games", 16),
+            "cycle_games": bot_doc.get("cycle_games", 12),
             "pause_between_cycles": bot_doc.get("pause_between_cycles", 5),
             "pause_on_draw": bot_doc.get("pause_on_draw", 1),
             "cycle_total_amount": bot_doc.get("cycle_total_amount", 0),
@@ -18297,7 +18297,7 @@ async def recalculate_bot_bets(
             )
         
         # Get bot parameters
-        cycle_length = bot.get("cycle_games", 16)  # ИСПРАВЛЕНО: используем cycle_games вместо cycle_length
+        cycle_length = bot.get("cycle_games", 12)  # ИСПРАВЛЕНО: используем cycle_games вместо cycle_length
         cycle_total_amount = bot.get("cycle_total_amount", 500.0)
         win_percentage = bot.get("win_percentage", 60)
         min_bet_amount = bot.get("min_bet_amount", 5.0)
@@ -18339,7 +18339,7 @@ async def recalculate_bot_bets(
             "bot_id": bot_id,
             "generated_bets": int(active_bets_count),
             "cycle_parameters": {
-                "cycle_games": bot.get("cycle_games", 16),
+                "cycle_games": bot.get("cycle_games", 12),
                 "min_bet_amount": bot.get("min_bet_amount", 1.0),
                 "max_bet_amount": bot.get("max_bet_amount", 50.0),
                 "wins_count": bot.get("wins_count", 6),
@@ -19213,7 +19213,7 @@ async def update_individual_bot_settings(
         # Counts validation (if any provided)
         if any(v is not None for v in [wins_count, losses_count, draws_count]):
             # Determine target cycle games (updated or existing)
-            target_cycle_games = cycle_games if cycle_games is not None else bot.get("cycle_games", 16)
+            target_cycle_games = cycle_games if cycle_games is not None else bot.get("cycle_games", 12)
             W = wins_count if wins_count is not None else bot.get("wins_count", 6)
             L = losses_count if losses_count is not None else bot.get("losses_count", 6)
             D = draws_count if draws_count is not None else bot.get("draws_count", 4)
@@ -19994,7 +19994,7 @@ async def get_bot_active_bets(
         
         bot = Bot(**bot_doc)
         
-        cycle_games = bot_doc.get('cycle_games', 16)
+        cycle_games = bot_doc.get('cycle_games', 12)
         if cycle_games <= 0:
             cycle_games = 12
         
