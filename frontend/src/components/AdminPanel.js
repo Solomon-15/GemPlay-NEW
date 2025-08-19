@@ -36,6 +36,7 @@ const AdminPanel = ({ user, onClose }) => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(null);
   const [clearCacheLoading, setClearCacheLoading] = useState(false);
+  const [fullResetLoading, setFullResetLoading] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
   const navTimerRef = useRef(null);
   const navShownAtRef = useRef(0);

@@ -1,0 +1,50 @@
+# 🔥 ПАТЧ ДЛЯ ДОБАВЛЕНИЯ ПОЛНОГО СБРОСА БД
+
+## 1. BACKEND ИЗМЕНЕНИЯ (server.py):
+
+### Добавить функцию в auth_utils.py:
+async def get_current_super_admin(token: str = Depends(oauth2_scheme)):
+    user = await get_current_user(token)
+    if user.role != "SUPER_ADMIN":
+        raise HTTPException(status_code=403, detail="Только SUPER_ADMIN")
+    return user
+
+### Добавить endpoint в server.py:
+@api_router.post("/admin/database/full-reset")
+async def full_database_reset(
+    request_data: dict = Body(...),
+    current_user: User = Depends(get_current_super_admin)
+):
+    # Проверка подтверждения
+    if request_data.get('confirmation') != 'ПОЛНЫЙ СБРОС':
+        raise HTTPException(400, "Неверное подтверждение")
+    
+    # Сохраняем админов
+    admin_roles = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR'] 
+    admin_users = await db.users.find({"role": {"$in": admin_roles}}).to_list(None)
+    
+    # Удаляем все коллекции кроме админов
+    collections = ["users", "games", "bots", "transactions"]
+    total_deleted = 0
+    
+    for collection_name in collections:
+        if collection_name == "users":
+            result = await db[collection_name].delete_many({"role": {"$nin": admin_roles}})
+        else:
+            result = await db[collection_name].delete_many({})
+        total_deleted += result.deleted_count
+    
+    return {"success": True, "total_deleted": total_deleted}
+
+## 2. FRONTEND ИЗМЕНЕНИЯ (AdminPanel.js):
+
+### Добавить состояние:
+const [fullResetLoading, setFullResetLoading] = useState(false);
+
+### Добавить кнопку после "Очистить кэш":
+{user?.role === 'SUPER_ADMIN' && (
+  <button onClick={fullDatabaseReset} disabled={fullResetLoading}
+    className="px-4 py-2 bg-red-600 hover:bg-red-700 border-2 border-red-500 rounded-lg text-white font-bold">
+    🔥 СБРОС БД
+  </button>
+)}
