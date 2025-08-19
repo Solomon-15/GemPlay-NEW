@@ -2004,7 +2004,19 @@ async def bot_automation_loop():
             await asyncio.sleep(5)  # Пауза даже при ошибке
 
 async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
-    """Сохраняет данные о завершённом цикле в базу данных"""
+    """
+    УСТАРЕВШАЯ ФУНКЦИЯ - НЕ ИСПОЛЬЗУЕТСЯ
+    
+    Эта функция создавала дублированные циклы и была источником проблемы
+    с появлением двух записей в истории циклов.
+    
+    Теперь данные циклов сохраняются ТОЛЬКО через аккумуляторы в complete_bot_cycle()
+    """
+    logger.warning("⚠️ save_completed_cycle() вызвана, но отключена для предотвращения дублирования циклов")
+    logger.warning("   Данные циклов теперь сохраняются только через систему аккумуляторов")
+    return  # Ранний возврат - функция больше не выполняется
+    
+    # ОТКЛЮЧЁННЫЙ КОД (оставлен для справки):
     try:
         bot_id = bot_doc.get("id")
         if not bot_id:
@@ -9217,11 +9229,34 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             }
         )
         
-        # ИСПРАВЛЕНО: Проверяем, не сохранён ли уже цикл в completed_cycles
-        # Получаем данные аккумулятора для определения номера цикла
+        # ИСПРАВЛЕНО: Убираем дублированный вызов save_completed_cycle
+        # Данные цикла теперь сохраняются ТОЛЬКО через аккумуляторы
+        # save_completed_cycle больше не вызывается, чтобы избежать дублирования циклов
+        
         accumulator = await db.bot_profit_accumulators.find_one({"id": accumulator_id})
         if accumulator:
             cycle_number = accumulator.get("cycle_number", 1)
+            
+            # Сохраняем данные цикла напрямую в completed_cycles из аккумулятора
+            cycle_data = {
+                "id": str(uuid.uuid4()),
+                "bot_id": bot_id,
+                "cycle_number": cycle_number,
+                "start_time": accumulator.get("cycle_start_date", datetime.utcnow()),
+                "end_time": datetime.utcnow(),
+                "duration_seconds": int((datetime.utcnow() - accumulator.get("cycle_start_date", datetime.utcnow())).total_seconds()),
+                "total_bets": accumulator.get("games_completed", 0),
+                "wins_count": accumulator.get("games_won", 0),
+                "losses_count": accumulator.get("games_completed", 0) - accumulator.get("games_won", 0),
+                "draws_count": 0,  # В аккумуляторах ничьи не отслеживаются отдельно
+                "total_bet_amount": total_spent,
+                "total_winnings": total_earned - total_spent if total_earned > total_spent else 0,
+                "total_losses": total_spent - total_earned if total_spent > total_earned else 0,
+                "net_profit": profit,
+                "is_profitable": profit > 0,
+                "created_by_system_version": "v3.0_accumulators_only",
+                "created_at": datetime.utcnow()
+            }
             
             # Проверяем существование цикла в completed_cycles
             existing_cycle = await db.completed_cycles.find_one({
@@ -9230,13 +9265,16 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             })
             
             if not existing_cycle:
-                # Цикла нет - сохраняем через save_completed_cycle
-                bot = await db.bots.find_one({"id": bot_id})
-                if bot:
-                    await save_completed_cycle(bot, datetime.utcnow())
-                    logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} data saved to completed_cycles")
+                try:
+                    await db.completed_cycles.insert_one(cycle_data)
+                    logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} saved directly from accumulator (profit: ${profit:.2f})")
+                except Exception as insert_error:
+                    if "duplicate key" in str(insert_error).lower():
+                        logger.warning(f"✅ Bot {bot_id} cycle #{cycle_number} already exists (race condition), skipping")
+                    else:
+                        raise insert_error
             else:
-                logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} already exists in completed_cycles, skipping duplicate save")
+                logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} already exists, skipping duplicate save")
         
     except Exception as e:
         logger.error(f"Error completing bot cycle: {e}")
