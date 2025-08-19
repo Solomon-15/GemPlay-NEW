@@ -448,9 +448,9 @@ const AdminPanel = ({ user, onClose }) => {
         const confirmBtn = modal.querySelector('#confirmBtn');
         const cancelBtn = modal.querySelector('#cancelBtn');
 
-        // Активируем кнопку только при правильном вводе
+        // Активируем кнопку только при правильном вводе (строгое сравнение)
         input.addEventListener('input', (e) => {
-          const isCorrect = e.target.value.trim() === 'ПОЛНЫЙ СБРОС';
+          const isCorrect = e.target.value === 'ПОЛНЫЙ СБРОС';
           confirmBtn.disabled = !isCorrect;
           confirmBtn.style.opacity = isCorrect ? '1' : '0.5';
           confirmBtn.style.cursor = isCorrect ? 'pointer' : 'not-allowed';
@@ -471,7 +471,7 @@ const AdminPanel = ({ user, onClose }) => {
 
         // Обработчики кнопок
         confirmBtn.addEventListener('click', () => {
-          if (input.value.trim() === 'ПОЛНЫЙ СБРОС') {
+          if (input.value === 'ПОЛНЫЙ СБРОС') {
             document.body.removeChild(modal);
             resolve(true);
           }

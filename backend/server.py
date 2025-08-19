@@ -11802,8 +11802,8 @@ async def full_database_reset(
                 detail="Доступ запрещён! Полный сброс БД доступен только SUPER_ADMIN."
             )
         
-        # 2. Проверка текстового подтверждения
-        confirmation = request_data.get('confirmation', '').strip()
+        # 2. Проверка текстового подтверждения (строгая, без trim)
+        confirmation = request_data.get('confirmation', '')
         if confirmation != 'ПОЛНЫЙ СБРОС':
             logger.warning(f"Invalid confirmation attempt by {current_user.email}: '{confirmation}'")
             raise HTTPException(

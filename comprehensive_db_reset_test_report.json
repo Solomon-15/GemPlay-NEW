@@ -1,0 +1,2317 @@
+{
+  "test_summary": {
+    "total_iterations": 50,
+    "perfect_iterations": 0,
+    "average_success_rate": 83.3,
+    "final_result": "ТРЕБУЕТ УЛУЧШЕНИЙ"
+  },
+  "detailed_results": [
+    {
+      "iteration": 1,
+      "timestamp": "2025-08-19T21:04:16.776378",
+      "duration": 0.0008840560913085938,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 2,
+      "timestamp": "2025-08-19T21:04:18.779114",
+      "duration": 0.0008914470672607422,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 3,
+      "timestamp": "2025-08-19T21:04:20.782472",
+      "duration": 0.0008819103240966797,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 4,
+      "timestamp": "2025-08-19T21:04:22.785750",
+      "duration": 0.0008547306060791016,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 5,
+      "timestamp": "2025-08-19T21:04:24.789098",
+      "duration": 0.0008902549743652344,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 6,
+      "timestamp": "2025-08-19T21:04:26.792406",
+      "duration": 0.0008857250213623047,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 7,
+      "timestamp": "2025-08-19T21:04:28.795086",
+      "duration": 0.0009150505065917969,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 8,
+      "timestamp": "2025-08-19T21:04:30.798493",
+      "duration": 0.0009493827819824219,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 9,
+      "timestamp": "2025-08-19T21:04:32.802166",
+      "duration": 0.0011332035064697266,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 10,
+      "timestamp": "2025-08-19T21:04:34.805490",
+      "duration": 0.0008730888366699219,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 11,
+      "timestamp": "2025-08-19T21:04:36.808955",
+      "duration": 0.0009355545043945312,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 12,
+      "timestamp": "2025-08-19T21:04:38.812359",
+      "duration": 0.0009720325469970703,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 13,
+      "timestamp": "2025-08-19T21:04:40.815760",
+      "duration": 0.000982046127319336,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 14,
+      "timestamp": "2025-08-19T21:04:42.819155",
+      "duration": 0.0009794235229492188,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 15,
+      "timestamp": "2025-08-19T21:04:44.822575",
+      "duration": 0.0008797645568847656,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 16,
+      "timestamp": "2025-08-19T21:04:46.825914",
+      "duration": 0.0008831024169921875,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 17,
+      "timestamp": "2025-08-19T21:04:48.830079",
+      "duration": 0.0017495155334472656,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 18,
+      "timestamp": "2025-08-19T21:04:50.833467",
+      "duration": 0.0009801387786865234,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 19,
+      "timestamp": "2025-08-19T21:04:52.837014",
+      "duration": 0.0009975433349609375,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 20,
+      "timestamp": "2025-08-19T21:04:54.840327",
+      "duration": 0.0008842945098876953,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 21,
+      "timestamp": "2025-08-19T21:04:56.843780",
+      "duration": 0.0009665489196777344,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 22,
+      "timestamp": "2025-08-19T21:04:58.847228",
+      "duration": 0.0009205341339111328,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 23,
+      "timestamp": "2025-08-19T21:05:00.850596",
+      "duration": 0.0009253025054931641,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 24,
+      "timestamp": "2025-08-19T21:05:02.853945",
+      "duration": 0.0008981227874755859,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 25,
+      "timestamp": "2025-08-19T21:05:04.857297",
+      "duration": 0.0008835792541503906,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 26,
+      "timestamp": "2025-08-19T21:05:06.860669",
+      "duration": 0.0009250640869140625,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 27,
+      "timestamp": "2025-08-19T21:05:08.864012",
+      "duration": 0.0008337497711181641,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 28,
+      "timestamp": "2025-08-19T21:05:10.867281",
+      "duration": 0.0008556842803955078,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 29,
+      "timestamp": "2025-08-19T21:05:12.870901",
+      "duration": 0.0010428428649902344,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 30,
+      "timestamp": "2025-08-19T21:05:14.874345",
+      "duration": 0.0008957386016845703,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 31,
+      "timestamp": "2025-08-19T21:05:16.877650",
+      "duration": 0.0008609294891357422,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 32,
+      "timestamp": "2025-08-19T21:05:18.880917",
+      "duration": 0.0008387565612792969,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 33,
+      "timestamp": "2025-08-19T21:05:20.884347",
+      "duration": 0.0009524822235107422,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 34,
+      "timestamp": "2025-08-19T21:05:22.887758",
+      "duration": 0.0008504390716552734,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 35,
+      "timestamp": "2025-08-19T21:05:24.891210",
+      "duration": 0.0009014606475830078,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 36,
+      "timestamp": "2025-08-19T21:05:26.895181",
+      "duration": 0.0013129711151123047,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 37,
+      "timestamp": "2025-08-19T21:05:28.898510",
+      "duration": 0.0008757114410400391,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 38,
+      "timestamp": "2025-08-19T21:05:30.901911",
+      "duration": 0.0009160041809082031,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 39,
+      "timestamp": "2025-08-19T21:05:32.905256",
+      "duration": 0.0008988380432128906,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 40,
+      "timestamp": "2025-08-19T21:05:34.908651",
+      "duration": 0.0009529590606689453,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 41,
+      "timestamp": "2025-08-19T21:05:36.912082",
+      "duration": 0.0009291172027587891,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 42,
+      "timestamp": "2025-08-19T21:05:38.915371",
+      "duration": 0.0008599758148193359,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 43,
+      "timestamp": "2025-08-19T21:05:40.918690",
+      "duration": 0.0008711814880371094,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 44,
+      "timestamp": "2025-08-19T21:05:42.922204",
+      "duration": 0.001001596450805664,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 45,
+      "timestamp": "2025-08-19T21:05:44.925628",
+      "duration": 0.0009624958038330078,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 46,
+      "timestamp": "2025-08-19T21:05:46.929122",
+      "duration": 0.0009374618530273438,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 47,
+      "timestamp": "2025-08-19T21:05:48.931479",
+      "duration": 0.0009257793426513672,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 48,
+      "timestamp": "2025-08-19T21:05:50.934872",
+      "duration": 0.0008654594421386719,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 49,
+      "timestamp": "2025-08-19T21:05:52.938112",
+      "duration": 0.0008156299591064453,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    },
+    {
+      "iteration": 50,
+      "timestamp": "2025-08-19T21:05:54.941522",
+      "duration": 0.0009458065032958984,
+      "success_rate": 83.33333333333334,
+      "tests_passed": 5,
+      "total_tests": 6,
+      "is_perfect": false,
+      "issues_found": [
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+        "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+      ],
+      "detailed_results": {
+        "access_rights": {
+          "passed": true,
+          "issues": []
+        },
+        "confirmation": {
+          "passed": false,
+          "issues": [
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+            "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False"
+          ]
+        },
+        "data_preservation": {
+          "passed": true,
+          "issues": []
+        },
+        "error_handling": {
+          "passed": true,
+          "issues": []
+        },
+        "edge_cases": {
+          "passed": true,
+          "issues": []
+        },
+        "performance": {
+          "passed": true,
+          "issues": []
+        }
+      }
+    }
+  ],
+  "all_issues_found": [
+    "Проблема с подтверждением 'ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+    "Проблема с подтверждением 'ПОЛНЫЙ СБРОС\n\r': получено True, ожидалось False",
+    "Проблема с подтверждением ' ПОЛНЫЙ СБРОС ': получено True, ожидалось False",
+    "Проблема с подтверждением ' ПОЛНЫЙ СБРОС': получено True, ожидалось False"
+  ],
+  "test_completion_time": "2025-08-19T21:05:54.941698"
+}
