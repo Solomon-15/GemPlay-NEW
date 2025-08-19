@@ -582,6 +582,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
             totalGemValue={selectedGemValue}
             selectedMove={selectedMove}
             onSelectedMoveChange={setSelectedMove}
+            showCountdown={showCountdown}
           />
         );
       case 3:
@@ -674,7 +675,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4" onWheel={(e)=>e.stopPropagation()} onTouchMove={(e)=>e.stopPropagation()}>
       {/* Анимированный обратный отсчет 3-2-1 */}
       {showCountdown && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-95 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black bg-opacity-98 backdrop-blur-md">
           <div className="text-center">
             <div 
               key={countdownNumber}
@@ -752,7 +753,7 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
         )}
 
         {/* Content */}
-        <div className="p-4 overflow-y-auto max-h-96">
+        <div className={`p-4 overflow-y-auto max-h-96 ${showCountdown ? 'pointer-events-none opacity-50' : ''}`}>
           {renderCurrentStep()}
         </div>
 
@@ -776,14 +777,14 @@ const JoinBattleModal = ({ bet, user, onClose, onUpdateUser }) => {
           </div>
         )}
         {currentStep === 2 && (
-          <div className="p-4 border-t border-border-primary">
+          <div className={`p-4 border-t border-border-primary ${showCountdown ? 'pointer-events-none opacity-50' : ''}`}>
             <div className="flex space-x-3">
               <button
                 type="button"
                 onClick={startBattle}
-                disabled={loading || !canGoNext || isStartingBattle}
+                disabled={loading || !canGoNext || isStartingBattle || showCountdown}
                 className={`flex-1 px-4 py-2 text-white font-rajdhani font-bold rounded-lg transition-all duration-300 disabled:opacity-50 ${
-                  isStartingBattle 
+                  isStartingBattle || showCountdown
                     ? 'bg-gray-600 cursor-not-allowed' 
                     : 'bg-gradient-accent hover:scale-105'
                 }`}

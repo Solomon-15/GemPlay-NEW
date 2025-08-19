@@ -4,7 +4,8 @@ const MoveSelectionStep = ({
   targetAmount,
   totalGemValue,
   selectedMove,
-  onSelectedMoveChange
+  onSelectedMoveChange,
+  showCountdown = false
 }) => {
 
   const moves = [
@@ -39,10 +40,14 @@ const MoveSelectionStep = ({
               e.stopPropagation();
               handleMoveSelect(move.id);
             }}
-            className={`p-6 rounded-lg border-2 transition-all duration-300 hover:scale-105 ${
+            className={`p-6 rounded-lg border-2 transition-all duration-300 ${
+              showCountdown 
+                ? 'pointer-events-none' 
+                : 'hover:scale-105'
+            } ${
               selectedMove === move.id
                 ? 'border-accent-primary bg-accent-primary bg-opacity-20'
-                : 'border-border-primary hover:border-accent-primary'
+                : `border-border-primary ${showCountdown ? '' : 'hover:border-accent-primary'}`
             }`}
           >
             <div className="flex flex-col items-center space-y-2">
