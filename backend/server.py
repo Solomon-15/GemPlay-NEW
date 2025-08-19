@@ -2533,15 +2533,13 @@ async def update_bot_cycle_stats(bot_id: str, outcome: str, game_value: float):
         if outcome == "WIN":
             update_data["current_cycle_wins"] = bot_doc.get("current_cycle_wins", 0) + 1
             update_data["current_cycle_gem_value_won"] = bot_doc.get("current_cycle_gem_value_won", 0.0) + game_value
-            # Прибыль = выигранное - потраченное
-            profit = game_value  # При победе бот получает удвоенную ставку, минус свою ставку = чистый выигрыш
-            update_data["current_cycle_profit"] = bot_doc.get("current_cycle_profit", 0.0) + profit
+            # ИСПРАВЛЕНО: Убрали обновление current_cycle_profit во время цикла
+            # Прибыль рассчитывается только в аккумуляторах и отображается после завершения цикла
             
         elif outcome == "LOSS":
             update_data["current_cycle_losses"] = bot_doc.get("current_cycle_losses", 0) + 1
-            # При проигрыше бот теряет свою ставку
-            loss = -game_value
-            update_data["current_cycle_profit"] = bot_doc.get("current_cycle_profit", 0.0) + loss
+            # ИСПРАВЛЕНО: Убрали обновление current_cycle_profit во время цикла
+            # Потери учитываются только в аккумуляторах
             
         elif outcome == "DRAW":
             update_data["current_cycle_draws"] = bot_doc.get("current_cycle_draws", 0) + 1
@@ -2585,31 +2583,32 @@ async def check_and_complete_bot_cycle(bot_id: str):
         
         if games_played >= cycle_games:
             # Цикл завершен!
-            cycle_profit = bot_doc.get("current_cycle_profit", 0.0)
+            # ИСПРАВЛЕНО: Убрали использование current_cycle_profit (устаревшее поле)
+            # Прибыль теперь рассчитывается только в аккумуляторах через complete_bot_cycle()
             completed_cycles = bot_doc.get("completed_cycles", 0)
             
             logger.info(f"🎯 Bot {bot_doc.get('name', bot_id)} completed cycle #{completed_cycles + 1}")
             logger.info(f"   Games: {current_wins}W/{current_losses}L (target: {cycle_games})")
-            logger.info(f"   Cycle profit: ${cycle_profit:.2f}")
+            logger.info(f"   Cycle profit will be calculated by accumulator system")
             
             # Обновляем статистику бота
+            # ИСПРАВЛЕНО: Убрали cycle_profit и total_net_profit из старой логики
+            # Прибыль теперь обрабатывается только через аккумуляторы
             update_data = {
                 "completed_cycles": completed_cycles + 1,
-                "total_net_profit": bot_doc.get("total_net_profit", 0.0) + cycle_profit,
                 # Сброс текущего цикла
                 "current_cycle_wins": 0,
                 "current_cycle_losses": 0,
                 "current_cycle_draws": 0,
                 "current_cycle_gem_value_won": 0.0,
                 "current_cycle_gem_value_total": 0.0,
-                "current_cycle_profit": 0.0,
+                "current_cycle_profit": 0.0,  # Всегда сбрасываем в 0
                 "updated_at": datetime.utcnow()
             }
             
-            # Переводим прибыль в "Доход от ботов" если она положительная
-            if cycle_profit > 0:
-                # Legacy REGULAR_BOT_CYCLE_PROFIT disabled. BOT_REVENUE is recorded in complete_bot_cycle().
-                logger.info(f"💰 Cycle profit calculated ${cycle_profit:.2f} for bot {bot_doc.get('name', 'Bot')} (will be recorded as BOT_REVENUE on cycle accumulator completion)")
+            # ИСПРАВЛЕНО: Убрали старую логику перевода прибыли
+            # Прибыль теперь обрабатывается только в complete_bot_cycle() через аккумуляторы
+            logger.info(f"💰 Cycle completed for bot {bot_doc.get('name', 'Bot')} - profit will be calculated by accumulator system")
             
             # Обновляем бота в базе данных
             await db.bots.update_one({"id": bot_id}, {"$set": update_data})
@@ -2680,7 +2679,8 @@ async def get_bot_cycle_statistics():
                     "draws": current_draws,
                     "games_played": games_in_current_cycle,
                     "games_remaining": games_remaining,
-                    "profit": bot.get("current_cycle_profit", 0.0),
+                    # ИСПРАВЛЕНО: Убрали отображение прибыли во время цикла
+                    # Прибыль отображается только после завершения цикла через аккумуляторы
                 },
                 "total_net_profit": bot.get("total_net_profit", 0.0),
                 "win_percentage": bot.get("win_percentage", 55.0)
@@ -18074,7 +18074,9 @@ async def get_regular_bots_list(
                         else:
                             draws_sum_cur += bet_amount
                 active_pool_cur = wins_sum_cur + losses_sum_cur
-                current_profit = wins_sum_cur - losses_sum_cur
+                # ИСПРАВЛЕНО: Прибыль НЕ отображается во время цикла
+                # Она появляется только после завершения всего цикла
+                current_profit = 0  # Всегда 0 во время цикла
             except Exception:
                 active_pool_cur = 0
                 current_profit = 0
