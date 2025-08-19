@@ -9097,7 +9097,7 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             logger.error(f"Bot {bot_id} not found")
             return
         
-        cycle_length = bot.get("cycle_length", 12)  # По умолчанию 12 игр
+        cycle_length = bot.get("cycle_games", 12)  # ИСПРАВЛЕНО: используем cycle_games вместо cycle_length
         
         accumulator = await db.bot_profit_accumulators.find_one({
             "bot_id": bot_id,
@@ -18297,7 +18297,7 @@ async def recalculate_bot_bets(
             )
         
         # Get bot parameters
-        cycle_length = bot.get("cycle_length", 12)
+        cycle_length = bot.get("cycle_games", 12)  # ИСПРАВЛЕНО: используем cycle_games вместо cycle_length
         cycle_total_amount = bot.get("cycle_total_amount", 500.0)
         win_percentage = bot.get("win_percentage", 60)
         min_bet_amount = bot.get("min_bet_amount", 5.0)
