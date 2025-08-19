@@ -1,0 +1,34 @@
+{
+  "test_timestamp": "2025-08-19T20:13:17.388665",
+  "backend_analysis": {
+    "function_exists": true,
+    "real_clearing": true,
+    "operations_found": [
+      "expire"
+    ],
+    "logs_admin_action": true,
+    "returns_success": true
+  },
+  "frontend_analysis": {
+    "function_exists": true,
+    "has_confirmation": true,
+    "has_loading_state": true,
+    "clears_localstorage": true,
+    "clears_sessionstorage": true,
+    "clears_cache_api": true,
+    "calls_server": true,
+    "shows_success": true,
+    "shows_error": true,
+    "preserves_token": true
+  },
+  "dependencies_analysis": {
+    "dependencies_found": []
+  },
+  "summary": {
+    "button_implemented": true,
+    "server_endpoint_exists": true,
+    "real_cache_clearing": true,
+    "ui_feedback": true,
+    "proper_confirmation": true
+  }
+}

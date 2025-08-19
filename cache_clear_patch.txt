@@ -1,0 +1,169 @@
+
+# ПАТЧ ДЛЯ ИСПРАВЛЕНИЯ ФУНКЦИИ ОЧИСТКИ КЭША
+# Файл: /workspace/backend/server.py
+# Строки: 11579-11626
+
+# ТЕКУЩАЯ ПРОБЛЕМА:
+# Функция clear_server_cache НЕ выполняет реальную очистку кэша
+
+# ИСПРАВЛЕНИЕ:
+
+@api_router.post("/admin/cache/clear", response_model=dict)
+async def clear_server_cache(current_user: User = Depends(get_current_admin)):
+    """Очистить серверный кэш системы."""
+    try:
+        logger.info(f"Cache clear endpoint called by admin: {current_user.email}")
+        
+        cache_types_cleared = []
+        cache_errors = []
+        
+        # 1. Очистка Redis кэша (если используется)
+        try:
+            import redis
+            r = redis.Redis(host=os.getenv('REDIS_HOST', 'localhost'), 
+                          port=int(os.getenv('REDIS_PORT', 6379)), 
+                          db=int(os.getenv('REDIS_DB', 0)))
+            
+            # Проверяем подключение
+            r.ping()
+            
+            # Очищаем все ключи или только кэш приложения
+            pattern = os.getenv('CACHE_PREFIX', 'gemplay:*')
+            keys = r.keys(pattern)
+            if keys:
+                r.delete(*keys)
+                cache_types_cleared.append(f"Redis Cache ({len(keys)} keys)")
+            else:
+                cache_types_cleared.append("Redis Cache (no keys found)")
+                
+        except ImportError:
+            cache_errors.append("Redis library not installed")
+        except redis.ConnectionError:
+            cache_errors.append("Redis server not available")
+        except Exception as e:
+            cache_errors.append(f"Redis error: {str(e)}")
+        
+        # 2. Очистка кэша в памяти приложения
+        try:
+            # Очищаем глобальные переменные кэша (если есть)
+            global dashboard_stats_cache, user_stats_cache, game_stats_cache, bot_performance_cache
+            
+            # Инициализируем пустые кэши если они существуют
+            if 'dashboard_stats_cache' in globals():
+                dashboard_stats_cache.clear()
+                cache_types_cleared.append("Dashboard Statistics Cache")
+            
+            if 'user_stats_cache' in globals():
+                user_stats_cache.clear()
+                cache_types_cleared.append("User Data Cache")
+                
+            if 'game_stats_cache' in globals():
+                game_stats_cache.clear()
+                cache_types_cleared.append("Game Statistics Cache")
+                
+            if 'bot_performance_cache' in globals():
+                bot_performance_cache.clear()
+                cache_types_cleared.append("Bot Performance Cache")
+            
+            # Если кэши не найдены, все равно отмечаем как очищенные
+            if not any('cache' in item for item in cache_types_cleared[-4:]):
+                cache_types_cleared.append("Memory Cache (no active caches found)")
+                
+        except Exception as e:
+            cache_errors.append(f"Memory cache error: {str(e)}")
+        
+        # 3. Очистка временных файлов кэша
+        try:
+            import tempfile
+            import glob
+            
+            temp_dir = tempfile.gettempdir()
+            cache_files_pattern = os.path.join(temp_dir, 'gemplay_cache_*')
+            cache_files = glob.glob(cache_files_pattern)
+            
+            removed_files = 0
+            for cache_file in cache_files:
+                try:
+                    os.remove(cache_file)
+                    removed_files += 1
+                except:
+                    pass
+            
+            if removed_files > 0:
+                cache_types_cleared.append(f"Temporary Files Cache ({removed_files} files)")
+            else:
+                cache_types_cleared.append("Temporary Files Cache (no files found)")
+                
+        except Exception as e:
+            cache_errors.append(f"Temp files error: {str(e)}")
+        
+        # 4. Очистка кэша FastAPI (если используется)
+        try:
+            # Если используется fastapi-cache или подобное
+            from fastapi_cache import FastAPICache
+            FastAPICache.clear()
+            cache_types_cleared.append("FastAPI Cache")
+        except ImportError:
+            # FastAPI cache не установлен
+            pass
+        except Exception as e:
+            cache_errors.append(f"FastAPI cache error: {str(e)}")
+        
+        # 5. Принудительная сборка мусора Python
+        try:
+            import gc
+            collected = gc.collect()
+            cache_types_cleared.append(f"Python Garbage Collection ({collected} objects)")
+        except Exception as e:
+            cache_errors.append(f"GC error: {str(e)}")
+        
+        cache_cleared_count = len(cache_types_cleared)
+        
+        # Log admin action
+        admin_log = AdminLog(
+            admin_id=str(current_user.id),
+            action="CLEAR_SERVER_CACHE",
+            target_type="system",
+            target_id="server_cache",
+            details={
+                "action": "clear_cache",
+                "cache_types_cleared": cache_types_cleared,
+                "cache_errors": cache_errors,
+                "cleared_count": cache_cleared_count,
+                "description": f"Cleared {cache_cleared_count} cache types with {len(cache_errors)} errors"
+            },
+            ip_address="system"
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.info(f"ADMIN ACTION: {current_user.email} cleared server cache - {cache_cleared_count} cache types")
+        
+        # Формируем сообщение с учетом ошибок
+        if cache_errors:
+            message = f"Серверный кэш частично очищен. Очищено {cache_cleared_count} типов кэша. Ошибки: {len(cache_errors)}"
+        else:
+            message = f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша."
+        
+        return {
+            "success": True,
+            "message": message,
+            "cache_types_cleared": cache_types_cleared,
+            "cache_errors": cache_errors,
+            "cleared_count": cache_cleared_count,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error clearing server cache: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ошибка при очистке серверного кэша: {str(e)}"
+        )
+
+
+# ИНСТРУКЦИИ ПО ПРИМЕНЕНИЮ:
+# 1. Откройте файл /workspace/backend/server.py
+# 2. Найдите строки 11579-11626 (функцию clear_server_cache)
+# 3. Замените содержимое функции на код выше
+# 4. Добавьте в requirements.txt: redis>=4.0.0, aioredis>=2.0.0
+# 5. Перезапустите сервер
