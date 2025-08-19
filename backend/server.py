@@ -11785,6 +11785,175 @@ async def clear_server_cache(current_user: User = Depends(get_current_admin)):
             detail=f"Ошибка при очистке серверного кэша: {str(e)}"
         )
 
+@api_router.post("/admin/database/full-reset", response_model=dict)
+async def full_database_reset(
+    request_data: dict = Body(...),
+    current_user: User = Depends(get_current_admin)
+):
+    """🔥 КРИТИЧЕСКАЯ ОПЕРАЦИЯ: Полный сброс базы данных (только SUPER_ADMIN)"""
+    try:
+        logger.warning(f"🔥 CRITICAL: Full database reset requested by {current_user.email} (role: {current_user.role})")
+        
+        # 1. Строгая проверка роли - только SUPER_ADMIN
+        if current_user.role != "SUPER_ADMIN":
+            logger.error(f"🚫 Unauthorized database reset attempt by {current_user.email} (role: {current_user.role})")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Доступ запрещён! Полный сброс БД доступен только SUPER_ADMIN."
+            )
+        
+        # 2. Проверка текстового подтверждения
+        confirmation = request_data.get('confirmation', '').strip()
+        if confirmation != 'ПОЛНЫЙ СБРОС':
+            logger.warning(f"Invalid confirmation attempt by {current_user.email}: '{confirmation}'")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Неверное подтверждение. Введите точно 'ПОЛНЫЙ СБРОС'"
+            )
+        
+        logger.info(f"🔥 Starting full database reset by SUPER_ADMIN: {current_user.email}")
+        
+        # 3. Сохраняем администраторов перед сбросом
+        admin_roles = ['SUPER_ADMIN', 'ADMIN', 'MODERATOR']
+        admin_users = await db.users.find({"role": {"$in": admin_roles}}).to_list(None)
+        
+        logger.info(f"Found {len(admin_users)} admin accounts to preserve")
+        
+        # 4. Определяем коллекции для сброса
+        collections_to_reset = [
+            {
+                "name": "users",
+                "filter": {"role": {"$nin": admin_roles}},
+                "description": "Обычные пользователи"
+            },
+            {
+                "name": "games", 
+                "filter": {},
+                "description": "Все игры и ставки"
+            },
+            {
+                "name": "bots",
+                "filter": {},
+                "description": "Обычные боты"
+            },
+            {
+                "name": "human_bots",
+                "filter": {},
+                "description": "Human боты"
+            },
+            {
+                "name": "transactions",
+                "filter": {},
+                "description": "Транзакции"
+            },
+            {
+                "name": "gem_transactions",
+                "filter": {},
+                "description": "Транзакции гемов"
+            },
+            {
+                "name": "notifications",
+                "filter": {},
+                "description": "Уведомления"
+            }
+        ]
+        
+        # 5. Выполняем сброс коллекций
+        total_deleted = 0
+        collections_reset = []
+        reset_errors = []
+        
+        for collection_info in collections_to_reset:
+            try:
+                collection_name = collection_info["name"]
+                filter_query = collection_info["filter"]
+                description = collection_info["description"]
+                
+                # Подсчитываем документы для удаления
+                count_before = await db[collection_name].count_documents(filter_query)
+                
+                if count_before > 0:
+                    # Удаляем документы
+                    delete_result = await db[collection_name].delete_many(filter_query)
+                    deleted_count = delete_result.deleted_count
+                    
+                    collections_reset.append({
+                        "collection": collection_name,
+                        "description": description,
+                        "deleted": deleted_count
+                    })
+                    
+                    total_deleted += deleted_count
+                    logger.info(f"Reset collection '{collection_name}': {deleted_count} documents deleted")
+                else:
+                    collections_reset.append({
+                        "collection": collection_name,
+                        "description": description,
+                        "deleted": 0,
+                        "note": "Collection was empty"
+                    })
+                    
+            except Exception as e:
+                error_msg = f"Error resetting collection '{collection_name}': {str(e)}"
+                reset_errors.append(error_msg)
+                logger.error(error_msg)
+        
+        # 6. Очистка всех кэшей после сброса БД
+        try:
+            global dashboard_stats_cache, user_stats_cache, game_stats_cache, bot_performance_cache, system_metrics_cache
+            global request_counts, user_activity, bot_activity_tracker
+            
+            # Очищаем все кэши
+            dashboard_stats_cache.clear()
+            user_stats_cache.clear()
+            game_stats_cache.clear()
+            bot_performance_cache.clear()
+            system_metrics_cache.clear()
+            request_counts.clear()
+            user_activity.clear()
+            bot_activity_tracker.clear()
+            
+            logger.info("All caches cleared after database reset")
+            
+        except Exception as e:
+            logger.warning(f"Cache clear error after DB reset: {e}")
+        
+        # 7. Критическое логирование
+        admin_log = AdminLog(
+            admin_id=str(current_user.id),
+            action="FULL_DATABASE_RESET",
+            target_type="database",
+            target_id="full_system",
+            details={
+                "total_deleted": total_deleted,
+                "admin_accounts_preserved": len(admin_users),
+                "collections_reset": collections_reset,
+                "errors": reset_errors
+            },
+            ip_address="system"
+        )
+        await db.admin_logs.insert_one(admin_log.dict())
+        
+        logger.critical(f"🔥 FULL DATABASE RESET COMPLETED by {current_user.email}: {total_deleted} documents deleted")
+        
+        return {
+            "success": True,
+            "message": f"База данных сброшена. Удалено {total_deleted} записей. Сохранено {len(admin_users)} администраторов.",
+            "total_deleted": total_deleted,
+            "admin_accounts_preserved": len(admin_users),
+            "collections_reset": collections_reset,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.critical(f"🚨 CRITICAL ERROR during database reset: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Критическая ошибка при сбросе БД: {str(e)}"
+        )
+
 @api_router.get("/admin/games")
 async def get_games_list(
     page: int = 1,

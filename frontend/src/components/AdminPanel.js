@@ -37,6 +37,7 @@ const AdminPanel = ({ user, onClose }) => {
   const [refreshInterval, setRefreshInterval] = useState(null);
   const [clearCacheLoading, setClearCacheLoading] = useState(false);
   const [fullResetLoading, setFullResetLoading] = useState(false);
+  const [dbResetLoading, setDbResetLoading] = useState(false);
   const [navLoading, setNavLoading] = useState(false);
   const navTimerRef = useRef(null);
   const navShownAtRef = useRef(0);
@@ -354,6 +355,212 @@ const AdminPanel = ({ user, onClose }) => {
         showErrorRU(`Ошибка очистки кэша: ${errorMessage}`);
       } finally {
         setClearCacheLoading(false);
+      }
+    }
+  };
+
+  const fullDatabaseReset = async () => {
+    if (dbResetLoading) return;
+
+    // Первая проверка - только SUPER_ADMIN
+    if (user?.role !== 'SUPER_ADMIN') {
+      showErrorRU('🚫 Доступ запрещён! Полный сброс БД доступен только SUPER_ADMIN.');
+      return;
+    }
+
+    // Создаем специальное модальное окно с критическим предупреждением
+    const showCriticalConfirmation = () => {
+      return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90';
+        modal.innerHTML = `
+          <div class="bg-gradient-to-br from-red-900 to-red-800 border-2 border-red-500 rounded-xl max-w-lg mx-4 p-6 text-white shadow-2xl">
+            <div class="text-center mb-6">
+              <div class="text-6xl mb-4 animate-bounce">⚠️</div>
+              <h3 class="text-2xl font-bold text-red-300 mb-3">КРИТИЧЕСКОЕ ПРЕДУПРЕЖДЕНИЕ</h3>
+              <p class="text-base font-bold bg-red-800 p-3 rounded border border-red-600 mb-4">
+                Эта операция УДАЛИТ все данные кроме администрации!
+              </p>
+              
+              <div class="bg-red-800 p-4 rounded-lg border border-red-600 text-left">
+                <p class="font-bold mb-3 text-red-300 text-center">🗑️ БУДЕТ УДАЛЕНО:</p>
+                <ul class="text-xs space-y-1">
+                  <li>• 👥 Все обычные пользователи</li>
+                  <li>• 🤖 Все боты и настройки</li>
+                  <li>• 🎮 Игры, ставки, транзакции</li>
+                  <li>• 📊 Логи и статистика</li>
+                  <li>• 💎 Экономические данные</li>
+                </ul>
+                
+                <div class="border-t border-green-600 mt-3 pt-3">
+                  <p class="font-bold mb-2 text-green-300 text-center">✅ СОХРАНИТСЯ:</p>
+                  <ul class="text-xs space-y-1">
+                    <li>• 👑 SUPER_ADMIN аккаунты</li>
+                    <li>• 🛡️ ADMIN аккаунты</li>
+                    <li>• 🔒 MODERATOR аккаунты</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div class="bg-red-700 p-3 rounded-lg border-2 border-red-500 mt-4 animate-pulse">
+                <p class="font-bold text-red-100 text-center">❌ ВОССТАНОВЛЕНИЕ НЕВОЗМОЖНО!</p>
+              </div>
+            </div>
+            
+            <div class="mb-6">
+              <label class="block text-sm font-bold mb-3 text-red-300 text-center">
+                Введите "ПОЛНЫЙ СБРОС" для подтверждения:
+              </label>
+              <input 
+                type="text" 
+                id="confirmationInput"
+                class="w-full px-4 py-3 bg-red-800 border-2 border-red-600 rounded-lg text-white placeholder-red-400 focus:outline-none focus:border-red-400 text-center font-bold text-lg"
+                placeholder="ПОЛНЫЙ СБРОС"
+                autocomplete="off"
+              />
+              <p class="text-xs text-red-300 text-center mt-2">
+                Регистр имеет значение. Введите точно как указано.
+              </p>
+            </div>
+            
+            <div class="flex space-x-3">
+              <button 
+                id="cancelBtn"
+                class="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-700 rounded-lg font-bold transition-all duration-200"
+              >
+                ❌ Отмена
+              </button>
+              <button 
+                id="confirmBtn"
+                class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold transition-all duration-200"
+                disabled
+                style="opacity: 0.5; cursor: not-allowed;"
+              >
+                🔥 СБРОСИТЬ БД
+              </button>
+            </div>
+          </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const input = modal.querySelector('#confirmationInput');
+        const confirmBtn = modal.querySelector('#confirmBtn');
+        const cancelBtn = modal.querySelector('#cancelBtn');
+
+        // Активируем кнопку только при правильном вводе
+        input.addEventListener('input', (e) => {
+          const isCorrect = e.target.value.trim() === 'ПОЛНЫЙ СБРОС';
+          confirmBtn.disabled = !isCorrect;
+          confirmBtn.style.opacity = isCorrect ? '1' : '0.5';
+          confirmBtn.style.cursor = isCorrect ? 'pointer' : 'not-allowed';
+          
+          // Визуальная обратная связь
+          if (isCorrect) {
+            confirmBtn.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.8)';
+            confirmBtn.classList.add('animate-pulse');
+            input.style.borderColor = '#10b981';
+            input.style.color = '#10b981';
+          } else {
+            confirmBtn.style.boxShadow = 'none';
+            confirmBtn.classList.remove('animate-pulse');
+            input.style.borderColor = '#dc2626';
+            input.style.color = '#ffffff';
+          }
+        });
+
+        // Обработчики кнопок
+        confirmBtn.addEventListener('click', () => {
+          if (input.value.trim() === 'ПОЛНЫЙ СБРОС') {
+            document.body.removeChild(modal);
+            resolve(true);
+          }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+          document.body.removeChild(modal);
+          resolve(false);
+        });
+
+        // Закрытие по ESC
+        const handleEsc = (e) => {
+          if (e.key === 'Escape') {
+            document.body.removeChild(modal);
+            document.removeEventListener('keydown', handleEsc);
+            resolve(false);
+          }
+        };
+        document.addEventListener('keydown', handleEsc);
+
+        // Фокус на input
+        setTimeout(() => input.focus(), 200);
+      });
+    };
+
+    const confirmed = await showCriticalConfirmation();
+
+    if (confirmed) {
+      try {
+        setDbResetLoading(true);
+
+        // Вызываем серверный endpoint
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${API}/admin/database/full-reset`, 
+          { 
+            confirmation: 'ПОЛНЫЙ СБРОС',
+            timestamp: new Date().toISOString(),
+            user_role: user.role,
+            user_id: user.id
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 120000 // 2 минуты таймаут для критической операции
+          }
+        );
+
+        if (response.data.success) {
+          showSuccessRU(`🔥 База данных полностью сброшена! ${response.data.message}`);
+          
+          // Логируем детали операции
+          console.log('🔥 Полный сброс БД выполнен:', {
+            timestamp: response.data.timestamp,
+            collections_reset: response.data.collections_reset,
+            admin_accounts_preserved: response.data.admin_accounts_preserved,
+            total_deleted: response.data.total_deleted
+          });
+          
+          // Обновляем статистику
+          await fetchDashboardStats();
+          
+          // Показываем уведомление о завершении
+          setTimeout(() => {
+            showSuccessRU('Статистика обновлена после сброса БД');
+          }, 2000);
+          
+        } else {
+          throw new Error(response.data.message || 'Неизвестная ошибка сброса БД');
+        }
+      } catch (error) {
+        console.error('Ошибка полного сброса БД:', error);
+        
+        let errorMessage = 'Произошла ошибка при сбросе БД';
+        
+        if (error.response?.status === 403) {
+          errorMessage = 'Недостаточно прав для выполнения операции';
+        } else if (error.response?.status === 400) {
+          errorMessage = 'Неверное подтверждение или параметры запроса';
+        } else if (error.response?.data?.detail) {
+          errorMessage = error.response.data.detail;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        showErrorRU(`🚨 Ошибка сброса БД: ${errorMessage}`);
+      } finally {
+        setDbResetLoading(false);
       }
     }
   };
@@ -762,6 +969,43 @@ const AdminPanel = ({ user, onClose }) => {
                 </>
               )}
             </button>
+            
+            {/* 🔥 Кнопка полного сброса БД (только для SUPER_ADMIN) */}
+            {user?.role === 'SUPER_ADMIN' && (
+              <button
+                onClick={fullDatabaseReset}
+                disabled={dbResetLoading}
+                className={`px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-800 disabled:opacity-50 border-2 border-red-500 rounded-lg text-white font-roboto text-sm font-bold transition-all duration-200 flex items-center space-x-2 shadow-lg ${
+                  dbResetLoading ? 'cursor-not-allowed animate-pulse' : 'cursor-pointer hover:scale-105 hover:shadow-red-500/50'
+                }`}
+                title="🔥 КРИТИЧЕСКАЯ ОПЕРАЦИЯ: Полный сброс базы данных (только SUPER_ADMIN)"
+                style={{
+                  background: dbResetLoading 
+                    ? 'linear-gradient(45deg, #7f1d1d, #991b1b)' 
+                    : 'linear-gradient(45deg, #dc2626, #ef4444)',
+                  boxShadow: dbResetLoading 
+                    ? 'none' 
+                    : '0 4px 12px rgba(239, 68, 68, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+                }}
+              >
+                {dbResetLoading ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Сброс БД...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                    <span>🔥 СБРОС БД</span>
+                  </>
+                )}
+              </button>
+            )}
+            
             {/* Кнопка сканирования несоответствий (ADMIN/QA only) */}
             {(user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'MODERATOR') && (
               <button

@@ -1,0 +1,54 @@
+{
+  "test_timestamp": "2025-08-19T20:50:14.557610",
+  "before_state": {
+    "total_documents": 15,
+    "admin_accounts": 3
+  },
+  "after_state": {
+    "total_documents": 3,
+    "admin_accounts": 3
+  },
+  "reset_results": {
+    "total_deleted": 12,
+    "collections_reset": [
+      {
+        "collection": "users",
+        "deleted": 3,
+        "remaining": 3
+      },
+      {
+        "collection": "games",
+        "deleted": 3,
+        "remaining": 0
+      },
+      {
+        "collection": "bots",
+        "deleted": 2,
+        "remaining": 0
+      },
+      {
+        "collection": "human_bots",
+        "deleted": 1,
+        "remaining": 0
+      },
+      {
+        "collection": "transactions",
+        "deleted": 2,
+        "remaining": 0
+      },
+      {
+        "collection": "notifications",
+        "deleted": 1,
+        "remaining": 0
+      }
+    ]
+  },
+  "security_check": {
+    "all_admins_preserved": true,
+    "users_deleted": true,
+    "games_deleted": true,
+    "bots_deleted": true,
+    "total_reduction": true
+  },
+  "test_passed": true
+}
