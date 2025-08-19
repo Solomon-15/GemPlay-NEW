@@ -2055,13 +2055,14 @@ async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
         cycle_number = bot_doc.get("completed_cycles_count", 0) + 1
         
         # ИСПРАВЛЕНО: Проверяем, не существует ли уже цикл с таким номером для этого бота
+        # Используем проекцию для быстрой проверки существования
         existing_cycle = await db.completed_cycles.find_one({
             "bot_id": bot_id,
             "cycle_number": cycle_number
-        })
+        }, {"_id": 1})
         
         if existing_cycle:
-            logger.warning(f"Cycle #{cycle_number} for bot {bot_id} already exists, skipping save to prevent duplicate")
+            logger.warning(f"✅ Cycle #{cycle_number} for bot {bot_id} already exists in completed_cycles, skipping duplicate save (idempotent)")
             return
         
         # Рассчитываем дополнительные метрики
@@ -2132,14 +2133,17 @@ async def save_completed_cycle(bot_doc: dict, completion_time: datetime):
         
         # ИСПРАВЛЕНО: Сохраняем в коллекцию completed_cycles с обработкой дублей
         try:
-            await db.completed_cycles.insert_one(completed_cycle)
+            result = await db.completed_cycles.insert_one(completed_cycle)
+            logger.info(f"✅ Inserted new cycle #{cycle_number} for bot {bot_id} with ID: {result.inserted_id}")
         except Exception as insert_error:
             # Проверяем, не ошибка ли уникальности (дублирование)
-            if "duplicate key" in str(insert_error).lower() or "E11000" in str(insert_error):
-                logger.warning(f"Cycle #{cycle_number} for bot {bot_id} already exists in database, skipping insert")
-                return  # Выходим, не обновляя счётчик
+            error_str = str(insert_error).lower()
+            if "duplicate key" in error_str or "e11000" in error_str or "unique" in error_str:
+                logger.warning(f"✅ Cycle #{cycle_number} for bot {bot_id} already exists in database (race condition), operation is idempotent")
+                return  # Выходим, не обновляя счётчик - это нормально
             else:
                 # Другая ошибка - пробрасываем дальше
+                logger.error(f"❌ Failed to insert cycle #{cycle_number} for bot {bot_id}: {insert_error}")
                 raise insert_error
         
         # Сохраняем игры цикла в отдельную коллекцию для быстрого доступа
@@ -2267,12 +2271,11 @@ async def maintain_all_bots_active_bets():
                     pause_between_cycles = fresh_bot_doc.get("pause_between_cycles", 5)
                     
                     if last_cycle_completed_at is None:
-                        # Цикл только что завершился - сохраняем данные о завершённом цикле
+                        # Цикл только что завершился - начинаем паузу
+                        # ИСПРАВЛЕНО: Убрали дублированный вызов save_completed_cycle
+                        # Данные цикла сохраняются через механизм аккумуляторов в complete_bot_cycle()
                         cycle_completion_time = datetime.utcnow()
-                        logger.info(f"🏁 Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle fully completed, saving cycle data")
-                        
-                        # Сохраняем данные о завершённом цикле
-                        await save_completed_cycle(fresh_bot_doc, cycle_completion_time)
+                        logger.info(f"🏁 Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle completed, starting pause")
                         
                         # Начинаем паузу
                         logger.info(f"⏱️ Bot {fresh_bot_doc.get('name', 'Unknown')}: starting pause of {pause_between_cycles}s")
@@ -13156,8 +13159,12 @@ async def get_bot_revenue_summary(
         total_bots = await db.bots.count_documents({"bot_type": "REGULAR"})
         
         # Get recent cycles for trend analysis
+        # ИСПРАВЛЕНО: Исключаем фиктивные циклы из трендового анализа
+        recent_filter = {"id": {"$not": {"$regex": "^temp_cycle_"}}}
+        if date_filter:
+            recent_filter.update(date_filter)
         recent_cycles = await db.completed_cycles.find(
-            date_filter if date_filter else {}
+            recent_filter
         ).sort("end_time", -1).limit(10).to_list(10)
         
         return {
@@ -13211,7 +13218,8 @@ async def export_bot_cycles_csv(
     """Export bot cycles data to CSV format."""
     try:
         # Use same filter logic as history endpoint
-        filter_query = {}
+        # ИСПРАВЛЕНО: Исключаем фиктивные циклы из экспорта
+        filter_query = {"id": {"$not": {"$regex": "^temp_cycle_"}}}
         
         if bot_name:
             filter_query["bot_name"] = {"$regex": bot_name, "$options": "i"}
@@ -19419,8 +19427,10 @@ async def get_bot_cycle_history(
             raise HTTPException(status_code=404, detail="Bot not found")
 
         # Получаем завершённые циклы из коллекции (новые сверху)
+        # ИСПРАВЛЕНО: Исключаем фиктивные циклы из истории бота
         completed_cycles = await db.completed_cycles.find({
-            "bot_id": bot_id
+            "bot_id": bot_id,
+            "id": {"$not": {"$regex": "^temp_cycle_"}}
         }).sort("end_time", -1).to_list(1000)
 
         # ИСПРАВЛЕНО: Убираем генерацию фиктивных циклов
@@ -19504,37 +19514,10 @@ async def get_completed_cycle_bets(
             bot_cycles_count = await db.completed_cycles.count_documents({"bot_id": bot_id})
             logger.info(f"Bot {bot_id} has {bot_cycles_count} completed cycles in total")
             
-            # Если это временный цикл, генерируем демо-данные
-            if cycle_id.startswith("temp_cycle_"):
-                logger.info(f"Generating demo data for temporary cycle: {cycle_id}")
-                # Генерируем демо-данные для временного цикла
-                cycle_parts = cycle_id.split("_")
-                if len(cycle_parts) >= 4:
-                    try:
-                        cycle_num = int(cycle_parts[3])
-                    except ValueError:
-                        logger.error(f"Invalid cycle number in temp cycle ID: {cycle_id}")
-                        raise HTTPException(status_code=400, detail="Invalid temporary cycle ID format")
-                    completed_cycle = {
-                        "id": cycle_id,
-                        "bot_id": bot_id,
-                        "cycle_number": bot.get("completed_cycles", 0) - cycle_num + 1,
-                        "start_time": datetime.utcnow() - timedelta(days=cycle_num*7),
-                        "end_time": datetime.utcnow() - timedelta(days=(cycle_num-1)*7),
-                        "duration_seconds": 86400 * 7,
-                        "total_bets": 20 + ((cycle_num-1) * 5),
-                        "wins_count": 10 + ((cycle_num-1) * 2),
-                        "losses_count": 8 + ((cycle_num-1) * 2),
-                        "draws_count": 2 + ((cycle_num-1) * 1),
-                        "total_bet_amount": 1000.0 + ((cycle_num-1) * 500),
-                        "total_winnings": 1200.0 + ((cycle_num-1) * 600),
-                        "total_losses": 800.0 + ((cycle_num-1) * 400),
-                        "net_profit": 400.0 + ((cycle_num-1) * 200)
-                    }
-                else:
-                    raise HTTPException(status_code=404, detail="Invalid temporary cycle ID")
-            else:
-                raise HTTPException(status_code=404, detail="Completed cycle not found")
+            # ИСПРАВЛЕНО: Убрали генерацию фиктивных циклов
+            # Теперь возвращаем только реальные данные из БД
+            logger.warning(f"Completed cycle not found: {cycle_id} for bot {bot_id}")
+            raise HTTPException(status_code=404, detail="Completed cycle not found")
 
         # Сначала пытаемся получить сохраненные игры цикла
         cycle_games = await db.cycle_games.find({
@@ -19562,36 +19545,11 @@ async def get_completed_cycle_bets(
             }).sort("created_at", 1).to_list(1000)
             logger.info(f"Found {len(games)} games by time range for cycle {cycle_id}")
         
-        # Если это временный цикл и нет реальных игр, генерируем демо-игры
-        if not games and cycle_id.startswith("temp_cycle_"):
-            logger.info(f"Generating demo games for temporary cycle: {cycle_id}")
-            games = []
-            for i in range(completed_cycle["total_bets"]):
-                # Определяем результат на основе статистики цикла
-                if i < completed_cycle["wins_count"]:
-                    winner_id = bot_id
-                    opponent_move = "ROCK" if i % 3 == 0 else "PAPER"
-                    bot_move = "PAPER" if i % 3 == 0 else "SCISSORS"
-                elif i < completed_cycle["wins_count"] + completed_cycle["losses_count"]:
-                    winner_id = f"opponent_{i}"
-                    bot_move = "ROCK" if i % 3 == 0 else "PAPER"
-                    opponent_move = "PAPER" if i % 3 == 0 else "SCISSORS"
-                else:
-                    winner_id = None  # Ничья
-                    bot_move = opponent_move = ["ROCK", "PAPER", "SCISSORS"][i % 3]
-                
-                games.append({
-                    "id": f"demo_game_{cycle_id}_{i+1}",
-                    "creator_id": bot_id,
-                    "opponent_id": f"opponent_{i}",
-                    "creator_move": bot_move,
-                    "opponent_move": opponent_move,
-                    "winner_id": winner_id,
-                    "bet_amount": 50.0 + (i * 10),
-                    "bet_gems": {"Ruby": 2, "Emerald": 1} if i % 2 == 0 else {"Sapphire": 1, "Topaz": 3},
-                    "created_at": completed_cycle["start_time"] + timedelta(hours=i),
-                    "status": "COMPLETED"
-                })
+        # ИСПРАВЛЕНО: Убрали генерацию демо-игр для фиктивных циклов
+        # Теперь работаем только с реальными данными
+        if not games:
+            logger.warning(f"No games found for cycle {cycle_id}, bot {bot_id}")
+            # Возвращаем пустой список вместо генерации фиктивных данных
 
         # Форматируем данные для frontend
         bets_list = []
