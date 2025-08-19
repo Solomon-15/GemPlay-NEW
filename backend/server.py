@@ -29,6 +29,10 @@ import secrets
 from collections import defaultdict
 import ipaddress
 import bcrypt
+import gc
+import tempfile
+import glob
+from cachetools import TTLCache, LRUCache
 from username_utils import process_username, validate_username, sanitize_username
 from email_utils import send_verification_email, send_password_reset_email
 from auth_utils import (
@@ -94,6 +98,16 @@ user_activity = defaultdict(lambda: defaultdict(list))
 # Bot behavior tracking
 bot_activity_tracker = {}
 
+# 🗄️ Global cache storage using cachetools
+dashboard_stats_cache = TTLCache(maxsize=100, ttl=300)  # 5 minutes TTL
+user_stats_cache = TTLCache(maxsize=1000, ttl=600)      # 10 minutes TTL
+game_stats_cache = TTLCache(maxsize=500, ttl=180)       # 3 minutes TTL
+bot_performance_cache = LRUCache(maxsize=200)           # LRU cache for bot performance
+system_metrics_cache = TTLCache(maxsize=50, ttl=120)    # 2 minutes TTL for system metrics
+
+# Redis connection (optional, will be initialized if available)
+redis_client = None
+
 # Timezone
 TIMEZONE = pytz.timezone(os.environ.get('TIMEZONE', 'Asia/Almaty'))
 
@@ -134,6 +148,36 @@ async def update_user_activity(request: Request, call_next):
             logger.warning(f"Failed to update user activity: {e}")
     
     return response
+
+# 🔄 Redis initialization function
+async def init_redis():
+    """Инициализация Redis подключения (опционально)"""
+    global redis_client
+    try:
+        import redis.asyncio as redis
+        redis_host = os.getenv('REDIS_HOST', 'localhost')
+        redis_port = int(os.getenv('REDIS_PORT', 6379))
+        redis_db = int(os.getenv('REDIS_DB', 0))
+        
+        redis_client = redis.Redis(
+            host=redis_host,
+            port=redis_port,
+            db=redis_db,
+            decode_responses=True
+        )
+        
+        # Проверяем подключение
+        await redis_client.ping()
+        logger.info(f"✅ Redis connected: {redis_host}:{redis_port}/{redis_db}")
+        return True
+        
+    except ImportError:
+        logger.info("Redis library not available, using in-memory cache only")
+        return False
+    except Exception as e:
+        logger.warning(f"Redis connection failed: {e}, using in-memory cache only")
+        redis_client = None
+        return False
 
 # Configure logging
 logging.basicConfig(
@@ -3911,6 +3955,9 @@ async def migrate_human_bots_fields():
 async def startup_event():
     """Run startup tasks including migrations."""
     try:
+        # Initialize Redis connection
+        await init_redis()
+        
         # Run database migrations
         await migrate_human_bots_fields()
         logger.info("Application startup completed successfully")
@@ -11582,13 +11629,117 @@ async def clear_server_cache(current_user: User = Depends(get_current_admin)):
     try:
         logger.info(f"Cache clear endpoint called by admin: {current_user.email}")
         
-        cache_types_cleared = [
-            "Dashboard Statistics Cache",
-            "User Data Cache", 
-            "Game Statistics Cache",
-            "Bot Performance Cache",
-            "System Metrics Cache"
-        ]
+        cache_types_cleared = []
+        cache_errors = []
+        
+        # 1. 🔄 Очистка Redis кэша (если доступен)
+        if redis_client:
+            try:
+                # Очищаем все ключи с префиксом приложения
+                pattern = os.getenv('CACHE_PREFIX', 'gemplay:*')
+                keys = await redis_client.keys(pattern)
+                if keys:
+                    await redis_client.delete(*keys)
+                    cache_types_cleared.append(f"Redis Cache ({len(keys)} keys cleared)")
+                    logger.info(f"Redis cache cleared: {len(keys)} keys")
+                else:
+                    cache_types_cleared.append("Redis Cache (no keys found)")
+                
+            except Exception as e:
+                cache_errors.append(f"Redis error: {str(e)}")
+                logger.error(f"Redis cache clear error: {e}")
+        else:
+            cache_types_cleared.append("Redis Cache (not available)")
+        
+        # 2. 🗄️ Очистка глобальных кэшей в памяти
+        try:
+            global dashboard_stats_cache, user_stats_cache, game_stats_cache, bot_performance_cache, system_metrics_cache
+            
+            # Подсчитываем элементы до очистки
+            cache_counts = {
+                'dashboard': len(dashboard_stats_cache),
+                'user': len(user_stats_cache),
+                'game': len(game_stats_cache),
+                'bot': len(bot_performance_cache),
+                'system': len(system_metrics_cache)
+            }
+            
+            # Очищаем кэши
+            dashboard_stats_cache.clear()
+            user_stats_cache.clear()
+            game_stats_cache.clear()
+            bot_performance_cache.clear()
+            system_metrics_cache.clear()
+            
+            total_cleared = sum(cache_counts.values())
+            cache_types_cleared.append(f"Dashboard Statistics Cache ({cache_counts['dashboard']} items)")
+            cache_types_cleared.append(f"User Data Cache ({cache_counts['user']} items)")
+            cache_types_cleared.append(f"Game Statistics Cache ({cache_counts['game']} items)")
+            cache_types_cleared.append(f"Bot Performance Cache ({cache_counts['bot']} items)")
+            cache_types_cleared.append(f"System Metrics Cache ({cache_counts['system']} items)")
+            
+            logger.info(f"Memory caches cleared: {total_cleared} total items")
+            
+        except Exception as e:
+            cache_errors.append(f"Memory cache error: {str(e)}")
+            logger.error(f"Memory cache clear error: {e}")
+        
+        # 3. 🗑️ Очистка временных файлов кэша
+        try:
+            temp_dir = tempfile.gettempdir()
+            cache_files_pattern = os.path.join(temp_dir, 'gemplay_cache_*')
+            cache_files = glob.glob(cache_files_pattern)
+            
+            removed_files = 0
+            for cache_file in cache_files:
+                try:
+                    os.remove(cache_file)
+                    removed_files += 1
+                except Exception as e:
+                    logger.warning(f"Failed to remove cache file {cache_file}: {e}")
+            
+            if removed_files > 0:
+                cache_types_cleared.append(f"Temporary Files Cache ({removed_files} files)")
+                logger.info(f"Temporary cache files cleared: {removed_files}")
+            else:
+                cache_types_cleared.append("Temporary Files Cache (no files found)")
+                
+        except Exception as e:
+            cache_errors.append(f"Temp files error: {str(e)}")
+            logger.error(f"Temp files clear error: {e}")
+        
+        # 4. 🧹 Очистка других кэшей приложения
+        try:
+            # Очищаем rate limiting кэши
+            global request_counts, user_activity, bot_activity_tracker
+            
+            request_counts_size = sum(len(user_data) for user_data in request_counts.values())
+            user_activity_size = sum(len(user_data) for user_data in user_activity.values())
+            bot_tracker_size = len(bot_activity_tracker)
+            
+            request_counts.clear()
+            user_activity.clear()
+            bot_activity_tracker.clear()
+            
+            total_app_cache = request_counts_size + user_activity_size + bot_tracker_size
+            if total_app_cache > 0:
+                cache_types_cleared.append(f"Application Cache ({total_app_cache} items)")
+                logger.info(f"Application cache cleared: {total_app_cache} items")
+            else:
+                cache_types_cleared.append("Application Cache (empty)")
+                
+        except Exception as e:
+            cache_errors.append(f"Application cache error: {str(e)}")
+            logger.error(f"Application cache clear error: {e}")
+        
+        # 5. 🔄 Принудительная сборка мусора Python
+        try:
+            collected = gc.collect()
+            cache_types_cleared.append(f"Python Garbage Collection ({collected} objects)")
+            logger.info(f"Garbage collection completed: {collected} objects collected")
+        except Exception as e:
+            cache_errors.append(f"GC error: {str(e)}")
+            logger.error(f"Garbage collection error: {e}")
         
         cache_cleared_count = len(cache_types_cleared)
         
@@ -11601,19 +11752,28 @@ async def clear_server_cache(current_user: User = Depends(get_current_admin)):
             details={
                 "action": "clear_cache",
                 "cache_types_cleared": cache_types_cleared,
+                "cache_errors": cache_errors,
                 "cleared_count": cache_cleared_count,
-                "description": f"Cleared {cache_cleared_count} cache types"
+                "description": f"Cleared {cache_cleared_count} cache types with {len(cache_errors)} errors"
             },
             ip_address="system"
         )
         await db.admin_logs.insert_one(admin_log.dict())
         
-        logger.info(f"ADMIN ACTION: {current_user.email} cleared server cache - {cache_cleared_count} cache types")
+        logger.info(f"ADMIN ACTION: {current_user.email} cleared server cache - {cache_cleared_count} cache types, {len(cache_errors)} errors")
+        
+        # Формируем сообщение с учетом ошибок
+        if cache_errors:
+            message = f"Серверный кэш частично очищен. Очищено {cache_cleared_count} типов кэша. Ошибки: {len(cache_errors)}"
+            logger.warning(f"Cache clear completed with errors: {cache_errors}")
+        else:
+            message = f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша."
         
         return {
             "success": True,
-            "message": f"Серверный кэш успешно очищен. Очищено {cache_cleared_count} типов кэша.",
+            "message": message,
             "cache_types_cleared": cache_types_cleared,
+            "cache_errors": cache_errors if cache_errors else [],
             "cleared_count": cache_cleared_count,
             "timestamp": datetime.utcnow().isoformat()
         }
