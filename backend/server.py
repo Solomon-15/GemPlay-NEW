@@ -5587,29 +5587,51 @@ async def get_bot_profit_integration(current_admin: User = Depends(get_current_a
         week_ago = current_time - timedelta(weeks=1)
         month_ago = current_time - timedelta(days=30)
         
-        # Get bot revenue by time periods
-        bot_revenue_today = await db.profit_entries.aggregate([
-            {"$match": {"entry_type": "BOT_REVENUE", "created_at": {"$gte": day_ago}}},
-            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        # ИСПРАВЛЕНО: Получаем доход от ботов из completed_cycles вместо profit_entries
+        # для устранения дублирования данных
+        
+        # Get bot revenue by time periods from completed_cycles
+        bot_revenue_today = await db.completed_cycles.aggregate([
+            {
+                "$match": {
+                    "id": {"$not": {"$regex": "^temp_cycle_"}},  # Исключаем фиктивные циклы
+                    "end_time": {"$gte": day_ago}
+                }
+            },
+            {"$group": {"_id": None, "total": {"$sum": "$net_profit"}}}
         ]).to_list(1)
         bot_revenue_today = bot_revenue_today[0]["total"] if bot_revenue_today else 0
         
-        bot_revenue_week = await db.profit_entries.aggregate([
-            {"$match": {"entry_type": "BOT_REVENUE", "created_at": {"$gte": week_ago}}},
-            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        bot_revenue_week = await db.completed_cycles.aggregate([
+            {
+                "$match": {
+                    "id": {"$not": {"$regex": "^temp_cycle_"}},  # Исключаем фиктивные циклы
+                    "end_time": {"$gte": week_ago}
+                }
+            },
+            {"$group": {"_id": None, "total": {"$sum": "$net_profit"}}}
         ]).to_list(1)
         bot_revenue_week = bot_revenue_week[0]["total"] if bot_revenue_week else 0
         
-        bot_revenue_month = await db.profit_entries.aggregate([
-            {"$match": {"entry_type": "BOT_REVENUE", "created_at": {"$gte": month_ago}}},
-            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        bot_revenue_month = await db.completed_cycles.aggregate([
+            {
+                "$match": {
+                    "id": {"$not": {"$regex": "^temp_cycle_"}},  # Исключаем фиктивные циклы
+                    "end_time": {"$gte": month_ago}
+                }
+            },
+            {"$group": {"_id": None, "total": {"$sum": "$net_profit"}}}
         ]).to_list(1)
         bot_revenue_month = bot_revenue_month[0]["total"] if bot_revenue_month else 0
         
-        # Get total bot revenue
-        bot_revenue_total = await db.profit_entries.aggregate([
-            {"$match": {"entry_type": "BOT_REVENUE"}},
-            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        # Get total bot revenue from completed_cycles
+        bot_revenue_total = await db.completed_cycles.aggregate([
+            {
+                "$match": {
+                    "id": {"$not": {"$regex": "^temp_cycle_"}}  # Исключаем фиктивные циклы
+                }
+            },
+            {"$group": {"_id": None, "total": {"$sum": "$net_profit"}}}
         ]).to_list(1)
         bot_revenue_total = bot_revenue_total[0]["total"] if bot_revenue_total else 0
         
@@ -5632,10 +5654,10 @@ async def get_bot_profit_integration(current_admin: User = Depends(get_current_a
         ]).to_list(1)
         bot_win_stats = bot_win_stats[0] if bot_win_stats else {}
         
-        # Get recent bot transactions
-        recent_bot_transactions = await db.profit_entries.find({
-            "entry_type": "BOT_REVENUE"
-        }).sort("created_at", -1).limit(10).to_list(10)
+        # ИСПРАВЛЕНО: Получаем недавние транзакции ботов из completed_cycles
+        recent_bot_transactions = await db.completed_cycles.find({
+            "id": {"$not": {"$regex": "^temp_cycle_"}}  # Исключаем фиктивные циклы
+        }).sort("end_time", -1).limit(10).to_list(10)
         
         # Calculate bot efficiency
         total_games = await db.games.count_documents({
@@ -5669,13 +5691,14 @@ async def get_bot_profit_integration(current_admin: User = Depends(get_current_a
             },
             # Legacy sections removed: creation_modes, behaviors
             "efficiency": bot_efficiency,
+            # ИСПРАВЛЕНО: Адаптируем формат для данных из completed_cycles
             "recent_transactions": [
                 {
                     "id": str(tx["_id"]),
-                    "amount": tx["amount"],
-                    "created_at": tx["created_at"],
-                    "description": tx.get("description", ""),
-                    "source_id": tx.get("source_id", "")
+                    "amount": tx.get("net_profit", 0),
+                    "created_at": tx.get("end_time", tx.get("created_at")),
+                    "description": f"Bot cycle #{tx.get('cycle_number', '?')} - {tx.get('bot_name', 'Unknown Bot')}",
+                    "source_id": tx.get("bot_id", "")
                 }
                 for tx in recent_bot_transactions
             ]
@@ -12878,18 +12901,18 @@ async def get_bot_revenue_details(
         for bot in bots:
             bot_revenue = 0
             
-            # Get completed cycles for this bot with period filter
+            # ИСПРАВЛЕНО: Получаем доход от завершённых циклов бота из completed_cycles
             query = {
-                "type": "BOT_REVENUE",
-                "bot_id": bot["id"]
+                "bot_id": bot["id"],
+                "id": {"$not": {"$regex": "^temp_cycle_"}}  # Исключаем фиктивные циклы
             }
             if start_date:
-                query["created_at"] = {"$gte": start_date}
+                query["end_time"] = {"$gte": start_date}
             
-            profit_entries = await db.profit_entries.find(query).to_list(None)
+            completed_cycles = await db.completed_cycles.find(query).to_list(None)
             
-            for entry in profit_entries:
-                bot_revenue += entry.get("amount", 0)
+            for cycle in completed_cycles:
+                bot_revenue += cycle.get("net_profit", 0)
             
             total_revenue += bot_revenue
             
@@ -13423,16 +13446,16 @@ async def get_total_revenue_breakdown(
         for entry in gift_commission_entries:
             gift_commission_total += entry.get("amount", 0)
         
-        # Get bot revenue
-        query = {"entry_type": "BOT_REVENUE"}
+        # ИСПРАВЛЕНО: Получаем доход от ботов из completed_cycles
+        query = {"id": {"$not": {"$regex": "^temp_cycle_"}}}  # Исключаем фиктивные циклы
         if start_date:
-            query["created_at"] = {"$gte": start_date}
+            query["end_time"] = {"$gte": start_date}
         
         bot_revenue_total = 0
-        bot_revenue_entries = await db.profit_entries.find(query).to_list(None)
+        bot_revenue_entries = await db.completed_cycles.find(query).to_list(None)
         bot_revenue_count = len(bot_revenue_entries)
-        for entry in bot_revenue_entries:
-            bot_revenue_total += entry.get("amount", 0)
+        for cycle in bot_revenue_entries:
+            bot_revenue_total += cycle.get("net_profit", 0)
         
         # Build breakdown
         revenue_breakdown = [
@@ -13626,7 +13649,8 @@ async def get_expenses_details(
         
         # Calculate total revenue for the period
         total_revenue = 0
-        query = {"type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION", "BOT_REVENUE"]}}
+        # ИСПРАВЛЕНО: Убираем BOT_REVENUE из запроса, так как доход от ботов теперь берётся из completed_cycles
+        query = {"type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION"]}}
         if start_date:
             query["created_at"] = {"$gte": start_date}
         
@@ -13634,6 +13658,15 @@ async def get_expenses_details(
         
         for entry in revenue_entries:
             total_revenue += entry.get("amount", 0)
+        
+        # ИСПРАВЛЕНО: Добавляем доход от ботов из completed_cycles
+        bot_query = {"id": {"$not": {"$regex": "^temp_cycle_"}}}
+        if start_date:
+            bot_query["end_time"] = {"$gte": start_date}
+        
+        bot_cycles = await db.completed_cycles.find(bot_query).to_list(None)
+        bot_revenue = sum(cycle.get("net_profit", 0) for cycle in bot_cycles)
+        total_revenue += bot_revenue
         
         # Calculate expenses
         percentage_expenses = (total_revenue * expense_percentage) / 100
@@ -13725,7 +13758,8 @@ async def get_net_profit_analysis(
         total_revenue = 0
         revenue_by_type = {}
         
-        query = {"type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION", "BOT_REVENUE"]}}
+        # ИСПРАВЛЕНО: Убираем BOT_REVENUE из запроса, так как доход от ботов теперь берётся из completed_cycles
+        query = {"type": {"$in": ["BET_COMMISSION", "GIFT_COMMISSION"]}}
         if start_date:
             query["created_at"] = {"$gte": start_date}
         
