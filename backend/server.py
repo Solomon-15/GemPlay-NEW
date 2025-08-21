@@ -8975,21 +8975,28 @@ async def maintain_bot_active_bets(game: Game):
         logger.error(f"Error maintaining bot active bets: {e}")
 
 async def accumulate_bot_profit(game: Game, winner_id: str):
-    """Накопление прибыли от обычных ботов в защищённом контейнере."""
+    """Накопление прибыли от обычных ботов с поддержкой ничьих (ИСПРАВЛЕНО)."""
     try:
         bot_id = None
         bot_won = False
+        is_draw = False
         
         creator_bot = await db.bots.find_one({"id": game.creator_id})
         if creator_bot and creator_bot.get("bot_type") == "REGULAR":
             bot_id = game.creator_id
-            bot_won = (winner_id == game.creator_id)
+            if winner_id is None:
+                is_draw = True
+            else:
+                bot_won = (winner_id == game.creator_id)
         
         if game.opponent_id:
             opponent_bot = await db.bots.find_one({"id": game.opponent_id})
             if opponent_bot and opponent_bot.get("bot_type") == "REGULAR":
                 bot_id = game.opponent_id
-                bot_won = (winner_id == game.opponent_id)
+                if winner_id is None:
+                    is_draw = True
+                else:
+                    bot_won = (winner_id == game.opponent_id)
         
         if not bot_id:
             logger.warning(f"No regular bot found in game {game.id}")
@@ -9000,7 +9007,7 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             logger.error(f"Bot {bot_id} not found")
             return
         
-        cycle_length = bot.get("cycle_games", 16)  # ИСПРАВЛЕНО: используем cycle_games вместо cycle_length
+        cycle_length = bot.get("cycle_games", 16)
         
         accumulator = await db.bot_profit_accumulators.find_one({
             "bot_id": bot_id,
@@ -9016,50 +9023,72 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             if last_accumulator:
                 cycle_number = last_accumulator["cycle_number"] + 1
             
-            accumulator = BotProfitAccumulator(
-                bot_id=bot_id,
-                cycle_number=cycle_number,
-                total_spent=0,
-                total_earned=0,
-                games_completed=0,
-                games_won=0,
-                cycle_start_date=datetime.utcnow()
-            )
-            await db.bot_profit_accumulators.insert_one(accumulator.dict())
-        else:
-            accumulator = BotProfitAccumulator(**accumulator)
+            # ИСПРАВЛЕНО: Добавляем поддержку ничьих в аккумулятор
+            accumulator = {
+                "id": str(uuid.uuid4()),
+                "bot_id": bot_id,
+                "cycle_number": cycle_number,
+                "total_spent": 0,
+                "total_earned": 0,
+                "games_completed": 0,
+                "games_won": 0,
+                "games_lost": 0,  # ДОБАВЛЕНО: отдельный счетчик поражений
+                "games_drawn": 0,  # ДОБАВЛЕНО: счетчик ничьих
+                "cycle_start_date": datetime.utcnow(),
+                "is_cycle_completed": False,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+            await db.bot_profit_accumulators.insert_one(accumulator)
         
         bet_amount = game.bet_amount
         
-        new_total_spent = accumulator.total_spent + bet_amount
+        new_total_spent = accumulator.get("total_spent", 0) + bet_amount
+        new_total_earned = accumulator.get("total_earned", 0)
+        new_games_won = accumulator.get("games_won", 0)
+        new_games_lost = accumulator.get("games_lost", 0)
+        new_games_drawn = accumulator.get("games_drawn", 0)
         
-        new_total_earned = accumulator.total_earned
-        if bot_won:
-            new_total_earned += bet_amount * 2  # Бот получает свою ставку + ставку противника
-            new_games_won = accumulator.games_won + 1
+        # ИСПРАВЛЕНО: Правильная обработка всех исходов включая ничьи
+        if is_draw:
+            # При ничье бот получает свою ставку обратно (не тратит, но и не зарабатывает)
+            new_total_earned += bet_amount  # Возврат ставки
+            new_games_drawn += 1
+            result_text = "DRAW"
+        elif bot_won:
+            # При победе бот получает свою ставку + ставку противника
+            new_total_earned += bet_amount * 2
+            new_games_won += 1
+            result_text = "WIN"
         else:
-            new_games_won = accumulator.games_won
+            # При поражении бот теряет ставку (уже учтена в total_spent)
+            new_games_lost += 1
+            result_text = "LOSS"
         
-        new_games_completed = accumulator.games_completed + 1
+        new_games_completed = new_games_won + new_games_lost + new_games_drawn
         
         await db.bot_profit_accumulators.update_one(
-            {"id": accumulator.id},
+            {"id": accumulator.get("id")},
             {
                 "$set": {
                     "total_spent": new_total_spent,
                     "total_earned": new_total_earned,
                     "games_completed": new_games_completed,
                     "games_won": new_games_won,
+                    "games_lost": new_games_lost,
+                    "games_drawn": new_games_drawn,
                     "updated_at": datetime.utcnow()
                 }
             }
         )
         
-        logger.info(f"🤖 Bot {bot_id} cycle update: {new_games_completed}/{cycle_length} games, "
-                   f"spent: ${new_total_spent}, earned: ${new_total_earned}")
+        logger.info(f"🤖 Bot {bot_id} {result_text}: {new_games_completed}/{cycle_length} games "
+                   f"(W:{new_games_won}/L:{new_games_lost}/D:{new_games_drawn}), "
+                   f"spent: ${new_total_spent:.2f}, earned: ${new_total_earned:.2f}")
         
-        if new_games_completed >= cycle_length:
-            await complete_bot_cycle(accumulator.id, new_total_spent, new_total_earned, bot_id)
+        # ИСПРАВЛЕНО: Убираем преждевременное завершение цикла
+        # Цикл должен завершаться только через maintain_all_bots_active_bets() 
+        # когда ВСЕ игры действительно завершены, а не по счетчику аккумулятора
         
     except Exception as e:
         logger.error(f"Error accumulating bot profit: {e}")
