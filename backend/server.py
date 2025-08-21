@@ -9152,10 +9152,18 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             draws_count = accumulator.get("games_drawn", 0)  # Теперь ничьи учитываются!
             total_bets = wins_count + losses_count + draws_count
             
-            # ИСПРАВЛЕНО: Правильный расчет активного пула (без ничьих)
-            active_pool = total_spent - (draws_count * (total_spent / max(1, total_bets))) if total_bets > 0 else total_spent
+            # ИСПРАВЛЕНО: Правильный расчет активного пула и потерь
+            # Активный пул = сумма ставок в играх где есть победитель (исключая ничьи)
+            if total_bets > 0:
+                avg_bet = total_spent / total_bets
+                draws_amount = draws_count * avg_bet  # Приблизительная сумма ничьих
+                active_pool = total_spent - draws_amount  # Пул без ничьих
+            else:
+                active_pool = total_spent
             
-            # Сохраняем данные цикла с правильным учетом ничьих
+            # Рассчитываем потери как сумму проигрышных ставок
+            losses_amount = (losses_count * (total_spent / max(1, total_bets))) if total_bets > 0 else 0
+            
             cycle_data = {
                 "id": str(uuid.uuid4()),
                 "bot_id": bot_id,
@@ -9169,12 +9177,12 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
                 "draws_count": draws_count,  # ИСПРАВЛЕНО: Теперь ничьи правильно записываются!
                 "total_bet_amount": total_spent,
                 "total_winnings": total_earned - total_spent if total_earned > total_spent else 0,
-                "total_losses": total_spent - total_earned if total_spent > total_earned else 0,
+                "total_losses": round(losses_amount, 2),  # ИСПРАВЛЕНО: Правильный расчет потерь
                 "net_profit": profit,
                 "is_profitable": profit > 0,
-                "active_pool": active_pool,  # ДОБАВЛЕНО: активный пул для корректного ROI
+                "active_pool": round(active_pool, 2),  # ИСПРАВЛЕНО: правильный активный пул
                 "roi_active": (profit / active_pool * 100) if active_pool > 0 else 0,  # ДОБАВЛЕНО: ROI от активного пула
-                "created_by_system_version": "v4.0_with_draws_fixed",  # ОБНОВЛЕНО: версия системы
+                "created_by_system_version": "v5.0_no_double_accumulation",  # ОБНОВЛЕНО: версия системы
                 "created_at": datetime.utcnow()
             }
             
