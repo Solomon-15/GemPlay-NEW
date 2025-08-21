@@ -9094,7 +9094,7 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
         logger.error(f"Error accumulating bot profit: {e}")
 
 async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earned: float, bot_id: str):
-    """Завершение цикла бота и перевод излишка в прибыль."""
+    """Завершение цикла бота с правильным учетом ничьих (ИСПРАВЛЕНО)."""
     try:
         profit = total_earned - total_spent
         
@@ -9110,11 +9110,11 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             }
         )
         
-        # Логируем завершение цикла - данные сохраняются в completed_cycles через save_completed_cycle()
+        # Логируем завершение цикла
         if profit > 0:
-            logger.info(f"🎯 Bot {bot_id} cycle completed: profit ${profit:.2f} (will be recorded in completed_cycles)")
+            logger.info(f"🎯 Bot {bot_id} cycle completed: profit ${profit:.2f} (recording to completed_cycles)")
         else:
-            logger.info(f"🎯 Bot {bot_id} cycle completed: deficit ${abs(profit):.2f} (will be recorded in completed_cycles)")
+            logger.info(f"🎯 Bot {bot_id} cycle completed: deficit ${abs(profit):.2f} (recording to completed_cycles)")
         
         await db.bots.update_one(
             {"id": bot_id},
@@ -9126,15 +9126,20 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             }
         )
         
-        # ИСПРАВЛЕНО: Убираем дублированный вызов save_completed_cycle
-        # Данные цикла теперь сохраняются ТОЛЬКО через аккумуляторы
-        # save_completed_cycle больше не вызывается, чтобы избежать дублирования циклов
-        
         accumulator = await db.bot_profit_accumulators.find_one({"id": accumulator_id})
         if accumulator:
             cycle_number = accumulator.get("cycle_number", 1)
             
-            # Сохраняем данные цикла напрямую в completed_cycles из аккумулятора
+            # ИСПРАВЛЕНО: Правильное использование новых полей с ничьими
+            wins_count = accumulator.get("games_won", 0)
+            losses_count = accumulator.get("games_lost", 0)
+            draws_count = accumulator.get("games_drawn", 0)  # Теперь ничьи учитываются!
+            total_bets = wins_count + losses_count + draws_count
+            
+            # ИСПРАВЛЕНО: Правильный расчет активного пула (без ничьих)
+            active_pool = total_spent - (draws_count * (total_spent / max(1, total_bets))) if total_bets > 0 else total_spent
+            
+            # Сохраняем данные цикла с правильным учетом ничьих
             cycle_data = {
                 "id": str(uuid.uuid4()),
                 "bot_id": bot_id,
@@ -9142,16 +9147,18 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
                 "start_time": accumulator.get("cycle_start_date", datetime.utcnow()),
                 "end_time": datetime.utcnow(),
                 "duration_seconds": int((datetime.utcnow() - accumulator.get("cycle_start_date", datetime.utcnow())).total_seconds()),
-                "total_bets": accumulator.get("games_completed", 0),
-                "wins_count": accumulator.get("games_won", 0),
-                "losses_count": accumulator.get("games_completed", 0) - accumulator.get("games_won", 0),
-                "draws_count": 0,  # В аккумуляторах ничьи не отслеживаются отдельно
+                "total_bets": total_bets,
+                "wins_count": wins_count,
+                "losses_count": losses_count,
+                "draws_count": draws_count,  # ИСПРАВЛЕНО: Теперь ничьи правильно записываются!
                 "total_bet_amount": total_spent,
                 "total_winnings": total_earned - total_spent if total_earned > total_spent else 0,
                 "total_losses": total_spent - total_earned if total_spent > total_earned else 0,
                 "net_profit": profit,
                 "is_profitable": profit > 0,
-                "created_by_system_version": "v3.0_accumulators_only",
+                "active_pool": active_pool,  # ДОБАВЛЕНО: активный пул для корректного ROI
+                "roi_active": (profit / active_pool * 100) if active_pool > 0 else 0,  # ДОБАВЛЕНО: ROI от активного пула
+                "created_by_system_version": "v4.0_with_draws_fixed",  # ОБНОВЛЕНО: версия системы
                 "created_at": datetime.utcnow()
             }
             
@@ -9164,7 +9171,8 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             if not existing_cycle:
                 try:
                     await db.completed_cycles.insert_one(cycle_data)
-                    logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} saved directly from accumulator (profit: ${profit:.2f})")
+                    logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} saved with draws: "
+                              f"W:{wins_count}/L:{losses_count}/D:{draws_count}, profit: ${profit:.2f}")
                 except Exception as insert_error:
                     if "duplicate key" in str(insert_error).lower():
                         logger.warning(f"✅ Bot {bot_id} cycle #{cycle_number} already exists (race condition), skipping")
