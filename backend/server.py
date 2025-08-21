@@ -593,9 +593,9 @@ class Bot(BaseModel):
     min_bet_amount: float = 1.0  # 1-10000
     max_bet_amount: float = 100.0  # 1-10000
     # НОВАЯ ЛОГИКА: Убираем win_percentage, добавляем баланс игр
-    wins_count: int = 6           # Баланс игр - количество побед
+    wins_count: int = 7           # Баланс игр - количество побед (ИСПРАВЛЕНО: 7 вместо 6)
     losses_count: int = 6         # Баланс игр - количество поражений  
-    draws_count: int = 4          # Баланс игр - количество ничьих
+    draws_count: int = 3          # Баланс игр - количество ничьих (ИСПРАВЛЕНО: 3 вместо 4)
     wins_percentage: float = 44.0  # Процент исходов - победы
     losses_percentage: float = 36.0 # Процент исходов - поражения
     draws_percentage: float = 20.0  # Процент исходов - ничьи
