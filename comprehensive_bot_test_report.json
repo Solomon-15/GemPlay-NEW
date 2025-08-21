@@ -1,0 +1,219 @@
+{
+  "timestamp": "2025-08-21T20:33:18.219003",
+  "test_bot_id": "test_bot_8e0e7a43",
+  "summary": {
+    "total_tests": 9,
+    "passed": 9,
+    "failed": 0,
+    "errors": 0,
+    "success_rate": 100.0
+  },
+  "detailed_results": {
+    "calculation_logic": {
+      "status": "SUCCESS",
+      "calculated": {
+        "wins": 356,
+        "losses": 291,
+        "draws": 162,
+        "profit": 65,
+        "roi": 10.046367851622875
+      },
+      "expected": {
+        "total": 809,
+        "wins": 356,
+        "losses": 291,
+        "draws": 162,
+        "profit": 65,
+        "roi": 10.05
+      }
+    },
+    "bot_creation": {
+      "status": "SUCCESS",
+      "bot_config": {
+        "name": "TestBot_test_bot",
+        "min_bet_amount": 1.0,
+        "max_bet_amount": 100.0,
+        "cycle_games": 16,
+        "wins_percentage": 44.0,
+        "losses_percentage": 36.0,
+        "draws_percentage": 20.0,
+        "wins_count": 7,
+        "losses_count": 6,
+        "draws_count": 3,
+        "pause_between_cycles": 5
+      },
+      "created_bot": {
+        "id": "test_bot_8e0e7a43",
+        "name": "TestBot_test_bot",
+        "bot_type": "REGULAR",
+        "is_active": true,
+        "min_bet_amount": 1.0,
+        "max_bet_amount": 100.0,
+        "cycle_games": 16,
+        "wins_percentage": 44.0,
+        "losses_percentage": 36.0,
+        "draws_percentage": 20.0,
+        "wins_count": 7,
+        "losses_count": 6,
+        "draws_count": 3,
+        "pause_between_cycles": 5,
+        "created_at": "2025-08-21 20:33:18.218513",
+        "has_completed_cycles": false
+      }
+    },
+    "bet_generation": {
+      "status": "SUCCESS",
+      "generated_bets": 16,
+      "sums": {
+        "wins": 356,
+        "losses": 291,
+        "draws": 162,
+        "total": 809
+      },
+      "expected": {
+        "total": 809,
+        "wins": 356,
+        "losses": 291,
+        "draws": 162
+      }
+    },
+    "cycle_automation": {
+      "status": "SUCCESS",
+      "conditions": {
+        "total_games": 16,
+        "needs_initial_cycle": false,
+        "cycle_fully_completed": false
+      },
+      "action": "НЕОПРЕДЕЛЕННОЕ СОСТОЯНИЕ",
+      "should_create_cycle": false
+    },
+    "game_execution": {
+      "status": "SUCCESS",
+      "completed_games": 16,
+      "results": {
+        "wins": 7,
+        "losses": 6,
+        "draws": 3
+      },
+      "expected_balance": {
+        "wins": 7,
+        "losses": 6,
+        "draws": 3
+      }
+    },
+    "profit_accumulation": {
+      "status": "SUCCESS",
+      "accumulator": {
+        "id": "acc_test_bot_8e0e7a43",
+        "bot_id": "test_bot_8e0e7a43",
+        "cycle_number": 1,
+        "total_spent": 809,
+        "total_earned": 874,
+        "games_completed": 16,
+        "games_won": 7,
+        "games_lost": 6,
+        "games_drawn": 3,
+        "cycle_start_date": "2025-08-21 20:33:18.218738",
+        "is_cycle_completed": false
+      },
+      "expected": {
+        "spent": 809,
+        "earned": 874,
+        "profit": 65
+      }
+    },
+    "cycle_completion": {
+      "status": "SUCCESS",
+      "completed_cycle": {
+        "id": "cycle_test_bot_8e0e7a43",
+        "bot_id": "test_bot_8e0e7a43",
+        "cycle_number": 1,
+        "start_time": "2025-08-21 20:33:18.218738",
+        "end_time": "2025-08-21 20:33:18.218779",
+        "total_bets": 16,
+        "wins_count": 7,
+        "losses_count": 6,
+        "draws_count": 3,
+        "total_bet_amount": 809,
+        "total_winnings": 356,
+        "total_losses": 291,
+        "total_draws": 162,
+        "net_profit": 65,
+        "active_pool": 647,
+        "roi_active": 10.05,
+        "is_profitable": true,
+        "created_by_system_version": "v5.0_no_pause_on_draw"
+      },
+      "expected": {
+        "total_bets": 16,
+        "wins_count": 7,
+        "losses_count": 6,
+        "draws_count": 3,
+        "total_winnings": 356,
+        "total_losses": 291,
+        "total_draws": 162,
+        "active_pool": 647,
+        "net_profit": 65,
+        "roi_active": 10.05
+      }
+    },
+    "api_integration": {
+      "status": "SUCCESS",
+      "api_response": {
+        "bot_id": "test_bot_8e0e7a43",
+        "bot_name": "TestBot_test_bot",
+        "total_completed_cycles": 1,
+        "cycles": [
+          {
+            "id": "cycle_test_bot_8e0e7a43",
+            "cycle_number": 1,
+            "completed_at": "2025-08-21T20:33:18.218779",
+            "duration": "1ч 0м",
+            "total_games": 16,
+            "games_played": 16,
+            "wins": 7,
+            "losses": 6,
+            "draws": 3,
+            "total_bet": 809,
+            "total_winnings": 356,
+            "total_losses": 291,
+            "profit": 65,
+            "roi_percent": 10.05
+          }
+        ]
+      },
+      "expected": {
+        "total_games": 16,
+        "wins": 7,
+        "losses": 6,
+        "draws": 3,
+        "total_bet": 809,
+        "total_winnings": 356,
+        "total_losses": 291,
+        "profit": 65,
+        "roi_percent": 10.05
+      }
+    },
+    "ui_display": {
+      "status": "SUCCESS",
+      "history_display": {
+        "cycle_number": "#1",
+        "games": "16 игр",
+        "balance": "7W/6L/3D",
+        "total_amount": "$809",
+        "winnings": "+$356",
+        "losses": "$291",
+        "profit": "+$65",
+        "roi": "+10.05%"
+      },
+      "revenue_display": {
+        "bot_name": "TestBot_test_bot",
+        "total_revenue": "$65",
+        "cycles_count": 1,
+        "avg_roi": "10.05%",
+        "total_games": 16
+      },
+      "shows_correct_values": true
+    }
+  }
+}
