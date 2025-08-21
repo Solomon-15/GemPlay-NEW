@@ -92,6 +92,21 @@ backend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE FIX VERIFICATION COMPLETED: All critical fixes have been implemented correctly in the code: 1) Duplicate accumulate_bot_profit call at line 7985 removed (replaced with explanatory comment), 2) total_losses calculation fixed to use sum of losing bets instead of total_spent - total_earned, 3) Draw handling properly implemented with games_drawn tracking, 4) Active pool calculation improved to exclude draws, 5) System version updated to v5.0_no_double_accumulation. Old data corruption confirmed (32 games, 14/12/6 W/L/D, $0 losses) which validates the issue existed. New bots created after fixes will generate correct data. The API works correctly - the issue was in the cycle completion logic which has been fixed."
 
+  - task: "Test financial logic with new default values"
+    implemented: true
+    working: true
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing corrected financial logic with new default values: Game balance 7/6/3, Percentages 44%/36%/20%, Expected cycle sum ~808"
+      - working: true
+        agent: "testing"
+        comment: "✅ FINANCIAL LOGIC VERIFICATION SUCCESSFUL: New default values are working correctly. Bot creation shows correct Game Balance: 7/6/3 (wins/losses/draws) and Percentages: 44.0%/36.0%/20.0%. Backend logs confirm correct financial calculations: Bets: 16 = 7W/6L/3D, Sums: W=355, L=291, D=162, TOTAL=808, ROI: 9.91% (close to expected 10%). Both Bot model defaults and create_regular_bots function have been corrected. The fixes in create_full_bot_cycle function are also working properly."
+
 frontend:
 
 metadata:
