@@ -196,14 +196,14 @@ class BotCycleTestSuite:
                     games = games_data.get("games", [])
                     bot_games = [game for game in games if game.get("creator_id") == self.created_bot_id]
                     
-                    # Check completed cycles
+                    # Check completed cycles using correct endpoint
                     async with self.session.get(
-                        f"{BACKEND_URL}/admin/bots/completed-cycles",
+                        f"{BACKEND_URL}/admin/bots/{self.created_bot_id}/completed-cycles",
                         headers=self.get_auth_headers()
                     ) as cycles_response:
                         if cycles_response.status == 200:
-                            cycles = await cycles_response.json()
-                            bot_cycles = [cycle for cycle in cycles if cycle.get("bot_id") == self.created_bot_id]
+                            cycles_data = await cycles_response.json()
+                            bot_cycles = cycles_data.get("cycles", [])
                             
                             # At this point, if there are less than 16 completed games, there should be NO completed cycles
                             completed_games = [game for game in bot_games if game.get("status") == "COMPLETED"]
