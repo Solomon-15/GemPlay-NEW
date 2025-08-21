@@ -274,14 +274,14 @@ class BotCycleTestSuite:
             return
         
         try:
-            # Check for duplicate cycles
+            # Check for duplicate cycles using correct endpoint
             async with self.session.get(
-                f"{BACKEND_URL}/admin/bots/completed-cycles",
+                f"{BACKEND_URL}/admin/bots/{self.created_bot_id}/completed-cycles",
                 headers=self.get_auth_headers()
             ) as response:
                 if response.status == 200:
-                    cycles = await response.json()
-                    bot_cycles = [cycle for cycle in cycles if cycle.get("bot_id") == self.created_bot_id]
+                    cycles_data = await response.json()
+                    bot_cycles = cycles_data.get("cycles", [])
                     
                     # Check for duplicates by cycle_number
                     cycle_numbers = [cycle.get("cycle_number") for cycle in bot_cycles]
