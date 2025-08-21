@@ -98,8 +98,10 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "Test get_bot_completed_cycles API fixes"
+  stuck_tasks:
+    - "Test get_bot_completed_cycles API fixes"
   test_all: false
   test_priority: "high_first"
 
@@ -108,3 +110,5 @@ agent_communication:
     message: "Starting comprehensive testing of bot cycle fixes. Focus on verifying no premature cycle completion and proper draw handling."
   - agent: "testing"
     message: "✅ TESTING COMPLETED: All critical bot cycle fixes have been verified through code analysis and functional testing. Key findings: 1) Bot creation properly implements new logic with draw support, 2) accumulate_bot_profit() correctly handles draws with proper game tracking, 3) maintain_all_bots_active_bets() prevents premature cycle completion, 4) complete_bot_cycle() records draws and prevents duplicates, 5) System properly balances games with expected 44%/36%/20% distribution. All fixes are working as intended."
+  - agent: "testing"
+    message: "🔍 COMPLETED CYCLES API TESTING: Found critical issues with data integrity. The get_bot_completed_cycles function correctly reads from database (not MOCK data), but the database contains corrupted cycle data. Bot f70aaf4a has cycles with doubled values: 32 games instead of 16, W/L/D of 14/12/6 instead of 7/6/3, and total_losses=$0 despite having losses. The issue is in the cycle completion logic that writes to the database, not in the display function. Older bot cycles in DB show correct values, indicating recent regression in cycle completion code."
