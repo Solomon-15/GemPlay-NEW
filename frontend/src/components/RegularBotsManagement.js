@@ -3953,7 +3953,7 @@ const RegularBotsManagement = () => {
                               return (
                                 <span 
                                   className={`font-roboto text-sm font-bold cursor-help ${
-                                    roi >= 0 ? 'text-blue-400' : 'text-red-400'
+                                    roi >= 0 ? 'text-yellow-400' : 'text-red-400'
                                   }`}
                                   title={tooltipText}
                                 >
