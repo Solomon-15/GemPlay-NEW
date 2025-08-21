@@ -2004,7 +2004,7 @@ async def startup_event():
             await db.sounds.insert_one(sound.dict())
             logger.info(f"Created default sound: {sound_data['name']}")
     
-    # Start background tasks
+    # Start background tasks (НЕ включает bot_automation_loop - он запускается позже)
     start_background_scheduler()
     
     logger.info("GemPlay API started successfully with background tasks!")
@@ -2021,8 +2021,8 @@ def start_background_scheduler():
     scheduler_thread = Thread(target=run_scheduler, daemon=True)
     scheduler_thread.start()
     
-    # Start bot automation using asyncio create_task - ONLY ONE automation loop
-    asyncio.create_task(bot_automation_loop())
+    # ПЕРЕНЕСЕНО: bot_automation_loop() теперь запускается в startup_event_secondary()
+    # asyncio.create_task(bot_automation_loop())  # ПЕРЕНЕСЕНО
     
     # DISABLED: Conflicting automation loops that cause race conditions
     # asyncio.create_task(new_bot_automation_task())  # DISABLED to prevent duplicate bet creation
@@ -2069,6 +2069,10 @@ async def maintain_all_bots_active_bets():
             return
             
         logger.info(f"🤖 Checking {len(active_bots)} active bots for cycle management")
+        
+        if len(active_bots) == 0:
+            logger.debug("📭 No active bots found")
+            return
         
         for bot_doc in active_bots:
             try:
@@ -2120,25 +2124,26 @@ async def maintain_all_bots_active_bets():
                 # Цикл нужно создать если нет игр вообще
                 needs_initial_cycle = total_games_in_cycle == 0
                 
-                logger.debug(f"Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle status - total_games={total_games_in_cycle}, active={active_games}, completed={completed_games}, target={cycle_games_target}")
+                bot_name = fresh_bot_doc.get('name', 'Unknown')
+                logger.info(f"🔍 Bot {bot_name}: cycle status - total_games={total_games_in_cycle}, active={active_games}, completed={completed_games}, target={cycle_games_target}")
+                logger.info(f"   Conditions: needs_initial_cycle={needs_initial_cycle}, cycle_fully_completed={cycle_fully_completed}")
                 
-                # НОВАЯ ПРАВИЛЬНАЯ ЛОГИКА ПРИНЯТИЯ РЕШЕНИЙ
+                # ИСПРАВЛЕНО: ПРАВИЛЬНАЯ ЛОГИКА ПРИНЯТИЯ РЕШЕНИЙ
                 if needs_initial_cycle:
-                    # Нет игр вообще - создаем первый цикл
-                    if not fresh_bot_doc.get("has_completed_cycles", False):
-                        logger.info(f"🎯 Bot {fresh_bot_doc.get('name', 'Unknown')}: starting initial cycle (new bot)")
+                    # Нет игр вообще - создаем цикл (независимо от has_completed_cycles)
+                    logger.info(f"🎯 Bot {fresh_bot_doc.get('name', 'Unknown')}: no games found, starting new cycle")
+                    
+                    success = await create_full_bot_cycle(fresh_bot_doc)
+                    if success:
+                        logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')} created cycle of {cycle_games_target} bets")
                         
-                        # Отмечаем что у бота теперь есть циклы
+                        # Отмечаем что у бота есть циклы (для статистики)
                         await db.bots.update_one(
                             {"id": bot_id},
                             {"$set": {"has_completed_cycles": True}}
                         )
-                        
-                        success = await create_full_bot_cycle(fresh_bot_doc)
-                        if success:
-                            logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')} created initial cycle of {cycle_games_target} bets")
-                        else:
-                            logger.warning(f"❌ Failed to create initial cycle for bot {fresh_bot_doc.get('name', 'Unknown')}")
+                    else:
+                        logger.warning(f"❌ Failed to create cycle for bot {fresh_bot_doc.get('name', 'Unknown')}")
                 
                 elif cycle_fully_completed:
                     # Цикл ПОЛНОСТЬЮ завершен - проверяем паузу
@@ -3969,20 +3974,44 @@ async def migrate_human_bots_fields():
         return {"error": str(e), "migrated": 0}
 
 @app.on_event("startup")
-async def startup_event():
-    """Run startup tasks including migrations."""
+async def startup_event_secondary():
+    """Run additional startup tasks including migrations."""
     try:
         # Initialize Redis connection
         await init_redis()
         
         # Run database migrations
         await migrate_human_bots_fields()
-        logger.info("Application startup completed successfully")
+        logger.info("Secondary startup tasks completed successfully")
         
         # Start background task for cleaning up expired reservations
         asyncio.create_task(cleanup_expired_reservations())
+        
+        # ИСПРАВЛЕНО: Запускаем bot automation loop после всех инициализаций
+        asyncio.create_task(bot_automation_loop())
+        logger.info("✅ Bot automation loop started")
+        
+        # ИСПРАВЛЕНО: Принудительная проверка циклов для всех активных ботов при запуске
+        asyncio.create_task(initial_bot_cycles_check())
+        logger.info("✅ Initial bot cycles check started")
     except Exception as e:
-        logger.error(f"Error during application startup: {e}")
+        logger.error(f"Error during secondary startup: {e}")
+
+async def initial_bot_cycles_check():
+    """Принудительная проверка и создание циклов для всех активных ботов при запуске."""
+    try:
+        logger.info("🔍 Initial bot cycles check: scanning active bots...")
+        
+        # Ждем 3 секунды чтобы БД полностью инициализировалась
+        await asyncio.sleep(3)
+        
+        # Принудительно запускаем проверку циклов для всех активных ботов
+        await maintain_all_bots_active_bets()
+        
+        logger.info("✅ Initial bot cycles check completed")
+        
+    except Exception as e:
+        logger.error(f"Error in initial bot cycles check: {e}")
 
 async def cleanup_expired_reservations():
     """Background task to clean up expired game reservations."""
