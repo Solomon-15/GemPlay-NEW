@@ -2271,15 +2271,15 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
             {"$set": {"current_cycle_start_time": cycle_start_time}}
         )
         
-        # Получаем проценты исходов от бота
-        wins_percentage = bot_doc.get("wins_percentage", 35)
-        losses_percentage = bot_doc.get("losses_percentage", 35) 
-        draws_percentage = bot_doc.get("draws_percentage", 30)
+        # Получаем проценты исходов от бота (ИСПРАВЛЕНО: правильные значения по умолчанию)
+        wins_percentage = bot_doc.get("wins_percentage", 44)  # ИСПРАВЛЕНО: 44% вместо 35%
+        losses_percentage = bot_doc.get("losses_percentage", 36)  # ИСПРАВЛЕНО: 36% вместо 35%
+        draws_percentage = bot_doc.get("draws_percentage", 20)  # ИСПРАВЛЕНО: 20% вместо 30%
         
-        # НОВАЯ ФОРМУЛА 2.0: Генерируем ставки согласно новой логике ROI
-        wins_count = bot_doc.get("wins_count", 6)
-        losses_count = bot_doc.get("losses_count", 6)
-        draws_count = bot_doc.get("draws_count", 4)
+        # ИСПРАВЛЕНО: Правильные значения баланса игр по умолчанию (7/6/3)
+        wins_count = bot_doc.get("wins_count", 7)  # ИСПРАВЛЕНО: 7 вместо 6
+        losses_count = bot_doc.get("losses_count", 6)  # ✅ Остается 6
+        draws_count = bot_doc.get("draws_count", 3)  # ИСПРАВЛЕНО: 3 вместо 4
         
         all_cycle_bets = await generate_cycle_bets_natural_distribution(
             bot_id=bot_id,
