@@ -83,12 +83,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Test regular bot creation with new logic"
-    - "Test accumulator correct functionality"
-    - "Test proper cycle completion logic"
-    - "Test reporting with draws"
-    - "Test no duplicate cycles"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
