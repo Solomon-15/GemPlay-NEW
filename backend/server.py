@@ -546,8 +546,10 @@ class BotProfitAccumulator(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     bot_id: str
     cycle_number: int
-    total_spent: float  # Общая сумма, потраченная ботом на цикл
-    total_earned: float  # Общая сумма, заработанная ботом в цикле
+    # УДАЛЕНО: total_spent, total_earned - используем прямой расчёт Выигрыши - Потери
+    wins_amount: float = 0.0  # Сумма выигрышных ставок
+    losses_amount: float = 0.0  # Сумма проигрышных ставок
+    draws_amount: float = 0.0  # Сумма ничейных ставок
     games_completed: int  # Количество завершенных игр в цикле
     games_won: int  # Количество выигранных игр
     cycle_start_date: datetime
@@ -2165,9 +2167,8 @@ async def maintain_all_bots_active_bets():
                         })
                         
                         if accumulator:
-                            total_spent = accumulator.get("total_spent", 0)
-                            total_earned = accumulator.get("total_earned", 0)
-                            await complete_bot_cycle(accumulator["id"], total_spent, total_earned, bot_id)
+                            # ИСПРАВЛЕНО: Убираем total_spent/total_earned, используем прямой расчёт
+                            await complete_bot_cycle(accumulator["id"], bot_id)
                             logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle finalized through accumulators")
                         else:
                             logger.warning(f"⚠️ Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle completed but no accumulator found")
@@ -9076,13 +9077,15 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             if last_accumulator:
                 cycle_number = last_accumulator["cycle_number"] + 1
             
-            # ИСПРАВЛЕНО: Добавляем поддержку ничьих в аккумулятор
+            # ИСПРАВЛЕНО: Прямой расчёт прибыли без total_spent/total_earned
             accumulator = {
                 "id": str(uuid.uuid4()),
                 "bot_id": bot_id,
                 "cycle_number": cycle_number,
-                "total_spent": 0,
-                "total_earned": 0,
+                # УДАЛЕНО: total_spent, total_earned - используем прямой расчёт
+                "wins_amount": 0.0,   # Сумма выигрышных ставок
+                "losses_amount": 0.0, # Сумма проигрышных ставок
+                "draws_amount": 0.0,  # Сумма ничейных ставок
                 "games_completed": 0,
                 "games_won": 0,
                 "games_lost": 0,  # ДОБАВЛЕНО: отдельный счетчик поражений
@@ -9096,25 +9099,25 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
         
         bet_amount = game.bet_amount
         
-        new_total_spent = accumulator.get("total_spent", 0) + bet_amount
-        new_total_earned = accumulator.get("total_earned", 0)
+        # ИСПРАВЛЕНО: Прямое накопление сумм по категориям без total_spent/total_earned
+        new_wins_amount = accumulator.get("wins_amount", 0.0)
+        new_losses_amount = accumulator.get("losses_amount", 0.0)
+        new_draws_amount = accumulator.get("draws_amount", 0.0)
         new_games_won = accumulator.get("games_won", 0)
         new_games_lost = accumulator.get("games_lost", 0)
         new_games_drawn = accumulator.get("games_drawn", 0)
         
-        # ИСПРАВЛЕНО: Правильная обработка всех исходов включая ничьи
+        # ИСПРАВЛЕНО: Простое накопление сумм по категориям
         if is_draw:
-            # При ничье бот получает свою ставку обратно (не тратит, но и не зарабатывает)
-            new_total_earned += bet_amount  # Возврат ставки
+            new_draws_amount += bet_amount
             new_games_drawn += 1
             result_text = "DRAW"
         elif bot_won:
-            # При победе бот получает свою ставку + ставку противника
-            new_total_earned += bet_amount * 2
+            new_wins_amount += bet_amount
             new_games_won += 1
             result_text = "WIN"
         else:
-            # При поражении бот теряет ставку (уже учтена в total_spent)
+            new_losses_amount += bet_amount
             new_games_lost += 1
             result_text = "LOSS"
         
@@ -9124,8 +9127,10 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             {"id": accumulator.get("id")},
             {
                 "$set": {
-                    "total_spent": new_total_spent,
-                    "total_earned": new_total_earned,
+                    # УДАЛЕНО: total_spent, total_earned
+                    "wins_amount": new_wins_amount,
+                    "losses_amount": new_losses_amount,
+                    "draws_amount": new_draws_amount,
                     "games_completed": new_games_completed,
                     "games_won": new_games_won,
                     "games_lost": new_games_lost,
@@ -9135,9 +9140,14 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             }
         )
         
+        # ИСПРАВЛЕНО: Прямой расчёт прибыли
+        direct_profit = new_wins_amount - new_losses_amount
+        total_cycle_amount = new_wins_amount + new_losses_amount + new_draws_amount
+        
         logger.info(f"🤖 Bot {bot_id} {result_text}: {new_games_completed}/{cycle_length} games "
                    f"(W:{new_games_won}/L:{new_games_lost}/D:{new_games_drawn}), "
-                   f"spent: ${new_total_spent:.2f}, earned: ${new_total_earned:.2f}")
+                   f"sums: W=${new_wins_amount:.0f}/L=${new_losses_amount:.0f}/D=${new_draws_amount:.0f}, "
+                   f"profit: ${direct_profit:.0f}")
         
         # ИСПРАВЛЕНО: Убираем преждевременное завершение цикла
         # Цикл должен завершаться только через maintain_all_bots_active_bets() 
@@ -9146,10 +9156,20 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
     except Exception as e:
         logger.error(f"Error accumulating bot profit: {e}")
 
-async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earned: float, bot_id: str):
-    """Завершение цикла бота с правильным учетом ничьих (ИСПРАВЛЕНО)."""
+async def complete_bot_cycle(accumulator_id: str, bot_id: str):
+    """Завершение цикла бота с прямым расчётом прибыли (ИСПРАВЛЕНО)."""
     try:
-        profit = total_earned - total_spent
+        # Получаем аккумулятор
+        accumulator = await db.bot_profit_accumulators.find_one({"id": accumulator_id})
+        if not accumulator:
+            logger.error(f"Accumulator {accumulator_id} not found")
+            return
+        
+        # ИСПРАВЛЕНО: Прямой расчёт прибыли = Выигрыши - Потери
+        wins_amount = accumulator.get("wins_amount", 0.0)
+        losses_amount = accumulator.get("losses_amount", 0.0)
+        draws_amount = accumulator.get("draws_amount", 0.0)
+        profit = wins_amount - losses_amount
         
         await db.bot_profit_accumulators.update_one(
             {"id": accumulator_id},
