@@ -13156,8 +13156,8 @@ async def get_bot_revenue_details(
                 "win_rate": (games_won / games_played * 100) if games_played > 0 else 0,
                 "current_cycle_games": current_cycle_games,
                 "current_cycle_wins": current_cycle_wins,
-                "cycles_completed": len(profit_entries),
-                "avg_revenue_per_cycle": bot_revenue / len(profit_entries) if len(profit_entries) > 0 else 0,
+                "cycles_completed": len(completed_cycles),
+                "avg_revenue_per_cycle": bot_revenue / len(completed_cycles) if len(completed_cycles) > 0 else 0,
                 "status": "active" if bot.get("is_active", False) else "inactive"
             })
         
