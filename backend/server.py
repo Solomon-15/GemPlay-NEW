@@ -2148,11 +2148,24 @@ async def maintain_all_bots_active_bets():
                     pause_between_cycles = fresh_bot_doc.get("pause_between_cycles", 5)
                     
                     if last_cycle_completed_at is None:
-                        # Цикл только что завершился - начинаем паузу
-                        # ИСПРАВЛЕНО: Убрали дублированный вызов save_completed_cycle
-                        # Данные цикла сохраняются через механизм аккумуляторов в complete_bot_cycle()
+                        # Цикл только что завершился - ПРАВИЛЬНО завершаем через аккумуляторы
                         cycle_completion_time = datetime.utcnow()
-                        logger.info(f"🏁 Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle completed, starting pause")
+                        logger.info(f"🏁 Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle fully completed, finalizing through accumulators")
+                        
+                        # ИСПРАВЛЕНО: Теперь правильно завершаем цикл через аккумуляторы
+                        # когда цикл ДЕЙСТВИТЕЛЬНО завершен (все игры сыграны)
+                        accumulator = await db.bot_profit_accumulators.find_one({
+                            "bot_id": bot_id,
+                            "is_cycle_completed": False
+                        })
+                        
+                        if accumulator:
+                            total_spent = accumulator.get("total_spent", 0)
+                            total_earned = accumulator.get("total_earned", 0)
+                            await complete_bot_cycle(accumulator["id"], total_spent, total_earned, bot_id)
+                            logger.info(f"✅ Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle finalized through accumulators")
+                        else:
+                            logger.warning(f"⚠️ Bot {fresh_bot_doc.get('name', 'Unknown')}: cycle completed but no accumulator found")
                         
                         # Начинаем паузу
                         logger.info(f"⏱️ Bot {fresh_bot_doc.get('name', 'Unknown')}: starting pause of {pause_between_cycles}s")
