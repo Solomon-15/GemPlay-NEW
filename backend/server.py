@@ -19060,14 +19060,14 @@ async def generate_cycle_bets_natural_distribution(
             exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
         logger.info(f"    Exact cycle total (int): {exact_cycle_total}")
 
-        # 2) Интегральное распределение суммы по W/L/D с округлением в большую сторону
+        # 2) Интегральное распределение суммы по W/L/D с правилом half-up
         raw_w = exact_cycle_total * (float(wins_percentage) / 100.0)
         raw_l = exact_cycle_total * (float(losses_percentage) / 100.0)
         raw_d = exact_cycle_total * (float(draws_percentage) / 100.0)
 
-        # ИСПРАВЛЕНО: Используем ceil (округление в большую сторону) вместо floor
-        ceils = [math.ceil(raw_w), math.ceil(raw_l), math.ceil(raw_d)]
-        sum_ceils = sum(ceils)
+        # ИСПРАВЛЕНО: Используем стандартное округление half-up (≥0.5 вверх, <0.5 вниз)
+        rounded_values = [int(raw_w + 0.5), int(raw_l + 0.5), int(raw_d + 0.5)]
+        sum_rounded = sum(rounded_values)
         
         if diff > 0:
             # Сумма превышает exact_cycle_total, уменьшаем наименьшие значения
