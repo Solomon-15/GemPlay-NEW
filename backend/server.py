@@ -7982,7 +7982,10 @@ async def distribute_game_rewards(game: Game, winner_id: str, commission_amount:
             # Override commission amount to 0 for regular bot games
             commission_amount = 0
             
-            await accumulate_bot_profit(game, winner_id)
+            # ИСПРАВЛЕНО: Убрали дублированный вызов accumulate_bot_profit
+            # Функция уже вызывается в строке 7657 в логике определения результата
+            # Дублированный вызов здесь приводил к удвоению всех показателей (32 игры вместо 16, etc.)
+            logger.info(f"💰 Bot profit accumulation handled in game outcome logic (line 7657)")
         
         # Unfreeze gems for both players using their respective gem combinations
         
