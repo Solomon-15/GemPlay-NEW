@@ -74,6 +74,21 @@ backend:
         agent: "testing"
         comment: "✅ VERIFIED: complete_bot_cycle() includes duplicate prevention logic with existing_cycle check before insertion. No duplicate cycles found in testing"
 
+  - task: "Test get_bot_completed_cycles API fixes"
+    implemented: true
+    working: false
+    file: "server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Testing fixes for get_bot_completed_cycles function that was returning MOCK data instead of real data from DB"
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUES FOUND: 1) API correctly reads from DB (not MOCK), but DB contains incorrect data. 2) Cycles show 32 total games instead of 16 (doubled). 3) W/L/D values are 14/12/6 instead of 7/6/3 (doubled). 4) total_losses = $0 despite having losses. 5) Issue is in cycle completion logic, not display function. Database analysis shows bot f70aaf4a has corrupted cycles with doubled values while older bot cycles are correct."
+
 frontend:
 
 metadata:
