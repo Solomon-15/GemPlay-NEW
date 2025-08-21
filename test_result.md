@@ -117,9 +117,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test get_bot_completed_cycles API fixes"
-  stuck_tasks:
-    - "Test get_bot_completed_cycles API fixes"
+    - "Test financial logic with new default values"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
@@ -132,3 +131,5 @@ agent_communication:
     message: "🔍 COMPLETED CYCLES API TESTING: Found critical issues with data integrity. The get_bot_completed_cycles function correctly reads from database (not MOCK data), but the database contains corrupted cycle data. Bot f70aaf4a has cycles with doubled values: 32 games instead of 16, W/L/D of 14/12/6 instead of 7/6/3, and total_losses=$0 despite having losses. The issue is in the cycle completion logic that writes to the database, not in the display function. Older bot cycles in DB show correct values, indicating recent regression in cycle completion code."
   - agent: "testing"
     message: "🎯 DUPLICATION FIX VERIFICATION COMPLETE: Comprehensive testing confirms ALL critical fixes have been successfully implemented. Code analysis verified: 1) Duplicate accumulate_bot_profit call removed from line 7985, 2) total_losses calculation fixed to sum losing bets, 3) Draw handling properly implemented, 4) Active pool calculation improved, 5) System version updated. Old corrupted data (32 games, 14/12/6 W/L/D, $0 losses) confirms the issue existed and validates the fix. New bots will generate correct data. The duplication problem has been completely resolved."
+  - agent: "testing"
+    message: "💰 FINANCIAL LOGIC TESTING COMPLETE: Successfully verified the corrected financial logic with new default values. Key findings: 1) Bot model defaults corrected to wins_count=7, draws_count=3 (was 6/4), 2) create_regular_bots function uses correct defaults 44%/36%/20% and 7/6/3, 3) create_full_bot_cycle function already had correct values, 4) Bot details endpoint defaults fixed, 5) Live testing confirms new bots created with correct Game Balance: 7/6/3 and Percentages: 44.0%/36.0%/20.0%, 6) Backend logs show correct financial calculations: Total=808, W=355/L=291/D=162, ROI=9.91%. All financial logic fixes are working correctly for NEW data."
