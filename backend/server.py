@@ -19120,48 +19120,47 @@ async def generate_cycle_bets_natural_distribution(
         raw_d = exact_cycle_total * (float(draws_percentage) / 100.0)
 
         # ИСПРАВЛЕНО: Используем стандартное округление half-up (≥0.5 вверх, <0.5 вниз)
-        rounded_values = [int(raw_w + 0.5), int(raw_l + 0.5), int(raw_d + 0.5)]
-        sum_rounded = sum(rounded_values)
+        target_wins_sum = int(raw_w + 0.5)
+        target_losses_sum = int(raw_l + 0.5)
+        target_draws_sum = int(raw_d + 0.5)
         
-        if diff > 0:
-            # Сумма превышает exact_cycle_total, уменьшаем наименьшие значения
-            # Сортируем по возрастанию для уменьшения наименьших
+        # Проверяем что сумма точная
+        calculated_sum = target_wins_sum + target_losses_sum + target_draws_sum
+        diff = calculated_sum - exact_cycle_total
+        
+        # Коррекция если нужно
+        if diff != 0:
+            # Используем метод наибольших остатков для коррекции
             fractional_parts = [raw_w - math.floor(raw_w), raw_l - math.floor(raw_l), raw_d - math.floor(raw_d)]
-            order = sorted(range(3), key=lambda i: fractional_parts[i])
             
-            for i in range(diff):
-                idx = order[i % 3]
-                allocation[idx] -= 1
-                if allocation[idx] < 0:
-                    allocation[idx] = 0
-        
-        target_wins_sum, target_losses_sum, target_draws_sum = map(int, allocation)
-        
-        # Финальная проверка и коррекция
-        final_sum = target_wins_sum + target_losses_sum + target_draws_sum
-        final_diff = exact_cycle_total - final_sum
-        
-        if final_diff != 0:
-            # Если нужно добавить/убрать, делаем это с наибольшими дробными частями
-            fractional_parts = [raw_w - math.floor(raw_w), raw_l - math.floor(raw_l), raw_d - math.floor(raw_d)]
-            order = sorted(range(3), key=lambda i: fractional_parts[i], reverse=(final_diff > 0))
+            if diff > 0:
+                # Нужно уменьшить - сортируем по наименьшим остаткам
+                order = sorted(range(3), key=lambda i: fractional_parts[i])
+            else:
+                # Нужно увеличить - сортируем по наибольшим остаткам
+                order = sorted(range(3), key=lambda i: fractional_parts[i], reverse=True)
             
-            for i in range(abs(final_diff)):
+            for i in range(abs(diff)):
                 idx = order[i % 3]
-                if final_diff > 0:
-                    if idx == 0:
-                        target_wins_sum += 1
-                    elif idx == 1:
-                        target_losses_sum += 1
-                    else:
-                        target_draws_sum += 1
-                else:
+                if diff > 0:
                     if idx == 0:
                         target_wins_sum = max(0, target_wins_sum - 1)
                     elif idx == 1:
                         target_losses_sum = max(0, target_losses_sum - 1)
                     else:
                         target_draws_sum = max(0, target_draws_sum - 1)
+                else:
+                    if idx == 0:
+                        target_wins_sum += 1
+                    elif idx == 1:
+                        target_losses_sum += 1
+                    else:
+                        target_draws_sum += 1
+        
+        # Финальная проверка
+        final_sum = target_wins_sum + target_losses_sum + target_draws_sum
+        if final_sum != exact_cycle_total:
+            logger.warning(f"⚠️ Final sum {final_sum} != target {exact_cycle_total}, but proceeding")
 
         logger.info(f"    Target sums (int): W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
 
