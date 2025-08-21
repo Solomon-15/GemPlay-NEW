@@ -19060,39 +19060,54 @@ async def generate_cycle_bets_natural_distribution(
             exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
         logger.info(f"    Exact cycle total (int): {exact_cycle_total}")
 
-        # 2) Интегральное распределение суммы по W/L/D по методу наибольших остатков
+        # 2) Интегральное распределение суммы по W/L/D с округлением в большую сторону
         raw_w = exact_cycle_total * (float(wins_percentage) / 100.0)
         raw_l = exact_cycle_total * (float(losses_percentage) / 100.0)
         raw_d = exact_cycle_total * (float(draws_percentage) / 100.0)
 
-        floors = [math.floor(raw_w), math.floor(raw_l), math.floor(raw_d)]
-        remainders = [raw_w - floors[0], raw_l - floors[1], raw_d - floors[2]]
-        sum_floors = sum(floors)
-        diff = exact_cycle_total - sum_floors
-
-        allocation = floors[:]
-        if diff != 0:
-            # Положительная разница — добавляем к наибольшим остаткам, отрицательная — вычитаем от наименьших остатков
-            order = sorted(range(3), key=lambda i: remainders[i], reverse=(diff > 0))
-            step = 1 if diff > 0 else -1
-            for i in range(abs(diff)):
+        # ИСПРАВЛЕНО: Используем ceil (округление в большую сторону) вместо floor
+        ceils = [math.ceil(raw_w), math.ceil(raw_l), math.ceil(raw_d)]
+        sum_ceils = sum(ceils)
+        
+        if diff > 0:
+            # Сумма превышает exact_cycle_total, уменьшаем наименьшие значения
+            # Сортируем по возрастанию для уменьшения наименьших
+            fractional_parts = [raw_w - math.floor(raw_w), raw_l - math.floor(raw_l), raw_d - math.floor(raw_d)]
+            order = sorted(range(3), key=lambda i: fractional_parts[i])
+            
+            for i in range(diff):
                 idx = order[i % 3]
-                allocation[idx] += step
-                # не даем опуститься ниже 0 в крайних случаях
+                allocation[idx] -= 1
                 if allocation[idx] < 0:
                     allocation[idx] = 0
-
+        
         target_wins_sum, target_losses_sum, target_draws_sum = map(int, allocation)
-        # Защита: суммарная проверка
-        adjust = exact_cycle_total - (target_wins_sum + target_losses_sum + target_draws_sum)
-        if adjust != 0:
-            # Добрасываем/снимаем по тому же правилу остатков, чтобы сумма точно сошлась
-            order = sorted(range(3), key=lambda i: remainders[i], reverse=(adjust > 0))
-            for i in range(abs(adjust)):
+        
+        # Финальная проверка и коррекция
+        final_sum = target_wins_sum + target_losses_sum + target_draws_sum
+        final_diff = exact_cycle_total - final_sum
+        
+        if final_diff != 0:
+            # Если нужно добавить/убрать, делаем это с наибольшими дробными частями
+            fractional_parts = [raw_w - math.floor(raw_w), raw_l - math.floor(raw_l), raw_d - math.floor(raw_d)]
+            order = sorted(range(3), key=lambda i: fractional_parts[i], reverse=(final_diff > 0))
+            
+            for i in range(abs(final_diff)):
                 idx = order[i % 3]
-                target = [target_wins_sum, target_losses_sum, target_draws_sum]
-                target[idx] += 1 if adjust > 0 else -1
-                target_wins_sum, target_losses_sum, target_draws_sum = target
+                if final_diff > 0:
+                    if idx == 0:
+                        target_wins_sum += 1
+                    elif idx == 1:
+                        target_losses_sum += 1
+                    else:
+                        target_draws_sum += 1
+                else:
+                    if idx == 0:
+                        target_wins_sum = max(0, target_wins_sum - 1)
+                    elif idx == 1:
+                        target_losses_sum = max(0, target_losses_sum - 1)
+                    else:
+                        target_draws_sum = max(0, target_draws_sum - 1)
 
         logger.info(f"    Target sums (int): W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
 
