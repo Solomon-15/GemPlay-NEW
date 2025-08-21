@@ -546,7 +546,8 @@ class BotProfitAccumulator(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     bot_id: str
     cycle_number: int
-    # УДАЛЕНО: total_spent, total_earned - используем прямой расчёт Выигрыши - Потери
+    total_spent: float = 0.0  # ОСТАВЛЯЕМ: общая сумма ставок (выигрыши + поражения + ничьи)
+    # УДАЛЕНО: total_earned - используем прямой расчёт Выигрыши - Потери
     wins_amount: float = 0.0  # Сумма выигрышных ставок
     losses_amount: float = 0.0  # Сумма проигрышных ставок
     draws_amount: float = 0.0  # Сумма ничейных ставок
@@ -9077,12 +9078,13 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             if last_accumulator:
                 cycle_number = last_accumulator["cycle_number"] + 1
             
-            # ИСПРАВЛЕНО: Прямой расчёт прибыли без total_spent/total_earned
+            # ИСПРАВЛЕНО: Прямой расчёт прибыли с сохранением total_spent
             accumulator = {
                 "id": str(uuid.uuid4()),
                 "bot_id": bot_id,
                 "cycle_number": cycle_number,
-                # УДАЛЕНО: total_spent, total_earned - используем прямой расчёт
+                "total_spent": 0.0,   # ОСТАВЛЯЕМ: общая сумма ставок
+                # УДАЛЕНО: total_earned - используем прямой расчёт
                 "wins_amount": 0.0,   # Сумма выигрышных ставок
                 "losses_amount": 0.0, # Сумма проигрышных ставок
                 "draws_amount": 0.0,  # Сумма ничейных ставок
@@ -9099,7 +9101,8 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
         
         bet_amount = game.bet_amount
         
-        # ИСПРАВЛЕНО: Прямое накопление сумм по категориям без total_spent/total_earned
+        # ИСПРАВЛЕНО: Накопление с total_spent и прямыми суммами по категориям
+        new_total_spent = accumulator.get("total_spent", 0.0) + bet_amount  # ОСТАВЛЯЕМ
         new_wins_amount = accumulator.get("wins_amount", 0.0)
         new_losses_amount = accumulator.get("losses_amount", 0.0)
         new_draws_amount = accumulator.get("draws_amount", 0.0)
@@ -9107,7 +9110,7 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
         new_games_lost = accumulator.get("games_lost", 0)
         new_games_drawn = accumulator.get("games_drawn", 0)
         
-        # ИСПРАВЛЕНО: Простое накопление сумм по категориям
+        # ИСПРАВЛЕНО: Простое накопление сумм по категориям (БЕЗ сложной логики earned)
         if is_draw:
             new_draws_amount += bet_amount
             new_games_drawn += 1
@@ -9127,7 +9130,8 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
             {"id": accumulator.get("id")},
             {
                 "$set": {
-                    # УДАЛЕНО: total_spent, total_earned
+                    "total_spent": new_total_spent,  # ОСТАВЛЯЕМ
+                    # УДАЛЕНО: total_earned
                     "wins_amount": new_wins_amount,
                     "losses_amount": new_losses_amount,
                     "draws_amount": new_draws_amount,
@@ -9146,7 +9150,7 @@ async def accumulate_bot_profit(game: Game, winner_id: str):
         
         logger.info(f"🤖 Bot {bot_id} {result_text}: {new_games_completed}/{cycle_length} games "
                    f"(W:{new_games_won}/L:{new_games_lost}/D:{new_games_drawn}), "
-                   f"sums: W=${new_wins_amount:.0f}/L=${new_losses_amount:.0f}/D=${new_draws_amount:.0f}, "
+                   f"total_spent: ${new_total_spent:.0f}, sums: W=${new_wins_amount:.0f}/L=${new_losses_amount:.0f}/D=${new_draws_amount:.0f}, "
                    f"profit: ${direct_profit:.0f}")
         
         # ИСПРАВЛЕНО: Убираем преждевременное завершение цикла
@@ -9165,11 +9169,12 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
             logger.error(f"Accumulator {accumulator_id} not found")
             return
         
-        # ИСПРАВЛЕНО: Прямой расчёт прибыли = Выигрыши - Потери
+        # ИСПРАВЛЕНО: Прямой расчёт прибыли = Выигрыши - Потери (БЕЗ total_earned!)
         wins_amount = accumulator.get("wins_amount", 0.0)
         losses_amount = accumulator.get("losses_amount", 0.0)
         draws_amount = accumulator.get("draws_amount", 0.0)
-        profit = wins_amount - losses_amount
+        total_spent = accumulator.get("total_spent", 0.0)  # ОСТАВЛЯЕМ для совместимости
+        profit = wins_amount - losses_amount  # ПРОСТАЯ ФОРМУЛА!
         
         await db.bot_profit_accumulators.update_one(
             {"id": accumulator_id},
