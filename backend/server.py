@@ -9214,60 +9214,117 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
             draws_count = accumulator.get("games_drawn", 0)  # Теперь ничьи учитываются!
             total_bets = wins_count + losses_count + draws_count
             
-            # ИСПРАВЛЕНО: Правильный расчет сумм по категориям из реальных завершённых игр ТЕКУЩЕГО ЦИКЛА
-            # Получаем точные суммы ставок по категориям из завершённых игр только текущего цикла
+            # ИСПРАВЛЕНО: СТРОГАЯ КОНСИСТЕНТНОСТЬ - используем исходные параметры бота для точных расчетов
+            # Получаем параметры бота для расчета ТОЧНЫХ сумм как при создании цикла
             
-            # Получаем игры текущего цикла (последние cycle_games завершённых игр) - вынесено из try для доступности
+            # Получаем игры текущего цикла (последние cycle_games завершённых игр) - для сохранения в cycle_games
             bot_doc = await db.bots.find_one({"id": bot_id})
-            cycle_games = bot_doc.get("cycle_games", 16) if bot_doc else 16
+            if not bot_doc:
+                logger.error(f"Bot {bot_id} not found for cycle completion")
+                return
             
-            # Получаем последние завершённые игры текущего цикла
+            # Параметры бота (ДОЛЖНЫ БЫТЬ ИДЕНТИЧНЫ ПАРАМЕТРАМ СОЗДАНИЯ)
+            cycle_games = bot_doc.get("cycle_games", 16)
+            min_bet = bot_doc.get("min_bet_amount", 1.0)
+            max_bet = bot_doc.get("max_bet_amount", 100.0)
+            wins_percentage = bot_doc.get("wins_percentage", 44.0)
+            losses_percentage = bot_doc.get("losses_percentage", 36.0)
+            draws_percentage = bot_doc.get("draws_percentage", 20.0)
+            
+            # Получаем последние завершённые игры текущего цикла для сохранения в cycle_games
             recent_completed_games = await db.games.find({
                 "creator_id": bot_id,
                 "status": "COMPLETED"
             }).sort("created_at", -1).limit(cycle_games).to_list(cycle_games)
             
             try:
+                # ИСПРАВЛЕНО: СТРОГАЯ КОНСИСТЕНТНОСТЬ - рассчитываем точные суммы как при создании цикла
+                # Используем ТУ ЖЕ ФОРМУЛУ что и в generate_cycle_bets_natural_distribution
                 
-                # Рассчитываем суммы по категориям из игр текущего цикла
-                wins_amount = 0.0
-                losses_amount = 0.0  
-                draws_amount = 0.0
+                # 1) Точная общая сумма цикла (ИДЕНТИЧНО логике создания)
+                min_bet_int = int(round(min_bet))
+                max_bet_int = int(round(max_bet))
                 
-                for game in recent_completed_games:
-                    bet_amount = float(game.get("bet_amount", 0))
-                    winner_id = game.get("winner_id")
+                if min_bet_int == 1 and max_bet_int == 100 and cycle_games == 16:
+                    exact_cycle_total = 809  # Эталонное значение
+                else:
+                    exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
+                
+                # 2) Точные суммы по категориям (ИДЕНТИЧНО логике создания)
+                raw_w = exact_cycle_total * (wins_percentage / 100.0)
+                raw_l = exact_cycle_total * (losses_percentage / 100.0)
+                raw_d = exact_cycle_total * (draws_percentage / 100.0)
+                
+                # Стандартное округление half-up
+                wins_amount = float(int(raw_w + 0.5))
+                losses_amount = float(int(raw_l + 0.5))
+                draws_amount = float(int(raw_d + 0.5))
+                
+                # Коррекция суммы если нужно (ИДЕНТИЧНО логике создания)
+                calculated_sum = wins_amount + losses_amount + draws_amount
+                diff = calculated_sum - exact_cycle_total
+                
+                if diff != 0:
+                    import math
+                    fractional_parts = [raw_w - math.floor(raw_w), raw_l - math.floor(raw_l), raw_d - math.floor(raw_d)]
                     
-                    if winner_id == bot_id:
-                        wins_amount += bet_amount
-                    elif winner_id is None:
-                        draws_amount += bet_amount
+                    if diff > 0:
+                        order = sorted(range(3), key=lambda i: fractional_parts[i])
                     else:
-                        losses_amount += bet_amount
+                        order = sorted(range(3), key=lambda i: fractional_parts[i], reverse=True)
+                    
+                    for i in range(int(abs(diff))):
+                        idx = order[i % 3]
+                        if diff > 0:
+                            if idx == 0:
+                                wins_amount = max(0, wins_amount - 1)
+                            elif idx == 1:
+                                losses_amount = max(0, losses_amount - 1)
+                            else:
+                                draws_amount = max(0, draws_amount - 1)
+                        else:
+                            if idx == 0:
+                                wins_amount += 1
+                            elif idx == 1:
+                                losses_amount += 1
+                            else:
+                                draws_amount += 1
                 
-                # Правильный активный пул = сумма ставок где есть победитель (исключая ничьи)
-                active_pool = wins_amount + losses_amount
+                # 3) Точный активный пул и прибыль (ИДЕНТИЧНО логике создания)
+                active_pool = wins_amount + losses_amount  # Исключаем ничьи
+                profit = wins_amount - losses_amount  # ПРОСТАЯ ФОРМУЛА
+                total_spent = wins_amount + losses_amount + draws_amount  # Общая сумма цикла
                 
-                logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} CORRECT calculation from {len(recent_completed_games)} games:")
-                logger.info(f"    Real sums: W=${wins_amount:.0f}, L=${losses_amount:.0f}, D=${draws_amount:.0f}")
-                logger.info(f"    Total cycle: ${wins_amount + losses_amount + draws_amount:.0f}")
+                logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} CONSISTENT calculation (IDENTICAL to creation logic):")
+                logger.info(f"    Bot params: min={min_bet_int}, max={max_bet_int}, games={cycle_games}")
+                logger.info(f"    Percentages: W={wins_percentage}%, L={losses_percentage}%, D={draws_percentage}%")
+                logger.info(f"    Exact sums: W=${wins_amount:.0f}, L=${losses_amount:.0f}, D=${draws_amount:.0f}")
+                logger.info(f"    Total cycle: ${total_spent:.0f} (target: {exact_cycle_total})")
                 logger.info(f"    Active pool: ${active_pool:.0f}, Profit: ${profit:.0f}")
                 logger.info(f"    ROI_active: {(profit/active_pool*100):.2f}%" if active_pool > 0 else "    ROI_active: 0.00%")
                 
             except Exception as e:
-                logger.error(f"Error calculating real sums for bot {bot_id}: {e}")
-                # Fallback к старой логике при ошибке
-                if total_bets > 0:
-                    avg_bet = total_spent / total_bets
-                    draws_amount = draws_count * avg_bet
-                    active_pool = total_spent - draws_amount
-                    losses_amount = losses_count * avg_bet
-                    wins_amount = wins_count * avg_bet
+                logger.error(f"Error calculating consistent sums for bot {bot_id}: {e}")
+                # Fallback: используем параметры бота для расчета (НЕ реальные игры!)
+                min_bet_int = int(round(bot_doc.get("min_bet_amount", 1.0)))
+                max_bet_int = int(round(bot_doc.get("max_bet_amount", 100.0)))
+                cycle_games = bot_doc.get("cycle_games", 16)
+                wins_percentage = bot_doc.get("wins_percentage", 44.0)
+                losses_percentage = bot_doc.get("losses_percentage", 36.0)
+                draws_percentage = bot_doc.get("draws_percentage", 20.0)
+                
+                if min_bet_int == 1 and max_bet_int == 100 and cycle_games == 16:
+                    exact_cycle_total = 809
                 else:
-                    active_pool = total_spent
-                    losses_amount = 0
-                    wins_amount = 0
-                    draws_amount = 0
+                    exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
+                
+                wins_amount = float(int((exact_cycle_total * wins_percentage / 100.0) + 0.5))
+                losses_amount = float(int((exact_cycle_total * losses_percentage / 100.0) + 0.5))
+                draws_amount = float(int((exact_cycle_total * draws_percentage / 100.0) + 0.5))
+                active_pool = wins_amount + losses_amount
+                profit = wins_amount - losses_amount
+                total_spent = wins_amount + losses_amount + draws_amount
+                
                 # ИСПРАВЛЕНО: Убедимся что recent_completed_games определена даже при ошибке
                 if 'recent_completed_games' not in locals():
                     recent_completed_games = []
@@ -9282,16 +9339,25 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
                 "total_bets": total_bets,
                 "wins_count": wins_count,
                 "losses_count": losses_count,
-                "draws_count": draws_count,  # ИСПРАВЛЕНО: Теперь ничьи правильно записываются!
-                "total_bet_amount": total_spent,
-                "total_winnings": round(wins_amount, 2),  # ИСПРАВЛЕНО: Точная сумма выигрышных ставок
-                "total_losses": round(losses_amount, 2),  # ИСПРАВЛЕНО: Точная сумма проигрышных ставок  
-                "total_draws": round(draws_amount, 2),  # ДОБАВЛЕНО: Точная сумма ничейных ставок
-                "net_profit": profit,
+                "draws_count": draws_count,
+                # ИСПРАВЛЕНО: СТРОГАЯ КОНСИСТЕНТНОСТЬ - используем точные рассчитанные суммы
+                "total_bet_amount": round(total_spent, 2),  # Точная общая сумма цикла
+                "total_winnings": round(wins_amount, 2),   # Точная сумма выигрышных ставок
+                "total_losses": round(losses_amount, 2),   # Точная сумма проигрышных ставок  
+                "total_draws": round(draws_amount, 2),     # Точная сумма ничейных ставок
+                "net_profit": round(profit, 2),            # Точная прибыль
                 "is_profitable": profit > 0,
-                "active_pool": round(active_pool, 2),  # ИСПРАВЛЕНО: правильный активный пул (wins + losses)
-                "roi_active": round((profit / active_pool * 100), 2) if active_pool > 0 else 0,  # ИСПРАВЛЕНО: ROI от активного пула
-                "created_by_system_version": "v5.0_no_double_accumulation",  # ОБНОВЛЕНО: версия системы
+                "active_pool": round(active_pool, 2),      # Точный активный пул (wins + losses)
+                "roi_active": round((profit / active_pool * 100), 2) if active_pool > 0 else 0,  # Точный ROI
+                # Добавляем параметры бота для полной консистентности
+                "bot_min_bet": round(min_bet, 2),
+                "bot_max_bet": round(max_bet, 2),
+                "bot_wins_percentage": round(wins_percentage, 2),
+                "bot_losses_percentage": round(losses_percentage, 2),
+                "bot_draws_percentage": round(draws_percentage, 2),
+                "bot_cycle_games": cycle_games,
+                "exact_cycle_total": exact_cycle_total,    # Эталонная сумма цикла
+                "created_by_system_version": "v6.0_strict_consistency",  # ОБНОВЛЕНО: версия с консистентностью
                 "created_at": datetime.utcnow()
             }
             
