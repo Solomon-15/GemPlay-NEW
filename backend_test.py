@@ -234,14 +234,14 @@ class BotCycleTestSuite:
             return
         
         try:
-            # Check completed cycles for draw reporting
+            # Check completed cycles for draw reporting using correct endpoint
             async with self.session.get(
-                f"{BACKEND_URL}/admin/bots/completed-cycles",
+                f"{BACKEND_URL}/admin/bots/{self.created_bot_id}/completed-cycles",
                 headers=self.get_auth_headers()
             ) as response:
                 if response.status == 200:
-                    cycles = await response.json()
-                    bot_cycles = [cycle for cycle in cycles if cycle.get("bot_id") == self.created_bot_id]
+                    cycles_data = await response.json()
+                    bot_cycles = cycles_data.get("cycles", [])
                     
                     if bot_cycles:
                         cycle = bot_cycles[0]  # Check first completed cycle
