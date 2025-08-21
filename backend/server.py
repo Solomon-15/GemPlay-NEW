@@ -19899,7 +19899,7 @@ async def get_bot_completed_cycles(
     bot_id: str,
     current_user: User = Depends(get_current_admin)
 ):
-    """Get list of completed cycles for a bot."""
+    """Get list of completed cycles for a bot (ИСПРАВЛЕНО - теперь возвращает реальные данные)."""
     try:
         # Find the bot first
         bot = await db.bots.find_one({"id": bot_id})
@@ -19909,32 +19909,63 @@ async def get_bot_completed_cycles(
                 detail="Bot not found"
             )
         
-        # For now, return empty list since we haven't implemented cycle history storage yet
-        # TODO: Implement proper cycle history storage when cycle completes
-        completed_cycles_count = bot.get("completed_cycles", 0)
+        # ИСПРАВЛЕНО: Получаем реальные данные из коллекции completed_cycles
+        completed_cycles_cursor = db.completed_cycles.find(
+            {"bot_id": bot_id}
+        ).sort("cycle_number", -1)  # Сортируем по номеру цикла (новые сначала)
         
-        # Mock data for demonstration (will be replaced with real data)
+        completed_cycles_list = await completed_cycles_cursor.to_list(length=100)
+        
+        # Форматируем данные для фронтенда с правильными расчетами
         cycles = []
-        for i in range(completed_cycles_count):
+        for cycle in completed_cycles_list:
+            # Получаем правильные данные из БД
+            total_bets = cycle.get("total_bets", 0)
+            wins_count = cycle.get("wins_count", 0) 
+            losses_count = cycle.get("losses_count", 0)
+            draws_count = cycle.get("draws_count", 0)
+            net_profit = cycle.get("net_profit", 0)
+            total_bet_amount = cycle.get("total_bet_amount", 0)
+            total_winnings = cycle.get("total_winnings", 0)
+            total_losses = cycle.get("total_losses", 0)
+            roi_active = cycle.get("roi_active", 0)
+            
+            # Рассчитываем продолжительность
+            start_time = cycle.get("start_time")
+            end_time = cycle.get("end_time")
+            duration_text = "N/A"
+            if start_time and end_time:
+                if isinstance(start_time, str):
+                    start_time = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                if isinstance(end_time, str):
+                    end_time = datetime.fromisoformat(end_time.replace('Z', '+00:00'))
+                
+                duration_seconds = (end_time - start_time).total_seconds()
+                hours = int(duration_seconds // 3600)
+                minutes = int((duration_seconds % 3600) // 60)
+                duration_text = f"{hours}ч {minutes}м" if hours > 0 else f"{minutes}м"
+            
             cycles.append({
-                "id": f"cycle_{bot_id}_{i+1}",
-                "cycle_number": i + 1,
-                "completed_at": datetime.utcnow().isoformat(),
-                "duration": "2h 15m",
-                "total_games": 12,
-                "games_played": 12,
-                "wins": 7,
-                "losses": 4,
-                "draws": 1,
-                "total_bet": 150.0,
-                "total_winnings": 280.0,
-                "profit": 130.0
+                "id": cycle.get("id", f"cycle_{bot_id}_{cycle.get('cycle_number', 0)}"),
+                "cycle_number": cycle.get("cycle_number", 0),
+                "completed_at": cycle.get("end_time", datetime.utcnow()).isoformat() if isinstance(cycle.get("end_time"), datetime) else cycle.get("end_time", datetime.utcnow().isoformat()),
+                "duration": duration_text,
+                "total_games": total_bets,  # Правильное количество игр
+                "games_played": total_bets,
+                "wins": wins_count,  # Правильное количество побед
+                "losses": losses_count,  # Правильное количество поражений  
+                "draws": draws_count,  # Правильное количество ничьих
+                "total_bet": round(total_bet_amount, 2),  # Общая сумма ставок
+                "total_winnings": round(total_winnings, 2),  # Общий выигрыш
+                "total_losses": round(total_losses, 2),  # Общие потери (ИСПРАВЛЕНО)
+                "profit": round(net_profit, 2),  # Чистая прибыль
+                "roi_percent": round(roi_active, 2)  # ROI в процентах (от активного пула)
             })
         
         return {
             "bot_id": bot_id,
-            "bot_name": bot.get("name", "Bot"),
-            "total_completed_cycles": completed_cycles_count,
+            "bot_name": bot.get("name", f"Bot_{bot_id[:8]}"),
+            "total_completed_cycles": len(cycles),
             "cycles": cycles
         }
         
