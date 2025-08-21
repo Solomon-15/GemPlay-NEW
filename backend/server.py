@@ -9152,17 +9152,51 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
             draws_count = accumulator.get("games_drawn", 0)  # Теперь ничьи учитываются!
             total_bets = wins_count + losses_count + draws_count
             
-            # ИСПРАВЛЕНО: Правильный расчет активного пула и потерь
-            # Активный пул = сумма ставок в играх где есть победитель (исключая ничьи)
-            if total_bets > 0:
-                avg_bet = total_spent / total_bets
-                draws_amount = draws_count * avg_bet  # Приблизительная сумма ничьих
-                active_pool = total_spent - draws_amount  # Пул без ничьих
-            else:
-                active_pool = total_spent
-            
-            # Рассчитываем потери как сумму проигрышных ставок
-            losses_amount = (losses_count * (total_spent / max(1, total_bets))) if total_bets > 0 else 0
+            # ИСПРАВЛЕНО: Правильный расчет сумм по категориям из реальных завершённых игр
+            # Получаем точные суммы ставок по категориям из завершённых игр
+            try:
+                # Сумма выигрышных ставок (победы бота)
+                wins_sum_agg = await db.games.aggregate([
+                    {"$match": {"creator_id": bot_id, "status": "COMPLETED", "winner_id": bot_id}},
+                    {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+                ]).to_list(1)
+                wins_amount = float(wins_sum_agg[0]['total'] if wins_sum_agg else 0)
+                
+                # Сумма проигрышных ставок (поражения бота)  
+                losses_sum_agg = await db.games.aggregate([
+                    {"$match": {"creator_id": bot_id, "status": "COMPLETED", "winner_id": {"$ne": bot_id, "$ne": None}}},
+                    {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+                ]).to_list(1)
+                losses_amount = float(losses_sum_agg[0]['total'] if losses_sum_agg else 0)
+                
+                # Сумма ничейных ставок (ничьи)
+                draws_sum_agg = await db.games.aggregate([
+                    {"$match": {"creator_id": bot_id, "status": "COMPLETED", "winner_id": None}},
+                    {"$group": {"_id": None, "total": {"$sum": "$bet_amount"}}}
+                ]).to_list(1)
+                draws_amount = float(draws_sum_agg[0]['total'] if draws_sum_agg else 0)
+                
+                # Правильный активный пул = сумма ставок где есть победитель (исключая ничьи)
+                active_pool = wins_amount + losses_amount
+                
+                logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} CORRECT calculation:")
+                logger.info(f"    Real sums: W=${wins_amount}, L=${losses_amount}, D=${draws_amount}")
+                logger.info(f"    Active pool: ${active_pool}, Profit: ${profit}")
+                
+            except Exception as e:
+                logger.error(f"Error calculating real sums for bot {bot_id}: {e}")
+                # Fallback к старой логике при ошибке
+                if total_bets > 0:
+                    avg_bet = total_spent / total_bets
+                    draws_amount = draws_count * avg_bet
+                    active_pool = total_spent - draws_amount
+                    losses_amount = losses_count * avg_bet
+                    wins_amount = wins_count * avg_bet
+                else:
+                    active_pool = total_spent
+                    losses_amount = 0
+                    wins_amount = 0
+                    draws_amount = 0
             
             cycle_data = {
                 "id": str(uuid.uuid4()),
@@ -9176,12 +9210,13 @@ async def complete_bot_cycle(accumulator_id: str, total_spent: float, total_earn
                 "losses_count": losses_count,
                 "draws_count": draws_count,  # ИСПРАВЛЕНО: Теперь ничьи правильно записываются!
                 "total_bet_amount": total_spent,
-                "total_winnings": total_earned - total_spent if total_earned > total_spent else 0,
-                "total_losses": round(losses_amount, 2),  # ИСПРАВЛЕНО: Правильный расчет потерь
+                "total_winnings": round(wins_amount, 2),  # ИСПРАВЛЕНО: Точная сумма выигрышных ставок
+                "total_losses": round(losses_amount, 2),  # ИСПРАВЛЕНО: Точная сумма проигрышных ставок  
+                "total_draws": round(draws_amount, 2),  # ДОБАВЛЕНО: Точная сумма ничейных ставок
                 "net_profit": profit,
                 "is_profitable": profit > 0,
-                "active_pool": round(active_pool, 2),  # ИСПРАВЛЕНО: правильный активный пул
-                "roi_active": (profit / active_pool * 100) if active_pool > 0 else 0,  # ДОБАВЛЕНО: ROI от активного пула
+                "active_pool": round(active_pool, 2),  # ИСПРАВЛЕНО: правильный активный пул (wins + losses)
+                "roi_active": round((profit / active_pool * 100), 2) if active_pool > 0 else 0,  # ИСПРАВЛЕНО: ROI от активного пула
                 "created_by_system_version": "v5.0_no_double_accumulation",  # ОБНОВЛЕНО: версия системы
                 "created_at": datetime.utcnow()
             }
@@ -13284,7 +13319,7 @@ async def get_bot_cycles_history(
                 roi_filter["$gte"] = min_roi
             if max_roi is not None:
                 roi_filter["$lte"] = max_roi
-            filter_query["roi_percent"] = roi_filter
+            filter_query["roi_active"] = roi_filter
         
         # Get total count
         total_count = await db.completed_cycles.count_documents(filter_query)
@@ -13315,7 +13350,7 @@ async def get_bot_cycles_history(
                 "win_rate_percent": cycle.get("win_rate_percent", 0),
                 "total_bet_amount": cycle.get("total_bet_amount", 0),
                 "net_profit": cycle.get("net_profit", 0),
-                "roi_percent": cycle.get("roi_percent", 0),
+                "roi_percent": cycle.get("roi_active", 0),
                 "profit_per_game": cycle.get("profit_per_game", 0),
                 "games_per_hour": cycle.get("games_per_hour", 0),
                 "average_bet_amount": cycle.get("average_bet_amount", 0),
@@ -13331,7 +13366,7 @@ async def get_bot_cycles_history(
             total_profit = sum(c.get("net_profit", 0) for c in cycles)
             total_games = sum(c.get("total_bets", 0) for c in cycles)
             profitable_cycles = len([c for c in cycles if c.get("is_profitable", False)])
-            avg_roi = sum(c.get("roi_percent", 0) for c in cycles) / len(cycles)
+            avg_roi = sum(c.get("roi_active", 0) for c in cycles) / len(cycles)
         else:
             total_profit = 0
             total_games = 0
@@ -13398,7 +13433,7 @@ async def get_bot_revenue_summary(
                 "profitable_cycles": {"$sum": {"$cond": ["$is_profitable", 1, 0]}},
                 "total_games": {"$sum": "$total_bets"},
                 "total_bet_amount": {"$sum": "$total_bet_amount"},
-                "avg_roi": {"$avg": "$roi_percent"},
+                "avg_roi": {"$avg": "$roi_active"},
                 "avg_games_per_cycle": {"$avg": "$total_bets"},
                 "avg_cycle_duration": {"$avg": "$duration_seconds"}
             }}
@@ -13538,7 +13573,7 @@ async def export_bot_cycles_csv(
                 "Процент побед": f"{cycle.get('win_rate_percent', 0):.1f}%",
                 "Сумма ставок": f"${cycle.get('total_bet_amount', 0):.2f}",
                 "Чистая прибыль": f"${cycle.get('net_profit', 0):.2f}",
-                "ROI": f"{cycle.get('roi_percent', 0):.1f}%",
+                "ROI": f"{cycle.get('roi_active', 0):.1f}%",
                 "Прибыль за игру": f"${cycle.get('profit_per_game', 0):.2f}",
                 "Средняя ставка": f"${cycle.get('average_bet_amount', 0):.2f}",
                 "Длительность (часы)": f"{cycle.get('duration_seconds', 0) / 3600:.2f}",
