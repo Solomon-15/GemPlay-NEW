@@ -9216,16 +9216,18 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
             
             # ИСПРАВЛЕНО: Правильный расчет сумм по категориям из реальных завершённых игр ТЕКУЩЕГО ЦИКЛА
             # Получаем точные суммы ставок по категориям из завершённых игр только текущего цикла
+            
+            # Получаем игры текущего цикла (последние cycle_games завершённых игр) - вынесено из try для доступности
+            bot_doc = await db.bots.find_one({"id": bot_id})
+            cycle_games = bot_doc.get("cycle_games", 16) if bot_doc else 16
+            
+            # Получаем последние завершённые игры текущего цикла
+            recent_completed_games = await db.games.find({
+                "creator_id": bot_id,
+                "status": "COMPLETED"
+            }).sort("created_at", -1).limit(cycle_games).to_list(cycle_games)
+            
             try:
-                # Получаем игры текущего цикла (последние cycle_games завершённых игр)
-                bot_doc = await db.bots.find_one({"id": bot_id})
-                cycle_games = bot_doc.get("cycle_games", 16) if bot_doc else 16
-                
-                # Получаем последние завершённые игры текущего цикла
-                recent_completed_games = await db.games.find({
-                    "creator_id": bot_id,
-                    "status": "COMPLETED"
-                }).sort("created_at", -1).limit(cycle_games).to_list(cycle_games)
                 
                 # Рассчитываем суммы по категориям из игр текущего цикла
                 wins_amount = 0.0
@@ -9266,6 +9268,9 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
                     losses_amount = 0
                     wins_amount = 0
                     draws_amount = 0
+                # ИСПРАВЛЕНО: Убедимся что recent_completed_games определена даже при ошибке
+                if 'recent_completed_games' not in locals():
+                    recent_completed_games = []
             
             cycle_data = {
                 "id": str(uuid.uuid4()),
@@ -9301,13 +9306,61 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
                     await db.completed_cycles.insert_one(cycle_data)
                     logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} saved with draws: "
                               f"W:{wins_count}/L:{losses_count}/D:{draws_count}, profit: ${profit:.2f}")
+                    
+                    # ИСПРАВЛЕНО: Сохраняем игры цикла для детального просмотра в админ-панели
+                    # Сохраняем все игры цикла в коллекцию cycle_games для отображения в модалке "Детали"
+                    try:
+                        cycle_games_data = []
+                        for game in recent_completed_games:
+                            cycle_games_data.append({
+                                "cycle_id": cycle_data["id"],
+                                "bot_id": bot_id,
+                                "game_id": game.get("id"),
+                                "game_data": game
+                            })
+                        
+                        if cycle_games_data:
+                            await db.cycle_games.insert_many(cycle_games_data)
+                            logger.info(f"✅ Bot {bot_id} cycle #{cycle_number}: saved {len(cycle_games_data)} games for detailed view")
+                        
+                    except Exception as games_save_error:
+                        logger.error(f"Error saving cycle games for bot {bot_id} cycle #{cycle_number}: {games_save_error}")
+                        # Не прерываем выполнение, так как основной цикл уже сохранен
+                    
                 except Exception as insert_error:
                     if "duplicate key" in str(insert_error).lower():
                         logger.warning(f"✅ Bot {bot_id} cycle #{cycle_number} already exists (race condition), skipping")
                     else:
                         raise insert_error
             else:
-                logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} already exists, skipping duplicate save")
+                logger.info(f"✅ Bot {bot_id} cycle #{cycle_number} already exists, checking if games need to be saved")
+                
+                # ИСПРАВЛЕНО: Проверяем, есть ли уже сохраненные игры для этого цикла
+                existing_cycle_games = await db.cycle_games.find({
+                    "cycle_id": existing_cycle["id"],
+                    "bot_id": bot_id
+                }).to_list(1)
+                
+                if not existing_cycle_games and recent_completed_games:
+                    # Сохраняем игры для уже существующего цикла (ретроактивное исправление)
+                    try:
+                        cycle_games_data = []
+                        for game in recent_completed_games:
+                            cycle_games_data.append({
+                                "cycle_id": existing_cycle["id"],
+                                "bot_id": bot_id,
+                                "game_id": game.get("id"),
+                                "game_data": game
+                            })
+                        
+                        if cycle_games_data:
+                            await db.cycle_games.insert_many(cycle_games_data)
+                            logger.info(f"✅ Bot {bot_id} cycle #{cycle_number}: retroactively saved {len(cycle_games_data)} games for detailed view")
+                        
+                    except Exception as games_save_error:
+                        logger.error(f"Error retroactively saving cycle games for bot {bot_id} cycle #{cycle_number}: {games_save_error}")
+                else:
+                    logger.info(f"✅ Bot {bot_id} cycle #{cycle_number}: games already saved or no games to save")
         
     except Exception as e:
         logger.error(f"Error completing bot cycle: {e}")
