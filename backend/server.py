@@ -18526,9 +18526,9 @@ async def get_bot_details(
             "cycle_total_amount": bot_doc.get("cycle_total_amount", 0),
             
             # New W/L/D configuration
-            "wins_count": bot_doc.get("wins_count", 6),
+            "wins_count": bot_doc.get("wins_count", 7),  # ИСПРАВЛЕНО: 7 вместо 6
             "losses_count": bot_doc.get("losses_count", 6),
-            "draws_count": bot_doc.get("draws_count", 4),
+            "draws_count": bot_doc.get("draws_count", 3),  # ИСПРАВЛЕНО: 3 вместо 4
             "wins_percentage": bot_doc.get("wins_percentage", 44.0),
             "losses_percentage": bot_doc.get("losses_percentage", 36.0),
             "draws_percentage": bot_doc.get("draws_percentage", 20.0),
