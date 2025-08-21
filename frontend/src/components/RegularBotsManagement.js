@@ -123,7 +123,7 @@ const RegularBotsManagement = () => {
     draws_percentage: 20.0,
     cycle_games: 16,
     pause_between_cycles: 5,
-    pause_on_draw: 5,
+    // УДАЛЕНО: pause_on_draw
                           wins_count: 7,
                           losses_count: 6,
                           draws_count: 3
@@ -444,7 +444,7 @@ const RegularBotsManagement = () => {
       
       cycle_games: 16, // НОВОЕ: 16 игр по умолчанию (было 12)
       pause_between_cycles: 5, // 1-3600 секунд
-      pause_on_draw: 5, // 1-60 секунд
+      // УДАЛЕНО: pause_on_draw
       
 
       
@@ -1083,9 +1083,7 @@ const RegularBotsManagement = () => {
       errors.push('Пауза между циклами должна быть от 1 до 3600 секунд');
     }
     
-    if (formData.pause_on_draw < 1 || formData.pause_on_draw > 60) {
-      errors.push('Пауза при ничье должна быть от 1 до 60 секунд');
-    }
+    // УДАЛЕНО: валидация pause_on_draw
     
     const validModes = ['always-first', 'queue-based', 'after-all'];
 

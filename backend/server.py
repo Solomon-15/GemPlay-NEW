@@ -617,7 +617,7 @@ class Bot(BaseModel):
     
     # Пауза между играми (секунды)
     pause_between_cycles: int = 5  # Пауза между циклами (по умолчанию 5 секунд)
-    pause_on_draw: int = 5  # Пауза при ничье и между ставками (по умолчанию 5 секунд)
+    # УДАЛЕНО: pause_on_draw - логика паузы при ничье полностью удалена
     
     # Реальная сумма цикла (вычисляется автоматически)
     cycle_total_amount: float = 0.0  # Реальная сумма всех ставок в цикле
@@ -17255,7 +17255,7 @@ async def create_regular_bots(
         
         cycle_games = bot_config.get("cycle_games", 16)  # 1-66
         pause_between_cycles = bot_config.get("pause_between_cycles", 5)  # Пауза между циклами
-        pause_on_draw = bot_config.get("pause_on_draw", 5)  # Пауза при ничье и между ставками
+        # УДАЛЕНО: pause_on_draw - логика паузы при ничье полностью удалена
         profit_strategy = bot_config.get("profit_strategy", "balanced")
         
         # Валидация процентов исходов
@@ -17296,7 +17296,7 @@ async def create_regular_bots(
             cycle_games=cycle_games,
             current_limit=cycle_games,
             pause_between_cycles=pause_between_cycles,
-            pause_on_draw=pause_on_draw,
+            # УДАЛЕНО: pause_on_draw
             cycle_total_amount=real_cycle_total,  # Сохраняем реальную сумму
             is_active=True
         )
@@ -17520,7 +17520,7 @@ async def create_bot_bet(bot: Bot) -> bool:
     Создание ставки для бота с новой системой распределения:
     1. Использует процентное распределение исходов (wins_percentage/losses_percentage/draws_percentage)  
     2. Распределяет суммы согласно win_percentage (соотношение выигрыша к общей сумме)
-    3. Генерирует ставки последовательно с задержкой pause_on_draw
+    3. Генерирует ставки без дополнительных задержек (pause_on_draw удалена)
     """
     try:
         logger.info(f"🎯 NEW SYSTEM: Creating bet for bot {bot.id} ({bot.name})")
@@ -18499,7 +18499,7 @@ async def get_regular_bots_list(
                 "max_bet_amount": bot_doc.get('max_bet_amount', 50.0),
 
                 "pause_between_cycles": bot_doc.get('pause_between_cycles', 5),
-                "pause_on_draw": bot_doc.get('pause_on_draw', 1),
+                # УДАЛЕНО: pause_on_draw
 
                 
                 # Legacy fields for backward compatibility
@@ -18601,7 +18601,7 @@ async def get_bot_details(
             "max_bet_amount": bot_doc.get("max_bet_amount", 50.0),
             "cycle_games": bot_doc.get("cycle_games", 16),
             "pause_between_cycles": bot_doc.get("pause_between_cycles", 5),
-            "pause_on_draw": bot_doc.get("pause_on_draw", 1),
+            # УДАЛЕНО: pause_on_draw
             "cycle_total_amount": bot_doc.get("cycle_total_amount", 0),
             
             # New W/L/D configuration
@@ -19550,7 +19550,7 @@ async def update_individual_bot_settings(
 
         cycle_games = update_data.get("cycle_games")
         pause_between_cycles = update_data.get("pause_between_cycles")
-        pause_on_draw = update_data.get("pause_on_draw")
+        # УДАЛЕНО: pause_on_draw
         creation_mode = update_data.get("creation_mode")
         profit_strategy = update_data.get("profit_strategy")
         
@@ -19574,8 +19574,7 @@ async def update_individual_bot_settings(
             raise HTTPException(status_code=400, detail="Cycle games must be between 1 and 66")
         if pause_between_cycles is not None and (pause_between_cycles < 1 or pause_between_cycles > 300):
             raise HTTPException(status_code=400, detail="Pause between cycles must be between 1 and 300 seconds")
-        if pause_on_draw is not None and (pause_on_draw < 1 or pause_on_draw > 60):
-            raise HTTPException(status_code=400, detail="Pause on draw must be between 1 and 60 seconds")
+        # УДАЛЕНО: валидация pause_on_draw
 
         
         # Percentages validation (if any provided)
@@ -19616,8 +19615,7 @@ async def update_individual_bot_settings(
             update_fields["cycle_games"] = cycle_games
         if pause_between_cycles is not None:
             update_fields["pause_between_cycles"] = pause_between_cycles
-        if pause_on_draw is not None:
-            update_fields["pause_on_draw"] = pause_on_draw
+        # УДАЛЕНО: обновление pause_on_draw
 
         # New fields
         if wins_count is not None:
