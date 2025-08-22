@@ -522,40 +522,69 @@ const RegularBotsManagement = () => {
     return calculateCycleAmounts().total;
   };
   
-  // НОВАЯ ФУНКЦИЯ: Расчет превью ROI на основе фактических W/L/D
-  const calculatePreviewFromCounts = (winsCount, lossesCount, drawsCount, minBet, maxBet) => {
-    if (!winsCount && winsCount !== 0 || !lossesCount && lossesCount !== 0 || !drawsCount && drawsCount !== 0 || !minBet || !maxBet) {
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ: Расчет превью ROI по правильной логике
+  const calculatePreviewFromCounts = (winsCount, lossesCount, drawsCount, minBet, maxBet, winsPercent, lossesPercent, drawsPercent) => {
+    const totalGames = (winsCount || 0) + (lossesCount || 0) + (drawsCount || 0);
+    if (!totalGames || !minBet || !maxBet || !winsPercent || !lossesPercent || !drawsPercent) {
       return { total: 0, active_pool: 0, profit: 0, roi_active: 0 };
     }
     
-    // Расчет сумм на основе фактических количеств игр
-    const avgBet = (parseFloat(minBet) + parseFloat(maxBet)) / 2;
+    // Масштабируем общую сумму от эталонной (16 игр = 809)
+    const min_bet = parseFloat(minBet);
+    const max_bet = parseFloat(maxBet);
     
-    // Суммы по категориям (пропорционально среднему размеру ставки)
-    const winsSum = Math.round(winsCount * avgBet * 1.1); // Победы чуть больше средней
-    const lossesSum = Math.round(lossesCount * avgBet * 0.9); // Поражения чуть меньше средней
-    const drawsSum = Math.round(drawsCount * avgBet); // Ничьи равны средней
+    // Коэффициент масштабирования по количеству игр
+    const gamesCoeff = totalGames / 16;
     
-    // Общая сумма цикла = Победы + Поражения + Ничьи
-    const totalSum = winsSum + lossesSum + drawsSum;
+    // Коэффициент масштабирования по диапазону ставок
+    const rangeCoeff = ((min_bet + max_bet) / 2) / ((1 + 100) / 2);
     
-    // Активный пул = Победы + Поражения (ничьи не участвуют в ROI)
-    const activePool = winsSum + lossesSum;
+    // Общая сумма цикла (масштабированная от эталонной 809)
+    const totalCycleSum = Math.round(809 * gamesCoeff * rangeCoeff);
     
-    // Прибыль = Победы - Поражения
-    const profit = winsSum - lossesSum;
+    // Переводим проценты пресета в суммы ставок
+    const winsSum = Math.round((winsPercent / 100) * totalCycleSum);
+    const lossesSum = Math.round((lossesPercent / 100) * totalCycleSum);
+    const drawsSum = Math.round((drawsPercent / 100) * totalCycleSum);
+    
+    // Корректируем суммы чтобы точно получить totalCycleSum
+    const actualTotal = winsSum + lossesSum + drawsSum;
+    const diff = totalCycleSum - actualTotal;
+    let finalWinsSum = winsSum;
+    let finalLossesSum = lossesSum;
+    let finalDrawsSum = drawsSum;
+    
+    // Распределяем разницу пропорционально
+    if (diff !== 0) {
+      if (Math.abs(diff) <= 3) {
+        // Малая разница - добавляем к наибольшей категории
+        if (winsSum >= lossesSum && winsSum >= drawsSum) {
+          finalWinsSum += diff;
+        } else if (lossesSum >= drawsSum) {
+          finalLossesSum += diff;
+        } else {
+          finalDrawsSum += diff;
+        }
+      }
+    }
+    
+    // Активный пул = Сумма ставок побед + Сумма ставок поражений
+    const activePool = finalWinsSum + finalLossesSum;
+    
+    // Прибыль = Сумма ставок побед - Сумма ставок поражений
+    const profit = finalWinsSum - finalLossesSum;
     
     // ROI_active = (Прибыль ÷ Активный пул) × 100%
     const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
     
     return {
-      total: totalSum,
+      total: finalWinsSum + finalLossesSum + finalDrawsSum,
       active_pool: activePool,
       profit: profit,
-      roi_active: Math.round(roiActive * 100) / 100, // Округляем до 2 знаков
-      wins_sum: winsSum,
-      losses_sum: lossesSum,
-      draws_sum: drawsSum
+      roi_active: Math.round(roiActive * 100) / 100,
+      wins_sum: finalWinsSum,
+      losses_sum: finalLossesSum,
+      draws_sum: finalDrawsSum
     };
   };
   
@@ -3114,13 +3143,16 @@ const RegularBotsManagement = () => {
               <div className="border border-purple-500 bg-purple-900 bg-opacity-20 rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-purple-400 mb-3">📊 Превью ROI расчетов</h4>
                 {(() => {
-                  // Используем фактические количества W/L/D из пресета или ручного ввода
+                  // Используем правильную логику: масштабирование от эталонной суммы 809
                   const preview = calculatePreviewFromCounts(
                     botForm.wins_count,
                     botForm.losses_count, 
                     botForm.draws_count,
                     botForm.min_bet_amount,
-                    botForm.max_bet_amount
+                    botForm.max_bet_amount,
+                    botForm.wins_percentage,
+                    botForm.losses_percentage,
+                    botForm.draws_percentage
                   );
                   
                   return (
@@ -4854,13 +4886,16 @@ const RegularBotsManagement = () => {
                   <div className="mt-6 border border-purple-500 bg-purple-900 bg-opacity-20 rounded-lg p-4">
                     <h4 className="font-rajdhani font-bold text-purple-400 mb-3">📊 Превью ROI расчетов</h4>
                     {(() => {
-                      // Используем фактические количества W/L/D из пресета или ручного ввода
+                      // Используем правильную логику: масштабирование от эталонной суммы 809
                       const preview = calculatePreviewFromCounts(
                         currentPreset.wins_count,
                         currentPreset.losses_count,
                         currentPreset.draws_count,
                         currentPreset.min_bet_amount,
-                        currentPreset.max_bet_amount
+                        currentPreset.max_bet_amount,
+                        currentPreset.wins_percentage,
+                        currentPreset.losses_percentage,
+                        currentPreset.draws_percentage
                       );
                       
                       if (preview.total === 0) {
