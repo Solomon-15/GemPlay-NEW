@@ -2646,7 +2646,23 @@ const RegularBotsManagement = () => {
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-center">
                       <div className="flex flex-col items-center">
-                        {/* Фактическая прибыль на текущий момент */}
+                        {/* Верхняя строка: Фиксированная расчётная прибыль за цикл */}
+                        {bot.cycle_planned_profit !== null && bot.cycle_planned_profit !== undefined && (
+                          <div className="text-blue-400 font-roboto text-xs font-bold mb-1" title="Фиксированная прибыль за текущий цикл (расчётная)">
+                            {(() => {
+                              const plannedProfit = Number(bot.cycle_planned_profit);
+                              const color = plannedProfit >= 0 ? 'text-blue-400' : 'text-blue-400'; // Всегда синий для расчётной
+                              const sign = plannedProfit > 0 ? '+' : plannedProfit < 0 ? '−' : '+';
+                              return (
+                                <span className={color}>
+                                  {sign}${Math.abs(Math.round(plannedProfit))} план
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        )}
+                        
+                        {/* Основная строка: Фактическая прибыль на текущий момент (зелёным цветом) */}
                         {(() => {
                           // Фактическая прибыль текущего активного цикла
                           const sums = cycleSumsByBot[bot.id] || bot.cycle_total_info || {};
