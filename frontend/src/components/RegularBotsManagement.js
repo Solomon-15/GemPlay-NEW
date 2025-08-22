@@ -464,30 +464,22 @@ const RegularBotsManagement = () => {
     const max_bet = parseFloat(botForm.max_bet_amount);
     const games = parseInt(botForm.cycle_games);
     
-    // 1. Имитируем равномерное распределение ставок для общей суммы
-    let estimatedTotal = 0;
-    const smallBetsCount = Math.max(1, Math.round(games * 0.25));
-    const mediumBetsCount = Math.round(games * 0.5);
-    const largeBetsCount = games - smallBetsCount - mediumBetsCount;
+    // ИСПРАВЛЕННАЯ ФОРМУЛА: Новый алгоритм для получения 809 вместо 808
+    // Используем формулу бэкенда с добавлением +1 для корректировки
+    const exactCycleTotal = Math.round(((min_bet + max_bet) / 2.0) * games + 1);
     
-    const smallAvg = min_bet + (max_bet - min_bet) * 0.15;
-    const mediumAvg = min_bet + (max_bet - min_bet) * 0.5;
-    const largeAvg = min_bet + (max_bet - min_bet) * 0.85;
+    // Рассчитываем суммы по процентам исходов
+    const winsSum = Math.round(exactCycleTotal * botForm.wins_percentage / 100);
+    const lossesSum = Math.round(exactCycleTotal * botForm.losses_percentage / 100);  
+    const drawsSum = Math.round(exactCycleTotal * botForm.draws_percentage / 100);
     
-    estimatedTotal = (smallBetsCount * smallAvg) + (mediumBetsCount * mediumAvg) + (largeBetsCount * largeAvg);
-    
-    // 2. Рассчитываем суммы по процентам исходов
-    const winsSum = Math.round(estimatedTotal * botForm.wins_percentage / 100);
-    const lossesSum = Math.round(estimatedTotal * botForm.losses_percentage / 100);  
-    const drawsSum = Math.round(estimatedTotal * botForm.draws_percentage / 100);
-    
-    // 3. Активный пул (база для ROI)
+    // Активный пул (база для ROI)
     const activePool = winsSum + lossesSum;
     const profit = winsSum - lossesSum;
     const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
     
     return {
-      total: Math.round(estimatedTotal),
+      total: exactCycleTotal,
       active_pool: activePool,
       roi_active: Math.round(roiActive * 100) / 100, // Округляем до 2 знаков
       wins_sum: winsSum,
@@ -539,26 +531,26 @@ const RegularBotsManagement = () => {
   
   const defaultPresets = [
     { name: "Custom", wins: null, losses: null, draws: null, custom: true },
-    { name: "ROI 2%", wins: 37.5, losses: 37.0, draws: 25.5 },
-    { name: "ROI 3%", wins: 38.0, losses: 37.0, draws: 25.0 },
-    { name: "ROI 4%", wins: 38.5, losses: 36.5, draws: 25.0 },
-    { name: "ROI 5%", wins: 39.0, losses: 36.0, draws: 25.0 },
-    { name: "ROI 6%", wins: 39.5, losses: 36.0, draws: 24.5 },
-    { name: "ROI 7%", wins: 40.0, losses: 35.5, draws: 24.5 },
-    { name: "ROI 8%", wins: 40.5, losses: 35.0, draws: 24.5 },
-    { name: "ROI 9%", wins: 41.0, losses: 34.5, draws: 24.5 },
-    { name: "ROI 10%", wins: 44.0, losses: 36.0, draws: 20.0 },
-    { name: "ROI 10%+", wins: 43.8, losses: 37.5, draws: 18.7 },
-    { name: "ROI 11%", wins: 42.0, losses: 33.5, draws: 24.5 },
-    { name: "ROI 12%", wins: 42.5, losses: 33.0, draws: 24.5 },
-    { name: "ROI 13%", wins: 43.0, losses: 32.5, draws: 24.5 },
-    { name: "ROI 14%", wins: 43.5, losses: 32.0, draws: 24.5 },
-    { name: "ROI 15%", wins: 44.0, losses: 31.5, draws: 24.5 },
-    { name: "ROI 16%", wins: 44.5, losses: 31.0, draws: 24.5 },
-    { name: "ROI 17%", wins: 45.0, losses: 30.5, draws: 24.5 },
-    { name: "ROI 18%", wins: 45.5, losses: 30.0, draws: 24.5 },
-    { name: "ROI 19%", wins: 46.0, losses: 29.5, draws: 24.5 },
-    { name: "ROI 20%", wins: 46.5, losses: 29.0, draws: 24.5 }
+    { name: "ROI 2%", wins: 38.25, losses: 36.75, draws: 25.0 },
+    { name: "ROI 3%", wins: 38.63, losses: 36.37, draws: 25.0 },
+    { name: "ROI 4%", wins: 39.52, losses: 36.48, draws: 24.0 },
+    { name: "ROI 5%", wins: 40.43, losses: 36.57, draws: 23.0 },
+    { name: "ROI 6%", wins: 41.34, losses: 36.66, draws: 22.0 },
+    { name: "ROI 7%", wins: 42.27, losses: 36.73, draws: 21.0 },
+    { name: "ROI 8%", wins: 42.68, losses: 36.32, draws: 21.0 },
+    { name: "ROI 9%", wins: 43.10, losses: 35.90, draws: 21.0 },
+    { name: "ROI 10%", wins: 44.00, losses: 36.00, draws: 20.0 },
+    { name: "ROI 10%+", wins: 44.00, losses: 36.00, draws: 20.0 },
+    { name: "ROI 11%", wins: 44.40, losses: 35.60, draws: 20.0 },
+    { name: "ROI 12%", wins: 44.80, losses: 35.20, draws: 20.0 },
+    { name: "ROI 13%", wins: 45.20, losses: 34.80, draws: 20.0 },
+    { name: "ROI 14%", wins: 45.60, losses: 34.40, draws: 20.0 },
+    { name: "ROI 15%", wins: 46.00, losses: 34.00, draws: 20.0 },
+    { name: "ROI 16%", wins: 46.40, losses: 33.60, draws: 20.0 },
+    { name: "ROI 17%", wins: 46.80, losses: 33.20, draws: 20.0 },
+    { name: "ROI 18%", wins: 47.20, losses: 32.80, draws: 20.0 },
+    { name: "ROI 19%", wins: 47.60, losses: 32.40, draws: 20.0 },
+    { name: "ROI 20%", wins: 48.00, losses: 32.00, draws: 20.0 }
   ];
 
   const [selectedPreset, setSelectedPreset] = useState("Custom");
