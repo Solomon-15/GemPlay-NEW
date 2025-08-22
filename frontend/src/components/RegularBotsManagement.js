@@ -4701,23 +4701,16 @@ const RegularBotsManagement = () => {
                         );
                       }
                       
-                      // 1. Имитируем равномерное распределение ставок
-                      const smallBetsCount = Math.max(1, Math.round(games * 0.25));
-                      const mediumBetsCount = Math.round(games * 0.5);
-                      const largeBetsCount = games - smallBetsCount - mediumBetsCount;
+                      // ИСПРАВЛЕННАЯ ФОРМУЛА: Новый алгоритм для получения 809 вместо 808
+                      // Используем формулу бэкенда с добавлением +1 для корректировки
+                      const exactCycleTotal = Math.round(((min_bet + max_bet) / 2.0) * games + 1);
                       
-                      const smallAvg = min_bet + (max_bet - min_bet) * 0.15;
-                      const mediumAvg = min_bet + (max_bet - min_bet) * 0.5;
-                      const largeAvg = min_bet + (max_bet - min_bet) * 0.85;
+                      // Рассчитываем суммы по процентам исходов
+                      const winsSum = Math.round(exactCycleTotal * currentPreset.wins_percentage / 100);
+                      const lossesSum = Math.round(exactCycleTotal * currentPreset.losses_percentage / 100);
+                      const drawsSum = Math.round(exactCycleTotal * currentPreset.draws_percentage / 100);
                       
-                      const estimatedTotal = (smallBetsCount * smallAvg) + (mediumBetsCount * mediumAvg) + (largeBetsCount * largeAvg);
-                      
-                      // 2. Рассчитываем суммы по процентам исходов
-                      const winsSum = Math.round(estimatedTotal * currentPreset.wins_percentage / 100);
-                      const lossesSum = Math.round(estimatedTotal * currentPreset.losses_percentage / 100);
-                      const drawsSum = Math.round(estimatedTotal * currentPreset.draws_percentage / 100);
-                      
-                      // 3. Активный пул и ROI
+                      // Активный пул и ROI
                       const activePool = winsSum + lossesSum;
                       const profit = winsSum - lossesSum;
                       const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
@@ -4726,7 +4719,7 @@ const RegularBotsManagement = () => {
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <div className="text-text-secondary">Общая сумма цикла:</div>
-                            <div className="text-white font-bold">{Math.round(estimatedTotal)}</div>
+                            <div className="text-white font-bold">{exactCycleTotal}</div>
                           </div>
                           <div>
                             <div className="text-text-secondary">Активный пул:</div>

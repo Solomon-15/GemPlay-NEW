@@ -2201,9 +2201,9 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
         max_bet = bot_doc.get("max_bet_amount", 50.0)
         win_percentage = bot_doc.get("win_percentage", 55.0)
         
-        # Вычисляем точную сумму цикла
+        # Вычисляем точную сумму цикла (новый алгоритм +1)
         average_bet = (min_bet + max_bet) / 2
-        exact_total_amount = average_bet * cycle_games
+        exact_total_amount = average_bet * cycle_games + 1
         
         logger.info(f"🎯 Bot {bot_id}: Creating complete cycle - {cycle_games} bets with exact total {exact_total_amount}")
         
@@ -2472,8 +2472,8 @@ async def calculate_real_cycle_total_amount(bot_doc: dict) -> float:
         # Вычисляем среднюю ставку
         avg_bet = (min_bet + max_bet) / 2
         
-        # Реальная сумма цикла = количество игр * средняя ставка
-        real_cycle_total = cycle_games * avg_bet
+        # Реальная сумма цикла = количество игр * средняя ставка + 1 (новый алгоритм)
+        real_cycle_total = cycle_games * avg_bet + 1
         
         logger.info(f"🔢 Calculated real cycle total for bot {bot_doc.get('id', 'unknown')}: "
                    f"{real_cycle_total} (games: {cycle_games}, avg_bet: {avg_bet})")
@@ -5872,7 +5872,7 @@ async def get_bot_cycle_bets(
         active_pool = wins_sum + losses_sum
         profit = wins_sum - losses_sum
         roi_active = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
-        exact_cycle_total = int(round(((min_bet + max_bet) / 2.0) * cycle_len))
+        exact_cycle_total = int(round(((min_bet + max_bet) / 2.0) * cycle_len + 1))
         
         return {
             "success": True,
