@@ -123,7 +123,6 @@ const RegularBotsManagement = () => {
     draws_percentage: 28.0,
     cycle_games: 16,
     pause_between_cycles: 5,
-    // УДАЛЕНО: pause_on_draw
                           wins_count: 6,
                           losses_count: 6,
                           draws_count: 4
@@ -444,7 +443,6 @@ const RegularBotsManagement = () => {
       
       cycle_games: 16, // НОВОЕ: 16 игр по умолчанию (было 12)
       pause_between_cycles: 5, // 1-3600 секунд
-      // УДАЛЕНО: pause_on_draw
       
 
       
@@ -1262,7 +1260,6 @@ const RegularBotsManagement = () => {
       errors.push('Пауза между циклами должна быть от 1 до 3600 секунд');
     }
     
-    // УДАЛЕНО: валидация pause_on_draw
     
     const validModes = ['always-first', 'queue-based', 'after-all'];
 
@@ -1346,7 +1343,6 @@ const RegularBotsManagement = () => {
         draws_percentage: botForm.draws_percentage,
         cycle_games: botForm.cycle_games,
         pause_between_cycles: botForm.pause_between_cycles,
-        pause_on_draw: botForm.pause_on_draw,
         // УДАЛЕНО: creation_mode (наследие)
         // УДАЛЕНО: profit_strategy (наследие)
       };
@@ -1370,7 +1366,6 @@ const RegularBotsManagement = () => {
           draws_percentage: savedPercentages.draws_percentage || 28.0,
           cycle_games: 16,
           pause_between_cycles: 5,
-          pause_on_draw: 5,
           cycle_total_amount: 0
         };
       });
@@ -1420,7 +1415,6 @@ const RegularBotsManagement = () => {
         draws_percentage: b.draws_percentage ?? 28.0,
         cycle_games: b.cycle_games ?? 12,
         pause_between_cycles: b.pause_between_cycles ?? 5,
-        pause_on_draw: b.pause_on_draw ?? 1,
         cycle_total_amount: b.cycle_total_amount ?? 0
       });
       setSelectedPreset('Custom');
@@ -1437,7 +1431,7 @@ const RegularBotsManagement = () => {
         draws_percentage: b.draws_percentage ?? 28.0,
         cycle_games: b.cycle_games ?? 12,
         pause_between_cycles: b.pause_between_cycles ?? 5,
-        pause_on_draw: b.pause_on_draw ?? 1
+
       });
       
       setEditingBot(response.data.bot);
@@ -1470,7 +1464,6 @@ const RegularBotsManagement = () => {
         draws_percentage: botForm.draws_percentage,
         cycle_games: botForm.cycle_games,
         pause_between_cycles: botForm.pause_between_cycles,
-        pause_on_draw: botForm.pause_on_draw,
         // УДАЛЕНО: creation_mode (наследие)
         // УДАЛЕНО: profit_strategy (наследие)
       };
@@ -3103,25 +3096,7 @@ const RegularBotsManagement = () => {
                     </div>
                   </div>
 
-                  {/* Пауза при ничье */}
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Пауза при ничье (сек):</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="60"
-                      value={botForm.pause_on_draw}
-                      onChange={(e) => {
-                        const newForm = {...botForm, pause_on_draw: parseInt(e.target.value) || 1};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                    <div className="text-xs text-text-secondary mt-1">
-                      При ничье создается новая ставка через указанное время
-                    </div>
-                  </div>
+
                 </div>
 
                 {/* Предупреждения и подсказки (сохранены) */}
@@ -3509,23 +3484,7 @@ const RegularBotsManagement = () => {
                     />
                     <div className="text-xs text-text-secondary mt-1">Интервал после завершения цикла до начала нового</div>
                   </div>
-                  {/* Пауза при ничье */}
-                  <div>
-                    <label className="block text-text-secondary text-sm mb-1">Пауза при ничье (сек):</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="60"
-                      value={botForm.pause_on_draw}
-                      onChange={(e) => {
-                        const newForm = {...botForm, pause_on_draw: parseInt(e.target.value) || 1};
-                        setBotForm(newForm);
-                        validateExtendedFormInRealTime(newForm);
-                      }}
-                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
-                    />
-                    {/* При ничье технология замены ставок отключена */}
-                  </div>
+
                 </div>
                 {/* Вариант 2: Без лайв‑превью ROI в режиме редактирования */}
               </div>
@@ -4617,7 +4576,6 @@ const RegularBotsManagement = () => {
                               draws_percentage: preset.draws_percentage,
                               cycle_games: preset.cycle_games,
                               pause_between_cycles: preset.pause_between_cycles,
-                              pause_on_draw: preset.pause_on_draw,
                               wins_count: Math.round(preset.cycle_games * preset.wins_percentage / 100),
                               losses_count: Math.round(preset.cycle_games * preset.losses_percentage / 100),
                               draws_count: Math.round(preset.cycle_games * preset.draws_percentage / 100)
@@ -4869,17 +4827,7 @@ const RegularBotsManagement = () => {
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-text-secondary text-sm mb-2">Пауза при ничье (сек)</label>
-                      <input
-                        type="number"
-                        value={currentPreset.pause_on_draw}
-                        onChange={(e) => setCurrentPreset(prev => ({ ...prev, pause_on_draw: parseInt(e.target.value) || 5 }))}
-                        min="1"
-                        max="60"
-                        className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto text-sm focus:outline-none focus:border-accent-primary"
-                      />
-                    </div>
+
                   </div>
 
                   {/* ОБНОВЛЕННОЕ ПРЕВЬЮ: ROI расчеты на основе фактических W/L/D */}
@@ -4992,7 +4940,6 @@ const RegularBotsManagement = () => {
                           draws_percentage: 28.0,
                           cycle_games: 16,
                           pause_between_cycles: 5,
-                          pause_on_draw: 5,
                           wins_count: 7,
                           losses_count: 6,
                           draws_count: 3
