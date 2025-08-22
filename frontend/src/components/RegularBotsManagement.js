@@ -539,22 +539,26 @@ const RegularBotsManagement = () => {
   
   const defaultPresets = [
     { name: "Custom", wins: null, losses: null, draws: null, custom: true },
-    { name: "ROI 2%", wins: 39.3, losses: 37.7, draws: 23.0 },
-    { name: "ROI 3%", wins: 40.7, losses: 38.3, draws: 21.0 },
-    { name: "ROI 4%", wins: 41.6, losses: 38.4, draws: 20.0 },
-    { name: "ROI 5%", wins: 41.5, losses: 37.5, draws: 21.0 },
-    { name: "ROI 6%", wins: 41.9, losses: 37.1, draws: 21.0 },
-    { name: "ROI 7%", wins: 38.0, losses: 33.0, draws: 29.0 },
-    { name: "ROI 8%", wins: 38.9, losses: 33.1, draws: 28.0 },
-    { name: "ROI 9%", wins: 42.0, losses: 35.0, draws: 23.0 },
-    { name: "ROI 10%", wins: 38.5, losses: 31.5, draws: 30.0 },
-    { name: "ROI 10%+", wins: 44, losses: 36, draws: 20.0 },
-    { name: "ROI 11%", wins: 41.6, losses: 33.4, draws: 25.0 },
-    { name: "ROI 12%", wins: 39.8, losses: 31.2, draws: 29.0 },
-    { name: "ROI 13%", wins: 44.6, losses: 34.4, draws: 21.0 },
-    { name: "ROI 14%", wins: 41.6, losses: 31.4, draws: 27.0 },
-    { name: "ROI 15%", wins: 46.0, losses: 34.0, draws: 20.0 },
-    { name: "ROI 20%", wins: 47.4, losses: 31.6, draws: 21.0 }
+    { name: "ROI 2%", wins: 37.5, losses: 37.0, draws: 25.5 },
+    { name: "ROI 3%", wins: 38.0, losses: 37.0, draws: 25.0 },
+    { name: "ROI 4%", wins: 38.5, losses: 36.5, draws: 25.0 },
+    { name: "ROI 5%", wins: 39.0, losses: 36.0, draws: 25.0 },
+    { name: "ROI 6%", wins: 39.5, losses: 36.0, draws: 24.5 },
+    { name: "ROI 7%", wins: 40.0, losses: 35.5, draws: 24.5 },
+    { name: "ROI 8%", wins: 40.5, losses: 35.0, draws: 24.5 },
+    { name: "ROI 9%", wins: 41.0, losses: 34.5, draws: 24.5 },
+    { name: "ROI 10%", wins: 44.0, losses: 36.0, draws: 20.0 },
+    { name: "ROI 10%+", wins: 43.8, losses: 37.5, draws: 18.7 },
+    { name: "ROI 11%", wins: 42.0, losses: 33.5, draws: 24.5 },
+    { name: "ROI 12%", wins: 42.5, losses: 33.0, draws: 24.5 },
+    { name: "ROI 13%", wins: 43.0, losses: 32.5, draws: 24.5 },
+    { name: "ROI 14%", wins: 43.5, losses: 32.0, draws: 24.5 },
+    { name: "ROI 15%", wins: 44.0, losses: 31.5, draws: 24.5 },
+    { name: "ROI 16%", wins: 44.5, losses: 31.0, draws: 24.5 },
+    { name: "ROI 17%", wins: 45.0, losses: 30.5, draws: 24.5 },
+    { name: "ROI 18%", wins: 45.5, losses: 30.0, draws: 24.5 },
+    { name: "ROI 19%", wins: 46.0, losses: 29.5, draws: 24.5 },
+    { name: "ROI 20%", wins: 46.5, losses: 29.0, draws: 24.5 }
   ];
 
   const [selectedPreset, setSelectedPreset] = useState("Custom");
