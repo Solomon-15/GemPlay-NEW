@@ -11,7 +11,7 @@ import time
 from datetime import datetime
 
 # Configuration
-BACKEND_URL = "https://preset-hub-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://dengi-potok.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gemplay.com"
 ADMIN_PASSWORD = "Admin123!"
 TEST_BOT_ID = "75646e1d-55cd-4941-8e6b-55474c5f7c42"
