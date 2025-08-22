@@ -689,6 +689,8 @@ const RegularBotsManagement = () => {
     const w = (winsP / 100) * N;
     const l = (lossesP / 100) * N;
     const d = (drawsP / 100) * N;
+    
+    // Начальное распределение методом наибольших остатков
     let W = Math.floor(w), L = Math.floor(l), D = Math.floor(d);
     let R = N - (W + L + D);
     const remainders = [
@@ -696,21 +698,57 @@ const RegularBotsManagement = () => {
       { key: 'L', rem: l - L },
       { key: 'D', rem: d - D }
     ].sort((a, b) => b.rem - a.rem);
+    
     let i = 0;
     while (R > 0) {
       const k = remainders[i % remainders.length].key;
       if (k === 'W') W += 1; else if (k === 'L') L += 1; else D += 1;
       R -= 1; i += 1;
     }
-    // гарантируем неотрицательность и точную сумму
+    
+    // НОВЫЙ АЛГОРИТМ: Балансировка побед и поражений
+    // Проверяем разницу между победами и поражениями
+    let wlDifference = Math.abs(W - L);
+    
+    // Если разница больше 2, пытаемся сбалансировать
+    if (wlDifference > 2 && D > 0) {
+      // Определяем кто больше
+      const isWinsMore = W > L;
+      const maxDifference = isWinsMore ? W - L : L - W;
+      
+      // Сколько можем перераспределить из ничьих
+      const canRedistribute = Math.min(D, Math.floor((maxDifference - 2) / 2));
+      
+      if (canRedistribute > 0) {
+        // Перераспределяем из ничьих в меньшую категорию
+        if (isWinsMore) {
+          L += canRedistribute;
+        } else {
+          W += canRedistribute;
+        }
+        D -= canRedistribute;
+        
+        console.log(`🔄 Балансировка: перераспределено ${canRedistribute} из ничьих для баланса W/L`);
+      }
+    }
+    
+    // Финальная проверка и корректировка
     W = Math.max(0, W); L = Math.max(0, L); D = Math.max(0, D);
     const total = W + L + D;
+    
     if (total !== N) {
       const diff = N - total;
       if (diff !== 0) {
-        if (W >= L && W >= D) W += diff; else if (L >= W && L >= D) L += diff; else D += diff;
+        // Приоритет корректировки: сначала ничьи, потом меньшая из W/L
+        if (diff > 0) {
+          if (W <= L) W += diff; else L += diff;
+        } else {
+          if (D >= Math.abs(diff)) D += diff;
+          else if (W >= L) W += diff; else L += diff;
+        }
       }
     }
+    
     return { W, L, D };
   };
 
