@@ -484,6 +484,7 @@ const RegularBotsManagement = () => {
       return fraction >= 0.50 ? Math.ceil(num) : Math.floor(num);
     };
     
+    // Half-up округление (как в примере: 356 / 291 / 162)
     let winsSum = halfUpRound(exactWins);
     let lossesSum = halfUpRound(exactLosses);
     let drawsSum = halfUpRound(exactDraws);
@@ -4739,6 +4740,7 @@ const RegularBotsManagement = () => {
                         return fraction >= 0.50 ? Math.ceil(num) : Math.floor(num);
                       };
                       
+                      // Half-up округление (как в примере: 356 / 291 / 162)
                       let winsSum = halfUpRound(exactWins);
                       let lossesSum = halfUpRound(exactLosses);
                       let drawsSum = halfUpRound(exactDraws);
