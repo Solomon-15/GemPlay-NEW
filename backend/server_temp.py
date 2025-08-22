@@ -18638,14 +18638,14 @@ async def generate_cycle_bets_natural_distribution(
         draws_count = int(draws_count)
         cycle_games = int(cycle_games)
 
-        # 1) Определяем эталонную сумму цикла
+        # 1) Определяем базовую сумму цикла (база 800)
         if min_bet_int == 1 and max_bet_int == 100 and cycle_games == 16:
-            reference_cycle_total = 809  # Эталонное значение для стандартного случая
+            reference_cycle_total = 800  # Базовое значение для стандартного случая
         else:
-            # Пропорциональный расчет от эталона для других случаев
+            # Пропорциональный расчет от базы для других случаев
             standard_base = int(round(((1 + 100) / 2.0) * 16))  # 808
             current_base = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
-            reference_cycle_total = int(round((809 * current_base) / standard_base))
+            reference_cycle_total = int(round((800 * current_base) / standard_base))
         
         logger.info(f"    Reference cycle total (int): {reference_cycle_total}")
 
