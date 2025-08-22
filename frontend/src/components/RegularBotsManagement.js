@@ -4138,7 +4138,10 @@ const RegularBotsManagement = () => {
                   {/* Добавляем строку с общей суммой всех ставок сверху */}
                   <div className="text-green-400 font-roboto text-sm font-bold mb-2">
                     Общая сумма всех ставок: ${(() => {
-                      const totalStakes = (cycleDetailsData.bets || []).reduce((sum, bet) => sum + (bet.bet_amount || 0), 0);
+                      const totalStakes = (cycleDetailsData.bets || []).reduce((sum, bet) => {
+                        const amount = Number(bet.bet_amount) || 0;
+                        return sum + amount;
+                      }, 0);
                       return Math.round(totalStakes);
                     })()}
                   </div>
