@@ -706,37 +706,79 @@ const RegularBotsManagement = () => {
       R -= 1; i += 1;
     }
     
-    // НОВЫЙ АЛГОРИТМ: Балансировка количества побед и поражений
-    // Цель: разница между W и L не более ±1-2
-    let wlDifference = Math.abs(W - L);
+    // УЛУЧШЕННЫЙ АЛГОРИТМ: Балансировка W/L с контролем доли ничьих
+    // Цель: разница между W и L в пределах ±1-2, доля ничьих 20-30%
     
-    // Если разница больше 2, агрессивно балансируем
-    while (wlDifference > 2) {
-      const isWinsMore = W > L;
+    // Вычисляем целевую долю ничьих (20-30% от общего количества игр)
+    const minDraws = Math.floor(N * 0.20); // 20%
+    const maxDraws = Math.ceil(N * 0.30);  // 30%
+    
+    // Корректируем количество ничьих в допустимый диапазон
+    if (D < minDraws) {
+      const needMoreDraws = minDraws - D;
+      const canTakeFromWL = Math.min(needMoreDraws, Math.floor((W + L) * 0.1)); // Не более 10% от W+L
+      if (canTakeFromWL > 0) {
+        // Забираем поровну из W и L
+        const fromEach = Math.floor(canTakeFromWL / 2);
+        W = Math.max(1, W - fromEach);
+        L = Math.max(1, L - fromEach);
+        D += fromEach * 2;
+      }
+    } else if (D > maxDraws) {
+      const excessDraws = D - maxDraws;
+      // Перераспределяем лишние ничьи в W и L, сохраняя баланс
+      const toEach = Math.floor(excessDraws / 2);
+      W += toEach;
+      L += toEach;
+      D -= toEach * 2;
       
-      // Пытаемся перераспределить из ничьих
-      if (D > 0) {
-        if (isWinsMore) {
-          L += 1;
-          D -= 1;
+      // Оставшиеся отдаем меньшей из W/L для баланса
+      const remaining = excessDraws - (toEach * 2);
+      if (remaining > 0) {
+        if (W <= L) {
+          W += remaining;
         } else {
-          W += 1;
-          D -= 1;
+          L += remaining;
+        }
+        D -= remaining;
+      }
+    }
+    
+    // Агрессивная балансировка W и L (разница не более ±1-2)
+    let wlDifference = Math.abs(W - L);
+    let balanceAttempts = 0;
+    
+    while (wlDifference > 2 && balanceAttempts < 20) {
+      const isWinsMore = W > L;
+      const targetDifference = Math.floor(wlDifference / 2); // Сколько нужно перераспределить
+      
+      // Пытаемся перераспределить из ничьих (если есть запас)
+      if (D > minDraws && targetDifference > 0) {
+        const canTakeFromDraws = Math.min(D - minDraws, targetDifference);
+        if (isWinsMore) {
+          L += canTakeFromDraws;
+          D -= canTakeFromDraws;
+        } else {
+          W += canTakeFromDraws;
+          D -= canTakeFromDraws;
         }
       } else {
-        // Если ничьих нет, перераспределяем между W и L
+        // Прямое перераспределение между W и L
         if (isWinsMore && W > 1) {
-          W -= 1;
-          L += 1;
+          const toMove = Math.min(Math.floor(wlDifference / 2), W - 1);
+          W -= toMove;
+          L += toMove;
         } else if (!isWinsMore && L > 1) {
-          L -= 1;
-          W += 1;
+          const toMove = Math.min(Math.floor(wlDifference / 2), L - 1);
+          L -= toMove;
+          W += toMove;
         } else {
           break; // Не можем больше балансировать
         }
       }
       
       wlDifference = Math.abs(W - L);
+      balanceAttempts++;
       
       // Защита от бесконечного цикла
       if (W + L + D !== N) break;
