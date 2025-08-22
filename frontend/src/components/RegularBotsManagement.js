@@ -106,7 +106,7 @@ const RegularBotsManagement = () => {
   const [isQuickLaunchModalOpen, setIsQuickLaunchModalOpen] = useState(false);
   const [quickLaunchPresets, setQuickLaunchPresets] = useState([]);
   const [isCreatingPreset, setIsCreatingPreset] = useState(false);
-  const [selectedPresetForQuickLaunch, setSelectedPresetForQuickLaunch] = useState("Custom");
+  const [selectedPresetForQuickLaunch, setSelectedPresetForQuickLaunch] = useState("ROI 10%");
   
   // Состояния для перетаскивания модального окна
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
@@ -117,16 +117,16 @@ const RegularBotsManagement = () => {
     buttonName: '',
     buttonColor: 'blue',
     min_bet_amount: 1.0,
-    max_bet_amount: 50.0,
-    wins_percentage: 44.0,
-    losses_percentage: 36.0,
-    draws_percentage: 20.0,
+    max_bet_amount: 100.0,
+    wins_percentage: 41.73,
+    losses_percentage: 30.27,
+    draws_percentage: 28.0,
     cycle_games: 16,
     pause_between_cycles: 5,
     // УДАЛЕНО: pause_on_draw
-                          wins_count: 7,
+                          wins_count: 6,
                           losses_count: 6,
-                          draws_count: 3
+                          draws_count: 4
   });
 
   const pagination = usePagination(1, 10);
@@ -437,10 +437,10 @@ const RegularBotsManagement = () => {
       losses_count: 6,  // Количество поражений в цикле  
       draws_count: 4,   // Количество ничьих в цикле
       
-      // Процент исходов игр (новые значения по умолчанию)
-      wins_percentage: savedPercentages.wins_percentage || 44.0,
-      losses_percentage: savedPercentages.losses_percentage || 36.0,
-      draws_percentage: savedPercentages.draws_percentage || 20.0,
+      // Процент исходов игр (новые значения по умолчанию: ROI 10%)
+      wins_percentage: savedPercentages.wins_percentage || 41.73,
+      losses_percentage: savedPercentages.losses_percentage || 30.27,
+      draws_percentage: savedPercentages.draws_percentage || 28.0,
       
       cycle_games: 16, // НОВОЕ: 16 игр по умолчанию (было 12)
       pause_between_cycles: 5, // 1-3600 секунд
@@ -559,29 +559,28 @@ const RegularBotsManagement = () => {
   
   const defaultPresets = [
     { name: "Custom", wins: null, losses: null, draws: null, custom: true },
-    { name: "ROI 2%", wins: 38.25, losses: 36.75, draws: 25.0 },
-    { name: "ROI 3%", wins: 38.63, losses: 36.37, draws: 25.0 },
-    { name: "ROI 4%", wins: 39.52, losses: 36.48, draws: 24.0 },
-    { name: "ROI 5%", wins: 40.43, losses: 36.57, draws: 23.0 },
-    { name: "ROI 6%", wins: 41.34, losses: 36.66, draws: 22.0 },
-    { name: "ROI 7%", wins: 42.27, losses: 36.73, draws: 21.0 },
-    { name: "ROI 8%", wins: 42.68, losses: 36.32, draws: 21.0 },
-    { name: "ROI 9%", wins: 43.10, losses: 35.90, draws: 21.0 },
-    { name: "ROI 10%", wins: 44.00, losses: 36.00, draws: 20.0 },
-    { name: "ROI 10%+", wins: 44.00, losses: 36.00, draws: 20.0 },
-    { name: "ROI 11%", wins: 44.40, losses: 35.60, draws: 20.0 },
-    { name: "ROI 12%", wins: 44.80, losses: 35.20, draws: 20.0 },
-    { name: "ROI 13%", wins: 45.20, losses: 34.80, draws: 20.0 },
-    { name: "ROI 14%", wins: 45.60, losses: 34.40, draws: 20.0 },
-    { name: "ROI 15%", wins: 46.00, losses: 34.00, draws: 20.0 },
-    { name: "ROI 16%", wins: 46.40, losses: 33.60, draws: 20.0 },
-    { name: "ROI 17%", wins: 46.80, losses: 33.20, draws: 20.0 },
-    { name: "ROI 18%", wins: 47.20, losses: 32.80, draws: 20.0 },
-    { name: "ROI 19%", wins: 47.60, losses: 32.40, draws: 20.0 },
-    { name: "ROI 20%", wins: 48.00, losses: 32.00, draws: 20.0 }
+    { name: "ROI 2%", wins: 37.44, losses: 34.56, draws: 28.0 },
+    { name: "ROI 3%", wins: 37.89, losses: 34.11, draws: 28.0 },
+    { name: "ROI 4%", wins: 38.88, losses: 33.12, draws: 28.0 },
+    { name: "ROI 5%", wins: 39.35, losses: 32.65, draws: 28.0 },
+    { name: "ROI 6%", wins: 39.31, losses: 32.69, draws: 28.0 },
+    { name: "ROI 7%", wins: 40.31, losses: 31.69, draws: 28.0 },
+    { name: "ROI 8%", wins: 40.04, losses: 31.96, draws: 28.0 },
+    { name: "ROI 9%", wins: 41.23, losses: 30.77, draws: 28.0 },
+    { name: "ROI 10%", wins: 41.73, losses: 30.27, draws: 28.0 },
+    { name: "ROI 11%", wins: 42.27, losses: 29.73, draws: 28.0 },
+    { name: "ROI 12%", wins: 42.73, losses: 29.27, draws: 28.0 },
+    { name: "ROI 13%", wins: 42.73, losses: 29.27, draws: 28.0 },
+    { name: "ROI 14%", wins: 43.81, losses: 28.19, draws: 28.0 },
+    { name: "ROI 15%", wins: 44.31, losses: 27.69, draws: 28.0 },
+    { name: "ROI 16%", wins: 44.81, losses: 27.19, draws: 28.0 },
+    { name: "ROI 17%", wins: 44.77, losses: 27.23, draws: 28.0 },
+    { name: "ROI 18%", wins: 45.27, losses: 26.73, draws: 28.0 },
+    { name: "ROI 19%", wins: 45.77, losses: 26.23, draws: 28.0 },
+    { name: "ROI 20%", wins: 46.27, losses: 25.73, draws: 28.0 }
   ];
 
-  const [selectedPreset, setSelectedPreset] = useState("Custom");
+  const [selectedPreset, setSelectedPreset] = useState("ROI 10%");
 
   const applyPreset = (preset) => {
     if (!preset || preset.custom) {
@@ -1208,12 +1207,12 @@ const RegularBotsManagement = () => {
         return {
           name: '',
           min_bet_amount: 1.0,
-          max_bet_amount: 50.0,
+          max_bet_amount: 100.0,
           // Удалено наследие win_percentage
-          wins_percentage: savedPercentages.wins_percentage,
-          losses_percentage: savedPercentages.losses_percentage,
-          draws_percentage: savedPercentages.draws_percentage,
-          cycle_games: 12,
+          wins_percentage: savedPercentages.wins_percentage || 41.73,
+          losses_percentage: savedPercentages.losses_percentage || 30.27,
+          draws_percentage: savedPercentages.draws_percentage || 28.0,
+          cycle_games: 16,
           pause_between_cycles: 5,
           pause_on_draw: 5,
           cycle_total_amount: 0
@@ -1254,15 +1253,15 @@ const RegularBotsManagement = () => {
       setBotForm({
         name: b.name || '',
         min_bet_amount: b.min_bet_amount ?? 1.0,
-        max_bet_amount: b.max_bet_amount ?? 50.0,
+        max_bet_amount: b.max_bet_amount ?? 100.0,
         // Удалено наследие win_percentage
         // Новая система: подтягиваем баланс и проценты из бота
         wins_count: b.wins_count ?? 6,
         losses_count: b.losses_count ?? 6,
         draws_count: b.draws_count ?? 4,
-        wins_percentage: b.wins_percentage ?? 44.0,
-        losses_percentage: b.losses_percentage ?? 36.0,
-        draws_percentage: b.draws_percentage ?? 20.0,
+        wins_percentage: b.wins_percentage ?? 41.73,
+        losses_percentage: b.losses_percentage ?? 30.27,
+        draws_percentage: b.draws_percentage ?? 28.0,
         cycle_games: b.cycle_games ?? 12,
         pause_between_cycles: b.pause_between_cycles ?? 5,
         pause_on_draw: b.pause_on_draw ?? 1,
@@ -1272,14 +1271,14 @@ const RegularBotsManagement = () => {
       validateExtendedFormInRealTime({
         name: b.name || '',
         min_bet_amount: b.min_bet_amount ?? 1.0,
-        max_bet_amount: b.max_bet_amount ?? 50.0,
+        max_bet_amount: b.max_bet_amount ?? 100.0,
         // Удалено наследие win_percentage
         wins_count: b.wins_count ?? 6,
         losses_count: b.losses_count ?? 6,
         draws_count: b.draws_count ?? 4,
-        wins_percentage: b.wins_percentage ?? 44.0,
-        losses_percentage: b.losses_percentage ?? 36.0,
-        draws_percentage: b.draws_percentage ?? 20.0,
+        wins_percentage: b.wins_percentage ?? 41.73,
+        losses_percentage: b.losses_percentage ?? 30.27,
+        draws_percentage: b.draws_percentage ?? 28.0,
         cycle_games: b.cycle_games ?? 12,
         pause_between_cycles: b.pause_between_cycles ?? 5,
         pause_on_draw: b.pause_on_draw ?? 1
@@ -2730,7 +2729,7 @@ const RegularBotsManagement = () => {
                       step="1"
                       value={botForm.max_bet_amount}
                       onChange={(e) => {
-                        const newForm = {...botForm, max_bet_amount: parseInt(e.target.value) || 50};
+                        const newForm = {...botForm, max_bet_amount: parseInt(e.target.value) || 100};
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
                       }}
@@ -3129,7 +3128,7 @@ const RegularBotsManagement = () => {
                       step="1"
                       value={botForm.max_bet_amount}
                       onChange={(e) => {
-                        const newForm = {...botForm, max_bet_amount: parseInt(e.target.value) || 50};
+                        const newForm = {...botForm, max_bet_amount: parseInt(e.target.value) || 100};
                         setBotForm(newForm);
                         validateExtendedFormInRealTime(newForm);
                       }}
@@ -4583,7 +4582,7 @@ const RegularBotsManagement = () => {
                       <input
                         type="number"
                         value={currentPreset.max_bet_amount}
-                        onChange={(e) => setCurrentPreset(prev => ({ ...prev, max_bet_amount: parseFloat(e.target.value) || 50 }))}
+                        onChange={(e) => setCurrentPreset(prev => ({ ...prev, max_bet_amount: parseFloat(e.target.value) || 100 }))}
                         min="1"
                         max="10000"
                         step="0.1"
@@ -4847,10 +4846,10 @@ const RegularBotsManagement = () => {
                           buttonName: '',
                           buttonColor: 'blue',
                           min_bet_amount: 1.0,
-                          max_bet_amount: 50.0,
-                          wins_percentage: 44.0,
-                          losses_percentage: 36.0,
-                          draws_percentage: 20.0,
+                          max_bet_amount: 100.0,
+                          wins_percentage: 41.73,
+                          losses_percentage: 30.27,
+                          draws_percentage: 28.0,
                           cycle_games: 16,
                           pause_between_cycles: 5,
                           pause_on_draw: 5,
