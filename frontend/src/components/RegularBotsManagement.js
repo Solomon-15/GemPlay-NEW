@@ -464,26 +464,19 @@ const RegularBotsManagement = () => {
     const max_bet = parseFloat(botForm.max_bet_amount);
     const games = parseInt(botForm.cycle_games);
     
-    // 1. Определяем эталонную сумму цикла для стандартного случая
-    let referenceCycleTotal;
-    if (min_bet === 1 && max_bet === 100 && games === 16) {
-      referenceCycleTotal = 809; // Эталонное значение для стандартного случая
-    } else {
-      // Для других случаев используем пропорциональный расчет от эталона
-      const standardBase = Math.round(((1 + 100) / 2.0) * 16); // 808
-      const currentBase = Math.round(((min_bet + max_bet) / 2.0) * games);
-      referenceCycleTotal = Math.round((809 * currentBase) / standardBase);
-    }
+    // 1. Применяем новый алгоритм для всех случаев
+    // Базовая сумма по старому методу: (min + max) / 2 * games
+    const baseCycleTotal = ((min_bet + max_bet) / 2.0) * games;
     
-    // 2. Применяем метод наибольших остатков - вычисляем точные доли от эталонной суммы
+    // 2. Применяем метод наибольших остатков - вычисляем точные доли от базовой суммы
     const winsPercent = botForm.wins_percentage / 100;
     const lossesPercent = botForm.losses_percentage / 100;
     const drawsPercent = botForm.draws_percentage / 100;
     
-    // Точные доли от эталонной суммы (как в примере: 355.96 / 291.24 / 161.80)
-    const exactWins = referenceCycleTotal * winsPercent;
-    const exactLosses = referenceCycleTotal * lossesPercent;
-    const exactDraws = referenceCycleTotal * drawsPercent;
+    // Точные доли от базовой суммы (как в примере: 355.52 / 290.88 / 161.60)
+    const exactWins = baseCycleTotal * winsPercent;
+    const exactLosses = baseCycleTotal * lossesPercent;
+    const exactDraws = baseCycleTotal * drawsPercent;
     
     // Применяем правило округления half-up (≥0.50 вверх, <0.50 вниз)
     const halfUpRound = (num) => {
@@ -4726,26 +4719,19 @@ const RegularBotsManagement = () => {
                         );
                       }
                       
-                      // 1. Определяем эталонную сумму цикла
-                      let referenceCycleTotal;
-                      if (min_bet === 1 && max_bet === 100 && games === 16) {
-                        referenceCycleTotal = 809; // Эталонное значение
-                      } else {
-                        // Пропорциональный расчет от эталона для других случаев
-                        const standardBase = Math.round(((1 + 100) / 2.0) * 16); // 808
-                        const currentBase = Math.round(((min_bet + max_bet) / 2.0) * games);
-                        referenceCycleTotal = Math.round((809 * currentBase) / standardBase);
-                      }
+                      // 1. Применяем новый алгоритм для всех случаев
+                      // Базовая сумма по старому методу: (min + max) / 2 * games
+                      const baseCycleTotal = ((min_bet + max_bet) / 2.0) * games;
                       
-                      // 2. Применяем метод наибольших остатков - точные доли от эталонной суммы
+                      // 2. Применяем метод наибольших остатков - точные доли от базовой суммы
                       const winsPercent = currentPreset.wins_percentage / 100;
                       const lossesPercent = currentPreset.losses_percentage / 100;
                       const drawsPercent = currentPreset.draws_percentage / 100;
                       
-                      // Точные доли от эталонной суммы (355.96 / 291.24 / 161.80)
-                      const exactWins = referenceCycleTotal * winsPercent;
-                      const exactLosses = referenceCycleTotal * lossesPercent;
-                      const exactDraws = referenceCycleTotal * drawsPercent;
+                      // Точные доли от базовой суммы (355.52 / 290.88 / 161.60)
+                      const exactWins = baseCycleTotal * winsPercent;
+                      const exactLosses = baseCycleTotal * lossesPercent;
+                      const exactDraws = baseCycleTotal * drawsPercent;
                       
                       // Применяем правило округления half-up (≥0.50 вверх, <0.50 вниз)
                       const halfUpRound = (num) => {
