@@ -789,14 +789,18 @@ const RegularBotsManagement = () => {
 
     balanceTowardEquality();
 
-    // 5) Гарантируем, что значения не равны полностью и не нулевые при достаточном N
+    // 5) Гарантируем допустимые значения и правило L ≥ W (равенство допустимо)
     if (N >= 3) {
-      if (W === L) {
-        // Лёгкое смещение, не нарушая deltaMax
-        if (W + 1 <= activeGames && Math.abs((W + 1) - (L - 1)) <= deltaMax && L > 0) { W += 1; L -= 1; }
-      }
       if (W === 0) { W = 1; if (L > 0) L -= 1; }
       if (L === 0) { L = 1; if (W > 0) W -= 1; }
+      // Применяем L ≥ W (не нарушая deltaMax и сумму)
+      if (W > L) {
+        const shift = Math.min(Math.ceil((W - L) / 2), W); // минимальный сдвиг к равенству
+        W -= shift;
+        L += shift;
+        // Если всё ещё W > L, делаем ещё один шаг
+        if (W > L && W > 0) { W -= 1; L += 1; }
+      }
     }
 
     // 6) Спец-правило: при N=16 и ROI≈10% по умолчанию 6/6/4
@@ -4540,9 +4544,7 @@ const RegularBotsManagement = () => {
                               draws_percentage: preset.draws_percentage,
                               cycle_games: preset.cycle_games,
                               pause_between_cycles: preset.pause_between_cycles,
-                              wins_count: Math.round(preset.cycle_games * preset.wins_percentage / 100),
-                              losses_count: Math.round(preset.cycle_games * preset.losses_percentage / 100),
-                              draws_count: Math.round(preset.cycle_games * preset.draws_percentage / 100)
+                              ...(() => { const { W, L, D } = recalcCountsFromPercents(preset.cycle_games, preset.wins_percentage, preset.losses_percentage, preset.draws_percentage); return { wins_count: W, losses_count: L, draws_count: D }; })()
                             };
                             
                             const response = await axios.post(`${API}/admin/bots/create-regular`, botData, {
