@@ -2662,7 +2662,7 @@ const RegularBotsManagement = () => {
                           </div>
                         )}
                         
-                        {/* Основная строка: Фактическая прибыль на текущий момент (зелёным цветом) */}
+                        {/* Основная строка: Фактическая прибыль на текущий момент */}
                         {(() => {
                           // Фактическая прибыль текущего активного цикла
                           const sums = cycleSumsByBot[bot.id] || bot.cycle_total_info || {};
@@ -2671,9 +2671,10 @@ const RegularBotsManagement = () => {
                             : (typeof sums.wins_sum === 'number' && typeof sums.losses_sum === 'number')
                               ? (Number(sums.wins_sum) - Number(sums.losses_sum))
                               : 0;
+                          const color = profit >= 0 ? 'text-green-400' : 'text-red-400';
                           const sign = profit > 0 ? '+' : profit < 0 ? '−' : '+';
                           return (
-                            <span className="text-green-400 font-roboto text-sm font-bold" title="Фактическая прибыль на текущий момент">
+                            <span className={`${color} font-roboto text-sm font-bold`} title="Фактическая прибыль на текущий момент">
                               {sign}${Math.abs(Math.round(profit))}
                             </span>
                           );
