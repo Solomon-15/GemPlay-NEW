@@ -406,18 +406,18 @@ const RegularBotsManagement = () => {
       if (saved) {
         const parsed = JSON.parse(saved);
         return {
-          wins_percentage: parsed.wins_percentage || 35,
-          losses_percentage: parsed.losses_percentage || 35,
-          draws_percentage: parsed.draws_percentage || 30
+          wins_percentage: parsed.wins_percentage || 39.6,
+          losses_percentage: parsed.losses_percentage || 32.4,
+          draws_percentage: parsed.draws_percentage || 28.0
         };
       }
     } catch (error) {
       console.error('Ошибка загрузки сохраненных процентов:', error);
     }
     return {
-      wins_percentage: 35,
-      losses_percentage: 35, 
-      draws_percentage: 30
+      wins_percentage: 39.6,
+      losses_percentage: 32.4, 
+      draws_percentage: 28.0
     };
   };
 
@@ -621,31 +621,26 @@ const RegularBotsManagement = () => {
   const [showPresetModal, setShowPresetModal] = useState(false);
   const [newPresetName, setNewPresetName] = useState('');
   
-  const defaultPresets = [
-    { name: "Custom", wins: null, losses: null, draws: null, custom: true },
-    { name: "ROI 2%", wins: 37.44, losses: 34.56, draws: 28.0 },
-    { name: "ROI 3%", wins: 37.89, losses: 34.11, draws: 28.0 },
-    { name: "ROI 4%", wins: 38.88, losses: 33.12, draws: 28.0 },
-    { name: "ROI 5%", wins: 39.35, losses: 32.65, draws: 28.0 },
-    { name: "ROI 6%", wins: 39.31, losses: 32.69, draws: 28.0 },
-    { name: "ROI 7%", wins: 40.31, losses: 31.69, draws: 28.0 },
-    { name: "ROI 8%", wins: 40.04, losses: 31.96, draws: 28.0 },
-    { name: "ROI 9%", wins: 41.23, losses: 30.77, draws: 28.0 },
-    { name: "⭐ ROI 10%", wins: 41.73, losses: 30.27, draws: 28.0 },
-    { name: "ROI 11%", wins: 42.27, losses: 29.73, draws: 28.0 },
-    { name: "ROI 12%", wins: 42.73, losses: 29.27, draws: 28.0 },
-    { name: "ROI 13%", wins: 42.73, losses: 29.27, draws: 28.0 },
-    { name: "ROI 14%", wins: 43.81, losses: 28.19, draws: 28.0 },
-    { name: "ROI 15%", wins: 44.31, losses: 27.69, draws: 28.0 },
-    { name: "ROI 16%", wins: 44.81, losses: 27.19, draws: 28.0 },
-    { name: "ROI 17%", wins: 44.77, losses: 27.23, draws: 28.0 },
-    { name: "ROI 18%", wins: 45.27, losses: 26.73, draws: 28.0 },
-    { name: "ROI 19%", wins: 45.77, losses: 26.23, draws: 28.0 },
-    { name: "ROI 20%", wins: 46.27, losses: 25.73, draws: 28.0 }
-  ];
+  const generateDefaultPresets = () => {
+    const draws = 28.0;
+    const activeShare = 100 - draws; // 72%
+    const presets = [
+      { name: "Custom", wins: null, losses: null, draws: null, custom: true }
+    ];
+    for (let roi = 2; roi <= 20; roi++) {
+      const r = roi / 100;
+      const wins = (activeShare * (1 + r)) / 2; // W% от общего
+      const losses = activeShare - wins;        // L% от общего
+      const name = roi === 10 ? "⭐ ROI 10%" : `ROI ${roi}%`;
+      presets.push({ name, wins: Number(wins.toFixed(2)), losses: Number(losses.toFixed(2)), draws });
+    }
+    return presets;
+  };
 
+  const defaultPresets = generateDefaultPresets();
+  
   const [selectedPreset, setSelectedPreset] = useState("⭐ ROI 10%");
-
+  
   const applyPreset = (preset) => {
     if (!preset || preset.custom) {
       setSelectedPreset("Custom");
@@ -667,16 +662,23 @@ const RegularBotsManagement = () => {
       return;
     }
     setSelectedPresetForQuickLaunch(preset.name);
-    setCurrentPreset(prev => ({
-      ...prev,
-      wins_percentage: Number(preset.wins.toFixed(1)),
-      losses_percentage: Number(preset.losses.toFixed(1)),
-      draws_percentage: Number(preset.draws.toFixed(1)),
-      // Автоматически пересчитываем counts
-      wins_count: Math.round(prev.cycle_games * preset.wins / 100),
-      losses_count: Math.round(prev.cycle_games * preset.losses / 100),
-      draws_count: Math.round(prev.cycle_games * preset.draws / 100)
-    }));
+    setCurrentPreset(prev => {
+      const { W, L, D } = recalcCountsFromPercents(
+        prev.cycle_games,
+        preset.wins,
+        preset.losses,
+        preset.draws
+      );
+      return ({
+        ...prev,
+        wins_percentage: Number(preset.wins.toFixed(1)),
+        losses_percentage: Number(preset.losses.toFixed(1)),
+        draws_percentage: Number(preset.draws.toFixed(1)),
+        wins_count: W,
+        losses_count: L,
+        draws_count: D
+      });
+    });
   };
 
   // Функции для перетаскивания модального окна
@@ -750,121 +752,83 @@ const RegularBotsManagement = () => {
   // Пересчет counts по процентам (Largest Remainder)
   const recalcCountsFromPercents = (games, winsP, lossesP, drawsP) => {
     const N = Math.max(1, parseInt(games) || 1);
-    const w = (winsP / 100) * N;
-    const l = (lossesP / 100) * N;
-    const d = (drawsP / 100) * N;
-    
-    // Начальное распределение методом наибольших остатков
-    let W = Math.floor(w), L = Math.floor(l), D = Math.floor(d);
-    let R = N - (W + L + D);
-    const remainders = [
-      { key: 'W', rem: w - W },
-      { key: 'L', rem: l - L },
-      { key: 'D', rem: d - D }
-    ].sort((a, b) => b.rem - a.rem);
-    
-    let i = 0;
-    while (R > 0) {
-      const k = remainders[i % remainders.length].key;
-      if (k === 'W') W += 1; else if (k === 'L') L += 1; else D += 1;
-      R -= 1; i += 1;
-    }
-    
-    // УЛУЧШЕННЫЙ АЛГОРИТМ: Балансировка W/L с контролем доли ничьих
-    // Цель: разница между W и L в пределах ±1-2, доля ничьих 20-30%
-    
-    // Вычисляем целевую долю ничьих (20-30% от общего количества игр)
-    const minDraws = Math.floor(N * 0.20); // 20%
-    const maxDraws = Math.ceil(N * 0.30);  // 30%
-    
-    // Корректируем количество ничьих в допустимый диапазон
-    if (D < minDraws) {
-      const needMoreDraws = minDraws - D;
-      const canTakeFromWL = Math.min(needMoreDraws, Math.floor((W + L) * 0.1)); // Не более 10% от W+L
-      if (canTakeFromWL > 0) {
-        // Забираем поровну из W и L
-        const fromEach = Math.floor(canTakeFromWL / 2);
-        W = Math.max(1, W - fromEach);
-        L = Math.max(1, L - fromEach);
-        D += fromEach * 2;
+
+    // 1) Целевое количество ничьих: близко к 28% и в пределах [25%;30%]
+    const minDraws = Math.floor(N * 0.25);
+    const maxDraws = Math.ceil(N * 0.30);
+    const targetDrawsRaw = (drawsP / 100) * N;
+    let D = Math.floor(targetDrawsRaw + 0.5); // half-up к ближайшему
+    if (D < minDraws) D = minDraws;
+    if (D > maxDraws) D = maxDraws;
+
+    // 2) Распределяем активные игры между W и L по долям winsP/(winsP+lossesP)
+    const activeGames = Math.max(0, N - D);
+    const activePercent = (winsP + lossesP) > 0 ? (winsP + lossesP) : 1;
+    const winsShare = winsP / activePercent;
+
+    let W = Math.floor(activeGames * winsShare + 0.5); // half-up
+    let L = activeGames - W;
+
+    // 3) Правила допустимой разницы |W-L| в зависимости от N
+    let deltaMax = 1;
+    if (N <= 10) deltaMax = 1; 
+    else if (N <= 20) deltaMax = 2; 
+    else if (N <= 30) deltaMax = 3; 
+    else if (N <= 40) deltaMax = 4; 
+    else deltaMax = 4; // 41+ — в пределах ±3–4, разрешаем максимум 4
+
+    // 4) Балансировка до допустимой разницы (минимизируем разницу)
+    const balanceTowardEquality = () => {
+      let attempts = 0;
+      while (Math.abs(W - L) > deltaMax && attempts < 50) {
+        if (W > L && W > 0) { W -= 1; L += 1; }
+        else if (L > W && L > 0) { L -= 1; W += 1; }
+        attempts++;
       }
-    } else if (D > maxDraws) {
-      const excessDraws = D - maxDraws;
-      // Перераспределяем лишние ничьи в W и L, сохраняя баланс
-      const toEach = Math.floor(excessDraws / 2);
-      W += toEach;
-      L += toEach;
-      D -= toEach * 2;
-      
-      // Оставшиеся отдаем меньшей из W/L для баланса
-      const remaining = excessDraws - (toEach * 2);
-      if (remaining > 0) {
-        if (W <= L) {
-          W += remaining;
-        } else {
-          L += remaining;
-        }
-        D -= remaining;
+    };
+
+    balanceTowardEquality();
+
+    // 5) Гарантируем, что значения не равны полностью и не нулевые при достаточном N
+    if (N >= 3) {
+      if (W === L) {
+        // Лёгкое смещение, не нарушая deltaMax
+        if (W + 1 <= activeGames && Math.abs((W + 1) - (L - 1)) <= deltaMax && L > 0) { W += 1; L -= 1; }
       }
+      if (W === 0) { W = 1; if (L > 0) L -= 1; }
+      if (L === 0) { L = 1; if (W > 0) W -= 1; }
     }
-    
-    // Агрессивная балансировка W и L (разница не более ±1-2)
-    let wlDifference = Math.abs(W - L);
-    let balanceAttempts = 0;
-    
-    while (wlDifference > 2 && balanceAttempts < 20) {
-      const isWinsMore = W > L;
-      const targetDifference = Math.floor(wlDifference / 2); // Сколько нужно перераспределить
-      
-      // Пытаемся перераспределить из ничьих (если есть запас)
-      if (D > minDraws && targetDifference > 0) {
-        const canTakeFromDraws = Math.min(D - minDraws, targetDifference);
-        if (isWinsMore) {
-          L += canTakeFromDraws;
-          D -= canTakeFromDraws;
-        } else {
-          W += canTakeFromDraws;
-          D -= canTakeFromDraws;
-        }
-      } else {
-        // Прямое перераспределение между W и L
-        if (isWinsMore && W > 1) {
-          const toMove = Math.min(Math.floor(wlDifference / 2), W - 1);
-          W -= toMove;
-          L += toMove;
-        } else if (!isWinsMore && L > 1) {
-          const toMove = Math.min(Math.floor(wlDifference / 2), L - 1);
-          L -= toMove;
-          W += toMove;
-        } else {
-          break; // Не можем больше балансировать
-        }
-      }
-      
-      wlDifference = Math.abs(W - L);
-      balanceAttempts++;
-      
-      // Защита от бесконечного цикла
-      if (W + L + D !== N) break;
+
+    // 6) Спец-правило: при N=16 и ROI≈10% по умолчанию 6/6/4
+    const isRoi10 = Math.abs((winsP - lossesP) / (winsP + lossesP || 1) - 0.10) < 0.01 && Math.abs(drawsP - 28) < 0.6;
+    if (N === 16 && isRoi10) {
+      D = 4; W = 6; L = 6;
     }
-    
-    // Финальная проверка и корректировка
+
+    // Финальная проверка и корректировка суммы
     W = Math.max(0, W); L = Math.max(0, L); D = Math.max(0, D);
-    const total = W + L + D;
-    
+    let total = W + L + D;
     if (total !== N) {
       const diff = N - total;
-      if (diff !== 0) {
-        // Приоритет корректировки: сначала ничьи, потом меньшая из W/L
-        if (diff > 0) {
-          if (W <= L) W += diff; else L += diff;
-        } else {
-          if (D >= Math.abs(diff)) D += diff;
-          else if (W >= L) W += diff; else L += diff;
+      if (diff > 0) {
+        // Добавляем в меньшие категории, приоритет ничьям, затем меньшей из W/L
+        if (D < maxDraws) { const add = Math.min(diff, maxDraws - D); D += add; total += add; }
+        if (total < N) {
+          const remaining = N - total;
+          if (W <= L) W += remaining; else L += remaining;
+        }
+      } else if (diff < 0) {
+        // Урезаем из наибольшей категории
+        let toRemove = -diff;
+        while (toRemove > 0) {
+          if (D > minDraws && D >= W && D >= L) { D -= 1; }
+          else if (W >= L && W > 0) { W -= 1; }
+          else if (L > 0) { L -= 1; }
+          toRemove -= 1;
         }
       }
     }
-    
+
     return { W, L, D };
   };
 
@@ -4940,9 +4904,9 @@ const RegularBotsManagement = () => {
                           draws_percentage: 28.0,
                           cycle_games: 16,
                           pause_between_cycles: 5,
-                          wins_count: 7,
+                          wins_count: 6,
                           losses_count: 6,
-                          draws_count: 3
+                          draws_count: 4
                         });
                         setIsCreatingPreset(false);
                         showSuccessRU('Пресет добавлен');
