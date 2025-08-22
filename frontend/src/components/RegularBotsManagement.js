@@ -467,13 +467,13 @@ const RegularBotsManagement = () => {
     let exactWins, exactLosses, exactDraws;
     
     if (min_bet === 1 && max_bet === 100 && games === 16) {
-      // Эталонные точные доли для стандартного случая
-      exactWins = 355.52;
-      exactLosses = 290.88;
-      exactDraws = 161.60;
+      // Эталонные точные доли для базы 800 (W=352, L=288, D=160)
+      exactWins = 352.00;
+      exactLosses = 288.00;
+      exactDraws = 160.00;
     } else {
-      // Для других случаев вычисляем пропорционально от эталонных точных долей
-      const standardSum = 355.52 + 290.88 + 161.60; // 808
+      // Для других случаев вычисляем пропорционально от базы 800
+      const standardSum = 800.00;
       const scaleFactor = (((min_bet + max_bet) / 2.0) * games) / (((1 + 100) / 2.0) * 16);
       
       const winsPercent = botForm.wins_percentage / 100;
@@ -527,7 +527,7 @@ const RegularBotsManagement = () => {
       return { total: 0, active_pool: 0, profit: 0, roi_active: 0 };
     }
     
-    // Масштабируем общую сумму от эталонной (16 игр = 809)
+    // Масштабируем общую сумму от базы 800 (для 16 игр, 1–100)
     const min_bet = parseFloat(minBet);
     const max_bet = parseFloat(maxBet);
     
@@ -537,8 +537,8 @@ const RegularBotsManagement = () => {
     // Коэффициент масштабирования по диапазону ставок
     const rangeCoeff = ((min_bet + max_bet) / 2) / ((1 + 100) / 2);
     
-    // Общая сумма цикла (масштабированная от эталонной 809)
-    const totalCycleSum = Math.round(809 * gamesCoeff * rangeCoeff);
+    // Общая сумма цикла (масштабированная от базы 800)
+    const totalCycleSum = Math.round(800 * gamesCoeff * rangeCoeff);
     
     // Переводим проценты пресета в суммы ставок
     const winsSum = Math.round((winsPercent / 100) * totalCycleSum);
@@ -552,17 +552,14 @@ const RegularBotsManagement = () => {
     let finalLossesSum = lossesSum;
     let finalDrawsSum = drawsSum;
     
-    // Распределяем разницу пропорционально
-    if (diff !== 0) {
-      if (Math.abs(diff) <= 3) {
-        // Малая разница - добавляем к наибольшей категории
-        if (winsSum >= lossesSum && winsSum >= drawsSum) {
-          finalWinsSum += diff;
-        } else if (lossesSum >= drawsSum) {
-          finalLossesSum += diff;
-        } else {
-          finalDrawsSum += diff;
-        }
+    // Распределяем разницу пропорционально (малые погрешности)
+    if (diff !== 0 && Math.abs(diff) <= 3) {
+      if (winsSum >= lossesSum && winsSum >= drawsSum) {
+        finalWinsSum += diff;
+      } else if (lossesSum >= drawsSum) {
+        finalLossesSum += diff;
+      } else {
+        finalDrawsSum += diff;
       }
     }
     
@@ -3086,7 +3083,7 @@ const RegularBotsManagement = () => {
               <div className="border border-purple-500 bg-purple-900 bg-opacity-20 rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-purple-400 mb-3">📊 Превью ROI расчетов</h4>
                 {(() => {
-                  // Используем правильную логику: масштабирование от эталонной суммы 809
+                  // Используем правильную логику: масштабирование от базы 800
                   const preview = calculatePreviewFromCounts(
                     botForm.wins_count,
                     botForm.losses_count, 
@@ -4800,7 +4797,7 @@ const RegularBotsManagement = () => {
                   <div className="mt-6 border border-purple-500 bg-purple-900 bg-opacity-20 rounded-lg p-4">
                     <h4 className="font-rajdhani font-bold text-purple-400 mb-3">📊 Превью ROI расчетов</h4>
                     {(() => {
-                      // Используем правильную логику: масштабирование от эталонной суммы 809
+                      // Используем правильную логику: масштабирование от базы 800
                       const preview = calculatePreviewFromCounts(
                         currentPreset.wins_count,
                         currentPreset.losses_count,
