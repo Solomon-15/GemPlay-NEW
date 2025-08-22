@@ -2651,10 +2651,9 @@ const RegularBotsManagement = () => {
                           <div className="text-blue-400 font-roboto text-xs font-bold mb-1" title="Фиксированная прибыль за текущий цикл (расчётная)">
                             {(() => {
                               const plannedProfit = Number(bot.cycle_planned_profit);
-                              const color = plannedProfit >= 0 ? 'text-blue-400' : 'text-blue-400'; // Всегда синий для расчётной
                               const sign = plannedProfit > 0 ? '+' : plannedProfit < 0 ? '−' : '+';
                               return (
-                                <span className={color}>
+                                <span className="text-blue-400">
                                   {sign}${Math.abs(Math.round(plannedProfit))} план
                                 </span>
                               );
