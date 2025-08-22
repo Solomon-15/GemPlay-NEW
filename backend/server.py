@@ -2529,22 +2529,50 @@ async def check_and_complete_bot_cycle(bot_id: str):
 
 async def calculate_real_cycle_total_amount(bot_doc: dict) -> float:
     """
-    Вычисляет реальную сумму цикла на основе текущих данных бота.
+    Вычисляет реальную сумму цикла по правильной логике масштабирования от эталонной суммы 809.
+    Синхронизировано с фронтендом.
     """
     try:
         # Получаем базовые параметры
         cycle_games = bot_doc.get('cycle_games', 16)
         min_bet = bot_doc.get('min_bet_amount', 1.0)
         max_bet = bot_doc.get('max_bet_amount', 100.0)
+        wins_percentage = bot_doc.get('wins_percentage', 44.0)
+        losses_percentage = bot_doc.get('losses_percentage', 36.0)
+        draws_percentage = bot_doc.get('draws_percentage', 20.0)
         
-        # Вычисляем среднюю ставку
-        avg_bet = (min_bet + max_bet) / 2
+        # ПРАВИЛЬНАЯ ЛОГИКА: Масштабирование от эталонной суммы 809
+        # Коэффициент масштабирования по количеству игр (от эталонных 16)
+        games_coeff = cycle_games / 16
         
-        # Реальная сумма цикла = количество игр * средняя ставка
-        real_cycle_total = cycle_games * avg_bet
+        # Коэффициент масштабирования по диапазону ставок (от эталонного 1-100)
+        range_coeff = ((min_bet + max_bet) / 2) / ((1 + 100) / 2)
+        
+        # Общая сумма цикла (масштабированная от эталонной 809)
+        total_cycle_sum = round(809 * games_coeff * range_coeff)
+        
+        # Переводим проценты в суммы ставок (синхронизировано с фронтендом)
+        wins_sum = round((wins_percentage / 100) * total_cycle_sum)
+        losses_sum = round((losses_percentage / 100) * total_cycle_sum)
+        draws_sum = round((draws_percentage / 100) * total_cycle_sum)
+        
+        # Корректируем для точного соответствия общей сумме
+        actual_total = wins_sum + losses_sum + draws_sum
+        diff = total_cycle_sum - actual_total
+        if diff != 0 and abs(diff) <= 3:
+            if wins_sum >= losses_sum and wins_sum >= draws_sum:
+                wins_sum += diff
+            elif losses_sum >= draws_sum:
+                losses_sum += diff
+            else:
+                draws_sum += diff
+        
+        # Финальная сумма цикла
+        real_cycle_total = wins_sum + losses_sum + draws_sum
         
         logger.info(f"🔢 Calculated real cycle total for bot {bot_doc.get('id', 'unknown')}: "
-                   f"{real_cycle_total} (games: {cycle_games}, avg_bet: {avg_bet})")
+                   f"{real_cycle_total} (games: {cycle_games}, coeff: {games_coeff:.3f}×{range_coeff:.3f}, "
+                   f"sums: {wins_sum}/{losses_sum}/{draws_sum})")
         
         return real_cycle_total
         
@@ -17464,8 +17492,28 @@ async def create_regular_bots(
         
         created_bots = []
         
-        # НОВАЯ ЛОГИКА: Вычисляем реальную сумму цикла
-        real_cycle_total = (min_bet + max_bet) / 2 * cycle_games
+        # СИНХРОНИЗИРОВАННАЯ ЛОГИКА: Вычисляем реальную сумму цикла по правильной формуле
+        games_coeff = cycle_games / 16
+        range_coeff = ((min_bet + max_bet) / 2) / ((1 + 100) / 2)
+        total_cycle_sum = round(809 * games_coeff * range_coeff)
+        
+        # Переводим проценты в суммы ставок
+        wins_sum = round((wins_percentage / 100) * total_cycle_sum)
+        losses_sum = round((losses_percentage / 100) * total_cycle_sum)
+        draws_sum = round((draws_percentage / 100) * total_cycle_sum)
+        
+        # Корректируем для точного соответствия
+        actual_total = wins_sum + losses_sum + draws_sum
+        diff = total_cycle_sum - actual_total
+        if diff != 0 and abs(diff) <= 3:
+            if wins_sum >= losses_sum and wins_sum >= draws_sum:
+                wins_sum += diff
+            elif losses_sum >= draws_sum:
+                losses_sum += diff
+            else:
+                draws_sum += diff
+        
+        real_cycle_total = wins_sum + losses_sum + draws_sum
         
         bot = Bot(
             name=bot_name,
@@ -19849,6 +19897,14 @@ async def update_individual_bot_settings(
             update_fields["losses_percentage"] = losses_percentage
         if draws_percentage is not None:
             update_fields["draws_percentage"] = draws_percentage
+        
+        # Пересчитываем cycle_total_amount если изменились параметры влияющие на расчет
+        if any(field in update_fields for field in ['cycle_games', 'min_bet_amount', 'max_bet_amount', 'wins_percentage', 'losses_percentage', 'draws_percentage']):
+            # Получаем обновленные данные бота
+            updated_bot_data = {**bot, **update_fields}
+            recalculated_total = await calculate_real_cycle_total_amount(updated_bot_data)
+            update_fields["cycle_total_amount"] = recalculated_total
+            logger.info(f"🔄 Recalculated cycle_total_amount for bot {bot_id}: {recalculated_total}")
         
         # Update bot in database
         await db.bots.update_one(
