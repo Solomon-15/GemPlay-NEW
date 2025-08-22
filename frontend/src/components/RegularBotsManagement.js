@@ -3068,8 +3068,10 @@ const RegularBotsManagement = () => {
                 {(() => {
                   const preview = calculateCycleAmounts();
                   const activePoolShare = preview.total > 0 ? Math.round(((preview.active_pool / preview.total) * 100)) : 0;
+                  const drawsShare = preview.total > 0 ? Math.round(((preview.draws_sum / preview.total) * 100)) : 0;
                   const warnings = [];
                   if (activePoolShare < 65) warnings.push(`⚠️ Активный пул слишком мал (${activePoolShare}%). Рекомендуется ≥ 65%.`);
+                  if (drawsShare > 40) warnings.push(`⚠️ Доля ничьих слишком велика (${drawsShare}%). Проверьте проценты.`);
                   if (preview.roi_active < 2 || preview.roi_active > 20) warnings.push(`⚠️ ROI_active (${preview.roi_active}%) вне рекомендуемых пределов [2%, 20%].`);
                   return warnings.length > 0 ? (
                     <div className="mt-3 border border-yellow-500 bg-yellow-900 bg-opacity-20 rounded-lg p-3 text-yellow-200 text-sm space-y-1">
