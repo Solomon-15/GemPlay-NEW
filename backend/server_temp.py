@@ -17728,19 +17728,22 @@ def compute_cycle_planned_profit(min_bet: float, max_bet: float, cycle_games: in
         if games <= 0 or max_bet_f <= 0 or max_bet_f < min_bet_f:
             return 0.0
         
-        # 1) Группы ставок
-        small_cnt = max(1, int(round(games * 0.25)))
-        medium_cnt = int(round(games * 0.5))
-        large_cnt = max(0, games - small_cnt - medium_cnt)
-        rng = max_bet_f - min_bet_f
-        small_avg = min_bet_f + rng * 0.15
-        medium_avg = min_bet_f + rng * 0.5
-        large_avg = min_bet_f + rng * 0.85
-        estimated_total = small_cnt * small_avg + medium_cnt * medium_avg + large_cnt * large_avg
+        # 1) Базовая сумма цикла
+        base_cycle_total = int(round(((min_bet_f + max_bet_f) / 2.0) * games))
         
-        # 2) Суммы по исходам
-        wins_sum = int(round(estimated_total * float(wins_percentage or 0) / 100.0))
-        losses_sum = int(round(estimated_total * float(losses_percentage or 0) / 100.0))
+        # 2) Применяем метод наибольших остатков с правилом half-up
+        import math
+        def half_up_round(num):
+            fraction = num - math.floor(num)
+            return math.ceil(num) if fraction >= 0.50 else math.floor(num)
+        
+        # Точные суммы от базовой суммы
+        exact_wins = base_cycle_total * (float(wins_percentage or 0) / 100.0)
+        exact_losses = base_cycle_total * (float(losses_percentage or 0) / 100.0)
+        
+        # Округляем по правилу half-up
+        wins_sum = half_up_round(exact_wins)
+        losses_sum = half_up_round(exact_losses)
         
         # 3) Планируемая прибыль = wins_sum - losses_sum
         planned_profit = wins_sum - losses_sum
@@ -17765,18 +17768,22 @@ def compute_planned_roi_percent(min_bet: float, max_bet: float, cycle_games: int
         games = int(cycle_games or 0)
         if games <= 0 or max_bet_f <= 0 or max_bet_f < min_bet_f:
             return 0.0
-        # 1) Группы
-        small_cnt = max(1, int(round(games * 0.25)))
-        medium_cnt = int(round(games * 0.5))
-        large_cnt = max(0, games - small_cnt - medium_cnt)
-        rng = max_bet_f - min_bet_f
-        small_avg = min_bet_f + rng * 0.15
-        medium_avg = min_bet_f + rng * 0.5
-        large_avg = min_bet_f + rng * 0.85
-        estimated_total = small_cnt * small_avg + medium_cnt * medium_avg + large_cnt * large_avg
-        # 2) Суммы по исходам (округление к ближайшему целому)
-        wins_sum = int(round(estimated_total * float(wins_percentage or 0) / 100.0))
-        losses_sum = int(round(estimated_total * float(losses_percentage or 0) / 100.0))
+        # 1) Базовая сумма цикла
+        base_cycle_total = int(round(((min_bet_f + max_bet_f) / 2.0) * games))
+        
+        # 2) Применяем метод наибольших остатков с правилом half-up
+        import math
+        def half_up_round(num):
+            fraction = num - math.floor(num)
+            return math.ceil(num) if fraction >= 0.50 else math.floor(num)
+        
+        # Точные суммы от базовой суммы
+        exact_wins = base_cycle_total * (float(wins_percentage or 0) / 100.0)
+        exact_losses = base_cycle_total * (float(losses_percentage or 0) / 100.0)
+        
+        # Округляем по правилу half-up
+        wins_sum = half_up_round(exact_wins)
+        losses_sum = half_up_round(exact_losses)
         active_pool = wins_sum + losses_sum
         if active_pool <= 0:
             return 0.0

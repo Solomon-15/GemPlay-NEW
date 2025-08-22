@@ -6016,7 +6016,24 @@ async def get_bot_cycle_bets(
         active_pool = wins_sum + losses_sum
         profit = wins_sum - losses_sum
         roi_active = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
-        exact_cycle_total = int(round(((min_bet + max_bet) / 2.0) * cycle_len))
+        # Применяем метод наибольших остатков для получения точной суммы
+        base_cycle_total = int(round(((min_bet + max_bet) / 2.0) * cycle_len))
+        
+        import math
+        def half_up_round(num):
+            fraction = num - math.floor(num)
+            return math.ceil(num) if fraction >= 0.50 else math.floor(num)
+        
+        # Используем стандартные проценты для расчета
+        exact_wins = base_cycle_total * 0.44
+        exact_losses = base_cycle_total * 0.36  
+        exact_draws = base_cycle_total * 0.20
+        
+        wins_rounded = half_up_round(exact_wins)
+        losses_rounded = half_up_round(exact_losses)
+        draws_rounded = half_up_round(exact_draws)
+        
+        exact_cycle_total = wins_rounded + losses_rounded + draws_rounded
         
         return {
             "success": True,
@@ -17845,9 +17862,21 @@ def compute_cycle_planned_profit(min_bet: float, max_bet: float, cycle_games: in
         large_avg = min_bet_f + rng * 0.85
         estimated_total = small_cnt * small_avg + medium_cnt * medium_avg + large_cnt * large_avg
         
-        # 2) Суммы по исходам
-        wins_sum = int(round(estimated_total * float(wins_percentage or 0) / 100.0))
-        losses_sum = int(round(estimated_total * float(losses_percentage or 0) / 100.0))
+        # 2) Применяем метод наибольших остатков с правилом half-up
+        base_cycle_total = int(round(((min_bet_f + max_bet_f) / 2.0) * games))
+        
+        import math
+        def half_up_round(num):
+            fraction = num - math.floor(num)
+            return math.ceil(num) if fraction >= 0.50 else math.floor(num)
+        
+        # Точные суммы от базовой суммы
+        exact_wins = base_cycle_total * (float(wins_percentage or 0) / 100.0)
+        exact_losses = base_cycle_total * (float(losses_percentage or 0) / 100.0)
+        
+        # Округляем по правилу half-up
+        wins_sum = half_up_round(exact_wins)
+        losses_sum = half_up_round(exact_losses)
         
         # 3) Планируемая прибыль = wins_sum - losses_sum
         planned_profit = wins_sum - losses_sum
@@ -17880,10 +17909,21 @@ def compute_planned_roi_percent(min_bet: float, max_bet: float, cycle_games: int
         small_avg = min_bet_f + rng * 0.15
         medium_avg = min_bet_f + rng * 0.5
         large_avg = min_bet_f + rng * 0.85
-        estimated_total = small_cnt * small_avg + medium_cnt * medium_avg + large_cnt * large_avg
-        # 2) Суммы по исходам (округление к ближайшему целому)
-        wins_sum = int(round(estimated_total * float(wins_percentage or 0) / 100.0))
-        losses_sum = int(round(estimated_total * float(losses_percentage or 0) / 100.0))
+        # Используем правильную логику метода наибольших остатков
+        base_cycle_total = int(round(((min_bet_f + max_bet_f) / 2.0) * games))
+        
+        import math
+        def half_up_round(num):
+            fraction = num - math.floor(num)
+            return math.ceil(num) if fraction >= 0.50 else math.floor(num)
+        
+        # Точные суммы от базовой суммы
+        exact_wins = base_cycle_total * (float(wins_percentage or 0) / 100.0)
+        exact_losses = base_cycle_total * (float(losses_percentage or 0) / 100.0)
+        
+        # Округляем по правилу half-up
+        wins_sum = half_up_round(exact_wins)
+        losses_sum = half_up_round(exact_losses)
         active_pool = wins_sum + losses_sum
         if active_pool <= 0:
             return 0.0
@@ -18719,43 +18759,26 @@ async def generate_cycle_bets_natural_distribution(
         draws_count = int(draws_count)
         cycle_games = int(cycle_games)
 
-        # 1) Точная общая сумма цикла по формуле: N × (min+max)/2, округление до целого
-        exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
-        logger.info(f"    Exact cycle total (int): {exact_cycle_total}")
+        # 1) Базовая сумма цикла для распределения методом наибольших остатков
+        base_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
+        logger.info(f"    Base cycle total (int): {base_cycle_total}")
 
         # 2) Интегральное распределение суммы по W/L/D по методу наибольших остатков
-        raw_w = exact_cycle_total * (float(wins_percentage) / 100.0)
-        raw_l = exact_cycle_total * (float(losses_percentage) / 100.0)
-        raw_d = exact_cycle_total * (float(draws_percentage) / 100.0)
+        raw_w = base_cycle_total * (float(wins_percentage) / 100.0)
+        raw_l = base_cycle_total * (float(losses_percentage) / 100.0)
+        raw_d = base_cycle_total * (float(draws_percentage) / 100.0)
 
-        floors = [math.floor(raw_w), math.floor(raw_l), math.floor(raw_d)]
-        remainders = [raw_w - floors[0], raw_l - floors[1], raw_d - floors[2]]
-        sum_floors = sum(floors)
-        diff = exact_cycle_total - sum_floors
-
-        allocation = floors[:]
-        if diff != 0:
-            # Положительная разница — добавляем к наибольшим остаткам, отрицательная — вычитаем от наименьших остатков
-            order = sorted(range(3), key=lambda i: remainders[i], reverse=(diff > 0))
-            step = 1 if diff > 0 else -1
-            for i in range(abs(diff)):
-                idx = order[i % 3]
-                allocation[idx] += step
-                # не даем опуститься ниже 0 в крайних случаях
-                if allocation[idx] < 0:
-                    allocation[idx] = 0
-
-        target_wins_sum, target_losses_sum, target_draws_sum = map(int, allocation)
-        # Защита: суммарная проверка
-        adjust = exact_cycle_total - (target_wins_sum + target_losses_sum + target_draws_sum)
-        if adjust != 0:
-            # Добрасываем/снимаем по тому же правилу остатков, чтобы сумма точно сошлась
-            order = sorted(range(3), key=lambda i: remainders[i], reverse=(adjust > 0))
-            for i in range(abs(adjust)):
-                idx = order[i % 3]
-                target = [target_wins_sum, target_losses_sum, target_draws_sum]
-                target[idx] += 1 if adjust > 0 else -1
-                target_wins_sum, target_losses_sum, target_draws_sum = target
+        # Применяем правило округления half-up (≥0.50 вверх, <0.50 вниз)
+        def half_up_round(num):
+            fraction = num - math.floor(num)
+            return math.ceil(num) if fraction >= 0.50 else math.floor(num)
+        
+        target_wins_sum = half_up_round(raw_w)
+        target_losses_sum = half_up_round(raw_l)
+        target_draws_sum = half_up_round(raw_d)
+        
+        # Итоговая сумма цикла = сумма округленных частей
+        exact_cycle_total = target_wins_sum + target_losses_sum + target_draws_sum
 
         logger.info(f"    Target sums (int): W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
 
