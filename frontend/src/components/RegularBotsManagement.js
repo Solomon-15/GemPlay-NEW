@@ -106,7 +106,7 @@ const RegularBotsManagement = () => {
   const [isQuickLaunchModalOpen, setIsQuickLaunchModalOpen] = useState(false);
   const [quickLaunchPresets, setQuickLaunchPresets] = useState([]);
   const [isCreatingPreset, setIsCreatingPreset] = useState(false);
-  const [selectedPresetForQuickLaunch, setSelectedPresetForQuickLaunch] = useState("ROI 10%");
+  const [selectedPresetForQuickLaunch, setSelectedPresetForQuickLaunch] = useState("⭐ ROI 10%");
   
   // Состояния для перетаскивания модального окна
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
@@ -437,7 +437,7 @@ const RegularBotsManagement = () => {
       losses_count: 6,  // Количество поражений в цикле  
       draws_count: 4,   // Количество ничьих в цикле
       
-      // Процент исходов игр (новые значения по умолчанию: ROI 10%)
+      // Процент исходов игр (новые значения по умолчанию: ⭐ ROI 10%)
       wins_percentage: savedPercentages.wins_percentage || 41.73,
       losses_percentage: savedPercentages.losses_percentage || 30.27,
       draws_percentage: savedPercentages.draws_percentage || 28.0,
@@ -567,7 +567,7 @@ const RegularBotsManagement = () => {
     { name: "ROI 7%", wins: 40.31, losses: 31.69, draws: 28.0 },
     { name: "ROI 8%", wins: 40.04, losses: 31.96, draws: 28.0 },
     { name: "ROI 9%", wins: 41.23, losses: 30.77, draws: 28.0 },
-    { name: "ROI 10%", wins: 41.73, losses: 30.27, draws: 28.0 },
+    { name: "⭐ ROI 10%", wins: 41.73, losses: 30.27, draws: 28.0 },
     { name: "ROI 11%", wins: 42.27, losses: 29.73, draws: 28.0 },
     { name: "ROI 12%", wins: 42.73, losses: 29.27, draws: 28.0 },
     { name: "ROI 13%", wins: 42.73, losses: 29.27, draws: 28.0 },
@@ -580,7 +580,7 @@ const RegularBotsManagement = () => {
     { name: "ROI 20%", wins: 46.27, losses: 25.73, draws: 28.0 }
   ];
 
-  const [selectedPreset, setSelectedPreset] = useState("ROI 10%");
+  const [selectedPreset, setSelectedPreset] = useState("⭐ ROI 10%");
 
   const applyPreset = (preset) => {
     if (!preset || preset.custom) {
