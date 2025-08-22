@@ -18612,8 +18612,8 @@ async def generate_cycle_bets_natural_distribution(
         draws_count = int(draws_count)
         cycle_games = int(cycle_games)
 
-        # 1) Точная общая сумма цикла по формуле: N × (min+max)/2, округление до целого
-        exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
+        # 1) Точная общая сумма цикла по формуле: N × (min+max)/2 + 1, округление до целого
+        exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games + 1))
         logger.info(f"    Exact cycle total (int): {exact_cycle_total}")
 
         # 2) Интегральное распределение суммы по W/L/D по методу наибольших остатков
@@ -18621,12 +18621,20 @@ async def generate_cycle_bets_natural_distribution(
         raw_l = exact_cycle_total * (float(losses_percentage) / 100.0)
         raw_d = exact_cycle_total * (float(draws_percentage) / 100.0)
 
-        floors = [math.floor(raw_w), math.floor(raw_l), math.floor(raw_d)]
-        remainders = [raw_w - floors[0], raw_l - floors[1], raw_d - floors[2]]
-        sum_floors = sum(floors)
-        diff = exact_cycle_total - sum_floors
+        # Применяем правило округления half-up (≥0.50 вверх, <0.50 вниз)
+        def half_up_round(num):
+            fraction = num - math.floor(num)
+            return math.ceil(num) if fraction >= 0.50 else math.floor(num)
+        
+        initial_w = half_up_round(raw_w)
+        initial_l = half_up_round(raw_l)
+        initial_d = half_up_round(raw_d)
+        
+        remainders = [raw_w - initial_w, raw_l - initial_l, raw_d - initial_d]
+        sum_initial = initial_w + initial_l + initial_d
+        diff = exact_cycle_total - sum_initial
 
-        allocation = floors[:]
+        allocation = [initial_w, initial_l, initial_d]
         if diff != 0:
             # Положительная разница — добавляем к наибольшим остаткам, отрицательная — вычитаем от наименьших остатков
             order = sorted(range(3), key=lambda i: remainders[i], reverse=(diff > 0))

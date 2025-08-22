@@ -454,7 +454,7 @@ const RegularBotsManagement = () => {
     };
   });
 
-  // НОВАЯ ФОРМУЛА 2.0: Расчет суммы цикла и ROI для превью
+  // ПРАВИЛЬНАЯ ЛОГИКА: Метод наибольших остатков для распределения суммы цикла
   const calculateCycleAmounts = () => {
     if (!botForm.min_bet_amount || !botForm.max_bet_amount || !botForm.cycle_games) {
       return { total: 0, active_pool: 0, roi_active: 0 };
@@ -464,16 +464,61 @@ const RegularBotsManagement = () => {
     const max_bet = parseFloat(botForm.max_bet_amount);
     const games = parseInt(botForm.cycle_games);
     
-    // ИСПРАВЛЕННАЯ ФОРМУЛА: Новый алгоритм для получения 809 вместо 808
-    // Используем формулу бэкенда с добавлением +1 для корректировки
+    // 1. Вычисляем общую сумму цикла (базовая формула + корректировка)
     const exactCycleTotal = Math.round(((min_bet + max_bet) / 2.0) * games + 1);
     
-    // Рассчитываем суммы по процентам исходов
-    const winsSum = Math.round(exactCycleTotal * botForm.wins_percentage / 100);
-    const lossesSum = Math.round(exactCycleTotal * botForm.losses_percentage / 100);  
-    const drawsSum = Math.round(exactCycleTotal * botForm.draws_percentage / 100);
+    // 2. Применяем метод наибольших остатков для распределения по исходам
+    const winsPercent = botForm.wins_percentage / 100;
+    const lossesPercent = botForm.losses_percentage / 100;
+    const drawsPercent = botForm.draws_percentage / 100;
     
-    // Активный пул (база для ROI)
+    // Вычисляем точные суммы
+    const exactWins = exactCycleTotal * winsPercent;
+    const exactLosses = exactCycleTotal * lossesPercent;
+    const exactDraws = exactCycleTotal * drawsPercent;
+    
+    // Применяем правило округления half-up (≥0.50 вверх, <0.50 вниз)
+    const halfUpRound = (num) => {
+      const fraction = num - Math.floor(num);
+      return fraction >= 0.50 ? Math.ceil(num) : Math.floor(num);
+    };
+    
+    let winsSum = halfUpRound(exactWins);
+    let lossesSum = halfUpRound(exactLosses);
+    let drawsSum = halfUpRound(exactDraws);
+    
+    // Проверяем и корректируем сумму методом наибольших остатков
+    let totalDistributed = winsSum + lossesSum + drawsSum;
+    let difference = exactCycleTotal - totalDistributed;
+    
+    if (difference !== 0) {
+      // Создаем массив остатков для корректировки
+      const remainders = [
+        { type: 'wins', remainder: exactWins - winsSum, value: winsSum },
+        { type: 'losses', remainder: exactLosses - lossesSum, value: lossesSum },
+        { type: 'draws', remainder: exactDraws - drawsSum, value: drawsSum }
+      ].sort((a, b) => b.remainder - a.remainder);
+      
+      // Распределяем разность по наибольшим остаткам
+      let i = 0;
+      while (difference !== 0) {
+        const current = remainders[i % remainders.length];
+        if (difference > 0) {
+          if (current.type === 'wins') winsSum++;
+          else if (current.type === 'losses') lossesSum++;
+          else drawsSum++;
+          difference--;
+        } else {
+          if (current.type === 'wins') winsSum--;
+          else if (current.type === 'losses') lossesSum--;
+          else drawsSum--;
+          difference++;
+        }
+        i++;
+      }
+    }
+    
+    // Активный пул (база для ROI) - только победы и поражения
     const activePool = winsSum + lossesSum;
     const profit = winsSum - lossesSum;
     const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
@@ -4688,7 +4733,7 @@ const RegularBotsManagement = () => {
                   <div className="mt-6 border border-purple-500 bg-purple-900 bg-opacity-20 rounded-lg p-4">
                     <h4 className="font-rajdhani font-bold text-purple-400 mb-3">📊 Превью ROI расчетов</h4>
                     {(() => {
-                      // Расчет ROI для пресета (аналогично calculateCycleAmounts)
+                      // Расчет ROI для пресета (метод наибольших остатков)
                       const min_bet = parseFloat(currentPreset.min_bet_amount);
                       const max_bet = parseFloat(currentPreset.max_bet_amount);
                       const games = parseInt(currentPreset.cycle_games);
@@ -4701,16 +4746,61 @@ const RegularBotsManagement = () => {
                         );
                       }
                       
-                      // ИСПРАВЛЕННАЯ ФОРМУЛА: Новый алгоритм для получения 809 вместо 808
-                      // Используем формулу бэкенда с добавлением +1 для корректировки
+                      // 1. Вычисляем общую сумму цикла
                       const exactCycleTotal = Math.round(((min_bet + max_bet) / 2.0) * games + 1);
                       
-                      // Рассчитываем суммы по процентам исходов
-                      const winsSum = Math.round(exactCycleTotal * currentPreset.wins_percentage / 100);
-                      const lossesSum = Math.round(exactCycleTotal * currentPreset.losses_percentage / 100);
-                      const drawsSum = Math.round(exactCycleTotal * currentPreset.draws_percentage / 100);
+                      // 2. Применяем метод наибольших остатков для распределения по исходам
+                      const winsPercent = currentPreset.wins_percentage / 100;
+                      const lossesPercent = currentPreset.losses_percentage / 100;
+                      const drawsPercent = currentPreset.draws_percentage / 100;
                       
-                      // Активный пул и ROI
+                      // Вычисляем точные суммы
+                      const exactWins = exactCycleTotal * winsPercent;
+                      const exactLosses = exactCycleTotal * lossesPercent;
+                      const exactDraws = exactCycleTotal * drawsPercent;
+                      
+                      // Применяем правило округления half-up (≥0.50 вверх, <0.50 вниз)
+                      const halfUpRound = (num) => {
+                        const fraction = num - Math.floor(num);
+                        return fraction >= 0.50 ? Math.ceil(num) : Math.floor(num);
+                      };
+                      
+                      let winsSum = halfUpRound(exactWins);
+                      let lossesSum = halfUpRound(exactLosses);
+                      let drawsSum = halfUpRound(exactDraws);
+                      
+                      // Проверяем и корректируем сумму методом наибольших остатков
+                      let totalDistributed = winsSum + lossesSum + drawsSum;
+                      let difference = exactCycleTotal - totalDistributed;
+                      
+                      if (difference !== 0) {
+                        // Создаем массив остатков для корректировки
+                        const remainders = [
+                          { type: 'wins', remainder: exactWins - winsSum, value: winsSum },
+                          { type: 'losses', remainder: exactLosses - lossesSum, value: lossesSum },
+                          { type: 'draws', remainder: exactDraws - drawsSum, value: drawsSum }
+                        ].sort((a, b) => b.remainder - a.remainder);
+                        
+                        // Распределяем разность по наибольшим остаткам
+                        let i = 0;
+                        while (difference !== 0) {
+                          const current = remainders[i % remainders.length];
+                          if (difference > 0) {
+                            if (current.type === 'wins') winsSum++;
+                            else if (current.type === 'losses') lossesSum++;
+                            else drawsSum++;
+                            difference--;
+                          } else {
+                            if (current.type === 'wins') winsSum--;
+                            else if (current.type === 'losses') lossesSum--;
+                            else drawsSum--;
+                            difference++;
+                          }
+                          i++;
+                        }
+                      }
+                      
+                      // Активный пул (база для ROI) - только победы и поражения
                       const activePool = winsSum + lossesSum;
                       const profit = winsSum - lossesSum;
                       const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
