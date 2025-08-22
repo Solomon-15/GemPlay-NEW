@@ -469,15 +469,14 @@ const RegularBotsManagement = () => {
     let exactWins, exactLosses, exactDraws;
     
     if (min_bet === 1 && max_bet === 100 && games === 16) {
-      // Эталонные точные значения для стандартного случая
-      exactWins = 355.96;
-      exactLosses = 291.24;
-      exactDraws = 161.80;
+      // Эталонные точные доли для стандартного случая
+      exactWins = 355.52;
+      exactLosses = 290.88;
+      exactDraws = 161.60;
     } else {
-      // Для других случаев вычисляем пропорционально от эталонных значений
-      const standardSum = 355.96 + 291.24 + 161.80; // 809
-      const currentBase = ((min_bet + max_bet) / 2.0) * games;
-      const scaleFactor = currentBase / ((1 + 100) / 2.0 * 16); // Коэффициент масштабирования
+      // Для других случаев вычисляем пропорционально от эталонных точных долей
+      const standardSum = 355.52 + 290.88 + 161.60; // 808
+      const scaleFactor = (((min_bet + max_bet) / 2.0) * games) / (((1 + 100) / 2.0) * 16);
       
       const winsPercent = botForm.wins_percentage / 100;
       const lossesPercent = botForm.losses_percentage / 100;
@@ -4735,15 +4734,14 @@ const RegularBotsManagement = () => {
                       let exactWins, exactLosses, exactDraws;
                       
                       if (min_bet === 1 && max_bet === 100 && games === 16) {
-                        // Эталонные точные значения для стандартного случая
-                        exactWins = 355.96;
-                        exactLosses = 291.24;
-                        exactDraws = 161.80;
+                        // Эталонные точные доли для стандартного случая
+                        exactWins = 355.52;
+                        exactLosses = 290.88;
+                        exactDraws = 161.60;
                       } else {
-                        // Для других случаев вычисляем пропорционально от эталонных значений
-                        const standardSum = 355.96 + 291.24 + 161.80; // 809
-                        const currentBase = ((min_bet + max_bet) / 2.0) * games;
-                        const scaleFactor = currentBase / ((1 + 100) / 2.0 * 16); // Коэффициент масштабирования
+                        // Для других случаев вычисляем пропорционально от эталонных точных долей
+                        const standardSum = 355.52 + 290.88 + 161.60; // 808
+                        const scaleFactor = (((min_bet + max_bet) / 2.0) * games) / (((1 + 100) / 2.0) * 16);
                         
                         const winsPercent = currentPreset.wins_percentage / 100;
                         const lossesPercent = currentPreset.losses_percentage / 100;
