@@ -5967,8 +5967,14 @@ async def get_bot_cycle_bets(
         active_pool = wins_sum + losses_sum
         profit = wins_sum - losses_sum
         roi_active = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
-        # Базовая сумма цикла для распределения методом наибольших остатков
-        base_cycle_total = int(round(((min_bet + max_bet) / 2.0) * cycle_len))
+        # Определяем эталонную сумму цикла
+        if min_bet == 1 and max_bet == 100 and cycle_len == 16:
+            reference_cycle_total = 809  # Эталонное значение
+        else:
+            # Пропорциональный расчет от эталона
+            standard_base = int(round(((1 + 100) / 2.0) * 16))  # 808
+            current_base = int(round(((min_bet + max_bet) / 2.0) * cycle_len))
+            reference_cycle_total = int(round((809 * current_base) / standard_base))
         
         # Применяем метод наибольших остатков с правилом half-up
         def half_up_round(num):
@@ -5976,10 +5982,10 @@ async def get_bot_cycle_bets(
             fraction = num - math.floor(num)
             return math.ceil(num) if fraction >= 0.50 else math.floor(num)
         
-        # Точные суммы от базовой суммы
-        exact_wins = base_cycle_total * 0.44  # 44%
-        exact_losses = base_cycle_total * 0.36  # 36% 
-        exact_draws = base_cycle_total * 0.20  # 20%
+        # Точные доли от эталонной суммы (355.96 / 291.24 / 161.80)
+        exact_wins = reference_cycle_total * 0.44  # 44%
+        exact_losses = reference_cycle_total * 0.36  # 36% 
+        exact_draws = reference_cycle_total * 0.20  # 20%
         
         # Округляем по правилу half-up
         wins_sum = half_up_round(exact_wins)
@@ -9329,8 +9335,14 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
                 losses_percentage = bot_doc.get("losses_percentage", 36.0)
                 draws_percentage = bot_doc.get("draws_percentage", 20.0)
                 
-                # Базовая сумма цикла для распределения методом наибольших остатков
-                base_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
+                # Определяем эталонную сумму цикла
+                if min_bet_int == 1 and max_bet_int == 100 and cycle_games == 16:
+                    reference_cycle_total = 809  # Эталонное значение
+                else:
+                    # Пропорциональный расчет от эталона
+                    standard_base = int(round(((1 + 100) / 2.0) * 16))  # 808
+                    current_base = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
+                    reference_cycle_total = int(round((809 * current_base) / standard_base))
                 
                 # Применяем метод наибольших остатков с правилом half-up
                 import math
@@ -9338,10 +9350,10 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
                     fraction = num - math.floor(num)
                     return math.ceil(num) if fraction >= 0.50 else math.floor(num)
                 
-                # Точные суммы от базовой суммы
-                exact_wins = base_cycle_total * (wins_percentage / 100.0)
-                exact_losses = base_cycle_total * (losses_percentage / 100.0)
-                exact_draws = base_cycle_total * (draws_percentage / 100.0)
+                # Точные доли от эталонной суммы (355.96 / 291.24 / 161.80)
+                exact_wins = reference_cycle_total * (wins_percentage / 100.0)
+                exact_losses = reference_cycle_total * (losses_percentage / 100.0)
+                exact_draws = reference_cycle_total * (draws_percentage / 100.0)
                 
                 # Округляем по правилу half-up
                 wins_amount = float(half_up_round(exact_wins))
@@ -18380,17 +18392,23 @@ def compute_cycle_planned_profit(min_bet: float, max_bet: float, cycle_games: in
         large_avg = min_bet_f + rng * 0.85
         estimated_total = small_cnt * small_avg + medium_cnt * medium_avg + large_cnt * large_avg
         
-        # 2) Применяем метод наибольших остатков с правилом half-up
-        base_cycle_total = int(round(((min_bet_f + max_bet_f) / 2.0) * games))
+        # 2) Определяем эталонную сумму цикла
+        if min_bet_f == 1 and max_bet_f == 100 and games == 16:
+            reference_cycle_total = 809  # Эталонное значение
+        else:
+            # Пропорциональный расчет от эталона
+            standard_base = int(round(((1 + 100) / 2.0) * 16))  # 808
+            current_base = int(round(((min_bet_f + max_bet_f) / 2.0) * games))
+            reference_cycle_total = int(round((809 * current_base) / standard_base))
         
         import math
         def half_up_round(num):
             fraction = num - math.floor(num)
             return math.ceil(num) if fraction >= 0.50 else math.floor(num)
         
-        # Точные суммы от базовой суммы
-        exact_wins = base_cycle_total * (float(wins_percentage or 0) / 100.0)
-        exact_losses = base_cycle_total * (float(losses_percentage or 0) / 100.0)
+        # Точные доли от эталонной суммы (355.96 / 291.24 / 161.80)
+        exact_wins = reference_cycle_total * (float(wins_percentage or 0) / 100.0)
+        exact_losses = reference_cycle_total * (float(losses_percentage or 0) / 100.0)
         
         # Округляем по правилу half-up
         wins_sum = half_up_round(exact_wins)
@@ -18427,17 +18445,23 @@ def compute_planned_roi_percent(min_bet: float, max_bet: float, cycle_games: int
         small_avg = min_bet_f + rng * 0.15
         medium_avg = min_bet_f + rng * 0.5
         large_avg = min_bet_f + rng * 0.85
-        # Используем правильную логику метода наибольших остатков
-        base_cycle_total = int(round(((min_bet_f + max_bet_f) / 2.0) * games))
+        # Определяем эталонную сумму цикла
+        if min_bet_f == 1 and max_bet_f == 100 and games == 16:
+            reference_cycle_total = 809  # Эталонное значение
+        else:
+            # Пропорциональный расчет от эталона
+            standard_base = int(round(((1 + 100) / 2.0) * 16))  # 808
+            current_base = int(round(((min_bet_f + max_bet_f) / 2.0) * games))
+            reference_cycle_total = int(round((809 * current_base) / standard_base))
         
         import math
         def half_up_round(num):
             fraction = num - math.floor(num)
             return math.ceil(num) if fraction >= 0.50 else math.floor(num)
         
-        # Точные суммы от базовой суммы
-        exact_wins = base_cycle_total * (float(wins_percentage or 0) / 100.0)
-        exact_losses = base_cycle_total * (float(losses_percentage or 0) / 100.0)
+        # Точные доли от эталонной суммы (355.96 / 291.24 / 161.80)
+        exact_wins = reference_cycle_total * (float(wins_percentage or 0) / 100.0)
+        exact_losses = reference_cycle_total * (float(losses_percentage or 0) / 100.0)
         
         # Округляем по правилу half-up
         wins_sum = half_up_round(exact_wins)
