@@ -464,18 +464,18 @@ const RegularBotsManagement = () => {
     const max_bet = parseFloat(botForm.max_bet_amount);
     const games = parseInt(botForm.cycle_games);
     
-    // 1. Вычисляем общую сумму цикла (базовая формула + корректировка)
-    const exactCycleTotal = Math.round(((min_bet + max_bet) / 2.0) * games + 1);
+    // 1. Вычисляем базовую сумму цикла (без корректировки)
+    const baseCycleTotal = Math.round(((min_bet + max_bet) / 2.0) * games);
     
     // 2. Применяем метод наибольших остатков для распределения по исходам
     const winsPercent = botForm.wins_percentage / 100;
     const lossesPercent = botForm.losses_percentage / 100;
     const drawsPercent = botForm.draws_percentage / 100;
     
-    // Вычисляем точные суммы
-    const exactWins = exactCycleTotal * winsPercent;
-    const exactLosses = exactCycleTotal * lossesPercent;
-    const exactDraws = exactCycleTotal * drawsPercent;
+    // Вычисляем точные суммы от базовой суммы
+    const exactWins = baseCycleTotal * winsPercent;
+    const exactLosses = baseCycleTotal * lossesPercent;
+    const exactDraws = baseCycleTotal * drawsPercent;
     
     // Применяем правило округления half-up (≥0.50 вверх, <0.50 вниз)
     const halfUpRound = (num) => {
@@ -487,36 +487,8 @@ const RegularBotsManagement = () => {
     let lossesSum = halfUpRound(exactLosses);
     let drawsSum = halfUpRound(exactDraws);
     
-    // Проверяем и корректируем сумму методом наибольших остатков
-    let totalDistributed = winsSum + lossesSum + drawsSum;
-    let difference = exactCycleTotal - totalDistributed;
-    
-    if (difference !== 0) {
-      // Создаем массив остатков для корректировки
-      const remainders = [
-        { type: 'wins', remainder: exactWins - winsSum, value: winsSum },
-        { type: 'losses', remainder: exactLosses - lossesSum, value: lossesSum },
-        { type: 'draws', remainder: exactDraws - drawsSum, value: drawsSum }
-      ].sort((a, b) => b.remainder - a.remainder);
-      
-      // Распределяем разность по наибольшим остаткам
-      let i = 0;
-      while (difference !== 0) {
-        const current = remainders[i % remainders.length];
-        if (difference > 0) {
-          if (current.type === 'wins') winsSum++;
-          else if (current.type === 'losses') lossesSum++;
-          else drawsSum++;
-          difference--;
-        } else {
-          if (current.type === 'wins') winsSum--;
-          else if (current.type === 'losses') lossesSum--;
-          else drawsSum--;
-          difference++;
-        }
-        i++;
-      }
-    }
+    // Итоговая сумма цикла = сумма всех распределенных частей
+    const finalCycleTotal = winsSum + lossesSum + drawsSum;
     
     // Активный пул (база для ROI) - только победы и поражения
     const activePool = winsSum + lossesSum;
@@ -524,7 +496,7 @@ const RegularBotsManagement = () => {
     const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
     
     return {
-      total: exactCycleTotal,
+      total: finalCycleTotal,
       active_pool: activePool,
       roi_active: Math.round(roiActive * 100) / 100, // Округляем до 2 знаков
       wins_sum: winsSum,
@@ -4746,18 +4718,18 @@ const RegularBotsManagement = () => {
                         );
                       }
                       
-                      // 1. Вычисляем общую сумму цикла
-                      const exactCycleTotal = Math.round(((min_bet + max_bet) / 2.0) * games + 1);
+                      // 1. Вычисляем базовую сумму цикла
+                      const baseCycleTotal = Math.round(((min_bet + max_bet) / 2.0) * games);
                       
                       // 2. Применяем метод наибольших остатков для распределения по исходам
                       const winsPercent = currentPreset.wins_percentage / 100;
                       const lossesPercent = currentPreset.losses_percentage / 100;
                       const drawsPercent = currentPreset.draws_percentage / 100;
                       
-                      // Вычисляем точные суммы
-                      const exactWins = exactCycleTotal * winsPercent;
-                      const exactLosses = exactCycleTotal * lossesPercent;
-                      const exactDraws = exactCycleTotal * drawsPercent;
+                      // Вычисляем точные суммы от базовой суммы
+                      const exactWins = baseCycleTotal * winsPercent;
+                      const exactLosses = baseCycleTotal * lossesPercent;
+                      const exactDraws = baseCycleTotal * drawsPercent;
                       
                       // Применяем правило округления half-up (≥0.50 вверх, <0.50 вниз)
                       const halfUpRound = (num) => {
@@ -4769,36 +4741,8 @@ const RegularBotsManagement = () => {
                       let lossesSum = halfUpRound(exactLosses);
                       let drawsSum = halfUpRound(exactDraws);
                       
-                      // Проверяем и корректируем сумму методом наибольших остатков
-                      let totalDistributed = winsSum + lossesSum + drawsSum;
-                      let difference = exactCycleTotal - totalDistributed;
-                      
-                      if (difference !== 0) {
-                        // Создаем массив остатков для корректировки
-                        const remainders = [
-                          { type: 'wins', remainder: exactWins - winsSum, value: winsSum },
-                          { type: 'losses', remainder: exactLosses - lossesSum, value: lossesSum },
-                          { type: 'draws', remainder: exactDraws - drawsSum, value: drawsSum }
-                        ].sort((a, b) => b.remainder - a.remainder);
-                        
-                        // Распределяем разность по наибольшим остаткам
-                        let i = 0;
-                        while (difference !== 0) {
-                          const current = remainders[i % remainders.length];
-                          if (difference > 0) {
-                            if (current.type === 'wins') winsSum++;
-                            else if (current.type === 'losses') lossesSum++;
-                            else drawsSum++;
-                            difference--;
-                          } else {
-                            if (current.type === 'wins') winsSum--;
-                            else if (current.type === 'losses') lossesSum--;
-                            else drawsSum--;
-                            difference++;
-                          }
-                          i++;
-                        }
-                      }
+                      // Итоговая сумма цикла = сумма всех распределенных частей
+                      const finalCycleTotal = winsSum + lossesSum + drawsSum;
                       
                       // Активный пул (база для ROI) - только победы и поражения
                       const activePool = winsSum + lossesSum;
@@ -4809,7 +4753,7 @@ const RegularBotsManagement = () => {
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <div className="text-text-secondary">Общая сумма цикла:</div>
-                            <div className="text-white font-bold">{exactCycleTotal}</div>
+                            <div className="text-white font-bold">{finalCycleTotal}</div>
                           </div>
                           <div>
                             <div className="text-text-secondary">Активный пул:</div>

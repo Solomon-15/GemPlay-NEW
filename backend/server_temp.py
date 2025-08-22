@@ -2201,9 +2201,9 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
         max_bet = bot_doc.get("max_bet_amount", 50.0)
         win_percentage = bot_doc.get("win_percentage", 55.0)
         
-        # Вычисляем точную сумму цикла (новый алгоритм +1)
+        # Вычисляем точную сумму цикла
         average_bet = (min_bet + max_bet) / 2
-        exact_total_amount = average_bet * cycle_games + 1
+        exact_total_amount = average_bet * cycle_games
         
         logger.info(f"🎯 Bot {bot_id}: Creating complete cycle - {cycle_games} bets with exact total {exact_total_amount}")
         
@@ -2472,8 +2472,8 @@ async def calculate_real_cycle_total_amount(bot_doc: dict) -> float:
         # Вычисляем среднюю ставку
         avg_bet = (min_bet + max_bet) / 2
         
-        # Реальная сумма цикла = количество игр * средняя ставка + 1 (новый алгоритм)
-        real_cycle_total = cycle_games * avg_bet + 1
+        # Реальная сумма цикла = количество игр * средняя ставка
+        real_cycle_total = cycle_games * avg_bet
         
         logger.info(f"🔢 Calculated real cycle total for bot {bot_doc.get('id', 'unknown')}: "
                    f"{real_cycle_total} (games: {cycle_games}, avg_bet: {avg_bet})")
@@ -5872,7 +5872,7 @@ async def get_bot_cycle_bets(
         active_pool = wins_sum + losses_sum
         profit = wins_sum - losses_sum
         roi_active = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
-        exact_cycle_total = int(round(((min_bet + max_bet) / 2.0) * cycle_len + 1))
+        exact_cycle_total = int(round(((min_bet + max_bet) / 2.0) * cycle_len))
         
         return {
             "success": True,
@@ -18612,14 +18612,14 @@ async def generate_cycle_bets_natural_distribution(
         draws_count = int(draws_count)
         cycle_games = int(cycle_games)
 
-        # 1) Точная общая сумма цикла по формуле: N × (min+max)/2 + 1, округление до целого
-        exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games + 1))
-        logger.info(f"    Exact cycle total (int): {exact_cycle_total}")
+        # 1) Базовая сумма цикла по формуле: N × (min+max)/2, округление до целого
+        base_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
+        logger.info(f"    Base cycle total (int): {base_cycle_total}")
 
         # 2) Интегральное распределение суммы по W/L/D по методу наибольших остатков
-        raw_w = exact_cycle_total * (float(wins_percentage) / 100.0)
-        raw_l = exact_cycle_total * (float(losses_percentage) / 100.0)
-        raw_d = exact_cycle_total * (float(draws_percentage) / 100.0)
+        raw_w = base_cycle_total * (float(wins_percentage) / 100.0)
+        raw_l = base_cycle_total * (float(losses_percentage) / 100.0)
+        raw_d = base_cycle_total * (float(draws_percentage) / 100.0)
 
         # Применяем правило округления half-up (≥0.50 вверх, <0.50 вниз)
         def half_up_round(num):
@@ -18630,33 +18630,10 @@ async def generate_cycle_bets_natural_distribution(
         initial_l = half_up_round(raw_l)
         initial_d = half_up_round(raw_d)
         
-        remainders = [raw_w - initial_w, raw_l - initial_l, raw_d - initial_d]
-        sum_initial = initial_w + initial_l + initial_d
-        diff = exact_cycle_total - sum_initial
-
-        allocation = [initial_w, initial_l, initial_d]
-        if diff != 0:
-            # Положительная разница — добавляем к наибольшим остаткам, отрицательная — вычитаем от наименьших остатков
-            order = sorted(range(3), key=lambda i: remainders[i], reverse=(diff > 0))
-            step = 1 if diff > 0 else -1
-            for i in range(abs(diff)):
-                idx = order[i % 3]
-                allocation[idx] += step
-                # не даем опуститься ниже 0 в крайних случаях
-                if allocation[idx] < 0:
-                    allocation[idx] = 0
-
-        target_wins_sum, target_losses_sum, target_draws_sum = map(int, allocation)
-        # Защита: суммарная проверка
-        adjust = exact_cycle_total - (target_wins_sum + target_losses_sum + target_draws_sum)
-        if adjust != 0:
-            # Добрасываем/снимаем по тому же правилу остатков, чтобы сумма точно сошлась
-            order = sorted(range(3), key=lambda i: remainders[i], reverse=(adjust > 0))
-            for i in range(abs(adjust)):
-                idx = order[i % 3]
-                target = [target_wins_sum, target_losses_sum, target_draws_sum]
-                target[idx] += 1 if adjust > 0 else -1
-                target_wins_sum, target_losses_sum, target_draws_sum = target
+        # Итоговая сумма цикла = сумма всех распределенных частей
+        final_cycle_total = initial_w + initial_l + initial_d
+        
+        target_wins_sum, target_losses_sum, target_draws_sum = initial_w, initial_l, initial_d
 
         logger.info(f"    Target sums (int): W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
 
@@ -18708,8 +18685,8 @@ async def generate_cycle_bets_natural_distribution(
 
         # Валидации целостности
         final_total = actual_wins_sum + actual_losses_sum + actual_draws_sum
-        if final_total != exact_cycle_total:
-            logger.warning(f"❗ Final cycle total {final_total} != exact_cycle_total {exact_cycle_total}. Forcing fix in logs-only.")
+        if final_total != final_cycle_total:
+            logger.warning(f"❗ Final cycle total {final_total} != final_cycle_total {final_cycle_total}. Forcing fix in logs-only.")
         
         logger.info(f"✅ NEW INT FORMULA results:")
         logger.info(f"    Bets: {len(all_bets)} = {wins_count}W/{losses_count}L/{draws_count}D")
