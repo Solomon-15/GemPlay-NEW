@@ -25,6 +25,10 @@ import EmailVerificationBanner from "./components/EmailVerificationBanner";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Debug logging
+console.log('DEBUG: BACKEND_URL =', BACKEND_URL);
+console.log('DEBUG: API =', API);
+
 // Login Component
 const LoginForm = ({ onLogin, setUser, authView, setAuthView }) => {
   const [isLogin, setIsLogin] = useState(true);
