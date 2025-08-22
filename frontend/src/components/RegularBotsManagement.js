@@ -522,6 +522,43 @@ const RegularBotsManagement = () => {
     return calculateCycleAmounts().total;
   };
   
+  // НОВАЯ ФУНКЦИЯ: Расчет превью ROI на основе фактических W/L/D
+  const calculatePreviewFromCounts = (winsCount, lossesCount, drawsCount, minBet, maxBet) => {
+    if (!winsCount && winsCount !== 0 || !lossesCount && lossesCount !== 0 || !drawsCount && drawsCount !== 0 || !minBet || !maxBet) {
+      return { total: 0, active_pool: 0, profit: 0, roi_active: 0 };
+    }
+    
+    // Расчет сумм на основе фактических количеств игр
+    const avgBet = (parseFloat(minBet) + parseFloat(maxBet)) / 2;
+    
+    // Суммы по категориям (пропорционально среднему размеру ставки)
+    const winsSum = Math.round(winsCount * avgBet * 1.1); // Победы чуть больше средней
+    const lossesSum = Math.round(lossesCount * avgBet * 0.9); // Поражения чуть меньше средней
+    const drawsSum = Math.round(drawsCount * avgBet); // Ничьи равны средней
+    
+    // Общая сумма цикла = Победы + Поражения + Ничьи
+    const totalSum = winsSum + lossesSum + drawsSum;
+    
+    // Активный пул = Победы + Поражения (ничьи не участвуют в ROI)
+    const activePool = winsSum + lossesSum;
+    
+    // Прибыль = Победы - Поражения
+    const profit = winsSum - lossesSum;
+    
+    // ROI_active = (Прибыль ÷ Активный пул) × 100%
+    const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
+    
+    return {
+      total: totalSum,
+      active_pool: activePool,
+      profit: profit,
+      roi_active: Math.round(roiActive * 100) / 100, // Округляем до 2 знаков
+      wins_sum: winsSum,
+      losses_sum: lossesSum,
+      draws_sum: drawsSum
+    };
+  };
+  
   // НОВАЯ ФУНКЦИЯ: Автосвязь баланса игр
   const updateBalanceGames = (newCycleGames, autoUpdate = true) => {
     if (!autoUpdate) return;
@@ -3073,32 +3110,44 @@ const RegularBotsManagement = () => {
                 })()}
               </div>
 
-              {/* НОВАЯ ЛОГИКА: Превью ROI расчетов */}
+              {/* ОБНОВЛЕННАЯ ЛОГИКА: Превью ROI расчетов на основе фактических W/L/D */}
               <div className="border border-purple-500 bg-purple-900 bg-opacity-20 rounded-lg p-4">
                 <h4 className="font-rajdhani font-bold text-purple-400 mb-3">📊 Превью ROI расчетов</h4>
                 {(() => {
-                  const preview = calculateCycleAmounts();
+                  // Используем фактические количества W/L/D из пресета или ручного ввода
+                  const preview = calculatePreviewFromCounts(
+                    botForm.wins_count,
+                    botForm.losses_count, 
+                    botForm.draws_count,
+                    botForm.min_bet_amount,
+                    botForm.max_bet_amount
+                  );
+                  
                   return (
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <div className="text-text-secondary">Общая сумма цикла:</div>
                         <div className="text-white font-bold">{preview.total}</div>
+                        <div className="text-xs text-gray-400">W+L+D = {botForm.wins_count}+{botForm.losses_count}+{botForm.draws_count}</div>
                       </div>
                       <div>
                         <div className="text-text-secondary">Активный пул:</div>
                         <div className="text-purple-300 font-bold">{preview.active_pool}</div>
+                        <div className="text-xs text-gray-400">W+L = {botForm.wins_count}+{botForm.losses_count}</div>
                       </div>
                       <div>
                         <div className="text-text-secondary">Прибыль:</div>
                         <div className={`font-bold ${preview.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {preview.profit}
                         </div>
+                        <div className="text-xs text-gray-400">W-L = {botForm.wins_count}-{botForm.losses_count}</div>
                       </div>
                       <div>
                         <div className="text-text-secondary">ROI_active:</div>
                         <div className={`font-bold text-lg ${preview.roi_active >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {preview.roi_active}%
                         </div>
+                        <div className="text-xs text-gray-400">({preview.profit}÷{preview.active_pool})×100</div>
                       </div>
                     </div>
                   );
@@ -4801,16 +4850,20 @@ const RegularBotsManagement = () => {
                     </div>
                   </div>
 
-                  {/* Превью ROI расчетов */}
+                  {/* ОБНОВЛЕННОЕ ПРЕВЬЮ: ROI расчеты на основе фактических W/L/D */}
                   <div className="mt-6 border border-purple-500 bg-purple-900 bg-opacity-20 rounded-lg p-4">
                     <h4 className="font-rajdhani font-bold text-purple-400 mb-3">📊 Превью ROI расчетов</h4>
                     {(() => {
-                      // Расчет ROI для пресета (метод наибольших остатков)
-                      const min_bet = parseFloat(currentPreset.min_bet_amount);
-                      const max_bet = parseFloat(currentPreset.max_bet_amount);
-                      const games = parseInt(currentPreset.cycle_games);
+                      // Используем фактические количества W/L/D из пресета или ручного ввода
+                      const preview = calculatePreviewFromCounts(
+                        currentPreset.wins_count,
+                        currentPreset.losses_count,
+                        currentPreset.draws_count,
+                        currentPreset.min_bet_amount,
+                        currentPreset.max_bet_amount
+                      );
                       
-                      if (!min_bet || !max_bet || !games) {
+                      if (preview.total === 0) {
                         return (
                           <div className="text-text-secondary text-sm">
                             Заполните все поля для расчета ROI
@@ -4818,69 +4871,31 @@ const RegularBotsManagement = () => {
                         );
                       }
                       
-                      // Метод наибольших остатков для распределения по исходам
-                      // Для стандартного случая [1-100] × 16 игр используем эталонные точные суммы
-                      let exactWins, exactLosses, exactDraws;
-                      
-                      if (min_bet === 1 && max_bet === 100 && games === 16) {
-                        // Эталонные точные доли для стандартного случая
-                        exactWins = 355.52;
-                        exactLosses = 290.88;
-                        exactDraws = 161.60;
-                      } else {
-                        // Для других случаев вычисляем пропорционально от эталонных точных долей
-                        const standardSum = 355.52 + 290.88 + 161.60; // 808
-                        const scaleFactor = (((min_bet + max_bet) / 2.0) * games) / (((1 + 100) / 2.0) * 16);
-                        
-                        const winsPercent = currentPreset.wins_percentage / 100;
-                        const lossesPercent = currentPreset.losses_percentage / 100;
-                        const drawsPercent = currentPreset.draws_percentage / 100;
-                        
-                        exactWins = standardSum * scaleFactor * winsPercent;
-                        exactLosses = standardSum * scaleFactor * lossesPercent;
-                        exactDraws = standardSum * scaleFactor * drawsPercent;
-                      }
-                      
-                      // Правило округления half-up: если дробная часть ≥ 0,50 — округляем вверх; если < 0,50 — вниз
-                      const halfUpRound = (num) => {
-                        const fraction = num - Math.floor(num);
-                        return fraction >= 0.50 ? Math.ceil(num) : Math.floor(num);
-                      };
-                      
-                      // Применяем half-up округление (результат: 356 / 291 / 162 = 809)
-                      let winsSum = halfUpRound(exactWins);
-                      let lossesSum = halfUpRound(exactLosses);
-                      let drawsSum = halfUpRound(exactDraws);
-                      
-                      // Итоговая сумма цикла = сумма всех округленных частей
-                      const finalCycleTotal = winsSum + lossesSum + drawsSum;
-                      
-                      // Активный пул (база для ROI) - только победы и поражения
-                      const activePool = winsSum + lossesSum;
-                      const profit = winsSum - lossesSum;
-                      const roiActive = activePool > 0 ? ((profit / activePool) * 100) : 0;
-                      
                       return (
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <div className="text-text-secondary">Общая сумма цикла:</div>
-                            <div className="text-white font-bold">{finalCycleTotal}</div>
+                            <div className="text-white font-bold">{preview.total}</div>
+                            <div className="text-xs text-gray-400">W+L+D = {currentPreset.wins_count}+{currentPreset.losses_count}+{currentPreset.draws_count}</div>
                           </div>
                           <div>
                             <div className="text-text-secondary">Активный пул:</div>
-                            <div className="text-purple-300 font-bold">{activePool}</div>
+                            <div className="text-purple-300 font-bold">{preview.active_pool}</div>
+                            <div className="text-xs text-gray-400">W+L = {currentPreset.wins_count}+{currentPreset.losses_count}</div>
                           </div>
                           <div>
                             <div className="text-text-secondary">Прибыль:</div>
-                            <div className={`font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {profit}
+                            <div className={`font-bold ${preview.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {preview.profit}
                             </div>
+                            <div className="text-xs text-gray-400">W-L = {currentPreset.wins_count}-{currentPreset.losses_count}</div>
                           </div>
                           <div>
                             <div className="text-text-secondary">ROI_active:</div>
-                            <div className={`font-bold text-lg ${roiActive >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {Math.round(roiActive * 100) / 100}%
+                            <div className={`font-bold text-lg ${preview.roi_active >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {preview.roi_active}%
                             </div>
+                            <div className="text-xs text-gray-400">({preview.profit}÷{preview.active_pool})×100</div>
                           </div>
                         </div>
                       );
