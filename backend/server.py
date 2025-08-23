@@ -2265,9 +2265,9 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
         win_percentage = bot_doc.get("win_percentage", 55.0)
         
         # Вычисляем точную сумму цикла
-        # ИСПРАВЛЕНО: Для стандартного диапазона 1-100 и 16 игр используем эталонное значение 809
+        # Для стандартного диапазона 1-100 и 16 игр используем эталонное значение 800
         if min_bet == 1.0 and max_bet == 100.0 and cycle_games == 16:
-            exact_total_amount = 809.0  # Эталонное значение из задачи
+            exact_total_amount = 800.0  # Эталонное значение цикла
         else:
             average_bet = (min_bet + max_bet) / 2
             exact_total_amount = average_bet * cycle_games
@@ -2528,7 +2528,7 @@ async def check_and_complete_bot_cycle(bot_id: str):
 
 async def calculate_real_cycle_total_amount(bot_doc: dict) -> float:
     """
-    Вычисляет реальную сумму цикла по правильной логике масштабирования от эталонной суммы 809.
+    Вычисляет реальную сумму цикла по логике масштабирования от базовой суммы 800.
     Синхронизировано с фронтендом.
     """
     try:
@@ -2540,15 +2540,15 @@ async def calculate_real_cycle_total_amount(bot_doc: dict) -> float:
         losses_percentage = bot_doc.get('losses_percentage', 36.0)
         draws_percentage = bot_doc.get('draws_percentage', 20.0)
         
-        # ПРАВИЛЬНАЯ ЛОГИКА: Масштабирование от эталонной суммы 809
-        # Коэффициент масштабирования по количеству игр (от эталонных 16)
+        # Масштабирование от базовой суммы 800
+        # Коэффициент масштабирования по количеству игр (от базовых 16)
         games_coeff = cycle_games / 16
         
-        # Коэффициент масштабирования по диапазону ставок (от эталонного 1-100)
+        # Коэффициент масштабирования по диапазону ставок (от базового 1-100)
         range_coeff = ((min_bet + max_bet) / 2) / ((1 + 100) / 2)
         
-        # Общая сумма цикла (масштабированная от эталонной 809)
-        total_cycle_sum = round(809 * games_coeff * range_coeff)
+        # Общая сумма цикла (масштабированная от 800)
+        total_cycle_sum = round(800 * games_coeff * range_coeff)
         
         # Переводим проценты в суммы ставок (синхронизировано с фронтендом)
         wins_sum = round((wins_percentage / 100) * total_cycle_sum)
@@ -5996,12 +5996,12 @@ async def get_bot_cycle_bets(
         roi_active = round((profit / active_pool * 100), 2) if active_pool > 0 else 0.0
         # Определяем эталонную сумму цикла
         if min_bet == 1 and max_bet == 100 and cycle_len == 16:
-            reference_cycle_total = 809  # Эталонное значение
+            reference_cycle_total = 800  # Базовое значение
         else:
-            # Пропорциональный расчет от эталона
+            # Пропорциональный расчет от базы 800
             standard_base = int(round(((1 + 100) / 2.0) * 16))  # 808
             current_base = int(round(((min_bet + max_bet) / 2.0) * cycle_len))
-            reference_cycle_total = int(round((809 * current_base) / standard_base))
+            reference_cycle_total = int(round((800 * current_base) / standard_base))
         
         # Применяем метод наибольших остатков с правилом half-up
         def half_up_round(num):
@@ -9295,7 +9295,7 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
                 max_bet_int = int(round(max_bet))
                 
                 if min_bet_int == 1 and max_bet_int == 100 and cycle_games == 16:
-                    exact_cycle_total = 809  # Эталонное значение
+                    exact_cycle_total = 800  # Базовое значение
                 else:
                     exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
                 
@@ -9362,14 +9362,14 @@ async def complete_bot_cycle(accumulator_id: str, bot_id: str):
                 losses_percentage = bot_doc.get("losses_percentage", 36.0)
                 draws_percentage = bot_doc.get("draws_percentage", 20.0)
                 
-                # Определяем эталонную сумму цикла
+                # Определяем базовую сумму цикла
                 if min_bet_int == 1 and max_bet_int == 100 and cycle_games == 16:
-                    reference_cycle_total = 809  # Эталонное значение
+                    reference_cycle_total = 800  # Базовое значение
                 else:
-                    # Пропорциональный расчет от эталона
+                    # Пропорциональный расчет от базы 800
                     standard_base = int(round(((1 + 100) / 2.0) * 16))  # 808
                     current_base = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
-                    reference_cycle_total = int(round((809 * current_base) / standard_base))
+                    reference_cycle_total = int(round((800 * current_base) / standard_base))
                 
                 # Применяем метод наибольших остатков с правилом half-up
                 import math
@@ -17490,10 +17490,10 @@ async def create_regular_bots(
         
         created_bots = []
         
-        # СИНХРОНИЗИРОВАННАЯ ЛОГИКА: Вычисляем реальную сумму цикла по правильной формуле
+        # СИНХРОНИЗИРОВАННАЯ ЛОГИКА: Вычисляем реальную сумму цикла от базовой суммы 800
         games_coeff = cycle_games / 16
         range_coeff = ((min_bet + max_bet) / 2) / ((1 + 100) / 2)
-        total_cycle_sum = round(809 * games_coeff * range_coeff)
+        total_cycle_sum = round(800 * games_coeff * range_coeff)
         
         # Переводим проценты в суммы ставок
         wins_sum = round((wins_percentage / 100) * total_cycle_sum)
@@ -18436,14 +18436,14 @@ def compute_cycle_planned_profit(min_bet: float, max_bet: float, cycle_games: in
         large_avg = min_bet_f + rng * 0.85
         estimated_total = small_cnt * small_avg + medium_cnt * medium_avg + large_cnt * large_avg
         
-        # 2) Определяем эталонную сумму цикла
+        # 2) Определяем базовую сумму цикла
         if min_bet_f == 1 and max_bet_f == 100 and games == 16:
-            reference_cycle_total = 809  # Эталонное значение
+            reference_cycle_total = 800  # Базовое значение
         else:
-            # Пропорциональный расчет от эталона
+            # Пропорциональный расчет от базы 800
             standard_base = int(round(((1 + 100) / 2.0) * 16))  # 808
             current_base = int(round(((min_bet_f + max_bet_f) / 2.0) * games))
-            reference_cycle_total = int(round((809 * current_base) / standard_base))
+            reference_cycle_total = int(round((800 * current_base) / standard_base))
         
         import math
         def half_up_round(num):
@@ -19344,9 +19344,9 @@ async def generate_cycle_bets_natural_distribution(
         cycle_games = int(cycle_games)
 
         # 1) Точная общая сумма цикла по формуле: N × (min+max)/2, округление до целого
-        # ИСПРАВЛЕНО: Для стандартного диапазона 1-100 и 16 игр используем эталонное значение 809
+        # Для стандартного диапазона 1-100 и 16 игр используем базовое значение 800
         if min_bet_int == 1 and max_bet_int == 100 and cycle_games == 16:
-            exact_cycle_total = 809  # Эталонное значение из задачи
+            exact_cycle_total = 800  # Базовое значение
         else:
             exact_cycle_total = int(round(((min_bet_int + max_bet_int) / 2.0) * cycle_games))
         logger.info(f"    Exact cycle total (int): {exact_cycle_total}")
