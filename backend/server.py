@@ -19431,6 +19431,26 @@ async def generate_cycle_bets_natural_distribution(
 
         logger.info(f"    Target sums (int): W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
 
+        # Корректировка по ROI_set с правилом ближайшего чётного (базовый случай 1–100 и 16 игр)
+        if min_bet_int == 1 and max_bet_int == 100 and cycle_games == 16:
+            active_pool_planned = int(target_wins_sum + target_losses_sum)
+            profit_planned = int(target_wins_sum - target_losses_sum)
+            roi_planned = (profit_planned / active_pool_planned * 100.0) if active_pool_planned > 0 else 0.0
+            # ROI_set = округление до целого и клип 2..30
+            roi_set_local = max(2, min(30, int(round(roi_planned))))
+            x = (active_pool_planned * roi_set_local) / 100.0
+            p_round = int(round(x))
+            if p_round % 2 != 0:
+                lower = max(0, p_round - 1)
+                upper = min(active_pool_planned, p_round + 1)
+                p_even = lower if abs(x - lower) <= abs(upper - x) else upper
+            else:
+                p_even = p_round
+            target_wins_sum = int((active_pool_planned + p_even) // 2)
+            target_losses_sum = int((active_pool_planned - p_even) // 2)
+            target_draws_sum = int(exact_cycle_total - active_pool_planned)
+            logger.info(f"    Adjusted by ROI_set: W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum} (roi_set={roi_set_local}%, p_even={p_even})")
+
         # 3) Для каждой категории генерируем ставки с весами 6/6/4 по диапазонам (1–30/31–70/71–100)
         def _build_weighted(min_b:int, max_b:int, total:int, cnt:int, rng:random.Random):
             if cnt <= 0:
