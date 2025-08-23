@@ -123,9 +123,10 @@ const RegularBotsManagement = () => {
     draws_percentage: 28.0,
     cycle_games: 16,
     pause_between_cycles: 5,
-                          wins_count: 6,
-                          losses_count: 6,
-                          draws_count: 4
+    pause_between_bets: 5,
+    wins_count: 5,
+    losses_count: 7,
+    draws_count: 4
   });
 
   const pagination = usePagination(1, 10);
