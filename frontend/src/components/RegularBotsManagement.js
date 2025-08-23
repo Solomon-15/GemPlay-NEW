@@ -443,6 +443,7 @@ const RegularBotsManagement = () => {
       
       cycle_games: 16, // НОВОЕ: 16 игр по умолчанию (было 12)
       pause_between_cycles: 5, // 1-3600 секунд
+      pause_between_bets: 5, // 1-3600 секунд
       
 
       
@@ -1308,6 +1309,7 @@ const RegularBotsManagement = () => {
         draws_percentage: botForm.draws_percentage,
         cycle_games: botForm.cycle_games,
         pause_between_cycles: botForm.pause_between_cycles,
+        pause_between_bets: botForm.pause_between_bets,
         // УДАЛЕНО: creation_mode (наследие)
         // УДАЛЕНО: profit_strategy (наследие)
       };
@@ -1331,6 +1333,7 @@ const RegularBotsManagement = () => {
           draws_percentage: savedPercentages.draws_percentage || 28.0,
           cycle_games: 16,
           pause_between_cycles: 5,
+          pause_between_bets: 5,
           cycle_total_amount: 0
         };
       });
@@ -1380,6 +1383,7 @@ const RegularBotsManagement = () => {
         draws_percentage: b.draws_percentage ?? 28.0,
         cycle_games: b.cycle_games ?? 12,
         pause_between_cycles: b.pause_between_cycles ?? 5,
+        pause_between_bets: b.pause_between_bets ?? 5,
         cycle_total_amount: b.cycle_total_amount ?? 0
       });
       setSelectedPreset('Custom');
@@ -1396,6 +1400,7 @@ const RegularBotsManagement = () => {
         draws_percentage: b.draws_percentage ?? 28.0,
         cycle_games: b.cycle_games ?? 12,
         pause_between_cycles: b.pause_between_cycles ?? 5,
+        pause_between_bets: b.pause_between_bets ?? 5,
 
       });
       
@@ -1429,6 +1434,7 @@ const RegularBotsManagement = () => {
         draws_percentage: botForm.draws_percentage,
         cycle_games: botForm.cycle_games,
         pause_between_cycles: botForm.pause_between_cycles,
+        pause_between_bets: botForm.pause_between_bets,
         // УДАЛЕНО: creation_mode (наследие)
         // УДАЛЕНО: profit_strategy (наследие)
       };
@@ -3058,6 +3064,25 @@ const RegularBotsManagement = () => {
                     </div>
                   </div>
 
+                  {/* Пауза между ставками */}
+                  <div>
+                    <label className="block text-text-secondary text-sm mb-1">Пауза между ставками:</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="3600"
+                      value={botForm.pause_between_bets}
+                      onChange={(e) => {
+                        const newForm = {...botForm, pause_between_bets: parseInt(e.target.value) || 5};
+                        setBotForm(newForm);
+                        validateExtendedFormInRealTime(newForm);
+                      }}
+                      className="w-full px-3 py-2 bg-surface-sidebar border border-border-primary rounded-lg text-white focus:outline-none focus:border-accent-primary"
+                    />
+                    <div className="text-xs text-text-secondary mt-1">
+                      Интервал между ставками в рамках одного цикла
+                    </div>
+                  </div>
 
                 </div>
 
@@ -4550,6 +4575,7 @@ const RegularBotsManagement = () => {
                               draws_percentage: preset.draws_percentage,
                               cycle_games: preset.cycle_games,
                               pause_between_cycles: preset.pause_between_cycles,
+                              pause_between_bets: preset.pause_between_bets,
                               ...(() => { const { W, L, D } = recalcCountsFromPercents(preset.cycle_games, preset.wins_percentage, preset.losses_percentage, preset.draws_percentage); return { wins_count: W, losses_count: L, draws_count: D }; })()
                             };
                             
@@ -4793,6 +4819,18 @@ const RegularBotsManagement = () => {
                         type="number"
                         value={currentPreset.pause_between_cycles}
                         onChange={(e) => setCurrentPreset(prev => ({ ...prev, pause_between_cycles: parseInt(e.target.value) || 5 }))}
+                        min="1"
+                        max="3600"
+                        className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto text-sm focus:outline-none focus:border-accent-primary"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-text-secondary text-sm mb-2">Пауза между ставками (сек)</label>
+                      <input
+                        type="number"
+                        value={currentPreset.pause_between_bets}
+                        onChange={(e) => setCurrentPreset(prev => ({ ...prev, pause_between_bets: parseInt(e.target.value) || 5 }))}
                         min="1"
                         max="3600"
                         className="w-full px-3 py-2 bg-surface-card border border-border-primary rounded-lg text-white font-roboto text-sm focus:outline-none focus:border-accent-primary"
