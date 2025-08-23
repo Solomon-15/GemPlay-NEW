@@ -1226,6 +1226,25 @@ const RegularBotsManagement = () => {
       errors.push('Пауза между циклами должна быть от 1 до 3600 секунд');
     }
     
+    if (formData.pause_between_bets < 1 || formData.pause_between_bets > 3600) {
+      errors.push('Пауза между ставками должна быть от 1 до 3600 секунд');
+    }
+    
+    // Подсказка по диапазону ROI: рекомендуем 2–30%
+    const activePoolPreview = 576; // для 16 и 1–100
+    const roiPlan = (() => {
+      const w = Number(formData.wins_percentage || 0);
+      const l = Number(formData.losses_percentage || 0);
+      const total = 800; // база
+      const wSum = Math.round(total * w / 100);
+      const lSum = Math.round(total * l / 100);
+      const a = wSum + lSum;
+      return a > 0 ? ((wSum - lSum) / a) * 100 : 0;
+    })();
+    if (roiPlan < 2 || roiPlan > 30) {
+      errors.push(`Плановый ROI (${roiPlan.toFixed(2)}%) вне рекомендуемого диапазона [2%, 30%]`);
+    }
+    
     
     const validModes = ['always-first', 'queue-based', 'after-all'];
 
