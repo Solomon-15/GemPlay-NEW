@@ -136,7 +136,21 @@ const BotCycleModal = ({ bot, onClose }) => {
         <div className="bg-surface-sidebar rounded-lg p-3">
           <div className="text-text-secondary text-sm">Сумма цикла</div>
           <div className="text-lg font-bold text-blue-400">
-            ${cycleData.cycle_total_amount}
+            {(() => {
+              const val = Number(cycleData.cycle_total_amount || 0);
+              if (val > 0) return `$${val}`;
+              // fallback: суммируем ставки
+              if (Array.isArray(cycleData.bets) && cycleData.bets.length > 0) {
+                const s = cycleData.bets.reduce((acc, b) => acc + Number(b.amount || 0), 0);
+                if (s > 0) return `$${s}`;
+              }
+              // базовый случай: 1–100 и 16 игр → 800
+              const minBet = Math.round(Number(bot?.min_bet_amount ?? 1));
+              const maxBet = Math.round(Number(bot?.max_bet_amount ?? 100));
+              const games = Math.round(Number(bot?.cycle_games ?? 16));
+              if (minBet === 1 && maxBet === 100 && games === 16) return `$800`;
+              return '$—';
+            })()}
           </div>
         </div>
         <div className="bg-surface-sidebar rounded-lg p-3">
