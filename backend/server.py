@@ -2293,6 +2293,30 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
         losses_count = bot_doc.get("losses_count", 6)  # ✅ Остается 6
         draws_count = bot_doc.get("draws_count", 3)  # ИСПРАВЛЕНО: 3 вместо 4
         
+        # Определяем ROI_set (целое 2–30) и выбираем W/L/D по количеству
+        try:
+            # Плановые суммы по текущим % от базовой суммы exact_total_amount
+            tmp_total = float(exact_total_amount)
+            w_sum_planned = int(round(tmp_total * (float(wins_percentage) / 100.0)))
+            l_sum_planned = int(round(tmp_total * (float(losses_percentage) / 100.0)))
+            active_planned = w_sum_planned + l_sum_planned
+            roi_plan = (float(w_sum_planned - l_sum_planned) / active_planned * 100.0) if active_planned > 0 else 0.0
+            roi_set = max(2, min(30, int(round(roi_plan))))
+        except Exception:
+            roi_set = 10
+        # D_count фиксировано 4 для 16 игр, W/L зависят от ROI_set и номера цикла
+        if int(cycle_games) == 16:
+            draws_count = 4
+            if roi_set <= 10:
+                # Чередование "через раз": нечётные циклы 5/7/4, чётные 6/6/4
+                if (cycle_number % 2) == 1:
+                    wins_count, losses_count = 5, 7
+                else:
+                    wins_count, losses_count = 6, 6
+            else:
+                # ROI 11–30 → всегда 5/7/4
+                wins_count, losses_count = 5, 7
+        
         all_cycle_bets = await generate_cycle_bets_natural_distribution(
             bot_id=bot_id,
             min_bet=min_bet,
