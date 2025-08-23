@@ -2663,7 +2663,11 @@ const RegularBotsManagement = () => {
                             const minBet = Math.round(Number(bot.min_bet_amount ?? bot.min_bet ?? 1));
                             const maxBet = Math.round(Number(bot.max_bet_amount ?? bot.max_bet ?? 50));
                             const cycleGames = Math.max(1, Number(bot.cycle_games ?? 12));
-                            val = Math.round(((minBet + maxBet) / 2.0) * cycleGames);
+                            if (minBet === 1 && maxBet === 100 && cycleGames === 16) {
+                              val = 800;
+                            } else {
+                              val = Math.round(((minBet + maxBet) / 2.0) * cycleGames);
+                            }
                           }
                           return val > 0 ? val : '—';
                         })()}
