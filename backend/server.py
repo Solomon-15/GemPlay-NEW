@@ -302,6 +302,7 @@ class BotSettings(BaseModel):
 
 class UpdateBotPauseRequest(BaseModel):
     pause_between_cycles: int = Field(..., ge=1, le=3600, description="Пауза между циклами в секундах (1-3600)")
+    pause_between_bets: Optional[int] = Field(default=5, ge=1, le=3600, description="Пауза между ставками в секундах (1-3600)")
 
 # Removed legacy: UpdateBotWinPercentageRequest (win_percentage deprecated)
 
@@ -2340,8 +2341,9 @@ async def create_full_bot_cycle(bot_doc: dict) -> bool:
             await db.games.insert_one(game.dict())
             created_count += 1
             
-            # Небольшая пауза между созданием
-            await asyncio.sleep(0.1)
+            # Пауза между ставками (сек)
+            pause_between_bets = int(bot_doc.get("pause_between_bets", 5) or 5)
+            await asyncio.sleep(max(0.0, float(pause_between_bets)))
         
         logger.info(f"✅ Bot {bot_id}: Created complete cycle - {created_count}/{cycle_games} bets")
         logger.info(f"🎯 Bot {bot_id}: Total bet amounts = {sum(bet['amount'] for bet in all_cycle_bets)}")
@@ -19320,7 +19322,8 @@ async def generate_cycle_bets_natural_distribution(
     draws_count: int,
     wins_percentage: float,
     losses_percentage: float,
-    draws_percentage: float
+    draws_percentage: float,
+    cycle_number: int
 ):
     """
     НОВАЯ ФОРМУЛА 2.0: Генерирует ставки согласно новой логике ROI.
