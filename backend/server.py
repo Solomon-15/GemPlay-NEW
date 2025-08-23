@@ -19404,42 +19404,38 @@ async def generate_cycle_bets_natural_distribution(
 
         logger.info(f"    Target sums (int): W={target_wins_sum}, L={target_losses_sum}, D={target_draws_sum}")
 
-        # 3) Для каждой категории генерируем случайные ставки по всему диапазону и нормализуем к точной сумме
-        # Победы
-        wins_base = generate_uniform_bet_amounts(min_bet_int, max_bet_int, wins_count)
-        wins_bets = normalize_amounts_to_exact_sum(wins_base, target_wins_sum, min_bet_int, max_bet_int)
+        # 3) Для каждой категории генерируем ставки с весами 6/6/4 по диапазонам (1–30/31–70/71–100)
+        def _build_weighted(min_b:int, max_b:int, total:int, cnt:int, rng:random.Random):
+            if cnt <= 0:
+                return []
+            small_share, medium_share, large_share = 0.375, 0.375, 0.25
+            small_sum = int(round(total * small_share))
+            medium_sum = int(round(total * medium_share))
+            large_sum = total - small_sum - medium_sum
+            small_cnt = max(1, int(round(cnt * small_share)))
+            medium_cnt = max(1, int(round(cnt * medium_share)))
+            large_cnt = max(0, cnt - small_cnt - medium_cnt)
+            if small_cnt + medium_cnt + large_cnt != cnt:
+                large_cnt += (cnt - (small_cnt + medium_cnt + large_cnt))
+            rng_span = max_b - min_b
+            s_lo, s_hi = min_b, min_b + int(rng_span * 0.30)
+            m_lo, m_hi = min_b + int(rng_span * 0.31), min_b + int(rng_span * 0.70)
+            l_lo, l_hi = min_b + int(rng_span * 0.71), max_b
+            def gen(cnt, lo, hi):
+                return [rng.randint(lo, max(lo, hi)) for _ in range(max(0, cnt))]
+            base = gen(small_cnt, s_lo, s_hi) + gen(medium_cnt, m_lo, m_hi) + gen(large_cnt, l_lo, l_hi)
+            return [int(x) for x in normalize_amounts_to_exact_sum(base, total, min_b, max_b)]
 
-        # Поражения
-        losses_base = generate_uniform_bet_amounts(min_bet_int, max_bet_int, losses_count)
-        losses_bets = normalize_amounts_to_exact_sum(losses_base, target_losses_sum, min_bet_int, max_bet_int)
+        # детерминированный RNG
+        import hashlib as _hl
+        _seed_input = f"{bot_id}:{cycle_games}:{min_bet_int}-{max_bet_int}:{wins_count}-{losses_count}-{draws_count}"
+        _rng = random.Random(int(_hl.sha256(_seed_input.encode()).hexdigest(), 16) % (2**32))
+        wins_bets = _build_weighted(min_bet_int, max_bet_int, target_wins_sum, wins_count, _rng)
+        losses_bets = _build_weighted(min_bet_int, max_bet_int, target_losses_sum, losses_count, _rng)
+        draws_bets  = _build_weighted(min_bet_int, max_bet_int, target_draws_sum,  draws_count,  _rng)
 
-        # Ничьи
-        draws_base = generate_uniform_bet_amounts(min_bet_int, max_bet_int, draws_count)
-        draws_bets = normalize_amounts_to_exact_sum(draws_base, target_draws_sum, min_bet_int, max_bet_int)
-
-        # 4) Формируем финальный массив ставок (все суммы — целые)
+        # 4) Формируем финальный массив ставок (детерминированная последовательность задаётся ниже)
         all_bets = []
-        for i in range(wins_count):
-            all_bets.append({
-                "result": "win",
-                "amount": int(wins_bets[i]) if i < len(wins_bets) else min_bet_int,
-                "index": i
-            })
-        for i in range(losses_count):
-            all_bets.append({
-                "result": "loss",
-                "amount": int(losses_bets[i]) if i < len(losses_bets) else min_bet_int,
-                "index": wins_count + i
-            })
-        for i in range(draws_count):
-            all_bets.append({
-                "result": "draw",
-                "amount": int(draws_bets[i]) if i < len(draws_bets) else min_bet_int,
-                "index": wins_count + losses_count + i
-            })
-
-        # Перемешиваем для случайного порядка
-        random.shuffle(all_bets)
 
         # 5) Рассчитываем точные суммы и ROI по формуле из задания
         actual_wins_sum = int(sum(bet["amount"] for bet in all_bets if bet["result"] == "win"))
