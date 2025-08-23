@@ -619,8 +619,9 @@ class Bot(BaseModel):
     current_cycle_gem_value_won: float = 0.0  # Сумма выигранных гемов в текущем цикле
     current_cycle_gem_value_total: float = 0.0  # Общая сумма ставок в текущем цикле
     
-    # Пауза между играми (секунды)
+    # Паузы (секунды)
     pause_between_cycles: int = 5  # Пауза между циклами (по умолчанию 5 секунд)
+    pause_between_bets: int = 5    # Пауза между ставками (по умолчанию 5 секунд)
     
     # Реальная сумма цикла (вычисляется автоматически)
     cycle_total_amount: float = 0.0  # Реальная сумма всех ставок в цикле
@@ -17469,6 +17470,7 @@ async def create_regular_bots(
         
         cycle_games = bot_config.get("cycle_games", 16)  # 1-66
         pause_between_cycles = bot_config.get("pause_between_cycles", 5)  # Пауза между циклами
+        pause_between_bets = bot_config.get("pause_between_bets", 5)  # Пауза между ставками
         profit_strategy = bot_config.get("profit_strategy", "balanced")
         
         # Валидация процентов исходов
@@ -17529,6 +17531,7 @@ async def create_regular_bots(
             cycle_games=cycle_games,
             current_limit=cycle_games,
             pause_between_cycles=pause_between_cycles,
+            pause_between_bets=pause_between_bets,
             cycle_total_amount=real_cycle_total,  # Сохраняем реальную сумму
             is_active=True
         )
